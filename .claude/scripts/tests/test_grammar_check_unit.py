@@ -84,6 +84,15 @@ def test_a_verified_unit_that_stops_passing_is_demoted():
     assert u["status"] == "derived"
 
 
+def test_a_conflict_is_never_promoted_by_a_passing_check():
+    # The checks are about the shape of a rule. A conflict is about the sources
+    # disagreeing, and writing the rule well does not settle that.
+    u = unit(status="conflict", notes="KerML says mandatory, the Xtext says optional.")
+    assert check(u) is False
+    assert u["status"] == "conflict"
+    assert any("adjudicator" in d for d in u["diagnostics"])
+
+
 def test_a_missing_rule_fails_without_running_the_rule_checks():
     u = unit(rule=None)
     assert check(u) is False

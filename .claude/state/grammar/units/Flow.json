@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Flow",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "41e1ec157d2dbb7927c23174c05181a1f4fbf25643ae9771de472916bc3c4275",
     "xtext_rule": "3a44da7f5dccc1a0fcdab6c8e1de0152b93c2dffb47c939ea8e58949d1ff985a",
@@ -56,5 +56,55 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Flow"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "FeaturePrefix"
+      },
+      {
+        "k": "kw",
+        "text": "flow"
+      },
+      {
+        "k": "ref",
+        "name": "FlowDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "TypeBody"
+      }
+    ]
+  },
+  "decision": "A feature prefix, `flow`, the declaration, and the body. The same four-part shape as BindingConnector and Succession. The declaration is named FlowDeclaration, not ItemFlowDeclaration as the clause's reference says \u2014 see the notes.",
+  "notes": "THE CLAUSE REFERENCES A PRODUCTION IT DOES NOT DEFINE. KerML 8.2.5.9.2 writes `Flow = FeaturePrefix 'flow' ItemFlowDeclaration TypeBody`, but nothing in that clause, or anywhere else, defines ItemFlowDeclaration. The same clause goes on to define `FlowDeclaration`, which is never referenced. The reference and the definition do not match.\n\nThe resolution is not in doubt, and was checked rather than assumed. ItemFlowDeclaration appears in no derivation unit and in no entry of the Xtext production inventory; FlowDeclaration appears in both. The pilot rule is `Flow : FeaturePrefix 'flow' FlowDeclaration TypeBody`. So the clause's own definition and the Xtext agree on FlowDeclaration, and only the one reference disagrees. This rule uses FlowDeclaration.\n\nThe likely cause, stated as inference and not as finding: KerML renamed ItemFlow to Flow, and this reference was not renamed with it. That reading is consistent with the orphaned name but is not evidence, and no OMG issue is cited because none has been verified.\n\nA SEPARATE DEFECT IN THE SAME CLAUSE, NOT THIS PRODUCTION'S. The clause's EBNF block does not balance \u2014 it closes one parenthesis short \u2014 and the unclosed `(` is in PayloadFeature's third alternative, which opens a group and never closes it. That belongs to PayloadFeature's unit. This production is unaffected: `FeaturePrefix 'flow' FlowDeclaration TypeBody` has no grouping at all.\n\nThis is the second of the two malformed clause atoms found by sweeping all 558 exported clauses; the other is 8.2.4.3.1 Features.md, recorded on the Feature unit. Every other clause balances.\n\nCORPUS: `flow a.y to b.x1;` exercises the keyword, the end-to-end declaration form and the `;` body.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.9.2",
+      "note": "states Flow, and defines FlowDeclaration, though its reference names ItemFlowDeclaration as described in the notes"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "`Flow : FeaturePrefix 'flow' FlowDeclaration TypeBody` \u2014 resolves the naming inconsistency in favour of FlowDeclaration"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Behaviors.kerml",
+      "note": "contains `flow a.y to b.x1;`"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T22:53:23Z"
 }

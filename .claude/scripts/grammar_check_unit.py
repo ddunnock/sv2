@@ -126,6 +126,13 @@ def _record(unit: Json, checks: list[Check]) -> bool:
     unit["acceptance"] = {c.name: "pass" if c.passed else "fail" for c in checks}
     ok = all(c.passed for c in checks)
 
+    if unit.get("status") == "conflict":
+        # These checks are about the shape of a rule, not about whether the
+        # sources agree. Promoting here would retire an unresolved conflict by
+        # writing it well, which is the one thing adjudication exists to prevent.
+        unit["diagnostics"] = ["sources disagree; run the grammar-adjudicator, not this check"]
+        return False
+
     if ok:
         # Only stamp the transition, so re-checking a verified unit is a no-op.
         if unit.get("status") != "verified" or not unit.get("verified_utc"):

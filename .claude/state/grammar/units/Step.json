@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Step",
   "language": "kerml",
-  "status": "pending",
+  "status": "conflict",
   "fingerprint": {
     "spec_clause": "4f9a5b021ff9f875dbd0e68c04e3d8c58fa58342db026aeffbc3b23c13e47a3f",
     "xtext_rule": "bf76082b20affca3e6423bd5cde54ea1c71463166ca7b304cf0802a3cca73af4",
@@ -56,5 +56,6 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Step"
-  }
+  },
+  "notes": "CONFLICT: IS THE FEATURE DECLARATION MANDATORY OR OPTIONAL? The same divergence as Invariant, Expression and BooleanExpression, reached here through the StepDeclaration fragment.\n\nREADING A — the clause. KerML 8.2.5.6.2 states:\n    Step = FeaturePrefix 'step' FeatureDeclaration ValuePart? TypeBody\nFeatureDeclaration carries no `?`, so `step;` does not parse.\n\nREADING B — the Xtext. The pilot rule is:\n    Step : FeaturePrefix 'step' StepDeclaration TypeBody\nand `fragment StepDeclaration : FeatureDeclaration? ValuePart?`. Expanded, the declaration is OPTIONAL and `step;` parses.\n\nTHE CORPUS DOES NOT DISCRIMINATE HERE. A sweep of the pinned corpus for `step` followed directly by `{` or `;` found nothing: every instance carries a declaration, as in `step step1: Focus[1];`. So this production has no evidence of its own either way, and that absence is itself the reason not to decide it here. A corpus that always writes an optional thing is indistinguishable from one where the thing is required.\n\nWHERE THE EVIDENCE IS. Invariant, which shares this divergence exactly, does have a discriminating instance — `inv { age >= 35 }` with no declaration — and it favours reading B. This unit should follow whatever is adjudicated there unless there is a stated reason to treat steps differently.\n\nThe StepDeclaration fragment is not itself the disagreement; it is a factoring of `FeatureDeclaration? ValuePart?` that would not be ported either way. The disagreement is the `?` inside it."
 }

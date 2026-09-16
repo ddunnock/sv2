@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "BooleanExpression",
   "language": "kerml",
-  "status": "pending",
+  "status": "conflict",
   "fingerprint": {
     "spec_clause": "b857760bf227cea6c897c67d39bd0aec44370c8d1236e3b31ea7179500e6e418",
     "xtext_rule": "9ba3e3d3d8225f26984513126697b9f7480a85ded9edaad37806f0b4eab5235a",
@@ -56,5 +56,6 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::BooleanExpression"
-  }
+  },
+  "notes": "CONFLICT: IS THE FEATURE DECLARATION MANDATORY OR OPTIONAL? The same divergence as Invariant, Step and Expression, reached here through the ExpressionDeclaration fragment.\n\nREADING A — the clause. KerML 8.2.5.7.4 states:\n    BooleanExpression = FeaturePrefix 'bool' FeatureDeclaration ValuePart? FunctionBody\nFeatureDeclaration carries no `?`, so `bool { ... }` does not parse.\n\nREADING B — the Xtext. The pilot rule is:\n    BooleanExpression : FeaturePrefix 'bool' ExpressionDeclaration FunctionBody\nand `fragment ExpressionDeclaration : FeatureDeclaration? ValuePart?`. Expanded, the declaration is OPTIONAL.\n\nTHE CORPUS IS SILENT ON THIS PRODUCTION ENTIRELY. A sweep of the pinned corpus found NO `bool` declarations at all — not with a declaration, not without one. So there is no corpus evidence for this production in either direction, and an oracle sweep will not exercise it. That is worth stating plainly: whatever is decided here rests on the clause and the Xtext alone, and a mistake in it will not be caught by the corpus.\n\nWHERE THE EVIDENCE IS. Invariant shares this divergence through the same ExpressionDeclaration fragment and has a discriminating instance, `inv { age >= 35 }`, favouring reading B. A ruling on that fragment settles this production too, which is the only reason this one can be settled at all."
 }

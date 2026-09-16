@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Invariant",
   "language": "kerml",
-  "status": "pending",
+  "status": "conflict",
   "fingerprint": {
     "spec_clause": "b857760bf227cea6c897c67d39bd0aec44370c8d1236e3b31ea7179500e6e418",
     "xtext_rule": "28574375ed0b0354168dbaa61cee14ac8dce369f88a7fe4a88855914612454cb",
@@ -56,5 +56,6 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Invariant"
-  }
+  },
+  "notes": "CONFLICT: IS THE FEATURE DECLARATION MANDATORY OR OPTIONAL? The two sources disagree about what an invariant with no name accepts, and the corpus decides against the specification.\n\nREADING A — the clause. KerML 8.2.5.7.4 states:\n    Invariant = FeaturePrefix 'inv' ( 'true' | isNegated ?= 'false' )? FeatureDeclaration ValuePart? FunctionBody\nFeatureDeclaration carries no `?`. On this reading `inv { ... }` does not parse, because something must stand between `inv` and the body.\n\nREADING B — the Xtext. The pilot rule is:\n    Invariant : FeaturePrefix 'inv' ( 'true' | isNegated ?= 'false' )? ExpressionDeclaration FunctionBody\nand ExpressionDeclaration is `fragment ExpressionDeclaration : FeatureDeclaration? ValuePart?`. Expanded, that is `FeatureDeclaration? ValuePart?` — the declaration is OPTIONAL. On this reading `inv { ... }` parses.\n\nTHE CORPUS SETTLES WHAT PARSES, AND IT AGREES WITH B. vendor/corpus/kerml/src/examples/Individuals Examples/JohnIndividualExample.kerml line 89 contains `inv { age >= 35 }`, with no declaration between the keyword and the body. Reading A rejects a file the pilot ships as an example. That is corpus evidence against the clause, which .claude/rules/grammar.md says is often the correct way to resolve a release-BNF-versus-corpus contradiction — but it also says to say which was followed and why, and not to resolve it silently in code. Hence this conflict rather than a quiet choice of B.\n\nWHAT IS NOT SETTLED, and is why this needs adjudication rather than a coin flip: whether the clause's missing `?` is a specification defect to be recorded as a deviation, or whether the pilot and its examples are permissive beyond what the language admits. The first is the more likely reading given the corpus, but the two have different consequences — a deviation entry versus a known-permissive rejection case — and picking the convenient one is exactly what the adjudication rule exists to stop.\n\nThe Xtext's ExpressionDeclaration fragment is NOT itself the disagreement. It is a factoring of `FeatureDeclaration? ValuePart?`, and the factoring would not be ported either way; the disagreement is the `?` inside it.\n\nSHARED WITH THREE SIBLINGS. Step, Expression and BooleanExpression have the identical shape and the identical divergence, through the sibling fragment StepDeclaration and through this same ExpressionDeclaration. Only this production has a corpus instance that discriminates. Whatever is decided here should be applied to all four or explicitly not applied, with a reason."
 }
