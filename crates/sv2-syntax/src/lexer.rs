@@ -188,10 +188,32 @@ fn lex_comment(cursor: &mut Cursor<'_>) -> Option<SyntaxKind> {
     None
 }
 
+/// Whether `text` is a comment that never reached its `*/` (`KerML` 8.2.2.2).
+///
+/// `REGULAR_COMMENT = '/*' COMMENT_TEXT '*/'` and
+/// `MULTILINE_NOTE = '//*' COMMENT_TEXT '*/'` both require the terminator, so text
+/// that runs to end of input matches neither. The lexer still emits the token with
+/// every byte it covers — dropping it would break the round-trip — which is what
+/// leaves the parser able to report it.
+///
+/// The opener is excluded before looking for the terminator, because `/*/` ends in
+/// `*/` while being unterminated: those are the opener's own characters.
+#[must_use]
+pub(crate) fn is_unterminated_comment(kind: SyntaxKind, text: &str) -> bool {
+    let opener = match kind {
+        SyntaxKind::RegularComment => "/*",
+        SyntaxKind::MultilineNote => "//*",
+        _ => return false,
+    };
+    text.get(opener.len()..)
+        .is_none_or(|rest| !rest.ends_with("*/"))
+}
+
 /// Consume through the next `*/`, or to end of input if there is none.
 ///
 /// An unterminated comment is not an error here: the text still belongs to the
-/// token, and dropping it would break the round-trip.
+/// token, and dropping it would break the round-trip. [`is_unterminated_comment`]
+/// is what turns it into a diagnostic, at the layer that has somewhere to put one.
 fn eat_until_close(cursor: &mut Cursor<'_>) {
     while cursor.peek().is_some() {
         if cursor.eat("*/") {

@@ -143,3 +143,73 @@ fn parsing_never_panics_on_truncated_input() {
         }
     }
 }
+
+// -- reserved words are not names (KerML 8.2.2.6) ---------------------------------
+
+#[test]
+fn a_reserved_word_cannot_be_a_declared_name() {
+    // "A reserved keyword is a token that has the lexical structure of a basic name
+    // but cannot actually be used as a basic name" (KerML 8.2.2.6), and `package` is
+    // on that list. It lexes as BASIC_NAME, so only the pinned keyword table can tell
+    // the parser that Identification has no declaredName here.
+    parse_rejected("package package;");
+}
+
+#[test]
+fn a_reserved_word_cannot_be_a_short_name() {
+    // Identification = ( '<' declaredShortName = NAME '>' )? ( declaredName = NAME )?
+    // Both slots are NAME, so 8.2.2.6 governs both.
+    parse_rejected("package <package> Vehicle;");
+}
+
+#[test]
+fn a_name_that_merely_contains_a_reserved_word_is_a_name() {
+    // The positive case for the same rule: the exclusion is by whole token, not by
+    // substring. `packages` is not `package`, and a parser that rejected it would
+    // reject most of the corpus.
+    parse_accepted("package packages;");
+    parse_accepted("package MyPackage;");
+}
+
+#[test]
+fn a_reserved_word_in_quotes_is_a_name() {
+    // UNRESTRICTED_NAME = single_quote ( NAME_CHARACTER | ESCAPE_SEQUENCE )*
+    // single_quote (KerML 8.2.2.3). Quoting is exactly the escape hatch 8.2.2.6
+    // leaves open: the represented name is the characters within the quotes, and
+    // nothing says those characters may not spell a keyword.
+    parse_accepted("package 'package';");
+}
+
+// -- comments must be closed (KerML 8.2.2.2) --------------------------------------
+
+#[test]
+fn an_unterminated_regular_comment_is_reported() {
+    // REGULAR_COMMENT = '/*' COMMENT_TEXT '*/'. Text that runs to end of input
+    // matches neither that nor anything else.
+    parse_rejected("package Vehicle; /* never closed");
+}
+
+#[test]
+fn an_unterminated_multiline_note_is_reported() {
+    // MULTILINE_NOTE = '//*' COMMENT_TEXT '*/' carries the same terminator.
+    parse_rejected("package Vehicle; //* never closed");
+}
+
+#[test]
+fn a_comment_opener_whose_last_two_characters_are_the_terminator_is_still_unterminated() {
+    // `/*/` ends in `*/` while being unterminated: those are the opener's own
+    // characters. The check has to exclude the opener before looking.
+    parse_rejected("package Vehicle; /*/");
+    parse_rejected("package Vehicle; //*/");
+}
+
+#[test]
+fn a_closed_comment_is_not_reported() {
+    // The positive case: a check that fired on every comment would reject the corpus.
+    parse_accepted("package Vehicle; /* closed */");
+    parse_accepted("package Vehicle; //* closed */");
+    parse_accepted("/* before */ package Vehicle; // to end of line");
+    // The shortest closed forms, either side of the `/*/` case above.
+    parse_accepted("package Vehicle; /**/");
+    parse_accepted("package Vehicle; //**/");
+}

@@ -1,0 +1,5 @@
+// Rule: a BASIC_NAME cannot start with a digit.
+// KerML 8.2.2.3 — BASIC_NAME = BASIC_INITIAL_CHARACTER BASIC_NAME_CHARACTER*
+//   BASIC_INITIAL_CHARACTER = ALPHABETIC_CHARACTER | '_'
+// A DECIMAL_DIGIT is a BASIC_NAME_CHARACTER but not an initial one.
+package 9Lives;

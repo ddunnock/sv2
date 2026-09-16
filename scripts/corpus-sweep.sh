@@ -54,8 +54,11 @@ main() {
   cd "$(dirname "$0")/.."
   local corpus=${SV2_CORPUS_DIR:-tests/corpus}
 
-  if [[ ! -d ${corpus} ]]; then
-    printf 'corpus not present at %s — set SV2_CORPUS_DIR or see tests/corpus/README.md\n' "${corpus}"
+  # Inert only when there is nothing at all to sweep. A missing positive corpus
+  # must not skip the negative half: rejection cases that never run are worse than
+  # no rejection cases, because they look like coverage in the tree.
+  if [[ ! -d ${corpus} && ! -d ${NEG} ]]; then
+    printf 'no corpus at %s and no rejection set at %s — sweep inert\n' "${corpus}" "${NEG}"
     exit 0
   fi
   if [[ ! -x ${BIN} ]]; then
@@ -75,8 +78,19 @@ main() {
 
   file_list=$(mktemp)
   trap 'rm -f -- "${file_list}"' EXIT
-  sweep "${corpus}" accept
-  local pass=${as_expected} fail=${unexpected} negpass=0 negfail=1
+
+  local pass=0 fail=0 negpass=0 negfail=1
+  if [[ -d ${corpus} ]]; then
+    sweep "${corpus}" accept
+    pass=${as_expected}
+    fail=${unexpected}
+  else
+    # The mirror of the warning below, and the reason this is not an error yet: a
+    # parser that rejects everything passes a negative-only sweep exactly as one
+    # that accepts everything passes a positive-only sweep. The acceptance claim
+    # currently rests on the in-crate corpus round-trip and the parser tests.
+    printf '  no corpus at %s — nothing here claims anything parses\n' "${corpus}"
+  fi
   if [[ -d ${NEG} ]]; then
     sweep "${NEG}" reject
     negpass=${as_expected}

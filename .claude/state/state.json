@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-16T17:13:40Z",
+    "regenerated_utc": "2026-09-16T17:27:51Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -23,10 +23,10 @@
       "percent": 0.9
     },
     "tests": {
-      "unit": 55,
+      "unit": 63,
       "snapshots": 4,
       "corpus_files": 311,
-      "negative_cases": 0,
+      "negative_cases": 12,
       "known_permissive": 0
     },
     "pins": {
@@ -37,13 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
-      "4499097 Record the initial commit in the derived state",
-      "124b074 Initial commit: sv2, a SysML v2 / KerML front end"
+      "36ebdfe Stop comparing the commit log when checking state.json for staleness",
+      "c2916ed Record the initial commit in the derived state",
+      "e9157b3 Initial commit: sv2, a SysML v2 / KerML front end"
     ]
   },
   "authored": {
-    "objective": "sv2-syntax is up and the `sv2` command has a seam: the lexer covers the pinned token set and the specification's lexical productions, `package` parses into a lossless CST, and `sv2 parse [--quiet] <file>` reports acceptance through the exit status the corpus sweep reads. Next increment is the negative corpus, then the remaining PackageBodyElement alternatives, and only then pointing the sweep at vendor/corpus.",
-    "next_step": "`sv2 parse` is wired (STD-002-RS \u00a73 updated to match). 55 unit tests plus 4 snapshots: 18 in sv2-cli \u2014 argument shapes in src/cli.rs, and six file-backed cases in tests/parse_command.rs (parses, does not parse, --quiet, missing, non-UTF-8, file untouched) \u2014 and the sv2-syntax suite unchanged. Exit codes are now one per ErrorCode: 2 NOT_IMPLEMENTED, 3 USAGE, 4 READ_FAILED, 5 PARSE_FAILED, held apart by a test, because the sweep discards both streams and a shared status would report a mistyped path as a grammar failure. Coverage 5/558 against the specification.\nNEXT, in order:\n  1. tests/rejection/ still does not exist. corpus-sweep.sh treats a missing negative set as a failure, by design: a positive-only sweep is passed by a parser that accepts everything. One case per rule violated, with the clause cited (.claude/rules/tests.md). This is now the only thing standing between the sweep and being real \u2014 the binary it runs exists.\n  2. Do NOT point tests/corpus at vendor/corpus yet. 310 of 311 corpus files are not packages, so the sweep would be red from the first commit and stay red, which makes the gate useless rather than honest. Wire it when acceptance is plausible, which is after step 3.\n  3. Next productions: Import, then the other PackageBodyElement alternatives (PackageMember, ElementFilterMember, AliasMember). Each needs its clause read through the navigator, a coverage marker, and a negative case in the same change.\nKNOWN GAPS in what exists:\n  - Trivia attachment is positional, not owned: whitespace before a node lands inside whichever node was open. It round-trips, so the invariant holds, but the convention has not been decided and a graphical edit will care which node owns a comment. Decide it before the tree shape is depended on.\n  - parse_for_editor() from .claude/rules/syntax.md does not exist yet. parse() already recovers and never panics, so the resilient entry point is currently the same code under a different name \u2014 add it when the two need to differ.\n  - `sv2 parse` has no product on stdout: it is a check, not a dump. The first command whose product is structured is what decides the output format, and \u00a78.2 wants a test that stdout still parses as exactly that product.",
+    "objective": "sv2-syntax is up, the `sv2` command has a seam, and the corpus sweep is live on its negative half: the lexer covers the pinned token set, `package` parses into a lossless CST, `sv2 parse [--quiet] <file>` reports acceptance through its exit status, and 12 rejection cases run on every gate. Next increment is the remaining PackageBodyElement alternatives, and only then pointing the positive sweep at vendor/corpus.",
+    "next_step": "tests/rejection/ exists and the sweep runs it: 12 cases, one per rule violated, each citing its clause. 63 unit tests plus 4 snapshots.\nIT FOUND TWO DEFECTS on its first run, both fixed in the same change:\n  - An unterminated comment was accepted. KerML 8.2.2.2 requires the '*/' on both REGULAR_COMMENT and MULTILINE_NOTE; the lexer ran them to end of input silently. lexer::is_unterminated_comment now names it and parser::eat_trivia reports it, once per token. The '/*/' case is in the suite: it ends in '*/' and is still unterminated, because those are the opener's own characters.\n  - A reserved word was accepted as a declared name. KerML 8.2.2.6: a reserved keyword has the lexical structure of a basic name but cannot be used as one. at_name() now asks the pinned keyword table, so `package package;` is rejected while `packages`, `MyPackage` and the quoted `'package'` still parse.\nALSO: corpus-sweep.sh skipped the negative half whenever the positive corpus was absent, which would have left every rejection case unrun while looking like coverage. The two halves are now independent. The harness was checked by planting a file that parses and confirming the sweep goes red.\nNEXT, in order:\n  1. Next productions: Import, then the other PackageBodyElement alternatives (PackageMember, ElementFilterMember, AliasMember). Each needs its clause read through the navigator, a coverage marker, and a negative case in tests/rejection/ in the same change.\n  2. Only then point tests/corpus at vendor/corpus. 310 of 311 corpus files are still not packages, so wiring it now would be red from the first commit and stay red. Until it is wired, the sweep's positive half claims nothing and says so on every run \u2014 a negative-only sweep is passed by a parser that rejects everything, exactly as a positive-only one is passed by a parser that accepts everything. Acceptance currently rests on the in-crate corpus round-trip and the parser tests.\nKNOWN GAPS in what exists:\n  - Trivia attachment is positional, not owned: whitespace before a node lands inside whichever node was open. It round-trips, so the invariant holds, but the convention has not been decided and a graphical edit will care which node owns a comment. Decide it before the tree shape is depended on.\n  - parse_for_editor() from .claude/rules/syntax.md does not exist yet. parse() already recovers and never panics, so the resilient entry point is currently the same code under a different name \u2014 add it when the two need to differ.\n  - `sv2 parse` has no product on stdout: it is a check, not a dump. The first command whose product is structured is what decides the output format, and \u00a78.2 wants a test that stdout still parses as exactly that product.\n  - tests/rejection/known-permissive/ does not exist, because nothing has needed it. Both defects found so far were fixed rather than recorded, which is the right default: an entry there is a recorded deviation, not a place for an inconvenient case.",
     "pending_decisions": [
       {
         "id": "ADR-0009",

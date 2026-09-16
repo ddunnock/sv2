@@ -25,7 +25,7 @@ use rowan::{GreenNode, GreenNodeBuilder, Language as _};
 
 use crate::generated::kinds::{KEYWORDS, SyntaxKind};
 use crate::language::{Sv2Language, SyntaxNode};
-use crate::lexer::{Token, is_trivia, tokenize};
+use crate::lexer::{Token, is_trivia, is_unterminated_comment, tokenize};
 
 /// The result of parsing: a tree, plus what went wrong.
 #[derive(Debug, Clone)]
@@ -114,8 +114,22 @@ impl<'a> Parser<'a> {
     /// Whether the next meaningful token is a NAME.
     ///
     /// NAME is `BASIC_NAME` | `UNRESTRICTED_NAME` (`KerML` 8.2.2.3).
+    ///
+    /// A reserved word is excluded. `KerML` 8.2.2.6: "a reserved keyword is a token
+    /// that has the lexical structure of a basic name but cannot actually be used as a
+    /// basic name". The lexer cannot make that distinction, because `package` and
+    /// `Vehicle` are the same token shape; the pinned keyword table is what separates
+    /// them, and asking it here is what keeps `package package;` from declaring a
+    /// package named `package`.
     fn at_name(&self) -> bool {
-        self.at(SyntaxKind::BasicName) || self.at(SyntaxKind::UnrestrictedName)
+        let Some(token) = self.peek() else {
+            return false;
+        };
+        match token.kind {
+            SyntaxKind::UnrestrictedName => true,
+            SyntaxKind::BasicName => keyword(self.text_of(token)).is_none(),
+            _ => false,
+        }
     }
 
     /// Whether the next meaningful token is this keyword.
@@ -141,10 +155,17 @@ impl<'a> Parser<'a> {
     }
 
     /// Attach pending trivia to the tree. Never skipped — losslessness depends on it.
+    ///
+    /// Every trivia token passes through here exactly once, which is why the
+    /// unterminated-comment diagnostic is raised here rather than at each call site.
     fn eat_trivia(&mut self) {
         while let Some(token) = self.tokens.get(self.pos).copied() {
             if !is_trivia(token.kind) {
                 break;
+            }
+            if is_unterminated_comment(token.kind, self.text_of(token)) {
+                self.errors
+                    .push("comment is never closed: expected `*/`".to_owned());
             }
             self.push(token, token.kind);
         }
