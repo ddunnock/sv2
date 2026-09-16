@@ -75,7 +75,22 @@ def check(units: dict[str, Json], body: dict[str, Json], digest: str) -> int:
         if not derived:
             print("no grammar derived yet — freeze check inert")
             return 0
-        print(f"{len(derived)} unit(s) have rules but the grammar has never been frozen.")
+        # A derivation in progress is not a failure. The derive-grammar skill puts the
+        # checkpoint on the unit files precisely so a session can derive a batch and
+        # stop; a check that went red on the first rule would mean no session that
+        # touched phase 3 could ever end green, and the only way to work would be to
+        # switch the gate off. It goes red the moment the work is complete instead:
+        # every unit verified with no frozen reference is a finished derivation nobody
+        # froze, which is exactly the state this check exists to catch.
+        unverified = [n for n, u in units.items() if u["status"] != "verified"]
+        if unverified:
+            done = len(units) - len(unverified)
+            print(
+                f"derivation in progress: {done}/{len(units)} verified, "
+                f"{len(derived)} with rules — freeze check inert"
+            )
+            return 0
+        print(f"all {len(units)} unit(s) are verified and the grammar has never been frozen.")
         print(
             "Run python3.11 .claude/scripts/grammar_validate.py"
             " then python3.11 .claude/scripts/grammar_freeze.py"

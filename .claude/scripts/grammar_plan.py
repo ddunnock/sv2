@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -113,6 +114,26 @@ def _plan_one(name: str, units: dict[str, Json], src: Sources) -> str:
     return "restale"
 
 
+#: A terminal in the specification BNF is written in SCREAMING_SNAKE. Terminals come
+#: from the lexer, not from derivation. Checked against the Xtext's own `kind` in
+#: `_terminals`, which reports a divergence rather than absorbing it.
+TERMINAL_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
+
+
+def _terminals(names: list[str]) -> set[str]:
+    """The lexical productions among `names`, and a complaint if the two inventories disagree."""
+    lexical = {n for n in names if TERMINAL_NAME.match(n)}
+    xtext = load_json(GRAMMAR / "productions.json") or {"productions": []}
+    marked = {p["name"] for p in xtext["productions"] if p.get("kind") == "terminal"}
+    # A terminal the Xtext names that does not look like one is the convention breaking,
+    # and the convention is what this function rests on.
+    if unexpected := (marked & set(names)) - lexical:
+        print(
+            f"  warning: Xtext calls these terminal but they are not SCREAMING_SNAKE: {unexpected}"
+        )
+    return lexical
+
+
 def _retire_undeclared(declared: set[str]) -> int:
     retired = 0
     for name, unit in load_units().items():
@@ -131,20 +152,28 @@ def main(argv: list[str] | None = None) -> int:
     argparse.ArgumentParser(description=__doc__).parse_args(argv)
     os.chdir(REPO_ROOT)
 
-    inventory = load_json(GRAMMAR / "productions.json")
+    # The specification's inventory, not the pilot's. DERIVATION.md: the Xtext is a
+    # second opinion and never the source, so planning from it omits every production
+    # the pilot does not implement — 94 of them are recorded spec_only/follow_spec,
+    # whose decision is to implement them — and plans 182 the pilot invented, all
+    # recorded xtext_only/follow_spec, whose decision is not to. Each unit still
+    # carries its Xtext rule as `xtext_rule_text`; that is where the second opinion
+    # belongs.
+    inventory = load_json(GRAMMAR / "bnf-productions.json")
     if not inventory:
-        print("no inventory — run python3.11 scripts/extract_productions.py")
+        print("no inventory — run python3.11 scripts/extract_bnf.py")
         return 1
     src = _load_sources()
     units = load_units()
 
-    outcomes = {"created": 0, "restale": 0, "carried": 0}
-    for production in inventory["productions"]:
-        if production["kind"] == "terminal":
-            continue  # terminals come from the lexer, not derivation
-        outcomes[_plan_one(production["name"], units, src)] += 1
+    names: list[str] = inventory["productions"]
+    derivable = [n for n in names if n not in _terminals(names)]
 
-    retired = _retire_undeclared({p["name"] for p in inventory["productions"]})
+    outcomes = {"created": 0, "restale": 0, "carried": 0}
+    for name in derivable:
+        outcomes[_plan_one(name, units, src)] += 1
+
+    retired = _retire_undeclared(set(derivable))
     print(
         f"plan: {outcomes['created']} new, {outcomes['restale']} stale (inputs moved), "
         f"{outcomes['carried']} carried forward, {retired} retired"
