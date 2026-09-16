@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "AliasMember",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "ae749cbc62a7c4714ee4780cfac40ed8de3fb5a0296823cfce2627cdb00562de",
     "xtext_rule": "f76ca5d21b6c6b69e4f5030739b4b85e7c4539a34f30f4f54fd0ad171a1fac68",
@@ -56,5 +56,86 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Membership"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "MemberPrefix"
+      },
+      {
+        "k": "kw",
+        "text": "alias"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "<"
+            },
+            {
+              "k": "tok",
+              "name": "NAME"
+            },
+            {
+              "k": "kw",
+              "text": ">"
+            }
+          ]
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "tok",
+          "name": "NAME"
+        }
+      },
+      {
+        "k": "kw",
+        "text": "for"
+      },
+      {
+        "k": "ref",
+        "name": "QualifiedName"
+      },
+      {
+        "k": "ref",
+        "name": "RelationshipBody"
+      }
+    ]
+  },
+  "decision": "A member prefix, `alias`, an optional short name in angle brackets, an optional name, `for`, the qualified name being aliased, and a relationship body \u2014 exactly as KerML 8.2.3.4.1 states it. BOTH names are optional and independently so, which means `alias for X;` parses: an alias that names nothing. That is what the clause says, and it is not narrowed here.",
+  "notes": "The clause and the Xtext agree on the structure.\n\nTHE IDENTIFIER IS A TOKEN, NOT A PRODUCTION REFERENCE. Both name positions are written `{k: tok, name: NAME}`, which is how QualifiedName writes its segments and is the convention of this grammar: NAME is lexical and has no unit of its own, and the Xtext rule named `Name` is retired in the plan. Two earlier drafts of this unit got that wrong \u2014 the first wrote a `ref` to `NAME`, the second a `ref` to `Name` \u2014 and both failed refs_declared. The check was right both times; the reference set is the derived units, and a lexical token is not one of them.\n\nOne surface difference in the Xtext is notation rather than language and is not carried across: it writes the reference as `[SysML::Element|QualifiedName]`, which is Xtext's cross-reference syntax saying \"parse a QualifiedName, resolve it to an Element\". What parses is a QualifiedName; the resolution is name resolution, which clause 8.2.3.4.1 note 3 describes and which does not belong in concrete syntax. The clause's own `[QualifiedName]` bracket notation means the same thing.\n\nFOR A PARSER AUTHOR: `alias` is the deciding keyword and it is reached after the nullable MemberPrefix. The two optional names are a genuine lookahead problem \u2014 after `alias`, a bare NAME could be the member name, and `<` opens the short name, but a parser must not commit to either before seeing whether `for` follows. The corpus exercises three of the four name combinations but not the both-names form.\n\nCORPUS: the relationship body is exercised in both of its shapes. `alias Torque for ISQ::TorqueValue;` closes with `;`, and `alias Car for Automobile {` opens a braced body, which is what makes RelationshipBody's two alternatives both real here rather than theoretical.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.1",
+      "note": "AliasMember is stated there with both optional names, 'for', the qualified name and the relationship body"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/01. Packages/Package Example.sysml",
+      "note": "contains `public alias Car for Automobile;`, exercising the visibility prefix and the `;` body"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/01. Packages/Documentation Example.sysml",
+      "note": "contains `alias Car for Automobile {`, exercising the braced RelationshipBody alternative"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T21:38:42Z"
 }

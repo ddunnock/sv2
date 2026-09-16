@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Import",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "e935229250003d639b33d0cb7021c2612a38f19a19d6ea4fc601279e4de98945",
     "xtext_rule": "6a39bb970a5d49446d46d702b5d6f522057c55f5aebb348495294ce59ea26cfb",
@@ -56,5 +56,62 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Import"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "VisibilityIndicator"
+      },
+      {
+        "k": "kw",
+        "text": "import"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "kw",
+          "text": "all"
+        }
+      },
+      {
+        "k": "ref",
+        "name": "ImportDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "RelationshipBody"
+      }
+    ]
+  },
+  "decision": "A visibility indicator, `import`, an optional `all`, the declaration, and a relationship body, as KerML 8.2.3.4.2 states it. THE VISIBILITY IS MANDATORY HERE, and that is the one thing about this production most likely to be got wrong: everywhere else in the language visibility arrives through the nullable MemberPrefix, but Import states `visibility = VisibilityIndicator` with no `?`. An import must say whether it is public, private or protected.",
+  "notes": "THE XTEXT DISAGREES AND IS NOT FOLLOWED. The pilot rule is `Import returns SysML::Import : ( MembershipImport | NamespaceImport ) RelationshipBody ;` \u2014 it omits the visibility, omits the `import` keyword, omits `all`, and inlines ImportDeclaration's two alternatives in place of referring to it. The pilot handles the dropped prefix at its call sites instead. That is the manual-inlining LL workaround that .claude/rules/grammar.md names explicitly, not a claim that imports have no `import` keyword, and porting it would produce a grammar in which `import` is not part of an import. The specification is normative and is followed.\n\nThis is recorded as a difference in reading, not as a conflict, because the two sources are not making contradictory claims about the language \u2014 the Xtext is silent on the prefix at this production and states it elsewhere. The evidence for that is the corpus, which shows the full form the clause describes.\n\nFOR A PARSER AUTHOR: because visibility is mandatory, `import X::*;` with no leading keyword is NOT a well-formed Import by this production, even though it is what a reader expects to be legal and what the nullable MemberPrefix would allow anywhere else. Check that against real files before treating it as settled \u2014 the corpus writes the visibility every time, which is consistent with the clause, but a corpus that always writes an optional thing looks identical to one where the thing is required.\n\nCORPUS: both the plain and the `all` forms occur. `public import Definitions::*;` is the ordinary shape; `import all` appears in the import-test and model-containment files.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.2",
+      "note": "Import is stated there as visibility, 'import', optional 'all', ImportDeclaration and RelationshipBody"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "contains `public import Definitions::*;` and `public import ISQ::*;`, showing the mandatory visibility the Xtext rule omits"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Import Tests/PrivateImportTest.sysml",
+      "note": "contains an `import all` form, exercising the optional isImportAll keyword"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T21:36:00Z"
 }

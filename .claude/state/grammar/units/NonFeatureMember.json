@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "NonFeatureMember",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "05d6d5f37d8b9f1e7ac7d05e166f70177a93aa02d6a11aa9711bf654061a4fca",
     "xtext_rule": "113223f6725b4e370702b876d70dfa4c8b3e93323d29b10243e1f188190e2c0f",
@@ -56,5 +56,42 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::OwningMembership"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "MemberPrefix"
+      },
+      {
+        "k": "ref",
+        "name": "MemberElement"
+      }
+    ]
+  },
+  "decision": "A member prefix and a member element, exactly as KerML 8.2.3.4.1 states it. No keyword of its own: this is the plain, unannounced way a non-feature element becomes a member of a namespace, and it is the case that carries most of what a file contains.",
+  "notes": "The clause and the Xtext agree exactly; there is no LL workaround to decline here.\n\nFOR A PARSER AUTHOR: this production contributes no terminal of its own. Both of its parts are references, and the first of them is nullable, so it cannot be recognised by lookahead at its own start \u2014 the decision is made by MemberElement's leading keyword. It is the sibling of NamespaceFeatureMember, which has the identical shape with FeatureElement in place of MemberElement, and the two are told apart only by which of those two alternations accepts the token that follows the prefix.\n\nThe empty corpus_instances is expected: the production adds no text of its own, so every span a corpus file offers is attributable to the MemberElement inside it.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.1",
+      "note": "NonFeatureMember is stated there as MemberPrefix followed by MemberElement"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the pilot rule has the same body, MemberPrefix then MemberElement"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T21:31:09Z"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "VisibilityIndicator",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "ae749cbc62a7c4714ee4780cfac40ed8de3fb5a0296823cfce2627cdb00562de",
     "xtext_rule": "d0d0c5790aa55bccb93585b651f801fbe38263017940e0b5ef07fe63fccf302c",
@@ -56,5 +56,51 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::VisibilityKind"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "kw",
+        "text": "public"
+      },
+      {
+        "k": "kw",
+        "text": "private"
+      },
+      {
+        "k": "kw",
+        "text": "protected"
+      }
+    ]
+  },
+  "decision": "Three keywords, in the order KerML 8.2.3.4.1 states them. This is the only production in the membership prefix that contributes a terminal, and every visibility a member can carry is one of these three.",
+  "notes": "The clause and the Xtext agree on the three keywords. The Xtext writes it as an `enum` rule binding each keyword to a VisibilityKind literal \u2014 `public = 'public' | private = 'private' | protected = 'protected'`. That binding is abstract-syntax assignment, not concrete syntax, and it is not carried across: what parses is the keyword, and which enum literal it becomes belongs to whoever builds the element.\n\nFOR A PARSER AUTHOR: all three are in the pinned token set as keywords, so this is a single-token decision and the one place MemberPrefix can be recognised at all. Nothing else in the membership prefix is lexical.\n\nCORPUS: 9 instances, all of the form `public import ...` or `private import ...`. Note that they exercise the indicator through Import rather than through MemberPrefix, because Import states its visibility mandatorily where MemberPrefix leaves it optional. That is corpus support for the keywords themselves, which is what this production is; it is not evidence about where the indicator may appear, and this unit makes no claim about that.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.1",
+      "note": "VisibilityIndicator is stated there as 'public' | 'private' | 'protected'"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "contains `public import Definitions::*;`, exercising the `public` keyword"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/29. Expressions/MassRollup1.sysml",
+      "note": "contains `private import NumericalFunctions::*;`, exercising the `private` keyword"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T21:31:08Z"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FeatureElement",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "13ffd4d40b20f950fa8816fdd0b24cf1b00ec029f03ac056dbecc33e8c33d5db",
     "xtext_rule": "5c99cb13e2fc2467fbc41588fe058930566ce200235e9d1927b74c93fce7ef11",
@@ -56,5 +56,74 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "Feature"
+      },
+      {
+        "k": "ref",
+        "name": "Step"
+      },
+      {
+        "k": "ref",
+        "name": "Expression"
+      },
+      {
+        "k": "ref",
+        "name": "BooleanExpression"
+      },
+      {
+        "k": "ref",
+        "name": "Invariant"
+      },
+      {
+        "k": "ref",
+        "name": "Connector"
+      },
+      {
+        "k": "ref",
+        "name": "BindingConnector"
+      },
+      {
+        "k": "ref",
+        "name": "Succession"
+      },
+      {
+        "k": "ref",
+        "name": "Flow"
+      },
+      {
+        "k": "ref",
+        "name": "SuccessionFlow"
+      }
+    ]
+  },
+  "decision": "Ten alternatives, in the order KerML 8.2.3.4.3 states them. This is the production that names every kind of feature the language has, and it is the counterpart of NonFeatureElement in the same clause: the two together partition what a member of a namespace can be, once annotating elements are set aside.",
+  "notes": "THE CLAUSE AND THE XTEXT AGREE EXACTLY \u2014 same ten alternatives, same order, no inlining and no predicate. That is worth recording because it is uncommon in this layer, and it means there is no LL workaround to decline here.\n\nFOR A PARSER AUTHOR: the ten are not disjoint on their first token. Each alternative carries its own leading keyword, but the specialisation relationships among them mean the choice is not a single-token decision everywhere \u2014 `Expression`, `BooleanExpression` and `Invariant` in particular sit on the boundary between the feature layer and the expression layer that this grammar has already derived. Each alternative's own unit states its prefix; this production states only the set.\n\nThe empty corpus_instances is expected. FeatureElement is a pure alternation contributing no terminal of its own, so no span of corpus text is attributable to it rather than to the alternative that matched. Its corpus support is the support of its ten alternatives.\n\nWHAT THIS UNBLOCKS: ReturnFeatureMember referenced FeatureElement and was the last reference dangling out of the expression layer on that side. All ten alternatives are themselves pending and are the opening of the definition-usage layer.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.3",
+      "note": "FeatureElement is stated there as the ten-way alternation transcribed into the rule"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the pilot rule lists the same ten alternatives in the same order, with no inlining"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T21:28:17Z"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MemberPrefix",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "ae749cbc62a7c4714ee4780cfac40ed8de3fb5a0296823cfce2627cdb00562de",
     "xtext_rule": "01241a72e7dbc58f3eb13b8ce20c2b184b86a7b85d95ef490cd37970ce1754cf",
@@ -56,5 +56,36 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Membership"
-  }
+  },
+  "rule": {
+    "k": "opt",
+    "item": {
+      "k": "ref",
+      "name": "VisibilityIndicator"
+    }
+  },
+  "decision": "An optional visibility indicator, and nothing else, exactly as KerML 8.2.3.4.1 states it. Every membership production in the language opens with this, which is why it is a production of its own rather than an option repeated at each site.",
+  "notes": "THIS PRODUCTION IS NULLABLE, and that is the fact most likely to be needed elsewhere. It derives the empty string, so a site that writes `MemberPrefix?` accepts exactly what a site writing `MemberPrefix` accepts. That is the whole of the apparent KerML/SysML disagreement on ResultExpressionMember, and it is why that one is recorded rather than adjudicated.\n\nThe clause and the Xtext agree. The Xtext marks it `fragment`, which is a parser-generator inlining directive rather than a statement about the language, and is not carried across: this grammar keeps the production named because the specification names it.\n\nFOR A PARSER AUTHOR: being nullable, this cannot be used to decide whether a member is starting. It consumes a `public`, `private` or `protected` if one is there and otherwise nothing, and the decision about what follows belongs to the enclosing production.\n\nThe empty corpus_instances is expected: the production contributes no terminal of its own beyond the VisibilityIndicator it optionally admits, and that terminal is attributable to VisibilityIndicator.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.1",
+      "note": "MemberPrefix is stated there as `( visibility = VisibilityIndicator )?`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the pilot fragment has the same body; only the `fragment` inlining directive differs"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T21:29:01Z"
 }

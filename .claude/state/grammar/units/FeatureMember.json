@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FeatureMember",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "d95fc40510a2050d40b76837537e9bec4c895b088bc7e4760c8aff4d536e1750",
     "xtext_rule": "5b9e5a3f7753db66153c6608216c984c83866b11dbdfac0ae47c78c09602d72f",
@@ -56,5 +56,42 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::OwningMembership"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "TypeFeatureMember"
+      },
+      {
+        "k": "ref",
+        "name": "OwnedFeatureMember"
+      }
+    ]
+  },
+  "decision": "Two alternatives, as KerML 8.2.4.1.6 states them. The distinction between them is the `member` keyword that TypeFeatureMember carries and OwnedFeatureMember does not, and that keyword is the whole of the concrete-syntax difference.",
+  "notes": "The clause and the Xtext agree exactly.\n\nFOR A PARSER AUTHOR: the two alternatives are distinguishable, but not at the first token, because both open with the nullable MemberPrefix. The decision point is the token after the optional visibility indicator: `member` selects TypeFeatureMember, anything that can start a FeatureElement selects OwnedFeatureMember. The two are otherwise the same shape.\n\nWHY THE DISTINCTION EXISTS, as far as this production says: the clause gives the two alternatives different metaclasses \u2014 TypeFeatureMember is an OwningMembership, OwnedFeatureMember is a FeatureMembership \u2014 so the keyword changes which relationship the member establishes. That is abstract syntax and belongs to whoever builds the element; recorded here only because it is why one keyword is worth a production.\n\nThe empty corpus_instances is expected: this is a pure alternation contributing no terminal of its own, so corpus text is attributable to whichever alternative matched.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.6",
+      "note": "FeatureMember is stated there as TypeFeatureMember | OwnedFeatureMember"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the pilot rule lists the same two alternatives in the same order"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T21:31:09Z"
 }

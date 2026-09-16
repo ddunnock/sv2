@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MemberElement",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "13ffd4d40b20f950fa8816fdd0b24cf1b00ec029f03ac056dbecc33e8c33d5db",
     "xtext_rule": "ebfe4bddc93e9710849d48b9d1190ab142aa40509f9816f15c7f96a090a33cda",
@@ -56,5 +56,42 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Element"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "AnnotatingElement"
+      },
+      {
+        "k": "ref",
+        "name": "NonFeatureElement"
+      }
+    ]
+  },
+  "decision": "Two alternatives, as KerML 8.2.3.4.3 states them: an annotating element, or a non-feature element. Together with FeatureElement in the same clause, this is what partitions everything that can be a member of a namespace \u2014 the clause states all three productions side by side and MemberElement is the half that is not a feature.",
+  "notes": "The clause and the Xtext agree exactly.\n\nFOR A PARSER AUTHOR: a pure alternation with no terminal of its own, so the decision is made entirely by the leading token of whichever alternative applies. AnnotatingElement covers the comment and documentation forms, NonFeatureElement the twenty-six kinds the same clause lists; each alternative's own unit states its prefix.\n\nThe empty corpus_instances is expected for a production that contributes no text of its own.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.3",
+      "note": "MemberElement is stated there as AnnotatingElement | NonFeatureElement"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the pilot rule lists the same two alternatives in the same order"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T21:32:54Z"
 }
