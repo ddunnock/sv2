@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedFeatureChain",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "c7667d153b5701eb1b01c5b5d0ebe2a5ff76a2f7fa56e68f749a6b10e9b5f771",
     "xtext_rule": "2d8b48e7d5b058465b7b6fbfffc3213b74633787cfaceb4b945a0ba8d036007f",
@@ -56,5 +56,27 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "FeatureChain"
+  },
+  "decision": "A FeatureChain, owned.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.5",
+      "note": "OwnedFeatureChain is stated there"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T21:08:34Z"
 }

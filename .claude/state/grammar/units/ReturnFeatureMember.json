@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ReturnFeatureMember",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "8424c7798f166fa9186918bfbb6d4192303bf44e0025da69f4bccddf2615ab77",
     "xtext_rule": "0b325b7fb271349afb90492d45a9a5bffeefe79bc0267c7a749f746aac3ad6ea",
@@ -56,5 +56,40 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::ReturnParameterMembership"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "MemberPrefix"
+      },
+      {
+        "k": "kw",
+        "text": "return"
+      },
+      {
+        "k": "ref",
+        "name": "FeatureElement"
+      }
+    ]
+  },
+  "decision": "A member prefix, `return`, then the feature returned.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.7.1",
+      "note": "ReturnFeatureMember is stated there"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T21:08:34Z"
 }

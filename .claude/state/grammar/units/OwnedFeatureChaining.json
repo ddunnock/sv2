@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedFeatureChaining",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "c7667d153b5701eb1b01c5b5d0ebe2a5ff76a2f7fa56e68f749a6b10e9b5f771",
     "xtext_rule": "f9d727b48113391a3ae8db4be399777cfd4de350375604c9b43a20f943ed1358",
@@ -56,5 +56,27 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::FeatureChaining"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "QualifiedName"
+  },
+  "decision": "`chainingFeature = [QualifiedName]`. Each segment of a chain is itself a qualified name, so `a::b.c::d` is two segments and not four.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.5",
+      "note": "OwnedFeatureChaining is stated there"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T21:08:34Z"
 }
