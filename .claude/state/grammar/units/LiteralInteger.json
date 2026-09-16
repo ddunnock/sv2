@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "LiteralInteger",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "49097a051c21ab92a8061a15311792c33297d79573e59cdb0411e15fab297560",
     "xtext_rule": "c177ce00c348e477b7c842cd0db7b112197dda7f41f0ef251fc46a676620c326",
@@ -56,5 +56,27 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::LiteralInteger"
-  }
+  },
+  "rule": {
+    "k": "tok",
+    "name": "DECIMAL_VALUE"
+  },
+  "decision": "`value = DECIMAL_VALUE`, the lexical terminal from KerML 8.2.2.4.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.4",
+      "note": "LiteralInteger is stated there"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T20:58:19Z"
 }

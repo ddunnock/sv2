@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-16T20:44:22Z",
+    "regenerated_utc": "2026-09-16T20:58:43Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "bece57a Adjudicate the InvocationTypeMember slot, on the editor's own account",
       "5235d68 Derive the primary expressions of KerML 8.2.5.8.2",
       "c5a3583 Derive QualifiedName and the base expressions of KerML 8.2.5.8.3",
       "83a2772 Adjudicate the MetaClassificationTestOperator casing defect",
       "e1526ae Derive the expression forms of KerML 8.2.5.8.1",
       "3eaa618 Commit the derivation, keep the clause out of it, and say where everything came from",
       "f0bf0dc Derive the operator vocabulary of KerML 8.2.5.8.1",
-      "ffa7938 Plan the derivation from the specification, and let a derivation be in progress",
-      "9187aa1 Export specification clause text for the derivation, and unblock phase 1"
+      "ffa7938 Plan the derivation from the specification, and let a derivation be in progress"
     ]
   },
   "authored": {

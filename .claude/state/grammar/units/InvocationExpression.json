@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "InvocationExpression",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "95ab32e456a3a33bfaf472ff96283869448e139365e245cd001a9df85d57e59f",
     "xtext_rule": "b238d2d68f0806f444b89657fd110fb2e916fe01cd5cc2019de2b1c927e331a6",
@@ -56,5 +56,40 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::InvocationExpression"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "InstantiatedTypeMember"
+      },
+      {
+        "k": "ref",
+        "name": "ArgumentList"
+      },
+      {
+        "k": "ref",
+        "name": "EmptyResultMember"
+      }
+    ]
+  },
+  "decision": "The type being invoked, its arguments, and the empty result. The member is InstantiatedTypeMember; the clause writes InstatiatedTypeMember, missing an 'n', which is recorded as the deviation InstatiatedTypeMember-misspelling.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.3",
+      "note": "InvocationExpression is stated there"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T20:58:19Z"
 }

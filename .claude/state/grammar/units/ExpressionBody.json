@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ExpressionBody",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "95ab32e456a3a33bfaf472ff96283869448e139365e245cd001a9df85d57e59f",
     "xtext_rule": "4ecfb21f8d56827da09d4b3ee08f7cce9d4f80ef2f47f3b60e3e2f235b9c44de",
@@ -56,5 +56,40 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Expression"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "{"
+      },
+      {
+        "k": "ref",
+        "name": "FunctionBodyPart"
+      },
+      {
+        "k": "kw",
+        "text": "}"
+      }
+    ]
+  },
+  "decision": "Braces around a function body part.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.3",
+      "note": "ExpressionBody is stated there"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T20:58:19Z"
 }
