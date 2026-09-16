@@ -3039,6 +3039,31 @@
       ]
     },
     {
+      "production": "MetaClassificationTestOperator-casing",
+      "bucket": "spec_only",
+      "upstream": "The Pilot Xtext defines and references MetaClassificationTestOperator, capital C, consistently at KerMLExpressions.xtext:177 and :188. That is the pilot echoing the specification's defective reference and then defining something to satisfy it, not an independent second reading: the capital-C spelling appears nowhere else in KerML.",
+      "problem": "KerML clause 8.2.5.8.1 defines the production MetaclassificationTestOperator, lowercase c, with body '@@'. Three lines earlier in the same clause, MetaclassificationExpression's own body references it as MetaClassificationTestOperator, capital C. Read literally the clause contains a dangling reference: nothing defines the capital-C spelling and nothing references the lowercase-c definition. This is not a transcription artifact \u2014 the wiki production atom for the clause, receipted to the PDF span, carries both spellings.",
+      "decision": "follow_spec",
+      "rationale": "Follow the defined spelling, MetaclassificationTestOperator, lowercase c. Three things settle it, all checkable from this repository. The definition is the load-bearing occurrence: it is what gives the production a body, while the capital-C reference resolves to nothing. MetaclassificationExpression itself, on the line above the defect, spells Metaclassification with a lowercase c. And Tier B' silently repairs the reference to lowercase in both positions, the same pattern already recorded for FlowFeatureRedefinition and SpecificType. Nothing about acceptance turns on this \u2014 the operator is '@@' either way \u2014 so the decision is about the production's identity in the inventory and in citations, not about what parses. An adjudication reported a filed OMG issue, KERML11-112, stating that the capital C is incorrect. That would be direct confirmation from the source and it matches the pattern of KERML11-108 already cited in this file, but it has NOT been verified from this machine and is therefore not recorded as evidence. Add it as an omg_issue entry once confirmed. The rationale above does not depend on it.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.8.1 Operator Expressions",
+          "note": "Retrieved as the wiki production atom OperatorExpressions, region_sha256 423205c742ed7cc2. The clause reads 'operator = MetaClassificationTestOperator' inside MetaclassificationExpression, then defines 'MetaclassificationTestOperator' below it. No other production in the clause uses the capital-C spelling."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "Tier B', KerML-textual-bnf.kebnf: the reference at line 996 and the definition at line 1033 both spell it lowercase, so the transcription repairs the clause without comment. Verified by reading both lines."
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus",
+          "note": "No corpus file uses '@@', so the corpus cannot arbitrate. It could not in any case: the token is the same under either reading, and the conflict is about the production's name rather than about what parses."
+        }
+      ]
+    },
+    {
       "production": "MetaclassificationExpression",
       "bucket": "spec_only",
       "upstream": "The Xtext has no rule of this name. Its precedence cascade distributes this production's job across one rule per operator-binding level.",
