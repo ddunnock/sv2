@@ -29,6 +29,10 @@ if TYPE_CHECKING:
     from _state import Json
 
 MAX_SNIPPETS = 8
+#: Where the clause text lives. Not in the units and not in the repository: it is
+#: verbatim OMG specification prose, and this repository is MIT and public. Build it
+#: with .claude/scripts/export_wiki_clauses.py.
+CLAUSES = os.environ.get("SV2_WIKI_CLAUSES", str(Path.home() / ".sv2-derivation/bnf-clauses.json"))
 HARD_RULES = [
     "Derive from spec_clause_text. The Xtext is a second opinion, never the source.",
     "Do NOT port Xtext LL workarounds: inlined bodies, narrowed ranges, -> and => predicates.",
@@ -78,10 +82,25 @@ def corpus_instances(xtext_rule_text: str) -> list[dict[str, str]]:
     return snippets
 
 
+def clause_text(name: str) -> tuple[str, str]:
+    """The clause text for one production, and a complaint if the export is absent."""
+    clauses = load_json(CLAUSES, {})
+    if not clauses:
+        return "", (
+            f"no clause export at {CLAUSES} — run "
+            "python3.11 .claude/scripts/export_wiki_clauses.py, then set SV2_WIKI_CLAUSES"
+        )
+    entry = clauses.get(name)
+    if not entry:
+        return "", f"{name} has no clause in {CLAUSES}"
+    return entry.get("text", ""), ""
+
+
 def context_pack(unit: Json) -> Json:
     """The complete, isolated input for deriving one unit."""
     name = unit["production"]
     inputs = unit["inputs"]
+    text, complaint = clause_text(name)
     keywords, operators = pinned_tokens()
     inventory = load_json(GRAMMAR / "productions.json", {"productions": []})
     return {
@@ -91,7 +110,8 @@ def context_pack(unit: Json) -> Json:
         "metaclass": inputs.get("metaclass", ""),
         "inputs": {
             "spec_clause_ref": inputs.get("spec_clause_ref", ""),
-            "spec_clause_text": inputs.get("spec_clause_text", ""),
+            "spec_clause_text": text,
+            "spec_clause_problem": complaint,
             "xtext_file": inputs.get("xtext_file", ""),
             "xtext_rule_text": inputs.get("xtext_rule_text", ""),
             "corpus_instances": corpus_instances(inputs.get("xtext_rule_text", "")),

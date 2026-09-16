@@ -54,9 +54,17 @@ def _load_sources() -> Sources:
 
 
 def _clause_inputs(clause: Json, xtext_file: str | None, xtext: str | None) -> dict[str, str]:
+    """The inputs a unit records. The clause TEXT is deliberately not among them.
+
+    A unit is committed; the clause is verbatim OMG specification prose and this
+    repository is MIT and public. What the unit keeps is the citation and, in
+    `fingerprint.spec_clause`, a sha256 of the text — one way, so it is a drift
+    detector and not a copy. `grammar_next.py` joins the text back from the local
+    export when it emits a pack. Storing it here also duplicated each clause once per
+    production in it: 1.2 MB for 170 KB of distinct text.
+    """
     return {
         "spec_clause_ref": clause.get("ref", ""),
-        "spec_clause_text": clause.get("text", ""),
         "xtext_file": xtext_file or "",
         "xtext_rule_text": xtext or "",
     }
@@ -134,6 +142,16 @@ def _terminals(names: list[str]) -> set[str]:
     return lexical
 
 
+def _strip_clause_text(units: dict[str, Json]) -> int:
+    """Drop clause text left in units by an earlier schema. Idempotent."""
+    stripped = 0
+    for unit in units.values():
+        if unit.get("inputs", {}).pop("spec_clause_text", None) is not None:
+            save_unit(unit)
+            stripped += 1
+    return stripped
+
+
 def _retire_undeclared(declared: set[str]) -> int:
     retired = 0
     for name, unit in load_units().items():
@@ -165,6 +183,10 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     src = _load_sources()
     units = load_units()
+
+    stripped = _strip_clause_text(units)
+    if stripped:
+        print(f"      removed embedded clause text from {stripped} unit(s)")
 
     names: list[str] = inventory["productions"]
     derivable = [n for n in names if n not in _terminals(names)]

@@ -1,0 +1,124 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
+#
+# Operator precedence and associativity for the SysML v2 / KerML expression layer.
+#
+# WHY THIS IS NOT IN THE GRAMMAR. The specification says so itself: KerML clause
+# 8.2.5.8.1, note 2, states that the grouping of nested OperatorExpressions is not
+# directly expressed in the syntactic productions, and is instead determined by
+# operator precedence. So no production can carry it, the derived units cannot carry
+# it, and a parser written from the productions alone will parse the easy cases and
+# mis-associate the rest. It is recorded here instead, as data a parser can read.
+#
+# WHY IT IS DATA AND NOT A QUOTATION. The source is a table in an OMG specification
+# document. What is reproduced here is the arrangement it describes — which operator
+# binds tighter than which, and which way each groups — because that is a fact about
+# the language and the thing an implementation needs. The document's own text, notes
+# and formatting are not reproduced. `.claude/scripts/check_derivation_text.py`
+# enforces that boundary for the derivation units; this file is authored to it.
+#
+# Source: KerML 8.2.5.8.1, table 6 (precedence) and note 2 (associativity).
+# Every literal below is in the pinned token set and appears in one of the derived
+# units BinaryOperator, UnaryOperator, ConditionalBinaryOperator,
+# ClassificationTestOperator, CastOperator, MetaclassificationTestOperator,
+# MetaCastOperator or ExtentExpression.
+
+[source]
+clause = "KerML 8.2.5.8.1"
+table = "6"
+note = "2"
+wiki_atom = "OperatorExpressions.md"
+region_sha256 = "423205c742ed7cc2"
+
+# Tiers, tightest binding first. `tier = 1` groups more tightly than `tier = 2`.
+# `arity` is what the production takes, not what the symbol looks like: `+` and `-`
+# appear as both unary and binary and are two different entries.
+# `assoc` applies to binary tiers only. Note 2: every binary operator groups to the
+# left except exponentiation, which groups to the right.
+
+[[tier]]
+n = 1
+arity = "unary"
+operators = ["all"]
+
+[[tier]]
+n = 2
+arity = "unary"
+operators = ["+", "-", "~", "not"]
+
+[[tier]]
+n = 3
+arity = "binary"
+assoc = "right"
+operators = ["^", "**"]
+
+[[tier]]
+n = 4
+arity = "binary"
+assoc = "left"
+operators = ["*", "/", "%"]
+
+[[tier]]
+n = 5
+arity = "binary"
+assoc = "left"
+operators = ["+", "-"]
+
+[[tier]]
+n = 6
+arity = "binary"
+assoc = "left"
+operators = [".."]
+
+[[tier]]
+n = 7
+arity = "binary"
+assoc = "left"
+operators = ["<", ">", "<=", ">="]
+
+[[tier]]
+n = 8
+arity = "binary"
+assoc = "left"
+operators = ["istype", "hastype", "@", "@@", "as", "meta"]
+
+[[tier]]
+n = 9
+arity = "binary"
+assoc = "left"
+operators = ["==", "!=", "===", "!=="]
+
+[[tier]]
+n = 10
+arity = "binary"
+assoc = "left"
+operators = ["&", "and"]
+
+[[tier]]
+n = 11
+arity = "binary"
+assoc = "left"
+operators = ["xor"]
+
+[[tier]]
+n = 12
+arity = "binary"
+assoc = "left"
+operators = ["|", "or"]
+
+[[tier]]
+n = 13
+arity = "binary"
+assoc = "left"
+operators = ["implies"]
+
+[[tier]]
+n = 14
+arity = "binary"
+assoc = "left"
+operators = ["??"]
+
+[[tier]]
+n = 15
+arity = "ternary"
+operators = ["if"]

@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "production": "OwnedExpression",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "dfcf21afde47835f1a859f96a3517e36df8afbbcf70345c2f910b60f1cb700ef",
+    "xtext_rule": "851c9b4929869f1dfc9b46a20fcf479a35720356f4ca22ee41d48a7b510875a6",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "8e6996ec70b45077540b81145db362f2bac187733b279bc9116486139724027f"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.8.1 (OperatorExpressions.md, region_sha256 423205c742ed7cc2)",
+    "xtext_file": "KerMLExpressions.xtext",
+    "xtext_rule_text": "OwnedExpression returns SysML::Expression :\n\t ConditionalExpression\n;",
+    "corpus_refs": [
+      "vendor/corpus/kerml/src/examples/Address Book Example/AddressBookModel.kerml",
+      "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_N_ary.kerml",
+      "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml",
+      "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_UnownedEnds.kerml",
+      "vendor/corpus/kerml/src/examples/Behavior Examples/Camera.kerml",
+      "vendor/corpus/kerml/src/examples/Behavior Examples/TakePicture.kerml",
+      "vendor/corpus/kerml/src/examples/Individuals Examples/JohnIndividualExample.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-Atoms.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-ModelingInstances.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-2-WithoutConnectors.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-3-OneToOneConnectors.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-4-OneToUnrestrictedConnectors.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-5-TimingForStructures.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-6-Sequences.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-7-DecisionsAndMerges.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_1.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_2.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_1.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_2.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_3.kerml",
+      "vendor/corpus/kerml/src/examples/Massed Thing Example/MassedThings.kerml",
+      "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml",
+      "vendor/corpus/kerml/src/examples/Packet Example/PacketUsage.kerml",
+      "vendor/corpus/kerml/src/examples/Packet Example/Packets.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/ArgumentResolution.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Associations.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Behaviors.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Circular.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Classifications.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Classifiers.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Conjugation.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Connectors.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Dependencies.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Expansion.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Expressions.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
+    ],
+    "metaclass": "SysML::Expression"
+  },
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "ConditionalExpression"
+      },
+      {
+        "k": "ref",
+        "name": "ConditionalBinaryOperatorExpression"
+      },
+      {
+        "k": "ref",
+        "name": "BinaryOperatorExpression"
+      },
+      {
+        "k": "ref",
+        "name": "UnaryOperatorExpression"
+      },
+      {
+        "k": "ref",
+        "name": "ClassificationExpression"
+      },
+      {
+        "k": "ref",
+        "name": "MetaclassificationExpression"
+      },
+      {
+        "k": "ref",
+        "name": "ExtentExpression"
+      },
+      {
+        "k": "ref",
+        "name": "PrimaryExpression"
+      }
+    ]
+  },
+  "decision": "Eight alternatives, exactly as KerML 8.2.5.8.1 states them. The Xtext reduces the whole production to `ConditionalExpression`, which is not a narrower language but a precedence cascade: the pilot threads the operator tiers through a chain of rules so a generated LL parser can resolve them. That is a parser-generator technique, not a language fact, and porting it would make this grammar describe the pilot. The clause is the source and the clause lists eight.",
+  "notes": "PRECEDENCE IS NOT IN THIS PRODUCTION, and cannot be. The clause says so itself in its note 2: the grouping of nested OperatorExpressions is not directly expressed in the syntactic productions and follows operator precedence instead. The fifteen tiers and the associativity rule are recorded as data in docs/operator-precedence.toml. This alternation is therefore ambiguous on its own, by the specification's own construction. The Earley oracle in phase 5 will accept that ambiguity where a recursive-descent parser must commit; any implementation has to carry the precedence data explicitly.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.1",
+      "note": "OwnedExpression : Expression = ConditionalExpression | ConditionalBinaryOperatorExpression | BinaryOperatorExpression | UnaryOperatorExpression | ClassificationExpression | MetaclassificationExpression | ExtentExpression | PrimaryExpression"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_1.kerml",
+      "note": "expression instances listed in this unit's corpus_refs"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerMLExpressions.xtext",
+      "note": "OwnedExpression returns SysML::Expression : ConditionalExpression ; \u2014 the precedence cascade, recorded as the second opinion it is and not ported"
+    }
+  ],
+  "verified_utc": "2026-09-16T20:03:20Z"
+}

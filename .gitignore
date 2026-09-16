@@ -20,13 +20,8 @@ CLAUDE.local.md
 .claude/settings.local.json
 .claude/gate-off
 
-# Derivation units. Each carries its clause verbatim as `spec_clause_text`, 1.2 MB
-# of OMG specification prose across the set, and this repository is MIT and public.
-# Same constraint that keeps the wikis out (state.json, "wiki-reproducibility").
-# Rebuild them:
+# The derivation units ARE committed: they carry the derived rule, the decision and
+# the evidence, and none of them carries the clause text. See NOTICE.md.
+# The clause export they are derived from is not, and lives outside the tree:
 #   python3.11 .claude/scripts/export_wiki_clauses.py
 #   export SV2_WIKI_CLAUSES=~/.sv2-derivation/bnf-clauses.json
-#   python3.11 .claude/scripts/grammar_plan.py
-# Derived rules do NOT survive a fresh clone this way — see the pending decision
-# "derivation-evidence-in-repo".
-.claude/state/grammar/units/

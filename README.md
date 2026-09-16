@@ -151,3 +151,11 @@ with any file copied out of the repository.
 Vendored inputs under `vendor/` keep their own licences: the OMG artifacts under their
 published IPR terms, the Pilot Xtext under EPL-2.0 with its notice intact. None of it
 is compiled into the crates.
+
+**`NOTICE.md` is the attribution**, and `vendor/sources.lock.toml` is its
+machine-readable form — every pinned file with its licence and sha256. The short
+version: no specification clause text is in this repository. The grammar derivation
+reads the clauses from wikis built locally from OMG's PDFs and records only the
+citation, a sha256 of the clause, and what was decided.
+`.claude/scripts/check_derivation_text.py` runs on every gate and fails if that line
+is crossed.

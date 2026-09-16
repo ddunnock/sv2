@@ -64,6 +64,8 @@ main() {
   run_check "decisions index" "${PY}" .claude/scripts/index_decisions.py --check
   run_check "bnf coverage" "${PY}" scripts/bnf_coverage.py --check
   run_check "frozen grammar" "${PY}" .claude/scripts/grammar_freeze.py --check
+  # Inert without the local clause export, which is not in the repository.
+  run_check "derivation prose" "${PY}" .claude/scripts/check_derivation_text.py
 
   # --- code ---
   if command -v cargo >/dev/null 2>&1; then
