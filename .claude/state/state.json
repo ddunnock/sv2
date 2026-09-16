@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-16T16:49:23Z",
+    "regenerated_utc": "2026-09-16T17:13:40Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -37,6 +37,7 @@
       "vendor_total": 332
     },
     "commits": [
+      "4499097 Record the initial commit in the derived state",
       "124b074 Initial commit: sv2, a SysML v2 / KerML front end"
     ]
   },
@@ -67,10 +68,8 @@
       },
       {
         "id": "state-commits-fixed-point",
-        "question": "regen_state.py records `git log --oneline -8` in the generated block, and --check compares it against the live log. That has no fixed point: the commit carrying state.json would have to record its own hash. So the gate is RED immediately after every commit, and the Stop hook blocks the turn that made it. The only stable end state is to regenerate and leave state.json modified in the working tree, to be swept into the next commit \u2014 which means the recorded log always lags by one commit. Options: drop `commits` from the generated block (it is the one measurement that is not about the code); record only commits that are ancestors of HEAD~1; or have --check ignore a log that differs from the recorded one only by commits newer than it. Until this is decided, do not try to commit a clean tree at the end of a session \u2014 it cannot be done.",
-        "blocks": [
-          "ending a session with both a green gate and a clean working tree"
-        ]
+        "question": "RESOLVED. regen_state.py recorded `git log --oneline -8` in the generated block and --check compared it, which has no fixed point: the commit carrying state.json cannot record its own hash, and amending only moves it. The gate was therefore red after every commit, for ever. Fixed by naming the compared measurements explicitly \u2014 COMPARED = (coverage, tests, pins) \u2014 and a pure is_stale() over them, with four tests including the one that says a new commit is not staleness. `commits` is still measured and written for whoever reads the block at session start; it is simply not evidence. Nothing else read it: not state_report.py, not the schema's required list. NOT weakened: coverage, tests and pins are still compared exactly as before, so an un-regenerated block after real work still fails.",
+        "blocks": []
       }
     ],
     "log": []

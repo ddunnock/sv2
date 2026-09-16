@@ -140,6 +140,22 @@ def commits() -> list[str]:
     return result.stdout.strip().splitlines() if result and result.returncode == 0 else []
 
 
+#: The measurements ``--check`` compares. ``commits`` is deliberately not one of
+#: them: it is a rolling ``git log`` window rather than a property of the tree, and
+#: the commit that carries state.json cannot record its own hash. Comparing it has
+#: no fixed point — amending only moves the hash — so the gate would be red after
+#: every commit, for ever. It is still measured and written, for whoever reads the
+#: block at session start; it is simply not evidence of anything being stale.
+COMPARED = ("coverage", "tests", "pins")
+
+
+def is_stale(recorded: dict[str, Json], measured: dict[str, Json]) -> bool:
+    """Whether the recorded generated block disagrees with what was just measured."""
+    return {key: recorded.get(key) for key in COMPARED} != {
+        key: measured.get(key) for key in COMPARED
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     """Rewrite the generated block, or with --check fail if it is stale."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -159,8 +175,7 @@ def main(argv: list[str] | None = None) -> int:
         # The gates block is a snapshot of the last regeneration, not a live claim:
         # the gate that runs this check has just measured every one of those results
         # itself. Re-running them here doubled every gate run's cargo and corpus work.
-        old = {k: v for k, v in doc["generated"].items() if k in measured}
-        if old != measured:
+        if is_stale(doc["generated"], measured):
             print(
                 "state.json generated block is stale. Run python3.11 .claude/scripts/regen_state.py"
             )
