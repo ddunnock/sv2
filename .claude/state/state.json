@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-16T16:40:29Z",
+    "regenerated_utc": "2026-09-16T16:49:23Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -36,7 +36,9 @@
       "vendor_pinned": 332,
       "vendor_total": 332
     },
-    "commits": []
+    "commits": [
+      "124b074 Initial commit: sv2, a SysML v2 / KerML front end"
+    ]
   },
   "authored": {
     "objective": "sv2-syntax is up and the `sv2` command has a seam: the lexer covers the pinned token set and the specification's lexical productions, `package` parses into a lossless CST, and `sv2 parse [--quiet] <file>` reports acceptance through the exit status the corpus sweep reads. Next increment is the negative corpus, then the remaining PackageBodyElement alternatives, and only then pointing the sweep at vendor/corpus.",
@@ -61,6 +63,13 @@
         "question": "RESOLVED as far as it can be on one machine. The wikis are pinned by receipt: 1651 atoms in .claude/state/wiki-receipts.json, each with its clause, page, the wiki's region_sha256 to the source PDF span, and a file hash. Drift now fails the gate, and a citation naming a receipt that was never pinned now fails scripts/check_citations.py. NOT resolved: the wikis are not in the repository, because their 1651 atoms carry ~2.3 MB of verbatim OMG specification prose with no licence notice, and this repository is MIT and public. So a fresh clone can verify nothing until it builds its own wikis from the specification PDFs, which are not redistributable either. Revisit only if OMG's licensing changes, or if the wiki builder can be pinned and rerun from locally-held PDFs as part of a bootstrap.",
         "blocks": [
           "verifying any clause citation on a machine that has not built the wikis"
+        ]
+      },
+      {
+        "id": "state-commits-fixed-point",
+        "question": "regen_state.py records `git log --oneline -8` in the generated block, and --check compares it against the live log. That has no fixed point: the commit carrying state.json would have to record its own hash. So the gate is RED immediately after every commit, and the Stop hook blocks the turn that made it. The only stable end state is to regenerate and leave state.json modified in the working tree, to be swept into the next commit \u2014 which means the recorded log always lags by one commit. Options: drop `commits` from the generated block (it is the one measurement that is not about the code); record only commits that are ancestors of HEAD~1; or have --check ignore a log that differs from the recorded one only by commits newer than it. Until this is decided, do not try to commit a clean tree at the end of a session \u2014 it cannot be done.",
+        "blocks": [
+          "ending a session with both a green gate and a clean working tree"
         ]
       }
     ],
