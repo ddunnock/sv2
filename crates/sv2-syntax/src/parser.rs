@@ -6,16 +6,22 @@
 //!
 //! ```text
 //! RootNamespace      = PackageBodyElement*
+//! PackageBodyElement = PackageMember | ElementFilterMember | AliasMember | Import
+//! PackageMember      = MemberPrefix ( DefinitionElement | UsageElement )
+//! MemberPrefix       = ( visibility = VisibilityIndicator )?
 //! Package            = ( ownedRelationship += PrefixMetadataMember )*
 //!                      PackageDeclaration PackageBody
 //! PackageDeclaration = 'package' Identification
 //! PackageBody        = ';' | '{' PackageBodyElement* '}'
 //! Identification     = ( '<' declaredShortName = NAME '>' )? ( declaredName = NAME )?
+//! Import             = VisibilityIndicator 'import' 'all'?
+//!                      ImportDeclaration RelationshipBody
 //! ```
 //!
-//! Only `Package` is handled so far; every other `PackageBodyElement` alternative is
-//! unimplemented and reports as such in the coverage report, which is the honest
-//! state of a parser this young.
+//! `PackageMember` and `Import` are the two `PackageBodyElement` alternatives handled
+//! so far, and `Package` is the one `DefinitionElement` of twenty-eight. Everything
+//! else is unimplemented and reports as such in the coverage report, which is the
+//! honest state of a parser this young.
 //!
 //! Every token the lexer produced ends up in the tree, in source order. Text that no
 //! production accepts becomes an `Error` node that still carries its bytes, so the
@@ -156,10 +162,24 @@ impl<'a> Parser<'a> {
 
     /// Whether the next meaningful token is this keyword.
     fn at_keyword(&self, text: &str) -> bool {
-        let Some(token) = self.peek() else {
-            return false;
-        };
-        token.kind == SyntaxKind::BasicName && self.text_of(token) == text
+        self.nth_is_keyword(0, text)
+    }
+
+    /// Whether the `n`th meaningful token from here is this keyword.
+    fn nth_is_keyword(&self, n: usize, text: &str) -> bool {
+        self.peek_nth(n)
+            .is_some_and(|token| token.kind == SyntaxKind::BasicName && self.text_of(token) == text)
+    }
+
+    /// Whether an `Import` starts here rather than a `PackageMember`.
+    ///
+    /// Both may open with a `VisibilityIndicator`, so the indicator alone does not
+    /// say which: `Import`'s visibility is required and `MemberPrefix`'s is
+    /// optional. The keyword after it is what separates them. A bare `import` with
+    /// no visibility is neither, and falls through to recovery — which is the rule
+    /// tests/rejection/import-without-visibility.sysml holds.
+    fn at_import(&self) -> bool {
+        self.at_visibility() && self.nth_is_keyword(1, "import")
     }
 
     fn at_end(&self) -> bool {
@@ -273,22 +293,62 @@ impl<'a> Parser<'a> {
     /// `PackageBodyElement*`, up to `until` or end of input.
     ///
     /// `PackageBodyElement = PackageMember | ElementFilterMember | AliasMember |
-    /// Import` (`SysML` 8.2.2.5.1). `Import` is implemented, and `Package` reaches
-    /// here through `PackageMember`, whose prefix and the other two alternatives are
-    /// not. Anything else is recovered over one token at a time rather than
+    /// Import` (`SysML` 8.2.2.5.1). `Import` and `PackageMember` are implemented;
+    /// `ElementFilterMember` and `AliasMember` are not. Anything else is recovered
+    /// over one token at a time rather than
     /// abandoning the enclosing body: an editor reparses invalid text constantly,
     /// and a body that vanishes on one bad token blanks the diagram on every
     /// keystroke.
     fn body_elements(&mut self, until: Option<SyntaxKind>) {
         while !self.at_end() && !until.is_some_and(|kind| self.at(kind)) {
-            if self.at_keyword("package") {
-                self.package();
-            } else if self.at_visibility() {
+            if self.at_import() {
                 self.import();
+            } else if self.at_keyword("package") || self.at_visibility() {
+                self.package_member();
             } else {
                 self.error_token();
             }
         }
+    }
+
+    // production: PackageMember
+    //
+    // PackageMember : OwningMembership =
+    //     MemberPrefix ( ownedRelatedElement += DefinitionElement
+    //                  | ownedRelatedElement = UsageElement )
+    //
+    // `DefinitionElement` and `UsageElement` get no node of their own. They are
+    // alternations over element productions, and the element that matched already
+    // says which alternative was taken, so a node here would add a level carrying
+    // nothing. Neither is marked for coverage: `Package` is the only one of
+    // `DefinitionElement`'s 28 alternatives implemented, and `UsageElement` none.
+    fn package_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PackageMember);
+        self.member_prefix();
+        if self.at_keyword("package") {
+            self.package();
+        } else {
+            self.error_expected("a package");
+        }
+        self.finish_node();
+    }
+
+    // production: MemberPrefix
+    //
+    // MemberPrefix : Membership = ( visibility = VisibilityIndicator )?
+    //
+    // The node is built whether or not a visibility is there. An empty one is the
+    // honest shape: the slot exists in the production, and a tree that omits the
+    // node when the slot is empty makes every consumer handle two shapes for one
+    // construct.
+    fn member_prefix(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MemberPrefix);
+        if self.at_visibility() {
+            self.visibility_indicator();
+        }
+        self.finish_node();
     }
 
     // production: Package

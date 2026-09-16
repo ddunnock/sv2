@@ -354,3 +354,64 @@ fn a_qualified_name_keeps_the_separator_that_is_its_own() {
         "the name owns one `::`, the import owns the other:\n{rendered}"
     );
 }
+
+// -- PackageMember, SysML 8.2.2.5.1 -----------------------------------------------
+//
+//   PackageMember : OwningMembership =
+//       MemberPrefix ( ownedRelatedElement += DefinitionElement
+//                    | ownedRelatedElement = UsageElement )
+//   MemberPrefix : Membership = ( visibility = VisibilityIndicator )?
+
+#[test]
+fn a_package_member_may_carry_a_visibility() {
+    // MemberPrefix's visibility is optional, unlike Import's, and all three
+    // indicators are available to it.
+    parse_accepted("public package Vehicle;");
+    parse_accepted("private package Vehicle;");
+    parse_accepted("protected package Vehicle;");
+}
+
+#[test]
+fn a_package_member_need_not_carry_one() {
+    // ( visibility = VisibilityIndicator )? — the whole prefix is optional, which is
+    // why every package written so far has parsed without one.
+    parse_accepted("package Vehicle;");
+}
+
+#[test]
+fn a_package_member_builds_the_prefix_whether_or_not_it_is_filled() {
+    // The slot exists in the production either way. A tree that dropped the node
+    // when the slot was empty would make every consumer handle two shapes for one
+    // construct.
+    let with = render(&parse_accepted("public package Vehicle;").syntax());
+    let without = render(&parse_accepted("package Vehicle;").syntax());
+    assert!(with.contains("MemberPrefix") && with.contains("VisibilityIndicator"));
+    assert!(without.contains("MemberPrefix"));
+    assert!(!without.contains("VisibilityIndicator"), "{without}");
+}
+
+#[test]
+fn a_visibility_does_not_by_itself_say_which_element_follows() {
+    // Import's visibility is required and MemberPrefix's is optional, so both may
+    // open the same way. The keyword after the indicator is what separates them —
+    // the one place a single token of lookahead is not enough.
+    let import = render(&parse_accepted("public import A::*;").syntax());
+    assert!(import.contains("Import") && !import.contains("PackageMember"));
+
+    let member = render(&parse_accepted("public package P;").syntax());
+    assert!(member.contains("PackageMember") && !member.contains("Import"));
+}
+
+#[test]
+fn a_package_member_nests_inside_a_package_body() {
+    // PackageBody = '{' PackageBodyElement* '}', and PackageMember is one of them,
+    // so the visibility is available at every depth rather than only at the root.
+    let parsed = parse_accepted("package Outer { private package Inner; }");
+    let rendered = render(&parsed.syntax());
+    assert_eq!(rendered.matches("PackageMember").count(), 2, "{rendered}");
+    assert_eq!(
+        rendered.matches("VisibilityIndicator").count(),
+        1,
+        "{rendered}"
+    );
+}

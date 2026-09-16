@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-16T17:40:25Z",
+    "regenerated_utc": "2026-09-16T18:44:57Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 10,
-      "unimplemented": 548,
+      "implemented": 12,
+      "unimplemented": 546,
       "absent": 0,
-      "percent": 1.8
+      "percent": 2.2
     },
     "tests": {
-      "unit": 75,
+      "unit": 80,
       "snapshots": 4,
       "corpus_files": 311,
-      "negative_cases": 20,
+      "negative_cases": 23,
       "known_permissive": 0
     },
     "pins": {
@@ -37,6 +37,8 @@
       "vendor_total": 332
     },
     "commits": [
+      "c603e80 Correct add-production against what the repository actually is",
+      "228c25b Implement Import, SysML 8.2.2.5.1",
       "da1cd84 Refuse to index two ADRs under one id",
       "2f227c3 Add the negative corpus, and fix the two defects it found",
       "cde75a1 Add ADR-0013, Rust CST via WebAssembly as CodeMirror's syntax tree source",
@@ -46,8 +48,8 @@
     ]
   },
   "authored": {
-    "objective": "sv2-syntax parses Package and Import into a lossless CST, the `sv2` command reports acceptance through its exit status, and the corpus sweep runs 20 rejection cases on every gate. Next increment is the remaining PackageBodyElement alternatives \u2014 PackageMember, ElementFilterMember, AliasMember \u2014 and only then pointing the positive sweep at vendor/corpus.",
-    "next_step": "Import is implemented end to end, with VisibilityIndicator, ImportDeclaration, MembershipImport, NamespaceImport, QualifiedName and RelationshipBody. Coverage 10/558. 71 unit tests, 4 snapshots, 20 rejection cases.\nWHAT THE GRAMMAR SAID, and where it surprised:\n  - Import's visibility carries no '( )?'. MemberPrefix one clause away is optional, which makes this worth stating: the specification BNF, the Pilot's ImportPrefix fragment, and all 741 imports in the pinned corpus agree that an import states its visibility. tests/rejection/import-without-visibility.sysml holds it. I nearly filed this as a spec-vs-corpus conflict on the strength of a regex that matched the space inside `private import`; the corpus has no bare import, and the 4 lines that look like one are comments.\n  - MembershipImport and NamespaceImport share their QualifiedName prefix, so the node is opened retroactively at a rowan checkpoint rather than guessed. A '::' belongs to the QualifiedName only when a NAME follows it, which needs two tokens of lookahead: `A::B::*` splits as name `A::B` then import `::*`. That split round-trips either way, so only a tree-shape test can catch it getting it wrong \u2014 there is one.\nPARTIAL, and deliberately left unmarked in coverage:\n  - NamespaceImport's second alternative, `importedNamespace = FilterPackage`, is not implemented.\n  - RelationshipBody accepts ';' and an empty '{ }' only, because OwnedAnnotation does not exist yet. Contents are reported rather than accepted, and tests/rejection/import-annotation-body-is-not-implemented.sysml is a rejection by absence rather than by rule \u2014 its header says so, and it goes when OwnedAnnotation lands.\nNEXT, in order:\n  1. The remaining PackageBodyElement alternatives, one per change, in this order: PackageMember (which is how Package itself is reached, and which needs MemberPrefix), then ElementFilterMember, then AliasMember. Each needs its clause read through the navigator, a coverage marker, and rejection cases in the same change. Note that Package is currently dispatched directly rather than through PackageMember; that seam closes with PackageMember.\n  2. Only then point tests/corpus at vendor/corpus. 310 of 311 files are still not packages. Until it is wired the sweep's positive half claims nothing and says so on every run: a negative-only sweep is passed by a parser that rejects everything. Acceptance rests on the 311-file round-trip and the parser tests.\nKNOWN GAPS in what exists:\n  - Trivia attachment is positional, not owned: whitespace before a node lands inside whichever node was open. It round-trips, so the invariant holds, but the convention has not been decided and a graphical edit will care which node owns a comment. Decide it before the tree shape is depended on.\n  - parse_for_editor() from .claude/rules/syntax.md does not exist yet. parse() already recovers and never panics, so the resilient entry point is currently the same code under a different name \u2014 add it when the two need to differ.\n  - `sv2 parse` has no product on stdout: it is a check, not a dump. The first command whose product is structured is what decides the output format, and \u00a78.2 wants a test that stdout still parses as exactly that product.\n  - No new snapshots were taken for Import, because `cargo insta review` is interactive and the rule is to review one at a time, never accept in bulk. The tree shape is held by three structural tests read off the productions instead. Add snapshots at a terminal if the shape is worth pinning that way.\n  - The add-production skill's step 1 greps grammars/*.g4, which do not exist. The pinned grammar is vendor/spec-bnf/*.kebnf and vendor/pilot/*.xtext. Fix the skill before it sends someone to an empty directory and they conclude the production is absent.",
+    "objective": "sv2-syntax parses Package, PackageMember and Import into a lossless CST, the `sv2` command reports acceptance through its exit status, and the corpus sweep runs 23 rejection cases on every gate. Next increment is the last two PackageBodyElement alternatives \u2014 ElementFilterMember and AliasMember \u2014 and only then pointing the positive sweep at vendor/corpus.",
+    "next_step": "PackageMember and MemberPrefix are implemented, and Package is now reached through them rather than dispatched directly \u2014 the seam the last entry flagged is closed. Coverage 12/558. 80 unit tests, 4 snapshots, 23 rejection cases.\nWHAT THE GRAMMAR SAID:\n  - Import and PackageMember can both open with a VisibilityIndicator. Import's is required, MemberPrefix's is optional, so the indicator alone does not say which production you are in \u2014 the keyword after it does. at_import() is that test, and it is the first place one token of lookahead was not enough. Both directions are pinned by a test. A bare `import` with no visibility is neither, and still falls to recovery.\n  - MemberPrefix builds its node whether or not a visibility is there. The slot exists in the production either way, and a tree that dropped the node when the slot was empty would make every consumer handle two shapes for one construct.\n  - DefinitionElement and UsageElement get no node and no coverage marker. They are alternations over element productions, the matched element already says which alternative was taken, and Package is the only one of DefinitionElement's 28 alternatives implemented.\nSNAPSHOTS: all four moved, from that one cause. cargo-insta is NOT installed on this machine, so neither `cargo insta review` nor `accept --snapshot` can run. They were accepted one at a time by promoting each .snap.new individually with its reason recorded, after answering the three questions in the refresh-snapshots skill for each: which change caused it, is the new shape the production's shape, did anything disappear. Every token is byte-identical across all four; only the two wrapper levels and the indentation below them changed. Install cargo-insta if you want the sanctioned command back \u2014 it needs network, so it is a deliberate act.\nNEXT, in order:\n  1. ElementFilterMember, then AliasMember \u2014 the last two PackageBodyElement alternatives, one per change. ElementFilterMember needs OwnedExpression, which does not exist; AliasMember needs QualifiedName, which does. Expect AliasMember to be the cheaper of the two and consider taking it first. Each needs its clause read through the navigator, a coverage marker, and rejection cases in the same change.\n  2. Only then point tests/corpus at vendor/corpus. Until it is wired the sweep's positive half claims nothing and says so on every run: a negative-only sweep is passed by a parser that rejects everything. Acceptance rests on the 311-file round-trip and the parser tests.\nKNOWN GAPS in what exists:\n  - Trivia attachment is positional, not owned. The new empty MemberPrefix node did NOT capture the trivia around it \u2014 checked against the trivia snapshot \u2014 but that is the current behaviour rather than a decided convention, and a graphical edit will care which node owns a comment.\n  - parse_for_editor() from .claude/rules/syntax.md does not exist yet.\n  - `sv2 parse` has no product on stdout: it is a check, not a dump.\n  - Three rejection cases are rejections by absence rather than by rule, each saying so in its header and each naming what removes it: import-annotation-body-is-not-implemented (OwnedAnnotation) and package-member-element-is-not-implemented (PartDefinition).\n  - cargo-insta is not installed, so any future snapshot move needs the manual promotion above or a deliberate install.",
     "pending_decisions": [
       {
         "id": "ADR-0009",

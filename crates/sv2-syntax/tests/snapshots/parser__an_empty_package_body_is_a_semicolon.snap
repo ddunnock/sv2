@@ -1,14 +1,16 @@
 ---
 source: crates/sv2-syntax/tests/parser.rs
-assertion_line: 42
+assertion_line: 78
 expression: render(&parsed.syntax())
 ---
 RootNamespace
-  Package
-    PackageDeclaration
-      KwPackage "package"
-      Whitespace " "
-      Identification
-        BasicName "Vehicle"
-    PackageBody
-      Semicolon ";"
+  PackageMember
+    MemberPrefix
+    Package
+      PackageDeclaration
+        KwPackage "package"
+        Whitespace " "
+        Identification
+          BasicName "Vehicle"
+      PackageBody
+        Semicolon ";"

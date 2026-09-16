@@ -115,6 +115,11 @@ NODES = [
     ("MembershipImport", "`[QualifiedName] ( '::' '**' )?`. `SysML` 8.2.2.5.1."),
     ("NamespaceImport", "`[QualifiedName] '::' '*' ( '::' '**' )?`. `SysML` 8.2.2.5.1."),
     ("RelationshipBody", "`';' | '{' OwnedAnnotation* '}'`. `SysML` 8.2.2.2."),
+    (
+        "PackageMember",
+        "`MemberPrefix ( DefinitionElement | UsageElement )`. `SysML` 8.2.2.5.1.",
+    ),
+    ("MemberPrefix", "`( visibility = VisibilityIndicator )?`. `SysML` 8.2.2.5.1."),
     ("Error", "recovered-over text; carries its bytes so the tree stays lossless"),
 ]
 

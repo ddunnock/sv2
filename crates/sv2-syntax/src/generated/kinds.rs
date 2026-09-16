@@ -497,6 +497,10 @@ pub enum SyntaxKind {
     NamespaceImport,
     /// `';' | '{' OwnedAnnotation* '}'`. `SysML` 8.2.2.2.
     RelationshipBody,
+    /// `MemberPrefix ( DefinitionElement | UsageElement )`. `SysML` 8.2.2.5.1.
+    PackageMember,
+    /// `( visibility = VisibilityIndicator )?`. `SysML` 8.2.2.5.1.
+    MemberPrefix,
     /// recovered-over text; carries its bytes so the tree stays lossless
     Error,
 
@@ -751,6 +755,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::MembershipImport,
     SyntaxKind::NamespaceImport,
     SyntaxKind::RelationshipBody,
+    SyntaxKind::PackageMember,
+    SyntaxKind::MemberPrefix,
     SyntaxKind::Error,
     SyntaxKind::Tombstone,
 ];
