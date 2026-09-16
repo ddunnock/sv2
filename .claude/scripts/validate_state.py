@@ -2,10 +2,17 @@
 # Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 """Validate the authored JSON state files against their schemas.
 
+Covers the two single documents — state.json and deviations.json — and every
+derived grammar unit. The units are the bulk of the authored state by a wide
+margin, and until they were validated here a schema could describe something no
+unit had ever looked like without anything noticing.
+
 Uses jsonschema when available; otherwise falls back to a structural check that
 covers required keys, enums, and the minLength rules that stop "TBD" from being
 accepted as a next step. The fallback never passes something the real validator
-would reject on those grounds.
+would reject on those grounds, but it is a subset: it does not understand $ref
+or the conditional requirements in the unit schema, so a machine without
+jsonschema checks the units less thoroughly than the gate does.
 
     python3.11 .claude/scripts/validate_state.py
 """
@@ -35,13 +42,46 @@ PAIRS = [
     (".claude/state/deviations.json", ".claude/state/schema/deviations.schema.json"),
 ]
 
+UNIT_SCHEMA = ".claude/state/schema/grammar-unit.schema.json"
+UNIT_GLOB = ".claude/state/grammar/units/*.json"
+
+# 708 units share one schema, so a single mistake in a generator prints 708
+# times. Enough to diagnose it, then a count.
+MAX_REPORTED = 20
+
 
 def schema_errors(doc_path: str, doc: Json, schema: Json) -> list[str]:
     """Full JSON Schema validation messages."""
-    errors = sorted(jsonschema.Draft202012Validator(schema).iter_errors(doc), key=lambda e: e.path)
+    return _validator_errors(doc_path, doc, jsonschema.Draft202012Validator(schema))
+
+
+def _validator_errors(doc_path: str, doc: Json, validator: object) -> list[str]:
+    errors = sorted(validator.iter_errors(doc), key=lambda e: e.path)  # type: ignore[attr-defined]
     return [
         f"  {doc_path}: {'/'.join(str(x) for x in e.path) or '<root>'}: {e.message}" for e in errors
     ]
+
+
+def unit_paths() -> list[Path]:
+    """Every derived grammar unit, resolved against the repository, not the CWD."""
+    return sorted(REPO_ROOT.glob(UNIT_GLOB))
+
+
+def unit_errors() -> list[str]:
+    """Validate every derived grammar unit against the shared unit schema."""
+    schema = json.loads((REPO_ROOT / UNIT_SCHEMA).read_text())
+    validator = jsonschema.Draft202012Validator(schema) if HAVE_JSONSCHEMA else None
+
+    messages: list[str] = []
+    for path in unit_paths():
+        where = str(path.relative_to(REPO_ROOT))
+        doc = json.loads(path.read_text())
+        messages += (
+            _validator_errors(where, doc, validator)
+            if validator is not None
+            else structural_errors(where, doc, schema)
+        )
+    return messages
 
 
 def _required(doc_path: str, obj: Json, schema: Json, where: str) -> list[str]:
@@ -105,18 +145,24 @@ def main(argv: list[str] | None = None) -> int:
         doc = json.loads(Path(doc_path).read_text())
         schema = json.loads(Path(schema_path).read_text())
         messages += check(doc_path, doc, schema)
+    messages += unit_errors()
 
     if messages:
-        print("\n".join(messages))
+        print("\n".join(messages[:MAX_REPORTED]))
+        if len(messages) > MAX_REPORTED:
+            print(f"  ... and {len(messages) - MAX_REPORTED} more")
         print()
         print("Schema validation failed. The state file is the handoff to the next session;")
         print("an invalid one is worse than none.")
         return 1
+
+    unit_count = len(unit_paths())
     if HAVE_JSONSCHEMA:
-        print("state schemas valid")
+        print(f"state schemas valid ({unit_count} units)")
     else:
         print(
-            "state schemas valid (structural fallback — pip install jsonschema for full checking)"
+            f"state schemas valid ({unit_count} units, structural fallback — "
+            "pip install jsonschema for full checking)"
         )
     return 0
 
