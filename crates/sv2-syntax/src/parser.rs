@@ -73,6 +73,11 @@ fn keyword(text: &str) -> Option<SyntaxKind> {
         .map(|(_, kind)| *kind)
 }
 
+/// The three `VisibilityIndicator` keywords, in the order the specification
+/// writes them (`SysML` 8.2.2.5.1). Looked up in the pinned token set like every
+/// other keyword; this is only the list of which ones the production names.
+const VISIBILITY: [&str; 3] = ["public", "private", "protected"];
+
 struct Parser<'a> {
     source: &'a str,
     tokens: Vec<Token>,
@@ -100,10 +105,20 @@ impl<'a> Parser<'a> {
 
     /// The next non-trivia token, without consuming anything.
     fn peek(&self) -> Option<Token> {
+        self.peek_nth(0)
+    }
+
+    /// The `n`th non-trivia token from here, without consuming anything.
+    ///
+    /// `ImportDeclaration` needs two: `A::B` and `A::*` differ only after the `::`,
+    /// and the `::` belongs to the `QualifiedName` in one and to the import in the
+    /// other.
+    fn peek_nth(&self, n: usize) -> Option<Token> {
         self.tokens
             .get(self.pos..)?
             .iter()
-            .find(|token| !is_trivia(token.kind))
+            .filter(|token| !is_trivia(token.kind))
+            .nth(n)
             .copied()
     }
 
@@ -122,14 +137,21 @@ impl<'a> Parser<'a> {
     /// them, and asking it here is what keeps `package package;` from declaring a
     /// package named `package`.
     fn at_name(&self) -> bool {
-        let Some(token) = self.peek() else {
-            return false;
-        };
+        self.peek().is_some_and(|token| self.is_name(token))
+    }
+
+    /// Whether `token` is a NAME, asked of any token rather than only the next one.
+    fn is_name(&self, token: Token) -> bool {
         match token.kind {
             SyntaxKind::UnrestrictedName => true,
             SyntaxKind::BasicName => keyword(self.text_of(token)).is_none(),
             _ => false,
         }
+    }
+
+    /// Whether a `VisibilityIndicator` starts here (`SysML` 8.2.2.5.1).
+    fn at_visibility(&self) -> bool {
+        VISIBILITY.iter().any(|word| self.at_keyword(word))
     }
 
     /// Whether the next meaningful token is this keyword.
@@ -250,14 +272,19 @@ impl<'a> Parser<'a> {
 
     /// `PackageBodyElement*`, up to `until` or end of input.
     ///
-    /// Only `Package` is implemented. Anything else is recovered over one token at a
-    /// time rather than abandoning the enclosing body: an editor reparses invalid
-    /// text constantly, and a body that vanishes on one bad token blanks the diagram
-    /// on every keystroke.
+    /// `PackageBodyElement = PackageMember | ElementFilterMember | AliasMember |
+    /// Import` (`SysML` 8.2.2.5.1). `Import` is implemented, and `Package` reaches
+    /// here through `PackageMember`, whose prefix and the other two alternatives are
+    /// not. Anything else is recovered over one token at a time rather than
+    /// abandoning the enclosing body: an editor reparses invalid text constantly,
+    /// and a body that vanishes on one bad token blanks the diagram on every
+    /// keystroke.
     fn body_elements(&mut self, until: Option<SyntaxKind>) {
         while !self.at_end() && !until.is_some_and(|kind| self.at(kind)) {
             if self.at_keyword("package") {
                 self.package();
+            } else if self.at_visibility() {
+                self.import();
             } else {
                 self.error_token();
             }
@@ -293,6 +320,147 @@ impl<'a> Parser<'a> {
         }
         if self.at_name() {
             self.bump();
+        }
+        self.finish_node();
+    }
+
+    // production: Import
+    //
+    // Import = visibility = VisibilityIndicator 'import' ( isImportAll ?= 'all' )?
+    //          ImportDeclaration RelationshipBody
+    //
+    // visibility carries no `( )?`: an import states its visibility. The
+    // specification BNF, the Pilot's ImportPrefix fragment, and all 741 imports in
+    // the pinned corpus agree, and `MemberPrefix`'s optional visibility one clause
+    // away is what makes that worth stating rather than assuming.
+    fn import(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Import);
+        self.visibility_indicator();
+        self.bump_as(keyword("import").unwrap_or(SyntaxKind::BasicName));
+        if self.at_keyword("all") {
+            self.bump_as(keyword("all").unwrap_or(SyntaxKind::BasicName));
+        }
+        self.import_declaration();
+        self.relationship_body();
+        self.finish_node();
+    }
+
+    // production: VisibilityIndicator
+    fn visibility_indicator(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::VisibilityIndicator);
+        match VISIBILITY.iter().find(|word| self.at_keyword(word)) {
+            Some(word) => self.bump_as(keyword(word).unwrap_or(SyntaxKind::BasicName)),
+            // Unreachable from body_elements, which only enters on at_visibility.
+            // Reported rather than consumed, so a future caller cannot lose a token.
+            None => self.error_expected("`public`, `private` or `protected`"),
+        }
+        self.finish_node();
+    }
+
+    // production: ImportDeclaration
+    //
+    // ImportDeclaration = MembershipImport | NamespaceImport
+    // MembershipImport  = [QualifiedName] ( '::' isRecursive ?= '**' )?
+    // NamespaceImport   = [QualifiedName] '::' '*' ( '::' isRecursive ?= '**' )?
+    //
+    // Which one it is cannot be known until after the QualifiedName, because they
+    // share that prefix. The node is opened retroactively at a checkpoint rather
+    // than guessed and repaired.
+    //
+    // NamespaceImport's second alternative, `importedNamespace = FilterPackage`, is
+    // not implemented; it stays unimplemented in the coverage report.
+    fn import_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ImportDeclaration);
+        let inner = self.builder.checkpoint();
+        self.qualified_name();
+        let kind = self.import_suffix();
+        self.builder
+            .start_node_at(inner, Sv2Language::kind_to_raw(kind));
+        self.finish_node();
+        self.finish_node();
+    }
+
+    /// What follows the `QualifiedName`, and therefore which import this is.
+    fn import_suffix(&mut self) -> SyntaxKind {
+        if !self.at(SyntaxKind::ColonColon) {
+            return SyntaxKind::MembershipImport;
+        }
+        self.bump();
+        if self.at(SyntaxKind::Star) {
+            self.bump();
+            self.recursive_suffix();
+            return SyntaxKind::NamespaceImport;
+        }
+        if self.at(SyntaxKind::StarStar) {
+            self.bump();
+            return SyntaxKind::MembershipImport;
+        }
+        // A `::` that qualified_name left behind is followed by neither, so it ends
+        // the name with nothing after it.
+        self.error_expected("`*` or `**` after `::`");
+        SyntaxKind::MembershipImport
+    }
+
+    /// `( '::' isRecursive ?= '**' )?`, the recursive suffix a `NamespaceImport` may carry.
+    fn recursive_suffix(&mut self) {
+        if self.at(SyntaxKind::ColonColon) {
+            self.bump();
+            self.expect(SyntaxKind::StarStar, "`**`");
+        }
+    }
+
+    // production: QualifiedName
+    //
+    // QualifiedName = ( '$' '::' )? ( NAME '::' )* NAME   (`KerML` 8.2.3.4.1)
+    //
+    // A `::` is only part of the name when a NAME follows it. `A::*` ends the name at
+    // `A`, and the `::` belongs to the NamespaceImport — which is why this needs two
+    // tokens of lookahead rather than consuming the separator and backing out.
+    fn qualified_name(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::QualifiedName);
+        if self.at(SyntaxKind::Dollar) {
+            self.bump();
+            self.expect(SyntaxKind::ColonColon, "`::`");
+        }
+        self.expect_name("a name");
+        while self.at(SyntaxKind::ColonColon) && self.name_follows_separator() {
+            self.bump();
+            self.expect_name("a name");
+        }
+        self.finish_node();
+    }
+
+    /// Whether the token after the next `::` is a NAME, so the `::` is the name's.
+    fn name_follows_separator(&self) -> bool {
+        self.peek_nth(1).is_some_and(|token| self.is_name(token))
+    }
+
+    // production: RelationshipBody
+    //
+    // RelationshipBody = ';' | '{' ( ownedRelationship += OwnedAnnotation )* '}'
+    //
+    // OwnedAnnotation is not implemented, so a braced body accepts nothing but its
+    // closing brace. Recovering over the contents keeps the tree lossless and the
+    // diagnostic honest; accepting them silently would report an annotation this
+    // parser cannot read as one it understood.
+    fn relationship_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::RelationshipBody);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            while !self.at_end() && !self.at(SyntaxKind::RBrace) {
+                self.error_token();
+            }
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.errors
+                .push("expected `;` or `{` after an import declaration".to_owned());
         }
         self.finish_node();
     }

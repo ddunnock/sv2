@@ -39,6 +39,24 @@ fn render(node: &SyntaxNode) -> String {
     out
 }
 
+/// The lines of the first `kind` node in `rendered`, with its children.
+///
+/// A child is any following line indented deeper than the node itself; a sibling at
+/// the same depth ends it. Getting that wrong is how a test reads a neighbour's
+/// tokens as its own.
+fn subtree(rendered: &str, kind: &str) -> String {
+    let mut lines = rendered.lines().skip_while(|l| l.trim_start() != kind);
+    let Some(head) = lines.next() else {
+        return String::new();
+    };
+    let depth = head.len() - head.trim_start().len();
+    let kids = lines.take_while(|l| l.len() - l.trim_start().len() > depth);
+    std::iter::once(head)
+        .chain(kids)
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 fn write_element(out: &mut String, element: SyntaxElement, depth: usize) {
     let indent = "  ".repeat(depth);
     match element {
@@ -212,4 +230,127 @@ fn a_closed_comment_is_not_reported() {
     // The shortest closed forms, either side of the `/*/` case above.
     parse_accepted("package Vehicle; /**/");
     parse_accepted("package Vehicle; //**/");
+}
+
+// -- Import, SysML 8.2.2.5.1 ------------------------------------------------------
+//
+//   Import              = visibility = VisibilityIndicator 'import'
+//                         ( isImportAll ?= 'all' )? ImportDeclaration RelationshipBody
+//   ImportDeclaration   = MembershipImport | NamespaceImport
+//   MembershipImport    = importedMembership = [QualifiedName] ( '::' isRecursive ?= '**' )?
+//   NamespaceImport     = importedNamespace = [QualifiedName] '::' '*'
+//                         ( '::' isRecursive ?= '**' )?
+//                       | importedNamespace = FilterPackage
+//   VisibilityIndicator = 'public' | 'private' | 'protected'
+//   QualifiedName       = ( '$' '::' )? ( NAME '::' )* NAME      (KerML 8.2.3.4.1)
+//   RelationshipBody    = ';' | '{' ( ownedRelationship += OwnedAnnotation )* '}'
+
+#[test]
+fn a_membership_import_names_one_member() {
+    // `private import Time::DateTime;` — 4 occurrences in the pinned corpus.
+    parse_accepted("private import Time::DateTime;");
+}
+
+#[test]
+fn a_namespace_import_ends_in_a_star() {
+    // `private import ISQ::*;` — 14 occurrences, the most common form in the corpus.
+    parse_accepted("private import ISQ::*;");
+    parse_accepted("public import Definitions::*;");
+}
+
+#[test]
+fn a_recursive_import_ends_in_a_double_star() {
+    // `public import vehicle_b::**;` — 8 occurrences. MembershipImport's
+    // ( '::' isRecursive ?= '**' )?.
+    parse_accepted("public import vehicle_b::**;");
+    // NamespaceImport carries the same suffix after its '*'.
+    parse_accepted("public import vehicle::*::**;");
+}
+
+#[test]
+fn a_qualified_name_may_be_more_than_two_segments() {
+    // `public import VehicleConfigurations::VehicleConfiguration_b::**;` — 6 in corpus.
+    parse_accepted("public import VehicleConfigurations::VehicleConfiguration_b::**;");
+}
+
+#[test]
+fn every_visibility_indicator_is_accepted() {
+    // VisibilityIndicator = 'public' | 'private' | 'protected'. All three, because a
+    // parser that only ever saw the two common ones would pass a corpus sweep.
+    parse_accepted("public import A::*;");
+    parse_accepted("private import A::*;");
+    parse_accepted("protected import A::*;");
+}
+
+#[test]
+fn an_import_may_be_marked_all() {
+    // ( isImportAll ?= 'all' )?, between 'import' and the declaration.
+    parse_accepted("public import all A::*;");
+    parse_accepted("public import all A::B;");
+}
+
+#[test]
+fn a_qualified_name_may_start_at_global_scope() {
+    // QualifiedName = ( '$' '::' )? ( NAME '::' )* NAME — the global scope qualifier.
+    parse_accepted("public import $::A::*;");
+}
+
+#[test]
+fn a_relationship_body_may_be_braces_instead_of_a_semicolon() {
+    // RelationshipBody = ';' | '{' ( ownedRelationship += OwnedAnnotation )* '}'.
+    // OwnedAnnotation is not implemented, so only the empty body is accepted here.
+    parse_accepted("public import A::* { }");
+}
+
+#[test]
+fn an_import_is_a_package_body_element() {
+    // PackageBodyElement = PackageMember | ElementFilterMember | AliasMember | Import.
+    // Import is the alternative implemented so far, so it must parse inside a body
+    // and not only at the root.
+    parse_accepted("package Vehicle { private import ISQ::*; }");
+}
+
+#[test]
+fn an_import_builds_the_nodes_the_grammar_names() {
+    // The shape is read off the productions, not off what the parser printed:
+    //   Import > VisibilityIndicator, ImportDeclaration > NamespaceImport >
+    //   QualifiedName, and RelationshipBody.
+    let parsed = parse_accepted("public import A::B::*;");
+    let rendered = render(&parsed.syntax());
+    for node in [
+        "Import",
+        "VisibilityIndicator",
+        "ImportDeclaration",
+        "NamespaceImport",
+        "QualifiedName",
+        "RelationshipBody",
+    ] {
+        assert!(rendered.contains(node), "no {node} node:\n{rendered}");
+    }
+    // A membership import is the other alternative, and must not be built here.
+    assert!(!rendered.contains("MembershipImport"), "{rendered}");
+}
+
+#[test]
+fn a_membership_import_builds_the_other_alternative() {
+    // The negative half of the pair above: the same prefix, a different node.
+    let parsed = parse_accepted("public import A::B;");
+    let rendered = render(&parsed.syntax());
+    assert!(rendered.contains("MembershipImport"), "{rendered}");
+    assert!(!rendered.contains("NamespaceImport"), "{rendered}");
+}
+
+#[test]
+fn a_qualified_name_keeps_the_separator_that_is_its_own() {
+    // `A::B::*` — the first two `::` belong to the QualifiedName and the third to
+    // the NamespaceImport. Getting that split wrong still round-trips, so only the
+    // tree shape can catch it.
+    let parsed = parse_accepted("public import A::B::*;");
+    let rendered = render(&parsed.syntax());
+    let qualified = subtree(&rendered, "QualifiedName");
+    assert_eq!(
+        qualified.matches("ColonColon").count(),
+        1,
+        "the name owns one `::`, the import owns the other:\n{rendered}"
+    );
 }

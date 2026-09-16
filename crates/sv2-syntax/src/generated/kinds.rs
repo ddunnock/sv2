@@ -485,6 +485,18 @@ pub enum SyntaxKind {
     Identification,
     /// `( '$' '::' )? ( NAME '::' )* NAME`. `KerML` 8.2.3.4.1.
     QualifiedName,
+    /// `VisibilityIndicator 'import' 'all'? ImportDeclaration RelationshipBody`. `SysML` 8.2.2.5.1.
+    Import,
+    /// `'public' | 'private' | 'protected'`. `SysML` 8.2.2.5.1.
+    VisibilityIndicator,
+    /// `MembershipImport | NamespaceImport`. `SysML` 8.2.2.5.1.
+    ImportDeclaration,
+    /// `[QualifiedName] ( '::' '**' )?`. `SysML` 8.2.2.5.1.
+    MembershipImport,
+    /// `[QualifiedName] '::' '*' ( '::' '**' )?`. `SysML` 8.2.2.5.1.
+    NamespaceImport,
+    /// `';' | '{' OwnedAnnotation* '}'`. `SysML` 8.2.2.2.
+    RelationshipBody,
     /// recovered-over text; carries its bytes so the tree stays lossless
     Error,
 
@@ -733,6 +745,12 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::PackageBody,
     SyntaxKind::Identification,
     SyntaxKind::QualifiedName,
+    SyntaxKind::Import,
+    SyntaxKind::VisibilityIndicator,
+    SyntaxKind::ImportDeclaration,
+    SyntaxKind::MembershipImport,
+    SyntaxKind::NamespaceImport,
+    SyntaxKind::RelationshipBody,
     SyntaxKind::Error,
     SyntaxKind::Tombstone,
 ];

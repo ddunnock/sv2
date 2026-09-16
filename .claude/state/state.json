@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-16T17:27:51Z",
+    "regenerated_utc": "2026-09-16T17:40:25Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 5,
-      "unimplemented": 553,
+      "implemented": 10,
+      "unimplemented": 548,
       "absent": 0,
-      "percent": 0.9
+      "percent": 1.8
     },
     "tests": {
-      "unit": 63,
+      "unit": 75,
       "snapshots": 4,
       "corpus_files": 311,
-      "negative_cases": 12,
+      "negative_cases": 20,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,17 @@
       "vendor_total": 332
     },
     "commits": [
+      "da1cd84 Refuse to index two ADRs under one id",
+      "2f227c3 Add the negative corpus, and fix the two defects it found",
+      "cde75a1 Add ADR-0013, Rust CST via WebAssembly as CodeMirror's syntax tree source",
       "36ebdfe Stop comparing the commit log when checking state.json for staleness",
       "c2916ed Record the initial commit in the derived state",
       "e9157b3 Initial commit: sv2, a SysML v2 / KerML front end"
     ]
   },
   "authored": {
-    "objective": "sv2-syntax is up, the `sv2` command has a seam, and the corpus sweep is live on its negative half: the lexer covers the pinned token set, `package` parses into a lossless CST, `sv2 parse [--quiet] <file>` reports acceptance through its exit status, and 12 rejection cases run on every gate. Next increment is the remaining PackageBodyElement alternatives, and only then pointing the positive sweep at vendor/corpus.",
-    "next_step": "tests/rejection/ exists and the sweep runs it: 12 cases, one per rule violated, each citing its clause. 63 unit tests plus 4 snapshots.\nIT FOUND TWO DEFECTS on its first run, both fixed in the same change:\n  - An unterminated comment was accepted. KerML 8.2.2.2 requires the '*/' on both REGULAR_COMMENT and MULTILINE_NOTE; the lexer ran them to end of input silently. lexer::is_unterminated_comment now names it and parser::eat_trivia reports it, once per token. The '/*/' case is in the suite: it ends in '*/' and is still unterminated, because those are the opener's own characters.\n  - A reserved word was accepted as a declared name. KerML 8.2.2.6: a reserved keyword has the lexical structure of a basic name but cannot be used as one. at_name() now asks the pinned keyword table, so `package package;` is rejected while `packages`, `MyPackage` and the quoted `'package'` still parse.\nALSO: corpus-sweep.sh skipped the negative half whenever the positive corpus was absent, which would have left every rejection case unrun while looking like coverage. The two halves are now independent. The harness was checked by planting a file that parses and confirming the sweep goes red.\nNEXT, in order:\n  1. Next productions: Import, then the other PackageBodyElement alternatives (PackageMember, ElementFilterMember, AliasMember). Each needs its clause read through the navigator, a coverage marker, and a negative case in tests/rejection/ in the same change.\n  2. Only then point tests/corpus at vendor/corpus. 310 of 311 corpus files are still not packages, so wiring it now would be red from the first commit and stay red. Until it is wired, the sweep's positive half claims nothing and says so on every run \u2014 a negative-only sweep is passed by a parser that rejects everything, exactly as a positive-only one is passed by a parser that accepts everything. Acceptance currently rests on the in-crate corpus round-trip and the parser tests.\nKNOWN GAPS in what exists:\n  - Trivia attachment is positional, not owned: whitespace before a node lands inside whichever node was open. It round-trips, so the invariant holds, but the convention has not been decided and a graphical edit will care which node owns a comment. Decide it before the tree shape is depended on.\n  - parse_for_editor() from .claude/rules/syntax.md does not exist yet. parse() already recovers and never panics, so the resilient entry point is currently the same code under a different name \u2014 add it when the two need to differ.\n  - `sv2 parse` has no product on stdout: it is a check, not a dump. The first command whose product is structured is what decides the output format, and \u00a78.2 wants a test that stdout still parses as exactly that product.\n  - tests/rejection/known-permissive/ does not exist, because nothing has needed it. Both defects found so far were fixed rather than recorded, which is the right default: an entry there is a recorded deviation, not a place for an inconvenient case.",
+    "objective": "sv2-syntax parses Package and Import into a lossless CST, the `sv2` command reports acceptance through its exit status, and the corpus sweep runs 20 rejection cases on every gate. Next increment is the remaining PackageBodyElement alternatives \u2014 PackageMember, ElementFilterMember, AliasMember \u2014 and only then pointing the positive sweep at vendor/corpus.",
+    "next_step": "Import is implemented end to end, with VisibilityIndicator, ImportDeclaration, MembershipImport, NamespaceImport, QualifiedName and RelationshipBody. Coverage 10/558. 71 unit tests, 4 snapshots, 20 rejection cases.\nWHAT THE GRAMMAR SAID, and where it surprised:\n  - Import's visibility carries no '( )?'. MemberPrefix one clause away is optional, which makes this worth stating: the specification BNF, the Pilot's ImportPrefix fragment, and all 741 imports in the pinned corpus agree that an import states its visibility. tests/rejection/import-without-visibility.sysml holds it. I nearly filed this as a spec-vs-corpus conflict on the strength of a regex that matched the space inside `private import`; the corpus has no bare import, and the 4 lines that look like one are comments.\n  - MembershipImport and NamespaceImport share their QualifiedName prefix, so the node is opened retroactively at a rowan checkpoint rather than guessed. A '::' belongs to the QualifiedName only when a NAME follows it, which needs two tokens of lookahead: `A::B::*` splits as name `A::B` then import `::*`. That split round-trips either way, so only a tree-shape test can catch it getting it wrong \u2014 there is one.\nPARTIAL, and deliberately left unmarked in coverage:\n  - NamespaceImport's second alternative, `importedNamespace = FilterPackage`, is not implemented.\n  - RelationshipBody accepts ';' and an empty '{ }' only, because OwnedAnnotation does not exist yet. Contents are reported rather than accepted, and tests/rejection/import-annotation-body-is-not-implemented.sysml is a rejection by absence rather than by rule \u2014 its header says so, and it goes when OwnedAnnotation lands.\nNEXT, in order:\n  1. The remaining PackageBodyElement alternatives, one per change, in this order: PackageMember (which is how Package itself is reached, and which needs MemberPrefix), then ElementFilterMember, then AliasMember. Each needs its clause read through the navigator, a coverage marker, and rejection cases in the same change. Note that Package is currently dispatched directly rather than through PackageMember; that seam closes with PackageMember.\n  2. Only then point tests/corpus at vendor/corpus. 310 of 311 files are still not packages. Until it is wired the sweep's positive half claims nothing and says so on every run: a negative-only sweep is passed by a parser that rejects everything. Acceptance rests on the 311-file round-trip and the parser tests.\nKNOWN GAPS in what exists:\n  - Trivia attachment is positional, not owned: whitespace before a node lands inside whichever node was open. It round-trips, so the invariant holds, but the convention has not been decided and a graphical edit will care which node owns a comment. Decide it before the tree shape is depended on.\n  - parse_for_editor() from .claude/rules/syntax.md does not exist yet. parse() already recovers and never panics, so the resilient entry point is currently the same code under a different name \u2014 add it when the two need to differ.\n  - `sv2 parse` has no product on stdout: it is a check, not a dump. The first command whose product is structured is what decides the output format, and \u00a78.2 wants a test that stdout still parses as exactly that product.\n  - No new snapshots were taken for Import, because `cargo insta review` is interactive and the rule is to review one at a time, never accept in bulk. The tree shape is held by three structural tests read off the productions instead. Add snapshots at a terminal if the shape is worth pinning that way.\n  - The add-production skill's step 1 greps grammars/*.g4, which do not exist. The pinned grammar is vendor/spec-bnf/*.kebnf and vendor/pilot/*.xtext. Fix the skill before it sends someone to an empty directory and they conclude the production is absent.",
     "pending_decisions": [
       {
         "id": "ADR-0009",

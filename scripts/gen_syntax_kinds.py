@@ -103,6 +103,18 @@ NODES = [
     ("PackageBody", "`';' | '{' PackageBodyElement* '}'`. `SysML` 8.2.2.5.1."),
     ("Identification", "`( '<' NAME '>' )? ( NAME )?`. `SysML` 8.2.2.2."),
     ("QualifiedName", "`( '$' '::' )? ( NAME '::' )* NAME`. `KerML` 8.2.3.4.1."),
+    (
+        "Import",
+        (
+            "`VisibilityIndicator 'import' 'all'? ImportDeclaration RelationshipBody`. "
+            "`SysML` 8.2.2.5.1."
+        ),
+    ),
+    ("VisibilityIndicator", "`'public' | 'private' | 'protected'`. `SysML` 8.2.2.5.1."),
+    ("ImportDeclaration", "`MembershipImport | NamespaceImport`. `SysML` 8.2.2.5.1."),
+    ("MembershipImport", "`[QualifiedName] ( '::' '**' )?`. `SysML` 8.2.2.5.1."),
+    ("NamespaceImport", "`[QualifiedName] '::' '*' ( '::' '**' )?`. `SysML` 8.2.2.5.1."),
+    ("RelationshipBody", "`';' | '{' OwnedAnnotation* '}'`. `SysML` 8.2.2.2."),
     ("Error", "recovered-over text; carries its bytes so the tree stays lossless"),
 ]
 
