@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ConstructorResult",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "95ab32e456a3a33bfaf472ff96283869448e139365e245cd001a9df85d57e59f",
     "xtext_rule": "fcf1f9b593c0370836cbd65f3bba214e044dcbbd1822abcd2506c8434e3e6f98",
@@ -56,5 +56,27 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "ArgumentList"
+  },
+  "decision": "A ConstructorResult is an ArgumentList: the arguments a constructor was given are its result's features.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.3",
+      "note": "ConstructorResult is stated there"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T20:32:53Z"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "NullExpression",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "95ab32e456a3a33bfaf472ff96283869448e139365e245cd001a9df85d57e59f",
     "xtext_rule": "8366d6de20a974d48a6857035934b24c7c271317e1d23dfde64da156768211c6",
@@ -56,5 +56,45 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::NullExpression"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "kw",
+        "text": "null"
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "kw",
+            "text": "("
+          },
+          {
+            "k": "kw",
+            "text": ")"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "Two spellings of the same thing: the keyword, or an empty pair of parentheses. The empty parentheses matter because they are also what an ArgumentList with no arguments looks like; which production applies is positional.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.3",
+      "note": "NullExpression is stated there"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T20:32:53Z"
 }

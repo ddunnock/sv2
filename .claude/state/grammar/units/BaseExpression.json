@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "BaseExpression",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "95ab32e456a3a33bfaf472ff96283869448e139365e245cd001a9df85d57e59f",
     "xtext_rule": "3c66a4604a6e26ea7a981c17e07585c1acb673bef3c82c6f7a7cccb7a57fb762",
@@ -56,5 +56,56 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Expression"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "NullExpression"
+      },
+      {
+        "k": "ref",
+        "name": "LiteralExpression"
+      },
+      {
+        "k": "ref",
+        "name": "FeatureReferenceExpression"
+      },
+      {
+        "k": "ref",
+        "name": "MetadataAccessExpression"
+      },
+      {
+        "k": "ref",
+        "name": "InvocationExpression"
+      },
+      {
+        "k": "ref",
+        "name": "ConstructorExpression"
+      },
+      {
+        "k": "ref",
+        "name": "BodyExpression"
+      }
+    ]
+  },
+  "decision": "Seven alternatives, in the clause's order. These are the expressions that are not built out of other expressions by an operator: a literal, a reference, an invocation, a constructor, a body, the null, or metadata access.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.3",
+      "note": "BaseExpression is stated there"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T20:32:53Z"
 }

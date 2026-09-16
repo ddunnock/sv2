@@ -2799,6 +2799,26 @@
       ]
     },
     {
+      "production": "InstatiatedTypeMember-misspelling",
+      "bucket": "spec_only",
+      "upstream": "Not an Xtext matter: the Pilot spells the rule correctly. This is a defect internal to the specification clause.",
+      "problem": "KerML clause 8.2.5.8.3 defines InstantiatedTypeMember and references it correctly from ConstructorExpression, but InvocationExpression's body references InstatiatedTypeMember, missing the second 'n'. Read literally the clause contains a dangling reference: nothing defines the misspelled form. Found while deriving the base expressions; it will stop InvocationExpression the same way the MetaClassificationTestOperator casing defect stopped MetaclassificationExpression.",
+      "decision": "follow_spec",
+      "rationale": "Follow the defined spelling, InstantiatedTypeMember. The definition is the load-bearing occurrence and the misspelled reference resolves to nothing; ConstructorExpression, in the same clause, already references the correct spelling, so the clause disagrees with itself in only one place. Tier B' carries the correct spelling at all four occurrences in KerML-textual-bnf.kebnf (1136, 1211, 1216, 1225), repairing the reference without comment, which is the same pattern recorded for FlowFeatureRedefinition, SpecificType and MetaClassificationTestOperator-casing. The production inventory therefore never contained the misspelling, and nothing about acceptance turns on it.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.8.3 Base Expressions",
+          "note": "Retrieved as the wiki production atom BaseExpressions, region_sha256 7b4c569d6bcfacac. InvocationExpression reads 'ownedRelationship += InstatiatedTypeMember'; ConstructorExpression and the definition both read InstantiatedTypeMember."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "Tier B', KerML-textual-bnf.kebnf lines 1136, 1211, 1216 and 1225 all spell it InstantiatedTypeMember. Verified by reading them."
+        }
+      ]
+    },
+    {
       "production": "InterfaceDefKeyword",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `InterfaceDefKeyword: InterfaceKeyword 'def';`.",

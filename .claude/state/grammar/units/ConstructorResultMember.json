@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ConstructorResultMember",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "95ab32e456a3a33bfaf472ff96283869448e139365e245cd001a9df85d57e59f",
     "xtext_rule": "5b28337c310324977e0affb05507be96db300079500f365f013965768bb44665",
@@ -56,5 +56,27 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::ReturnParameterMembership"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "ConstructorResult"
+  },
+  "decision": "`ownedRelatedElement += ConstructorResult`.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.3",
+      "note": "ConstructorResultMember is stated there"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T20:32:53Z"
 }
