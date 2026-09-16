@@ -415,3 +415,101 @@ fn a_package_member_nests_inside_a_package_body() {
         "{rendered}"
     );
 }
+
+// -- AliasMember, SysML 8.2.2.5.1 -------------------------------------------------
+//
+//   AliasMember : Membership =
+//       MemberPrefix 'alias' ( '<' memberShortName = NAME '>' )?
+//       ( memberName = NAME )? 'for' memberElement = [QualifiedName]
+//       RelationshipBody
+//
+// Membership, not OwningMembership (KerML 8.3.2.4.3): the target is a reference to an
+// element declared elsewhere, not a nested one.
+
+#[test]
+fn an_alias_names_an_element_declared_elsewhere() {
+    // `alias Car for Vehicle;` and `alias Torque for ISQ::TorqueValue;` are both in
+    // the pinned corpus. The target is a QualifiedName, so it may be qualified.
+    parse_accepted("alias Car for Vehicle;");
+    parse_accepted("alias Torque for ISQ::TorqueValue;");
+    parse_accepted("alias us for w::g;");
+}
+
+#[test]
+fn an_alias_name_may_be_unrestricted() {
+    // `alias 'Sport Sedan' for vehicle1_c1;` — from the corpus. memberName is a NAME,
+    // and NAME = BASIC_NAME | UNRESTRICTED_NAME (KerML 8.2.2.3).
+    parse_accepted("alias 'Sport Sedan' for vehicle1_c1;");
+}
+
+#[test]
+fn an_alias_may_carry_a_visibility() {
+    // `public alias Car for Automobile;` — one occurrence in the corpus. AliasMember
+    // opens with MemberPrefix, so the optional visibility is available to it.
+    parse_accepted("public alias Car for Automobile;");
+    parse_accepted("private alias Car for Automobile;");
+}
+
+#[test]
+fn an_alias_may_have_a_short_name() {
+    // ( '<' memberShortName = NAME '>' )?, before the optional memberName.
+    //
+    // NOT exercised by the pinned corpus: the only `alias <` in the 311 files is
+    // inside a comment. Constructed from the production rather than found, which is
+    // why both orderings are checked explicitly.
+    parse_accepted("alias <c> Car for Vehicle;");
+    parse_accepted("alias <c> for Vehicle;");
+}
+
+#[test]
+fn both_alias_name_slots_are_optional() {
+    // memberName and memberShortName are both 0..1 on Membership (KerML 8.3.2.4.3),
+    // and the production marks both slots `?`. So this parses. Whether an alias with
+    // no name means anything is a constraint question, not a grammar one, and
+    // ADR-0002 says validity gates writes rather than reads.
+    parse_accepted("alias for Vehicle;");
+}
+
+#[test]
+fn an_alias_body_may_be_braces() {
+    // RelationshipBody = ';' | '{' OwnedAnnotation* '}'. The corpus has three braced
+    // aliases and every one holds a `doc`, which is an OwnedAnnotation and therefore
+    // unimplemented — so only the empty body is accepted here, as for Import.
+    parse_accepted("alias Car for Automobile { }");
+}
+
+#[test]
+fn an_alias_builds_the_nodes_the_grammar_names() {
+    let parsed = parse_accepted("public alias <c> Car for A::B;");
+    let rendered = render(&parsed.syntax());
+    for node in [
+        "AliasMember",
+        "MemberPrefix",
+        "VisibilityIndicator",
+        "QualifiedName",
+        "RelationshipBody",
+    ] {
+        assert!(rendered.contains(node), "no {node} node:\n{rendered}");
+    }
+    // The target is a reference, never a nested element: no PackageMember here.
+    assert!(!rendered.contains("PackageMember"), "{rendered}");
+}
+
+#[test]
+fn an_alias_is_told_apart_from_the_other_prefixed_elements() {
+    // alias, package and import can all open with the same visibility indicator, so
+    // the deciding keyword is the one after it.
+    let alias = render(&parse_accepted("public alias A for B;").syntax());
+    assert!(alias.contains("AliasMember") && !alias.contains("Import"));
+
+    let import = render(&parse_accepted("public import A::*;").syntax());
+    assert!(import.contains("Import") && !import.contains("AliasMember"));
+
+    let member = render(&parse_accepted("public package P;").syntax());
+    assert!(member.contains("PackageMember") && !member.contains("AliasMember"));
+}
+
+#[test]
+fn an_alias_nests_inside_a_package_body() {
+    parse_accepted("package P { alias Car for Vehicle; }");
+}

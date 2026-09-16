@@ -120,6 +120,13 @@ NODES = [
         "`MemberPrefix ( DefinitionElement | UsageElement )`. `SysML` 8.2.2.5.1.",
     ),
     ("MemberPrefix", "`( visibility = VisibilityIndicator )?`. `SysML` 8.2.2.5.1."),
+    (
+        "AliasMember",
+        (
+            "`MemberPrefix 'alias' ( '<' NAME '>' )? NAME? 'for' [QualifiedName] "
+            "RelationshipBody`. `SysML` 8.2.2.5.1."
+        ),
+    ),
     ("Error", "recovered-over text; carries its bytes so the tree stays lossless"),
 ]
 

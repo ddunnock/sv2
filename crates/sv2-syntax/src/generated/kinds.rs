@@ -501,6 +501,8 @@ pub enum SyntaxKind {
     PackageMember,
     /// `( visibility = VisibilityIndicator )?`. `SysML` 8.2.2.5.1.
     MemberPrefix,
+    /// `MemberPrefix 'alias' ( '<' NAME '>' )? NAME? 'for' [QualifiedName] RelationshipBody`. `SysML` 8.2.2.5.1.
+    AliasMember,
     /// recovered-over text; carries its bytes so the tree stays lossless
     Error,
 
@@ -757,6 +759,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::RelationshipBody,
     SyntaxKind::PackageMember,
     SyntaxKind::MemberPrefix,
+    SyntaxKind::AliasMember,
     SyntaxKind::Error,
     SyntaxKind::Tombstone,
 ];

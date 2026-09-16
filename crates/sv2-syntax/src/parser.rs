@@ -16,12 +16,15 @@
 //! Identification     = ( '<' declaredShortName = NAME '>' )? ( declaredName = NAME )?
 //! Import             = VisibilityIndicator 'import' 'all'?
 //!                      ImportDeclaration RelationshipBody
+//! AliasMember        = MemberPrefix 'alias' ( '<' NAME '>' )? NAME?
+//!                      'for' [QualifiedName] RelationshipBody
 //! ```
 //!
-//! `PackageMember` and `Import` are the two `PackageBodyElement` alternatives handled
-//! so far, and `Package` is the one `DefinitionElement` of twenty-eight. Everything
-//! else is unimplemented and reports as such in the coverage report, which is the
-//! honest state of a parser this young.
+//! Three of the four `PackageBodyElement` alternatives are handled: `PackageMember`,
+//! `Import` and `AliasMember`. `ElementFilterMember` waits on `OwnedExpression`, and
+//! `Package` is the one `DefinitionElement` of twenty-eight. Everything else is
+//! unimplemented and reports as such in the coverage report, which is the honest
+//! state of a parser this young.
 //!
 //! Every token the lexer produced ends up in the tree, in source order. Text that no
 //! production accepts becomes an `Error` node that still carries its bytes, so the
@@ -171,6 +174,15 @@ impl<'a> Parser<'a> {
             .is_some_and(|token| token.kind == SyntaxKind::BasicName && self.text_of(token) == text)
     }
 
+    /// Whether the keyword deciding which `PackageBodyElement` this is, is `text`.
+    ///
+    /// Looks past an optional `VisibilityIndicator`. `MemberPrefix`'s visibility is
+    /// optional and `Import`'s is required, so the indicator never decides on its
+    /// own — the keyword after it does.
+    fn at_element_keyword(&self, text: &str) -> bool {
+        self.nth_is_keyword(usize::from(self.at_visibility()), text)
+    }
+
     /// Whether an `Import` starts here rather than a `PackageMember`.
     ///
     /// Both may open with a `VisibilityIndicator`, so the indicator alone does not
@@ -248,6 +260,15 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Consume `text` as a keyword, or record an error without consuming.
+    fn expect_keyword(&mut self, text: &str) {
+        if self.at_keyword(text) {
+            self.bump_as(keyword(text).unwrap_or(SyntaxKind::BasicName));
+        } else {
+            self.error_expected(&format!("`{text}`"));
+        }
+    }
+
     /// Consume the next token as a NAME, or record an error without consuming.
     fn expect_name(&mut self, what: &str) {
         if self.at_name() {
@@ -293,8 +314,8 @@ impl<'a> Parser<'a> {
     /// `PackageBodyElement*`, up to `until` or end of input.
     ///
     /// `PackageBodyElement = PackageMember | ElementFilterMember | AliasMember |
-    /// Import` (`SysML` 8.2.2.5.1). `Import` and `PackageMember` are implemented;
-    /// `ElementFilterMember` and `AliasMember` are not. Anything else is recovered
+    /// Import` (`SysML` 8.2.2.5.1). All but `ElementFilterMember` are implemented,
+    /// and that one waits on `OwnedExpression`. Anything else is recovered
     /// over one token at a time rather than
     /// abandoning the enclosing body: an editor reparses invalid text constantly,
     /// and a body that vanishes on one bad token blanks the diagram on every
@@ -303,12 +324,53 @@ impl<'a> Parser<'a> {
         while !self.at_end() && !until.is_some_and(|kind| self.at(kind)) {
             if self.at_import() {
                 self.import();
-            } else if self.at_keyword("package") || self.at_visibility() {
+            } else if self.at_element_keyword("alias") {
+                self.alias_member();
+            } else if self.at_element_keyword("package") {
                 self.package_member();
             } else {
                 self.error_token();
             }
         }
+    }
+
+    // production: AliasMember
+    //
+    // AliasMember : Membership =
+    //     MemberPrefix
+    //     'alias' ( '<' memberShortName = NAME '>' )?
+    //     ( memberName = NAME )?
+    //     'for' memberElement = [QualifiedName]
+    //     RelationshipBody
+    //
+    // `Membership`, not `OwningMembership` — the distinction the production exists
+    // for. `KerML` 8.3.2.4.3: a Membership that does not own its memberElement makes
+    // its memberNames "effectively aliases within the membershipOwningNamespace for
+    // an Element with a separate OwningMembership". That is why the target is a
+    // `[QualifiedName]` reference to an element declared elsewhere, and not a nested
+    // element the way `PackageMember`'s is.
+    //
+    // Both name slots are optional and both are 0..1 on the metaclass, so
+    // `alias for X;` is well formed as far as the syntax goes. The short-name slot is
+    // not exercised by the pinned corpus — the only `alias <` in 311 files is inside
+    // a comment — so its test is constructed from the production rather than found.
+    fn alias_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::AliasMember);
+        self.member_prefix();
+        self.bump_as(keyword("alias").unwrap_or(SyntaxKind::BasicName));
+        if self.at(SyntaxKind::Lt) {
+            self.bump();
+            self.expect_name("a short name");
+            self.expect(SyntaxKind::Gt, "`>`");
+        }
+        if self.at_name() {
+            self.bump();
+        }
+        self.expect_keyword("for");
+        self.qualified_name();
+        self.relationship_body();
+        self.finish_node();
     }
 
     // production: PackageMember
@@ -555,7 +617,7 @@ pub fn parse(source: &str) -> Parse {
 
 #[cfg(test)]
 mod tests {
-    use super::{SyntaxKind, keyword};
+    use super::{SyntaxKind, VISIBILITY, keyword};
 
     /// Every keyword this parser looks up by text must exist in the pinned token set.
     ///
@@ -563,12 +625,15 @@ mod tests {
     /// keyword leaving the token set would not fail at run time — it would quietly
     /// mis-tag the node. This is what turns that into a gate failure instead. Extend
     /// the list as productions are added.
-    /// Every keyword a production looks up by text. Extend as productions are added.
-    const NAMED: &[&str] = &["package"];
+    /// Every keyword a production looks up by text, beyond the `VISIBILITY` table
+    /// the test below chains on. Extend as productions are added.
+    const NAMED: &[&str] = &["package", "import", "all", "alias", "for"];
 
     #[test]
     fn every_keyword_this_parser_names_is_in_the_pinned_token_set() {
-        for text in NAMED {
+        // VISIBILITY is chained rather than copied: it is the list the parser itself
+        // uses, so a word added there cannot drift out of this check.
+        for text in NAMED.iter().chain(VISIBILITY.iter()) {
             assert!(
                 keyword(text).is_some(),
                 "`{text}` is not in the pinned token set; \
