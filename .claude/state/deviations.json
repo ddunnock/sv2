@@ -2879,6 +2879,46 @@
       ]
     },
     {
+      "production": "InvocationTypeMember-misnomer",
+      "bucket": "spec_only",
+      "upstream": "InvocationTypeMember occurs zero times in the Pilot Xtext. The pilot's inlined equivalent of this exact slot, the '->' alternative of PrimaryExpression at KerMLExpressions.xtext:308-313, uses InstantiatedTypeMember and builds a SysML::InvocationExpression there \u2014 matching the metaclass the specification types FunctionOperationExpression to. That is independent corroboration rather than an echo of the defective reference, because the pilot never had the defective name to echo. Verified at vendor/pilot/KerMLExpressions.xtext:308-313 and :436-438: the '->' alternative uses InstantiatedTypeMember and builds SysML::InvocationExpression, and InstantiatedTypeMember is defined as memberElement = [SysML::Type | QualifiedName]. Four occurrences of InstantiatedTypeMember in that file, zero of InvocationTypeMember.",
+      "problem": "KerML clause 8.2.5.8.2 states FunctionOperationExpression, typed ': InvocationExpression', with 'ownedRelationship += InvocationTypeMember' in the slot naming the invoked function. InvocationTypeMember is defined nowhere in either language: it occurs exactly once in the whole KerML wiki, as that reference. Read literally the production contains a dangling reference and cannot be derived. Unlike the other defects recorded this session, this is not a misspelling \u2014 'invocation' and 'instantiated' are different words \u2014 so Tier B' substituting one for the other is a substantive reading and not a character fix.",
+      "decision": "follow_spec",
+      "rationale": "Read InstantiatedTypeMember into the slot. This is confirmed by the specification's own editor rather than inferred: OMG issue KERML11-83 quotes the FunctionOperationExpression rule verbatim and reports that according to Ed Seidewitz, the KerML technical editor, InvocationTypeMember should have been InstantiatedTypeMember. Two further open issues report the same defect independently. Tier B' already carries the correction at KerML-textual-bnf.kebnf:1136, the same silent-repair pattern recorded for FlowFeatureRedefinition, SpecificType, MetaClassificationTestOperator-casing and InstatiatedTypeMember-misspelling. The Pilot corroborates independently at KerMLExpressions.xtext:308-313, where InstantiatedTypeMember resolves to a Type by QualifiedName (:436-438) \u2014 exactly the shape needed to name a library function such as select, collect or reduce after '->'. And the corpus agrees: 16 lines use the '->' syntax and every one places a bare qualified name in the slot.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.8.2 Primary Expressions",
+          "note": "Wiki production atom PrimaryExpressions, region_sha256 9ec248984ce84ebf. FunctionOperationExpression reads 'ownedRelationship += InvocationTypeMember'; that name is defined in no production atom of either wiki."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "Tier B', KerML-textual-bnf.kebnf:1136, puts InstantiatedTypeMember in the slot. Verified by reading the line."
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "KERML11-83",
+          "note": "Missing Metamodel Definition / Misprint. Status open, KerML 1.0b4, reported by Benjamin Standfield Tue 9 Sep 2025 01:40 GMT. Summary quotes the FunctionOperationExpression rule and states: 'InvocationTypeMember is not defined within the metamodel. According to Ed Seidewitz, this is a mistake in the specification and InvocationTypeMember should have been InstantiatedTypeMember.' Issue body retrieved from https://issues.omg.org/issues/KERML11-83 on 2026-09-16; quoted from the page."
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "KERML11-113",
+          "note": "FunctionOperationExpression references missing InvocationTypeMember rule. Title and status 'open' retrieved from https://issues.omg.org/issues/spec/KerML on 2026-09-16; the issue body was not retrieved."
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "KERML11-179",
+          "note": "Undefined rules in the text notation grammar. Title and status 'open' retrieved from https://issues.omg.org/issues/spec/KerML on 2026-09-16; the issue body was not retrieved."
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Expressions.kerml",
+          "note": "16 lines across the corpus use the '->' function-operation syntax, each placing a bare qualified name in the disputed slot, which is what a Type reference provides. Counted, not sampled."
+        }
+      ]
+    },
+    {
       "production": "ItemDefKeyword",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `ItemDefKeyword: ItemKeyword 'def';`.",
@@ -3064,7 +3104,7 @@
       "upstream": "The Pilot Xtext defines and references MetaClassificationTestOperator, capital C, consistently at KerMLExpressions.xtext:177 and :188. That is the pilot echoing the specification's defective reference and then defining something to satisfy it, not an independent second reading: the capital-C spelling appears nowhere else in KerML.",
       "problem": "KerML clause 8.2.5.8.1 defines the production MetaclassificationTestOperator, lowercase c, with body '@@'. Three lines earlier in the same clause, MetaclassificationExpression's own body references it as MetaClassificationTestOperator, capital C. Read literally the clause contains a dangling reference: nothing defines the capital-C spelling and nothing references the lowercase-c definition. This is not a transcription artifact \u2014 the wiki production atom for the clause, receipted to the PDF span, carries both spellings.",
       "decision": "follow_spec",
-      "rationale": "Follow the defined spelling, MetaclassificationTestOperator, lowercase c. Three things settle it, all checkable from this repository. The definition is the load-bearing occurrence: it is what gives the production a body, while the capital-C reference resolves to nothing. MetaclassificationExpression itself, on the line above the defect, spells Metaclassification with a lowercase c. And Tier B' silently repairs the reference to lowercase in both positions, the same pattern already recorded for FlowFeatureRedefinition and SpecificType. Nothing about acceptance turns on this \u2014 the operator is '@@' either way \u2014 so the decision is about the production's identity in the inventory and in citations, not about what parses. An adjudication reported a filed OMG issue, KERML11-112, stating that the capital C is incorrect. That would be direct confirmation from the source and it matches the pattern of KERML11-108 already cited in this file, but it has NOT been verified from this machine and is therefore not recorded as evidence. Add it as an omg_issue entry once confirmed. The rationale above does not depend on it.",
+      "rationale": "Follow the defined spelling, MetaclassificationTestOperator, lowercase c. Three things settle it, all checkable from this repository. The definition is the load-bearing occurrence: it is what gives the production a body, while the capital-C reference resolves to nothing. MetaclassificationExpression itself, on the line above the defect, spells Metaclassification with a lowercase c. And Tier B' silently repairs the reference to lowercase in both positions, the same pattern already recorded for FlowFeatureRedefinition and SpecificType. Nothing about acceptance turns on this \u2014 the operator is '@@' either way \u2014 so the decision is about the production's identity in the inventory and in citations, not about what parses.",
       "evidence": [
         {
           "kind": "spec_clause",
@@ -3080,6 +3120,11 @@
           "kind": "corpus_file",
           "ref": "vendor/corpus",
           "note": "No corpus file uses '@@', so the corpus cannot arbitrate. It could not in any case: the token is the same under either reading, and the conflict is about the production's name rather than about what parses."
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "KERML11-112",
+          "note": "\"C\" in \"MetaClassificationTestOperator\" should be lowercase. Status open, KerML 1.0, reported by Kent Johnson. Title and status retrieved from https://issues.omg.org/issues/spec/KerML on 2026-09-16; the issue body was not retrieved. The title alone states the defect and its direction."
         }
       ]
     },
@@ -4020,6 +4065,26 @@
           "kind": "file_id",
           "ref": "ptc/25-02-15",
           "note": "Xtext side read from the pinned grammar: body `PortKeyword`, which references no non-literal production."
+        }
+      ]
+    },
+    {
+      "production": "PositionalArgumentList-prefix",
+      "bucket": "spec_only",
+      "upstream": "The prefix does not appear in Tier B' at all, and the Pilot has no equivalent notation. It is a defect internal to the specification document.",
+      "problem": "KerML clause 8.2.5.8.3 writes PositionalArgumentList's repeated element as 'e.ownedRelationship += ArgumentMember' where every comparable production writes 'ownedRelationship += ...'. The 'e.' prefix binds nothing the clause introduces.",
+      "decision": "follow_spec",
+      "rationale": "Ignore the prefix. It concerns which element the relationship is added to, which is abstract syntax, and not what parses, so the derived rule is unaffected either way. Tier B' does not carry it. OMG issue KERML11-111 reports the same defect.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.8.3 Base Expressions",
+          "note": "Wiki production atom BaseExpressions, region_sha256 7b4c569d6bcfacac. PositionalArgumentList reads 'e.ownedRelationship += ArgumentMember'."
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "KERML11-111",
+          "note": "Incorrect prefix in \"s.isSufficient\" and \"e.ownedRelationship\". Title and status 'open' retrieved from https://issues.omg.org/issues/spec/KerML on 2026-09-16; the issue body was not retrieved."
         }
       ]
     },
