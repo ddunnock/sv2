@@ -53,9 +53,28 @@ def record(adr: Path) -> dict[str, str]:
     }
 
 
-def build_index() -> Json:
+def all_records() -> list[dict[str, str]]:
+    """Every ADR under docs/adr/, in filename order."""
+    return [record(adr) for adr in sorted(Path("docs/adr").glob("[0-9]*.md"))]
+
+
+def duplicate_ids(records: list[dict[str, str]]) -> dict[str, list[str]]:
+    """Ids claimed by more than one file, each mapped to the files claiming it.
+
+    An id is derived from the leading number of a filename, so two files numbered
+    0011 both answer to ADR-0011. Nothing downstream can tell them apart: the index
+    gets two entries under one id, and every citation of that id becomes ambiguous.
+    Silence here is what let a duplicate reach the index and only surface later as a
+    stale-index failure, which names neither file.
+    """
+    by_id: dict[str, list[str]] = {}
+    for entry in records:
+        by_id.setdefault(entry["id"], []).append(entry["file"])
+    return {adr_id: files for adr_id, files in by_id.items() if len(files) > 1}
+
+
+def build_index(records: list[dict[str, str]]) -> Json:
     """The decisions index document."""
-    records = [record(adr) for adr in sorted(Path("docs/adr").glob("[0-9]*.md"))]
     return {
         "_generated_by": ".claude/scripts/index_decisions.py",
         "_note": "Index only. docs/adr/ is the source of truth.",
@@ -71,7 +90,17 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     os.chdir(REPO_ROOT)
 
-    index = build_index()
+    records = all_records()
+    clashes = duplicate_ids(records)
+    if clashes:
+        # Refused in both modes. Writing an ambiguous index is worse than not
+        # writing one: the gate would go green over two decisions sharing a name.
+        for adr_id, files in sorted(clashes.items()):
+            print(f"ADR id {adr_id} is claimed by {len(files)} files: {', '.join(files)}")
+        print("an id names one decision — renumber all but one, and its internal references")
+        return 1
+
+    index = build_index(records)
     text = json.dumps(index, indent=2) + "\n"
     summary = f"{len(index['decisions'])} ADRs, {len(index['open'])} open"
     if args.check:
