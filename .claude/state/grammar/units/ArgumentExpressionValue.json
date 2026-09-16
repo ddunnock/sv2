@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ArgumentExpressionValue",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "302069a0ce58cfcc1727c2e35032fec260d68708c2cea504cf0d0e48ba3d4312",
     "xtext_rule": "78e8ff9b02fb8f91e62e30f20bc8d7b519db2d8c3044106f27e874d6c19de1b2",
@@ -56,5 +56,27 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::FeatureValue"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "OwnedExpressionReference"
+  },
+  "decision": "`value = OwnedExpressionReference`. A reference, not an OwnedExpression: this is the one difference between an argument and an argument expression, and it is what makes the operand lazy.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.1",
+      "note": "ArgumentExpressionValue is stated in OperatorExpressions"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T20:22:03Z"
 }

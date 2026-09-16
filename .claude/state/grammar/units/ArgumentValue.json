@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ArgumentValue",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "302069a0ce58cfcc1727c2e35032fec260d68708c2cea504cf0d0e48ba3d4312",
     "xtext_rule": "44cb3c3aadcfec157425be303e6dd3059318d778bdd6a5bb4dc882f5983bea15",
@@ -56,5 +56,27 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::FeatureValue"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "OwnedExpression"
+  },
+  "decision": "`value = OwnedExpression`. This is where an operand becomes any expression, and so where the expression grammar becomes recursive.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.1",
+      "note": "ArgumentValue is stated in OperatorExpressions"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T20:22:03Z"
 }

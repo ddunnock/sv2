@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MetaclassificationExpression",
   "language": "shared",
-  "status": "pending",
+  "status": "conflict",
   "fingerprint": {
     "spec_clause": "dfcf21afde47835f1a859f96a3517e36df8afbbcf70345c2f910b60f1cb700ef",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -56,5 +56,19 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": ""
-  }
+  },
+  "notes": "NAME CONFLICT on the test operator this production references. Not resolved here.\nReading A, from the specification clause: the clause defines a production spelled MetaclassificationTestOperator, lowercase c, with the body '@@'. That is the spelling carried into the Tier B' transcription and into this repository's production inventory, and it is the spelling of the unit already derived and verified for it.\nReading B, from the same clause, three lines earlier: this production's own body references MetaClassificationTestOperator, capital C. Nothing in the clause defines that spelling. The Pilot Xtext uses capital C consistently, both defining it (KerMLExpressions.xtext:188) and referencing it (:177), so the pilot is internally consistent where the specification is not.\nThe inconsistency is in the specification document itself, not introduced by the transcription: the wiki atom for clause 8.2.5.8.1, which is receipted to the PDF span, carries both spellings.\nEither spelling parses the same input \u2014 the operator is '@@' on both readings \u2014 so nothing about acceptance turns on this. What turns on it is the production's identity: the coverage inventory, the reference graph, and whether this rule can be checked at all, because a reference to the undefined spelling is a dangling reference and grammar_check_unit.py rejects it.\nResolving this by picking the spelling that happens to have a unit would be picking whichever is easier to implement, which .claude/rules/derivation.md forbids. For grammar-adjudicator.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.1",
+      "note": "defines MetaclassificationTestOperator; references MetaClassificationTestOperator"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerMLExpressions.xtext:177,188",
+      "note": "defines and references MetaClassificationTestOperator, capital C, consistently"
+    }
+  ],
+  "decision": "UNRESOLVED. The production is otherwise plain \u2014 MetadataArgumentMember, then a test or a cast, then EmptyResultMember \u2014 and can be written the moment the operator's name is settled."
 }

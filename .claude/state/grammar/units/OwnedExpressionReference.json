@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedExpressionReference",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "dfcf21afde47835f1a859f96a3517e36df8afbbcf70345c2f910b60f1cb700ef",
     "xtext_rule": "cc7533e76cbaf948af92bfc60a863b35bdd72afc69fa794d519e61e4477c439e",
@@ -56,5 +56,27 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::FeatureReferenceExpression"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "OwnedExpressionMember"
+  },
+  "decision": "`ownedRelationship += OwnedExpressionMember`. Typed as a FeatureReferenceExpression, so what is built refers to the expression rather than containing its evaluation.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.1",
+      "note": "OwnedExpressionReference is stated in OperatorExpressions"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T20:22:03Z"
 }

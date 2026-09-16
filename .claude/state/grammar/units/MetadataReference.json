@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MetadataReference",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "dfcf21afde47835f1a859f96a3517e36df8afbbcf70345c2f910b60f1cb700ef",
     "xtext_rule": "3a35bd3d61ffd49273e7c2956350d614cc482ff2aac8bbc1538ac209ebf9ed5f",
@@ -56,5 +56,27 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::MetadataAccessExpression"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "ElementReferenceMember"
+  },
+  "decision": "`ownedRelationship += ElementReferenceMember`, typed as a MetadataAccessExpression. The operand of a metaclassification is a reference to an element, not an expression over values, which is what makes `@@` a test on the metaclass rather than on the value.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.1",
+      "note": "MetadataReference is stated in OperatorExpressions"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T20:22:03Z"
 }

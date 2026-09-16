@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ConditionalExpression",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "dfcf21afde47835f1a859f96a3517e36df8afbbcf70345c2f910b60f1cb700ef",
     "xtext_rule": "335b6a2b4f41ee7de4aa63ffa9e1fa7fde3bbd45910d3b857d417c51299f815f",
@@ -56,5 +56,56 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Expression"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "if"
+      },
+      {
+        "k": "ref",
+        "name": "ArgumentMember"
+      },
+      {
+        "k": "kw",
+        "text": "?"
+      },
+      {
+        "k": "ref",
+        "name": "ArgumentExpressionMember"
+      },
+      {
+        "k": "kw",
+        "text": "else"
+      },
+      {
+        "k": "ref",
+        "name": "ArgumentExpressionMember"
+      },
+      {
+        "k": "ref",
+        "name": "EmptyResultMember"
+      }
+    ]
+  },
+  "decision": "The ternary. Its condition is an ArgumentMember and both branches are ArgumentExpressionMembers, which is not decoration: an ArgumentExpression wraps its value in an OwnedExpressionReference, so the branches are referenced rather than evaluated in place. That is how a conditional evaluates only the branch it takes, and it is visible in the grammar rather than left to semantics.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.1",
+      "note": "ConditionalExpression is stated in OperatorExpressions"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T20:22:03Z"
 }

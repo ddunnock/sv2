@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Argument",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "302069a0ce58cfcc1727c2e35032fec260d68708c2cea504cf0d0e48ba3d4312",
     "xtext_rule": "19c9c32fc27ff4dee9099410da7a1682bd840fbfe943ed919082710fb5537604",
@@ -56,5 +56,27 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "ArgumentValue"
+  },
+  "decision": "`ownedRelationship += ArgumentValue`.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.1",
+      "note": "Argument is stated in OperatorExpressions"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T20:22:03Z"
 }

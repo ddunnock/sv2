@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ClassificationExpression",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "dfcf21afde47835f1a859f96a3517e36df8afbbcf70345c2f910b60f1cb700ef",
     "xtext_rule": "790464ba2aee39308c0111b51fb8c46667e413dc1f0dfbf4b157f696ccec85fe",
@@ -56,5 +56,70 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Expression"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "ArgumentMember"
+        }
+      },
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "seq",
+            "items": [
+              {
+                "k": "ref",
+                "name": "ClassificationTestOperator"
+              },
+              {
+                "k": "ref",
+                "name": "TypeReferenceMember"
+              }
+            ]
+          },
+          {
+            "k": "seq",
+            "items": [
+              {
+                "k": "ref",
+                "name": "CastOperator"
+              },
+              {
+                "k": "ref",
+                "name": "TypeResultMember"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "EmptyResultMember"
+      }
+    ]
+  },
+  "decision": "The operand is optional, which is what lets `as Safety` and `@Safety` stand on their own after a dot or inside a filter, with the subject supplied by context. The test operators take a TypeReferenceMember and the cast takes a TypeResultMember: a test yields a boolean about the type, a cast yields the type, and the membership each builds is where that difference is recorded.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.1",
+      "note": "ClassificationExpression is stated in OperatorExpressions"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-16T20:22:03Z"
 }
