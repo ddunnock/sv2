@@ -1,0 +1,57 @@
+# Dependency, license, source, and layering policy for `cargo deny check`.
+# STD-002-RS §13.5.
+
+[graph]
+all-features = true
+
+[advisories]
+version = 2
+yanked = "deny"
+# Air-gapped builds use a mirrored advisory database (§12 rule 4). Point `db-urls` at
+# the mirror there, and record the date of its last refresh in the build log.
+ignore = []                       # every entry needs an advisory ID and a dated reason
+
+[licenses]
+version = 2
+confidence-threshold = 0.9
+private = { ignore = true }       # workspace crates are publish = false
+allow = [
+    "Apache-2.0",
+    "MIT",
+    "BSD-3-Clause",
+    "Unicode-3.0",
+    # is_ci, reached through miette's `fancy` feature in sv2-cli. ISC is
+    # OSI-approved and permissive.
+    "ISC",
+]                                 # permissive licences only, as the project is MIT
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true       # workspace path dependencies carry no version
+deny = [
+    # §2.5 layering: each entry lists the only crates that may depend on it directly.
+    #
+    #   sv2-cli        binary
+    #   sv2-resolve    libraries, names, derived properties, constraints
+    #   sv2-hir        desugaring and implied specialization
+    #   sv2-ast        typed accessors over the CST; owns no data
+    #   sv2-syntax     core: lossless CST, no I/O
+    #
+    # Each layer may reach any layer below it, never one above. The hir/resolve
+    # boundary is provisional (state.json, pending decision "crate-split"); moving it
+    # changes these lists, and the diff here is where that is reviewed.
+    { crate = "sv2-syntax", wrappers = ["sv2-ast", "sv2-hir", "sv2-resolve", "sv2-cli"] },
+    { crate = "sv2-ast", wrappers = ["sv2-hir", "sv2-resolve", "sv2-cli"] },
+    { crate = "sv2-hir", wrappers = ["sv2-resolve", "sv2-cli"] },
+    { crate = "sv2-resolve", wrappers = ["sv2-cli"] },
+
+    # §7.1 and §8.3: binary-only crates
+    { crate = "anyhow", wrappers = ["sv2-cli"] },
+    { crate = "tracing-subscriber", wrappers = ["sv2-cli"] },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

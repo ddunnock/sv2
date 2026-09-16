@@ -1,0 +1,86 @@
+{
+  "_generated_by": ".claude/scripts/index_decisions.py",
+  "_note": "Index only. docs/adr/ is the source of truth.",
+  "open": [
+    "0009"
+  ],
+  "decisions": [
+    {
+      "id": "0001",
+      "title": "Text is authoritative; diagrams are projections",
+      "status": "accepted",
+      "date": "2026-09-15",
+      "file": "docs/adr/0001-text-is-authoritative.md"
+    },
+    {
+      "id": "0002",
+      "title": "The IR admits everything that parses, not only what validates",
+      "status": "accepted",
+      "date": "2026-09-15",
+      "file": "docs/adr/0002-ir-admits-what-parses.md"
+    },
+    {
+      "id": "0003",
+      "title": "The IR is SysML v2 abstract syntax; KerML arrives by specialization",
+      "status": "accepted",
+      "date": "2026-09-15",
+      "file": "docs/adr/0003-ir-is-sysml-abstract-syntax.md"
+    },
+    {
+      "id": "0004",
+      "title": "Lossless incremental syntax tree, not an AST",
+      "status": "accepted",
+      "date": "2026-09-15",
+      "file": "docs/adr/0004-lossless-syntax-tree.md"
+    },
+    {
+      "id": "0005",
+      "title": "Layout and styling live in a split sidecar",
+      "status": "accepted",
+      "date": "2026-09-15",
+      "file": "docs/adr/0005-sidecar-split.md"
+    },
+    {
+      "id": "0006",
+      "title": "Diagram membership stays in the model",
+      "status": "accepted",
+      "date": "2026-09-15",
+      "file": "docs/adr/0006-view-membership-in-model.md"
+    },
+    {
+      "id": "0007",
+      "title": "The resolver is local and owned",
+      "status": "accepted",
+      "date": "2026-09-15",
+      "file": "docs/adr/0007-local-resolver.md"
+    },
+    {
+      "id": "0008",
+      "title": "First view is structure, interconnection second",
+      "status": "accepted",
+      "date": "2026-09-15",
+      "file": "docs/adr/0008-first-view-structure.md"
+    },
+    {
+      "id": "0009",
+      "title": "Element identity strategy",
+      "status": "proposed",
+      "date": "2026-09-15",
+      "file": "docs/adr/0009-element-identity.md"
+    },
+    {
+      "id": "0010",
+      "title": "Grammar and metamodel sourcing",
+      "status": "accepted",
+      "date": "2026-09-15",
+      "file": "docs/adr/0010-grammar-and-metamodel-sourcing.md"
+    },
+    {
+      "id": "0011",
+      "title": "Specification BNF as a pinned input",
+      "status": "accepted",
+      "date": "2026-09-16",
+      "file": "docs/adr/0011-specification-bnf-as-a-pinned-input.md"
+    }
+  ]
+}

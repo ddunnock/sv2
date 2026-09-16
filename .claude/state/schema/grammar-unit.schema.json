@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sv2/grammar-unit.schema.json",
+  "title": "One derived grammar production",
+  "description": "A single unit of derivation work. Derived in isolation from ONLY its own inputs, so the result does not depend on what was derived before it. That is what makes an AI-assisted derivation reproducible across sessions and across OMG releases.",
+  "type": "object",
+  "required": ["schema_version", "production", "status", "fingerprint", "inputs"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "production": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+    "language": { "enum": ["sysml", "kerml", "shared"] },
+    "status": {
+      "enum": ["pending", "derived", "verified", "conflict", "retired"],
+      "description": "pending: planned, not derived. derived: rule written, not yet checked. verified: passes all acceptance criteria. conflict: sources disagree and adjudication is unresolved. retired: removed upstream, kept for history."
+    },
+
+    "fingerprint": {
+      "type": "object",
+      "description": "Hashes of EXACTLY the inputs that produced this rule. On a new OMG release, comparing these tells you which units carry forward untouched and which must be re-derived. This is the mechanism that makes release N+1 cheap.",
+      "required": ["combined"],
+      "additionalProperties": false,
+      "properties": {
+        "spec_clause": { "type": "string" },
+        "xtext_rule": { "type": "string" },
+        "corpus_instances": { "type": "string" },
+        "combined": { "type": "string" }
+      }
+    },
+
+    "inputs": {
+      "type": "object",
+      "description": "What was in context when this unit was derived. Nothing else may be.",
+      "additionalProperties": false,
+      "properties": {
+        "spec_clause_ref": { "type": "string" },
+        "spec_clause_text": { "type": "string" },
+        "xtext_file": { "type": "string" },
+        "xtext_rule_text": { "type": "string" },
+        "corpus_refs": { "type": "array", "items": { "type": "string" } },
+        "metaclass": { "type": "string" }
+      }
+    },
+
+    "rule": {
+      "$ref": "#/$defs/node",
+      "description": "The derived rule, as an AST. A JSON AST rather than EBNF text so the validation oracle consumes it directly with no meta-parser. Human-readable EBNF is rendered from this, never stored alongside it."
+    },
+
+    "decision": {
+      "enum": ["follow_spec", "follow_corpus", "follow_xtext", "spec_and_xtext_agree"],
+      "description": "Which source this rule follows when they disagree. spec_and_xtext_agree means no adjudication was needed."
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["kind", "ref"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": { "enum": ["spec_clause", "corpus_file", "xtext_rule", "omg_issue", "file_id"] },
+          "ref": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "notes": { "type": "string" },
+    "derived_utc": { "type": "string" },
+    "verified_utc": { "type": "string" },
+    "acceptance": {
+      "type": "object",
+      "description": "Deterministic checks. Written by .claude/scripts/grammar_check_unit.py, never by hand.",
+      "additionalProperties": { "enum": ["pass", "fail", "skipped"] }
+    }
+  },
+
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["k"],
+      "additionalProperties": false,
+      "properties": {
+        "k": {
+          "enum": ["seq", "alt", "opt", "star", "plus", "ref", "kw", "tok"],
+          "description": "seq: ordered concatenation. alt: alternatives. opt: zero or one. star: zero or more. plus: one or more. ref: another production. kw: a literal keyword or operator, which MUST appear in keywords.json. tok: a named terminal class such as NAME or STRING_VALUE."
+        },
+        "items": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+        "item": { "$ref": "#/$defs/node" },
+        "name": { "type": "string" },
+        "text": { "type": "string" },
+        "sep": { "$ref": "#/$defs/node" }
+      }
+    }
+  }
+}

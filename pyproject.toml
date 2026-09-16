@@ -1,0 +1,141 @@
+# Tool configuration for the repository's Python scripts (scripts/ and
+# .claude/scripts/). This repository ships no Python distribution: nothing here is
+# built, published, or installed.
+#
+# The [project] table below exists for one reason — uv reads `requires-python` from
+# it, and without it `uv sync` and `uv run` warn and guess an interpreter. It
+# declares no dependencies and no build system, so uv treats the repository as a
+# virtual project and builds nothing. The scripts are still run by path, under the
+# interpreter named in .python-version.
+#
+# The tool tables below are STD-001-PY §12.
+
+[project]
+name = "sysmlv2-editor"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[tool.ruff]
+# py312 is the floor the lints assume: the interpreter this repository is moving
+# to, and the newest one RHEL 9 AppStream provides as a supported package. The
+# scripts are still invoked as `python3.11` until python3.12 is installed on the
+# machines that run the gate, and mypy stays at 3.11 until then — which is what
+# would catch 3.12-only syntax reaching a 3.11 interpreter.
+target-version = "py312"
+line-length = 100
+src = ["scripts", ".claude/scripts"]
+# Only the script directories. Without this, ruff also formats Python code blocks
+# inside Markdown, including the examples in docs/standards/.
+include = ["scripts/**/*.py", ".claude/scripts/**/*.py"]
+
+[tool.ruff.lint]
+select = [
+    "F",      # pyflakes
+    "E", "W", # pycodestyle
+    "I",      # import sorting
+    "N",      # pep8 naming
+    "UP",     # pyupgrade
+    "ANN",    # missing annotations
+    "S",      # bandit
+    "BLE",    # blind except
+    "FBT",    # boolean trap in signatures
+    "B",      # bugbear
+    "A",      # shadowing builtins
+    "C4",     # comprehensions
+    "DTZ",    # naive datetimes
+    "EM",     # exception message literals
+    "ISC",    # implicit string concat
+    "ICN",    # import conventions
+    "LOG", "G",  # logging correctness and format
+    "INP",    # implicit namespace packages
+    "PIE", "T20", "PT", "Q", "RSE", "RET",
+    "SLF",    # private member access
+    "SIM",
+    "TID",    # tidy imports
+    "TC",     # type-checking blocks
+    "ARG",    # unused arguments
+    "PTH",    # pathlib over os.path
+    "ERA",    # commented-out code
+    "PL",     # pylint refactor/warning/error
+    "TRY",    # exception antipatterns
+    "PERF",
+    "D",      # docstrings
+    "RUF",
+]
+ignore = [
+    "D203", "D213",   # conflict with the chosen convention
+    "D105", "D107",   # magic methods and __init__; see §11
+    "ANN401",         # Any is governed by §6, with a required comment
+    "TRY003",         # long messages are fine; EM101/EM102 govern placement
+    "ISC001",         # conflicts with the formatter
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-nested-blocks = 3
+max-branches = 12
+max-returns = 6
+max-args = 5
+max-statements = 40
+max-bool-expr = 5
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.flake8-type-checking]
+strict = true
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101", "D", "PLR2004", "ANN", "INP001", "SLF001"]  # asserts, docstrings, magic numbers, no __init__.py, private seams
+# The script directories (STD-003-SH §9.5): stdout is their product, and they are
+# not a package. S603/S607: these scripts exist to run the repository's own fixed
+# commands (cargo, git, sibling scripts) with argument lists, never a shell string.
+# D is NOT ignored here: a script's module docstring is its --help text (§11).
+"scripts/**" = ["T20", "INP001", "S603", "S607"]
+".claude/scripts/**" = ["T20", "INP001", "S603", "S607"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+warn_no_return = true
+disallow_any_explicit = false          # governed by §6 with a required comment
+enable_error_code = ["redundant-expr", "truthy-bool", "ignore-without-code"]
+# The private modules each script imports live beside it.
+mypy_path = ["scripts", ".claude/scripts"]
+files = ["scripts", ".claude/scripts"]
+exclude = ["/tests/"]
+
+[[tool.mypy.overrides]]
+# Optional at runtime: validate_state.py falls back to a structural check.
+module = ["jsonschema", "jsonschema.*"]
+ignore_missing_imports = true
+
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers --strict-config -q"
+# Tests live beside the scripts they cover.
+testpaths = ["scripts/tests", ".claude/scripts/tests"]
+pythonpath = ["scripts", ".claude/scripts"]
+markers = ["slow: excluded from the default run"]
+
+
+# STD-001-PY §2.3: the header every source file carries. Read by
+# scripts/check_headers.py for Python and, per STD-002-RS §2.3, Rust sources.
+# Two lines, so the licence and the author travel with any file copied out of
+# the repository — which is the whole of what MIT asks for.
+[tool.sv2.headers]
+required = true
+must_contain = [
+    "SPDX-License-Identifier: MIT",
+    "Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>",
+]

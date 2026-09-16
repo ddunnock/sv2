@@ -1,0 +1,11 @@
+root = true
+
+# STD-003-SH §12.2. shfmt reads these when invoked without formatting flags.
+[*.sh]
+indent_style = space
+indent_size = 2
+shell_variant = bash
+binary_next_line = true
+switch_case_indent = true
+space_redirects = false
+function_next_line = false

@@ -1,0 +1,21 @@
+/target
+**/*.rs.bk
+*.pending-snap
+
+# uv creates one here if anyone runs `uv venv`; .python-version decides which
+# interpreter it gets. Nothing in the gate uses it — the scripts run under the
+# system python3.11 directly.
+.venv/
+
+# Tool caches for the Python scripts.
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Personal, per-machine Claude Code configuration. The shared config in
+# `.claude/` IS committed on purpose – hooks, rules, agents, and skills are
+# team artifacts.
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/gate-off

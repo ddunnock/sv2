@@ -1,0 +1,106 @@
+# Workspace root. The tables below are STD-002-RS §13.1.
+#
+# Members inherit everything here. A member manifest carries only:
+#
+#   [package]
+#   name = "sv2-<role>"
+#   version.workspace = true
+#   edition.workspace = true
+#   rust-version.workspace = true
+#   license.workspace = true
+#   publish.workspace = true
+#
+#   [lints]
+#   workspace = true
+
+[workspace]
+resolver = "3"
+# §13.1. A new directory under crates/ is a member automatically, and fails
+# `cargo deny check bans` until its layer is declared in deny.toml (§2.5).
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+# §12 rule 7: the same release rust-toolchain.toml pins.
+rust-version = "1.98"
+license = "MIT"
+publish = false
+
+[workspace.dependencies]
+# §12 rule 2: versions live here and only here; members write `name = { workspace = true }`.
+# §12 rule 8: members can add features to an inherited dependency but cannot remove
+# them, so the features declared here are the minimum every member can accept.
+
+# Workspace crates, so members take them by `workspace = true` like any other.
+sv2-syntax = { path = "crates/sv2-syntax" }
+sv2-ast = { path = "crates/sv2-ast" }
+sv2-hir = { path = "crates/sv2-hir" }
+sv2-resolve = { path = "crates/sv2-resolve" }
+
+# Lossless syntax tree – see ADR-0004. 0.18 exists only as an alpha; the tree type
+# the whole workspace is built on tracks the latest release, not a pre-release.
+rowan = "0.17"
+text-size = "1"
+
+# Diagnostics with file:line:column. Libraries use the core crate; only sv2-cli
+# enables `fancy`, which pulls in terminal detection and colour output.
+miette = "7"
+thiserror = "2"
+
+# Testing.
+insta = { version = "1", features = ["glob"] }
+proptest = "1"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"          # §6.1: forbid, so no attribute can re-allow it
+missing_docs = "warn"           # §11
+unreachable_pub = "warn"        # §2.4
+unused_qualifications = "warn"
+let_underscore_drop = "warn"
+
+# Levels are "warn" so local work shows every finding at once. scripts/gate.sh runs
+# Clippy with `-D warnings`, which makes each of them an error before merge (§13.1).
+[workspace.lints.clippy]
+# groups first, at lower priority, so the named lints below override them
+pedantic = { level = "warn", priority = -1 }
+
+# pedantic lints that do not fit this codebase
+must_use_candidate = "allow"    # §5.3: #[must_use] is applied by rule, not by lint
+
+# complexity (§5.1); thresholds are in clippy.toml
+cognitive_complexity = "warn"
+excessive_nesting = "warn"
+
+# panics (§6.3). The parser must not panic on any input, valid or not; ADR-0002
+# depends on it.
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+dbg_macro = "warn"
+# The two remaining ways a parser panics on malformed input. A slice index out of
+# range, and a `str` slice that lands inside a multi-byte character, are both
+# reachable from user text. Use `.get(..)` and handle `None`.
+indexing_slicing = "warn"
+string_slice = "warn"
+
+# lint exceptions (§6.4)
+allow_attributes = "warn"
+allow_attributes_without_reason = "warn"
+
+# output and process control (§2.2, §8)
+print_stdout = "warn"
+print_stderr = "warn"
+exit = "warn"
+
+# determinism and layout (§4.2, §2)
+iter_over_hash_type = "warn"
+mod_module_files = "warn"
+
+[profile.dev]
+opt-level = 1           # the corpus sweep is unbearable at opt-level 0
+
+[profile.dev.package."*"]
+opt-level = 3

@@ -1,0 +1,18 @@
+---
+source: crates/sv2-syntax/tests/parser.rs
+assertion_line: 58
+expression: render(&parsed.syntax())
+---
+RootNamespace
+  SingleLineNote "// note"
+  Whitespace "\n"
+  Package
+    PackageDeclaration
+      KwPackage "package"
+      Whitespace "  "
+      Identification
+        BasicName "P"
+    Whitespace " "
+    PackageBody
+      Semicolon ";"
+  Whitespace "\n"

@@ -1,0 +1,7 @@
+# Crates allowed a binary target (STD-002-RS §2.2). A crate that is not listed here
+# may not have one: a library with a binary is a second, unrecorded path into it.
+#
+# One entry per crate: the package name, and why it is a binary.
+
+[crates]
+sv2-cli = "the sv2 command line"

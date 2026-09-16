@@ -1,0 +1,136 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
+"""Phase 3 helper. Emits the context pack for ONE pending unit and nothing else.
+
+Isolation is the reproducibility mechanism. If a unit is derived with only its
+own clause, its own Xtext rule, and its own corpus instances in context, the
+output does not depend on what was derived before it — same inputs, same
+result, regardless of session boundaries or order. Any workflow that shows the
+model the whole grammar at once forfeits that.
+
+    python3.11 .claude/scripts/grammar_next.py              next pending unit
+    python3.11 .claude/scripts/grammar_next.py PartUsage    a specific unit
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+from itertools import islice
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from _grammar import GRAMMAR, load_units, pinned_tokens
+from _state import REPO_ROOT, load_json
+
+if TYPE_CHECKING:
+    from _state import Json
+
+MAX_SNIPPETS = 8
+HARD_RULES = [
+    "Derive from spec_clause_text. The Xtext is a second opinion, never the source.",
+    "Do NOT port Xtext LL workarounds: inlined bodies, narrowed ranges, -> and => predicates.",
+    "Every kw text must be in allowed_keywords. Every ref name must be in allowed_refs.",
+    "At least one evidence entry. If sources disagree, set status 'conflict' and stop.",
+    "Touch no other unit file. Read no other unit file.",
+]
+
+
+def _select(units: dict[str, Json], wanted: str | None) -> tuple[Json | None, Json | None]:
+    """(unit, message): exactly one of the two is set."""
+    if wanted:
+        unit = units.get(wanted)
+        return (unit, None) if unit else (None, {"error": f"no unit {wanted!r}"})
+    pending = [u for u in units.values() if u["status"] == "pending"]
+    if not pending:
+        return None, {
+            "done": True,
+            "message": "no pending units",
+            "next": "python3.11 .claude/scripts/grammar_consistency.py",
+        }
+    # Deterministic order: fewest dependencies first, then alphabetical, so the
+    # same repository always yields the same sequence.
+    return min(
+        pending, key=lambda u: (len(u["inputs"].get("xtext_rule_text", "")), u["production"])
+    ), None
+
+
+def corpus_instances(xtext_rule_text: str) -> list[dict[str, str]]:
+    """Corpus lines mentioning this construct's keywords — evidence, not truth."""
+    literals = re.findall(r"'((?:[^'\\]|\\.)*)'", xtext_rule_text)
+    words = [k for k in literals if re.fullmatch(r"[a-z][a-z0-9_]*", k)][:3]
+    if not words:
+        return []
+    pattern = re.compile(
+        r"^.*\b(" + "|".join(re.escape(w) for w in words) + r")\b.*$", re.MULTILINE
+    )
+    snippets: list[dict[str, str]] = []
+    files = [*Path("vendor/corpus").rglob("*.sysml"), *Path("tests/corpus").rglob("*.sysml")]
+    for f in files:
+        snippets.extend(
+            {"file": str(f), "line": m.group().strip()[:160]}
+            for m in islice(pattern.finditer(f.read_text(errors="replace")), 2)
+        )
+        if len(snippets) >= MAX_SNIPPETS:
+            break
+    return snippets
+
+
+def context_pack(unit: Json) -> Json:
+    """The complete, isolated input for deriving one unit."""
+    name = unit["production"]
+    inputs = unit["inputs"]
+    keywords, operators = pinned_tokens()
+    inventory = load_json(GRAMMAR / "productions.json", {"productions": []})
+    return {
+        "unit": name,
+        "status": unit["status"],
+        "fingerprint": unit["fingerprint"]["combined"][:16],
+        "metaclass": inputs.get("metaclass", ""),
+        "inputs": {
+            "spec_clause_ref": inputs.get("spec_clause_ref", ""),
+            "spec_clause_text": inputs.get("spec_clause_text", ""),
+            "xtext_file": inputs.get("xtext_file", ""),
+            "xtext_rule_text": inputs.get("xtext_rule_text", ""),
+            "corpus_instances": corpus_instances(inputs.get("xtext_rule_text", "")),
+        },
+        "allowed_keywords": keywords + operators,
+        "allowed_refs": sorted({p["name"] for p in inventory["productions"]}),
+        "contract": {
+            "write_to": f".claude/state/grammar/units/{name}.json",
+            "set_fields": ["rule", "decision", "evidence", "status", "derived_utc", "notes"],
+            "status_must_be": "derived",
+            "rule_is": "a JSON AST per .claude/state/schema/grammar-unit.schema.json",
+            "hard_rules": HARD_RULES,
+        },
+        "then_run": f"python3.11 .claude/scripts/grammar_check_unit.py {name}",
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Emit the context pack for one pending unit, as JSON on stdout."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("unit", nargs="?", help="a specific unit instead of the next pending one")
+    args = parser.parse_args(argv)
+    os.chdir(REPO_ROOT)
+
+    units = load_units()
+    if not units:
+        print(
+            json.dumps(
+                {"error": "no units", "fix": "run python3.11 .claude/scripts/grammar_plan.py"}
+            )
+        )
+        return 1
+    unit, message = _select(units, args.unit)
+    if unit is None:
+        print(json.dumps(message))
+        return 0 if message and message.get("done") else 1
+    print(json.dumps(context_pack(unit), indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

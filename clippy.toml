@@ -1,0 +1,31 @@
+# Clippy thresholds and disallowed methods. STD-002-RS §13.2. The lints these keys
+# configure are switched on in the [workspace.lints.clippy] table of Cargo.toml.
+
+# §5.1 thresholds
+excessive-nesting-threshold = 4       # = three nested blocks inside the function body
+cognitive-complexity-threshold = 15
+too-many-arguments-threshold = 5
+too-many-lines-threshold = 60
+max-fn-params-bools = 0
+max-struct-bools = 3
+type-complexity-threshold = 250
+
+# §6.3: tests may unwrap, expect, panic, print, and dbg!
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-print-in-tests = true
+allow-dbg-in-tests = true
+# Pairs with `indexing_slicing` in Cargo.toml, on the same terms as the above.
+allow-indexing-slicing-in-tests = true
+
+# §2.2, §4.2, §10
+disallowed-methods = [
+    { path = "std::time::SystemTime::now", reason = "inject a Clock (STD-002-RS §10)" },
+    { path = "std::env::var", reason = "configuration is read once, in main (STD-002-RS §2.2)" },
+    { path = "std::env::var_os", reason = "configuration is read once, in main (STD-002-RS §2.2)" },
+    # The iterator forms read the same environment and would otherwise be the way
+    # around the two entries above.
+    { path = "std::env::vars", reason = "configuration is read once, in main (STD-002-RS §2.2)" },
+    { path = "std::env::vars_os", reason = "configuration is read once, in main (STD-002-RS §2.2)" },
+]

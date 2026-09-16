@@ -1,0 +1,38 @@
+grammar org.omg.kerml.xtext.KerML with org.eclipse.xtext.common.Terminals
+
+import "https://www.omg.org/spec/KerML/20250201" as KerML
+import "http://www.eclipse.org/emf/2002/Ecore" as Ecore
+
+/* block comment with 'fake' literal
+   spanning lines */
+// line comment 'alsofake'
+
+RootNamespace returns KerML::Namespace :
+	PackageBody*
+;
+
+PackageBody returns KerML::Package :
+	'package' Name ( ';' | '{' ( PackageBody | PartUsage )* '}' )
+;
+
+fragment Identification returns KerML::Element :
+	( '<' declaredShortName = Name '>' )? ( declaredName = Name )?
+;
+
+Name : ID ;
+
+enum VisibilityKind returns KerML::VisibilityKind :
+	public = 'public' | private = 'private'
+;
+
+Quote : '\'' ;
+
+terminal ML_NOTE : '//*' -> '*/' ;
+terminal SL_NOTE : '//' !('\n'|'\r')* ;
+terminal REGULAR_COMMENT : '/*' -> '*/' ;
+
+// Copied in shape from vendor/pilot/KerMLExpressions.xtext: a terminal defines
+// lexical structure with character ranges and escape letters, not with tokens.
+terminal DECIMAL_VALUE returns Ecore::EInt : '0'..'9' ('0'..'9')* ;
+terminal UNRESTRICTED_NAME returns Ecore::EString :
+	'\'' ('\\' ('b' | 't' | 'n' | 'f' | 'r' | '"' | "'" | '\\') | !('\\' | '\''))* '\'' ;

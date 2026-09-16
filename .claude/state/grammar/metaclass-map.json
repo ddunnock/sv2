@@ -1,0 +1,906 @@
+{
+  "_generated_by": "scripts/extract_productions.py",
+  "_note": "Metaclass -> the productions that construct it. Phase-2 desugaring targets.",
+  "counts": {
+    "metaclasses": 178
+  },
+  "map": {
+    "Ecore::EBoolean": [
+      "BooleanValue",
+      "Nonunique"
+    ],
+    "Ecore::EDouble": [
+      "RealValue"
+    ],
+    "Ecore::EInt": [
+      "DECIMAL_VALUE"
+    ],
+    "Ecore::EString": [
+      "STRING_VALUE",
+      "UNRESTRICTED_NAME"
+    ],
+    "SysML::AcceptActionUsage": [
+      "AcceptNode",
+      "TriggerAction"
+    ],
+    "SysML::ActionDefinition": [
+      "ActionDefinition"
+    ],
+    "SysML::ActionUsage": [
+      "AcceptNodeDeclaration",
+      "AcceptParameterPart",
+      "ActionBodyParameter",
+      "ActionNode",
+      "ActionNodePrefix",
+      "ActionNodeUsageDeclaration",
+      "ActionUsage",
+      "ActionUsageDeclaration",
+      "AssignmentNodeDeclaration",
+      "EffectBehaviorUsage",
+      "EmptyActionUsage",
+      "PerformActionUsageDeclaration",
+      "PerformedActionUsage",
+      "SendNodeDeclaration",
+      "SenderReceiverPart",
+      "StateActionUsage"
+    ],
+    "SysML::ActorMembership": [
+      "ActorMember"
+    ],
+    "SysML::AllocationDefinition": [
+      "AllocationDefinition"
+    ],
+    "SysML::AllocationUsage": [
+      "AllocationUsage",
+      "AllocationUsageDeclaration"
+    ],
+    "SysML::AnalysisCaseDefinition": [
+      "AnalysisCaseDefinition"
+    ],
+    "SysML::AnalysisCaseUsage": [
+      "AnalysisCaseUsage"
+    ],
+    "SysML::AnnotatingElement": [
+      "AnnotatingElement"
+    ],
+    "SysML::Annotation": [
+      "Annotation",
+      "OwnedAnnotation",
+      "PrefixMetadataAnnotation"
+    ],
+    "SysML::AssertConstraintUsage": [
+      "AssertConstraintUsage"
+    ],
+    "SysML::AssignmentActionUsage": [
+      "AssignmentNode"
+    ],
+    "SysML::Association": [
+      "Association"
+    ],
+    "SysML::AssociationStructure": [
+      "AssociationStructure"
+    ],
+    "SysML::AttributeDefinition": [
+      "AttributeDefinition"
+    ],
+    "SysML::AttributeUsage": [
+      "AttributeUsage"
+    ],
+    "SysML::Behavior": [
+      "Behavior"
+    ],
+    "SysML::BindingConnector": [
+      "BindingConnector",
+      "BindingConnectorDeclaration"
+    ],
+    "SysML::BindingConnectorAsUsage": [
+      "BindingConnectorAsUsage"
+    ],
+    "SysML::BooleanExpression": [
+      "BooleanExpression"
+    ],
+    "SysML::CalculationDefinition": [
+      "CalculationDefinition"
+    ],
+    "SysML::CalculationUsage": [
+      "CalculationUsage"
+    ],
+    "SysML::CaseDefinition": [
+      "CaseDefinition"
+    ],
+    "SysML::CaseUsage": [
+      "CaseUsage"
+    ],
+    "SysML::Class": [
+      "Class"
+    ],
+    "SysML::Classifier": [
+      "Classifier",
+      "ClassifierConjugationPart",
+      "ClassifierDeclaration",
+      "SubclassificationPart",
+      "SuperclassingPart"
+    ],
+    "SysML::Comment": [
+      "Comment"
+    ],
+    "SysML::ConcernDefinition": [
+      "ConcernDefinition"
+    ],
+    "SysML::ConcernUsage": [
+      "ConcernUsage",
+      "FramedConcernUsage"
+    ],
+    "SysML::ConjugatedPortDefinition": [
+      "ConjugatedPortDefinition"
+    ],
+    "SysML::ConjugatedPortTyping": [
+      "ConjugatedPortTyping"
+    ],
+    "SysML::Conjugation": [
+      "ClassifierConjugation",
+      "Conjugation",
+      "FeatureConjugation",
+      "OwnedConjugation"
+    ],
+    "SysML::ConnectionDefinition": [
+      "ConnectionDefinition"
+    ],
+    "SysML::ConnectionUsage": [
+      "ConnectionUsage",
+      "ConnectorPart",
+      "InterfacePart"
+    ],
+    "SysML::Connector": [
+      "BinaryConnectorDeclaration",
+      "BinaryConnectorPart",
+      "BinaryInterfacePart",
+      "Connector",
+      "ConnectorDeclaration",
+      "NaryConnectorDeclaration",
+      "NaryConnectorPart",
+      "NaryInterfacePart"
+    ],
+    "SysML::ConstraintDefinition": [
+      "ConstraintDefinition"
+    ],
+    "SysML::ConstraintUsage": [
+      "ConstraintUsage",
+      "ConstraintUsageDeclaration",
+      "RequirementConstraintUsage"
+    ],
+    "SysML::ConstructorExpression": [
+      "ConstructorExpression"
+    ],
+    "SysML::ControlNode": [
+      "ControlNode"
+    ],
+    "SysML::CrossSubsetting": [
+      "OwnedCrossSubsetting"
+    ],
+    "SysML::DataType": [
+      "DataType"
+    ],
+    "SysML::DecisionNode": [
+      "DecisionNode"
+    ],
+    "SysML::Definition": [
+      "BasicDefinitionPrefix",
+      "Definition",
+      "DefinitionDeclaration",
+      "DefinitionExtensionKeyword",
+      "DefinitionPrefix",
+      "ExtendedDefinition"
+    ],
+    "SysML::Dependency": [
+      "Dependency"
+    ],
+    "SysML::Differencing": [
+      "Differencing"
+    ],
+    "SysML::Disjoining": [
+      "Disjoining",
+      "OwnedDisjoining"
+    ],
+    "SysML::Documentation": [
+      "Documentation"
+    ],
+    "SysML::Element": [
+      "DefinitionElement",
+      "Identification",
+      "MemberElement",
+      "NonFeatureElement",
+      "OwnedRelatedElement"
+    ],
+    "SysML::ElementFilterMembership": [
+      "ElementFilterMember",
+      "FilterPackageMember"
+    ],
+    "SysML::EndFeatureMembership": [
+      "ConnectorEndMember",
+      "EmptySourceEndMember",
+      "EmptyTargetEndMember",
+      "FlowEndMember",
+      "InterfaceEndMember",
+      "MultiplicitySourceEndMember"
+    ],
+    "SysML::EnumerationDefinition": [
+      "EnumerationBody",
+      "EnumerationDefinition"
+    ],
+    "SysML::EnumerationUsage": [
+      "EnumeratedValue",
+      "EnumerationUsage"
+    ],
+    "SysML::EventOccurrenceUsage": [
+      "EventOccurrenceUsage",
+      "MessageEvent"
+    ],
+    "SysML::ExhibitStateUsage": [
+      "ExhibitStateUsage"
+    ],
+    "SysML::Expose": [
+      "Expose",
+      "ExposePrefix"
+    ],
+    "SysML::Expression": [
+      "AdditiveExpression",
+      "AndExpression",
+      "BaseExpression",
+      "ClassificationExpression",
+      "ConditionalExpression",
+      "EqualityExpression",
+      "ExponentiationExpression",
+      "Expression",
+      "ExpressionBody",
+      "ExpressionDeclaration",
+      "ExtentExpression",
+      "FunctionReference",
+      "ImpliesExpression",
+      "MultiplicativeExpression",
+      "NullCoalescingExpression",
+      "OrExpression",
+      "OwnedExpression",
+      "PrimaryExpression",
+      "RangeExpression",
+      "RelationalExpression",
+      "SequenceExpression",
+      "TargetExpression",
+      "UnaryExpression",
+      "XorExpression"
+    ],
+    "SysML::Feature": [
+      "Argument",
+      "ArgumentExpression",
+      "ArgumentList",
+      "BasicFeaturePrefix",
+      "BodyParameter",
+      "ChainingPart",
+      "ConnectorEnd",
+      "ConstructorResult",
+      "Crosses",
+      "Crossings",
+      "EmptyFeature",
+      "EndFeaturePrefix",
+      "Feature",
+      "FeatureChain",
+      "FeatureChainPrefix",
+      "FeatureConjugationPart",
+      "FeatureDeclaration",
+      "FeatureElement",
+      "FeaturePrefix",
+      "FeatureRelationshipPart",
+      "FeatureSpecialization",
+      "FeatureSpecializationPart",
+      "FlowFeature",
+      "InvertingPart",
+      "MetadataBody",
+      "MetadataBodyFeature",
+      "MultiplicityPart",
+      "NamedArgument",
+      "NamedArgumentList",
+      "OwnedCrossMultiplicity",
+      "OwnedCrossingFeature",
+      "OwnedCrossingMultiplicity",
+      "OwnedFeatureChain",
+      "Payload",
+      "PayloadFeatureSpecializationPart",
+      "PositionalArgumentList",
+      "Redefines",
+      "Redefinitions",
+      "References",
+      "Subsets",
+      "Subsettings",
+      "TriggerValuePart",
+      "TypeFeaturingPart",
+      "TypeReference",
+      "TypedBy",
+      "Typings",
+      "ValuePart"
+    ],
+    "SysML::FeatureChaining": [
+      "OwnedFeatureChaining"
+    ],
+    "SysML::FeatureDirectionKind": [
+      "FeatureDirection"
+    ],
+    "SysML::FeatureInverting": [
+      "FeatureInverting",
+      "OwnedFeatureInverting"
+    ],
+    "SysML::FeatureMembership": [
+      "ActionNodeMember",
+      "BehaviorUsageMember",
+      "EmptySuccessionMember",
+      "EntryTransitionMember",
+      "EqualityExpressionMember",
+      "ExpressionBodyMember",
+      "FlowFeatureMember",
+      "ForVariableDeclarationMember",
+      "FunctionReferenceMember",
+      "GuardedSuccessionMember",
+      "ImpliesExpressionMember",
+      "InterfaceNonOccurrenceUsageMember",
+      "InterfaceOccurrenceUsageMember",
+      "MetadataBodyFeatureMember",
+      "MetadataBodyUsageMember",
+      "NonOccurrenceUsageMember",
+      "OccurrenceUsageMember",
+      "OrExpressionMember",
+      "OwnedExpressionMember",
+      "OwnedFeatureMember",
+      "PayloadFeatureMember",
+      "StructureUsageMember",
+      "TargetAccessedFeatureMember",
+      "TargetFeatureMember",
+      "TargetSuccessionMember",
+      "TargetTransitionUsageMember",
+      "TransitionUsageMember",
+      "XorExpressionMember"
+    ],
+    "SysML::FeatureReferenceExpression": [
+      "BodyExpression",
+      "EqualityExpressionReference",
+      "FeatureReferenceExpression",
+      "FunctionReferenceExpression",
+      "ImpliesExpressionReference",
+      "OrExpressionReference",
+      "OwnedExpressionReference",
+      "SatisfactionReferenceExpression",
+      "SelfReferenceExpression",
+      "XorExpressionReference"
+    ],
+    "SysML::FeatureTyping": [
+      "FeatureType",
+      "FeatureTyping",
+      "MetadataTyping",
+      "OwnedFeatureTyping",
+      "ReferenceTyping"
+    ],
+    "SysML::FeatureValue": [
+      "ArgumentExpressionValue",
+      "ArgumentValue",
+      "FeatureBinding",
+      "FeatureValue",
+      "SatisfactionFeatureValue",
+      "TargetBinding",
+      "TriggerFeatureValue"
+    ],
+    "SysML::Flow": [
+      "Flow",
+      "FlowDeclaration"
+    ],
+    "SysML::FlowDefinition": [
+      "FlowDefinition"
+    ],
+    "SysML::FlowEnd": [
+      "FlowEnd"
+    ],
+    "SysML::FlowUsage": [
+      "FlowDeclaration",
+      "FlowUsage",
+      "Message",
+      "MessageDeclaration"
+    ],
+    "SysML::ForLoopActionUsage": [
+      "ForLoopNode"
+    ],
+    "SysML::ForkNode": [
+      "ForkNode"
+    ],
+    "SysML::FramedConcernMembership": [
+      "FramedConcernMember"
+    ],
+    "SysML::Function": [
+      "Function"
+    ],
+    "SysML::IfActionUsage": [
+      "IfNode"
+    ],
+    "SysML::Import": [
+      "FilterPackageImport",
+      "Import",
+      "ImportPrefix"
+    ],
+    "SysML::IncludeUseCaseUsage": [
+      "IncludeUseCaseUsage"
+    ],
+    "SysML::Interaction": [
+      "Interaction"
+    ],
+    "SysML::InterfaceDefinition": [
+      "InterfaceDefinition"
+    ],
+    "SysML::InterfaceUsage": [
+      "InterfaceUsage",
+      "InterfaceUsageDeclaration"
+    ],
+    "SysML::Intersecting": [
+      "Intersecting"
+    ],
+    "SysML::Invariant": [
+      "Invariant"
+    ],
+    "SysML::InvocationExpression": [
+      "InvocationExpression"
+    ],
+    "SysML::ItemDefinition": [
+      "ItemDefinition"
+    ],
+    "SysML::ItemUsage": [
+      "ItemUsage"
+    ],
+    "SysML::JoinNode": [
+      "JoinNode"
+    ],
+    "SysML::LibraryPackage": [
+      "LibraryPackage"
+    ],
+    "SysML::LiteralBoolean": [
+      "LiteralBoolean"
+    ],
+    "SysML::LiteralExpression": [
+      "LiteralExpression"
+    ],
+    "SysML::LiteralInfinity": [
+      "LiteralInfinity"
+    ],
+    "SysML::LiteralInteger": [
+      "LiteralInteger"
+    ],
+    "SysML::LiteralRational": [
+      "LiteralReal"
+    ],
+    "SysML::LiteralString": [
+      "LiteralString"
+    ],
+    "SysML::Membership": [
+      "AliasMember",
+      "ElementReferenceMember",
+      "FeatureChainMember",
+      "FeatureReferenceMember",
+      "InitialNodeMember",
+      "InstantiatedTypeMember",
+      "MemberPrefix",
+      "TransitionSourceMember"
+    ],
+    "SysML::MembershipExpose": [
+      "MembershipExpose"
+    ],
+    "SysML::MembershipImport": [
+      "FilterPackageMembershipImport",
+      "ImportedMembership",
+      "MembershipImport"
+    ],
+    "SysML::MergeNode": [
+      "MergeNode"
+    ],
+    "SysML::Metaclass": [
+      "Metaclass"
+    ],
+    "SysML::MetadataAccessExpression": [
+      "MetadataAccessExpression",
+      "MetadataReference"
+    ],
+    "SysML::MetadataDefinition": [
+      "MetadataDefinition"
+    ],
+    "SysML::MetadataFeature": [
+      "MetadataFeature",
+      "MetadataFeatureDeclaration",
+      "PrefixMetadataFeature"
+    ],
+    "SysML::MetadataUsage": [
+      "MetadataUsage",
+      "MetadataUsageDeclaration",
+      "PrefixMetadataUsage"
+    ],
+    "SysML::Multiplicity": [
+      "EmptyMultiplicity",
+      "Multiplicity",
+      "MultiplicitySubset"
+    ],
+    "SysML::MultiplicityRange": [
+      "MultiplicityBounds",
+      "MultiplicityRange",
+      "OwnedMultiplicityRange"
+    ],
+    "SysML::Namespace": [
+      "Namespace",
+      "NamespaceBody",
+      "NamespaceBodyElement",
+      "NamespaceDeclaration",
+      "PackageBody",
+      "PackageBodyElement",
+      "RootNamespace"
+    ],
+    "SysML::NamespaceExpose": [
+      "NamespaceExpose"
+    ],
+    "SysML::NamespaceImport": [
+      "FilterPackageNamespaceImport",
+      "ImportedNamespace",
+      "NamespaceImport"
+    ],
+    "SysML::NullExpression": [
+      "NullExpression"
+    ],
+    "SysML::ObjectiveMembership": [
+      "ObjectiveMember"
+    ],
+    "SysML::OccurrenceDefinition": [
+      "IndividualDefinition",
+      "OccurrenceDefinition",
+      "OccurrenceDefinitionPrefix"
+    ],
+    "SysML::OccurrenceUsage": [
+      "ControlNodePrefix",
+      "IndividualUsage",
+      "OccurrenceUsage",
+      "OccurrenceUsagePrefix",
+      "PortionUsage"
+    ],
+    "SysML::OwningMembership": [
+      "AnnotatingMember",
+      "ConjugatedPortDefinitionMember",
+      "DefinitionMember",
+      "EmptyMultiplicityMember",
+      "FeatureMember",
+      "MultiplicityExpressionMember",
+      "NamespaceFeatureMember",
+      "NamespaceMember",
+      "NonFeatureMember",
+      "OwnedCrossFeatureMember",
+      "OwnedCrossMultiplicityMember",
+      "OwnedCrossingFeatureMember",
+      "OwnedCrossingMultiplicityMember",
+      "OwnedMultiplicity",
+      "PackageMember",
+      "PrefixMetadataMember",
+      "TransitionSuccessionMember",
+      "TypeFeatureMember"
+    ],
+    "SysML::Package": [
+      "FilterPackage",
+      "Package",
+      "PackageBody",
+      "PackageDeclaration"
+    ],
+    "SysML::ParameterMembership": [
+      "ActionBodyParameterMember",
+      "ArgumentExpressionMember",
+      "ArgumentMember",
+      "AssignmentTargetMember",
+      "BodyParameterMember",
+      "EmptyParameterMember",
+      "ExpressionParameterMember",
+      "IfNodeParameterMember",
+      "MessageEventMember",
+      "NamedArgumentMember",
+      "NodeParameterMember",
+      "PayloadParameterMember",
+      "TypeReferenceMember"
+    ],
+    "SysML::PartDefinition": [
+      "PartDefinition"
+    ],
+    "SysML::PartUsage": [
+      "ActorUsage",
+      "PartUsage",
+      "StakeholderUsage"
+    ],
+    "SysML::PayloadFeature": [
+      "PayloadFeature"
+    ],
+    "SysML::PerformActionUsage": [
+      "PerformActionUsage"
+    ],
+    "SysML::PortConjugation": [
+      "PortConjugation"
+    ],
+    "SysML::PortDefinition": [
+      "PortDefinition"
+    ],
+    "SysML::PortUsage": [
+      "DefaultInterfaceEnd",
+      "InterfaceEnd",
+      "PortUsage"
+    ],
+    "SysML::PortionKind": [
+      "PortionKind"
+    ],
+    "SysML::Predicate": [
+      "Predicate"
+    ],
+    "SysML::Redefinition": [
+      "FlowRedefinition",
+      "OwnedRedefinition",
+      "ParameterRedefinition",
+      "Redefinition"
+    ],
+    "SysML::ReferenceSubsetting": [
+      "FlowEndSubsetting",
+      "OwnedReferenceSubsetting"
+    ],
+    "SysML::ReferenceUsage": [
+      "ConnectorEnd",
+      "DefaultReferenceUsage",
+      "EmptySourceEnd",
+      "EmptyTargetEnd",
+      "EmptyUsage",
+      "FlowFeature",
+      "ForVariableDeclaration",
+      "MetadataBodyUsage",
+      "MultiplicitySourceEnd",
+      "NodeParameter",
+      "OwnedCrossFeature",
+      "PayloadParameter",
+      "ReferenceUsage",
+      "SatisfactionParameter",
+      "SubjectUsage",
+      "TargetFeature",
+      "TargetParameter",
+      "VariantReference"
+    ],
+    "SysML::Relationship": [
+      "RelationshipBody",
+      "RelationshipOwnedElement"
+    ],
+    "SysML::RenderingDefinition": [
+      "RenderingDefinition"
+    ],
+    "SysML::RenderingUsage": [
+      "RenderingUsage",
+      "ViewRenderingUsage"
+    ],
+    "SysML::RequirementConstraintKind": [
+      "FramedConcernKind",
+      "RequirementConstraintKind",
+      "RequirementVerificationKind"
+    ],
+    "SysML::RequirementConstraintMembership": [
+      "RequirementConstraintMember"
+    ],
+    "SysML::RequirementDefinition": [
+      "RequirementDefinition"
+    ],
+    "SysML::RequirementUsage": [
+      "ObjectiveRequirementUsage",
+      "RequirementUsage",
+      "RequirementVerificationUsage"
+    ],
+    "SysML::RequirementVerificationMembership": [
+      "RequirementVerificationMember"
+    ],
+    "SysML::ResultExpressionMembership": [
+      "ResultExpressionMember"
+    ],
+    "SysML::ReturnParameterMembership": [
+      "ConstructorResultMember",
+      "ReturnFeatureMember",
+      "ReturnParameterMember",
+      "SelfReferenceMember",
+      "TypeResultMember"
+    ],
+    "SysML::SatisfyRequirementUsage": [
+      "SatisfyRequirementUsage"
+    ],
+    "SysML::SendActionUsage": [
+      "SendNode"
+    ],
+    "SysML::Specialization": [
+      "OwnedSpecialization",
+      "Specialization"
+    ],
+    "SysML::StakeholderMembership": [
+      "StakeholderMember"
+    ],
+    "SysML::StateDefinition": [
+      "StateDefBody",
+      "StateDefinition"
+    ],
+    "SysML::StateSubactionKind": [
+      "DoActionKind",
+      "EntryActionKind",
+      "ExitActionKind"
+    ],
+    "SysML::StateSubactionMembership": [
+      "DoActionMember",
+      "EntryActionMember",
+      "ExitActionMember"
+    ],
+    "SysML::StateUsage": [
+      "StateUsage",
+      "StateUsageBody"
+    ],
+    "SysML::Step": [
+      "Step",
+      "StepDeclaration"
+    ],
+    "SysML::Structure": [
+      "Structure"
+    ],
+    "SysML::Subclassification": [
+      "OwnedSubclassification",
+      "Ownedsubclassification",
+      "Subclassification"
+    ],
+    "SysML::SubjectMembership": [
+      "SatisfactionSubjectMember",
+      "SubjectMember"
+    ],
+    "SysML::Subsetting": [
+      "OwnedSubsetting",
+      "Subsetting"
+    ],
+    "SysML::Succession": [
+      "Succession",
+      "SuccessionDeclaration"
+    ],
+    "SysML::SuccessionAsUsage": [
+      "EmptySuccession",
+      "SuccessionAsUsage",
+      "TargetSuccession",
+      "TransitionSuccession"
+    ],
+    "SysML::SuccessionFlow": [
+      "SuccessionFlow"
+    ],
+    "SysML::SuccessionFlowUsage": [
+      "SuccessionFlowUsage"
+    ],
+    "SysML::TerminateActionUsage": [
+      "TerminateNode"
+    ],
+    "SysML::TextualRepresentation": [
+      "TextualRepresentation"
+    ],
+    "SysML::TransitionFeatureKind": [
+      "EffectFeatureKind",
+      "GuardFeatureKind",
+      "TriggerFeatureKind"
+    ],
+    "SysML::TransitionFeatureMembership": [
+      "EffectBehaviorMember",
+      "GuardExpressionMember",
+      "TriggerActionMember"
+    ],
+    "SysML::TransitionUsage": [
+      "DefaultTargetSuccession",
+      "GuardedSuccession",
+      "GuardedTargetSuccession",
+      "TargetTransitionUsage",
+      "TransitionUsage"
+    ],
+    "SysML::TriggerInvocationExpression": [
+      "TriggerExpression"
+    ],
+    "SysML::TriggerKind": [
+      "ChangeTriggerKind",
+      "TimeTriggerKind"
+    ],
+    "SysML::Type": [
+      "ActionBody",
+      "ActionBodyItem",
+      "CalculationBody",
+      "CalculationBodyItem",
+      "CalculationBodyPart",
+      "CaseBody",
+      "CaseBodyItem",
+      "ConjugationPart",
+      "DefinitionBody",
+      "DefinitionBodyItem",
+      "DifferencingPart",
+      "DisjoiningPart",
+      "FunctionBody",
+      "FunctionBodyPart",
+      "InterfaceBody",
+      "InterfaceBodyItem",
+      "IntersectingPart",
+      "RequirementBody",
+      "RequirementBodyItem",
+      "SpecializationPart",
+      "StateBodyItem",
+      "StateBodyPart",
+      "Type",
+      "TypeBody",
+      "TypeDeclaration",
+      "TypePrefix",
+      "TypeRelationshipPart",
+      "UnioningPart"
+    ],
+    "SysML::TypeFeaturing": [
+      "OwnedTypeFeaturing",
+      "TypeFeaturing"
+    ],
+    "SysML::Unioning": [
+      "Unioning"
+    ],
+    "SysML::Usage": [
+      "ActionTargetSuccession",
+      "BasicUsagePrefix",
+      "BehaviorUsageElement",
+      "EndUsagePrefix",
+      "ExtendedUsage",
+      "InterfaceNonOccurrenceUsageElement",
+      "InterfaceOccurrenceUsageElement",
+      "MetadataBody",
+      "NonOccurrenceUsageElement",
+      "OccurrenceUsageElement",
+      "RefPrefix",
+      "StructureUsageElement",
+      "UnextendedUsagePrefix",
+      "Usage",
+      "UsageBody",
+      "UsageCompletion",
+      "UsageDeclaration",
+      "UsageElement",
+      "UsageExtensionKeyword",
+      "UsagePrefix",
+      "VariantUsageElement"
+    ],
+    "SysML::UseCaseDefinition": [
+      "UseCaseDefinition"
+    ],
+    "SysML::UseCaseUsage": [
+      "UseCaseUsage"
+    ],
+    "SysML::VariantMembership": [
+      "EnumerationUsageMember",
+      "VariantUsageMember"
+    ],
+    "SysML::VerificationCaseDefinition": [
+      "VerificationCaseDefinition"
+    ],
+    "SysML::VerificationCaseUsage": [
+      "VerificationCaseUsage"
+    ],
+    "SysML::ViewDefinition": [
+      "ViewDefinition",
+      "ViewDefinitionBody",
+      "ViewDefinitionBodyItem"
+    ],
+    "SysML::ViewRenderingMembership": [
+      "ViewRenderingMember"
+    ],
+    "SysML::ViewUsage": [
+      "ViewBody",
+      "ViewBodyItem",
+      "ViewUsage"
+    ],
+    "SysML::ViewpointDefinition": [
+      "ViewpointDefinition"
+    ],
+    "SysML::ViewpointUsage": [
+      "ViewpointUsage"
+    ],
+    "SysML::VisibilityKind": [
+      "ExposeVisibilityKind",
+      "FilterPackageMemberVisibility",
+      "VisibilityIndicator"
+    ],
+    "SysML::WhileLoopActionUsage": [
+      "WhileLoopNode"
+    ]
+  }
+}

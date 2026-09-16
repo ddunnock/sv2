@@ -1,0 +1,4426 @@
+{
+  "_generated_by": "scripts/extract_productions.py",
+  "_source": [
+    "KerML.xtext",
+    "KerMLExpressions.xtext",
+    "SysML.xtext"
+  ],
+  "grammars": [
+    {
+      "file": "KerML.xtext",
+      "grammar": "org.omg.kerml.xtext.KerML",
+      "extends": "org.omg.kerml.expressions.xtext.KerMLExpressions",
+      "imports": [
+        {
+          "uri": "http://www.eclipse.org/emf/2002/Ecore",
+          "alias": "Ecore"
+        },
+        {
+          "uri": "https://www.omg.org/spec/SysML/20250201",
+          "alias": "SysML"
+        }
+      ]
+    },
+    {
+      "file": "KerMLExpressions.xtext",
+      "grammar": "org.omg.kerml.expressions.xtext.KerMLExpressions",
+      "extends": null,
+      "imports": [
+        {
+          "uri": "http://www.eclipse.org/emf/2002/Ecore",
+          "alias": "Ecore"
+        },
+        {
+          "uri": "https://www.omg.org/spec/SysML/20250201",
+          "alias": "SysML"
+        }
+      ]
+    },
+    {
+      "file": "SysML.xtext",
+      "grammar": "org.omg.sysml.xtext.SysML",
+      "extends": "org.omg.kerml.expressions.xtext.KerMLExpressions",
+      "imports": [
+        {
+          "uri": "http://www.eclipse.org/emf/2002/Ecore",
+          "alias": "Ecore"
+        },
+        {
+          "uri": "https://www.omg.org/spec/SysML/20250201",
+          "alias": "SysML"
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "total": 727,
+    "rule": 550,
+    "fragment": 154,
+    "enum": 14,
+    "terminal": 9
+  },
+  "productions": [
+    {
+      "name": "AliasMember",
+      "kind": "rule",
+      "returns": "SysML::Membership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "AnnotatingElement",
+      "kind": "rule",
+      "returns": "SysML::AnnotatingElement",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Annotation",
+      "kind": "rule",
+      "returns": "SysML::Annotation",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Association",
+      "kind": "rule",
+      "returns": "SysML::Association",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "AssociationStructure",
+      "kind": "rule",
+      "returns": "SysML::AssociationStructure",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "BasicFeaturePrefix",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Behavior",
+      "kind": "rule",
+      "returns": "SysML::Behavior",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "BinaryConnectorDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Connector",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "BindingConnector",
+      "kind": "rule",
+      "returns": "SysML::BindingConnector",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "BindingConnectorDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::BindingConnector",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "BooleanExpression",
+      "kind": "rule",
+      "returns": "SysML::BooleanExpression",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ChainingPart",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Class",
+      "kind": "rule",
+      "returns": "SysML::Class",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Classifier",
+      "kind": "rule",
+      "returns": "SysML::Classifier",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ClassifierConjugation",
+      "kind": "rule",
+      "returns": "SysML::Conjugation",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ClassifierConjugationPart",
+      "kind": "fragment",
+      "returns": "SysML::Classifier",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ClassifierDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Classifier",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Comment",
+      "kind": "rule",
+      "returns": "SysML::Comment",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Conjugation",
+      "kind": "rule",
+      "returns": "SysML::Conjugation",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ConjugationPart",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Connector",
+      "kind": "rule",
+      "returns": "SysML::Connector",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ConnectorDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Connector",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ConnectorEnd",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ConnectorEndMember",
+      "kind": "rule",
+      "returns": "SysML::EndFeatureMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Crossings",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "DataType",
+      "kind": "rule",
+      "returns": "SysML::DataType",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Dependency",
+      "kind": "rule",
+      "returns": "SysML::Dependency",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Differencing",
+      "kind": "rule",
+      "returns": "SysML::Differencing",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "DifferencingPart",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Disjoining",
+      "kind": "rule",
+      "returns": "SysML::Disjoining",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "DisjoiningPart",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Documentation",
+      "kind": "rule",
+      "returns": "SysML::Documentation",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ElementFilterMember",
+      "kind": "rule",
+      "returns": "SysML::ElementFilterMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "EndFeaturePrefix",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Expression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ExpressionBody",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ExpressionDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Expression",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Feature",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeatureChainPrefix",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeatureConjugation",
+      "kind": "rule",
+      "returns": "SysML::Conjugation",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeatureConjugationPart",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeatureDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeatureDirection",
+      "kind": "enum",
+      "returns": "SysML::FeatureDirectionKind",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeatureElement",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeatureInverting",
+      "kind": "rule",
+      "returns": "SysML::FeatureInverting",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeatureMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeaturePrefix",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeatureRelationshipPart",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeatureSpecialization",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeatureSpecializationPart",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeatureType",
+      "kind": "fragment",
+      "returns": "SysML::FeatureTyping",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeatureTyping",
+      "kind": "rule",
+      "returns": "SysML::FeatureTyping",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FeatureValue",
+      "kind": "rule",
+      "returns": "SysML::FeatureValue",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FilterPackage",
+      "kind": "rule",
+      "returns": "SysML::Package",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FilterPackageImport",
+      "kind": "rule",
+      "returns": "SysML::Import",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FilterPackageMember",
+      "kind": "rule",
+      "returns": "SysML::ElementFilterMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FilterPackageMemberVisibility",
+      "kind": "enum",
+      "returns": "SysML::VisibilityKind",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FilterPackageMembershipImport",
+      "kind": "rule",
+      "returns": "SysML::MembershipImport",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FilterPackageNamespaceImport",
+      "kind": "rule",
+      "returns": "SysML::NamespaceImport",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Flow",
+      "kind": "rule",
+      "returns": "SysML::Flow",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FlowDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Flow",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FlowEnd",
+      "kind": "rule",
+      "returns": "SysML::FlowEnd",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FlowEndMember",
+      "kind": "rule",
+      "returns": "SysML::EndFeatureMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FlowEndSubsetting",
+      "kind": "rule",
+      "returns": "SysML::ReferenceSubsetting",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FlowFeature",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FlowFeatureMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FlowRedefinition",
+      "kind": "rule",
+      "returns": "SysML::Redefinition",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Function",
+      "kind": "rule",
+      "returns": "SysML::Function",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FunctionBody",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "FunctionBodyPart",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Identification",
+      "kind": "fragment",
+      "returns": "SysML::Element",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Import",
+      "kind": "rule",
+      "returns": "SysML::Import",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ImportPrefix",
+      "kind": "fragment",
+      "returns": "SysML::Import",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ImportedMembership",
+      "kind": "fragment",
+      "returns": "SysML::MembershipImport",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ImportedNamespace",
+      "kind": "fragment",
+      "returns": "SysML::NamespaceImport",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Interaction",
+      "kind": "rule",
+      "returns": "SysML::Interaction",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Intersecting",
+      "kind": "rule",
+      "returns": "SysML::Intersecting",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "IntersectingPart",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Invariant",
+      "kind": "rule",
+      "returns": "SysML::Invariant",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "InvertingPart",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "LibraryPackage",
+      "kind": "rule",
+      "returns": "SysML::LibraryPackage",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "MemberElement",
+      "kind": "rule",
+      "returns": "SysML::Element",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "MemberPrefix",
+      "kind": "fragment",
+      "returns": "SysML::Membership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "MembershipImport",
+      "kind": "rule",
+      "returns": "SysML::MembershipImport",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Metaclass",
+      "kind": "rule",
+      "returns": "SysML::Metaclass",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "MetadataBody",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "MetadataBodyFeature",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "MetadataBodyFeatureMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "MetadataFeature",
+      "kind": "rule",
+      "returns": "SysML::MetadataFeature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "MetadataFeatureDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::MetadataFeature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "MetadataTyping",
+      "kind": "rule",
+      "returns": "SysML::FeatureTyping",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Multiplicity",
+      "kind": "rule",
+      "returns": "SysML::Multiplicity",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "MultiplicityBounds",
+      "kind": "fragment",
+      "returns": "SysML::MultiplicityRange",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "MultiplicityExpressionMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "MultiplicityPart",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "MultiplicityRange",
+      "kind": "rule",
+      "returns": "SysML::MultiplicityRange",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "MultiplicitySubset",
+      "kind": "rule",
+      "returns": "SysML::Multiplicity",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Namespace",
+      "kind": "rule",
+      "returns": "SysML::Namespace",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "NamespaceBody",
+      "kind": "fragment",
+      "returns": "SysML::Namespace",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "NamespaceBodyElement",
+      "kind": "fragment",
+      "returns": "SysML::Namespace",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "NamespaceDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Namespace",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "NamespaceFeatureMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "NamespaceImport",
+      "kind": "rule",
+      "returns": "SysML::NamespaceImport",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "NamespaceMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "NaryConnectorDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Connector",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "NonFeatureElement",
+      "kind": "rule",
+      "returns": "SysML::Element",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "NonFeatureMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Nonunique",
+      "kind": "rule",
+      "returns": "Ecore::EBoolean",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedAnnotation",
+      "kind": "rule",
+      "returns": "SysML::Annotation",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedConjugation",
+      "kind": "rule",
+      "returns": "SysML::Conjugation",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedCrossSubsetting",
+      "kind": "rule",
+      "returns": "SysML::CrossSubsetting",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedCrossingFeature",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedCrossingFeatureMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedCrossingMultiplicity",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedCrossingMultiplicityMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedDisjoining",
+      "kind": "rule",
+      "returns": "SysML::Disjoining",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedFeatureInverting",
+      "kind": "rule",
+      "returns": "SysML::FeatureInverting",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedFeatureMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedFeatureTyping",
+      "kind": "rule",
+      "returns": "SysML::FeatureTyping",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedMultiplicity",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedMultiplicityRange",
+      "kind": "rule",
+      "returns": "SysML::MultiplicityRange",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedRedefinition",
+      "kind": "rule",
+      "returns": "SysML::Redefinition",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedReferenceSubsetting",
+      "kind": "rule",
+      "returns": "SysML::ReferenceSubsetting",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedRelatedElement",
+      "kind": "rule",
+      "returns": "SysML::Element",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedSpecialization",
+      "kind": "rule",
+      "returns": "SysML::Specialization",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedSubsetting",
+      "kind": "rule",
+      "returns": "SysML::Subsetting",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "OwnedTypeFeaturing",
+      "kind": "rule",
+      "returns": "SysML::TypeFeaturing",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Ownedsubclassification",
+      "kind": "rule",
+      "returns": "SysML::Subclassification",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Package",
+      "kind": "rule",
+      "returns": "SysML::Package",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "PackageBody",
+      "kind": "fragment",
+      "returns": "SysML::Namespace",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "PackageDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Package",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "PayloadFeature",
+      "kind": "rule",
+      "returns": "SysML::PayloadFeature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "PayloadFeatureMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "PayloadFeatureSpecializationPart",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Predicate",
+      "kind": "rule",
+      "returns": "SysML::Predicate",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "PrefixMetadataAnnotation",
+      "kind": "rule",
+      "returns": "SysML::Annotation",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "PrefixMetadataFeature",
+      "kind": "rule",
+      "returns": "SysML::MetadataFeature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "PrefixMetadataMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Redefines",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Redefinition",
+      "kind": "rule",
+      "returns": "SysML::Redefinition",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Redefinitions",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "References",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ReferencesKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "RelationshipBody",
+      "kind": "fragment",
+      "returns": "SysML::Relationship",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "RelationshipOwnedElement",
+      "kind": "fragment",
+      "returns": "SysML::Relationship",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ResultExpressionMember",
+      "kind": "rule",
+      "returns": "SysML::ResultExpressionMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ReturnFeatureMember",
+      "kind": "rule",
+      "returns": "SysML::ReturnParameterMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "RootNamespace",
+      "kind": "rule",
+      "returns": "SysML::Namespace",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Specialization",
+      "kind": "rule",
+      "returns": "SysML::Specialization",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "SpecializationPart",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Step",
+      "kind": "rule",
+      "returns": "SysML::Step",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "StepDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Step",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Structure",
+      "kind": "rule",
+      "returns": "SysML::Structure",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Subclassification",
+      "kind": "rule",
+      "returns": "SysML::Subclassification",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Subsets",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Subsetting",
+      "kind": "rule",
+      "returns": "SysML::Subsetting",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Subsettings",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Succession",
+      "kind": "rule",
+      "returns": "SysML::Succession",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "SuccessionDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Succession",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "SuccessionFlow",
+      "kind": "rule",
+      "returns": "SysML::SuccessionFlow",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "SuperclassingPart",
+      "kind": "fragment",
+      "returns": "SysML::Classifier",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "TextualRepresentation",
+      "kind": "rule",
+      "returns": "SysML::TextualRepresentation",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Type",
+      "kind": "rule",
+      "returns": "SysML::Type",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "TypeBody",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "TypeDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "TypeFeatureMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "TypeFeaturing",
+      "kind": "rule",
+      "returns": "SysML::TypeFeaturing",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "TypeFeaturingPart",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "TypePrefix",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "TypeRelationshipPart",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "TypedBy",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Typings",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "Unioning",
+      "kind": "rule",
+      "returns": "SysML::Unioning",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "UnioningPart",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "ValuePart",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "VisibilityIndicator",
+      "kind": "enum",
+      "returns": "SysML::VisibilityKind",
+      "file": "KerML.xtext"
+    },
+    {
+      "name": "AdditiveExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "AdditiveOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "AndExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "AndOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "Argument",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ArgumentList",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ArgumentMember",
+      "kind": "rule",
+      "returns": "SysML::ParameterMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ArgumentValue",
+      "kind": "rule",
+      "returns": "SysML::FeatureValue",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "BaseExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "BodyExpression",
+      "kind": "rule",
+      "returns": "SysML::FeatureReferenceExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "BodyParameter",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "BodyParameterMember",
+      "kind": "rule",
+      "returns": "SysML::ParameterMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "BooleanValue",
+      "kind": "rule",
+      "returns": "Ecore::EBoolean",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "CastOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ClassificationExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ClassificationTestOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ConditionalAndOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ConditionalExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ConditionalOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ConditionalOrOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ConstructorExpression",
+      "kind": "rule",
+      "returns": "SysML::ConstructorExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ConstructorResult",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ConstructorResultMember",
+      "kind": "rule",
+      "returns": "SysML::ReturnParameterMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "DECIMAL_VALUE",
+      "kind": "terminal",
+      "returns": "Ecore::EInt",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "EXP_VALUE",
+      "kind": "terminal",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ElementReferenceMember",
+      "kind": "rule",
+      "returns": "SysML::Membership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "EmptyFeature",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "EqualityExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "EqualityExpressionMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "EqualityExpressionReference",
+      "kind": "rule",
+      "returns": "SysML::FeatureReferenceExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "EqualityOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ExponentiationExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ExponentiationOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ExpressionBody",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ExpressionBodyMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ExtentExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "FeatureChain",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "FeatureChainMember",
+      "kind": "rule",
+      "returns": "SysML::Membership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "FeatureReferenceExpression",
+      "kind": "rule",
+      "returns": "SysML::FeatureReferenceExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "FeatureReferenceMember",
+      "kind": "rule",
+      "returns": "SysML::Membership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "FunctionReference",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "FunctionReferenceExpression",
+      "kind": "rule",
+      "returns": "SysML::FeatureReferenceExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "FunctionReferenceMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "GlobalQualification",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ID",
+      "kind": "terminal",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ImpliesExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ImpliesExpressionMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ImpliesExpressionReference",
+      "kind": "rule",
+      "returns": "SysML::FeatureReferenceExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ImpliesOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "InstantiatedTypeMember",
+      "kind": "rule",
+      "returns": "SysML::Membership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "InvocationExpression",
+      "kind": "rule",
+      "returns": "SysML::InvocationExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "LiteralBoolean",
+      "kind": "rule",
+      "returns": "SysML::LiteralBoolean",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "LiteralExpression",
+      "kind": "rule",
+      "returns": "SysML::LiteralExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "LiteralInfinity",
+      "kind": "rule",
+      "returns": "SysML::LiteralInfinity",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "LiteralInteger",
+      "kind": "rule",
+      "returns": "SysML::LiteralInteger",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "LiteralReal",
+      "kind": "rule",
+      "returns": "SysML::LiteralRational",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "LiteralString",
+      "kind": "rule",
+      "returns": "SysML::LiteralString",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ML_NOTE",
+      "kind": "terminal",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "MetaCastOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "MetaClassificationTestOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "MetadataAccessExpression",
+      "kind": "rule",
+      "returns": "SysML::MetadataAccessExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "MetadataReference",
+      "kind": "rule",
+      "returns": "SysML::MetadataAccessExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "MultiplicativeExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "MultiplicativeOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "Name",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "NamedArgument",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "NamedArgumentList",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "NamedArgumentMember",
+      "kind": "rule",
+      "returns": "SysML::ParameterMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "NullCoalescingExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "NullCoalescingOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "NullExpression",
+      "kind": "rule",
+      "returns": "SysML::NullExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "OrExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "OrExpressionMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "OrExpressionReference",
+      "kind": "rule",
+      "returns": "SysML::FeatureReferenceExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "OrOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "OwnedExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "OwnedExpressionMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "OwnedExpressionReference",
+      "kind": "rule",
+      "returns": "SysML::FeatureReferenceExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "OwnedFeatureChain",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "OwnedFeatureChaining",
+      "kind": "rule",
+      "returns": "SysML::FeatureChaining",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ParameterRedefinition",
+      "kind": "rule",
+      "returns": "SysML::Redefinition",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "PositionalArgumentList",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "PrimaryExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "Qualification",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "QualifiedName",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "REGULAR_COMMENT",
+      "kind": "terminal",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "RangeExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "RealValue",
+      "kind": "rule",
+      "returns": "Ecore::EDouble",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ReferenceTyping",
+      "kind": "rule",
+      "returns": "SysML::FeatureTyping",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "RelationalExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "RelationalOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "ResultExpressionMember",
+      "kind": "rule",
+      "returns": "SysML::ResultExpressionMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "SL_NOTE",
+      "kind": "terminal",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "STRING_VALUE",
+      "kind": "terminal",
+      "returns": "Ecore::EString",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "SelfReferenceExpression",
+      "kind": "rule",
+      "returns": "SysML::FeatureReferenceExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "SelfReferenceMember",
+      "kind": "rule",
+      "returns": "SysML::ReturnParameterMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "SequenceExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "TypeReference",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "TypeReferenceMember",
+      "kind": "rule",
+      "returns": "SysML::ParameterMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "TypeResultMember",
+      "kind": "rule",
+      "returns": "SysML::ReturnParameterMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "UNRESTRICTED_NAME",
+      "kind": "terminal",
+      "returns": "Ecore::EString",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "UnaryExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "UnaryOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "WS",
+      "kind": "terminal",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "XorExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "XorExpressionMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "XorExpressionReference",
+      "kind": "rule",
+      "returns": "SysML::FeatureReferenceExpression",
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "XorOperator",
+      "kind": "rule",
+      "returns": null,
+      "file": "KerMLExpressions.xtext"
+    },
+    {
+      "name": "AcceptNode",
+      "kind": "rule",
+      "returns": "SysML::AcceptActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AcceptNodeDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AcceptParameterPart",
+      "kind": "fragment",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionBody",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionBodyItem",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionBodyParameter",
+      "kind": "rule",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionBodyParameterMember",
+      "kind": "rule",
+      "returns": "SysML::ParameterMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionDefinition",
+      "kind": "rule",
+      "returns": "SysML::ActionDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionNode",
+      "kind": "rule",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionNodeMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionNodePrefix",
+      "kind": "fragment",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionNodeUsageDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionTargetSuccession",
+      "kind": "rule",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionUsage",
+      "kind": "rule",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionUsageDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActionUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActorMember",
+      "kind": "rule",
+      "returns": "SysML::ActorMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ActorUsage",
+      "kind": "rule",
+      "returns": "SysML::PartUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AliasMember",
+      "kind": "rule",
+      "returns": "SysML::Membership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AllocateKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AllocationDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AllocationDefinition",
+      "kind": "rule",
+      "returns": "SysML::AllocationDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AllocationKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AllocationUsage",
+      "kind": "rule",
+      "returns": "SysML::AllocationUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AllocationUsageDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::AllocationUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AllocationUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AnalysisCaseDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AnalysisCaseDefinition",
+      "kind": "rule",
+      "returns": "SysML::AnalysisCaseDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AnalysisCaseKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AnalysisCaseUsage",
+      "kind": "rule",
+      "returns": "SysML::AnalysisCaseUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AnalysisCaseUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AnnotatingElement",
+      "kind": "rule",
+      "returns": "SysML::AnnotatingElement",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AnnotatingMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Annotation",
+      "kind": "rule",
+      "returns": "SysML::Annotation",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ArgumentExpression",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ArgumentExpressionMember",
+      "kind": "rule",
+      "returns": "SysML::ParameterMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ArgumentExpressionValue",
+      "kind": "rule",
+      "returns": "SysML::FeatureValue",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AssertConstraintUsage",
+      "kind": "rule",
+      "returns": "SysML::AssertConstraintUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AssignmentNode",
+      "kind": "rule",
+      "returns": "SysML::AssignmentActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AssignmentNodeDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AssignmentTargetMember",
+      "kind": "rule",
+      "returns": "SysML::ParameterMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AttributeDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AttributeDefinition",
+      "kind": "rule",
+      "returns": "SysML::AttributeDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AttributeKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AttributeUsage",
+      "kind": "rule",
+      "returns": "SysML::AttributeUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "AttributeUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "BasicDefinitionPrefix",
+      "kind": "fragment",
+      "returns": "SysML::Definition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "BasicUsagePrefix",
+      "kind": "fragment",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "BehaviorUsageElement",
+      "kind": "rule",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "BehaviorUsageMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "BinaryConnectorPart",
+      "kind": "fragment",
+      "returns": "SysML::Connector",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "BinaryInterfacePart",
+      "kind": "fragment",
+      "returns": "SysML::Connector",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "BindingConnectorAsUsage",
+      "kind": "rule",
+      "returns": "SysML::BindingConnectorAsUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "BindingKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CalculationBody",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CalculationBodyItem",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CalculationBodyPart",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CalculationDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CalculationDefinition",
+      "kind": "rule",
+      "returns": "SysML::CalculationDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CalculationKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CalculationUsage",
+      "kind": "rule",
+      "returns": "SysML::CalculationUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CalculationUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CaseBody",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CaseBodyItem",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CaseDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CaseDefinition",
+      "kind": "rule",
+      "returns": "SysML::CaseDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CaseKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CaseUsage",
+      "kind": "rule",
+      "returns": "SysML::CaseUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CaseUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ChangeTriggerKind",
+      "kind": "rule",
+      "returns": "SysML::TriggerKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Comment",
+      "kind": "rule",
+      "returns": "SysML::Comment",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConcernDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConcernDefinition",
+      "kind": "rule",
+      "returns": "SysML::ConcernDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConcernKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConcernUsage",
+      "kind": "rule",
+      "returns": "SysML::ConcernUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConcernUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConjugatedPortDefinition",
+      "kind": "rule",
+      "returns": "SysML::ConjugatedPortDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConjugatedPortDefinitionMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConjugatedPortTyping",
+      "kind": "rule",
+      "returns": "SysML::ConjugatedPortTyping",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConjugatedQualifiedName",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConnectionDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConnectionDefinition",
+      "kind": "rule",
+      "returns": "SysML::ConnectionDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConnectionKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConnectionUsage",
+      "kind": "rule",
+      "returns": "SysML::ConnectionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConnectionUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConnectorEnd",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConnectorEndMember",
+      "kind": "rule",
+      "returns": "SysML::EndFeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConnectorKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConnectorPart",
+      "kind": "fragment",
+      "returns": "SysML::ConnectionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConstraintDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConstraintDefinition",
+      "kind": "rule",
+      "returns": "SysML::ConstraintDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConstraintKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConstraintUsage",
+      "kind": "rule",
+      "returns": "SysML::ConstraintUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConstraintUsageDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::ConstraintUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ConstraintUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ControlNode",
+      "kind": "rule",
+      "returns": "SysML::ControlNode",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ControlNodePrefix",
+      "kind": "fragment",
+      "returns": "SysML::OccurrenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Crosses",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "CrossesKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "DecisionNode",
+      "kind": "rule",
+      "returns": "SysML::DecisionNode",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "DefaultInterfaceEnd",
+      "kind": "rule",
+      "returns": "SysML::PortUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "DefaultReferenceUsage",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "DefaultTargetSuccession",
+      "kind": "rule",
+      "returns": "SysML::TransitionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "DefinedByKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Definition",
+      "kind": "fragment",
+      "returns": "SysML::Definition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "DefinitionBody",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "DefinitionBodyItem",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "DefinitionDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Definition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "DefinitionElement",
+      "kind": "rule",
+      "returns": "SysML::Element",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "DefinitionExtensionKeyword",
+      "kind": "fragment",
+      "returns": "SysML::Definition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "DefinitionMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "DefinitionPrefix",
+      "kind": "fragment",
+      "returns": "SysML::Definition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Dependency",
+      "kind": "rule",
+      "returns": "SysML::Dependency",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "DoActionKind",
+      "kind": "rule",
+      "returns": "SysML::StateSubactionKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "DoActionMember",
+      "kind": "rule",
+      "returns": "SysML::StateSubactionMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Documentation",
+      "kind": "rule",
+      "returns": "SysML::Documentation",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EffectBehaviorMember",
+      "kind": "rule",
+      "returns": "SysML::TransitionFeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EffectBehaviorUsage",
+      "kind": "rule",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EffectFeatureKind",
+      "kind": "enum",
+      "returns": "SysML::TransitionFeatureKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ElementFilterMember",
+      "kind": "rule",
+      "returns": "SysML::ElementFilterMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EmptyActionUsage",
+      "kind": "rule",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EmptyMultiplicity",
+      "kind": "rule",
+      "returns": "SysML::Multiplicity",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EmptyMultiplicityMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EmptyParameterMember",
+      "kind": "rule",
+      "returns": "SysML::ParameterMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EmptySourceEnd",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EmptySourceEndMember",
+      "kind": "rule",
+      "returns": "SysML::EndFeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EmptySuccession",
+      "kind": "rule",
+      "returns": "SysML::SuccessionAsUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EmptySuccessionMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EmptyTargetEnd",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EmptyTargetEndMember",
+      "kind": "rule",
+      "returns": "SysML::EndFeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EmptyUsage",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EndUsagePrefix",
+      "kind": "fragment",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EntryActionKind",
+      "kind": "rule",
+      "returns": "SysML::StateSubactionKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EntryActionMember",
+      "kind": "rule",
+      "returns": "SysML::StateSubactionMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EntryTransitionMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EnumeratedValue",
+      "kind": "rule",
+      "returns": "SysML::EnumerationUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EnumerationBody",
+      "kind": "fragment",
+      "returns": "SysML::EnumerationDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EnumerationDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EnumerationDefinition",
+      "kind": "rule",
+      "returns": "SysML::EnumerationDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EnumerationKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EnumerationUsage",
+      "kind": "rule",
+      "returns": "SysML::EnumerationUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EnumerationUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EnumerationUsageMember",
+      "kind": "rule",
+      "returns": "SysML::VariantMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "EventOccurrenceUsage",
+      "kind": "rule",
+      "returns": "SysML::EventOccurrenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ExhibitStateUsage",
+      "kind": "rule",
+      "returns": "SysML::ExhibitStateUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ExitActionKind",
+      "kind": "rule",
+      "returns": "SysML::StateSubactionKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ExitActionMember",
+      "kind": "rule",
+      "returns": "SysML::StateSubactionMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Expose",
+      "kind": "rule",
+      "returns": "SysML::Expose",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ExposePrefix",
+      "kind": "fragment",
+      "returns": "SysML::Expose",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ExposeVisibilityKind",
+      "kind": "enum",
+      "returns": "SysML::VisibilityKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ExpressionBody",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ExpressionParameterMember",
+      "kind": "rule",
+      "returns": "SysML::ParameterMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ExtendedDefinition",
+      "kind": "rule",
+      "returns": "SysML::Definition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ExtendedUsage",
+      "kind": "rule",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FeatureBinding",
+      "kind": "rule",
+      "returns": "SysML::FeatureValue",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FeatureChainPrefix",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FeatureDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FeatureDirection",
+      "kind": "enum",
+      "returns": "SysML::FeatureDirectionKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FeatureSpecialization",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FeatureSpecializationPart",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FeatureTyping",
+      "kind": "rule",
+      "returns": "SysML::FeatureTyping",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FeatureValue",
+      "kind": "rule",
+      "returns": "SysML::FeatureValue",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FilterPackage",
+      "kind": "rule",
+      "returns": "SysML::Package",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FilterPackageImport",
+      "kind": "rule",
+      "returns": "SysML::Import",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FilterPackageMember",
+      "kind": "rule",
+      "returns": "SysML::ElementFilterMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FilterPackageMemberVisibility",
+      "kind": "enum",
+      "returns": "SysML::VisibilityKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FilterPackageMembershipImport",
+      "kind": "rule",
+      "returns": "SysML::MembershipImport",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FilterPackageNamespaceImport",
+      "kind": "rule",
+      "returns": "SysML::NamespaceImport",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FlowDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::FlowUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FlowDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FlowDefinition",
+      "kind": "rule",
+      "returns": "SysML::FlowDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FlowEnd",
+      "kind": "rule",
+      "returns": "SysML::FlowEnd",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FlowEndMember",
+      "kind": "rule",
+      "returns": "SysML::EndFeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FlowEndSubsetting",
+      "kind": "rule",
+      "returns": "SysML::ReferenceSubsetting",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FlowFeature",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FlowFeatureMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FlowKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FlowRedefinition",
+      "kind": "rule",
+      "returns": "SysML::Redefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FlowUsage",
+      "kind": "rule",
+      "returns": "SysML::FlowUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ForLoopNode",
+      "kind": "rule",
+      "returns": "SysML::ForLoopActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ForVariableDeclaration",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ForVariableDeclarationMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ForkNode",
+      "kind": "rule",
+      "returns": "SysML::ForkNode",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FramedConcernKind",
+      "kind": "enum",
+      "returns": "SysML::RequirementConstraintKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FramedConcernMember",
+      "kind": "rule",
+      "returns": "SysML::FramedConcernMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "FramedConcernUsage",
+      "kind": "rule",
+      "returns": "SysML::ConcernUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "GuardExpressionMember",
+      "kind": "rule",
+      "returns": "SysML::TransitionFeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "GuardFeatureKind",
+      "kind": "enum",
+      "returns": "SysML::TransitionFeatureKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "GuardedSuccession",
+      "kind": "rule",
+      "returns": "SysML::TransitionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "GuardedSuccessionMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "GuardedTargetSuccession",
+      "kind": "rule",
+      "returns": "SysML::TransitionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Identification",
+      "kind": "fragment",
+      "returns": "SysML::Element",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "IfNode",
+      "kind": "rule",
+      "returns": "SysML::IfActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "IfNodeParameterMember",
+      "kind": "rule",
+      "returns": "SysML::ParameterMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Import",
+      "kind": "rule",
+      "returns": "SysML::Import",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ImportPrefix",
+      "kind": "fragment",
+      "returns": "SysML::Import",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ImportedMembership",
+      "kind": "fragment",
+      "returns": "SysML::MembershipImport",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ImportedNamespace",
+      "kind": "fragment",
+      "returns": "SysML::NamespaceImport",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "IncludeUseCaseUsage",
+      "kind": "rule",
+      "returns": "SysML::IncludeUseCaseUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "IndividualDefinition",
+      "kind": "rule",
+      "returns": "SysML::OccurrenceDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "IndividualUsage",
+      "kind": "rule",
+      "returns": "SysML::OccurrenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InitialNodeMember",
+      "kind": "rule",
+      "returns": "SysML::Membership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfaceBody",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfaceBodyItem",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfaceDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfaceDefinition",
+      "kind": "rule",
+      "returns": "SysML::InterfaceDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfaceEnd",
+      "kind": "rule",
+      "returns": "SysML::PortUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfaceEndMember",
+      "kind": "rule",
+      "returns": "SysML::EndFeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfaceKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfaceNonOccurrenceUsageElement",
+      "kind": "rule",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfaceNonOccurrenceUsageMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfaceOccurrenceUsageElement",
+      "kind": "rule",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfaceOccurrenceUsageMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfacePart",
+      "kind": "fragment",
+      "returns": "SysML::ConnectionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfaceUsage",
+      "kind": "rule",
+      "returns": "SysML::InterfaceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfaceUsageDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::InterfaceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "InterfaceUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ItemDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ItemDefinition",
+      "kind": "rule",
+      "returns": "SysML::ItemDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ItemKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ItemUsage",
+      "kind": "rule",
+      "returns": "SysML::ItemUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ItemUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "JoinNode",
+      "kind": "rule",
+      "returns": "SysML::JoinNode",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "LibraryPackage",
+      "kind": "rule",
+      "returns": "SysML::LibraryPackage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MemberPrefix",
+      "kind": "fragment",
+      "returns": "SysML::Membership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MembershipExpose",
+      "kind": "rule",
+      "returns": "SysML::MembershipExpose",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MembershipImport",
+      "kind": "rule",
+      "returns": "SysML::MembershipImport",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MergeNode",
+      "kind": "rule",
+      "returns": "SysML::MergeNode",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Message",
+      "kind": "rule",
+      "returns": "SysML::FlowUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MessageDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::FlowUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MessageEvent",
+      "kind": "rule",
+      "returns": "SysML::EventOccurrenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MessageEventMember",
+      "kind": "rule",
+      "returns": "SysML::ParameterMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MessageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MetadataBody",
+      "kind": "fragment",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MetadataBodyUsage",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MetadataBodyUsageMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MetadataDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MetadataDefinition",
+      "kind": "rule",
+      "returns": "SysML::MetadataDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MetadataKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MetadataTyping",
+      "kind": "rule",
+      "returns": "SysML::FeatureTyping",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MetadataUsage",
+      "kind": "rule",
+      "returns": "SysML::MetadataUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MetadataUsageDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::MetadataUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MetadataUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MultiplicityExpressionMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MultiplicityPart",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MultiplicityRange",
+      "kind": "rule",
+      "returns": "SysML::MultiplicityRange",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MultiplicitySourceEnd",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "MultiplicitySourceEndMember",
+      "kind": "rule",
+      "returns": "SysML::EndFeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "NamespaceExpose",
+      "kind": "rule",
+      "returns": "SysML::NamespaceExpose",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "NamespaceImport",
+      "kind": "rule",
+      "returns": "SysML::NamespaceImport",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "NaryConnectorPart",
+      "kind": "fragment",
+      "returns": "SysML::Connector",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "NaryInterfacePart",
+      "kind": "fragment",
+      "returns": "SysML::Connector",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "NodeParameter",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "NodeParameterMember",
+      "kind": "rule",
+      "returns": "SysML::ParameterMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "NonOccurrenceUsageElement",
+      "kind": "rule",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "NonOccurrenceUsageMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Nonunique",
+      "kind": "rule",
+      "returns": "Ecore::EBoolean",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ObjectiveMember",
+      "kind": "rule",
+      "returns": "SysML::ObjectiveMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ObjectiveRequirementUsage",
+      "kind": "rule",
+      "returns": "SysML::RequirementUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OccurrenceDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OccurrenceDefinition",
+      "kind": "rule",
+      "returns": "SysML::OccurrenceDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OccurrenceDefinitionPrefix",
+      "kind": "fragment",
+      "returns": "SysML::OccurrenceDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OccurrenceKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OccurrenceUsage",
+      "kind": "rule",
+      "returns": "SysML::OccurrenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OccurrenceUsageElement",
+      "kind": "rule",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OccurrenceUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OccurrenceUsageMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OccurrenceUsagePrefix",
+      "kind": "fragment",
+      "returns": "SysML::OccurrenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OwnedAnnotation",
+      "kind": "rule",
+      "returns": "SysML::Annotation",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OwnedCrossFeature",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OwnedCrossFeatureMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OwnedCrossMultiplicity",
+      "kind": "rule",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OwnedCrossMultiplicityMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OwnedCrossSubsetting",
+      "kind": "rule",
+      "returns": "SysML::CrossSubsetting",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OwnedFeatureTyping",
+      "kind": "rule",
+      "returns": "SysML::FeatureTyping",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OwnedMultiplicity",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OwnedRedefinition",
+      "kind": "rule",
+      "returns": "SysML::Redefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OwnedReferenceSubsetting",
+      "kind": "rule",
+      "returns": "SysML::ReferenceSubsetting",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OwnedSubclassification",
+      "kind": "rule",
+      "returns": "SysML::Subclassification",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "OwnedSubsetting",
+      "kind": "rule",
+      "returns": "SysML::Subsetting",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Package",
+      "kind": "rule",
+      "returns": "SysML::Package",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PackageBody",
+      "kind": "fragment",
+      "returns": "SysML::Package",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PackageBodyElement",
+      "kind": "fragment",
+      "returns": "SysML::Namespace",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PackageDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Package",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PackageMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PartDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PartDefinition",
+      "kind": "rule",
+      "returns": "SysML::PartDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PartKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PartUsage",
+      "kind": "rule",
+      "returns": "SysML::PartUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PartUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Payload",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PayloadFeature",
+      "kind": "rule",
+      "returns": "SysML::PayloadFeature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PayloadFeatureMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PayloadFeatureSpecializationPart",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PayloadParameter",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PayloadParameterMember",
+      "kind": "rule",
+      "returns": "SysML::ParameterMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PerformActionUsage",
+      "kind": "rule",
+      "returns": "SysML::PerformActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PerformActionUsageDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PerformedActionUsage",
+      "kind": "rule",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PortConjugation",
+      "kind": "rule",
+      "returns": "SysML::PortConjugation",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PortDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PortDefinition",
+      "kind": "rule",
+      "returns": "SysML::PortDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PortKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PortUsage",
+      "kind": "rule",
+      "returns": "SysML::PortUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PortUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PortionKind",
+      "kind": "enum",
+      "returns": "SysML::PortionKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PortionUsage",
+      "kind": "rule",
+      "returns": "SysML::OccurrenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PrefixMetadataAnnotation",
+      "kind": "rule",
+      "returns": "SysML::Annotation",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PrefixMetadataMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "PrefixMetadataUsage",
+      "kind": "rule",
+      "returns": "SysML::MetadataUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Redefines",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RedefinesKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Redefinitions",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RefPrefix",
+      "kind": "fragment",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ReferenceKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ReferenceUsage",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ReferenceUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "References",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ReferencesKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RelationshipBody",
+      "kind": "fragment",
+      "returns": "SysML::Relationship",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RenderingDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RenderingDefinition",
+      "kind": "rule",
+      "returns": "SysML::RenderingDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RenderingKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RenderingUsage",
+      "kind": "rule",
+      "returns": "SysML::RenderingUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RenderingUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RequirementBody",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RequirementBodyItem",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RequirementConstraintKind",
+      "kind": "enum",
+      "returns": "SysML::RequirementConstraintKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RequirementConstraintMember",
+      "kind": "rule",
+      "returns": "SysML::RequirementConstraintMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RequirementConstraintUsage",
+      "kind": "rule",
+      "returns": "SysML::ConstraintUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RequirementDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RequirementDefinition",
+      "kind": "rule",
+      "returns": "SysML::RequirementDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RequirementKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RequirementUsage",
+      "kind": "rule",
+      "returns": "SysML::RequirementUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RequirementUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RequirementVerificationKind",
+      "kind": "enum",
+      "returns": "SysML::RequirementConstraintKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RequirementVerificationMember",
+      "kind": "rule",
+      "returns": "SysML::RequirementVerificationMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RequirementVerificationUsage",
+      "kind": "rule",
+      "returns": "SysML::RequirementUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ResultExpressionMember",
+      "kind": "rule",
+      "returns": "SysML::ResultExpressionMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ReturnParameterMember",
+      "kind": "rule",
+      "returns": "SysML::ReturnParameterMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "RootNamespace",
+      "kind": "rule",
+      "returns": "SysML::Namespace",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SatisfactionFeatureValue",
+      "kind": "rule",
+      "returns": "SysML::FeatureValue",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SatisfactionParameter",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SatisfactionReferenceExpression",
+      "kind": "rule",
+      "returns": "SysML::FeatureReferenceExpression",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SatisfactionSubjectMember",
+      "kind": "rule",
+      "returns": "SysML::SubjectMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SatisfyRequirementUsage",
+      "kind": "rule",
+      "returns": "SysML::SatisfyRequirementUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SendNode",
+      "kind": "rule",
+      "returns": "SysML::SendActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SendNodeDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SenderReceiverPart",
+      "kind": "fragment",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SpecializesKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "StakeholderMember",
+      "kind": "rule",
+      "returns": "SysML::StakeholderMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "StakeholderUsage",
+      "kind": "rule",
+      "returns": "SysML::PartUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "StateActionUsage",
+      "kind": "rule",
+      "returns": "SysML::ActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "StateBodyItem",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "StateBodyPart",
+      "kind": "fragment",
+      "returns": "SysML::Type",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "StateDefBody",
+      "kind": "fragment",
+      "returns": "SysML::StateDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "StateDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "StateDefinition",
+      "kind": "rule",
+      "returns": "SysML::StateDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "StateKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "StateUsage",
+      "kind": "rule",
+      "returns": "SysML::StateUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "StateUsageBody",
+      "kind": "fragment",
+      "returns": "SysML::StateUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "StateUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "StructureUsageElement",
+      "kind": "rule",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "StructureUsageMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SubclassificationPart",
+      "kind": "fragment",
+      "returns": "SysML::Classifier",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SubjectMember",
+      "kind": "rule",
+      "returns": "SysML::SubjectMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SubjectUsage",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Subsets",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SubsetsKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Subsettings",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SuccessionAsUsage",
+      "kind": "rule",
+      "returns": "SysML::SuccessionAsUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SuccessionFlowKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SuccessionFlowUsage",
+      "kind": "rule",
+      "returns": "SysML::SuccessionFlowUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "SuccessionKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TargetAccessedFeatureMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TargetBinding",
+      "kind": "rule",
+      "returns": "SysML::FeatureValue",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TargetExpression",
+      "kind": "rule",
+      "returns": "SysML::Expression",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TargetFeature",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TargetFeatureMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TargetParameter",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TargetSuccession",
+      "kind": "rule",
+      "returns": "SysML::SuccessionAsUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TargetSuccessionMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TargetTransitionUsage",
+      "kind": "rule",
+      "returns": "SysML::TransitionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TargetTransitionUsageMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TerminateNode",
+      "kind": "rule",
+      "returns": "SysML::TerminateActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TextualRepresentation",
+      "kind": "rule",
+      "returns": "SysML::TextualRepresentation",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TimeTriggerKind",
+      "kind": "rule",
+      "returns": "SysML::TriggerKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TransitionSourceMember",
+      "kind": "rule",
+      "returns": "SysML::Membership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TransitionSuccession",
+      "kind": "rule",
+      "returns": "SysML::SuccessionAsUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TransitionSuccessionMember",
+      "kind": "rule",
+      "returns": "SysML::OwningMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TransitionUsage",
+      "kind": "rule",
+      "returns": "SysML::TransitionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TransitionUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TransitionUsageMember",
+      "kind": "rule",
+      "returns": "SysML::FeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TriggerAction",
+      "kind": "rule",
+      "returns": "SysML::AcceptActionUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TriggerActionMember",
+      "kind": "rule",
+      "returns": "SysML::TransitionFeatureMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TriggerExpression",
+      "kind": "rule",
+      "returns": "SysML::TriggerInvocationExpression",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TriggerFeatureKind",
+      "kind": "enum",
+      "returns": "SysML::TransitionFeatureKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TriggerFeatureValue",
+      "kind": "rule",
+      "returns": "SysML::FeatureValue",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TriggerValuePart",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "TypedBy",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Typings",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "UnextendedUsagePrefix",
+      "kind": "fragment",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "Usage",
+      "kind": "fragment",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "UsageBody",
+      "kind": "fragment",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "UsageCompletion",
+      "kind": "fragment",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "UsageDeclaration",
+      "kind": "fragment",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "UsageElement",
+      "kind": "rule",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "UsageExtensionKeyword",
+      "kind": "fragment",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "UsagePrefix",
+      "kind": "fragment",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "UseCaseDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "UseCaseDefinition",
+      "kind": "rule",
+      "returns": "SysML::UseCaseDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "UseCaseKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "UseCaseUsage",
+      "kind": "rule",
+      "returns": "SysML::UseCaseUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "UseCaseUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ValuePart",
+      "kind": "fragment",
+      "returns": "SysML::Feature",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "VariantReference",
+      "kind": "rule",
+      "returns": "SysML::ReferenceUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "VariantUsageElement",
+      "kind": "rule",
+      "returns": "SysML::Usage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "VariantUsageMember",
+      "kind": "rule",
+      "returns": "SysML::VariantMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "VerificationCaseDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "VerificationCaseDefinition",
+      "kind": "rule",
+      "returns": "SysML::VerificationCaseDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "VerificationCaseKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "VerificationCaseUsage",
+      "kind": "rule",
+      "returns": "SysML::VerificationCaseUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "VerificationCaseUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewBody",
+      "kind": "fragment",
+      "returns": "SysML::ViewUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewBodyItem",
+      "kind": "fragment",
+      "returns": "SysML::ViewUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewDefinition",
+      "kind": "rule",
+      "returns": "SysML::ViewDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewDefinitionBody",
+      "kind": "fragment",
+      "returns": "SysML::ViewDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewDefinitionBodyItem",
+      "kind": "fragment",
+      "returns": "SysML::ViewDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewRenderingMember",
+      "kind": "rule",
+      "returns": "SysML::ViewRenderingMembership",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewRenderingUsage",
+      "kind": "rule",
+      "returns": "SysML::RenderingUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewUsage",
+      "kind": "rule",
+      "returns": "SysML::ViewUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewpointDefKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewpointDefinition",
+      "kind": "rule",
+      "returns": "SysML::ViewpointDefinition",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewpointKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewpointUsage",
+      "kind": "rule",
+      "returns": "SysML::ViewpointUsage",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "ViewpointUsageKeyword",
+      "kind": "rule",
+      "returns": null,
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "VisibilityIndicator",
+      "kind": "enum",
+      "returns": "SysML::VisibilityKind",
+      "file": "SysML.xtext"
+    },
+    {
+      "name": "WhileLoopNode",
+      "kind": "rule",
+      "returns": "SysML::WhileLoopActionUsage",
+      "file": "SysML.xtext"
+    }
+  ]
+}

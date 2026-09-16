@@ -1,0 +1,19 @@
+[package]
+name = "sv2-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# The command is `sv2`: scripts/corpus-sweep.sh runs target/debug/sv2.
+[[bin]]
+name = "sv2"
+path = "src/main.rs"
+
+[dependencies]
+sv2-syntax = { workspace = true }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true

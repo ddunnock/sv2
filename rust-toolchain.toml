@@ -1,0 +1,9 @@
+# Pinned so that a clippy or rustfmt change cannot turn the gate red on its own.
+# Bump deliberately, together with rust-version in Cargo.toml, and expect to fix lints
+# in the same change (STD-002-RS §12 rule 7, §13.4).
+[toolchain]
+channel = "1.98.1"
+# rust-src is what rust-analyzer needs to index the standard library. It plays no
+# part in any gate.
+components = ["clippy", "rustfmt", "rust-src"]
+profile = "minimal"

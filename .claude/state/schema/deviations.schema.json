@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sv2/deviations.schema.json",
+  "title": "Recorded grammar and metamodel deviations",
+  "description": "Replaces the prose PATCHES.md. Structured so scripts/grammar_diff.py can tell reviewed differences from unreviewed ones without grepping markdown, and so the spec-conformance-reviewer can check citations mechanically.",
+  "type": "object",
+  "required": ["schema_version", "source_selection", "deviations", "unpatched"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "source_selection": {
+      "type": "object",
+      "description": "Which grammar was vendored, why, and what was known about its defects going in.",
+      "additionalProperties": true
+    },
+    "deviations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["production", "bucket", "decision", "evidence"],
+        "additionalProperties": false,
+        "properties": {
+          "production": {
+            "type": "string",
+            "description": "Name as it appears in productions.json"
+          },
+          "bucket": { "enum": ["xtext_only", "spec_only", "conflict"] },
+          "upstream": { "type": "string", "description": "What the Xtext does as shipped" },
+          "problem": { "type": "string", "description": "The input it gets wrong, concretely" },
+          "decision": { "enum": ["follow_spec", "follow_corpus", "follow_xtext", "defer"] },
+          "rationale": { "type": "string" },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "description": "At least one. A clause citation retrieved from the wiki, or a corpus file path.",
+            "items": {
+              "type": "object",
+              "required": ["kind", "ref"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "enum": ["spec_clause", "corpus_file", "omg_issue", "file_id"] },
+                "ref": { "type": "string" },
+                "note": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "unpatched": {
+      "type": "array",
+      "description": "Places upstream is wrong and we have chosen NOT to diverge. These matter as much as the patches — they are what a reader would otherwise assume had been handled.",
+      "items": {
+        "type": "object",
+        "required": ["production", "rationale"],
+        "additionalProperties": false,
+        "properties": {
+          "production": { "type": "string" },
+          "rationale": { "type": "string" },
+          "evidence": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          }
+        }
+      }
+    }
+  }
+}

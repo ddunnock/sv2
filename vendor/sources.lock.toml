@@ -1,0 +1,2105 @@
+# The pinned vendor set.
+#
+# Every file this workspace treats as an input is listed here with the URL it came
+# from and the sha256 of the exact bytes. `sha256 = "UNPINNED"` means "fetch it and
+# record whatever arrives"; `scripts/vendor_sync.py` writes the digest back into this
+# file. After that, a changed hash is upstream drift and stops the sync.
+#
+#   python3.11 scripts/vendor_sync.py                fetch missing, verify pinned
+#   python3.11 scripts/vendor_sync.py --accept-new   a reviewed upgrade
+#   python3.11 scripts/vendor_verify.py              offline check; the gate runs this
+#
+# Tiers are ADR-0010. The versions are docs/conformance-target.toml; this file is
+# the bytes. Nothing here is editable by an agent — the PreToolUse hook blocks it.
+
+# ---------------------------------------------------------------------------
+# Tier A — OMG normative artifacts, namespace 20250201, IPR mode Non-Assert.
+#
+# The namespace-dated URL *is* the version (ADR-0010). The sha256 guards the other
+# failure the URL cannot: content republished at the same address. `file_id` is the
+# OMG document number, which is what a conformance claim cites.
+# ---------------------------------------------------------------------------
+
+# MOF XMI for the SysML v2 abstract syntax
+[[file]]
+path    = "vendor/omg/20250201/SysML.xmi"
+url     = "https://www.omg.org/spec/SysML/20250201/SysML.xmi"
+file_id = "ptc/25-02-15"
+tier    = "A"
+sha256  = "caa65d54f56798bf7582d173f7567e1eea37a49c45984f8bd7df145011cf8c6f"
+
+# JSON schema for the SysML abstract syntax
+[[file]]
+path    = "vendor/omg/20250201/SysML.json"
+url     = "https://www.omg.org/spec/SysML/20250201/SysML.json"
+file_id = "ptc/25-04-32"
+tier    = "A"
+sha256  = "bb0d8af159cf2cbe4a0df4ed6b903505a57e33d047068e5a50a7008a18d546c5"
+
+# MOF XMI for the KerML abstract syntax
+[[file]]
+path    = "vendor/omg/20250201/KerML.xmi"
+url     = "https://www.omg.org/spec/KerML/20250201/KerML.xmi"
+file_id = "ptc/25-04-04"
+tier    = "A"
+sha256  = "45b18775afe2b2fcdc70e24f37c6d2f344defcc3f38a02075a193354e2d7b466"
+
+# JSON schema for the KerML abstract syntax
+[[file]]
+path    = "vendor/omg/20250201/KerML.json"
+url     = "https://www.omg.org/spec/KerML/20250201/KerML.json"
+file_id = "ptc/25-04-21"
+tier    = "A"
+sha256  = "e454fe4b7c04f3d95874b6c1a4e6ef056ea5874c71fd3d17e3180319c2f58ab2"
+
+# JSON schema for KerML project interchange (KPAR) metadata
+[[file]]
+path    = "vendor/omg/20250201/KerML-Model-Interchange.json"
+url     = "https://www.omg.org/spec/KerML/20250201/KerML-Model-Interchange.json"
+file_id = "ptc/25-04-20"
+tier    = "A"
+sha256  = "c94b43f0f634902e9e1043498449fccde492b13bad1ccaed8289de7ecbf03bb6"
+
+# SysML Systems Library
+[[file]]
+path    = "vendor/omg/20250201/Systems-Library.kpar"
+url     = "https://www.omg.org/spec/SysML/20250201/Systems-Library.kpar"
+file_id = "ptc/25-04-24"
+tier    = "A"
+sha256  = "df7d8b2c6e08232ca7ce123a63148949c383fcbeaeba8d89c27ceece43793a1f"
+
+# SysML Analysis Domain Library
+[[file]]
+path    = "vendor/omg/20250201/Analysis-Domain-Library.kpar"
+url     = "https://www.omg.org/spec/SysML/20250201/Analysis-Domain-Library.kpar"
+file_id = "ptc/25-04-25"
+tier    = "A"
+sha256  = "96f0230cd7091faa2d27345b7f7748e0249fb42cfbdc48265ce6e82d6ecc1b38"
+
+# SysML Cause and Effect Domain Library
+[[file]]
+path    = "vendor/omg/20250201/Cause-and-Effect-Domain-Library.kpar"
+url     = "https://www.omg.org/spec/SysML/20250201/Cause-and-Effect-Domain-Library.kpar"
+file_id = "ptc/25-04-26"
+tier    = "A"
+sha256  = "c097c70232b8c9d38acbc92b402d8caa3b67f4d847dade0f29994164a4e25e94"
+
+# SysML Geometry Domain Library
+[[file]]
+path    = "vendor/omg/20250201/Geometry-Domain-Library.kpar"
+url     = "https://www.omg.org/spec/SysML/20250201/Geometry-Domain-Library.kpar"
+file_id = "ptc/25-04-27"
+tier    = "A"
+sha256  = "9cc40d628dfe8717b79af74297a7115103e3469708a54221cac0e42344ed8427"
+
+# SysML Metadata Domain Library
+[[file]]
+path    = "vendor/omg/20250201/Metadata-Domain-Library.kpar"
+url     = "https://www.omg.org/spec/SysML/20250201/Metadata-Domain-Library.kpar"
+file_id = "ptc/25-04-28"
+tier    = "A"
+sha256  = "5c51cd3b21b60c89742dbba0f59f25bdbc34224d05e32975d77bb93092458b9b"
+
+# SysML Quantities and Units Domain Library
+[[file]]
+path    = "vendor/omg/20250201/Quantities-and-Units-Domain-Library.kpar"
+url     = "https://www.omg.org/spec/SysML/20250201/Quantities-and-Units-Domain-Library.kpar"
+file_id = "ptc/25-04-29"
+tier    = "A"
+sha256  = "81a6e7264a9f287e482ec5b35f8ef98725b81f393e0b2e82dae3599511c0adc7"
+
+# SysML Requirement Derivation Domain Library
+[[file]]
+path    = "vendor/omg/20250201/Requirement-Derivation-Domain-Library.kpar"
+url     = "https://www.omg.org/spec/SysML/20250201/Requirement-Derivation-Domain-Library.kpar"
+file_id = "ptc/25-04-30"
+tier    = "A"
+sha256  = "a136e72ac6afbd96ede220cfec77fd54c75242d577d3f5ab9e5278b25baee6e5"
+
+# KerML Semantic Library
+[[file]]
+path    = "vendor/omg/20250201/Semantic-Library.kpar"
+url     = "https://www.omg.org/spec/KerML/20250201/Semantic-Library.kpar"
+file_id = "ptc/25-04-17"
+tier    = "A"
+sha256  = "6d9e311646a557cb08b64313cab6a7931109751b2ac7fbfcefad5c2216a6167b"
+
+# KerML Data Type Library
+[[file]]
+path    = "vendor/omg/20250201/Data-Type-Library.kpar"
+url     = "https://www.omg.org/spec/KerML/20250201/Data-Type-Library.kpar"
+file_id = "ptc/25-04-18"
+tier    = "A"
+sha256  = "957e4ff5c60f7fc5eedaf0b6d4f776856061c0aa7a424e260eeccb8d6ed7bfbd"
+
+# KerML Function Library
+[[file]]
+path    = "vendor/omg/20250201/Function-Library.kpar"
+url     = "https://www.omg.org/spec/KerML/20250201/Function-Library.kpar"
+file_id = "ptc/25-04-19"
+tier    = "A"
+sha256  = "a8319da3ab1d8ffc0f390ea1aef29d85a00451655c41a9267ce396845c2b1c8d"
+
+
+# ---------------------------------------------------------------------------
+# Tier B — the Pilot Implementation's Xtext. EPL-2.0, NOT normative.
+#
+# Used for the production inventory, the token set, and the production-to-metaclass
+# map. NOT used for rule bodies: the Xtext encodes its parser generator's LL
+# limitations as though they were language rules (docs/DERIVATION.md).
+#
+# {PILOT_SHA} is substituted from tier_b_pilot.revision in
+# docs/conformance-target.toml. It must be a full commit sha, never a branch.
+# ---------------------------------------------------------------------------
+
+[[file]]
+path    = "vendor/pilot/SysML.xtext"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Pilot-Implementation/{PILOT_SHA}/org.omg.sysml.xtext/src/org/omg/sysml/xtext/SysML.xtext"
+tier    = "B"
+license = "EPL-2.0"
+sha256  = "7d9142742c454f5810fe4db61a089abef5e0b8d61ad8bf552631d9136b04f298"
+
+[[file]]
+path    = "vendor/pilot/KerML.xtext"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Pilot-Implementation/{PILOT_SHA}/org.omg.kerml.xtext/src/org/omg/kerml/xtext/KerML.xtext"
+tier    = "B"
+license = "EPL-2.0"
+sha256  = "455561523b47fb34ff6c24e570e6ef752adf200ea05beb4d848773eb1a109d46"
+
+[[file]]
+path    = "vendor/pilot/KerMLExpressions.xtext"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Pilot-Implementation/{PILOT_SHA}/org.omg.kerml.expressions.xtext/src/org/omg/kerml/expressions/xtext/KerMLExpressions.xtext"
+tier    = "B"
+license = "EPL-2.0"
+sha256  = "506ee54d356cc2e1194d69bc2669665e952fc841cb28a119ff6758da225b8c62"
+
+[[file]]
+path    = "vendor/pilot/LICENSE-EPL-2.0.txt"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Pilot-Implementation/{PILOT_SHA}/LICENSE"
+tier    = "B"
+license = "EPL-2.0"
+sha256  = "0becf16567beb77fa252b7664631dd177c8f9a1889e48995b45379c7130e5303"
+
+
+# ---------------------------------------------------------------------------
+# Tier B' — the specification textual BNF, machine-readable.
+#
+# `bnf/*.kebnf` in SysML-v2-Release is a transcription of the normative BNF that
+# carries its clause numbers as comments. It is NOT the normative text: the header
+# reads "Manual corrections by HP de Koning", so the PDF clause arbitrates wherever
+# the two disagree. See .claude/state/deviations.json under source_selection.
+#
+# Pinned by the commit sha behind release tag 2026-08, not by the tag: a tag can be
+# moved, a sha cannot.
+# ---------------------------------------------------------------------------
+
+# SysML v2 textual BNF, transcribed from the specification
+[[file]]
+path    = "vendor/spec-bnf/SysML-textual-bnf.kebnf"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/bnf/SysML-textual-bnf.kebnf"
+tier    = "B-prime"
+license = "EPL-2.0"
+sha256  = "5352b63341a3b4fa4c926529a74ee8e77b0adb724ac072130f3a5134d76d8655"
+
+# KerML textual BNF, transcribed from the specification
+[[file]]
+path    = "vendor/spec-bnf/KerML-textual-bnf.kebnf"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/bnf/KerML-textual-bnf.kebnf"
+tier    = "B-prime"
+license = "EPL-2.0"
+sha256  = "2df526a1d36fc08a24adc05094fca069c3bef51aeb688f8328d408eee17103f8"
+
+# ---------------------------------------------------------------------------
+# Tier C — the corpus: files a conformant tool accepts.
+#
+# 310 model files from SysML-v2-Release at the commit behind release tag
+# 2026-08, plus the informative Simple Vehicle Model from OMG. Pinned separately
+# from the grammar because a corpus can grow without the language changing.
+#
+# Three trees, all treated as positive cases:
+#   kerml/src/examples      KerML examples
+#   sysml/src/examples      SysML examples
+#   sysml/src/training      the training model set
+#   sysml/src/validation    the validation SCENARIO set — named for modelling
+#                           scenarios (Parts Tree, Requirements, Verification),
+#                           not for rule violations. These are models that must
+#                           parse, not negative cases.
+#
+# There is no negative corpus here and there cannot be: tests/rejection/ is
+# hand-written, one case per rule violated, each citing the clause it breaks
+# (.claude/rules/tests.md). A positive-only sweep is passed by a parser that
+# accepts everything, so these files alone do not establish acceptance.
+#
+# NOT vendored: sysml.library/ — see INCLUDE in the generator. The library is
+# Tier A, inside the KPAR archives.
+# ---------------------------------------------------------------------------
+
+# The informative Simple Vehicle Model. OMG informative machine-readable document,
+# named in ADR-0010 as part of Tier C. Its URL is a cgi-bin document fetch rather
+# than a namespace-dated permalink, which is how OMG serves informative files.
+[[file]]
+path    = "vendor/corpus/omg/SimpleVehicleModel.sysml"
+url     = "https://www.omg.org/cgi-bin/doc?ptc/25-04-31.sysml"
+file_id = "ptc/25-04-31"
+tier    = "C"
+sha256  = "545b68c1da2f2fb63667011b0b21ed4fefb307adf713e5ec038345723600e912"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Address Book Example/AddressBookModel.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Address%20Book%20Example/AddressBookModel.kerml"
+tier    = "C"
+sha256  = "6faaf00beec24102f1fcc2aadde480f758407fabf1aa98c95af29896e65c7939"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_N_ary.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Association%20Examples/ProductSelection_N_ary.kerml"
+tier    = "C"
+sha256  = "24d003483c8f693c92a33a80662a503311174fb72509e464475f09d9c7d25aba"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Association%20Examples/ProductSelection_OwnedEnds.kerml"
+tier    = "C"
+sha256  = "f777c3db82ffea3a95eba9403406ed2f3ec760ee6ddd21bb96ff577866ef3077"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_UnownedEnds.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Association%20Examples/ProductSelection_UnownedEnds.kerml"
+tier    = "C"
+sha256  = "bea388095b1babf1cf6503b34b741477bcebb48fdd15387f55ca77960d2c7d23"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Behavior Examples/Camera.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Behavior%20Examples/Camera.kerml"
+tier    = "C"
+sha256  = "060a3d0e60a9f663ef6fa9dfb6004d9fba9849a0b0623bf3eff41577855b4eb0"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Behavior Examples/TakePicture.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Behavior%20Examples/TakePicture.kerml"
+tier    = "C"
+sha256  = "b3829d6059be1429c9b2ee90e38192b9e4ccaa12236498322aba83409ad1f8d7"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Individuals Examples/JohnIndividualExample.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Individuals%20Examples/JohnIndividualExample.kerml"
+tier    = "C"
+sha256  = "0f81f16144de4c7dadea4f252e925ce05c0ef735a361a7a6167c27f6926523d8"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-Atoms.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/KerML%20Spec%20Annex%20A%20Examples/A-2-Atoms.kerml"
+tier    = "C"
+sha256  = "9d972fecbc110cc1af256955add63a3f7d9875c99b4201faaa5ab2e635efc544"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-ModelingInstances.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/KerML%20Spec%20Annex%20A%20Examples/A-2-ModelingInstances.kerml"
+tier    = "C"
+sha256  = "d7022eb67c25572bd93cb3074f40cc02fd490c12c52f04ac0c45585eb25c834d"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-2-WithoutConnectors.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/KerML%20Spec%20Annex%20A%20Examples/A-3-2-WithoutConnectors.kerml"
+tier    = "C"
+sha256  = "3a36d857d9b95ab2fcace2435a6831a42dfedc16754edd8d3254d5884f27b62a"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-3-OneToOneConnectors.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/KerML%20Spec%20Annex%20A%20Examples/A-3-3-OneToOneConnectors.kerml"
+tier    = "C"
+sha256  = "9242be07645265e42f0a3d7aa14cffb1fee327c7d9c56003793e4554b3e53989"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-4-OneToUnrestrictedConnectors.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/KerML%20Spec%20Annex%20A%20Examples/A-3-4-OneToUnrestrictedConnectors.kerml"
+tier    = "C"
+sha256  = "e5b8f343451101bbe425d9a9176556072275eb1198c660a86692ae4dea6623f1"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-5-TimingForStructures.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/KerML%20Spec%20Annex%20A%20Examples/A-3-5-TimingForStructures.kerml"
+tier    = "C"
+sha256  = "9db4a32502dd287a03e0415818024d3ef9b626e60d36501d6878096496720ac2"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-6-Sequences.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/KerML%20Spec%20Annex%20A%20Examples/A-3-6-Sequences.kerml"
+tier    = "C"
+sha256  = "9e7fa6be31003d5fa939270673e45be94c005e729ae08e4ba3b09fcf4472e197"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-7-DecisionsAndMerges.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/KerML%20Spec%20Annex%20A%20Examples/A-3-7-DecisionsAndMerges.kerml"
+tier    = "C"
+sha256  = "e6c320b27fd51757a05b1d3fa84e26ef36b23527b53072b077259483626131d4"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/KerML%20Spec%20Annex%20A%20Examples/A-3-8-ChangingFeatureValues.kerml"
+tier    = "C"
+sha256  = "80250dbcc2a53feb2dacda1c22aca6ae98c454b271df5cd64800a98c5226e05c"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_1.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Mass%20Roll-up%20Example/MassRollup_1.kerml"
+tier    = "C"
+sha256  = "b5c9a09ecf19b2c06ac9749d643506129d6a8ca86e07cd6c7d28a905c0029ec4"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_2.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Mass%20Roll-up%20Example/MassRollup_2.kerml"
+tier    = "C"
+sha256  = "8c48b56644afbcf8cf231809b04929a154f8199cb0e17bcacdd4c0b2abf878d6"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_1.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Mass%20Roll-up%20Example/Vehicles_1.kerml"
+tier    = "C"
+sha256  = "f92a6098b6278df75258c3affd2fa2cb28f8b6f39d4faccbdbb35386a59023f9"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_2.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Mass%20Roll-up%20Example/Vehicles_2.kerml"
+tier    = "C"
+sha256  = "25eff39dce06fdb5837f27b34b004a8602661625260dd858543f64950341d773"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_3.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Mass%20Roll-up%20Example/Vehicles_3.kerml"
+tier    = "C"
+sha256  = "cca90d03d1b354ea037e37b7e9eae415a1f8af85bd187c2bea6b58457035f7a5"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Massed Thing Example/MassedThings.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Massed%20Thing%20Example/MassedThings.kerml"
+tier    = "C"
+sha256  = "3dee370ee373911ceca49199d0004b540c6286eaa0771db6c06ffaaa56d6eba0"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Named%20Collection%20Members%20Example/VehicleTanks.kerml"
+tier    = "C"
+sha256  = "63f240ca34e0a24760f65ddb650ab855ca4a1fe6a75f0cd5a607ebc67287f348"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Packet Example/PacketUsage.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Packet%20Example/PacketUsage.kerml"
+tier    = "C"
+sha256  = "f04cfefc3ac6a67b2ba53b0ea3ecbb449cf5cbd8beca87cf4827b11fc33f695c"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Packet Example/Packets.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Packet%20Example/Packets.kerml"
+tier    = "C"
+sha256  = "8d88def9c2d59677c9dbf7bb0b16b94c1c39bf43b32f627d92dc201ae0e2c33b"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/ArgumentResolution.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/ArgumentResolution.kerml"
+tier    = "C"
+sha256  = "3eea81c160be25f6ee891ec9dbcc8eeedd6019ab2d1fe435e275c6e0c22909e4"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Associations.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Associations.kerml"
+tier    = "C"
+sha256  = "90a96c432ac322cf27681b29d36a9f89683baaff79214908a8e836d96377c250"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Behaviors.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Behaviors.kerml"
+tier    = "C"
+sha256  = "1526ed5e97aeda790969aa9a2aa0d149055c12991d4ef2055c0f12d51425b32d"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Circular.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Circular.kerml"
+tier    = "C"
+sha256  = "4719625817a3cb27c4a8faf428a10213c356d9e1ea68f54ce9f97ea8522da516"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Classes.kerml"
+tier    = "C"
+sha256  = "543ddde2612aea3e6269858826f47026efe3067af193f21a197d996806d42f77"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Classifications.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Classifications.kerml"
+tier    = "C"
+sha256  = "a7c5e67ea3db1f878afcc56f4319326947b19eac87a30a079a77af25c2d33cce"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Classifiers.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Classifiers.kerml"
+tier    = "C"
+sha256  = "1bca0f3ca98026f802c475c61b6243c2d8c9994d9de980f715c6bc0c4af267e0"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Comments.kerml"
+tier    = "C"
+sha256  = "217ee9123694cbceff1964cf4b2e2be88c9453808a5f5df3abcc58ac67339261"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Conjugation.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Conjugation.kerml"
+tier    = "C"
+sha256  = "2b0fc0e6698052fae5609209084b4d8d3ef0df71928afe176dd02c7095184d83"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Connectors.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Connectors.kerml"
+tier    = "C"
+sha256  = "abbdcb4f0c63d7c31823561c7ede2e75e944da47a67e249c0fb23a3025e5b381"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Dependencies.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Dependencies.kerml"
+tier    = "C"
+sha256  = "530590c54d03b98c3b05b027244baeae8651bd3ad2044a46ed22d46ec66f1a4a"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Expansion.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Expansion.kerml"
+tier    = "C"
+sha256  = "799fa1522191dfbcb18535ca3cb95bbcf968e4060f7d99cd6d3a196539924d7d"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Expressions.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Expressions.kerml"
+tier    = "C"
+sha256  = "505c5c66669606cb4189d21bb26871a40dc78cd3bb68db23a86be72e0d7c3eef"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/FeatureChains.kerml"
+tier    = "C"
+sha256  = "7aac3979c13d5a493eb133d286144376a832da5d1065b76a60856d2030e2bd3a"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/FeatureInheritance.kerml"
+tier    = "C"
+sha256  = "da001b741844b18b5e5187c8403ad9e66a2841d2965e96473a755a54f1c73731"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Features.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Features.kerml"
+tier    = "C"
+sha256  = "a7ed5717a0202ae6328356f74525633ae4556ff6960fb32056905d031c4ba32d"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Filtering.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Filtering.kerml"
+tier    = "C"
+sha256  = "2a46dd1ab008f0f82d9bf96348fcfb9fe7b8cdde9e1a2c2178f2aa61c3a73595"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Imports.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Imports.kerml"
+tier    = "C"
+sha256  = "e78cc8deb4353ce40e3419bf7853a50a4ecbbffb7371f8a95c660143417032bc"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Inheritance.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Inheritance.kerml"
+tier    = "C"
+sha256  = "469dd07481a3da0a864082b262ee688d900c6dc14bd99414e523fe371d4ac0cd"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Inverses.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Inverses.kerml"
+tier    = "C"
+sha256  = "ca0ae0b19ebc799e3b3645c6c3717b36aae35ee39398f2c690f50861f2dce694"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/MetadataTest.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/MetadataTest.kerml"
+tier    = "C"
+sha256  = "824df095fea1664e42fe3cab7654c047216983eb1b64aca5ee12fa0fa5d18f99"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Redefinition.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Redefinition.kerml"
+tier    = "C"
+sha256  = "a9660bd0dc11092720e7975d83b0d48929708b533cd806e5264c2d0992aa1896"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Scoping.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Scoping.kerml"
+tier    = "C"
+sha256  = "e1d71b9a292ed4e2789e8bdb20478282a811a497f5b03092054f945b893b05ca"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/TextualRepresentation.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/TextualRepresentation.kerml"
+tier    = "C"
+sha256  = "f783effcac236b519244c7973654a829ab86aefe8acbfd905f5300dc33e2bade"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Simple Tests/Types.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Simple%20Tests/Types.kerml"
+tier    = "C"
+sha256  = "dfb4f750c17e341e11e3c6c7848d77716a5fef16654675a628c688cc563efb8d"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/ExtendedOccurrences.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Variable%20Feature%20Examples/Enhancements/ExtendedOccurrences.kerml"
+tier    = "C"
+sha256  = "4346afb6b11b9029ad81579cac690265de3cc6cf4a7d1e45a22c80dd79107011"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/Moments.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Variable%20Feature%20Examples/Enhancements/Moments.kerml"
+tier    = "C"
+sha256  = "441f93819dfbd6dee83b84c672d392f80c4c8ede24c810351ad1d84e142df560"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/TimeVaryingFeaturesEnhanced.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Variable%20Feature%20Examples/Enhancements/TimeVaryingFeaturesEnhanced.kerml"
+tier    = "C"
+sha256  = "56c4fb2f40cb53930bd5bd1f213def7e3dfbfb6db3a3bc504c29f94e8b0b0979"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/TimeVaryingSteps.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Variable%20Feature%20Examples/Enhancements/TimeVaryingSteps.kerml"
+tier    = "C"
+sha256  = "6ea7677b72645046564fe88cf346783ffe4ef3d4248be7a83ee4513ec18a6470"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Variable Feature Examples/TimeVaryingCarDriver.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Variable%20Feature%20Examples/TimeVaryingCarDriver.kerml"
+tier    = "C"
+sha256  = "d67c3870429ed0f7ced1bd21d9fe296b0d09c319f940982358ec2feb77e00568"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Variable Feature Examples/TimeVaryingFeatures.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Variable%20Feature%20Examples/TimeVaryingFeatures.kerml"
+tier    = "C"
+sha256  = "7a99f4e28532620e4b6ebd5a327a8d896ca4c327e9ca604fab4e0d7e8b6dc7cd"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Vehicle Example/VehicleDefinitions.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Vehicle%20Example/VehicleDefinitions.kerml"
+tier    = "C"
+sha256  = "8037bff947b8bebf862ac9e6838ec3550fa2fe84e18f3ac255942a9cbb84a353"
+
+[[file]]
+path    = "vendor/corpus/kerml/src/examples/Vehicle Example/VehicleUsages.kerml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/kerml/src/examples/Vehicle%20Example/VehicleUsages.kerml"
+tier    = "C"
+sha256  = "a1d4568426eb8847e36e0de8f6c25093a09304ca0f0bf5ad7e241cf9b6daf3ff"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Analysis Examples/AnalysisAnnotation.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Analysis%20Examples/AnalysisAnnotation.sysml"
+tier    = "C"
+sha256  = "c7654db1f5406300514648b960bfd859a4ca0b2a809545e895d6f4965fb0c165"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Analysis Examples/Dynamics.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Analysis%20Examples/Dynamics.sysml"
+tier    = "C"
+sha256  = "ed5c0c0b23f75bcddd853797ab8e97c394689652e0fef7214aa80baf4452818a"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Analysis Examples/Turbojet Stage Analysis.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Analysis%20Examples/Turbojet%20Stage%20Analysis.sysml"
+tier    = "C"
+sha256  = "a7c04ba7f34884333923ac27509f94027f5612e5b2af40e75a6f16caf7d14752"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Analysis Examples/Vehicle Analysis Demo.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Analysis%20Examples/Vehicle%20Analysis%20Demo.sysml"
+tier    = "C"
+sha256  = "d5c73158eb4fb8da08819fb4b20b06fe0153ec017355c40996a56fca550dd612"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFCoreLib.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Arrowhead%20Framework%20Example/AHFCoreLib.sysml"
+tier    = "C"
+sha256  = "08c81e862f96e1799a7e1ced4abc6171105c546de208d4fc309e1d8e1011e102"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Arrowhead%20Framework%20Example/AHFNorwayTopics.sysml"
+tier    = "C"
+sha256  = "a7b02539744dd06758b5bde8b0a3047749d61d69d4d1d102483907a7eadec30b"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFProfileLib.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Arrowhead%20Framework%20Example/AHFProfileLib.sysml"
+tier    = "C"
+sha256  = "ad560b0ecbfe615c500d8884307e3676666ae3fe1fcc7bcb213d392b97519cd6"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Arrowhead%20Framework%20Example/AHFSequences.sysml"
+tier    = "C"
+sha256  = "33ccdda01ec89aab46f02610e495924e3842b8745e44447b9f4b9997cc01ab9d"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_N_ary.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Association%20Examples/ProductSelection_N_ary.sysml"
+tier    = "C"
+sha256  = "71b73c389b7826c5c435f50c63f1b8fd17d6dae6788b3c0d3b82ce6571c4e6d9"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_OwnedEnds.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Association%20Examples/ProductSelection_OwnedEnds.sysml"
+tier    = "C"
+sha256  = "f826636f63fd9e3d78b6f173e668f09a11f159d20fda264dc8d32eed5c61d857"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_UnownedEnds.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Association%20Examples/ProductSelection_UnownedEnds.sysml"
+tier    = "C"
+sha256  = "b4fb425c73770ecf2569b98886b021354ed96baf25c04564d782a85c7156a0d3"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Camera Example/Camera.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Camera%20Example/Camera.sysml"
+tier    = "C"
+sha256  = "6ad1fad43c0fee8ca64ce01f7efb7b0477984711f4e59db85f801a8e56bd33bf"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Camera Example/PictureTaking.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Camera%20Example/PictureTaking.sysml"
+tier    = "C"
+sha256  = "355a83a27952516c71ff6eb5a4a56354cf2ae9433f0e2ae5cc272bf27c6656ed"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Cause and Effect Examples/CauseAndEffectExample.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Cause%20and%20Effect%20Examples/CauseAndEffectExample.sysml"
+tier    = "C"
+sha256  = "cea13bb56e7e25fac50f49ddd8f7a6b25c00921df71a9642d339b74a55cf12d5"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Cause and Effect Examples/MedicalDeviceFailure.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Cause%20and%20Effect%20Examples/MedicalDeviceFailure.sysml"
+tier    = "C"
+sha256  = "3e1e7a586016266015c25b2695b0c892b56adb2a7fc7cf0832dc6d5bccb895e7"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Comment Examples/Comments.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Comment%20Examples/Comments.sysml"
+tier    = "C"
+sha256  = "de15fe494f97ea705fd70c00957c0b93d569fa372b2b85771276a8eab74a9d5b"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Flashlight Example/Flashlight Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Flashlight%20Example/Flashlight%20Example.sysml"
+tier    = "C"
+sha256  = "0b90c2fa75f7ff82495418c3bc366802c6646f8618878845af0bc3975286f8f9"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Geometry Examples/CarWithEnvelopingShape.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Geometry%20Examples/CarWithEnvelopingShape.sysml"
+tier    = "C"
+sha256  = "570301dc80454a8520ba205c31ef438b7e054614e7366562d208fc206b7df6f1"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Geometry Examples/CarWithShapeAndCSG.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Geometry%20Examples/CarWithShapeAndCSG.sysml"
+tier    = "C"
+sha256  = "2c6477586699165c00aa0f0ed4ce0f97478d1aa35ff72de5aa6225217cc2e4e2"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Geometry Examples/ExternalShapeRefExample.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Geometry%20Examples/ExternalShapeRefExample.sysml"
+tier    = "C"
+sha256  = "666ab593484b975a36be6e6e33cbcb36d46f5729f445c6cff5e7637bf7249477"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Geometry Examples/SimpleQuadcopter.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Geometry%20Examples/SimpleQuadcopter.sysml"
+tier    = "C"
+sha256  = "82e2de737e7ac1580a7f73cdebb81841a5f72851921c606059f41eaabd5af46e"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Geometry Examples/VehicleGeometryAndCoordinateFrames.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Geometry%20Examples/VehicleGeometryAndCoordinateFrames.sysml"
+tier    = "C"
+sha256  = "e097b0f8a2094ed5b53275e5b1324a828d8769d7f4f4db41dabf9f643e462c24"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Import Tests/AliasImport.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Import%20Tests/AliasImport.sysml"
+tier    = "C"
+sha256  = "b243243ba39ca49c9ad53521418513ea3111b4e6be864023dfa1bb921baf96e2"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Import Tests/CircularImport.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Import%20Tests/CircularImport.sysml"
+tier    = "C"
+sha256  = "3ed6813e219e43b737251c69aaa421d0e993219cbf35d3f78819de8b6eef70d4"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Import Tests/PrivateImportTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Import%20Tests/PrivateImportTest.sysml"
+tier    = "C"
+sha256  = "5111a800ab20f0018277bef5b4ed9d055327d03ac8afbdea2c2d3e5713113007"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Import Tests/QualifiedNameImportTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Import%20Tests/QualifiedNameImportTest.sysml"
+tier    = "C"
+sha256  = "2720d3539f24ebfc294bec9dad4c7537af099e46df8b02b31a197aca51d7a1ed"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Individuals Examples/AnalysisIndividualExample.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Individuals%20Examples/AnalysisIndividualExample.sysml"
+tier    = "C"
+sha256  = "d122c30c46a7a32d4ae513fa5afd12ce020f52bc03357d89b82ea3f2c7dca453"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Individuals Examples/JohnIndividualExample.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Individuals%20Examples/JohnIndividualExample.sysml"
+tier    = "C"
+sha256  = "4a1c63acaa2f68177ba71936e7110a692b56bcc5acf240befc0b3124a4fbf4ad"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModel.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Interaction%20Sequencing%20Examples/ServerSequenceModel.sysml"
+tier    = "C"
+sha256  = "32d2847af1ee7eae4e1eba8431673e54e469cd893f9b9a7d8fcb56cdb404ff88"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModelOutside.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Interaction%20Sequencing%20Examples/ServerSequenceModelOutside.sysml"
+tier    = "C"
+sha256  = "9e77acbd7479aabaf309f0f5e01cada6859b38b582dec5335fd6d707f1a9e6bd"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Interaction%20Sequencing%20Examples/ServerSequenceOutsideRealization-2.sysml"
+tier    = "C"
+sha256  = "1c66e402fab39f0825b6b55f6ce2fcf346dfdbdf92a395cee45cb3fc91692145"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-3.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Interaction%20Sequencing%20Examples/ServerSequenceOutsideRealization-3.sysml"
+tier    = "C"
+sha256  = "9c0f256fd896b3e14e4641677b6c0090dc59336d3649be8d4996a5712767868d"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Interaction%20Sequencing%20Examples/ServerSequenceRealization-2.sysml"
+tier    = "C"
+sha256  = "791b64162fb088a5a3ba1d7913c4d7bea6e5906b4b3230dd587aae98a0ea3f51"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-3.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Interaction%20Sequencing%20Examples/ServerSequenceRealization-3.sysml"
+tier    = "C"
+sha256  = "415b2ac9e58d906039c420d366fa98c88dd03f2c0981c9a18a28520ad0dee25e"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassConstraintExample.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Mass%20Roll-up%20Example/MassConstraintExample.sysml"
+tier    = "C"
+sha256  = "2c09d516aba3653a210b8f99d509f392a9aeb46441a21e7c8ac62af7d3201b3d"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassRollup.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Mass%20Roll-up%20Example/MassRollup.sysml"
+tier    = "C"
+sha256  = "380aab83552f64ed52a92d73c518d6b78aa227e1a6a2d7f60bad4583dcc9879d"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Mass Roll-up Example/Vehicles.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Mass%20Roll-up%20Example/Vehicles.sysml"
+tier    = "C"
+sha256  = "f5de0deb796dc8628a6e4036edf9d6480c46c84278012b75250dcf7887f8a7b4"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Metadata Examples/IssueMetadataExample.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Metadata%20Examples/IssueMetadataExample.sysml"
+tier    = "C"
+sha256  = "873d5de264c3f7c7f5df84a3b589d07fc6c5d59e99db0a3e8e73e7c2f0f3e696"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Metadata Examples/RationaleMetadataExample.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Metadata%20Examples/RationaleMetadataExample.sysml"
+tier    = "C"
+sha256  = "f780fdd76f6aeee7208a3f1a73634b8bc2290c6ecfb1838efdc5af9878ab72e9"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Metadata Examples/RequirementMetadataExample.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Metadata%20Examples/RequirementMetadataExample.sysml"
+tier    = "C"
+sha256  = "dd1a5577b2b2a4ee435c882b8f1c533fa3968104148bcd28014fb1baac55869e"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Metadata Examples/RiskMetadataExample.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Metadata%20Examples/RiskMetadataExample.sysml"
+tier    = "C"
+sha256  = "cd50bcde1413b13e5aaee6854e4d42200dc2ca7d6c865ea868a4e5f9c5076799"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Metadata Examples/VerificationMetadataExample.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Metadata%20Examples/VerificationMetadataExample.sysml"
+tier    = "C"
+sha256  = "0c9ccc86dd459227164e54e6cb866795b1ef7ff212905ac9ba152fb3eb9bd631"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Packet Example/PacketUsage.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Packet%20Example/PacketUsage.sysml"
+tier    = "C"
+sha256  = "571a03119991b8e385cfaf99d93fa8c84fc5f71a07bd0c130f210951104dfbaf"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Packet Example/Packets.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Packet%20Example/Packets.sysml"
+tier    = "C"
+sha256  = "101eb4e3c9163d0aacaeb293fd03b16d94616abb79cc04f63a7b94eb9242403d"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Requirements Examples/HSUVRequirements.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Requirements%20Examples/HSUVRequirements.sysml"
+tier    = "C"
+sha256  = "6058165ce64aca5aab73b9a09eaeec7519942510c91fe71b3990f7bf612cdcae"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Requirements Examples/RequirementDerivationExample.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Requirements%20Examples/RequirementDerivationExample.sysml"
+tier    = "C"
+sha256  = "1575a8e09c008145ff619ef7d0ce7622d9e88c77811a6984578ef393d99e26c7"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Requirements Examples/VehicleRequirementDerivation.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Requirements%20Examples/VehicleRequirementDerivation.sysml"
+tier    = "C"
+sha256  = "aa7dcf0498eb967f539fc81ef63c6f924c691edfe26c279a875c1a3a0729a8e8"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Room Model/RoomModel.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Room%20Model/RoomModel.sysml"
+tier    = "C"
+sha256  = "da4c197311bfcb7b40c670a28dc8289adcc147bf0b1f9c4533a6803c213b7fa1"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/ActionTest.sysml"
+tier    = "C"
+sha256  = "f25839d6ed3237bbe454d71533646a0a6748384455d9870995299ed4149c38b8"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/AliasTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/AliasTest.sysml"
+tier    = "C"
+sha256  = "c919d53cfe77577ef1483a66d117533dfdc1a6c7bd769d616bc7f56c5c2835fb"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/AllocationTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/AllocationTest.sysml"
+tier    = "C"
+sha256  = "0affe4f7d051a20476834783039e93ca9d77708a36b56d7428ebdddf6ffaa8be"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/AnalysisTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/AnalysisTest.sysml"
+tier    = "C"
+sha256  = "2bbbd6da0943b4204f84c495944b79a2b9f7a173c3a8a2ab93d1cf8fb3ffac73"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/AssignmentTest.sysml"
+tier    = "C"
+sha256  = "7d4b3e64602856f6e7f9ce142f2e15535e1ae3d6e96852a50f86d838877e8976"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/CalculationTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/CalculationTest.sysml"
+tier    = "C"
+sha256  = "7b174ccf61882a28d25fec84a4a48631556b6af38ce8e84731e85273ff50737c"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/CommentTest.sysml"
+tier    = "C"
+sha256  = "385dc71179075e64044e17ca0af4a4f81ca0ac96528a045ed8678d6bf2e52e7a"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/ConjugationTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/ConjugationTest.sysml"
+tier    = "C"
+sha256  = "68f8ce99b28425e0963dac05a35959d8e38b11a4a0b76a0aa40f7d335cdf80aa"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/ConnectionTest.sysml"
+tier    = "C"
+sha256  = "8b0046d8d2e221923adba78cbed8359fbdacb85e623cf9ed1abd5ba3c0e3c2a7"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/ConstraintTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/ConstraintTest.sysml"
+tier    = "C"
+sha256  = "1a4aa4b5bc29e17c88dc5c2a5bec99960c40fe1633f96fd5591531b1ee291c77"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/ControlNodeTest.sysml"
+tier    = "C"
+sha256  = "050aa194cc74842aa286896db589ddbba00745ea799fb4bfcd987ff53ea6be75"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/DecisionTest.sysml"
+tier    = "C"
+sha256  = "a7a0ad502d3b83de68c0b33f571bfe7a13b011fbcf7f6393343bdf777bf367b3"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/DefaultValueTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/DefaultValueTest.sysml"
+tier    = "C"
+sha256  = "43100bb21269c18d5cec91f4c18617124a14282c5c23f2384a858d5ff6521f1e"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/DependencyTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/DependencyTest.sysml"
+tier    = "C"
+sha256  = "4fa7f0c7cc12999db50d15ede2aff38d2a049a62cff9503e66d0b3d7b7b54e01"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/EnumerationTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/EnumerationTest.sysml"
+tier    = "C"
+sha256  = "f2c666064fcb7ac6bd1f32aef63982e4b2f17a85494878c37a3e1c23edb83e55"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/FeaturePathTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/FeaturePathTest.sysml"
+tier    = "C"
+sha256  = "19d83b371973d6dcaa01b5dbde574415a968a69aa8016d4d1577e4a076bc595f"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/ImportTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/ImportTest.sysml"
+tier    = "C"
+sha256  = "a03a2e8a669ef2383a5e1246c465cc81979f1bc740d490dce840262cbf01d883"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/IndividualTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/IndividualTest.sysml"
+tier    = "C"
+sha256  = "00aff4e95c78e1148bd366a446e4cb0380741373cfd822ef833e3ccc8ec4a1af"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/InterfaceTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/InterfaceTest.sysml"
+tier    = "C"
+sha256  = "a43e497c0c934f86c0a9e377f7ceca1b0f8c7bb935d480410f465c03f2066a16"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/ItemTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/ItemTest.sysml"
+tier    = "C"
+sha256  = "0d6e175435b71d0cbebf2eabaadee50e068688542742c7786305d2652f13b410"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/MetadataTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/MetadataTest.sysml"
+tier    = "C"
+sha256  = "db29263ceb3d7df48a96653dcbd981baf4e0ab20e73c253172477c9f09046edd"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/MultiplicityTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/MultiplicityTest.sysml"
+tier    = "C"
+sha256  = "71f079792d466a7f31cdb4bb3b019455beb3c6086a7ce68fb181a3260a92126f"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/OccurrenceTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/OccurrenceTest.sysml"
+tier    = "C"
+sha256  = "21841d0d2604b54a6a90cd8735b48ee2726166da824630a29680244e35ba82ae"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/ParameterTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/ParameterTest.sysml"
+tier    = "C"
+sha256  = "70e48bc2d2a98dc6e53c0ec6122136fa90ced0b881bb7064ab8c627bacf4de36"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/PartTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/PartTest.sysml"
+tier    = "C"
+sha256  = "b1d1c29bd91810e0b3a84624419b8eccb2c8f5d8671c0a3d2bc7c75d98184f50"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/RequirementTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/RequirementTest.sysml"
+tier    = "C"
+sha256  = "c6afa1b5e1bac6b032bfca6789be9ae43a46349a7edab3be8d51f2285e68fdda"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/RootPackageTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/RootPackageTest.sysml"
+tier    = "C"
+sha256  = "216198b63ebd9e7e9ff0b96b63a21d3efac19a628c4adce5bb7e14b6eedcc65a"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/StateTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/StateTest.sysml"
+tier    = "C"
+sha256  = "c1e55572d8366b744c14cc66dba8e484f0037369d975fc4e675ccfdc7709bfd4"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/StructuredControlTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/StructuredControlTest.sysml"
+tier    = "C"
+sha256  = "f423bf9c9453714041ff969a3ec8e47e07cbec54a3878b15c7d1504d7fb92b52"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/TextualRepresentationTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/TextualRepresentationTest.sysml"
+tier    = "C"
+sha256  = "25e576f71a09111faf1aa77d340b525fdd4f7fc809e3716e4a777c0e7a059f2a"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/TradeStudyTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/TradeStudyTest.sysml"
+tier    = "C"
+sha256  = "20c36d1fb7d3bc3af2b36bdba30197946376750fa65238075aa657147630669b"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/UseCaseTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/UseCaseTest.sysml"
+tier    = "C"
+sha256  = "7059bbf738d26b673231af8f02dad7f83fd0fd6a56256b4b681f558e7c14231a"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/VariabilityTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/VariabilityTest.sysml"
+tier    = "C"
+sha256  = "1426e577c0980ed68b2cd34434936df1a59e894fdbb71f8890b0ee1e1f136633"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/VerificationTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/VerificationTest.sysml"
+tier    = "C"
+sha256  = "502f31d3dd2dde0f0a2c1fac3351b699ece175decc3508ed2e270a2aa3d02000"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Simple Tests/ViewTest.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Simple%20Tests/ViewTest.sysml"
+tier    = "C"
+sha256  = "140b86c5c988bdd305d2980c68a18f1fd12a71df4f960c2e0f102284e13a67e2"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/State Space Representation Examples/CartSample.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/State%20Space%20Representation%20Examples/CartSample.sysml"
+tier    = "C"
+sha256  = "285823caa3f6193e296fb9686e02f7b261f149c481b4475bc94c3fe180608a19"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/State Space Representation Examples/EVSample.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/State%20Space%20Representation%20Examples/EVSample.sysml"
+tier    = "C"
+sha256  = "4834675f798fb275b847887b53661bc351be8094b2f320ee4819d2bb4b71d3db"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Timeslice and Snapshot Examples/TimeVaryingAttribute.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Timeslice%20and%20Snapshot%20Examples/TimeVaryingAttribute.sysml"
+tier    = "C"
+sha256  = "0f67453cd6604c15764d061da3c33bca1ac35a2f78c51c011f1220080c389c7d"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Variability Examples/VehicleVariabilityModel.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Variability%20Examples/VehicleVariabilityModel.sysml"
+tier    = "C"
+sha256  = "14664c9e34155062f97bbbfef32bdb60ae7a8d35ce8fd19051882fd5fc222dcc"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Vehicle Example/SysML v2 Spec Annex A SimpleVehicleModel.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Vehicle%20Example/SysML%20v2%20Spec%20Annex%20A%20SimpleVehicleModel.sysml"
+tier    = "C"
+sha256  = "77d7ee54951e01c885d69d19d7359242baf22c69dcfe2d4088b0b59d56ea578d"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Vehicle Example/VehicleDefinitions.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Vehicle%20Example/VehicleDefinitions.sysml"
+tier    = "C"
+sha256  = "26aaac35d37d7298157ac6cbad7d4dbad5f638389561f4d0216975ff3ca0ffbd"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Vehicle Example/VehicleIndividuals.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Vehicle%20Example/VehicleIndividuals.sysml"
+tier    = "C"
+sha256  = "e77520c0faa9d8e2b54118c894593456419a83b39a9d6cf86992e03daae639a4"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/Vehicle Example/VehicleUsages.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/Vehicle%20Example/VehicleUsages.sysml"
+tier    = "C"
+sha256  = "895344628a0a5c74147aba9a32acc143efda109bae3947e16a44e43cb623983d"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package - Updated.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/v1%20Spec%20Examples/8.4.1%20Wheel%20Hub%20Assembly/Wheel%20Package%20-%20Updated.sysml"
+tier    = "C"
+sha256  = "62b1dbc8f228745b552e6435e4ce425400be232a2326120fe63ee31a07749498"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/v1%20Spec%20Examples/8.4.1%20Wheel%20Hub%20Assembly/Wheel%20Package.sysml"
+tier    = "C"
+sha256  = "480f4c74503436b67a2a2b64e89f74ac91ae9bf5b21327a276b603f8028a637e"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition - Updated.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/v1%20Spec%20Examples/8.4.5%20Constraining%20Decomposition/Vehicle%20Decomposition%20-%20Updated.sysml"
+tier    = "C"
+sha256  = "239730f56667232e7ac77e8e0739c96158166109aadc37f125b898352b246648"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/v1%20Spec%20Examples/8.4.5%20Constraining%20Decomposition/Vehicle%20Decomposition.sysml"
+tier    = "C"
+sha256  = "1058cbc3cf7c947c99e20a70606cec85290733caf4e8eea5d7bbe1fa7afd7517"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/examples/v1 Spec Examples/D.4.7.8 Dynamics/HSUVDynamics.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/examples/v1%20Spec%20Examples/D.4.7.8%20Dynamics/HSUVDynamics.sysml"
+tier    = "C"
+sha256  = "6ed6d95856f3e7eb7d0b51f9db6725040d3450b999a5b676a07ba2b7d54bced5"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/01. Packages/Comment Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/01.%20Packages/Comment%20Example.sysml"
+tier    = "C"
+sha256  = "54a68a8df67c40693c5be341df3fceaed6714f7912eabc78b53ad01ba0ddec61"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/01. Packages/Documentation Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/01.%20Packages/Documentation%20Example.sysml"
+tier    = "C"
+sha256  = "eb3c50cf3ac9cc4a90192688d103a2696cc2f912ead6c5a3c55b81f161e43ecf"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/01. Packages/Package Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/01.%20Packages/Package%20Example.sysml"
+tier    = "C"
+sha256  = "0d9011a7a0c393d434734fa3c615515ef0f12f70f5252856a4815e0c5df235ed"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/02. Part Definitions/Part Definition Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/02.%20Part%20Definitions/Part%20Definition%20Example.sysml"
+tier    = "C"
+sha256  = "521913a10985b6f0d8862f4e387ff844e9f2e862258e6f0bceeec1381da212b1"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/03. Generalization/Generalization Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/03.%20Generalization/Generalization%20Example.sysml"
+tier    = "C"
+sha256  = "876c1fc34d0d6cc4c95e3401ab15fd98e6cee5290ac83b70348e521621d911b8"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/04. Subsetting/Subsetting Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/04.%20Subsetting/Subsetting%20Example.sysml"
+tier    = "C"
+sha256  = "3e984c2497701a640a18c27d98270f10bf91fdc5fd039acd7be61fd9c85529a6"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/05. Redefinition/Redefinition Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/05.%20Redefinition/Redefinition%20Example.sysml"
+tier    = "C"
+sha256  = "2a58dadc33f5a752bd4601db23fad1c0396067dff9d0c48c69ea80e6eb8c7e8d"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/06. Enumeration Definitions/Enumeration Definitions-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/06.%20Enumeration%20Definitions/Enumeration%20Definitions-1.sysml"
+tier    = "C"
+sha256  = "d293a343a8957fbddcd4437fe7b576e10091a9d0c6a4c3cb718fbbd05a7f4149"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/06. Enumeration Definitions/Enumeration Definitions-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/06.%20Enumeration%20Definitions/Enumeration%20Definitions-2.sysml"
+tier    = "C"
+sha256  = "30c8dd20e140e8e2c4d1e27e75e74f1cda233cd5c815da739b09963525bc25ec"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/07. Parts/Parts Example-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/07.%20Parts/Parts%20Example-1.sysml"
+tier    = "C"
+sha256  = "390a2751034ecf5f75d7ebb5cf65119ce103e092c13114a80b15d2029afa3b89"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/07. Parts/Parts Example-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/07.%20Parts/Parts%20Example-2.sysml"
+tier    = "C"
+sha256  = "9cf9a4c1c0d98cd972dcdc2f74f7a1703816cb69605114e5caf88cf6cd1fa215"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/08. Items/Items Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/08.%20Items/Items%20Example.sysml"
+tier    = "C"
+sha256  = "a8f8cc4321933101c86bbc3651b4225b8a3f24a100a988f27bbef1d1738d68ca"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/09. Connections/Connections Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/09.%20Connections/Connections%20Example.sysml"
+tier    = "C"
+sha256  = "b7e709dc11084c488177317dd04d95885b2d779f85efce0ad4c286c865796aad"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/10. Ports/Port Conjugation Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/10.%20Ports/Port%20Conjugation%20Example.sysml"
+tier    = "C"
+sha256  = "0c7b995b29cc65d45817073688c73b4ac7004ab8000887311222d2b164082974"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/10. Ports/Port Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/10.%20Ports/Port%20Example.sysml"
+tier    = "C"
+sha256  = "3676915bf0f659529710c70cec5b404d95da03979d3dac951583932182d314f7"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/11. Interfaces/Interface Decomposition Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/11.%20Interfaces/Interface%20Decomposition%20Example.sysml"
+tier    = "C"
+sha256  = "c0d2e8cbbc99607647548c2f769a598a845d411787402aaeb5e8ded9157fe492"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/11. Interfaces/Interface Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/11.%20Interfaces/Interface%20Example.sysml"
+tier    = "C"
+sha256  = "81c8f2930bd1bb6fef3162fb5ff01480c59af34a9f959ab646c4b91621771426"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/12.%20Binding%20Connectors/Binding%20Connectors%20Example-1.sysml"
+tier    = "C"
+sha256  = "21108e56525e40539423821935378bba01e001a0cbd34ef8b67ddff7de22e919"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/12.%20Binding%20Connectors/Binding%20Connectors%20Example-2.sysml"
+tier    = "C"
+sha256  = "c17da7fade4c5c1f6040f7fc8375bee5b9af3827a69e889bcfbec263e4fe0c4e"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/13. Flows/Flow Definition Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/13.%20Flows/Flow%20Definition%20Example.sysml"
+tier    = "C"
+sha256  = "4953942240e572a0bced3e6a481e7a0078ec5f1911f5d8d34c0e287037da224f"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/13. Flows/Flow Interface Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/13.%20Flows/Flow%20Interface%20Example.sysml"
+tier    = "C"
+sha256  = "1b2f2d51dd2bca13e5a20548080f6cab21a3862ba0d7850ac9e86489d10d6633"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/13. Flows/Flow Usage Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/13.%20Flows/Flow%20Usage%20Example.sysml"
+tier    = "C"
+sha256  = "3545248d2433ffdeef47d18b8b26ec06329c52b1dbfa4f19be4684b283118456"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/14. Action Definitions/Action Definition Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/14.%20Action%20Definitions/Action%20Definition%20Example.sysml"
+tier    = "C"
+sha256  = "6ba1e3a81b50e75330a5011eff2b48fc69e8b1db93d92caa7263d302f95ed9df"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/14. Action Definitions/Action Shorthand Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/14.%20Action%20Definitions/Action%20Shorthand%20Example.sysml"
+tier    = "C"
+sha256  = "40b3cc083d4e300526f4f4c11e5f416a34564ec4f42ee296ed89ca08d13256cd"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/14. Action Definitions/Action Succession Example-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/14.%20Action%20Definitions/Action%20Succession%20Example-1.sysml"
+tier    = "C"
+sha256  = "85b068216d5edf0b5ce0e2de30d2a928a46c5572a732f7c8f787199947d54ca9"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/14. Action Definitions/Action Succession Example-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/14.%20Action%20Definitions/Action%20Succession%20Example-2.sysml"
+tier    = "C"
+sha256  = "0fdb44f0efd3ae9f5c853652b2327d6f11f004fec90f605ad661001955ee64a6"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/15. Actions/Action Decomposition.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/15.%20Actions/Action%20Decomposition.sysml"
+tier    = "C"
+sha256  = "f9245d4c83cb9dba2778f83e686bdb65f29615550bc29a264a99283cf71901e9"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/16. Conditional Succession/Conditional Succession Example-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/16.%20Conditional%20Succession/Conditional%20Succession%20Example-1.sysml"
+tier    = "C"
+sha256  = "7c998f285cc6ab602898fba85dacabcff0f5be7ef81ef9168fdd0b86a8f7259a"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/16. Conditional Succession/Conditional Succession Example-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/16.%20Conditional%20Succession/Conditional%20Succession%20Example-2.sysml"
+tier    = "C"
+sha256  = "14bccb577348cae5fe1b1773e1369243b44407b93419928d4610966f98bdaf63"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/17. Control/Camera.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/17.%20Control/Camera.sysml"
+tier    = "C"
+sha256  = "cd59a9c6fc168afd3784e338367dfbd36bc1cc08a66b7a6c6884766ee048b6a9"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/17. Control/Control Structures Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/17.%20Control/Control%20Structures%20Example.sysml"
+tier    = "C"
+sha256  = "70fa8b06ad95b75e404a10b4b9284667333b511eff9832514c72e2022f9b3171"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/17. Control/Decision Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/17.%20Control/Decision%20Example.sysml"
+tier    = "C"
+sha256  = "b8c23e53e8e0f8042861955fe90f1929f00763e913dbb8758e6ef9d7dc6a0fd7"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/17. Control/Fork Join Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/17.%20Control/Fork%20Join%20Example.sysml"
+tier    = "C"
+sha256  = "ea5b086aaf26c14ca1f9dc03262d4b0d92e746d914f157d08c67dc20337c64b4"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/17. Control/Merge Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/17.%20Control/Merge%20Example.sysml"
+tier    = "C"
+sha256  = "26d52bf0415681390c96022df5badfe925d603e98abc6d0e7481589b645d1deb"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/18. Action Performance/Action Performance Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/18.%20Action%20Performance/Action%20Performance%20Example.sysml"
+tier    = "C"
+sha256  = "9cfed0dda2bd2cb1c1d775a2520abe8155725c5f159f9de45f531da45648c62c"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/19. Terminate Actions/Terminate Actions Example-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/19.%20Terminate%20Actions/Terminate%20Actions%20Example-1.sysml"
+tier    = "C"
+sha256  = "68a22b8826dde8a1699c5357464dc060de22bb461d2bd2745ed5953fb82d7a79"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/19. Terminate Actions/Terminate Actions Example-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/19.%20Terminate%20Actions/Terminate%20Actions%20Example-2.sysml"
+tier    = "C"
+sha256  = "518bd633e5987133c8a0ef7ab2a7ccdeb3da4f9c4b17ddc13b5093e59bb9d7a6"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/20. Assignment Actions/Assignment Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/20.%20Assignment%20Actions/Assignment%20Example.sysml"
+tier    = "C"
+sha256  = "e042634df4719f3e1b0c27950625557d5d243ad49710242a9fe227e005d4b1f9"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/21. Asynchronous Messaging/Messaging Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/21.%20Asynchronous%20Messaging/Messaging%20Example.sysml"
+tier    = "C"
+sha256  = "d977f1412a23475f45985227fda677da0223e80191043a4fe3900b5f0a373b2b"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/21. Asynchronous Messaging/Messaging with Ports.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/21.%20Asynchronous%20Messaging/Messaging%20with%20Ports.sysml"
+tier    = "C"
+sha256  = "9afc396b62e3be85888f35feabb3327bfc068b1f95da2fd7f97f681840fcf582"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/22. Opaque Actions/Opaque Action Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/22.%20Opaque%20Actions/Opaque%20Action%20Example.sysml"
+tier    = "C"
+sha256  = "989053be5cba648732bb1f02412a63e50c2b4a621f3adb22ef19367b0ad42472"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/23. State Definitions/State Definition Example-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/23.%20State%20Definitions/State%20Definition%20Example-1.sysml"
+tier    = "C"
+sha256  = "bb96a947ac4f3648c75cb74ee36d3bf3b120ce80a833ae9791a877051d6c2dd0"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/23. State Definitions/State Definition Example-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/23.%20State%20Definitions/State%20Definition%20Example-2.sysml"
+tier    = "C"
+sha256  = "52c1ac545553470358affce66a40de21a51876ae10718a1a086419c2b0e6ef40"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/24. States/State Actions.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/24.%20States/State%20Actions.sysml"
+tier    = "C"
+sha256  = "38d8c51cde9cdf0aa774864e6dcc65d98aeb89e23ebe097704dfe8896bb36dd6"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/24. States/State Decomposition-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/24.%20States/State%20Decomposition-1.sysml"
+tier    = "C"
+sha256  = "ee8f049bfd5bb23e324f7f08faead640419122b7f909e36ce281ce8342557f58"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/24. States/State Decomposition-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/24.%20States/State%20Decomposition-2.sysml"
+tier    = "C"
+sha256  = "197be1fb0cc100b13c9daa41e25450076779fb6edcb2b54cd09c93bbe7b78cc6"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/25. Transitions/Change and Time Triggers.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/25.%20Transitions/Change%20and%20Time%20Triggers.sysml"
+tier    = "C"
+sha256  = "3633b959ba8b0c39f7bf22ff0bfcd8f5afdb133f444bf693423bbc6f30a708c6"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/25. Transitions/Local Clock Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/25.%20Transitions/Local%20Clock%20Example.sysml"
+tier    = "C"
+sha256  = "7c4652c10baeeeeea932071346b5297aed4cb09b1073d01d1a0f78f13586e3dc"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/25. Transitions/Transition Actions.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/25.%20Transitions/Transition%20Actions.sysml"
+tier    = "C"
+sha256  = "0c2e7db0d37ca8489f911b567e1a41ed8a7a21216b4b5646db99d370562742ba"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/26. State Exhibition/State Exhibition Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/26.%20State%20Exhibition/State%20Exhibition%20Example.sysml"
+tier    = "C"
+sha256  = "c37cca84071070eae990d6f4733b789e22042a986cbc8a2616f04300d343e09d"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/27. Occurrences/Event Occurrence Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/27.%20Occurrences/Event%20Occurrence%20Example.sysml"
+tier    = "C"
+sha256  = "a0711b453e25f88d39383ba74dca22edf8e6fd3e08ca4b3d96abf9546e5dc7c3"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/27. Occurrences/Interaction Example-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/27.%20Occurrences/Interaction%20Example-1.sysml"
+tier    = "C"
+sha256  = "d0fcda6e4b48ed7b0b57ee13152008d1fb4ee89343f48b0cc33fc484b4e3f39a"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/27. Occurrences/Interaction Example-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/27.%20Occurrences/Interaction%20Example-2.sysml"
+tier    = "C"
+sha256  = "001245283d57f289a673c87e973c834d357dfcf819d251145649595a0dc70ad0"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/27. Occurrences/Interaction Realization-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/27.%20Occurrences/Interaction%20Realization-1.sysml"
+tier    = "C"
+sha256  = "c7abccdd482f6001056d080562e1f5ce9a983c7d93ece5496f7e847e1d2bbebd"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/27. Occurrences/Interaction Realization-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/27.%20Occurrences/Interaction%20Realization-2.sysml"
+tier    = "C"
+sha256  = "fee96e42ba9bdd7c31c79fcf5057ded0008a5e6a7a12c5b4ba4463d9b9e61d94"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/27. Occurrences/Message Payload Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/27.%20Occurrences/Message%20Payload%20Example.sysml"
+tier    = "C"
+sha256  = "cb4a16abdc6e60f570b30ba2d838999f933d0efd9348cf4bf8404019fc9f1fe2"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/27. Occurrences/Time Slice and Snapshot Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/27.%20Occurrences/Time%20Slice%20and%20Snapshot%20Example.sysml"
+tier    = "C"
+sha256  = "5ba8953e347346861fc549f871a41177d64409666424c23a69da92da8162cad3"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/28. Individuals/Individuals and Roles-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/28.%20Individuals/Individuals%20and%20Roles-1.sysml"
+tier    = "C"
+sha256  = "60f6402e35fa411dff29755d441cc6f6954e647a41e225e80fedd892317379df"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/28. Individuals/Individuals and Snapshots Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/28.%20Individuals/Individuals%20and%20Snapshots%20Example.sysml"
+tier    = "C"
+sha256  = "bc98281dd2d2b3066b936f13f77657237ddd30be6ff5f31f03ae79d76054a4a5"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/28. Individuals/Individuals and Time Slices.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/28.%20Individuals/Individuals%20and%20Time%20Slices.sysml"
+tier    = "C"
+sha256  = "5768954807af2247983855032f5eb1adb3fda9c46ff3f98460b92bb0cc96deb0"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/29.%20Expressions/Car%20Mass%20Rollup%20Example%201.sysml"
+tier    = "C"
+sha256  = "7f101db8137b93ae093870f23db4e7ede0a3912ff12bd170686db3836dd28f0f"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/29.%20Expressions/Car%20Mass%20Rollup%20Example%202.sysml"
+tier    = "C"
+sha256  = "c83b5e531c4854406d9606f605fd911fb8159ca6273364583466bf5e2b70578d"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/29. Expressions/MassRollup1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/29.%20Expressions/MassRollup1.sysml"
+tier    = "C"
+sha256  = "289228badcbd9fd227ad6b0607cbcb5c351f58731d6747b1c0f08b40c592a7b6"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/29. Expressions/MassRollup2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/29.%20Expressions/MassRollup2.sysml"
+tier    = "C"
+sha256  = "da017e7651de908cd723278e2b454d41d1695509886905c219ac64b90a63ff53"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/30. Calculations/Calculation Definitions.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/30.%20Calculations/Calculation%20Definitions.sysml"
+tier    = "C"
+sha256  = "c8b300bc5a70262107d067df1e868a59ecda60343ed6ebd36e780919ef635b77"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/30. Calculations/Calculation Usages-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/30.%20Calculations/Calculation%20Usages-1.sysml"
+tier    = "C"
+sha256  = "50d3f3d82c5eaa65f37c40a9462ea544ac44aa9dccd256667d54bd3bd9e91c24"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/30. Calculations/Calculation Usages-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/30.%20Calculations/Calculation%20Usages-2.sysml"
+tier    = "C"
+sha256  = "8b5b296fb4f4af5c7126264b20cac05b81242820c21e090bcbd5c78c90b4e7bc"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/31. Constraints/Analytical Constraints.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/31.%20Constraints/Analytical%20Constraints.sysml"
+tier    = "C"
+sha256  = "8d4d3f3184a508f975e1e07a075ec5885024f7136a69a7a79b236d8a520582f3"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/31. Constraints/Constraint Assertions-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/31.%20Constraints/Constraint%20Assertions-1.sysml"
+tier    = "C"
+sha256  = "e74f69c3b8f4dd0011fd1799bf9f3450e7ad10cdec5875df0ff1eda20400e839"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/31. Constraints/Constraint Assertions-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/31.%20Constraints/Constraint%20Assertions-2.sysml"
+tier    = "C"
+sha256  = "905418655ca8f68497ca2ff72a53ee4c5d67c975b451cce2dd2566110923fb26"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/31. Constraints/Constraints Example-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/31.%20Constraints/Constraints%20Example-1.sysml"
+tier    = "C"
+sha256  = "7ef69d5f949ae62c9305410cf56a06f0ff72dd780f46c746bea9f31b62f6530e"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/31. Constraints/Constraints Example-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/31.%20Constraints/Constraints%20Example-2.sysml"
+tier    = "C"
+sha256  = "96627a47273a5762e6e1571517d67a6731b7b09b5c56b9d92574654fee38f39a"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/31. Constraints/Derivation Constraints.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/31.%20Constraints/Derivation%20Constraints.sysml"
+tier    = "C"
+sha256  = "aa73335f565d75f468997d843e60560df14279c92ad02a347ae0e4caf53ee799"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/31. Constraints/Time Constraints.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/31.%20Constraints/Time%20Constraints.sysml"
+tier    = "C"
+sha256  = "3acc92ed706c8c1a352929df9b2eee27b7bb2459a49a19838121dade80bc1108"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/32. Requirements/Requirement Definitions.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/32.%20Requirements/Requirement%20Definitions.sysml"
+tier    = "C"
+sha256  = "bbf6164994aed96f962710105ec6be8ce97022b3e627a64ffcf9e39c2785bf6d"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/32. Requirements/Requirement Groups.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/32.%20Requirements/Requirement%20Groups.sysml"
+tier    = "C"
+sha256  = "a4946e78a8602eac6eef372575636cfadd26c4e5228ed4f90510918fc7267c56"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/32. Requirements/Requirement Satisfaction.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/32.%20Requirements/Requirement%20Satisfaction.sysml"
+tier    = "C"
+sha256  = "bf4f3f309b20a4e82c5f72ef4f4740de226142190a906d2d078e82b8b1f36032"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/32. Requirements/Requirement Usages.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/32.%20Requirements/Requirement%20Usages.sysml"
+tier    = "C"
+sha256  = "cf926c7f8a7f2d8ffa70f2f8ed0c1f0ade16c7cbc1fa06a2dff7e6146df9ae70"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/33. Analysis/Analysis Case Definition Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/33.%20Analysis/Analysis%20Case%20Definition%20Example.sysml"
+tier    = "C"
+sha256  = "58c782d8502c4d659c4c3000bc2831dc9abcaa823b3116cc80a52cfcf20d10a2"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/33. Analysis/Analysis Case Usage Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/33.%20Analysis/Analysis%20Case%20Usage%20Example.sysml"
+tier    = "C"
+sha256  = "8061f236770a23a365026fa3565bdad1af381058deca50486d03d5efbe4fe93e"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/33. Analysis/Trade Study Analysis Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/33.%20Analysis/Trade%20Study%20Analysis%20Example.sysml"
+tier    = "C"
+sha256  = "c4708fca54c75cdff1e054c152fd50a9109773bfb267d54c57b9bcf841953070"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/34. Verification/Verification Case Definition Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/34.%20Verification/Verification%20Case%20Definition%20Example.sysml"
+tier    = "C"
+sha256  = "6c947e54087a4e5ab1719e4043e0480211112a2ee6fc62d9b18814f3ee8f0b5c"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/34. Verification/Verification Case Usage Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/34.%20Verification/Verification%20Case%20Usage%20Example.sysml"
+tier    = "C"
+sha256  = "f18e2dbdd9078aa3b9a3c223e2ea0251d90f7b0d64aee1dea22546cdc0977a38"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/35. Use Cases/Use Case Definition Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/35.%20Use%20Cases/Use%20Case%20Definition%20Example.sysml"
+tier    = "C"
+sha256  = "46d70e36666f54f5025de1d60c976ef24b56126a4a4a8f913cda8dacb1d7ad13"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/35. Use Cases/Use Case Usage Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/35.%20Use%20Cases/Use%20Case%20Usage%20Example.sysml"
+tier    = "C"
+sha256  = "abaaebced5d4f1d137ad5d8e7307a5d159a04d08a926e1ce11d59ee4f7ee1252"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/36.%20Variability/Variation%20Configuration.sysml"
+tier    = "C"
+sha256  = "00475547ef422bd1264740ba8e281d39968af27d6e640be592e9b63f82dab3f1"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/36. Variability/Variation Definitions.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/36.%20Variability/Variation%20Definitions.sysml"
+tier    = "C"
+sha256  = "d175901cc5f3c382e2e0bd894c3bf433b055b7a62203c14f097423dad584b7bf"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/36. Variability/Variation Usages.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/36.%20Variability/Variation%20Usages.sysml"
+tier    = "C"
+sha256  = "00a622b19bd0c0f0199e7a281676ea7dba1ac9f31276fe3f394d4859f90c86cd"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/37. Dependencies/Dependency Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/37.%20Dependencies/Dependency%20Example.sysml"
+tier    = "C"
+sha256  = "a67c6c5d00849b16f6a4f5f0a6867c94833fad77be9cf9afb28cdd4395dbcd9c"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/38. Allocation/Allocation Definition Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/38.%20Allocation/Allocation%20Definition%20Example.sysml"
+tier    = "C"
+sha256  = "01b3fd07fd12885dda5f7af570db6f52a60dbd4a891fc2c5de53183e3ddba741"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/38. Allocation/Allocation Usage Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/38.%20Allocation/Allocation%20Usage%20Example.sysml"
+tier    = "C"
+sha256  = "b3ffeaefc73bf13ae8f9c56e19e95a30e7e4140e1fa26aa6f1557a31c6bc4312"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/39. Metadata/Metadata Example-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/39.%20Metadata/Metadata%20Example-1.sysml"
+tier    = "C"
+sha256  = "7854ed2310900fb26ba5422d79e10b8fccc784fa3f012b75e2ddbf86c85dbf5e"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/39. Metadata/Metadata Example-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/39.%20Metadata/Metadata%20Example-2.sysml"
+tier    = "C"
+sha256  = "ab8f3ccc569c562876187629b7486207ff1a2aded1d2a35b88df599e78ce45b5"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/40. Filtering/Filtering Example-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/40.%20Filtering/Filtering%20Example-1.sysml"
+tier    = "C"
+sha256  = "6e8dc71d4f3bf124d78300aebda432dfb48617d36442137edb0aa131bc7689bd"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/40. Filtering/Filtering Example-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/40.%20Filtering/Filtering%20Example-2.sysml"
+tier    = "C"
+sha256  = "95fc48884d4b7baaa421692146126a6955e376d2337770e93663a0661bdf2c8f"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/41. Language Extension/Model Library Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/41.%20Language%20Extension/Model%20Library%20Example.sysml"
+tier    = "C"
+sha256  = "0e994cf5d207ca1bcb6832956504f807fde3ac976f2325f7e983290446743b1a"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/41. Language Extension/Semantic Metadata Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/41.%20Language%20Extension/Semantic%20Metadata%20Example.sysml"
+tier    = "C"
+sha256  = "3dee1f7403f9e8a9c7e450032ce66d85734fd1cd78a08d2d2e3dec4fa928030b"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/41. Language Extension/User Keyword Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/41.%20Language%20Extension/User%20Keyword%20Example.sysml"
+tier    = "C"
+sha256  = "e0d44dbd4fdeb997810ab18fc8bff5c447a32334242efdbaf09646af5f83be7a"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/42. Views/Viewpoint Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/42.%20Views/Viewpoint%20Example.sysml"
+tier    = "C"
+sha256  = "93dac2797ea78074199d9b7956e01f7ef0456c85fa2000f5a3b99a3cba4a96ad"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/training/42. Views/Views Example.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/training/42.%20Views/Views%20Example.sysml"
+tier    = "C"
+sha256  = "ad1e0b92f7084f8b864b852aa4938f01d4676ab31733e60088d4117f30a90f99"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/01-Parts Tree/1a-Parts Tree.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/01-Parts%20Tree/1a-Parts%20Tree.sysml"
+tier    = "C"
+sha256  = "68adac5f5b2a0f7d8d2ca2bb6ce4aca3d636317b74a3d2036f1df95379e3e514"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/01-Parts Tree/1c-Parts Tree Redefinition.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/01-Parts%20Tree/1c-Parts%20Tree%20Redefinition.sysml"
+tier    = "C"
+sha256  = "ee3fd9b693eee0eda5543ba146b1c672dacc06ec913bd3da5da12c240ef6f13e"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/01-Parts Tree/1d-Parts Tree with Reference.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/01-Parts%20Tree/1d-Parts%20Tree%20with%20Reference.sysml"
+tier    = "C"
+sha256  = "f2762576cfb1564605ce162a2326f2b5e00f9a6eb25879831adbf854db3e4689"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/02-Parts Interconnection/2a-Parts Interconnection.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/02-Parts%20Interconnection/2a-Parts%20Interconnection.sysml"
+tier    = "C"
+sha256  = "9fc597156787d6bfa04c6c06b30026b0a6b99240e43320aeb0b4b1c5d5f7ed8f"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/02-Parts Interconnection/2c-Parts Interconnection-Multiple Decompositions.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/02-Parts%20Interconnection/2c-Parts%20Interconnection-Multiple%20Decompositions.sysml"
+tier    = "C"
+sha256  = "2d6e1789531ef65d4a7e221eae51fff7adafd739abe47c073f9f3cc7c27f187f"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3a-Function-based Behavior-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/03-Function-based%20Behavior/3a-Function-based%20Behavior-1.sysml"
+tier    = "C"
+sha256  = "e4093071e6c613cb5e66e79be116cc90e2732c141ef85ffd10ada7fc71dd4ce1"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3a-Function-based Behavior-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/03-Function-based%20Behavior/3a-Function-based%20Behavior-2.sysml"
+tier    = "C"
+sha256  = "1fd798b584fcf8294bb179e6ad09bb231a860b7f06c0ac3ebf7d5c326b81355b"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3a-Function-based Behavior-3.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/03-Function-based%20Behavior/3a-Function-based%20Behavior-3.sysml"
+tier    = "C"
+sha256  = "ee405fc045e2325625d2ab7d242f1852c4ca9d36a40d8919ad22d4bcc97fbbe0"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3c-Function-based Behavior-structure mod-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/03-Function-based%20Behavior/3c-Function-based%20Behavior-structure%20mod-1.sysml"
+tier    = "C"
+sha256  = "a195aa08ccc55b28611590bf8318e68dc743a80bbab067f9e501223e4cf28a3d"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3c-Function-based Behavior-structure mod-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/03-Function-based%20Behavior/3c-Function-based%20Behavior-structure%20mod-2.sysml"
+tier    = "C"
+sha256  = "d4c3a58f64733407d8f55882bb422abeba6a56071a381fa81c7e0cecefb3a37c"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3c-Function-based Behavior-structure mod-3.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/03-Function-based%20Behavior/3c-Function-based%20Behavior-structure%20mod-3.sysml"
+tier    = "C"
+sha256  = "b06f8ff7362015304b73339a3444c3bb2b7b0f3ab367bf390cc849dd7ae10397"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3d-Function-based Behavior-item.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/03-Function-based%20Behavior/3d-Function-based%20Behavior-item.sysml"
+tier    = "C"
+sha256  = "53a4dbd7dd39c808582e6fe3c791fbf642a9d17fc1775c2796d2c7fd359ad456"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3e-Function-based Behavior-item.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/03-Function-based%20Behavior/3e-Function-based%20Behavior-item.sysml"
+tier    = "C"
+sha256  = "53076ded62ac7995f3bba8365c635e725894074faf3b19787bec711136b781ba"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/04-Functional Allocation/4a-Functional Allocation.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/04-Functional%20Allocation/4a-Functional%20Allocation.sysml"
+tier    = "C"
+sha256  = "5606db54345e6a79c90c948f7d71a86222110422f90ad7b5f5e30bdee93d7638"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/05-State-based%20Behavior/5-State-based%20Behavior-1.sysml"
+tier    = "C"
+sha256  = "09d33ca09f9121193374b09215f6a3fffe5654cdfde8c794a4f8637b71825485"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-1a.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/05-State-based%20Behavior/5-State-based%20Behavior-1a.sysml"
+tier    = "C"
+sha256  = "22bfc1ae2dbcb94db9844eddc16dda325645d2b0eb622bbfcfefe93bd6433ef8"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/05-State-based%20Behavior/5-State-based%20Behavior-2.sysml"
+tier    = "C"
+sha256  = "218835c9dbefdc8f76098c342aa6bb3db66b85c9a298fabed8e518920d36f32f"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/06-Individual and Snapshots/6-Individual and Snapshots.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/06-Individual%20and%20Snapshots/6-Individual%20and%20Snapshots.sysml"
+tier    = "C"
+sha256  = "31efc993fd2ead88e2edb0130fde4051c64a86dce7c31c1057b4131de507a848"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/07-Variant Configuration/7a-Variant Configuration - General Concept.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/07-Variant%20Configuration/7a-Variant%20Configuration%20-%20General%20Concept.sysml"
+tier    = "C"
+sha256  = "a4e94ee32045fe6250ec8ca932405d53d16e2a6b89b14621b4de8aa86a45f8af"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/07-Variant Configuration/7a1-Variant Configuration - General Concept-a.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/07-Variant%20Configuration/7a1-Variant%20Configuration%20-%20General%20Concept-a.sysml"
+tier    = "C"
+sha256  = "9d5321f0c569f5d36657b81b0c129138001939efecf8cb87c528f3eea629b0ab"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/07-Variant Configuration/7b-Variant Configurations.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/07-Variant%20Configuration/7b-Variant%20Configurations.sysml"
+tier    = "C"
+sha256  = "c0f5d9fc230789e6b4326d554a05e38cd4db48c2081d8d8a627eef52a5574fd7"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/08-Requirements/8-Requirements.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/08-Requirements/8-Requirements.sysml"
+tier    = "C"
+sha256  = "be660d2f7935c481d4ab39fb68231a00d830489ef9365b68e8213e50015323c1"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/09-Verification/9-Verification-simplified.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/09-Verification/9-Verification-simplified.sysml"
+tier    = "C"
+sha256  = "877d2ae9cfc2e51a37b0217ae94be7df0f810ecf36eddf31c9a27d14dc2a0356"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/10-Analysis and Trades/10a-Analysis.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/10-Analysis%20and%20Trades/10a-Analysis.sysml"
+tier    = "C"
+sha256  = "e24ec15d535a3bfbf8aaeb57e599503ce57de51bcc07790c77435b44501fc138"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/10-Analysis and Trades/10b-Trade-off Among Alternative Configurations.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/10-Analysis%20and%20Trades/10b-Trade-off%20Among%20Alternative%20Configurations.sysml"
+tier    = "C"
+sha256  = "b64991322decd492c6bb14ea32ad8282499d66e9dc8f9be66da9f283c74f6c80"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/10-Analysis and Trades/10c-Fuel Economy Analysis.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/10-Analysis%20and%20Trades/10c-Fuel%20Economy%20Analysis.sysml"
+tier    = "C"
+sha256  = "3bea4bbe7b04ba3572b3f7ccebd211897ad0521ef73009f31c32eed7296d3749"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/10-Analysis and Trades/10d-Dynamics Analysis.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/10-Analysis%20and%20Trades/10d-Dynamics%20Analysis.sysml"
+tier    = "C"
+sha256  = "600106d6e2874f810ebb4c98f6fafd6b96b6f79842a9fdb7b42fd269aeb56c40"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/11-View and Viewpoint/11a-View-Viewpoint.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/11-View%20and%20Viewpoint/11a-View-Viewpoint.sysml"
+tier    = "C"
+sha256  = "f89e97e5a9a49c6c3f2fc59162f99a60d1cf6faa5599ecdf1db398c72f8e3514"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/11-View and Viewpoint/11b-Safety and Security Feature Views.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/11-View%20and%20Viewpoint/11b-Safety%20and%20Security%20Feature%20Views.sysml"
+tier    = "C"
+sha256  = "d098663519952d3be7ded36d7fbd39ffdb21dd52c03448230d02b3e5f5b9ba27"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/12-Dependency Relationships/12a-Dependency.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/12-Dependency%20Relationships/12a-Dependency.sysml"
+tier    = "C"
+sha256  = "69966550379ca490de4dffa7b284be83983d0deaa565c073aec79c603f019bac"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/12-Dependency Relationships/12b-Allocation-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/12-Dependency%20Relationships/12b-Allocation-1.sysml"
+tier    = "C"
+sha256  = "1a65dcbc5a7f0086111744d6d0f640a36c2721ee9156fbab34b09cfede1e7d24"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/12-Dependency Relationships/12b-Allocation.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/12-Dependency%20Relationships/12b-Allocation.sysml"
+tier    = "C"
+sha256  = "458ffde07b81f5ee23392c3ec2f57066f4e9e83b3329c1614663c41dfd48c733"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/13-Model Containment/13a-Model Containment.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/13-Model%20Containment/13a-Model%20Containment.sysml"
+tier    = "C"
+sha256  = "0a7f5cb3d280ca39a6b657a1c2ccc9a87515722936bddbfcbbb86d0d77796687"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group-1.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/13-Model%20Containment/13b-Safety%20and%20Security%20Features%20Element%20Group-1.sysml"
+tier    = "C"
+sha256  = "9b8409690b432b74d05236e9642b8633ed6ac6c137b1ea25e29b994b90b3ba4e"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group-2.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/13-Model%20Containment/13b-Safety%20and%20Security%20Features%20Element%20Group-2.sysml"
+tier    = "C"
+sha256  = "592626e07a3c95392439f3a3f0ce91d44f8d6ef03d9cced3451bbdeabe91707f"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/13-Model%20Containment/13b-Safety%20and%20Security%20Features%20Element%20Group.sysml"
+tier    = "C"
+sha256  = "f72bc1e710bd77742eb371d63b466987b3d6ceae7f37a266e0245c6565878cab"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/14-Language Extensions/14a-Language Extensions.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/14-Language%20Extensions/14a-Language%20Extensions.sysml"
+tier    = "C"
+sha256  = "fbe9aaa70532d3303fd6fb39bc725cc9299e52c33a4960a97723a1f4154ecb82"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/14-Language Extensions/14b-Language Extensions.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/14-Language%20Extensions/14b-Language%20Extensions.sysml"
+tier    = "C"
+sha256  = "9fd6886fe63e328c9cca645d137e1413ed93068f56ed05e3be0e837832e705a8"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/14-Language Extensions/14c-Language Extensions.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/14-Language%20Extensions/14c-Language%20Extensions.sysml"
+tier    = "C"
+sha256  = "7760e8264bfa7b2ab6ecf4985110459c959d5c971712acd3f1f945317b3d92f4"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_01-Constants.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/15-Properties-Values-Expressions/15_01-Constants.sysml"
+tier    = "C"
+sha256  = "e88230f7825608a153977c07b16bd48dbdd41dadbcf2c0d4ecdb001a91dddbe7"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_02-Basic Value Properties.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/15-Properties-Values-Expressions/15_02-Basic%20Value%20Properties.sysml"
+tier    = "C"
+sha256  = "fe562529159fc94cf23b1fc827cd3590dc3946265680a3d9324f79125637138b"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_03-Value Expression.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/15-Properties-Values-Expressions/15_03-Value%20Expression.sysml"
+tier    = "C"
+sha256  = "156b04676dd45d985aafaa04cd98cbc70727a5ff8b395444471e37abfc23eb07"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_04-Logical Expressions.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/15-Properties-Values-Expressions/15_04-Logical%20Expressions.sysml"
+tier    = "C"
+sha256  = "be7c568cf296df8e4bd866ce604cdb1e2cef3223f3c7c7a8d74863fd3fe82554"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_05-Unification of Expression and Constraint Definition.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/15-Properties-Values-Expressions/15_05-Unification%20of%20Expression%20and%20Constraint%20Definition.sysml"
+tier    = "C"
+sha256  = "c62afbf670da4a4fc2f337e5eca84e7b8f1790113fdad7cf5c21757c2b98e9a8"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_06-System of Quantities.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/15-Properties-Values-Expressions/15_06-System%20of%20Quantities.sysml"
+tier    = "C"
+sha256  = "876f29fc5476b05f9fa908d69176e00825d996ba9b5c622cd2fbb95867a004a8"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_07-System of Units and Scales.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/15-Properties-Values-Expressions/15_07-System%20of%20Units%20and%20Scales.sysml"
+tier    = "C"
+sha256  = "359274cb936c12607ffb487a01b30c89359ab75b6b4328f9393d8d5745b4c1d0"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_08-Range Restriction.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/15-Properties-Values-Expressions/15_08-Range%20Restriction.sysml"
+tier    = "C"
+sha256  = "21be841080c23b55243365352b93b11094977555ea0b8f417107c7316eb52a1a"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_10-Primitive Data Types.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/15-Properties-Values-Expressions/15_10-Primitive%20Data%20Types.sysml"
+tier    = "C"
+sha256  = "25ff6e37d7090c1f16e24a0fe644ab69dde4745977afb3dae5f7161182bb2090"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_11-Variable Length Collection Types.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/15-Properties-Values-Expressions/15_11-Variable%20Length%20Collection%20Types.sysml"
+tier    = "C"
+sha256  = "28ea6f6aa4b222fdeead4b5f3bb5c1180a6d655d07b9fdeee2f285fd420d2408"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_12-Compound Value Type.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/15-Properties-Values-Expressions/15_12-Compound%20Value%20Type.sysml"
+tier    = "C"
+sha256  = "6d7232008b6d7522ae4e1b1cb9fa15c856e67054849696924594a7f4f2b0515c"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_13-Discretely Sampled Function Value.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/15-Properties-Values-Expressions/15_13-Discretely%20Sampled%20Function%20Value.sysml"
+tier    = "C"
+sha256  = "72dedb9af384da9948e1e9e9a1e6b8ffe1bb970bcb277588147f93efa9bf853e"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_19-Materials with Properties.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/15-Properties-Values-Expressions/15_19-Materials%20with%20Properties.sysml"
+tier    = "C"
+sha256  = "a8c4d8571ad672de9e300c7de2cac8c684bf6b403bc16fcf3a896a350b0218b3"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_19a-Materials with Properties.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/15-Properties-Values-Expressions/15_19a-Materials%20with%20Properties.sysml"
+tier    = "C"
+sha256  = "7d848239c6012cc15d04d4bd58b9d0e935972991cee7a9bb4569e9a7536fdd30"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/17-Sequence Modeling/17a-Sequence-Modeling.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/17-Sequence%20Modeling/17a-Sequence-Modeling.sysml"
+tier    = "C"
+sha256  = "52c79bd6c698ee26840a9246b0fd4294d05e59b11f38f9f5a980535bb0d0761c"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/17-Sequence Modeling/17b-Sequence-Modeling.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/17-Sequence%20Modeling/17b-Sequence-Modeling.sysml"
+tier    = "C"
+sha256  = "df9b1f3a76f0a0fb30bbf6f30705d64ac26cbe50b9143dcea5a877c7d69cdc1c"
+
+[[file]]
+path    = "vendor/corpus/sysml/src/validation/18-Use Case/18-Use Case.sysml"
+url     = "https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-Release/fb97b754f29588b8e9c7a35f370880cd15eb29e7/sysml/src/validation/18-Use%20Case/18-Use%20Case.sysml"
+tier    = "C"
+sha256  = "debd6b83bb60278f6c8d160d0fb8ad31b9107295461d8070cbd8069db9b9e457"

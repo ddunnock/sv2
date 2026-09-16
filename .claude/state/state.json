@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "generated": {
+    "regenerated_utc": "2026-09-16T16:40:29Z",
+    "gates": {
+      "vendor": "pass",
+      "namespace": "pass",
+      "derived": "pass",
+      "metaclass_map": "pass",
+      "grammar_diff": "pass",
+      "coverage": "pass",
+      "corpus": "pass",
+      "tests": "pass",
+      "clippy": "pass",
+      "doc": "pass",
+      "deny": "pass"
+    },
+    "coverage": {
+      "declared": 558,
+      "implemented": 5,
+      "unimplemented": 553,
+      "absent": 0,
+      "percent": 0.9
+    },
+    "tests": {
+      "unit": 55,
+      "snapshots": 4,
+      "corpus_files": 311,
+      "negative_cases": 0,
+      "known_permissive": 0
+    },
+    "pins": {
+      "omg_namespace": "20250201",
+      "pilot_revision": "5cca16d846016e62bb1e54e0e50e675254a022ef",
+      "pilot_bundle": "0.63.0",
+      "vendor_pinned": 332,
+      "vendor_total": 332
+    },
+    "commits": []
+  },
+  "authored": {
+    "objective": "sv2-syntax is up and the `sv2` command has a seam: the lexer covers the pinned token set and the specification's lexical productions, `package` parses into a lossless CST, and `sv2 parse [--quiet] <file>` reports acceptance through the exit status the corpus sweep reads. Next increment is the negative corpus, then the remaining PackageBodyElement alternatives, and only then pointing the sweep at vendor/corpus.",
+    "next_step": "`sv2 parse` is wired (STD-002-RS \u00a73 updated to match). 55 unit tests plus 4 snapshots: 18 in sv2-cli \u2014 argument shapes in src/cli.rs, and six file-backed cases in tests/parse_command.rs (parses, does not parse, --quiet, missing, non-UTF-8, file untouched) \u2014 and the sv2-syntax suite unchanged. Exit codes are now one per ErrorCode: 2 NOT_IMPLEMENTED, 3 USAGE, 4 READ_FAILED, 5 PARSE_FAILED, held apart by a test, because the sweep discards both streams and a shared status would report a mistyped path as a grammar failure. Coverage 5/558 against the specification.\nNEXT, in order:\n  1. tests/rejection/ still does not exist. corpus-sweep.sh treats a missing negative set as a failure, by design: a positive-only sweep is passed by a parser that accepts everything. One case per rule violated, with the clause cited (.claude/rules/tests.md). This is now the only thing standing between the sweep and being real \u2014 the binary it runs exists.\n  2. Do NOT point tests/corpus at vendor/corpus yet. 310 of 311 corpus files are not packages, so the sweep would be red from the first commit and stay red, which makes the gate useless rather than honest. Wire it when acceptance is plausible, which is after step 3.\n  3. Next productions: Import, then the other PackageBodyElement alternatives (PackageMember, ElementFilterMember, AliasMember). Each needs its clause read through the navigator, a coverage marker, and a negative case in the same change.\nKNOWN GAPS in what exists:\n  - Trivia attachment is positional, not owned: whitespace before a node lands inside whichever node was open. It round-trips, so the invariant holds, but the convention has not been decided and a graphical edit will care which node owns a comment. Decide it before the tree shape is depended on.\n  - parse_for_editor() from .claude/rules/syntax.md does not exist yet. parse() already recovers and never panics, so the resilient entry point is currently the same code under a different name \u2014 add it when the two need to differ.\n  - `sv2 parse` has no product on stdout: it is a check, not a dump. The first command whose product is structured is what decides the output format, and \u00a78.2 wants a test that stdout still parses as exactly that product.",
+    "pending_decisions": [
+      {
+        "id": "ADR-0009",
+        "question": "Element identity strategy: injected metadata UUIDs, name-keyed, fingerprint reconciliation, or layered.",
+        "blocks": [
+          "sidecar schema",
+          "stable element handles in sv2-resolve"
+        ],
+        "adr": "docs/adr/0009-element-identity.md"
+      },
+      {
+        "id": "crate-split",
+        "question": "Boundary between sv2-hir and sv2-resolve is provisional. Revisit once implied specialization injection exists and its real dependencies are visible.",
+        "blocks": []
+      },
+      {
+        "id": "wiki-reproducibility",
+        "question": "RESOLVED as far as it can be on one machine. The wikis are pinned by receipt: 1651 atoms in .claude/state/wiki-receipts.json, each with its clause, page, the wiki's region_sha256 to the source PDF span, and a file hash. Drift now fails the gate, and a citation naming a receipt that was never pinned now fails scripts/check_citations.py. NOT resolved: the wikis are not in the repository, because their 1651 atoms carry ~2.3 MB of verbatim OMG specification prose with no licence notice, and this repository is MIT and public. So a fresh clone can verify nothing until it builds its own wikis from the specification PDFs, which are not redistributable either. Revisit only if OMG's licensing changes, or if the wiki builder can be pinned and rerun from locally-held PDFs as part of a bootstrap.",
+        "blocks": [
+          "verifying any clause citation on a machine that has not built the wikis"
+        ]
+      }
+    ],
+    "log": []
+  }
+}

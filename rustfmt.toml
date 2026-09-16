@@ -1,0 +1,9 @@
+# STD-002-RS §13.3. Stable options only: `group_imports` and `imports_granularity`
+# are nightly-only and stable rustfmt ignores them with a warning, so the §9 import
+# grouping is kept by hand.
+edition = "2024"
+style_edition = "2024"
+max_width = 100
+newline_style = "Unix"
+use_field_init_shorthand = true
+use_try_shorthand = true

@@ -1,0 +1,39 @@
+// Excerpts copied verbatim from vendor/spec-bnf/SysML-textual-bnf.kebnf so the
+// expectations in test_extract_bnf.py describe the pinned transcription rather
+// than whatever the extractor happens to produce.
+
+// Clause 8.2.2.5.2 Package Elements
+
+UsageElement : Usage =
+      NonOccurrenceUsageElement
+    | OccurrenceUsageElement
+
+// Clause 8.2.2.10 Items Textual Notation
+
+ItemDefinition =
+    OccurrenceDefinitionPrefix
+    'item' 'def' Definition
+
+// Clause 8.2.2.11 Parts Textual Notation
+
+PartDefinition =
+    OccurrenceDefinitionPrefix 'part' 'def' Definition
+
+PartUsage =
+    OccurrenceUsagePrefix 'part' Usage
+
+// Clause 8.2.2.12 Ports Textual Notation
+
+PortDefinition =
+    DefinitionPrefix 'port' 'def' Definition
+    ownedRelationship += ConjugatedPortDefinitionMember
+    { conjugatedPortDefinition.ownedPortConjugator.
+        originalPortDefinition = this }
+
+// (See Note 1)
+
+ConjugatedPortDefinitionMember : OwningMembership =
+    ownedRelatedElement += ConjugatedPortDefinition
+
+PortConjugation =
+    {}

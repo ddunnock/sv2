@@ -1,0 +1,68 @@
+# The pinned conformance target.
+#
+# Every claim this workspace makes about SysML v2 or KerML syntax is relative to
+# exactly this revision. Changing it is a reviewed act, not a maintenance chore:
+# a moved pin silently invalidates every snapshot, coverage number, and corpus
+# result in the repository.
+#
+# Update deliberately: re-run `python3.11 scripts/vendor_sync.py`, which re-pins
+# vendor/sources.lock.toml, and record why in .claude/state/deviations.json.
+
+[tier_a_omg]
+# OMG normative artifacts. The namespace-dated URL is the version (ADR-0010).
+namespace = "20250201"
+
+[tier_b_pilot]
+# Pilot Xtext grammars. A full commit sha — never a branch name.
+# 5cca16d is "Updated to version 0.63.0 (20260901)", 2026-09-12. Its three .xtext
+# files import "https://www.omg.org/spec/SysML/20250201", so check_namespace_link.py
+# ties it to the Tier A namespace above; that assertion is the reason to pin two
+# sources instead of one.
+revision = "5cca16d846016e62bb1e54e0e50e675254a022ef"
+bundle_version = "0.63.0"
+
+[spec_bnf]
+# The specification textual BNF in machine-readable form: bnf/*.kebnf in
+# SysML-v2-Release, which carries the spec's own clause numbers as comments.
+#
+# NOT normative. Its header reads "Manual corrections by HP de Koning", so it is a
+# transcription and the PDF clause arbitrates wherever the two disagree. Rationale
+# and known defects are in .claude/state/deviations.json under source_selection.
+#
+# Pinned by the commit sha behind release tag 2026-08 — a tag can be moved, a sha
+# cannot.
+source = "https://github.com/Systems-Modeling/SysML-v2-Release"
+revision = "fb97b754f29588b8e9c7a35f370880cd15eb29e7"
+tag = "2026-08"
+
+[corpus]
+# Files the parser must accept. Pinned separately from the grammar because a
+# corpus can grow without the language changing.
+#
+# 310 model files from kerml/src and sysml/src — examples, the training set, and
+# the validation SCENARIO set (named for modelling scenarios, not rule violations,
+# so they are positive cases) — plus the informative Simple Vehicle Model,
+# ptc/25-04-31, which ADR-0010 names. Per-file sha256 in vendor/sources.lock.toml.
+#
+# sysml.library/ is NOT vendored from here: the standard library is Tier A, inside
+# the KPAR archives, and a second copy with nothing saying which one wins is worse
+# than one copy.
+#
+# This pin makes the corpus traceable and available offline. It does NOT by itself
+# make scripts/corpus-sweep.sh meaningful: the sweep needs a parser that accepts
+# something, and it needs tests/rejection/, which is hand-written one case per rule
+# with the clause cited. A positive-only sweep is passed by a parser that accepts
+# everything. Until both exist the sweep stays inert, which is the honest state.
+source = "https://github.com/Systems-Modeling/SysML-v2-Release"
+revision = "fb97b754f29588b8e9c7a35f370880cd15eb29e7"
+tag = "2026-08"
+
+[libraries]
+# Vendored standard libraries. Must be present locally – no runtime network access.
+# The ten OMG KPAR archives are Tier A artifacts, so the library pin is the Tier A
+# namespace; the per-file hashes are in vendor/sources.lock.toml.
+source = "omg-kpar"
+revision = "20250201"
+# How deep the bootstrap goes. See `.claude/rules/resolve.md`.
+# One of: systems-only | systems-plus-shim | full-kernel
+depth = "systems-plus-shim"
