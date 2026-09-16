@@ -25,6 +25,55 @@ START = "RootNamespace"
 _LEAF = {"kw": ("kw", "text"), "tok": ("tok", "name"), "ref": ("nt", "name")}
 _REPEAT = {"opt": "?", "star": "*", "plus": "+"}
 
+#: Fenced blocks inside a clause atom. Not every one holds grammar — a clause may
+#: also carry an OCL constraint or an operator-to-library table.
+_FENCE = re.compile(r"```[a-z]*\n(.*?)```", re.S)
+#: A block is grammar if it defines at least one rule: `Name =` or `Name : Metaclass =`.
+#: Without this, the operator table in 8.2.5.8.2 reads as an unclosed `[`, because
+#: there the bracket IS the operator being described.
+_DEFINES = re.compile(r"^\s*[A-Za-z_][A-Za-z0-9_]*\s*(?::\s*[A-Za-z_][A-Za-z0-9_:]*\s*)?=", re.M)
+#: A single-quoted literal. Stripped before counting brackets, because `'('` and
+#: `'['` are real keywords of the language.
+_QUOTED = re.compile(r"'(?:[^'\n])*'")
+_PAIRS = {"(": ")", "[": "]", "{": "}"}
+_CLOSERS = {close: open_ for open_, close in _PAIRS.items()}
+
+
+def _block_defects(block: str) -> list[str]:
+    defects = []
+    if block.count("'") % 2:
+        defects.append("an odd number of ' — a literal is not terminated")
+    stack: list[tuple[str, int]] = []
+    for number, line in enumerate(_QUOTED.sub("", block).splitlines(), 1):
+        for char in line:
+            if char in _PAIRS:
+                stack.append((char, number))
+            elif char in _CLOSERS:
+                if stack and stack[-1][0] == _CLOSERS[char]:
+                    stack.pop()
+                else:
+                    defects.append(f"an unmatched {char!r} on line {number}")
+                    return defects
+    if stack:
+        char, number = stack[0]
+        defects.append(f"an unclosed {char!r} opened on line {number}")
+    return defects
+
+
+def clause_defects(text: str) -> list[str]:
+    """Structural defects in a clause's grammar blocks, worst first, or empty.
+
+    The clause text is the SOURCE a unit is derived from, so a malformed one is
+    worth saying out loud rather than leaving to be noticed. Five of the 111
+    pinned atoms carry one: two have a stray bracket and three an unterminated
+    literal. Whether the defect is in the OMG document or in the wiki's
+    extraction from the PDF is not determined here, and this says only that the
+    text as exported does not parse as grammar.
+    """
+    return [
+        d for block in _FENCE.findall(text) if _DEFINES.search(block) for d in _block_defects(block)
+    ]
+
 
 def hash_parts(*parts: str | None) -> str:
     """A NUL-separated sha256 over ``parts``; ``None`` hashes as empty."""

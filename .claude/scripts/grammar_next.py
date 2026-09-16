@@ -22,7 +22,7 @@ from itertools import islice
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from _grammar import GRAMMAR, load_units, pinned_tokens
+from _grammar import GRAMMAR, clause_defects, load_units, pinned_tokens
 from _state import REPO_ROOT, load_json
 
 if TYPE_CHECKING:
@@ -93,7 +93,22 @@ def clause_text(name: str) -> tuple[str, str]:
     entry = clauses.get(name)
     if not entry:
         return "", f"{name} has no clause in {CLAUSES}"
-    return entry.get("text", ""), ""
+    text = entry.get("text", "")
+    defects = clause_defects(text)
+    if defects:
+        # The clause is the source. Saying this up front is the difference between
+        # repairing it deliberately and not noticing it needed repair.
+        return text, (
+            f"THE CLAUSE TEXT IS MALFORMED: it has {', and '.join(defects)}. "
+            "Do not derive from it as written. Work out the repair, check it against "
+            "the Tier B' transcription in vendor/spec-bnf and against the Xtext, and "
+            "if exactly one repair is coherent, derive from that and record on the "
+            "unit what was wrong and why the repair is the only reading. If more than "
+            "one repair is coherent, the unit is a conflict. Do not assert whether the "
+            "defect is in the OMG document or in the wiki's extraction of it unless "
+            "you have checked the PDF."
+        )
+    return text, ""
 
 
 def context_pack(unit: Json) -> Json:
