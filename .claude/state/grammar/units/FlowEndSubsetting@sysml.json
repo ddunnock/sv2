@@ -3,7 +3,7 @@
   "production": "FlowEndSubsetting",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "f503f360d20207704de75664ced4bbe1f57e024983fed96db8f3731cd57ee6a9",
     "xtext_rule": "5a1a53c9f16081f73e78185f1d45fbd36b7c7e45c2046c5a007a184df07f062f",
@@ -16,5 +16,62 @@
     "xtext_rule_text": "FlowEndSubsetting returns SysML::ReferenceSubsetting :\n\t  referencedFeature = [SysML::Feature | QualifiedName] '.'\n\t| ownedRelatedElement += FeatureChainPrefix\n;",
     "metaclass": "SysML::ReferenceSubsetting"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "Adjudicated from a pending clause/Xtext disagreement.",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "QualifiedName"
+          },
+          {
+            "k": "kw",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "FeatureChainPrefix"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.16 states FlowEndSubsetting : ReferenceSubsetting = referencedFeature = [QualifiedName] | referencedFeature = FeatureChainPrefix. The first alternative lacks the '.' that separates it from the flow feature; deviation FlowEndSubsetting (follow_xtext) adds it, as the SysML Xtext does. The second alternative is the clause as written. The `{ ownedRelatedElement += referencedFeature }` action is abstract syntax.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.16 (FlowsTextualNotation.md, region_sha256 e03f363eef9b4cf1)",
+      "note": "[QualifiedName] | FeatureChainPrefix"
+    },
+    {
+      "kind": "deviation",
+      "ref": "FlowEndSubsetting",
+      "note": "follow_xtext: '.' after the QualifiedName alternative"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "`flow p1.torque to p2.torque;`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext FlowEndSubsetting",
+      "note": "[QualifiedName] '.' | FeatureChainPrefix"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:30:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:30:20Z"
 }

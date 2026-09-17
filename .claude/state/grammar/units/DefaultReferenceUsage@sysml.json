@@ -3,7 +3,7 @@
   "production": "DefaultReferenceUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "a9884f0ac6f89d1725bb21e9aeed86b913bb1d5b1e7a5984ba1cbbb0d0acdcc2",
     "xtext_rule": "7933982d2cbe29b0a64536832b8da04259b8f970ab2608d584f0fed08e1d3d9f",
@@ -16,5 +16,60 @@
     "xtext_rule_text": "DefaultReferenceUsage returns SysML::ReferenceUsage :\n\t( isEnd ?= 'end' )? RefPrefix \n\tUsageDeclaration ValuePart? UsageBody\n;",
     "metaclass": "SysML::ReferenceUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "Adjudicated from a pending clause/Xtext disagreement. OccurrenceUsagePrefix@sysml has the same gap (the Xtext adds EndUsagePrefix as an alternative; the clause has none) and needs its own adjudication when derived.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "kw",
+          "text": "end"
+        }
+      },
+      {
+        "k": "ref",
+        "name": "RefPrefix"
+      },
+      {
+        "k": "ref",
+        "name": "Usage"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.6.3 states DefaultReferenceUsage : ReferenceUsage = RefPrefix Usage. Deviation DefaultReferenceUsage (follow_xtext) adds the optional bare 'end' the SysML Xtext has, which connection and allocation definitions need for keyword-less ends. The Xtext's unfolding of Usage into UsageDeclaration ValuePart? UsageBody is not ported; the clause's Usage says the same.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.3 (ReferenceUsages.md, region_sha256 27505145913280ac)",
+      "note": "RefPrefix Usage"
+    },
+    {
+      "kind": "deviation",
+      "ref": "DefaultReferenceUsage",
+      "note": "follow_xtext: optional 'end'"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml",
+      "note": "`end end1;`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext DefaultReferenceUsage",
+      "note": "( isEnd ?= 'end' )? RefPrefix UsageDeclaration ValuePart? UsageBody"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:33:51Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:33:51Z"
 }

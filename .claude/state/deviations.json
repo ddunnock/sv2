@@ -6427,6 +6427,151 @@
           "note": "The KerML Tier A pin the governing clause belongs to."
         }
       ]
+    },
+    {
+      "production": "AnnotatingMember",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (line 71) writes AnnotatingMember as `MemberPrefix ownedRelatedElement += AnnotatingElement`, adding the nullable MemberPrefix the specification omits.",
+      "problem": "SysML 8.2.2.4.1 states AnnotatingMember : OwningMembership = ownedRelatedElement += AnnotatingElement, with no MemberPrefix. AnnotatingMember is referenced only from EnumerationBody (SysML 8.2.2.8), where it is the only route to a comment, doc, rep or metadata inside an `enum def { }` body. Everywhere else an AnnotatingElement is reached through a member production that carries MemberPrefix (PackageMember, DefinitionMember, KerML's NonFeatureMember), so literally only enumeration bodies forbid `private doc /* */`.",
+      "decision": "follow_xtext",
+      "rationale": "Filed by the SysML specification's editor as SYSML21-319, open, reported 17 July 2025 against SysML 2.0b2: AnnotatingMember lacks MemberPrefix, so AnnotatingElements in EnumerationBodies cannot have any visibility other than public, 'even though there is no such restriction in the abstract syntax'. The pilot already adds it. The corpus has no visibility keyword before comment, doc, rep or metadata anywhere, so it does not decide the point. The Xtext's `=>` predicate on EnumerationBody's EnumerationUsageMember alternative is not ported; the optional visibility is followed by a token that tells the two alternatives apart. Adjudicated by the grammar-adjudicator on 2026-09-17; the issue page was fetched and its summary read directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.4.1 Annotations (region_sha256 3c3db88367d002e9)",
+          "note": "AnnotatingMember : OwningMembership = ownedRelatedElement += AnnotatingElement, no MemberPrefix"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.8 EnumerationsTextualNotation (region_sha256 9c242a1f7811f8ef)",
+          "note": "EnumerationBody, the only production referencing AnnotatingMember"
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-319",
+          "note": "AnnotatingMember does not allow visibility; open; Ed Seidewitz, 17 July 2025, updated 27 January 2026"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "FlowEndSubsetting",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 1325-1330) writes FlowEndSubsetting's first alternative as `referencedFeature = [SysML::Feature | QualifiedName] '.'`, with the trailing '.' the specification omits.",
+      "problem": "SysML 8.2.2.16 states FlowEndSubsetting = referencedFeature = [QualifiedName] | referencedFeature = FeatureChainPrefix, and FlowEnd = FlowEndSubsetting? FlowFeatureMember. QualifiedName separates segments with '::' only (KerML 8.2.3.4.1), and FeatureChainPrefix, ( OwnedFeatureChaining '.' )+ OwnedFeatureChaining '.', needs at least two chainings and two dots. So a two-segment end such as `p1.torque` has nowhere for its dot: the first alternative would read `from p1 torque`, and the second needs `a.b.` before the flow feature.",
+      "decision": "follow_xtext",
+      "rationale": "The dot is missing from the first alternative, not optional: nothing else in the clause can consume it, and SysML's own KerML base states FlowEnd with the dot (KerML 8.2.5.9.2, ( OwnedReferenceSubsetting '.' )? FlowFeatureMember). The corpus uses the two-segment form throughout; the adjudicator counted 121 flow ends of that shape, among them the Annex A model's first flow, `flow p1.torque to p2.torque;`. Three-segment ends parse through FeatureChainPrefix as written, so only the first alternative changes. No open SysML issue title names FlowEnd, FlowEndSubsetting or FeatureChainPrefix (the open list was read on 2026-09-17); closed issues were not searched. Adjudicated by the grammar-adjudicator on 2026-09-17; the clause, Xtext and corpus line were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.16 FlowsTextualNotation (region_sha256 e03f363eef9b4cf1)",
+          "note": "FlowEndSubsetting's first alternative is [QualifiedName] with no '.'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.3.4.1 Namespaces (region_sha256 893fa9cef98e60fc)",
+          "note": "QualifiedName segments are separated by '::' only"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.9.2 Flows (region_sha256 150b0ccc1e0d5422)",
+          "note": "FlowEnd = ( OwnedReferenceSubsetting '.' )? FlowFeatureMember, with the dot"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+          "note": "line 316: `flow p1.torque to p2.torque;`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "CaseBodyItem",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext writes CaseBodyItem as CalculationBodyItem | SubjectMember | ActorMember | ObjectiveMember, where CalculationBodyItem is ActionBodyItem | ReturnParameterMember (SysML 8.2.2.19).",
+      "problem": "SysML 8.2.2.22 states CaseBodyItem : Type = ActionBodyItem | SubjectMember | ActorMember | ObjectiveMember. 'return' is produced only by ReturnParameterMember, which ActionBodyItem does not reach, so the clause rejects a `return` member directly in a case, analysis, verification or use case body.",
+      "decision": "follow_xtext",
+      "rationale": "The specification contradicts its own grammar. SysML 7.22.2 declares a case 'a kind of calculation definition or usage', 7.19.2 lets a calculation declare its result with `return`, and the worked examples in 7.23.2 (`return fuelEconomyResult : DistancePerVolumeValue;` in analysis def FuelEconomyAnalysis) and 7.24.2 (`return verdict : VerdictKind = evaluateData.verdict;` in verification def VehicleMassTest) put `return` directly in case bodies. The corpus does the same in analysis and verification definitions and usages, including the Annex A model's `return :>> verdict = evaluatePassFail.verdict;`. The pilot reuses CalculationBodyItem, which is the reading the prose describes. No open SysML issue title names CaseBodyItem or return parameters in cases (the open list was read on 2026-09-17); issue bodies and closed issues were not searched, so none is cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the 7.22.2, 7.23.2 and 7.24.2 text was rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.22 CasesTextualNotation (region_sha256 3fa44e95d6e4ec23)",
+          "note": "CaseBodyItem without ReturnParameterMember"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 7.22.2 Case-Definitions-and-Usages (region_sha256 eb25a69f33cb475f)",
+          "note": "'a kind of calculation definition or usage'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 7.23.2 Analysis-Case-Definitions-and-Usages (region_sha256 2aa2d6ceaad20fca)",
+          "note": "`return fuelEconomyResult : DistancePerVolumeValue;` in an analysis def body"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 7.24.2 Verification-Case-Definitions-and-Usages (region_sha256 d518fc8c6f0142e0)",
+          "note": "`return verdict : VerdictKind = evaluateData.verdict;` in a verification def body"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/training/33. Analysis/Analysis Case Definition Example.sysml",
+          "note": "line 84: `return fuelEconomyResult : DistancePerVolumeValue = solveForFuelConsumption.fuelEconomy;`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+          "note": "line 1235: `return :>> verdict = evaluatePassFail.verdict;`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clauses belong to."
+        }
+      ]
+    },
+    {
+      "production": "DefaultReferenceUsage",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 630-633) writes DefaultReferenceUsage as `( isEnd ?= 'end' )? RefPrefix UsageDeclaration ValuePart? UsageBody`: an optional bare 'end' flag, and otherwise the specification's RefPrefix Usage unfolded.",
+      "problem": "SysML 8.2.2.6.3 states DefaultReferenceUsage : ReferenceUsage = RefPrefix Usage, with no 'end'. Only InterfaceDefinition has its own end production (DefaultInterfaceEnd, 8.2.2.14.1); connection and allocation definition bodies reach a keyword-less member only through DefinitionBodyItem, NonOccurrenceUsageElement and DefaultReferenceUsage. Literally, `end logical : LogicalElement;` in an allocation def and `end end1;` in a connection def have no production that accepts them.",
+      "decision": "follow_xtext",
+      "rationale": "The corpus writes keyword-less ends in connection and allocation definitions, and nothing else in the specification parses them: `end logical : LogicalElement;` (training 38, Allocation Definition Example.sysml line 32, and validation 12b-Allocation-1.sysml line 47), `end hitch : HitchBall;` (validation 3c, mod-1 and mod-2, line 13), `end end1;` (Simple Tests/ConnectionTest.sysml line 33). Only the bare 'end' flag the pilot uses is added, not EndUsagePrefix's OwnedCrossFeatureMember option, which nothing here needs. The adjudicator found that the pack's own corpus snippets for this unit do not exercise it (interface ends, comments, and `end item` members); the `end item` form points to the same gap in OccurrenceUsagePrefix, which is its own unit. No open SysML issue title names DefaultReferenceUsage or end usages without 'ref' (open list read on 2026-09-17); bodies and closed issues were not searched. Adjudicated by the grammar-adjudicator on 2026-09-17; two corpus lines were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.3 ReferenceUsages (region_sha256 27505145913280ac)",
+          "note": "DefaultReferenceUsage = RefPrefix Usage, no 'end'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.14.1 InterfaceDefinitions (region_sha256 86fc09c62954e744)",
+          "note": "DefaultInterfaceEnd = isEnd ?= 'end' Usage, an end production for interfaces only"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/training/38. Allocation/Allocation Definition Example.sysml",
+          "note": "line 32: `end logical : LogicalElement;` in `allocation def LogicalToPhysical {`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml",
+          "note": "line 33: `end end1;` in `abstract connection def C {`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
     }
   ],
   "unpatched": []

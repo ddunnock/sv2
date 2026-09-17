@@ -3,7 +3,7 @@
   "production": "EmptyMultiplicity",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "729e11bfb00a5a13f3ba4b6f6db4994e5bd6df5d4d6eb952ac3b8f19436b9f97",
     "xtext_rule": "b09fff7c6abde4500ab7f27574b5e26760a382f387a6fc790570b4c79263a260",
@@ -16,5 +16,34 @@
     "xtext_rule_text": "EmptyMultiplicity returns SysML::Multiplicity :\n\t{SysML::Multiplicity}\n;",
     "metaclass": "SysML::Multiplicity"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "seq",
+    "items": []
+  },
+  "decision": "SysML 8.2.2.9.1 states EmptyMultiplicity : Multiplicity = { }, an action that creates a Multiplicity and consumes no tokens. The SysML Xtext writes {SysML::Multiplicity}, the same. The rule is the empty sequence.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.9.1 (OccurrenceDefinitions.md, region_sha256 2a70ef572e61dedf)",
+      "note": "EmptyMultiplicity : Multiplicity = { }"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext EmptyMultiplicity",
+      "note": "{SysML::Multiplicity}"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:23:55Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:23:57Z"
 }

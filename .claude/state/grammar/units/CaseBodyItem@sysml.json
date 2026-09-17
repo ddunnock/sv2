@@ -3,7 +3,7 @@
   "production": "CaseBodyItem",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "e3a278925d36146fdb1fe9b1da78351269daeb41617744492f5e30c352341669",
     "xtext_rule": "c5490bd7e51c533c04bd1fe0ea04ef4c6b5e13bc9007d331c984f70fbcf0f3fc",
@@ -16,5 +16,60 @@
     "xtext_rule_text": "fragment CaseBodyItem returns SysML::Type :\n\t  CalculationBodyItem\n\t| ownedRelationship += SubjectMember \n\t| ownedRelationship += ActorMember\n\t| ownedRelationship += ObjectiveMember\n\t\n;",
     "metaclass": "SysML::Type"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "Adjudicated from a pending clause/Xtext disagreement.",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "ActionBodyItem"
+      },
+      {
+        "k": "ref",
+        "name": "ReturnParameterMember"
+      },
+      {
+        "k": "ref",
+        "name": "SubjectMember"
+      },
+      {
+        "k": "ref",
+        "name": "ActorMember"
+      },
+      {
+        "k": "ref",
+        "name": "ObjectiveMember"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.22 states CaseBodyItem : Type = ActionBodyItem | SubjectMember | ActorMember | ObjectiveMember. Deviation CaseBodyItem (follow_xtext) adds ReturnParameterMember, which the SysML Xtext reaches through CalculationBodyItem and SysML 7.22-7.24 require. The rule names ReturnParameterMember directly rather than taking over the Xtext's CalculationBodyItem reference, which would say the same thing through another production.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.22 (CasesTextualNotation.md, region_sha256 3fa44e95d6e4ec23)",
+      "note": "CaseBodyItem without ReturnParameterMember"
+    },
+    {
+      "kind": "deviation",
+      "ref": "CaseBodyItem",
+      "note": "follow_xtext: ReturnParameterMember added"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext CaseBodyItem",
+      "note": "CalculationBodyItem | SubjectMember | ActorMember | ObjectiveMember"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:31:54Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:31:54Z"
 }

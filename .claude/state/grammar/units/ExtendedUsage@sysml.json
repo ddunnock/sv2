@@ -3,7 +3,7 @@
   "production": "ExtendedUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
     "xtext_rule": "d8e3ec9109743188719a11b729e18c9817f67ff1ab1681597140bea30825b223",
@@ -16,5 +16,50 @@
     "xtext_rule_text": "ExtendedUsage returns SysML::Usage :\n\tUnextendedUsagePrefix UsageExtensionKeyword+ Usage\n;",
     "metaclass": "SysML::Usage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "UnextendedUsagePrefix"
+      },
+      {
+        "k": "plus",
+        "item": {
+          "k": "ref",
+          "name": "UsageExtensionKeyword"
+        }
+      },
+      {
+        "k": "ref",
+        "name": "Usage"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.27 states ExtendedUsage : Usage = UnextendedUsagePrefix UsageExtensionKeyword+ Usage. The SysML Xtext is identical. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.27 (MetadataTextualNotation.md, region_sha256 69251565feee7639)",
+      "note": "ExtendedUsage : Usage = UnextendedUsagePrefix UsageExtensionKeyword+ Usage"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext ExtendedUsage",
+      "note": "is identical"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:23:55Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:23:57Z"
 }

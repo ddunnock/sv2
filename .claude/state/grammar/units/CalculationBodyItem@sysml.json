@@ -3,7 +3,7 @@
   "production": "CalculationBodyItem",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "abc851f79d420fb31d8d7518538400aa03794ce96b1c7f0ed791b9375eeee723",
     "xtext_rule": "517b7bdf84a144227dada559acd6f12fbdf029186a63b3b419eebf6de2e21c87",
@@ -16,5 +16,43 @@
     "xtext_rule_text": "fragment CalculationBodyItem returns SysML::Type :\n\t  ActionBodyItem\n\t| ownedRelationship += ReturnParameterMember\n;",
     "metaclass": "SysML::Type"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "ActionBodyItem"
+      },
+      {
+        "k": "ref",
+        "name": "ReturnParameterMember"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.19 states CalculationBodyItem : Type = ActionBodyItem | ownedRelationship += ReturnParameterMember. The SysML Xtext is identical. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.19 (CalculationsTextualNotation.md, region_sha256 ee541841395079da)",
+      "note": "CalculationBodyItem : Type = ActionBodyItem | ownedRelationship += ReturnParameterMember"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext CalculationBodyItem",
+      "note": "is identical"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:25:15Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:25:16Z"
 }

@@ -3,7 +3,7 @@
   "production": "AnnotatingMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "d87d1ab982342f8c81e2a5560e39822563a1d479a63df9bbce3daf823109348b",
     "xtext_rule": "73bcaf36834cef38f0a4c306df1dbb94adf5691f283328f66167a6f1fd1710ee",
@@ -16,5 +16,53 @@
     "xtext_rule_text": "AnnotatingMember returns SysML::OwningMembership :\n\tMemberPrefix ownedRelatedElement += AnnotatingElement \n;",
     "metaclass": "SysML::OwningMembership"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "Adjudicated from a pending clause/Xtext disagreement. The corpus does not exercise the prefix; a positive test for `enum def E { private doc /* x */ }` belongs with the parser work.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "MemberPrefix"
+      },
+      {
+        "k": "ref",
+        "name": "AnnotatingElement"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.4.1 states AnnotatingMember : OwningMembership = ownedRelatedElement += AnnotatingElement; the SysML Xtext prefixes it with MemberPrefix. That disagreement is adjudicated and recorded as deviation AnnotatingMember (follow_xtext), on SYSML21-319, in which the specification's editor reports the missing MemberPrefix as a defect. The rule is MemberPrefix AnnotatingElement.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.4.1 (Annotations.md, region_sha256 3c3db88367d002e9)",
+      "note": "AnnotatingMember without MemberPrefix"
+    },
+    {
+      "kind": "deviation",
+      "ref": "AnnotatingMember",
+      "note": "follow_xtext: MemberPrefix added"
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "SYSML21-319",
+      "note": "AnnotatingMember does not allow visibility"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext AnnotatingMember",
+      "note": "MemberPrefix ownedRelatedElement += AnnotatingElement"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:28:54Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:28:54Z"
 }

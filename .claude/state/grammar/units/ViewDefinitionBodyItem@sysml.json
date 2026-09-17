@@ -3,7 +3,7 @@
   "production": "ViewDefinitionBodyItem",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "ee624722b91fd28dd540ce074f7c2db4f5caf3cb2d07fa533811eac7969424dd",
     "xtext_rule": "f5b5057f67a3bfd6edf6ddcb0454b97b0b985df5e72f7822cb0000c3b9937f82",
@@ -16,5 +16,47 @@
     "xtext_rule_text": "fragment ViewDefinitionBodyItem returns SysML::ViewDefinition :\n\t  DefinitionBodyItem\n\t| ownedRelationship += ElementFilterMember\n\t| ownedRelationship += ViewRenderingMember\n;",
     "metaclass": "SysML::ViewDefinition"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "DefinitionBodyItem"
+      },
+      {
+        "k": "ref",
+        "name": "ElementFilterMember"
+      },
+      {
+        "k": "ref",
+        "name": "ViewRenderingMember"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.26.1 states ViewDefinitionBodyItem : ViewDefinition = DefinitionBodyItem | ownedRelationship += ElementFilterMember | ownedRelationship += ViewRenderingMember. The SysML Xtext is identical. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.26.1 (ViewDefinitions.md, region_sha256 5198c1a94438ed0c)",
+      "note": "ViewDefinitionBodyItem : ViewDefinition = DefinitionBodyItem | ownedRelationship += ElementFilterMember | ownedRelationship += ViewRenderingMember"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext ViewDefinitionBodyItem",
+      "note": "is identical"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:25:15Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:25:17Z"
 }
