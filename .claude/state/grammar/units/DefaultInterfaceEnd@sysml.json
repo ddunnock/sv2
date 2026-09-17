@@ -38,6 +38,11 @@
       "note": "DefaultInterfaceEnd : PortUsage = isEnd ?= 'end' Usage"
     },
     {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "`end p1:DrivePwrPort;`"
+    },
+    {
       "kind": "xtext",
       "ref": "SysML.xtext DefaultInterfaceEnd",
       "note": "is identical"

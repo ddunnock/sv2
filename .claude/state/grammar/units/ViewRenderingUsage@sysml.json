@@ -87,6 +87,11 @@
       "note": "ViewRenderingUsage : RenderingUsage = ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart? UsageBody | ( UsageExtensionKeyword* 'rendering' | UsageExtensionKeyword+ ) Usage"
     },
     {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ViewTest.sysml",
+      "note": "`rendering r : R;`"
+    },
+    {
       "kind": "xtext",
       "ref": "SysML.xtext ViewRenderingUsage",
       "note": "is identical"
