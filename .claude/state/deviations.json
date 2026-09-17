@@ -6127,6 +6127,36 @@
           "note": "The KerML Tier A pin the governing clause belongs to."
         }
       ]
+    },
+    {
+      "production": "FilterPackageImport",
+      "bucket": "conflict",
+      "upstream": "SysML.xtext (and KerML.xtext) define `FilterPackageImport: FilterPackageMembershipImport | FilterPackageNamespaceImport`, whose two helpers are ImportedMembership and ImportedNamespace. They admit the same import forms without the nested-FilterPackage alternative of NamespaceImport.",
+      "problem": "SysML 2.0 clause 8.2.2.5.1 uses FilterPackageImport in `FilterPackage : Package = ownedRelationship += FilterPackageImport ( ownedRelationship += FilterPackageMember )+` and never defines it. The PDF (page 199, printed 167) goes from FilterPackage straight to FilterPackageMember. As printed, SysML's filter-package syntax cannot be derived from the normative clause.",
+      "decision": "follow_spec",
+      "rationale": "Take the definition from the specification's own machine-readable BNF, Tier B' (vendor/spec-bnf/SysML-textual-bnf.kebnf line 172, clause 8.2.2.5.1): `FilterPackageImport : Import = ImportDeclaration { visibility = 'public' }`. It is not normative, but it is the specification's transcription, not the pilot's. KerML 8.2.3.4.2's FilterPackage uses ImportDeclaration directly, so the two languages then accept the same filter-package syntax. OMG has the omission as SYSML21-449, 'Undefined rules in the text notation grammar', which names FilterPackageImport as referenced on page 200 and undefined. The pilot's two helpers accept the same token sequences: a nested filter package only adds further bracketed members. So following Tier B' changes structure, not the language. Revisit when SYSML21-449 is resolved. The same issue names CalculationUsageDeclaration as undefined (page 188), which will need the same treatment when its unit comes up.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.5.1 Packages (region_sha256 3ee603b1b89d4345)",
+          "note": "FilterPackage references FilterPackageImport; no production defines it. Confirmed in the clause export and in the SysML 2.0 PDF, page 199."
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-449",
+          "note": "EXACT MATCH. 'Undefined rules in the text notation grammar.', open, filed 11 Nov 2025 by Andrew Myers against SysML 2.0. It names FilterPackageImport, referenced on page 200, and CalculationUsageDeclaration, page 188, as undefined. Fetched and read on 2026-09-17."
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.3.4.2 Imports (region_sha256 a2610efd00be16cc)",
+          "note": "KerML's FilterPackage uses ImportDeclaration where SysML writes FilterPackageImport."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
     }
   ],
   "unpatched": []
