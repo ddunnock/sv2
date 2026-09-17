@@ -4959,7 +4959,7 @@
       "upstream": "The Pilot Xtext declares no rule named `SourceSuccession`. Either it inlines this production into the rule that uses it, or it reaches the same construct under a different name.",
       "problem": "The specification states `SourceSuccession` as a production of its own at SysML 8.2.2.9.3. A parser written from the Xtext inventory alone would not know this production exists, and its absence is invisible to a corpus sweep for as long as no pinned file exercises it.",
       "decision": "follow_spec",
-      "rationale": "Implement it. docs/DERIVATION.md states the resolution for this bucket: a specification-only production is usually one the Pilot has not implemented, and the specification is the normative source. Expect the corpus not to exercise it, which is exactly why it needs a rejection test rather than reliance on the sweep: a positive-only corpus cannot tell a production that is implemented from one that is missing.",
+      "rationale": "Implement it. docs/DERIVATION.md states the resolution for this bucket: a specification-only production is usually one the Pilot has not implemented, and the specification is the normative source. Unlike most of this bucket, the corpus does exercise it: AHFSequences.sysml line 14 `then event occurrence return_getItems1;` follows line 13's `event occurrence call_getItems1;`, and the leading 'then' is the SourceSuccessionMember that 8.2.2.17.1 admits before a body item. So the sweep can see this one. It still needs a rejection case, because the production derives at most a multiplicity and a positive-only corpus cannot tell a nearly-empty rule that is implemented from one that is missing.",
       "evidence": [
         {
           "kind": "spec_clause",
@@ -4979,7 +4979,7 @@
       "upstream": "The Pilot Xtext declares no rule named `SourceSuccessionMember`. Either it inlines this production into the rule that uses it, or it reaches the same construct under a different name.",
       "problem": "The specification states `SourceSuccessionMember` as a production of its own at SysML 8.2.2.9.3. A parser written from the Xtext inventory alone would not know this production exists, and its absence is invisible to a corpus sweep for as long as no pinned file exercises it.",
       "decision": "follow_spec",
-      "rationale": "Implement it. docs/DERIVATION.md states the resolution for this bucket: a specification-only production is usually one the Pilot has not implemented, and the specification is the normative source. Expect the corpus not to exercise it, which is exactly why it needs a rejection test rather than reliance on the sweep: a positive-only corpus cannot tell a production that is implemented from one that is missing.",
+      "rationale": "Implement it. docs/DERIVATION.md states the resolution for this bucket: a specification-only production is usually one the Pilot has not implemented, and the specification is the normative source. Unlike most of this bucket, the corpus does exercise it: AHFSequences.sysml line 14 `then event occurrence return_getItems1;` is exactly this member, the optional SourceSuccessionMember that 8.2.2.17.1 admits before a body item. So the sweep can see this one. It still needs a rejection case, because its only token is a 'then' that several other productions also spell.",
       "evidence": [
         {
           "kind": "spec_clause",

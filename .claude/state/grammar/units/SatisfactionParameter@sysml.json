@@ -3,7 +3,7 @@
   "production": "SatisfactionParameter",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "fc398636b89ed7f38aee585cc6eb3e6281af4853d57aab1490de3e1306db12d3",
     "xtext_rule": "33d2bcba6a1ef732369351552a885798479e5d376e2e863611649dd6bded0470",
@@ -16,5 +16,39 @@
     "xtext_rule_text": "SatisfactionParameter returns SysML::ReferenceUsage :\n\townedRelationship += SatisfactionFeatureValue\n;",
     "metaclass": "SysML::ReferenceUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "ref",
+    "name": "SatisfactionFeatureValue"
+  },
+  "decision": "A transcription of SysML 8.2.2.21.2. The clause and the Xtext state this production identically \u2014 `ownedRelationship += SatisfactionFeatureValue` in both \u2014 so there is nothing to weigh. It contributes no tokens: it is the reference usage that stands as the subject parameter of a satisfaction, and the subject's text is reached below it, through SatisfactionFeatureValue to a SatisfactionReferenceExpression and finally a FeatureChainMember. The 'by' that introduces the subject belongs to SatisfyRequirementUsage.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.21.2 (RequirementUsages.md, region_sha256 6c4f3553daaa3162)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/32. Requirements/Requirement Satisfaction.sysml",
+      "note": "Line 22 `satisfy vehicleSpecification by vehicle_design;` holds this parameter after 'by', with `vehicle_design` as the value reached through it. Line 23 `satisfy engineSpecification by vehicle_design.engine_v1;` is the same with a feature chain."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext SatisfactionParameter",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:41:42Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:41:42Z"
 }

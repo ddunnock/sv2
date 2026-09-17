@@ -3,7 +3,7 @@
   "production": "StateAssignmentActionUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "6f7cd7408a7b364e4a1c9cb070f712b9229c02405be681c2ba1907ce42b2860a",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -16,5 +16,43 @@
     "xtext_rule_text": "",
     "metaclass": ""
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No xtext evidence is recorded because the pinned SysML.xtext has no StateAssignmentActionUsage rule; see StatePerformActionUsage for the argument.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "AssignmentNodeDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "ActionBody"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.18.1: `StateAssignmentActionUsage : AssignmentActionUsage = AssignmentNodeDeclaration ActionBody`. There is no second opinion to weigh \u2014 the pinned pilot grammar defines no rule of this name, factoring the four State*ActionUsage forms into PerformedActionUsage (SysML.xtext:1811). The clause's decomposition is taken, as it was on StateActionUsage. The 'assign' keyword and the ':=' both live in AssignmentNodeDeclaration, so this production adds only the body.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.18.1 (StateDefinitions.md, region_sha256 0119cca482071cd3)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml",
+      "note": "Inside `state def Counting {` on line 18: line 20 `entry assign counter.count := 0;` is an entry subaction taking this alternative. Line 29 `do assign counter.count := counter.count + 1;`, inside `state increment {` on line 28, is the same production as a do subaction. In each the AssignmentNodeDeclaration runs from 'assign' through the assigned expression and `;` is the ActionBody."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:40:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:40:21Z"
 }

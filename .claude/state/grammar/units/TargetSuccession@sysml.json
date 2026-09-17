@@ -3,7 +3,7 @@
   "production": "TargetSuccession",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "bf230844585015a55800fd98050d6e2879682c9a5988b5261223ac6eb481d35b",
     "xtext_rule": "00b87b5926dac9d932d4fca9ffe069864527bb5daa8b1e1e8aac50ad9c64d7b0",
@@ -16,5 +16,52 @@
     "xtext_rule_text": "TargetSuccession returns SysML::SuccessionAsUsage :\n\townedRelationship += MultiplicitySourceEndMember\n\t'then' ownedRelationship += ConnectorEndMember\n;",
     "metaclass": "SysML::SuccessionAsUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "SourceEndMember"
+      },
+      {
+        "k": "kw",
+        "text": "then"
+      },
+      {
+        "k": "ref",
+        "name": "ConnectorEndMember"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.8. The Xtext accepts the same tokens and differs only in the name of the first member: it writes MultiplicitySourceEndMember, whose MultiplicitySourceEnd is `{SysML::ReferenceUsage} ( ownedRelationship += OwnedMultiplicity )?` (SysML.xtext:883-888), and the clause writes SourceEndMember, whose SourceEnd is `( ownedRelationship += OwnedMultiplicity )?` (8.2.2.9.3). Those are the same production under two names, so this is a naming difference rather than a disagreement, and the clause's name is taken because only SourceEndMember has a unit. The source end carries no reference of its own \u2014 at most a multiplicity \u2014 which is what makes this the target form: the source is the body item the succession follows, and only the target is written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.8 (ActionSuccessions.md, region_sha256 e5f3ae624be80231)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/19. Terminate Actions/Terminate Actions Example-1.sysml",
+      "note": "Inside `action def MonitoredActivity {` on line 8: line 12 `then performCriticalActivity;` and line 13 `then waitForTimeOut;` are each a bare 'then' followed by a reference and a ';' \u2014 this production, with the ';' belonging to the enclosing ActionTargetSuccession's UsageBody. Line 21 and line 24 `then stop;` are the same shape."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext TargetSuccession (line 1703)",
+      "note": "Second opinion. Same tokens; its MultiplicitySourceEndMember (883) is the clause's SourceEndMember under another name."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:43:24Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:43:24Z"
 }

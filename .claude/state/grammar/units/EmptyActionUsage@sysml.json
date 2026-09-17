@@ -3,7 +3,7 @@
   "production": "EmptyActionUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "6f7cd7408a7b364e4a1c9cb070f712b9229c02405be681c2ba1907ce42b2860a",
     "xtext_rule": "f35724262b7724db4d495830bf2838baf27ac9ffe3f898e2ec145d3284aff707",
@@ -16,5 +16,34 @@
     "xtext_rule_text": "EmptyActionUsage returns SysML::ActionUsage :\n\t{SysML::ActionUsage}\n;",
     "metaclass": "SysML::ActionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No corpus evidence is recorded, and none can be: the production matches the empty string, so no line of text is an instance of it in any way a reader could check.",
+  "rule": {
+    "k": "seq",
+    "items": []
+  },
+  "decision": "SysML 8.2.2.18.1 states this production as `EmptyActionUsage : ActionUsage = {}` \u2014 an empty right-hand side. The Xtext says the same thing in its own notation, `{SysML::ActionUsage}`, which is an Xtext action creating an object and consuming nothing. Both therefore derive the empty string, and the rule is an empty sequence. It exists so that a state subaction can be written with no behaviour at all: StateActionUsage's first alternative is `EmptyActionUsage ';'`, which is what makes a bare `entry;` or `do;` a state action whose body is empty, rather than a syntax error. The ';' belongs to that alternative and not to this production, which is why this rule is empty rather than being the terminator itself.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.18.1 (StateDefinitions.md, region_sha256 0119cca482071cd3)",
+      "note": "States the production as `{}`; the rule is the empty sequence that transcribes it."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext EmptyActionUsage",
+      "note": "Second opinion. `{SysML::ActionUsage}` is an Xtext object-creating action that consumes no input, so it agrees that the production derives the empty string."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:37:41Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:37:41Z"
 }

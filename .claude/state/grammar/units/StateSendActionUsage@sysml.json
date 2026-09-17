@@ -3,7 +3,7 @@
   "production": "StateSendActionUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "6f7cd7408a7b364e4a1c9cb070f712b9229c02405be681c2ba1907ce42b2860a",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -16,5 +16,43 @@
     "xtext_rule_text": "",
     "metaclass": ""
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "The clause prints the header as `StateSendActionUsage : SendActionUsage` with no '=' before the body, unlike StatePerformActionUsage, StateAcceptActionUsage and StateAssignmentActionUsage around it, which all carry one. This is the same class of transcription defect as the headers recorded by hand on UsagePrefix, DefinitionDeclaration, IncludeUseCaseUsage and FlowDefinition; grammar_next.py's spec_clause_problem does not flag it. It does not change the rule, so no deviation is recorded. Whether it is filed on the OMG tracker was not searched, and no issue is cited for it. No corpus line was cited for the send-with-'to' spelling: SimpleVehicleModel line 60 `do send new StartSignal() to controller` is a transition effect, not a state subaction.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "SendNodeDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "ActionBody"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.18.1: `StateSendActionUsage : SendActionUsage` followed by `SendNodeDeclaration ActionBody`. The header is missing its '=' \u2014 see notes \u2014 but the body is unambiguous and its three siblings in the same clause have the identical shape, so the rule is read as `SendNodeDeclaration ActionBody`. There is no second opinion to weigh: the pinned pilot grammar defines no rule of this name, factoring the four forms into PerformedActionUsage (SysML.xtext:1811). The clause's decomposition is taken, as it was on StateActionUsage.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.18.1 (StateDefinitions.md, region_sha256 0119cca482071cd3)",
+      "note": "States the production; the rule is its transcription, with the missing '=' in the header repaired."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml",
+      "note": "Inside `state TellUbehavior{` on line 59: line 60 `entry send new CallGiveItems(\"All the items\") via apisp.APIS_HTTP;` is a state entry subaction taking this alternative, with the SendNodeDeclaration running from 'send' to the 'via' part and `;` as the ActionBody."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:40:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:40:20Z"
 }

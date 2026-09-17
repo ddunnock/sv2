@@ -3,7 +3,7 @@
   "production": "EffectBehaviorMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "f5aaf95a70e9c5761f35840a917de06409e714de95f057ad5267b1965867525a",
@@ -16,5 +16,48 @@
     "xtext_rule_text": "EffectBehaviorMember returns SysML::TransitionFeatureMembership :\n\tkind = EffectFeatureKind ownedRelatedElement += EffectBehaviorUsage \n;",
     "metaclass": "SysML::TransitionFeatureMembership"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "do"
+      },
+      {
+        "k": "ref",
+        "name": "EffectBehaviorUsage"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.18.3 states `'do' { kind = 'effect' } ownedRelatedElement += EffectBehaviorUsage`. The braced part assigns into the abstract syntax and contributes no token. The Xtext writes `kind = EffectFeatureKind ownedRelatedElement += EffectBehaviorUsage`, and EffectFeatureKind (SysML.xtext:1913) is an enum whose only literal is `effect = 'do'`, so the two accept the same keyword. The 'do' here is the effect of a transition and is not the same 'do' as a state's DoActionMember, which the same clause states separately over StateActionUsage; the two are told apart by where they appear, not by their keyword.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+      "note": "States the production; the rule is its transcription with the abstract-syntax assignment dropped."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "Line 60 `do send new StartSignal() to controller` is the effect of the transition on lines 56-61: 'do' followed by an EffectBehaviorUsage taking its TransitionSendActionUsage form."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext EffectBehaviorMember (line 1909)",
+      "note": "Second opinion. Same keyword, reached through the one-literal enum at 1913."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:38:56Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:38:57Z"
 }

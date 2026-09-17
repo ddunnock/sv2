@@ -3,7 +3,7 @@
   "production": "ActionNode",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "1d21a99bccb8810f3e974cbe685772d27ca61795e03b0cfdb71408760696f3d8",
     "xtext_rule": "1609d951bef2d6244222dc4ba7d09da719832fa0c4d8bcc514329f1e6e0313e1",
@@ -16,5 +16,77 @@
     "xtext_rule_text": "ActionNode returns SysML::ActionUsage :\n\t  SendNode | AcceptNode | AssignmentNode \n\t| IfNode | WhileLoopNode | ForLoopNode\n\t| TerminateNode\n\t| ControlNode\n;",
     "metaclass": "SysML::ActionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "ControlNode"
+      },
+      {
+        "k": "ref",
+        "name": "SendNode"
+      },
+      {
+        "k": "ref",
+        "name": "AcceptNode"
+      },
+      {
+        "k": "ref",
+        "name": "AssignmentNode"
+      },
+      {
+        "k": "ref",
+        "name": "TerminateNode"
+      },
+      {
+        "k": "ref",
+        "name": "IfNode"
+      },
+      {
+        "k": "ref",
+        "name": "WhileLoopNode"
+      },
+      {
+        "k": "ref",
+        "name": "ForLoopNode"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.2. The clause and the Xtext offer the same eight alternatives and differ only in the order they are listed: the clause leads with ControlNode and the Xtext puts it last. Order between alternatives is not part of the language \u2014 it is a disambiguation strategy for a parser generator that tries them in sequence \u2014 and these eight are told apart by their leading keyword in any case, so nothing depends on it. The clause's order is kept, as the clause is the source. No alternative is added or dropped: ControlNode is the one that fans out to the merge, decide, fork and join nodes, which is why the list is eight long rather than eleven.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.2 (ActionUsages.md, region_sha256 207a908873b90795)",
+      "note": "States the production; the rule is its transcription in the clause's own order."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml",
+      "note": "Inside `action a1 {` on line 14, successive body items reach four different alternatives: line 16 `then merge m;` a ControlNode, line 17 `then accept S;` an AcceptNode, line 21 `then send new S() to b;` a SendNode, and line 23 `then decide;` a ControlNode again."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml",
+      "note": "Line 29 `do assign counter.count := counter.count + 1;` reaches the AssignmentNode alternative."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext ActionNode",
+      "note": "Second opinion. The same eight alternatives, listed in a different order."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:43:24Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:43:25Z"
 }

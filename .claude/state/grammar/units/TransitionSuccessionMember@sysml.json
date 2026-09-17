@@ -3,7 +3,7 @@
   "production": "TransitionSuccessionMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "3aaf8ef2c3dc2b51366bd24035098ede0562ef2e4615741f1bd7773c13141354",
@@ -16,5 +16,39 @@
     "xtext_rule_text": "TransitionSuccessionMember returns SysML::OwningMembership :\n\townedRelatedElement += TransitionSuccession \n;",
     "metaclass": "SysML::OwningMembership"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "ref",
+    "name": "TransitionSuccession"
+  },
+  "decision": "A transcription of SysML 8.2.2.18.3. The clause and the Xtext state this production identically \u2014 `ownedRelatedElement += TransitionSuccession` in both \u2014 so there is nothing to weigh. It contributes no tokens of its own: it is the owning membership that holds the succession a transition ends with, and the 'then' that introduces it belongs to the transition productions that reference it, which is why the same member serves TransitionUsage, TargetTransitionUsage, GuardedSuccession and GuardedTargetSuccession without repeating the keyword.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "Line 61 `then starting;` closes the transition on lines 56-61; the member is `starting`, the 'then' before it belongs to TransitionUsage and the ';' after it to the ActionBody."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext TransitionSuccessionMember",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:38:56Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:38:57Z"
 }

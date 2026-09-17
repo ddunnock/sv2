@@ -3,7 +3,7 @@
   "production": "GuardExpressionMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "7d52837b7532b5c4a8541cf50dca055c73960d687827aacdea5e1f23751652c9",
@@ -16,5 +16,48 @@
     "xtext_rule_text": "GuardExpressionMember returns SysML::TransitionFeatureMembership :\n\tkind = GuardFeatureKind ownedRelatedElement += OwnedExpression \n;",
     "metaclass": "SysML::TransitionFeatureMembership"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "if"
+      },
+      {
+        "k": "ref",
+        "name": "OwnedExpression"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.18.3 states `'if' { kind = 'guard' } ownedRelatedElement += OwnedExpression`. The braced part assigns into the abstract syntax and contributes no token, so the rule is the keyword followed by the expression. The Xtext writes `kind = GuardFeatureKind ownedRelatedElement += OwnedExpression`, and GuardFeatureKind (SysML.xtext:1905) is an enum whose only literal is `guard = 'if'`, so the two accept the same keyword. The guard is a full OwnedExpression rather than anything narrower, which is what admits the conjunction on SimpleVehicleModel line 59; narrowing it to a simpler expression form would be the kind of range narrowing a parser generator wants and the language does not state.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+      "note": "States the production; the rule is its transcription with the abstract-syntax assignment dropped."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "Line 59 `if ignitionCmd.ignitionOnOff==IgnitionOnOff::on and brakePedalDepressed` is the guard of the transition on lines 56-61: 'if' followed by an OwnedExpression that is an 'and' over an equality test."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext GuardExpressionMember (line 1901)",
+      "note": "Second opinion. Same keyword, reached through the one-literal enum at 1905."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:38:56Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:38:57Z"
 }

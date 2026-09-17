@@ -3,7 +3,7 @@
   "production": "NamespaceExpose",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "549f4dd10d3f615fe5551a4a966bcf84c7f0bc1fec8a26c65080c95b9edafcce",
     "xtext_rule": "c83b83e7bafceb7be110f8c15d42226ea3b90b809c615b6eee6543dd61a03a13",
@@ -16,5 +16,44 @@
     "xtext_rule_text": "NamespaceExpose returns SysML::NamespaceExpose :\n\tExposePrefix \n\t( ImportedNamespace\n\t| ownedRelatedElement += FilterPackage\n\t)\n;",
     "metaclass": "SysML::NamespaceExpose"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "The clause spells the second alternative's assignment `importedNamspace`, dropping the 'e'. It is an abstract-syntax assignment and does not change what parses, so no deviation is recorded; whether it is filed on the OMG tracker was not searched, and no issue is cited for it.",
+  "rule": {
+    "k": "ref",
+    "name": "NamespaceImport"
+  },
+  "decision": "SysML 8.2.2.26.2 states this production in one line: `NamespaceExpose = NamespaceImport`. The Xtext writes `ExposePrefix ( ImportedNamespace | ownedRelatedElement += FilterPackage )`, which looks wider and is not. The clause's NamespaceImport (8.2.2.5.1) already has exactly those two alternatives: `importedNamespace = [QualifiedName] '::' '*' ( '::' isRecursive ?= '**' )?` and `importedNamspace = FilterPackage`. ImportedNamespace is simply the Xtext's name for the first. ExposePrefix (SysML.xtext:2366) is the 'expose' keyword, which this derivation states once in Expose, as the clause does, so it does not reappear here. Both readings therefore accept the same text and the clause's form is taken.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.26.2 (ViewUsages.md, region_sha256 f49a7d5fda3165a3)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/42. Views/Views Example.sysml",
+      "note": "Line 12 `expose vehicle::**;` takes NamespaceImport's first alternative with the recursive '**'. Line 25 `expose vehicle::**[@Safety];` and line 30 `expose vehicle::**[not (@Safety)];` take the FilterPackage alternative, which is what the bracketed filter is."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ViewTest.sysml",
+      "note": "Line 35 `expose P::*;` is the plain non-recursive form of the first alternative."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext NamespaceExpose (line 2383)",
+      "note": "Second opinion. The same two alternatives under different names, with the keyword factored out."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:41:42Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:41:42Z"
 }

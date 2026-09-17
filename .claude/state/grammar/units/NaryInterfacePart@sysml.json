@@ -68,7 +68,7 @@
     {
       "kind": "corpus",
       "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml",
-      "note": "Lines 77-81 `interface APIS_transfer_interface : Interfaces::Interface connect ( tlu ::> ..., apsph ::> ..., apspm ::> ..., apsc ::> ..., mqget ::> ..., mqgive ::> ... ) {` is an n-ary interface part with six ends: the first two satisfy the mandatory pair and the remaining four the repetition. Each end takes InterfaceEnd's `( declaredName = NAME REFERENCES )?` form, naming the end before `::>`."
+      "note": "Lines 77-83 `interface APIS_transfer_interface : Interfaces::Interface connect ( tlu ::> ..., apsph ::> ..., apspm ::> ..., apsc ::> ..., mqget ::> ..., mqgive ::> ... ) {` is an n-ary interface part with six ends: the first two satisfy the mandatory pair and the remaining four the repetition. Each end takes InterfaceEnd's `( declaredName = NAME REFERENCES )?` form, naming the end before `::>`."
     },
     {
       "kind": "xtext",

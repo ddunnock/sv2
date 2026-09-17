@@ -9,172 +9,172 @@
   "skipped": 0,
   "productions_normalized": {
     "kerml": 542,
-    "sysml": 723
+    "sysml": 742
   },
-  "accepted": 158,
-  "missed": 153,
+  "accepted": 162,
+  "missed": 149,
   "caught": 37,
   "leaked": 0,
   "missed_detail": [
     {
       "file": "vendor/corpus/omg/SimpleVehicleModel.sysml",
-      "why": "undefined nonterminal 'StateAssignmentActionUsage'"
+      "why": "undefined nonterminal 'AssignmentNodeDeclaration'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Analysis Examples/AnalysisAnnotation.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Analysis Examples/Dynamics.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Analysis Examples/Turbojet Stage Analysis.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Analysis Examples/Vehicle Analysis Demo.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml",
-      "why": "undefined nonterminal 'StateAssignmentActionUsage'"
+      "why": "undefined nonterminal 'AssignmentNodeDeclaration'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml",
-      "why": "undefined nonterminal 'SourceEndMember'"
+      "why": "undefined nonterminal 'SourceEnd'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Camera Example/PictureTaking.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Flashlight Example/Flashlight Example.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Geometry Examples/VehicleGeometryAndCoordinateFrames.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Individuals Examples/AnalysisIndividualExample.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Individuals Examples/JohnIndividualExample.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModel.sysml",
-      "why": "undefined nonterminal 'SourceEndMember'"
+      "why": "undefined nonterminal 'SourceEnd'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModelOutside.sysml",
-      "why": "undefined nonterminal 'SourceEndMember'"
+      "why": "undefined nonterminal 'SourceEnd'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-2.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-3.sysml",
-      "why": "undefined nonterminal 'InterfaceEndMember'"
+      "why": "undefined nonterminal 'InterfaceEnd'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-2.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-3.sysml",
-      "why": "undefined nonterminal 'InterfaceEndMember'"
+      "why": "undefined nonterminal 'InterfaceEnd'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassConstraintExample.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassRollup.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Metadata Examples/IssueMetadataExample.sysml",
-      "why": "undefined nonterminal 'InterfaceEndMember'"
+      "why": "undefined nonterminal 'InterfaceEnd'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Metadata Examples/RationaleMetadataExample.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Metadata Examples/VerificationMetadataExample.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Requirements Examples/RequirementDerivationExample.sysml",
-      "why": "undefined nonterminal 'SatisfactionParameter'"
+      "why": "undefined nonterminal 'SatisfactionFeatureValue'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Requirements Examples/VehicleRequirementDerivation.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/AnalysisTest.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/CalculationTest.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/ConjugationTest.sysml",
-      "why": "undefined nonterminal 'InterfaceEndMember'"
+      "why": "undefined nonterminal 'InterfaceEnd'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/ConstraintTest.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/IndividualTest.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/InterfaceTest.sysml",
-      "why": "undefined nonterminal 'InterfaceEndMember'"
+      "why": "undefined nonterminal 'InterfaceEnd'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/ParameterTest.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/PartTest.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/RequirementTest.sysml",
-      "why": "undefined nonterminal 'SatisfactionParameter'"
+      "why": "undefined nonterminal 'SatisfactionFeatureValue'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/StateTest.sysml",
-      "why": "undefined nonterminal 'StateAssignmentActionUsage'"
+      "why": "undefined nonterminal 'AssignmentNodeDeclaration'"
     },
     {
       "file": "vendor/corpus/sysml/src/examples/Simple Tests/StructuredControlTest.sysml",
-      "why": "undefined nonterminal 'ActionNode'"
+      "why": "undefined nonterminal 'ForLoopNode'"
     }
   ],
   "leaked_detail": []

@@ -3,7 +3,7 @@
   "production": "EmptyEndMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -16,5 +16,29 @@
     "xtext_rule_text": "",
     "metaclass": ""
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No corpus evidence is recorded, and none can be: the production matches the empty string, so no line of text is an instance of it in any way a reader could check. No xtext evidence either, because the pinned SysML.xtext defines no EmptyEndMember; that is an absence in the pilot grammar, not a disagreement with the clause, so it is not a deviation.",
+  "rule": {
+    "k": "ref",
+    "name": "EmptyFeature"
+  },
+  "decision": "A transcription of SysML 8.2.2.18.3: `EmptyEndMember : EndFeatureMembership = ownedRelatedElement += EmptyFeature`, where EmptyFeature is `{}`. There is no second opinion to weigh \u2014 the pinned pilot grammar has no EmptyEndMember rule, using EmptySourceEndMember in the one place TransitionSuccession needs it \u2014 so the clause is the only source. The production contributes no tokens. Its purpose is the source end of a transition succession: `then off` names only a target, and the source is supplied by the transition that owns the succession, so the clause puts an empty end in the position the text leaves unwritten.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+      "note": "States the production; the rule is its transcription."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:37:22Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:37:22Z"
 }

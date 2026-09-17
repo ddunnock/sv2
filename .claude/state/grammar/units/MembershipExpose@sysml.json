@@ -3,7 +3,7 @@
   "production": "MembershipExpose",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "549f4dd10d3f615fe5551a4a966bcf84c7f0bc1fec8a26c65080c95b9edafcce",
     "xtext_rule": "64a0c91546caf94502e20ddc3dec10fddbae08a93910e384cc9cd71443e0b432",
@@ -16,5 +16,39 @@
     "xtext_rule_text": "MembershipExpose returns SysML::MembershipExpose :\n\tExposePrefix ImportedMembership\n;",
     "metaclass": "SysML::MembershipExpose"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "ref",
+    "name": "MembershipImport"
+  },
+  "decision": "SysML 8.2.2.26.2 states this production in one line: `MembershipExpose = MembershipImport`. An expose of a single membership is written exactly as an import of it, and the difference lives entirely in the enclosing Expose. The Xtext writes `ExposePrefix ImportedMembership`, which differs in two ways that cancel: ExposePrefix (SysML.xtext:2366) is the 'expose' keyword encoded as a visibility assignment, and this derivation puts that keyword in Expose where the clause puts it, so it must not appear again here; and ImportedMembership is the Xtext's name for the body of the clause's MembershipImport. The clause's form is taken, and the keyword is stated once.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.26.2 (ViewUsages.md, region_sha256 f49a7d5fda3165a3)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/validation/11-View and Viewpoint/11b-Safety and Security Feature Views.sysml",
+      "note": "Line 52 `expose vehicle;` is the membership form: a bare qualified name with no `::*`, which is what separates it from the namespace form. It is the only expose in the corpus that is not a namespace expose."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext MembershipExpose (line 2379)",
+      "note": "Second opinion. Same tokens once ExposePrefix is accounted for in Expose rather than here."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:41:42Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:41:42Z"
 }
