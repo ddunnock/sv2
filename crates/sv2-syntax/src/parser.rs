@@ -91,6 +91,62 @@ fn keyword(text: &str) -> Option<SyntaxKind> {
 /// other keyword; this is only the list of which ones the production names.
 const VISIBILITY: [&str; 3] = ["public", "private", "protected"];
 
+/// A usage production whose whole rule is `<prefix> KEYWORD Usage`.
+#[derive(Clone, Copy)]
+struct SimpleUsage {
+    /// The one keyword that says which production this is.
+    keyword: &'static str,
+    /// The node the production builds.
+    node: SyntaxKind,
+    /// Whether the prefix is an `OccurrenceUsagePrefix` rather than a `UsagePrefix`.
+    ///
+    /// An occurrence may carry `'individual'` and a `PortionKind` (`SysML` 8.2.2.9.2);
+    /// an attribute and an enumeration may not, because neither is an occurrence.
+    is_occurrence: bool,
+}
+
+/// Every usage production that is a prefix, one keyword and the `Usage` spine.
+///
+/// Ordered as the clauses number them. The keywords are disjoint, so the order does
+/// not decide anything — `at_simple_usage` takes the one whose keyword is written.
+const SIMPLE_USAGES: [SimpleUsage; 7] = [
+    SimpleUsage {
+        keyword: "attribute",
+        node: SyntaxKind::AttributeUsage,
+        is_occurrence: false,
+    },
+    SimpleUsage {
+        keyword: "enum",
+        node: SyntaxKind::EnumerationUsage,
+        is_occurrence: false,
+    },
+    SimpleUsage {
+        keyword: "occurrence",
+        node: SyntaxKind::OccurrenceUsage,
+        is_occurrence: true,
+    },
+    SimpleUsage {
+        keyword: "item",
+        node: SyntaxKind::ItemUsage,
+        is_occurrence: true,
+    },
+    SimpleUsage {
+        keyword: "part",
+        node: SyntaxKind::PartUsage,
+        is_occurrence: true,
+    },
+    SimpleUsage {
+        keyword: "port",
+        node: SyntaxKind::PortUsage,
+        is_occurrence: true,
+    },
+    SimpleUsage {
+        keyword: "rendering",
+        node: SyntaxKind::RenderingUsage,
+        is_occurrence: true,
+    },
+];
+
 struct Parser<'a> {
     source: &'a str,
     tokens: Vec<Token>,
@@ -251,24 +307,9 @@ impl<'a> Parser<'a> {
     /// `PackageMember = MemberPrefix ( DefinitionElement | UsageElement )`
     /// (`SysML` 8.2.2.6.1), and a definition body admits usages too, which is what
     /// makes `part def Vehicle { part engine : Engine; }` one definition holding one
-    /// usage. `PartUsage` and `AttributeUsage` are the `UsageElement`s implemented.
+    /// usage. The `UsageElement`s implemented are those in `SIMPLE_USAGES`.
     fn at_member_element(&self, n: usize) -> bool {
-        self.at_definition_element(n) || self.at_part_usage(n) || self.at_attribute_usage(n)
-    }
-
-    /// Whether an `AttributeUsage` starts at the `n`th meaningful token.
-    ///
-    /// `AttributeUsage = UsagePrefix 'attribute' Usage` (`SysML` 8.2.2.7). As with a
-    /// part, the `def` is what separates the usage from the definition, and
-    /// `AttributeDefinition` is not implemented.
-    ///
-    /// The prefix looked past is a `UsagePrefix`, which has no `'individual'` and no
-    /// `PortionKind`: an attribute is not an occurrence. Writing one is an error
-    /// rather than a longer prefix, which is what
-    /// `an_attribute_is_not_an_occurrence_and_takes_no_portion_kind` holds.
-    fn at_attribute_usage(&self, n: usize) -> bool {
-        let n = self.skip_basic_usage_prefix(n);
-        self.nth_is_keyword(n, "attribute") && !self.nth_is_keyword(n + 1, "def")
+        self.at_definition_element(n) || self.at_simple_usage(n).is_some()
     }
 
     /// The index just past a `BasicUsagePrefix` written from the `n`th token.
@@ -314,16 +355,6 @@ impl<'a> Parser<'a> {
             }
         }
         n
-    }
-
-    /// Whether a `PartUsage` starts at the `n`th meaningful token.
-    ///
-    /// `PartUsage = OccurrenceUsagePrefix 'part' Usage` (`SysML` 8.2.2.11). A usage and
-    /// a definition share every prefix keyword and the `part` after them, so the only
-    /// thing that separates them is the `def` a definition has and a usage does not.
-    fn at_part_usage(&self, n: usize) -> bool {
-        let n = self.skip_usage_prefix(n);
-        self.nth_is_keyword(n, "part") && !self.nth_is_keyword(n + 1, "def")
     }
 
     /// Whether an implemented `AnnotatingElement` starts here (`SysML` 8.2.2.4.1).
@@ -543,12 +574,12 @@ impl<'a> Parser<'a> {
     // alternations over element productions, and the element that matched already
     // says which alternative was taken, so a node here would add a level carrying
     // nothing. Neither is marked for coverage: `Package` and `PartDefinition` are
-    // the only two of `DefinitionElement`'s 30 alternatives implemented, and
-    // `PartUsage` is the only one of `UsageElement`'s.
+    // the only two of `DefinitionElement`'s 30 alternatives implemented, and the
+    // seven in SIMPLE_USAGES are what is implemented of `UsageElement`'s.
     //
     // A definition is tried before a usage. The two share every prefix keyword and
-    // the `part` after them, so `at_part_definition` — which requires the `def` —
-    // must decide first; `at_part_usage` is what is left.
+    // the keyword after them, so `at_part_definition` — which requires the `def` —
+    // must decide first; the usages are what is left.
     fn membership(&mut self, member: SyntaxKind) {
         self.eat_trivia();
         self.start_node(member);
@@ -557,26 +588,67 @@ impl<'a> Parser<'a> {
             self.package();
         } else if self.at_part_definition(0) {
             self.part_definition();
-        } else if self.at_part_usage(0) {
-            self.part_usage();
-        } else if self.at_attribute_usage(0) {
-            self.attribute_usage();
+        } else if let Some(usage) = self.at_simple_usage(0) {
+            self.simple_usage(usage);
         } else {
-            self.error_expected("a package, a part definition, a part usage or an attribute usage");
+            self.error_expected("a package, a part definition or a usage");
         }
         self.finish_node();
     }
 
     // production: AttributeUsage
+    // production: EnumerationUsage
+    // production: ItemUsage
+    // production: OccurrenceUsage
+    // production: PartUsage
+    // production: PortUsage
+    // production: RenderingUsage
     //
-    // AttributeUsage = UsagePrefix 'attribute' Usage             (SysML 8.2.2.7)
-    fn attribute_usage(&mut self) {
+    // AttributeUsage   = UsagePrefix           'attribute'  Usage  (SysML 8.2.2.7)
+    // EnumerationUsage = UsagePrefix           'enum'       Usage  (SysML 8.2.2.8)
+    // ItemUsage        = OccurrenceUsagePrefix 'item'       Usage  (SysML 8.2.2.10)
+    // OccurrenceUsage  = OccurrenceUsagePrefix 'occurrence' Usage  (SysML 8.2.2.9.2)
+    // PartUsage        = OccurrenceUsagePrefix 'part'       Usage  (SysML 8.2.2.11)
+    // PortUsage        = OccurrenceUsagePrefix 'port'       Usage  (SysML 8.2.2.12)
+    // RenderingUsage   = OccurrenceUsagePrefix 'rendering'  Usage  (SysML 8.2.2.26.3)
+    //
+    // Seven productions, one method, as PackageMember and DefinitionMember share
+    // `membership`. They differ in exactly two things — the keyword, and whether the
+    // prefix is an OccurrenceUsagePrefix or a UsagePrefix — so SIMPLE_USAGES carries
+    // those two and nothing else. Writing seven near-identical methods would not make
+    // any of them more faithful to its clause; it would make a difference between
+    // them harder to see.
+    //
+    // Each is marked separately because each IS fully implemented. What none of them
+    // implements lives below, in the prefixes and in FeatureSpecializationPart, and
+    // is recorded there.
+    fn simple_usage(&mut self, usage: SimpleUsage) {
         self.eat_trivia();
-        self.start_node(SyntaxKind::AttributeUsage);
-        self.usage_prefix();
-        self.expect_keyword("attribute");
+        self.start_node(usage.node);
+        if usage.is_occurrence {
+            self.occurrence_usage_prefix();
+        } else {
+            self.usage_prefix();
+        }
+        self.expect_keyword(usage.keyword);
         self.usage();
         self.finish_node();
+    }
+
+    /// Which of `SIMPLE_USAGES` starts at the `n`th meaningful token, if any.
+    ///
+    /// The keyword decides, and the `def` after it rules a usage out: every one of
+    /// these has a definition counterpart spelled the same way but for that word
+    /// (`SysML` 8.2.2.6.1), and none of those definitions is implemented.
+    fn at_simple_usage(&self, n: usize) -> Option<SimpleUsage> {
+        SIMPLE_USAGES.iter().copied().find(|usage| {
+            let after = if usage.is_occurrence {
+                self.skip_usage_prefix(n)
+            } else {
+                self.skip_basic_usage_prefix(n)
+            };
+            self.nth_is_keyword(after, usage.keyword) && !self.nth_is_keyword(after + 1, "def")
+        })
     }
 
     // UsagePrefix : Usage = UnextendedUsagePrefix UsageExtensionKeyword*
@@ -599,18 +671,6 @@ impl<'a> Parser<'a> {
         if self.at_basic_usage_prefix() {
             self.basic_usage_prefix();
         }
-        self.finish_node();
-    }
-
-    // production: PartUsage
-    //
-    // PartUsage = OccurrenceUsagePrefix 'part' Usage             (SysML 8.2.2.11)
-    fn part_usage(&mut self) {
-        self.eat_trivia();
-        self.start_node(SyntaxKind::PartUsage);
-        self.occurrence_usage_prefix();
-        self.expect_keyword("part");
-        self.usage();
         self.finish_node();
     }
 

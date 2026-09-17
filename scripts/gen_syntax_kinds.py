@@ -169,6 +169,11 @@ NODES = [
     ("DefinitionMember", "`MemberPrefix DefinitionElement`. `SysML` 8.2.2.6.1."),
     ("PartUsage", "`OccurrenceUsagePrefix 'part' Usage`. `SysML` 8.2.2.11."),
     ("AttributeUsage", "`UsagePrefix 'attribute' Usage`. `SysML` 8.2.2.7."),
+    ("ItemUsage", "`OccurrenceUsagePrefix 'item' Usage`. `SysML` 8.2.2.10."),
+    ("OccurrenceUsage", "`OccurrenceUsagePrefix 'occurrence' Usage`. `SysML` 8.2.2.9.2."),
+    ("PortUsage", "`OccurrenceUsagePrefix 'port' Usage`. `SysML` 8.2.2.12."),
+    ("RenderingUsage", "`OccurrenceUsagePrefix 'rendering' Usage`. `SysML` 8.2.2.26.3."),
+    ("EnumerationUsage", "`UsagePrefix 'enum' Usage`. `SysML` 8.2.2.8."),
     ("UsagePrefix", "`UnextendedUsagePrefix UsageExtensionKeyword*`. `SysML` 8.2.2.6.2."),
     (
         "OccurrenceUsagePrefix",

@@ -539,6 +539,16 @@ pub enum SyntaxKind {
     PartUsage,
     /// `UsagePrefix 'attribute' Usage`. `SysML` 8.2.2.7.
     AttributeUsage,
+    /// `OccurrenceUsagePrefix 'item' Usage`. `SysML` 8.2.2.10.
+    ItemUsage,
+    /// `OccurrenceUsagePrefix 'occurrence' Usage`. `SysML` 8.2.2.9.2.
+    OccurrenceUsage,
+    /// `OccurrenceUsagePrefix 'port' Usage`. `SysML` 8.2.2.12.
+    PortUsage,
+    /// `OccurrenceUsagePrefix 'rendering' Usage`. `SysML` 8.2.2.26.3.
+    RenderingUsage,
+    /// `UsagePrefix 'enum' Usage`. `SysML` 8.2.2.8.
+    EnumerationUsage,
     /// `UnextendedUsagePrefix UsageExtensionKeyword*`. `SysML` 8.2.2.6.2.
     UsagePrefix,
     /// `( EndUsagePrefix | BasicUsagePrefix 'individual'? PortionKind? ) UsageExtensionKeyword*`. `SysML` 8.2.2.9.2.
@@ -864,6 +874,11 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::DefinitionMember,
     SyntaxKind::PartUsage,
     SyntaxKind::AttributeUsage,
+    SyntaxKind::ItemUsage,
+    SyntaxKind::OccurrenceUsage,
+    SyntaxKind::PortUsage,
+    SyntaxKind::RenderingUsage,
+    SyntaxKind::EnumerationUsage,
     SyntaxKind::UsagePrefix,
     SyntaxKind::OccurrenceUsagePrefix,
     SyntaxKind::BasicUsagePrefix,

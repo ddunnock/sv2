@@ -144,17 +144,21 @@ fn an_unclosed_brace_is_reported_and_the_contents_are_kept() {
 
 #[test]
 fn text_no_implemented_production_accepts_becomes_an_error_node() {
-    // This case has now been `part def Engine;`, `part engine : Engine;` and
-    // `attribute mass : Real;`. Each stopped being a rejection when its production
-    // landed — PartDefinition, PartUsage (both SysML 8.2.2.11), AttributeUsage
-    // (8.2.2.7) — and the positive cases below hold all three. The property the test
-    // protects never changes: text this parser cannot read is reported, not silently
-    // accepted. Only the example has to move, and it will move again, because every
-    // usage production that lands takes the previous example with it.
+    // This case has now been `part def Engine;`, `part engine : Engine;`,
+    // `attribute mass : Real;` and `item wheel : Wheel;`. Each stopped being a
+    // rejection when its production landed, and the positive cases below hold all
+    // four. The property the test protects never changes: text this parser cannot
+    // read is reported, not silently accepted. Only the example moves.
     //
-    // `item wheel : Wheel;` is an ItemUsage (SysML 8.2.2.10), valid SysML that no
-    // production here reads. Replace it when ItemUsage lands.
-    let parsed = parse_rejected("item wheel : Wheel;");
+    // It is deliberately no longer a usage of the `<prefix> KEYWORD Usage` shape.
+    // Those now arrive in batches — seven of them are one table — so any of them
+    // would be a placeholder with a short life. A ConnectionUsage has a shape of its
+    // own, a BinaryConnectorPart naming two ends, so it will not land incidentally
+    // alongside something else.
+    //
+    // SysML 8.2.2.13 — ConnectionUsage = OccurrenceUsagePrefix 'connection'
+    //                    ConnectionUsageDeclaration ...
+    let parsed = parse_rejected("connection fuelLine connect a to b;");
     assert!(render(&parsed.syntax()).contains("Error"));
 }
 
@@ -892,12 +896,12 @@ fn a_reserved_word_cannot_name_a_part_definition() {
 #[test]
 fn unimplemented_definition_body_items_are_reported_at_the_body() {
     // The unimplemented item here moves for the same reason as the case above, and
-    // for the third time: both `part engine : Engine;` and `attribute mass : Real;`
-    // are now read, and a part usage and an attribute usage in a definition body are
-    // exercised as positive cases below. `item wheel : Wheel;` is an ItemUsage
-    // (SysML 8.2.2.10) that no production here reads. It must be reported, and the
+    // to the same construct: the usages it previously held are all read now, and each
+    // is exercised inside a definition body as a positive case below. A
+    // ConnectionUsage (SysML 8.2.2.13) is not. It must be reported, and the
     // definition after it must still parse — recovery happens at the enclosing body.
-    let parsed = parse_rejected("part def Vehicle { item wheel : Wheel; part def Wheel; }");
+    let parsed =
+        parse_rejected("part def Vehicle { connection c connect a to b; part def Wheel; }");
     let rendered = render(&parsed.syntax());
     assert_eq!(nodes_named(&rendered, "PartDefinition"), 2, "{rendered}");
 }
@@ -1283,4 +1287,93 @@ fn an_attribute_may_be_a_member_of_a_part() {
     let rendered = render(&parsed.syntax());
     assert!(rendered.contains("PartUsage"), "{rendered}");
     assert!(rendered.contains("AttributeUsage"), "{rendered}");
+}
+
+// -- the other usages of the same shape -------------------------------------------
+//
+//   ItemUsage        = OccurrenceUsagePrefix 'item'      Usage   (SysML 8.2.2.10)
+//   OccurrenceUsage  = OccurrenceUsagePrefix 'occurrence' Usage  (SysML 8.2.2.9.2)
+//   PortUsage        = OccurrenceUsagePrefix 'port'      Usage   (SysML 8.2.2.12)
+//   RenderingUsage   = OccurrenceUsagePrefix 'rendering' Usage   (SysML 8.2.2.26.3)
+//   EnumerationUsage = UsagePrefix           'enum'      Usage   (SysML 8.2.2.8)
+//
+// Each is a prefix, one keyword and the Usage spine. The occurrence four take an
+// OccurrenceUsagePrefix and so may carry 'individual' and a PortionKind; an
+// enumeration takes a UsagePrefix and may not, as an attribute may not.
+
+#[test]
+fn the_remaining_usages_build_their_own_nodes() {
+    for (source, node) in [
+        ("item wheel : Wheel;", "ItemUsage"),
+        ("occurrence o : Thing;", "OccurrenceUsage"),
+        ("port fuelPort : FuelPort;", "PortUsage"),
+        ("rendering r : AsTable;", "RenderingUsage"),
+        ("enum green : Color;", "EnumerationUsage"),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert!(
+            rendered.contains(node),
+            "{source} built no {node}:\n{rendered}"
+        );
+        assert!(rendered.contains("UsageDeclaration"), "{rendered}");
+        assert!(rendered.contains("UsageBody"), "{rendered}");
+    }
+}
+
+#[test]
+fn the_remaining_usages_as_the_corpus_writes_them() {
+    // Each line is from the pinned corpus.
+    // "17. Control/Camera.sysml" lines 9, 13 and 14.
+    parse_accepted("ref item scene : Scene;");
+    parse_accepted("in ref item scene : Scene;");
+    parse_accepted("out ref item realImage : Image;");
+    // "12. Binding Connectors/Binding Connectors Example-1.sysml" line 10 — the
+    // redefinition spelling this batch depends on.
+    parse_accepted("port redefines fuelTankPort { }");
+    // "27. Occurrences/Interaction Realization-2.sysml" line 5.
+    parse_accepted("port setSpeedPort { }");
+    // SimpleVehicleModel.sysml line 785.
+    parse_accepted("occurrence CruiseControl1 { }");
+    // "06. Enumeration Definitions/Enumeration Definitions-1.sysml" lines 5 to 7.
+    parse_accepted("enum green;");
+    // "42. Views/Views Example.sysml" line 16, and ViewTest.sysml line 38.
+    parse_accepted("rendering r2;");
+}
+
+#[test]
+fn an_enumeration_is_not_an_occurrence() {
+    // EnumerationUsage takes a UsagePrefix (SysML 8.2.2.8), which carries no
+    // 'individual' and no PortionKind — the same distinction AttributeUsage draws.
+    parse_rejected("snapshot enum green;");
+    // The occurrence usages do carry them.
+    parse_accepted("snapshot item wheel;");
+    parse_accepted("individual occurrence o;");
+    parse_accepted("timeslice port p;");
+}
+
+#[test]
+fn each_remaining_usage_is_not_its_definition() {
+    // The `def` separates usage from definition throughout (SysML 8.2.2.6.1). None of
+    // these definitions is implemented, so each is still reported: rejection by
+    // absence, which the usage landing here does not change.
+    for source in [
+        "item def Wheel;",
+        "occurrence def Thing;",
+        "port def FuelPort;",
+        "rendering def AsTable;",
+        "enum def Color;",
+    ] {
+        parse_rejected(source);
+    }
+}
+
+#[test]
+fn usages_nest_in_one_another() {
+    let parsed = parse_accepted(
+        "part vehicle : Vehicle { port fuelPort : FuelPort; item fuel : Fuel; attribute mass : MassValue; }",
+    );
+    let rendered = render(&parsed.syntax());
+    for node in ["PartUsage", "PortUsage", "ItemUsage", "AttributeUsage"] {
+        assert!(rendered.contains(node), "no {node} node:\n{rendered}");
+    }
 }
