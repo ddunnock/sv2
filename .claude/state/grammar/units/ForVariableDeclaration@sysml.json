@@ -16,7 +16,7 @@
     "xtext_rule_text": "ForVariableDeclaration returns SysML::ReferenceUsage :\n\tUsageDeclaration\n;",
     "metaclass": "SysML::ReferenceUsage"
   },
-  "notes": "UNREACHABLE as the grammar now stands, and deliberately so. ForVariableDeclarationMember was derived from its clause, which reads `ownedRelatedElement += UsageDeclaration` and so routes past this production; the Xtext references it instead. Nothing about the accepted language turns on the choice, since this rule is exactly UsageDeclaration. The unit is derived rather than left pending so that the alternative is on record and reviewable; whether to reach it from ForVariableDeclarationMember is listed there as a question to settle before freeze.",
+  "notes": "Reachable. ForVariableDeclarationMember was first derived from the literal clause text, `ownedRelatedElement += UsageDeclaration`, which left this production defined and referenced by nothing. That was adjudicated on 2026-09-17 and the member now assigns this production, as the pilot does and as SysML 8.2.2.6.2's OwnedCrossFeatureMember does for the same shape; see the deviation ForVariableDeclarationMember. Nothing about the accepted language changed, since this rule is exactly UsageDeclaration.",
   "rule": {
     "k": "ref",
     "name": "UsageDeclaration"

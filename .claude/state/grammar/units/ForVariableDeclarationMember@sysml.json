@@ -16,35 +16,40 @@
     "xtext_rule_text": "ForVariableDeclarationMember returns SysML::FeatureMembership :\n\townedRelatedElement += ForVariableDeclaration \n;",
     "metaclass": "SysML::FeatureMembership"
   },
-  "notes": "TO DECIDE BEFORE FREEZE. Following the clause here leaves ForVariableDeclaration@sysml defined and unreferenced, because this is the only production that would reach it and the clause routes around it to UsageDeclaration directly. The Xtext does reference it. Nothing about the accepted language turns on the choice \u2014 the wrapper is `UsageDeclaration` and nothing else \u2014 so it is not recorded as a deviation, but it belongs with NonFeatureChainPrimaryArgument on the list of unreachable productions to settle before the grammar is frozen. Unlike that pair, the two sources here do NOT agree, which is the argument for reconsidering it.",
+  "notes": "This was the last open structural question before the freeze, and it is now closed: ForVariableDeclaration is reachable and the SysML grammar has no unreachable production left.",
   "rule": {
     "k": "ref",
-    "name": "UsageDeclaration"
+    "name": "ForVariableDeclaration"
   },
-  "decision": "SysML 8.2.2.17.7 states `ForVariableDeclarationMember : FeatureMembership = ownedRelatedElement += UsageDeclaration`, and that is what the rule says. The Xtext writes `ownedRelatedElement += ForVariableDeclaration` instead, and the clause does define ForVariableDeclaration two lines below, as `ForVariableDeclaration : ReferenceUsage = UsageDeclaration`. Both readings accept exactly the same text, since the wrapper adds nothing, so this is not a disagreement about the language and no deviation is recorded. The clause's own wording is followed. The consequence is recorded in notes and is real: taking the clause literally leaves ForVariableDeclaration defined and referenced by nothing.",
+  "decision": "Adjudicated. SysML 8.2.2.17.7 states `ownedRelatedElement += UsageDeclaration`, and the rule departs from that literal text; the reasoning is recorded as the deviation ForVariableDeclarationMember, follow_xtext. UsageDeclaration is not an element \u2014 the pilot declares it a fragment (SysML.xtext:596), which contributes features to its caller's object rather than instantiating one \u2014 so it cannot be the target of a list-valued element assignment. The specification's own text settles which wrapper was meant: the three siblings in this clause each assign an element-producing production, 8.2.2.6.2 states the identical shape in `OwnedCrossFeatureMember` over `OwnedCrossFeature : ReferenceUsage = BasicUsagePrefix UsageDeclaration`, and `ownedRelatedElement += UsageDeclaration` appears in exactly one clause of the whole export, this one. Both readings accept the same text, so this changes no acceptance; it makes the clause's own ForVariableDeclaration reachable instead of orphaned.",
   "evidence": [
     {
       "kind": "clause",
       "ref": "sysml clause 8.2.2.17.7 (StructuredControlActionUsages.md, region_sha256 90c294385874fdc1)",
-      "note": "States the production; the rule is its transcription."
+      "note": "States the production, and defines ForVariableDeclaration two lines below it."
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.2 (Usages.md, region_sha256 a6f6e20afeed05e4)",
+      "note": "The precedent: OwnedCrossFeatureMember assigns OwnedCrossFeature, a ReferenceUsage wrapper of UsageDeclaration, not UsageDeclaration itself."
+    },
+    {
+      "kind": "deviation",
+      "ref": "ForVariableDeclarationMember",
+      "note": "Why the rule reads ForVariableDeclaration rather than UsageDeclaration."
     },
     {
       "kind": "corpus",
       "ref": "vendor/corpus/sysml/src/examples/Simple Tests/StructuredControlTest.sysml",
-      "note": "In line 32 `for n : ScalarValues::Integer in (1, 2, 3) {` this member holds `n : ScalarValues::Integer`, a UsageDeclaration with a name and a FeatureSpecializationPart."
-    },
-    {
-      "kind": "corpus",
-      "ref": "vendor/corpus/sysml/src/training/20. Assignment Actions/Assignment Example.sysml",
-      "note": "In line 25 `for vehiclePower in powerProfile {` it holds the bare name `vehiclePower`."
+      "note": "Line 32 `for n : ScalarValues::Integer in (1, 2, 3) {` is the sole instance and does not separate the two readings; both consume it identically."
     },
     {
       "kind": "xtext",
       "ref": "vendor/pilot/SysML.xtext ForVariableDeclarationMember (line 1632)",
-      "note": "Second opinion. Same language through a wrapper: its ForVariableDeclaration (1637) is exactly `UsageDeclaration`."
+      "note": "Second opinion, and the reading taken: it routes through ForVariableDeclaration (1637)."
     }
   ],
-  "derived_utc": "2026-09-17T19:00:51Z",
+  "derived_utc": "2026-09-17T19:51:41Z",
   "acceptance": {
     "has_rule": "pass",
     "has_evidence": "pass",
@@ -55,5 +60,5 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T19:00:51Z"
+  "verified_utc": "2026-09-17T19:51:41Z"
 }

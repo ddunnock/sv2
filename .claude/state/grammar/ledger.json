@@ -1,0 +1,18 @@
+{
+  "_note": "Append-only. One entry per freeze, so a future release can be compared against exactly what was frozen before it.",
+  "entries": [
+    {
+      "frozen_utc": "2026-09-17T19:52:58Z",
+      "omg_namespace": "20250201",
+      "pilot_revision": "5cca16d846016e62bb1e54e0e50e675254a022ef",
+      "productions": 554,
+      "grammar_sha256": "0b9abe64f1f3ce2b7506663be561283741fedf2623c6c8a91821b0969598dd8c",
+      "oracle": {
+        "accepted": 311,
+        "missed": 0,
+        "caught": 37,
+        "leaked": 0
+      }
+    }
+  ]
+}

@@ -6977,6 +6977,36 @@
           "note": "Xtext side read from the pinned grammar: body `'xor'`, which references no non-literal production."
         }
       ]
+    },
+    {
+      "production": "ForVariableDeclarationMember",
+      "bucket": "conflict",
+      "upstream": "SysML.xtext:1632 writes `ownedRelatedElement += ForVariableDeclaration`, routing through the ReferenceUsage-producing wrapper the clause itself defines, rather than assigning UsageDeclaration directly.",
+      "problem": "SysML 8.2.2.17.7 states `ForVariableDeclarationMember : FeatureMembership = ownedRelatedElement += UsageDeclaration`. UsageDeclaration is not an element: the pilot declares it `fragment UsageDeclaration returns SysML::Usage` (SysML.xtext:596), a fragment contributing features to whatever object its caller is building rather than instantiating one of its own, so it cannot be the target of a list-valued element assignment. Read literally the clause also leaves its own ForVariableDeclaration, defined two lines below as `ReferenceUsage = UsageDeclaration`, referenced by nothing \u2014 the only unreachable production in the SysML grammar.",
+      "decision": "follow_xtext",
+      "rationale": "A transcription slip in the clause, not a pilot workaround, and the specification's own text is what shows it. Its three siblings in the same clause each assign an element-producing production \u2014 ExpressionParameterMember to OwnedExpression, ActionBodyParameterMember to ActionBodyParameter, IfNodeParameterMember to IfNode \u2014 and ForVariableDeclarationMember is the only one that does not. Clause 8.2.2.6.2 states the identical shape this production should have: `OwnedCrossFeatureMember : OwningMembership = ownedRelatedElement += OwnedCrossFeature` over `OwnedCrossFeature : ReferenceUsage = BasicUsagePrefix UsageDeclaration`, a membership assigning a ReferenceUsage wrapper of UsageDeclaration, which is exactly what ForVariableDeclaration already is. And the string `ownedRelatedElement += UsageDeclaration` occurs in exactly one clause of the whole pinned export, this one \u2014 verified over all 558 clauses, not sampled. Both readings accept identical text, so nothing about the language turns on it; what turns on it is whether the specification's own ForVariableDeclaration is reachable or permanently orphaned. No OMG issue names either production: the SysML issue list was fetched and searched on 2026-09-17 and has no match, so none is cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the fragment declaration and the single-occurrence count were re-verified before this entry was written.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "sysml clause 8.2.2.17.7 (StructuredControlActionUsages.md, region_sha256 90c294385874fdc1)",
+          "note": "States `ForVariableDeclarationMember : FeatureMembership = ownedRelatedElement += UsageDeclaration` and, two lines below, `ForVariableDeclaration : ReferenceUsage = UsageDeclaration`."
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "sysml clause 8.2.2.6.2 (Usages.md, region_sha256 a6f6e20afeed05e4)",
+          "note": "The precedent the specification sets for this shape: `OwnedCrossFeatureMember : OwningMembership = ownedRelatedElement += OwnedCrossFeature` over `OwnedCrossFeature : ReferenceUsage = BasicUsagePrefix UsageDeclaration`. A membership assigns the wrapper, never UsageDeclaration itself."
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/StructuredControlTest.sysml",
+          "note": "Line 32 `for n : ScalarValues::Integer in (1, 2, 3) {` is the sole corpus instance and does NOT separate the two readings: both consume the same text. Recorded so that no later reader mistakes corpus silence here for corpus support."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
     }
   ],
   "unpatched": []
