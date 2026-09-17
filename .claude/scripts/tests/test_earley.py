@@ -32,8 +32,84 @@ def test_lexer_classifies_keywords_names_and_operators(lex):
     ]
 
 
-def test_lexer_skips_comments_and_notes(lex):
-    assert lex("/* c */ //* note */ // line\npart") == [("kw", "part")]
+def test_lexer_skips_notes_but_keeps_regular_comments(lex):
+    # KerML 8.2.2.2: `//* ... */` and `// ...` are notes, which are trivia. A `/* ... */`
+    # is a REGULAR_COMMENT, the body of a Comment element, and must reach the grammar.
+    assert lex("/* c */ //* note */ // line\npart") == [
+        ("tok", "REGULAR_COMMENT", "/* c */"),
+        ("kw", "part"),
+    ]
+
+
+def test_lexer_multiline_regular_comment_is_one_token(lex):
+    assert lex("/*\n * a\n */part") == [
+        ("tok", "REGULAR_COMMENT", "/*\n * a\n */"),
+        ("kw", "part"),
+    ]
+
+
+@pytest.fixture
+def numlex():
+    return make_lexer([], [".", "..", "*", "[", "]"])
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("42", [("tok", "DECIMAL_VALUE", "42")]),
+        ("2e3", [("tok", "EXPONENTIAL_VALUE", "2e3")]),
+        ("7E+10", [("tok", "EXPONENTIAL_VALUE", "7E+10")]),
+        # A real's `.` is its own token (KerML 8.2.2.4, RealValue).
+        ("2.5", [("tok", "DECIMAL_VALUE", "2"), ("kw", "."), ("tok", "DECIMAL_VALUE", "5")]),
+        (".5", [("kw", "."), ("tok", "DECIMAL_VALUE", "5")]),
+        (
+            "2.5e-3",
+            [("tok", "DECIMAL_VALUE", "2"), ("kw", "."), ("tok", "EXPONENTIAL_VALUE", "5e-3")],
+        ),
+        # A range is two decimals around `..`, not a real.
+        (
+            "[1..5]",
+            [
+                ("kw", "["),
+                ("tok", "DECIMAL_VALUE", "1"),
+                ("kw", ".."),
+                ("tok", "DECIMAL_VALUE", "5"),
+                ("kw", "]"),
+            ],
+        ),
+        # An exponent needs digits; `3e` is a decimal and a name.
+        ("3e", [("tok", "DECIMAL_VALUE", "3"), ("tok", "NAME", "e")]),
+    ],
+)
+def test_lexer_numbers_use_the_specification_terminals(numlex, text, expected):
+    assert numlex(text) == expected
+
+
+REAL = {
+    # RealValue and LiteralInteger as verified: KerML 8.2.5.8.4.
+    "RealValue": [
+        [("tok", "DECIMAL_VALUE"), kw("."), ("tok", "DECIMAL_VALUE")],
+        [("tok", "DECIMAL_VALUE"), kw("."), ("tok", "EXPONENTIAL_VALUE")],
+        [kw("."), ("tok", "DECIMAL_VALUE")],
+        [kw("."), ("tok", "EXPONENTIAL_VALUE")],
+        [("tok", "EXPONENTIAL_VALUE")],
+    ],
+    "LiteralInteger": [[("tok", "DECIMAL_VALUE")]],
+}
+
+
+@pytest.mark.parametrize("text", ["2.5", ".5", "2.5e-3", "6e23"])
+def test_numbers_reach_real_value(numlex, text):
+    assert recognize(REAL, "RealValue", numlex(text)) == (True, "ok")
+
+
+@pytest.mark.parametrize("text", ["5.", "5", "1..5"])
+def test_numbers_that_are_not_reals_are_rejected(numlex, text):
+    assert recognize(REAL, "RealValue", numlex(text))[0] is False
+
+
+def test_integer_reaches_literal_integer(numlex):
+    assert recognize(REAL, "LiteralInteger", numlex("42")) == (True, "ok")
 
 
 def test_lexer_reports_offset_of_unlexable_input(lex):

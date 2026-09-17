@@ -28,7 +28,10 @@ Productions = dict[str, list[list[Symbol]]]
 # An Earley item: production, alternative index, dot position, origin.
 Item = tuple[str, int, int, int]
 
-_SKIPPED = ("WS", "COMMENT", "LINENOTE", "MLNOTE")
+#: Trivia, per KerML 8.2.2.1-8.2.2.2: whitespace and the two note forms. A REGULAR_COMMENT
+#: (`/* ... */`) is NOT trivia. It is the body of a Comment element, and a bare one is a
+#: Comment in the model, so it is a token the grammar must see.
+_SKIPPED = ("WS", "ML_NOTE", "SL_NOTE")
 MAX_STATES = 400_000
 
 
@@ -38,14 +41,22 @@ def make_lexer(keywords: Iterable[str], operators: Iterable[str]) -> Callable[[s
     ops = sorted(operators, key=len, reverse=True)
     kws = set(keywords)
     op_re = "|".join(re.escape(o) for o in ops) if ops else r"(?!)"
+    # Token kinds carry the specification's terminal names (KerML 8.2.2), because a derived
+    # rule scans {k: tok, name: DECIMAL_VALUE} and the recognizer compares names exactly.
+    # Order is precedence among alternatives that can start at the same character:
+    # ML_NOTE `//*` before SL_NOTE `//`; EXPONENTIAL_VALUE before DECIMAL_VALUE so `2e3` is
+    # one token. A real's `.` is not part of any number token: RealValue is
+    # DECIMAL_VALUE? '.' ( DECIMAL_VALUE | EXPONENTIAL_VALUE ), so `2.5` is three tokens
+    # and `1..5` is DECIMAL_VALUE '..' DECIMAL_VALUE.
     master = re.compile(
         r"(?P<WS>\s+)"
-        r"|(?P<MLNOTE>//\*.*?\*/)"
-        r"|(?P<COMMENT>/\*.*?\*/)"
-        r"|(?P<LINENOTE>//[^\n]*)"
+        r"|(?P<ML_NOTE>//\*.*?\*/)"
+        r"|(?P<SL_NOTE>//[^\n\r]*)"
+        r"|(?P<REGULAR_COMMENT>/\*.*?\*/)"
         r"|(?P<STRING_VALUE>\"(?:[^\"\\]|\\.)*\")"
         r"|(?P<NAME>[A-Za-z_][A-Za-z0-9_]*|'(?:[^'\\]|\\.)*')"
-        r"|(?P<NUMBER>[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)"
+        r"|(?P<EXPONENTIAL_VALUE>[0-9]+[eE][+-]?[0-9]+)"
+        r"|(?P<DECIMAL_VALUE>[0-9]+)"
         r"|(?P<OP>" + op_re + r")",
         re.DOTALL,
     )
