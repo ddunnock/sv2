@@ -3,7 +3,7 @@
   "production": "AssignmentTargetMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "a268475e162e29768dbefce1071203c8c52c4eea909b9561a878f0d79d91c939",
     "xtext_rule": "fdf2fc5558868aa622768043e4fa6a87577c27d69d160afbcd0715ee87b1d20b",
@@ -16,5 +16,39 @@
     "xtext_rule_text": "AssignmentTargetMember returns SysML::ParameterMembership :\n\townedRelatedElement += TargetParameter \n;",
     "metaclass": "SysML::ParameterMembership"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "ref",
+    "name": "AssignmentTargetParameter"
+  },
+  "decision": "A transcription of SysML 8.2.2.17.5: `ownedRelatedElement += AssignmentTargetParameter`. The Xtext writes `ownedRelatedElement += TargetParameter`, which is not the same production under another name: its TargetParameter (SysML.xtext:1550) is `( => ownedRelationship += TargetBinding '.' )? ownedRelationship += TargetFeatureMember`, carrying the assigned feature inside itself, while the clause's AssignmentTargetParameter is `( ownedRelationship += AssignmentTargetBinding '.' )?` alone and AssignmentNodeDeclaration places the FeatureChainMember beside it. The two decompose the same tokens differently. The clause's decomposition is taken, consistently with AssignmentNodeDeclaration, which was derived from the same clause with FeatureChainMember as a sibling; taking the Xtext's here would state the feature twice. Its `=>` is a syntactic predicate in any case, an LL workaround that is not ported.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.5 (AssignmentActionUsages.md, region_sha256 dfe847fa0a5c6846)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml",
+      "note": "In line 20 `entry assign counter.count := 0;` this member holds `counter.` \u2014 the target parameter's optional binding and its '.' \u2014 while `count` is the sibling FeatureChainMember of AssignmentNodeDeclaration."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext AssignmentTargetMember",
+      "note": "Second opinion. A different decomposition of the same tokens, declined for consistency with AssignmentNodeDeclaration; its TargetParameter appears in no clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T19:00:51Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T19:00:51Z"
 }

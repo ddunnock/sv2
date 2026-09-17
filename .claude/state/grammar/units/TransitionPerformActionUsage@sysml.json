@@ -3,7 +3,7 @@
   "production": "TransitionPerformActionUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -16,5 +16,57 @@
     "xtext_rule_text": "",
     "metaclass": ""
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No corpus evidence is recorded. The corpus writes plenty of `do <name>` and `do action <name> { ... }`, but every instance found is a state's DoActionMember \u2014 for example Transition Actions.sysml line 36, which sits inside `state on {` on line 34 \u2014 and so is a StatePerformActionUsage rather than a transition effect. Citing one would be evidence for a different production. A perform effect on a transition is a construct the pinned corpus does not exercise. No xtext evidence either: the pilot has no rule of this name.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "PerformActionUsageDeclaration"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "{"
+            },
+            {
+              "k": "star",
+              "item": {
+                "k": "ref",
+                "name": "ActionBodyItem"
+              }
+            },
+            {
+              "k": "kw",
+              "text": "}"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.18.3: `PerformActionUsageDeclaration ( '{' ActionBodyItem* '}' )?`. There is no second opinion to weigh \u2014 the pinned pilot grammar defines no rule of this name, as it defines none for the other three transition effect forms \u2014 so the clause is the only source. The tail is braces or nothing, not an ActionBody: a transition effect cannot be terminated by a ';', because the 'then' of the transition's succession follows it. That is the one difference from StatePerformActionUsage, which is otherwise the same declaration.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+      "note": "States the production; the rule is its transcription."
+    }
+  ],
+  "derived_utc": "2026-09-17T19:01:54Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T19:01:54Z"
 }

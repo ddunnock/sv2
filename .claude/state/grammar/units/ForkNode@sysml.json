@@ -3,7 +3,7 @@
   "production": "ForkNode",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "9f6ad15d3c6276977efc7f4191cc5ceb74786e4a088c6dbbebcd16e6dd6dec08",
     "xtext_rule": "175a1a2bc2062f263ef0a3cee7dda2e71cd1a0134a1a0186258b940ca30afd3d",
@@ -16,5 +16,61 @@
     "xtext_rule_text": "ForkNode returns SysML::ForkNode :\n\tControlNodePrefix \n\tisComposite ?= 'fork' UsageDeclaration?\n\tActionBody\n;",
     "metaclass": "SysML::ForkNode"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "ControlNodePrefix"
+      },
+      {
+        "k": "kw",
+        "text": "fork"
+      },
+      {
+        "k": "ref",
+        "name": "UsageDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "ActionBody"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.3: `ControlNodePrefix isComposite ?= 'fork' UsageDeclaration ActionBody`. The `isComposite ?=` assigns into the abstract syntax and contributes no token. The Xtext's `UsageDeclaration?` is redundant against the clause's `UsageDeclaration`, since UsageDeclaration is nullable through Identification, which is what lets a fork be written bare.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.3 (ControlNodes.md, region_sha256 08ce249947265cb2)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "Line 1429 `fork fork2;` and line 1436 `fork fork3;` are this production with a named UsageDeclaration."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/19. Terminate Actions/Terminate Actions Example-1.sysml",
+      "note": "Line 11 `then fork;` is the same production with the UsageDeclaration taking its empty form."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext ForkNode",
+      "note": "Second opinion. Same tokens; its `UsageDeclaration?` is redundant."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:58:18Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:58:18Z"
 }

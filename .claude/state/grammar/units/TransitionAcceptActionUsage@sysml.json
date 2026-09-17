@@ -3,7 +3,7 @@
   "production": "TransitionAcceptActionUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -16,5 +16,57 @@
     "xtext_rule_text": "",
     "metaclass": ""
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No corpus evidence is recorded. Every `accept` found in a transition in the pinned corpus is the trigger after 'accept', not an effect after 'do', and citing one would be evidence for TriggerActionMember instead. An accept effect is a construct the corpus does not exercise. No xtext evidence either: the pilot has no rule of this name.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "AcceptNodeDeclaration"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "{"
+            },
+            {
+              "k": "star",
+              "item": {
+                "k": "ref",
+                "name": "ActionBodyItem"
+              }
+            },
+            {
+              "k": "kw",
+              "text": "}"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.18.3: `AcceptNodeDeclaration ( '{' ActionBodyItem* '}' )?`. There is no second opinion to weigh \u2014 the pinned pilot grammar defines no rule of this name. The tail is braces or nothing rather than an ActionBody, for the same reason as its three siblings: a transition effect is followed by the 'then' of the succession and so cannot take a ';' of its own. Note that this is an accept as an EFFECT, reached through 'do', and not the accept that is a transition's trigger, which is TriggerActionMember over TriggerAction.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+      "note": "States the production; the rule is its transcription."
+    }
+  ],
+  "derived_utc": "2026-09-17T19:01:54Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T19:01:54Z"
 }

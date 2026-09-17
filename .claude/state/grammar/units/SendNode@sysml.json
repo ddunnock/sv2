@@ -3,7 +3,7 @@
   "production": "SendNode",
   "scope": "sysml",
   "language": "sysml",
-  "status": "conflict",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "cf0bf22ae362f1a28f8dcf30bcf950e410f18b018592d5a5c0fd0b5cc7625d12",
@@ -16,6 +16,121 @@
     "xtext_rule_text": "SendNode returns SysML::SendActionUsage :\n\tOccurrenceUsagePrefix ActionNodeUsageDeclaration? 'send' \n\t( ActionBody\n\t| ( => \n\t\t( ownedRelationship += NodeParameterMember SenderReceiverPart?\n\t    | ownedRelationship += EmptyParameterMember SenderReceiverPart\n\t    )\n\t    ActionBody\n\t  )\n\t)\n;",
     "metaclass": "SysML::SendActionUsage"
   },
-  "notes": "CONFLICT, two defects in one clause line, both in the same direction. Not resolved here.\n\nSysML 8.2.2.17.4 states:\n    SendNode : SendActionUsage =\n    OccurrenceUsagePrefix ActionUsageDeclaration? 'send'\n    ( ownedRelationship += NodeParameterMember SenderReceiverPart?\n    | ownedRelationship += EmptyParameterMember SendReceiverPart )?\n    ActionBody\n\nvendor/pilot/SysML.xtext:1499 states:\n    OccurrenceUsagePrefix ActionNodeUsageDeclaration? 'send'\n    ( ActionBody\n    | ( => ( ownedRelationship += NodeParameterMember SenderReceiverPart?\n           | ownedRelationship += EmptyParameterMember SenderReceiverPart )\n          ActionBody ) )\n\nFIRST DISAGREEMENT - SendReceiverPart. The clause's second alternative ends in\nSendReceiverPart. That name is defined nowhere in either specification: a search\nof the whole clause export finds it in this one line and in no header. The\nXtext writes SenderReceiverPart in the same position, and SenderReceiverPart IS\ndefined, two lines below in this very clause. A rule referencing an undefined\nnonterminal cannot be derived, so this one is not a difference that can be left\nstanding either way.\n\nSECOND DISAGREEMENT - which declaration. The clause writes\nActionUsageDeclaration?, the Xtext ActionNodeUsageDeclaration?. These are\ndifferent languages, not two names for one rule:\n    ActionUsageDeclaration : ActionUsage = UsageDeclaration ValuePart?   (8.2.2.17.2)\n    ActionNodeUsageDeclaration : ActionUsage = 'action' UsageDeclaration?  (8.2.2.17.2)\nThe first has no 'action' keyword and so would admit `name send x to y;`; the\nsecond requires it and admits `action name send x to y;`. Three things side with\nthe Xtext, including the specification against itself: SendNodeDeclaration, in\nthis same clause and covering the same ground, writes `ActionNodeUsageDeclaration?\n'send' ...`; AcceptNode reaches AcceptNodeDeclaration's ActionNodeUsageDeclaration?;\nand AssignmentNodeDeclaration writes ( ActionNodeUsageDeclaration )?. SendNode's\nline is the only one of the four that differs.\n\nNOT A DISAGREEMENT, for the record: the Xtext's ( ActionBody | ( => (...) ActionBody ) )\nis the clause's ( ... )? ActionBody with the optionality hoisted into an explicit\nchoice and a '=>' syntactic predicate added to steer the parser generator. That is\nan LL workaround and must not be ported whichever way the two questions above are\nresolved; the clause's ( ... )? ActionBody is the form to keep.\n\nNo corpus instance separates the two readings: every send in the pinned corpus\nwrites no declaration at all before 'send', so the optional part is absent and\nboth readings accept all of them. The corpus cannot adjudicate this.\n\nFor the adjudicator: both questions, and whether each needs an entry in\ndeviations.json. The misspelling looks like the InstatiatedTypeMember and\nPrefixMetadataMember class already recorded there; whether either is filed on the\nOMG tracker has NOT been searched, and no issue number is cited on either.",
-  "derived_utc": "2026-09-17T18:50:21Z"
+  "notes": "The conflict notes written when this unit was flagged claimed no corpus instance separated the two readings of the declaration slot. That was wrong, and the adjudicator found the counterexample: `action publish send ...` appears in ServerSequenceOutsideRealization-2.sysml and ServerSequenceRealization-2.sysml, and `action snd send {` in ActionTest.sysml. All three were re-verified before this rule was written.",
+  "derived_utc": "2026-09-17T18:57:28Z",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "OccurrenceUsagePrefix"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "ActionNodeUsageDeclaration"
+        }
+      },
+      {
+        "k": "kw",
+        "text": "send"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "alt",
+          "items": [
+            {
+              "k": "seq",
+              "items": [
+                {
+                  "k": "ref",
+                  "name": "NodeParameterMember"
+                },
+                {
+                  "k": "opt",
+                  "item": {
+                    "k": "ref",
+                    "name": "SenderReceiverPart"
+                  }
+                }
+              ]
+            },
+            {
+              "k": "seq",
+              "items": [
+                {
+                  "k": "ref",
+                  "name": "EmptyParameterMember"
+                },
+                {
+                  "k": "ref",
+                  "name": "SenderReceiverPart"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "k": "ref",
+        "name": "ActionBody"
+      }
+    ]
+  },
+  "decision": "Adjudicated. One line of SysML 8.2.2.17.4 carries two defects, and the rule departs from the clause's literal text on both; each is recorded in deviations.json. First, the clause's second alternative ends in SendReceiverPart, which is defined nowhere in either specification, while SenderReceiverPart is defined two lines below in the same clause \u2014 a dangling reference repaired from the specification's own text (deviation SendReceiverPart-misspelling, follow_spec, SYSML21-408 open). Second, the clause writes ActionUsageDeclaration? where the Xtext and the clause's own three sibling declarations write ActionNodeUsageDeclaration?; those are different productions, the first carrying no 'action' keyword, and three files in the pinned corpus write exactly the keyword the literal reading would reject (deviation SendNode, follow_xtext, SYSML21-624 open). Not taken from the Xtext: its `( ActionBody | ( => ... ActionBody ) )` hoists the optional part into an explicit choice behind a '=>' syntactic predicate, an LL workaround for a parser generator this project does not use. The clause's `( ... )? ActionBody` says the same thing and is kept.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+      "note": "States the production. The rule follows it except at the two points recorded as deviations."
+    },
+    {
+      "kind": "deviation",
+      "ref": "SendReceiverPart-misspelling",
+      "note": "Why the second alternative reads SenderReceiverPart."
+    },
+    {
+      "kind": "deviation",
+      "ref": "SendNode",
+      "note": "Why the declaration slot reads ActionNodeUsageDeclaration?."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-2.sysml",
+      "note": "Line 23 `action publish send new Publish(someTopic, somePublication) via publicationPort;` takes the ActionNodeUsageDeclaration branch, the NodeParameterMember alternative, and the 'via' spelling of SenderReceiverPart. The literal clause reading rejects it."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml",
+      "note": "Line 21 `then send new S() to b;` takes the same alternative with no declaration and the 'to' spelling. Line 34 `action snd send {` is the construct SYSML21-624 names, with a braced ActionBody."
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "SYSML21-408",
+      "note": "Open. The misspelled reference. Page fetched and body read on 2026-09-17."
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "SYSML21-624",
+      "note": "Open. The wrong declaration production. Page fetched and body read on 2026-09-17."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext SendNode (line 1499)",
+      "note": "Second opinion. Agrees on both disputed points; its predicate-driven restructuring of the tail is declined."
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:57:28Z"
 }

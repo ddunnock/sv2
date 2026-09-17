@@ -3,7 +3,7 @@
   "production": "ActionNodeUsageDeclaration",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "1d21a99bccb8810f3e974cbe685772d27ca61795e03b0cfdb71408760696f3d8",
     "xtext_rule": "b54e6f77029daf133808c9cc29fca5531d77b0818ae27caf8e91bc88777fe7c5",
@@ -16,5 +16,51 @@
     "xtext_rule_text": "fragment ActionNodeUsageDeclaration returns SysML::ActionUsage :\n\tActionUsageKeyword UsageDeclaration?\n;",
     "metaclass": "SysML::ActionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "action"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "UsageDeclaration"
+        }
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.2: `'action' UsageDeclaration?`. The Xtext writes `ActionUsageKeyword UsageDeclaration?`, and ActionUsageKeyword (SysML.xtext:1403) is an alias for ActionKeyword (1349), which is the single literal 'action'. Two levels of alias over one keyword, so the two accept the same text and the clause's literal is written directly. The keyword is mandatory and the declaration is not, which is what makes a bare `action` legal as the head of a node that needs no name \u2014 and, since UsageDeclaration is itself nullable, the '?' here is belt and braces rather than a second reading.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.2 (ActionUsages.md, region_sha256 207a908873b90795)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/19. Terminate Actions/Terminate Actions Example-1.sysml",
+      "note": "Line 26 `action stop terminate;` has this declaration before the 'terminate' keyword: 'action' followed by the UsageDeclaration `stop`."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext ActionNodeUsageDeclaration",
+      "note": "Second opinion. Identical once ActionUsageKeyword (1403) and ActionKeyword (1349) are unwound to 'action'."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:55:06Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:55:06Z"
 }

@@ -3,7 +3,7 @@
   "production": "SenderReceiverPart",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "b0acc49d8a06f09475ca618912b3e27e9098b3007d8d27752cb899ea6c884558",
@@ -16,5 +16,101 @@
     "xtext_rule_text": "fragment SenderReceiverPart returns SysML::ActionUsage :\n\t'via' ownedRelationship += NodeParameterMember \n\t  ( 'to' ownedRelationship += NodeParameterMember )?\n\t| ownedRelationship += EmptyParameterMember\n\t  'to' ownedRelationship += NodeParameterMember\n;",
     "metaclass": "SysML::ActionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "kw",
+            "text": "via"
+          },
+          {
+            "k": "ref",
+            "name": "NodeParameterMember"
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "seq",
+              "items": [
+                {
+                  "k": "kw",
+                  "text": "to"
+                },
+                {
+                  "k": "ref",
+                  "name": "NodeParameterMember"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "EmptyParameterMember"
+          },
+          {
+            "k": "kw",
+            "text": "to"
+          },
+          {
+            "k": "ref",
+            "name": "NodeParameterMember"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.4. The clause and the Xtext state this production identically, so there is nothing to weigh. The two alternatives are the two ways a send names its ends: 'via' a sender, optionally also 'to' a receiver; or no sender at all \u2014 an EmptyParameterMember, which contributes no tokens \u2014 and 'to' a receiver. The second alternative is why `send x to y` binds `y` as the receiver rather than the sender, and why the parameter positions come out the same in both spellings. This is the production SendNode's own clause line misspells as SendReceiverPart; see the deviation of that name.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+      "note": "States the production; the rule is its transcription. The pack flags this clause as malformed, but the defect is in TriggerExpression (SYSML21-401) and not in this production."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml",
+      "note": "Line 21 `then send new S() to b;` takes the second alternative: no sender, `b` as the receiver after 'to'."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml",
+      "note": "Line 60 `entry send new CallGiveItems(\"All the items\") via apisp.APIS_HTTP;` takes the first alternative with the 'to' part absent."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "Line 1328 `do send new IgnitionCmd (ignitionOnOff=IgnitionOnOff::on) via handPort` is the first alternative again, as a transition effect."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext SenderReceiverPart (line 1516)",
+      "note": "Second opinion. Identical to the clause."
+    },
+    {
+      "kind": "deviation",
+      "ref": "SendReceiverPart-misspelling",
+      "note": "Records that SendNode's clause line references this production under a name defined nowhere."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:58:18Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:58:18Z"
 }

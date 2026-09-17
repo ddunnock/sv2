@@ -3,7 +3,7 @@
   "production": "ActionBodyParameterMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
     "xtext_rule": "ad1f4a3667e3bc9f21d65e632bf014734c6bc2ff6982a0ef01bf2f1036be5293",
@@ -16,5 +16,39 @@
     "xtext_rule_text": "ActionBodyParameterMember returns SysML::ParameterMembership :\n\townedRelatedElement += ActionBodyParameter \n;",
     "metaclass": "SysML::ParameterMembership"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "ref",
+    "name": "ActionBodyParameter"
+  },
+  "decision": "A transcription of SysML 8.2.2.17.7. The clause and the Xtext state this production identically \u2014 `ownedRelatedElement += ActionBodyParameter` in both \u2014 so there is nothing to weigh. It contributes no tokens; the braces of a branch or loop body belong to ActionBodyParameter below it. It is the member that puts a body in a parameter position, which is what makes the body of an if or a loop an argument of the node rather than a nested namespace.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.7 (StructuredControlActionUsages.md, region_sha256 90c294385874fdc1)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/StructuredControlTest.sysml",
+      "note": "The braced body opened on line 7 by `if i < 0 {` is held by this member, as is the else body opened on line 11 and the loop body on line 20."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext ActionBodyParameterMember (line 1603)",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T19:00:51Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T19:00:51Z"
 }

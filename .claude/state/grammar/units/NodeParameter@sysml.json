@@ -3,7 +3,7 @@
   "production": "NodeParameter",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "82e5df27db2b8f8bad50aee562030f0d54961fd46b0a5f5804dbfb780a6c7d99",
@@ -16,5 +16,39 @@
     "xtext_rule_text": "NodeParameter returns SysML::ReferenceUsage :\n\townedRelationship += FeatureBinding\n;",
     "metaclass": "SysML::ReferenceUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "ref",
+    "name": "FeatureBinding"
+  },
+  "decision": "A transcription of SysML 8.2.2.17.4. The clause and the Xtext state this production identically \u2014 `ownedRelationship += FeatureBinding` in both \u2014 so there is nothing to weigh. It contributes no tokens; the expression it stands for is reached through FeatureBinding, which is a FeatureValue over an OwnedExpression. Being an expression rather than a name is what lets a send payload be `new S()` or a for-loop sequence be `(1, 2, 3)`.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+      "note": "States the production; the rule is its transcription. The pack flags this clause as malformed, but the defect is in TriggerExpression (SYSML21-401) and not in this production."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml",
+      "note": "In line 21 `then send new S() to b;` one of these holds the constructor expression `new S()` and another the receiver `b`."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext NodeParameter",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T19:00:51Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T19:00:51Z"
 }

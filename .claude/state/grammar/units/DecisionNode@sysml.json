@@ -3,7 +3,7 @@
   "production": "DecisionNode",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "9f6ad15d3c6276977efc7f4191cc5ceb74786e4a088c6dbbebcd16e6dd6dec08",
     "xtext_rule": "913856bec724b1176fb7b38dbbb3b56bb939083b7de6ebb252d548828248e76e",
@@ -16,5 +16,61 @@
     "xtext_rule_text": "DecisionNode returns SysML::DecisionNode :\n\tControlNodePrefix \n\tisComposite ?= 'decide' UsageDeclaration?\n\tActionBody\n;",
     "metaclass": "SysML::DecisionNode"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "ControlNodePrefix"
+      },
+      {
+        "k": "kw",
+        "text": "decide"
+      },
+      {
+        "k": "ref",
+        "name": "UsageDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "ActionBody"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.3: `ControlNodePrefix isComposite ?= 'decide' UsageDeclaration ActionBody`. The `isComposite ?=` assigns into the abstract syntax and contributes no token. The Xtext's `UsageDeclaration?` against the clause's `UsageDeclaration` is redundant, not wider: UsageDeclaration is nullable through Identification (8.2.2.6.2 and 8.2.2.2), so both accept a decision node written with no name at all, which the corpus does. Same shape as MergeNode beside it; no deviation.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.3 (ControlNodes.md, region_sha256 08ce249947265cb2)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml",
+      "note": "Line 23 `then decide;` is this production with its UsageDeclaration taking the empty form, which is what the nullability of Identification allows."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml",
+      "note": "Line 9 `then decide D;` is the same production with `D` as the UsageDeclaration."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext DecisionNode",
+      "note": "Second opinion. Same tokens; its `UsageDeclaration?` is redundant."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:58:18Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:58:18Z"
 }

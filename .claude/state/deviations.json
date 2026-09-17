@@ -499,6 +499,71 @@
       ]
     },
     {
+      "production": "AnnotatingElement",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 75-80) writes SysML's AnnotatingElement as Comment | Documentation | TextualRepresentation | MetadataUsage.",
+      "problem": "SysML 8.2.2.4.1, in the PDF clause and in Tier B', writes `AnnotatingElement = Comment | Documentation | TextualRepresentation | MetadataFeature`, KerML 8.2.3.3.1's text word for word. MetadataFeature is KerML's production. Taken literally in SysML, it opens KerML's MetadataBody, and through NonFeatureMember the whole KerML kernel (Class, Association, Behavior and so on), inside SysML metadata annotations. SysML's own MetadataUsage is then unreachable from SysML's root.",
+      "decision": "follow_xtext",
+      "rationale": "A SysML-specific production the specification missed, not a pilot workaround. First, SysML's abstract syntax (8.3.27.3) makes MetadataUsage a MetadataFeature, so a MetadataUsage satisfies the printed alternative rather than contradicting it. Second, SysML already makes this substitution for the sibling productions in its own metadata clause: 8.2.2.27 restates PrefixMetadataAnnotation and PrefixMetadataMember over PrefixMetadataUsage in place of KerML's PrefixMetadataFeature. AnnotatingElement is the one it left as KerML wrote it. Third, it is the only place SysML's BNF names a KerML-only non-expression production that SysML has its own counterpart for; checked by scanning SysML's references to productions it does not state. Fourth, the SysML corpus uses `@X` and `metadata X about ...` 19 times at line start, and every name examined is a SysML metadata definition, not a KerML metaclass. No OMG issue names this wording; the SysML tracker was searched on 2026-09-17. SYSML21-419 treats 'MetadataUsages are AnnotatingElements' as settled, but it is about something else. Adjudicated by the grammar-adjudicator on 2026-09-17.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.4.1 Annotations (region_sha256 3c3db88367d002e9)",
+          "note": "AnnotatingElement = Comment | Documentation | TextualRepresentation | MetadataFeature"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.27 MetadataTextualNotation (region_sha256 69251565feee7639)",
+          "note": "PrefixMetadataAnnotation and PrefixMetadataMember restated over PrefixMetadataUsage : MetadataUsage, the substitution AnnotatingElement lacks"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.3.27.3 MetadataUsage",
+          "note": "MetadataUsage specializes MetadataFeature and ItemUsage"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Vehicle Example/SysML v2 Spec Annex A SimpleVehicleModel.sysml",
+          "note": "line 1128: `@Risk about engineTradeOffAnalysis::vehicle_b_engine4cyl {`, a metadata annotation typed by a SysML metadata definition"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "AnnotatingMember",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (line 71) writes AnnotatingMember as `MemberPrefix ownedRelatedElement += AnnotatingElement`, adding the nullable MemberPrefix the specification omits.",
+      "problem": "SysML 8.2.2.4.1 states AnnotatingMember : OwningMembership = ownedRelatedElement += AnnotatingElement, with no MemberPrefix. AnnotatingMember is referenced only from EnumerationBody (SysML 8.2.2.8), where it is the only route to a comment, doc, rep or metadata inside an `enum def { }` body. Everywhere else an AnnotatingElement is reached through a member production that carries MemberPrefix (PackageMember, DefinitionMember, KerML's NonFeatureMember), so literally only enumeration bodies forbid `private doc /* */`.",
+      "decision": "follow_xtext",
+      "rationale": "Filed by the SysML specification's editor as SYSML21-319, open, reported 17 July 2025 against SysML 2.0b2: AnnotatingMember lacks MemberPrefix, so AnnotatingElements in EnumerationBodies cannot have any visibility other than public, 'even though there is no such restriction in the abstract syntax'. The pilot already adds it. The corpus has no visibility keyword before comment, doc, rep or metadata anywhere, so it does not decide the point. The Xtext's `=>` predicate on EnumerationBody's EnumerationUsageMember alternative is not ported; the optional visibility is followed by a token that tells the two alternatives apart. Adjudicated by the grammar-adjudicator on 2026-09-17; the issue page was fetched and its summary read directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.4.1 Annotations (region_sha256 3c3db88367d002e9)",
+          "note": "AnnotatingMember : OwningMembership = ownedRelatedElement += AnnotatingElement, no MemberPrefix"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.8 EnumerationsTextualNotation (region_sha256 9c242a1f7811f8ef)",
+          "note": "EnumerationBody, the only production referencing AnnotatingMember"
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-319",
+          "note": "AnnotatingMember does not allow visibility; open; Ed Seidewitz, 17 July 2025, updated 27 January 2026"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
       "production": "AssignmentTargetBinding",
       "bucket": "spec_only",
       "upstream": "The Pilot Xtext declares no rule named `AssignmentTargetBinding`. Either it inlines this production into the rule that uses it, or it reaches the same construct under a different name.",
@@ -1004,6 +1069,51 @@
       ]
     },
     {
+      "production": "CaseBodyItem",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext writes CaseBodyItem as CalculationBodyItem | SubjectMember | ActorMember | ObjectiveMember, where CalculationBodyItem is ActionBodyItem | ReturnParameterMember (SysML 8.2.2.19).",
+      "problem": "SysML 8.2.2.22 states CaseBodyItem : Type = ActionBodyItem | SubjectMember | ActorMember | ObjectiveMember. 'return' is produced only by ReturnParameterMember, which ActionBodyItem does not reach, so the clause rejects a `return` member directly in a case, analysis, verification or use case body.",
+      "decision": "follow_xtext",
+      "rationale": "The specification contradicts its own grammar. SysML 7.22.2 declares a case 'a kind of calculation definition or usage', 7.19.2 lets a calculation declare its result with `return`, and the worked examples in 7.23.2 (`return fuelEconomyResult : DistancePerVolumeValue;` in analysis def FuelEconomyAnalysis) and 7.24.2 (`return verdict : VerdictKind = evaluateData.verdict;` in verification def VehicleMassTest) put `return` directly in case bodies. The corpus does the same in analysis and verification definitions and usages, including the Annex A model's `return :>> verdict = evaluatePassFail.verdict;`. The pilot reuses CalculationBodyItem, which is the reading the prose describes. No open SysML issue title names CaseBodyItem or return parameters in cases (the open list was read on 2026-09-17); issue bodies and closed issues were not searched, so none is cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the 7.22.2, 7.23.2 and 7.24.2 text was rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.22 CasesTextualNotation (region_sha256 3fa44e95d6e4ec23)",
+          "note": "CaseBodyItem without ReturnParameterMember"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 7.22.2 Case-Definitions-and-Usages (region_sha256 eb25a69f33cb475f)",
+          "note": "'a kind of calculation definition or usage'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 7.23.2 Analysis-Case-Definitions-and-Usages (region_sha256 2aa2d6ceaad20fca)",
+          "note": "`return fuelEconomyResult : DistancePerVolumeValue;` in an analysis def body"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 7.24.2 Verification-Case-Definitions-and-Usages (region_sha256 d518fc8c6f0142e0)",
+          "note": "`return verdict : VerdictKind = evaluateData.verdict;` in a verification def body"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/training/33. Analysis/Analysis Case Definition Example.sysml",
+          "note": "line 84: `return fuelEconomyResult : DistancePerVolumeValue = solveForFuelConsumption.fuelEconomy;`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+          "note": "line 1235: `return :>> verdict = evaluatePassFail.verdict;`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clauses belong to."
+        }
+      ]
+    },
+    {
       "production": "CaseDefKeyword",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `CaseDefKeyword: CaseKeyword 'def';`.",
@@ -1464,6 +1574,31 @@
       ]
     },
     {
+      "production": "ControlNodePrefix",
+      "bucket": "spec_only",
+      "upstream": "The pilot spells the literal correctly: `( isIndividual ?= 'individual' )?` at SysML.xtext, in the ControlNodePrefix fragment. The defect is internal to the specification clause.",
+      "problem": "SysML 8.2.2.17.3 prints `( isIndividual ?= 'individual )?` with no closing quote. Read literally the literal never terminates, so it swallows the rest of the clause and the production cannot be derived at all. Every control node reaches this prefix, so the defect blocks merge, decide, join and fork alike.",
+      "decision": "follow_spec",
+      "rationale": "Close the quote: the intended literal is 'individual', which is what the attribute name isIndividual, the surrounding `?=` idiom and the pilot grammar all say. The repair is the minimal one and adds no alternative the clause does not state. Filed as SYSML21-400, open. The `{ isPortion = true }` beside it is an abstract-syntax assignment and contributes no token, so it does not appear in the rule.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "sysml clause 8.2.2.17.3 (ControlNodes.md, region_sha256 08ce249947265cb2)",
+          "note": "Prints `( isIndividual ?= 'individual )?`, the opening quote unmatched."
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-400",
+          "note": "EXACT MATCH, page fetched and body read on 2026-09-17: 'ControlNodePrefix missing closing quote after 'individual', status open, source Emerson (Kent Johnson), reported Mon 27 Oct 2025. The body quotes the whole production."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
       "production": "CrossesKeyword",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `CrossesKeyword: '=>' | 'crosses';`.",
@@ -1544,6 +1679,46 @@
       ]
     },
     {
+      "production": "DefaultReferenceUsage",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 630-633) writes DefaultReferenceUsage as `( isEnd ?= 'end' )? RefPrefix UsageDeclaration ValuePart? UsageBody`: an optional bare 'end' flag, and otherwise the specification's RefPrefix Usage unfolded. Its UsageDeclaration (FeatureDeclaration) is Identification FeatureSpecializationPart? | FeatureSpecializationPart with a non-nullable Identification, so a declaration is always present.",
+      "problem": "SysML 8.2.2.6.3 states DefaultReferenceUsage : ReferenceUsage = RefPrefix Usage, with no 'end'. Only InterfaceDefinition has its own end production (DefaultInterfaceEnd, 8.2.2.14.1); connection and allocation definition bodies reach a keyword-less member only through DefinitionBodyItem, NonOccurrenceUsageElement and DefaultReferenceUsage. Literally, `end logical : LogicalElement;` in an allocation def and `end end1;` in a connection def have no production that accepts them. Separately, by the clause's letter every part of DefaultReferenceUsage can be empty (RefPrefix, UsageDeclaration through the nullable Identification of KerML 8.2.3.1, ValuePart) and UsageBody can be ';', so a lone ';' is a member: `package Vehicle;;` and `public;` both parse.",
+      "decision": "follow_xtext",
+      "rationale": "The corpus writes keyword-less ends in connection and allocation definitions, and nothing else in the specification parses them: `end logical : LogicalElement;` (training 38, Allocation Definition Example.sysml line 32, and validation 12b-Allocation-1.sysml line 47), `end hitch : HitchBall;` (validation 3c, mod-1 and mod-2, line 13), `end end1;` (Simple Tests/ConnectionTest.sysml line 33). Only the bare 'end' flag the pilot uses is added, not EndUsagePrefix's OwnedCrossFeatureMember option, which nothing here needs. The adjudicator found that the pack's own corpus snippets for this unit do not exercise it (interface ends, comments, and `end item` members); the `end item` form points to the same gap in OccurrenceUsagePrefix, which is its own unit. No open SysML issue title names DefaultReferenceUsage or end usages without 'ref' (open list read on 2026-09-17); bodies and closed issues were not searched. Adjudicated by the grammar-adjudicator on 2026-09-17; two corpus lines were rechecked directly. SECOND CHANGE, 2026-09-17, at the user's direction: the declaration must not be empty (a name or a FeatureSpecializationPart), as in the pilot. An empty member is not a declaration of anything, and the project's negative cases stray-semicolon.sysml and package-member-visibility-without-element.sysml encode that; Spec42 also rejects `package Vehicle;;`, `public;` and `package P { ; }`. Spec42 does not calibrate the finer boundary, since it rejects `in x;` and `x;`, which the corpus uses. Anonymous declarations such as `: T;` and `:> x;` keep parsing through FeatureSpecializationPart.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.3 ReferenceUsages (region_sha256 27505145913280ac)",
+          "note": "DefaultReferenceUsage = RefPrefix Usage, no 'end'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.14.1 InterfaceDefinitions (region_sha256 86fc09c62954e744)",
+          "note": "DefaultInterfaceEnd = isEnd ?= 'end' Usage, an end production for interfaces only"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/training/38. Allocation/Allocation Definition Example.sysml",
+          "note": "line 32: `end logical : LogicalElement;` in `allocation def LogicalToPhysical {`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml",
+          "note": "line 33: `end end1;` in `abstract connection def C {`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml",
+          "note": "line 33: `end end1;`, a keyword-less end with a name, still accepted"
+        }
+      ]
+    },
+    {
       "production": "DefinedByKeyword",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `DefinedByKeyword: ':' | 'defined' 'by';`.",
@@ -1560,6 +1735,71 @@
           "kind": "file_id",
           "ref": "ptc/25-02-15",
           "note": "Xtext side verified directly against the pinned grammar: the rule body extracted from vendor/pilot/*.xtext is `':' | 'defined' 'by'`, character for character the same alternation the specification states."
+        }
+      ]
+    },
+    {
+      "production": "DefinitionElement",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext writes DefinitionElement with the specification's 29 alternatives plus AllocationDefinition, between InterfaceDefinition and PortDefinition. The Xtext also places MetadataDefinition after ItemDefinition, which does not change the language.",
+      "problem": "SysML 8.2.2.5.2 lists 29 DefinitionElement alternatives and omits AllocationDefinition, which SysML 8.2.2.15 defines as OccurrenceDefinitionPrefix 'allocation' 'def' Definition, the same shape as the listed ConnectionDefinition. In the clause export, AllocationDefinition appears only in its own clause (the keys AllocationDefinition, AllocationUsage and AllocationUsageDeclaration, which share one text). Taken literally, the specification defines AllocationDefinition and reaches it from nowhere, so `allocation def` cannot be written as a package member. The Usage side has no matching gap: SysML 8.2.2.6.4 lists AllocationUsage in StructureUsageElement.",
+      "decision": "follow_xtext",
+      "rationale": "An editorial omission in the enumeration, not a pilot workaround: the Xtext's extra alternative is a plain alternative in an unordered list, with no inlining, narrowing or predicate. The corpus decides it with the specification's own worked example: the Annex A SimpleVehicleModel has `allocation def LogicalToPhysical{` as a direct member of `package AllocationDefinitions{` at line 338, and Simple Tests/AllocationTest.sysml has `allocation def A;` and `allocation def Logical_to_Physical :> A {` as package members at lines 22 and 24. A grammar that follows the clause rejects its own Annex A. The adjudicator searched the SysML tracker's open and closed issue lists for AllocationDefinition and DefinitionElement on 2026-09-17 and found no issue naming this omission; no issue is cited because none was read. Adjudicated by the grammar-adjudicator on 2026-09-17; the clause texts and corpus lines were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.5.2 PackageElements (region_sha256 15ebea5bc9c7f610)",
+          "note": "DefinitionElement = Package | ... | ExtendedDefinition, with no AllocationDefinition"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.15 AllocationsTextualNotation (region_sha256 c49ff28fffcd621a)",
+          "note": "AllocationDefinition = OccurrenceDefinitionPrefix 'allocation' 'def' Definition"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.4 BodyElements (region_sha256 ae188991c8997bec)",
+          "note": "StructureUsageElement includes AllocationUsage, so the Usage side has no parallel gap"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Vehicle Example/SysML v2 Spec Annex A SimpleVehicleModel.sysml",
+          "note": "line 338: `allocation def LogicalToPhysical{` inside `package AllocationDefinitions{`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/AllocationTest.sysml",
+          "note": "lines 22 and 24: `allocation def A;` and `allocation def Logical_to_Physical :> A {` as package members"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "DefinitionExtensionKeyWord-casing",
+      "bucket": "spec_only",
+      "upstream": "Not an Xtext matter: SysML.xtext's MetadataDefinition references DefinitionExtensionKeyword with the defined casing. This is a defect internal to the specification clause.",
+      "problem": "SysML 8.2.2.27 writes MetadataDefinition's body as `( isAbstract ?= 'abstract')? DefinitionExtensionKeyWord* 'metadata' 'def' Definition`, with a capital W. The production is defined as DefinitionExtensionKeyword in SysML 8.2.2.6.1 and referenced with that casing everywhere else, including ExtendedDefinition in the same clause. Read literally, MetadataDefinition contains a dangling reference.",
+      "decision": "follow_spec",
+      "rationale": "Follow the defined spelling, DefinitionExtensionKeyword. The definition is the load-bearing occurrence and the capitalised reference resolves to nothing; ExtendedDefinition, in the same clause, already uses the defined casing, so the clause disagrees with itself in one place. Tier B' writes DefinitionExtensionKeyword at SysML-textual-bnf.kebnf line 1669, repairing it without comment, the pattern recorded for InstatiatedTypeMember-misspelling and MetaClassificationTestOperator-casing. Whether an OMG issue names it was not searched, so none is cited.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.27 MetadataTextualNotation (region_sha256 69251565feee7639)",
+          "note": "MetadataDefinition reads DefinitionExtensionKeyWord*; ExtendedDefinition in the same clause reads DefinitionExtensionKeyword+"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.1 Definitions",
+          "note": "defines DefinitionExtensionKeyword : Definition"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
         }
       ]
     },
@@ -1864,6 +2104,76 @@
       ]
     },
     {
+      "production": "EntryTransitionMember",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (line 1796) writes the second alternative as 'then' ownedRelatedElement += TransitionSuccession.",
+      "problem": "SysML 8.2.2.18.1 prints EntryTransitionMember : FeatureMembership : MemberPrefix ( GuardedTargetSuccession | 'then' TargetSuccession ) ';'. TargetSuccession (8.2.2.17.8) is SourceEndMember 'then' ConnectorEndMember and carries its own 'then', so the printed alternative reads `then then target;`. TransitionSuccession (8.2.2.18.3) is EmptyEndMember ConnectorEndMember, with no 'then'. The header also ends in ':' where '=' belongs.",
+      "decision": "follow_xtext",
+      "rationale": "TargetSuccession is written where TransitionSuccession is meant: the two names differ by one word and sit in adjacent clauses, and the printed form doubles 'then'. The corpus writes a single 'then' after an entry action, e.g. Arrowhead Framework Example/AHFNorwayTopics.sysml lines 60-61, `entry send new CallGiveItems(\"All the items\") via apisp.APIS_HTTP;` then `then Wait;`, and no doubled 'then' occurs anywhere. The malformed header is filed as item 8 of SYSML21-402 (open, page read), which does not mention the succession; the substitution is unfiled as far as the open SysML issue list shows (read 2026-09-17). Adjudicated by the grammar-adjudicator on 2026-09-17; both succession bodies, the corpus lines and SYSML21-402 were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.18.1 StateDefinitions (region_sha256 0119cca482071cd3)",
+          "note": "'then' ownedRelatedElement += TargetSuccession, header ending ':'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.17.8 ActionSuccessions (region_sha256 e5f3ae624be80231)",
+          "note": "TargetSuccession = SourceEndMember 'then' ConnectorEndMember"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.18.3 TransitionUsages (region_sha256 2da333dc19880d39)",
+          "note": "TransitionSuccession = EmptyEndMember ConnectorEndMember"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml",
+          "note": "lines 60-61: `entry send new CallGiveItems(\"All the items\") via apisp.APIS_HTTP;` / `then Wait;`"
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-402",
+          "note": "item 8, `EntryTransitionMember : FeatureMembership :`, the malformed header only"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "EnumeratedValue",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 784-786) writes EnumeratedValue as `UsageExtensionKeyword* EnumerationUsageKeyword? Usage`, allowing prefix metadata before an enumerated value.",
+      "problem": "SysML 8.2.2.8 states EnumeratedValue : EnumerationUsage = 'enum'? Usage, with no UsageExtensionKeyword*. Every other usage takes prefix metadata through UsagePrefix or OccurrenceUsagePrefix (8.2.2.6.2, 8.2.2.9.2), and EnumerationDefinition in the same clause keeps DefinitionExtensionKeyword*. Literally, `#Security enum secret : ClassificationLevel = 2;` in an enumeration body cannot parse.",
+      "decision": "follow_xtext",
+      "rationale": "The corpus writes it: Simple Tests/MetadataTest.sysml line 9, `#Security enum secret : ClassificationLevel = 2;`, inside `#Security enum def ClassificationLevel :> ScalarValues::Natural {`. EnumeratedValue is the only usage production without extension keywords, and nothing in the specification says enumerated values cannot carry prefix metadata. The pilot's extra alternative has no predicate or inlining. No SysML issue names 8.2.2.8 or EnumeratedValue (open list read on 2026-09-17); SYSML21-360 corrects the same kind of omission in the graphical enumeration notation (8.2.3.8), a different clause, so it is not cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the corpus line was rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.8 EnumerationsTextualNotation (region_sha256 9c242a1f7811f8ef)",
+          "note": "EnumeratedValue = 'enum'? Usage, while EnumerationDefinition keeps DefinitionExtensionKeyword*"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.2 Usages (region_sha256 a6f6e20afeed05e4)",
+          "note": "UsagePrefix = UnextendedUsagePrefix UsageExtensionKeyword*"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/MetadataTest.sysml",
+          "note": "line 9: `#Security enum secret : ClassificationLevel = 2;`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
       "production": "EnumerationDefKeyword",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `EnumerationDefKeyword: EnumerationKeyword 'def';`.",
@@ -2129,6 +2439,46 @@
       ]
     },
     {
+      "production": "ExpressionBody",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 2436-2439) overrides `ExpressionBody returns SysML::Expression : CalculationBody`, so every SysML expression body, including select, collect and forAll bodies, reads SysML's calculation body.",
+      "problem": "SysML does not state ExpressionBody. Taken literally, it falls back to KerML 8.2.5.8.3, `ExpressionBody : Expression = '{' FunctionBodyPart '}'`, whose TypeBodyElement and ReturnFeatureMember (KerML 8.2.5.7.1) reach the KerML kernel. A SysML `{ ... }` expression body would then contain KerML elements, and SysML usages would be rejected in it.",
+      "decision": "follow_xtext",
+      "rationale": "Decided by the corpus, with the pilot agreeing. `vendor/corpus/sysml/src/validation/07-Variant Configuration/7b-Variant Configurations.sysml` line 127, `rearWheelChoice->forAll {in ref w; w == rearWheelChoice::narrowRimWheel}`, and `15-Properties-Values-Expressions/15_05-Unification of Expression and Constraint Definition.sysml` line 9, `wheelAssy->forAll {in ref w: WheelAssy;`, put `ref` in an expression body parameter. `ref` is SysML's usage prefix; KerML's BasicFeaturePrefix (8.2.4.3.1) has no such option. So these cannot parse under KerML's body. SysML itself states CalculationBody (8.2.2.19) as `';' | '{' CalculationBodyPart '}'` over SysML's ActionBodyItem, and the pilot routes every expression body through it. SysML's statement that it uses 'the expression notation from [KerML]' covers the operator and primary layer, and nothing in SysML says expression bodies hold KerML kernel elements. No OMG issue settles it; SysML and KerML trackers were searched on 2026-09-17. Adjudicated by the grammar-adjudicator on 2026-09-17; the corpus lines and KerML's BasicFeaturePrefix were checked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.8.3 BaseExpressions",
+          "note": "ExpressionBody : Expression = '{' FunctionBodyPart '}', the literal fallback"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.19 CalculationsTextualNotation (region_sha256 ee541841395079da)",
+          "note": "CalculationBody = ';' | '{' CalculationBodyPart '}', over SysML usages"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.4.3.1 Features (region_sha256 c9b4ff39176a7e05)",
+          "note": "BasicFeaturePrefix has direction, derived, abstract, composite/portion and var/const, and no `ref`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/validation/07-Variant Configuration/7b-Variant Configurations.sysml",
+          "note": "line 127: `rearWheelChoice->forAll {in ref w; w == rearWheelChoice::narrowRimWheel}`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_05-Unification of Expression and Constraint Definition.sysml",
+          "note": "line 9: `wheelAssy->forAll {in ref w: WheelAssy;`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
       "production": "ExpressionDeclaration",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `ExpressionDeclaration: FeatureDeclaration? ValuePart?;`.",
@@ -2294,6 +2644,36 @@
       ]
     },
     {
+      "production": "FilterPackageImport",
+      "bucket": "conflict",
+      "upstream": "SysML.xtext (and KerML.xtext) define `FilterPackageImport: FilterPackageMembershipImport | FilterPackageNamespaceImport`, whose two helpers are ImportedMembership and ImportedNamespace. They admit the same import forms without the nested-FilterPackage alternative of NamespaceImport.",
+      "problem": "SysML 2.0 clause 8.2.2.5.1 uses FilterPackageImport in `FilterPackage : Package = ownedRelationship += FilterPackageImport ( ownedRelationship += FilterPackageMember )+` and never defines it. The PDF (page 199, printed 167) goes from FilterPackage straight to FilterPackageMember. As printed, SysML's filter-package syntax cannot be derived from the normative clause.",
+      "decision": "follow_spec",
+      "rationale": "Take the definition from the specification's own machine-readable BNF, Tier B' (vendor/spec-bnf/SysML-textual-bnf.kebnf line 172, clause 8.2.2.5.1): `FilterPackageImport : Import = ImportDeclaration { visibility = 'public' }`. It is not normative, but it is the specification's transcription, not the pilot's. KerML 8.2.3.4.2's FilterPackage uses ImportDeclaration directly, so the two languages then accept the same filter-package syntax. OMG has the omission as SYSML21-449, 'Undefined rules in the text notation grammar', which names FilterPackageImport as referenced on page 200 and undefined. The pilot's two helpers accept the same token sequences: a nested filter package only adds further bracketed members. So following Tier B' changes structure, not the language. Revisit when SYSML21-449 is resolved. The same issue names CalculationUsageDeclaration as undefined (page 188), which will need the same treatment when its unit comes up.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.5.1 Packages (region_sha256 3ee603b1b89d4345)",
+          "note": "FilterPackage references FilterPackageImport; no production defines it. Confirmed in the clause export and in the SysML 2.0 PDF, page 199."
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-449",
+          "note": "EXACT MATCH. 'Undefined rules in the text notation grammar.', open, filed 11 Nov 2025 by Andrew Myers against SysML 2.0. It names FilterPackageImport, referenced on page 200, and CalculationUsageDeclaration, page 188, as undefined. Fetched and read on 2026-09-17."
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.3.4.2 Imports (region_sha256 a2610efd00be16cc)",
+          "note": "KerML's FilterPackage uses ImportDeclaration where SysML writes FilterPackageImport."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
       "production": "FilterPackageMemberVisibility",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `FilterPackageMemberVisibility: private = '[';`.",
@@ -2354,6 +2734,51 @@
       ]
     },
     {
+      "production": "FlowDeclaration",
+      "bucket": "conflict",
+      "upstream": "KerML.xtext writes FlowDeclaration's first alternative as `FeatureDeclaration? ValuePart? ( 'of' PayloadFeatureMember )? ( 'from' FlowEndMember 'to' FlowEndMember )?`, with the declaration optional.",
+      "problem": "KerML 8.2.5.9.2 writes `FeatureDeclaration ValuePart? ...` with no '?'. The specification's FeatureDeclaration (8.2.4.3.1) cannot derive the empty string, so as printed, `flow of P from a.b to c.d;` and `flow from a.b to c.d;` are rejected. The pilot accepts them.",
+      "decision": "follow_xtext",
+      "rationale": "EXTRAPOLATED, NOT CITED, and weaker than the Step entry this follows. KERML11-181 was fetched and read in full: it names only 8.2.5.7.2 Expression and 8.2.5.7.4 BooleanExpression/Invariant, not Flow or 8.2.5.9.2. KERML11-114, the one issue on this clause's flow productions, concerns only the stale ItemFlowDeclaration name. The decision rests on four points. First, the clause shape matches the Expression and Step productions KERML11-181 and the Step entry cover, `FeatureDeclaration? ValuePart?` in the pilot. Second, KerML 8.2.5.5.1 Connector writes `FeatureDeclaration?` explicitly in the specification text. Third, this production's own second alternative already permits a fully anonymous flow, `( 'all' )? FlowEndMember 'to' FlowEndMember`, so a mandatory declaration only when `of` or `from` is used would be an odd asymmetry. Fourth, the SysML FlowDeclaration, whose UsageDeclaration is nullable, is used declaration-less throughout the SysML corpus; that is indirect evidence only. It is weaker than Step because the pilot's FlowDeclaration is its own fragment, not a body shared with ExpressionDeclaration, and because no KerML corpus file uses the first alternative without a declaration. Revisit if an issue naming 8.2.5.9.2 is filed, or a KerML corpus instance appears either way. If this is wrong, nothing in this repository will notice. Adjudicated by the grammar-adjudicator on 2026-09-17; its premises were checked against the clause export.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.9.2 Flows (region_sha256 150b0ccc1e0d5422)",
+          "note": "FlowDeclaration = FeatureDeclaration ValuePart? ..., with no '?' on FeatureDeclaration."
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.4.3.1 Features (region_sha256 c9b4ff39176a7e05)",
+          "note": "FeatureDeclaration cannot derive the empty string: the FeatureIdentification | FeatureSpecializationPart | ConjugationPart group is required, and each branch consumes a token."
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "KERML11-181",
+          "note": "PATTERN EVIDENCE ONLY, NOT AUTHORITY. Fetched and read in full on 2026-09-17. It names 8.2.5.7.2 and 8.2.5.7.4 only; it does not name Flow, SuccessionFlow or 8.2.5.9.2."
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "KERML11-114",
+          "note": "Checked and excluded. 'Flow and SuccessionFlow reference missing ItemFlowDeclaration', open, filed 2 Nov 2025 against KerML 1.0. It concerns the name only, not declaration optionality. Fetched and read on 2026-09-17."
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.5.1 Connectors (region_sha256 ff47294b20bdba3f)",
+          "note": "Connector writes FeatureDeclaration? explicitly, the pattern the Step entry also relies on."
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Behaviors.kerml",
+          "note": "line 18: `flow a.y to b.x1;`, the second, declaration-less alternative. Not evidence for the first."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "The KerML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
       "production": "FlowDefKeyword",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `FlowDefKeyword: FlowKeyword 'def';`.",
@@ -2370,6 +2795,41 @@
           "kind": "file_id",
           "ref": "ptc/25-02-15",
           "note": "Xtext side read from the pinned grammar: body `FlowKeyword 'def'`, which references no non-literal production."
+        }
+      ]
+    },
+    {
+      "production": "FlowEndSubsetting",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 1325-1330) writes FlowEndSubsetting's first alternative as `referencedFeature = [SysML::Feature | QualifiedName] '.'`, with the trailing '.' the specification omits.",
+      "problem": "SysML 8.2.2.16 states FlowEndSubsetting = referencedFeature = [QualifiedName] | referencedFeature = FeatureChainPrefix, and FlowEnd = FlowEndSubsetting? FlowFeatureMember. QualifiedName separates segments with '::' only (KerML 8.2.3.4.1), and FeatureChainPrefix, ( OwnedFeatureChaining '.' )+ OwnedFeatureChaining '.', needs at least two chainings and two dots. So a two-segment end such as `p1.torque` has nowhere for its dot: the first alternative would read `from p1 torque`, and the second needs `a.b.` before the flow feature.",
+      "decision": "follow_xtext",
+      "rationale": "The dot is missing from the first alternative, not optional: nothing else in the clause can consume it, and SysML's own KerML base states FlowEnd with the dot (KerML 8.2.5.9.2, ( OwnedReferenceSubsetting '.' )? FlowFeatureMember). The corpus uses the two-segment form throughout; the adjudicator counted 121 flow ends of that shape, among them the Annex A model's first flow, `flow p1.torque to p2.torque;`. Three-segment ends parse through FeatureChainPrefix as written, so only the first alternative changes. No open SysML issue title names FlowEnd, FlowEndSubsetting or FeatureChainPrefix (the open list was read on 2026-09-17); closed issues were not searched. Adjudicated by the grammar-adjudicator on 2026-09-17; the clause, Xtext and corpus line were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.16 FlowsTextualNotation (region_sha256 e03f363eef9b4cf1)",
+          "note": "FlowEndSubsetting's first alternative is [QualifiedName] with no '.'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.3.4.1 Namespaces (region_sha256 893fa9cef98e60fc)",
+          "note": "QualifiedName segments are separated by '::' only"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.9.2 Flows (region_sha256 150b0ccc1e0d5422)",
+          "note": "FlowEnd = ( OwnedReferenceSubsetting '.' )? FlowFeatureMember, with the dot"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+          "note": "line 316: `flow p1.torque to p2.torque;`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
         }
       ]
     },
@@ -2510,6 +2970,41 @@
           "kind": "file_id",
           "ref": "ptc/25-02-15",
           "note": "Xtext side read from the pinned grammar: body `requirement = 'frame'`, which references no non-literal production."
+        }
+      ]
+    },
+    {
+      "production": "FramedConcernUsage",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 2082-2087) gives both alternatives RequirementBody, and the keyword alternative ConstraintUsageDeclaration; the Tier B' transcription writes the same.",
+      "problem": "SysML 8.2.2.21.1 prints FramedConcernUsage : ConcernUsage = OwnedReferenceSubsetting FeatureSpecializationPart? CalculationBody | ( UsageExtensionKeyword* 'concern' | UsageExtensionKeyword+ ) CalculationUsageDeclaration CalculationBody. CalculationUsageDeclaration is defined nowhere, and a concern is a requirement usage, whose body is RequirementBody.",
+      "decision": "follow_xtext",
+      "rationale": "The printed production is defective and filed: SYSML21-366 (open, Ed Seidewitz, page read) reports that CalculationUsageDeclaration is not defined in the grammar, and SYSML21-449 (open, page read earlier this session) lists it among undefined rules at page 188. The pilot and Tier B' both read it as RequirementUsage reads its own declaration and body, ConstraintUsageDeclaration RequirementBody; ConcernUsage specializes RequirementUsage in the abstract syntax, and only RequirementBody holds subject, stakeholder and nested require, assume and frame members. The corpus has three `frame concern` members, all with ';' bodies (e.g. `frame concern vs:VehicleSafety;`), so it does not exercise the body. Adjudicated by the grammar-adjudicator on 2026-09-17; SYSML21-366 was rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.21.1 RequirementDefinitions (region_sha256 fd824f1d9da5f780)",
+          "note": "FramedConcernUsage with CalculationBody and the undefined CalculationUsageDeclaration"
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-366",
+          "note": "Error in FramedConcernUsage production: CalculationUsageDeclaration is not defined"
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-449",
+          "note": "lists CalculationUsageDeclaration as undefined, page 188"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+          "note": "line 1546: `frame concern vs:VehicleSafety;`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
         }
       ]
     },
@@ -3124,6 +3619,56 @@
       ]
     },
     {
+      "production": "LibraryPackage",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/KerML.xtext writes LibraryPackage as `( isStandard ?= 'standard' )? 'library' ( ownedRelationship += PrefixMetadataMember )* PackageDeclaration PackageBody`, with 'standard' optional.",
+      "problem": "KerML 8.2.5.13 and SysML 8.2.2.5.1 both print `( isStandard ?= 'standard' ) 'library' ...` with no '?' on the group, which makes 'standard' mandatory and isStandard always true. As printed, the grammar rejects KerML 7.4.14's own example `library package AddressBooks {` and every library package in the corpus, none of which is standard.",
+      "decision": "follow_xtext",
+      "rationale": "The printed rule contradicts the specification around it. KerML 7.4.14 gives `library package AddressBooks {` without 'standard' and says only library packages from the Kernel Model Libraries or other recognized standard libraries should be identified as standard. The LibraryPackage metaclass (8.3.4.13.3) says isStandard 'should only be set to true' for those libraries, so false must be writable. The adjudicator found that the BNF's other standalone flag groups (isAbstract, isDerived, isReference, isImportAll and the rest) carry the trailing '?', and a bare `x ?= 'kw'` appears only where the keyword is the fixed opener of an alternative, which 'standard' is not. The corpus writes `library package` without 'standard' 9 times and never with it; the adjudicator reports that the pinned Tier A standard-library KPARs open with `standard library package` throughout. SysML restates KerML's text word for word, so it is one defect printed twice. The adjudicator read the KerML and SysML issue pages on 2026-09-17 and found no issue naming it; KERML11-10 (the keyword table) and SYSML21-267 (graphical notation) were read and are not about this. The pages may list open issues only, so the search is not conclusive, and no issue is cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the 7.4.14 and 8.3.4.13.3 wording and the corpus lines were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.13 PackagesConcreteSyntax (region_sha256 2f4d82cdd704641c)",
+          "note": "LibraryPackage = ( isStandard ?= 'standard' ) 'library' ..., no '?' on the group"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.5.1 Packages (region_sha256 3ee603b1b89d4345)",
+          "note": "the same text"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 7.4.14 Packages (region_sha256 e880cedb0b8e7d88)",
+          "note": "`library package AddressBooks {`, and only recognized standard libraries should be identified as standard"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.3.4.13.3 LibraryPackage (region_sha256 f7889cd6519491ac)",
+          "note": "isStandard 'should only be set to true' for standard libraries"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/kerml/src/examples/Simple Tests/MetadataTest.kerml",
+          "note": "line 4: `library package 'User Defined Extensions' {`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFCoreLib.sysml",
+          "note": "line 2: `library package AHFCoreLib {`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "The KerML Tier A pin the governing clause belongs to."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the restated clause belongs to."
+        }
+      ]
+    },
+    {
       "production": "ML_NOTE",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `terminal ML_NOTE: '//*'->'*/';`",
@@ -3390,6 +3935,46 @@
           "kind": "file_id",
           "ref": "ptc/25-02-15",
           "note": "Xtext side read from the pinned grammar: body `type = [SysML::Metaclass | QualifiedName]`."
+        }
+      ]
+    },
+    {
+      "production": "MetadataUsageDeclaration",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 149-150) writes the keyword alternative as DefinedByKeyword, ':' | 'defined' 'by' (lines 395-397), the same rule its TypedBy uses.",
+      "problem": "SysML 8.2.2.27 prints MetadataUsageDeclaration's keyword alternative as ( ':' | 'typed' 'by' ), KerML 8.2.5.12's MetadataFeatureDeclaration word for word. SysML does not reserve 'typed' (8.2.2.1.2) and defines no TYPED_BY; it reserves 'defined' and defines DEFINED_BY = ':' | 'defined' 'by', and its own TypedBy (8.2.2.6.5) is DEFINED_BY FeatureTyping where KerML's (8.2.4.3.1) is TYPED_BY OwnedFeatureTyping.",
+      "decision": "follow_xtext",
+      "rationale": "The 'typed' 'by' is an unadapted copy of KerML's text in a clause SysML otherwise converts to DEFINED_BY: SysML types every other feature with 'defined' 'by', and 'typed' is not one of its reserved words. The pilot's DefinedByKeyword is that conversion, with no predicate or inlining. Not a union: nothing supports 'typed' 'by' in SysML. The corpus is silent on the keyword spelling: typed metadata usages use ':', e.g. `metadata engineSelectionRationale : Rationale about engine4cyl {`. The OwnedFeatureTyping the clause prints is kept, per deviation PrefixMetadataTyping-chain. The adjudicator read the open SysML issue list on 2026-09-17: no issue names this; SYSML21-11 (8.2.2.1.2's missing reserved words) does not mention 'typed'. Adjudicated by the grammar-adjudicator on 2026-09-17; the two TypedBy clauses and SysML's reserved words were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.27 MetadataTextualNotation (region_sha256 69251565feee7639)",
+          "note": "( ':' | 'typed' 'by' )"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.1.2 LexicalStructure (region_sha256 4ceb9d8215eb7e2b)",
+          "note": "reserves 'defined', not 'typed'; DEFINED_BY = ':' | 'defined' 'by'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.5 Specialization (region_sha256 d0d5a04805076a67)",
+          "note": "TypedBy : Feature = DEFINED_BY ownedRelationship += FeatureTyping"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.12 MetadataConcreteSyntax (region_sha256 30fa0599ab27c325)",
+          "note": "MetadataFeatureDeclaration's ( ':' | 'typed' 'by' ), the text SysML copied"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Metadata Examples/RationaleMetadataExample.sysml",
+          "note": "line 11: `metadata engineSelectionRationale : Rationale about engine4cyl {`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
         }
       ]
     },
@@ -3794,6 +4379,51 @@
       ]
     },
     {
+      "production": "OccurrenceUsagePrefix",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 836-843) writes OccurrenceUsagePrefix as ( EndUsagePrefix | BasicUsagePrefix ( 'individual' )? ( PortionKind )? ) UsageExtensionKeyword*, adding EndUsagePrefix as an alternative.",
+      "problem": "SysML 8.2.2.9.2 states OccurrenceUsagePrefix : OccurrenceUsage = BasicUsagePrefix ( isIndividual ?= 'individual' )? ( portionKind = PortionKind )? UsageExtensionKeyword*, with no EndUsagePrefix. Every item, part, port, connection, flow and action usage takes this prefix, so none can begin with 'end'. The general usage prefix has the alternative (UnextendedUsagePrefix = EndUsagePrefix | BasicUsagePrefix, 8.2.2.6.2), as does ReferenceUsage (8.2.2.6.3); only interface bodies have a separate bare end form (DefaultInterfaceEnd, 8.2.2.14.1), with no keyword. Literally, `end port supplierPort : FuelOutPort;` in a flow def and `end [1] item a : A {` in a connection def cannot parse.",
+      "decision": "follow_xtext",
+      "rationale": "The corpus writes keyworded ends throughout connection, flow and interface definitions and usages; the adjudicator counted 34 lines that no other production accepts, e.g. training 13 Flow Definition Example line 8, `end port supplierPort : FuelOutPort;`, and Simple Tests/ConnectionTest.sysml line 68, `end [1] item a : A {`, whose multiplicity exercises EndUsagePrefix's OwnedCrossFeatureMember. The pilot's addition reuses the specification's own EndUsagePrefix unchanged, the alternative 8.2.2.6.2 and 8.2.2.6.3 already give the other usage prefixes. It completes deviation DefaultReferenceUsage, which added the bare 'end' for keyword-less ends. No open SysML issue title names this; SYSML21-594 ('OccurrencePrefix is referenced but not specified') was read and concerns the graphical BNF, so it is not cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the two corpus lines were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.9.2 OccurrenceUsages (region_sha256 6dfed224798030c3)",
+          "note": "OccurrenceUsagePrefix without EndUsagePrefix"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.2 Usages (region_sha256 a6f6e20afeed05e4)",
+          "note": "UnextendedUsagePrefix = EndUsagePrefix | BasicUsagePrefix"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.3 ReferenceUsages (region_sha256 27505145913280ac)",
+          "note": "ReferenceUsage = ( EndUsagePrefix | RefPrefix ) 'ref' Usage"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.14.1 InterfaceDefinitions (region_sha256 86fc09c62954e744)",
+          "note": "DefaultInterfaceEnd = isEnd ?= 'end' Usage, keyword-less, interfaces only"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/training/13. Flows/Flow Definition Example.sysml",
+          "note": "line 8: `end port supplierPort : FuelOutPort;` in `flow def FuelFlow {`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml",
+          "note": "line 68: `end [1] item a : A {` in `connection def AB {`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
       "production": "OrExpression",
       "bucket": "xtext_only",
       "upstream": "One level of the Xtext operator-precedence cascade, binding or, |. Its body delegates to the next tighter level and folds left-recursive repetitions in with a tree-rewrite action.",
@@ -4094,6 +4724,76 @@
       ]
     },
     {
+      "production": "PayloadFeature",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/KerML.xtext and SysML.xtext both write the last alternative as `ownedRelationship += OwnedMultiplicity ownedRelationship += OwnedFeatureTyping`, with the typing mandatory.",
+      "problem": "KerML 8.2.5.9.2 prints PayloadFeature with three '(' and two ')', reported as KERML11-115, which asks whether a ')' is missing or a '(' is extra and does not answer. Either one-character repair leaves `( ownedRelationship += OwnedFeatureTyping )?` on the last alternative, so a bare OwnedMultiplicity with no typing would be a payload. Every well-formed source makes the typing mandatory there.",
+      "decision": "follow_spec",
+      "rationale": "Follow the specification's well-formed statement of the same production rather than a paren-count repair of the defective one. SysML 8.2.2.16 states PayloadFeature cleanly, with the last alternative `OwnedMultiplicity OwnedFeatureTyping`; the KerML and SysML Tier B' transcriptions (KerML-textual-bnf.kebnf from line 1323) write the same, with no stray parenthesis; both pilot Xtext grammars agree. Against the five, the defective clause differs by the stray '(' and by a `( ... )?` around the last typing, both explicable as a mis-copy of the `( X )?` idiom one line above. The KerML-only `Identification ValuePart` alternative is outside the defect and is kept. The corpus has typing-first payloads (`flow of Fuel from ...`, `flow call_getItems of CallGiveItems[1]`) and no payload that is a multiplicity alone or multiplicity-first, so it does not decide the disputed alternative either way; a negative case for `flow of [2] from a to b;` is therefore warranted. Adjudicated by the grammar-adjudicator on 2026-09-17; the Tier B', SysML clause and Xtext texts were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.9.2 Flows (region_sha256 150b0ccc1e0d5422)",
+          "note": "PayloadFeature with three '(' and two ')'; the last alternative's typing wrapped in ( )?"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.16 FlowsTextualNotation (region_sha256 e03f363eef9b4cf1)",
+          "note": "well-formed; last alternative `ownedRelationship += OwnedMultiplicity ownedRelationship += OwnedFeatureTyping`"
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "KERML11-115",
+          "note": "PayloadFeature's mismatched parentheses; open; does not say which repair is intended"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml",
+          "note": "line 89: `flow call_getItems of CallGiveItems[1]`, typing then multiplicity"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "The KerML Tier A pin the governing clause belongs to."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the corroborating clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "PayloadFeature-sysml-value-alternative",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 1302-1307) writes SysML's PayloadFeature through fragment Payload with four alternatives, the second `Identification? ValuePart`, as KerML.xtext does.",
+      "problem": "SysML 8.2.2.16 states PayloadFeature : Feature = Identification? PayloadFeatureSpecializationPart ValuePart? | OwnedFeatureTyping OwnedMultiplicity? | OwnedMultiplicity OwnedFeatureTyping: three alternatives. KerML 8.2.5.9.2 has a fourth, Identification ValuePart, and the pilot keeps it for SysML. So `flow of x = 4 from a to b;` is SysML by the pilot and not by the clause.",
+      "decision": "follow_spec",
+      "rationale": "Keep SysML's three alternatives. The clause is well-formed here, and nothing in the specification or the corpus asks for the fourth: the corpus has no payload of the form `of name = value` in either language (every payload is typed or `name : Type = value`), no SysML prose describes an untyped valued payload, and no filed issue reports the omission. SysML states its own concrete syntax and may state it narrower than KerML; that FlowUsage is a KerML Flow in the abstract syntax does not carry the concrete syntax with it. Every follow_xtext decision in this file rests on a corpus instance, specification prose, or a filed issue, and this one has none. DISSENT RECORDED: the grammar-adjudicator recommended follow_xtext on 2026-09-17, arguing that 8.2.2.16 is a defect hotspot (SYSML21-399, -402 and -404 are filed against the same clause) and that the payload is one kernel metaclass; it found no issue naming this alternative. Reversing this decision adds `Identification? ValuePart` to PayloadFeature@sysml only.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.16 FlowsTextualNotation (region_sha256 e03f363eef9b4cf1)",
+          "note": "PayloadFeature with three alternatives"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.9.2 Flows (region_sha256 150b0ccc1e0d5422)",
+          "note": "the fourth alternative, Identification ValuePart, in KerML"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml",
+          "note": "line 89: `flow call_getItems of CallGiveItems[1]`, a typed payload; no corpus payload has the disputed form"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
       "production": "PerformedActionUsage",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `PerformedActionUsage: {SysML::PerformActionUsage} PerformActionUsageDeclaration | {SysML::AcceptActionUsage} AcceptNodeDeclaration | {SysML::SendActionUsage} SendNodeDeclaration | {SysML::AssignmentActionUsage} AssignmentNodeDeclaration;`.",
@@ -4190,6 +4890,36 @@
           "kind": "omg_issue",
           "ref": "KERML11-111",
           "note": "Incorrect prefix in \"s.isSufficient\" and \"e.ownedRelationship\". Title and status 'open' retrieved from https://issues.omg.org/issues/spec/KerML on 2026-09-16; the issue body was not retrieved."
+        }
+      ]
+    },
+    {
+      "production": "PrefixMetadataTyping-chain",
+      "bucket": "conflict",
+      "upstream": "KerML.xtext:1094 and SysML.xtext:153 route PrefixMetadataFeature and PrefixMetadataUsage, and the non-prefix MetadataFeatureDeclaration and MetadataUsageDeclaration too, to a dedicated `MetadataTyping : type = [SysML::Metaclass | QualifiedName]`, which has no OwnedFeatureChain alternative. The Xtext's ordinary OwnedFeatureTyping (SysML.xtext:441) keeps that alternative.",
+      "problem": "KerML 8.2.5.12 and SysML 8.2.2.27 state all four metadata typings as `ownedRelationship += OwnedFeatureTyping`, which admits a QualifiedName or an OwnedFeatureChain. So `#a.b part x;` parses by the specification and is a syntax error by the pilot.",
+      "decision": "follow_spec",
+      "rationale": "The narrowing is not an LL workaround: it has no predicate and no inlining, and the Xtext accepts the chain alternative in ordinary feature typing. It moves a semantic requirement into syntax, namely that metadata be typed by a metaclass. KerML 8.3.4.12.3 states that requirement as the validation constraint validateMetadataFeatureMetaclass, not as grammar. The specification is also uniform across the prefix and non-prefix forms. Following it keeps the grammar free of name resolution, which the grammar cannot perform, and lets such text parse and fail at validation. That matches this project's rule that validity gates writes, not reads (ADR-0002). The corpus has no `#` followed by a dotted chain, so it is silent either way. No OMG issue on the point was found after searching both trackers. Decided by the grammar-adjudicator on 2026-09-17.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.12 MetadataConcreteSyntax (region_sha256 30fa0599ab27c325)",
+          "note": "PrefixMetadataFeature and MetadataFeatureDeclaration both type by `ownedRelationship += OwnedFeatureTyping`."
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.27 MetadataTextualNotation (region_sha256 69251565feee7639)",
+          "note": "PrefixMetadataUsage and MetadataUsageDeclaration both type by `ownedRelationship += OwnedFeatureTyping`."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "The KerML Tier A pin the governing clause belongs to."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
         }
       ]
     },
@@ -4574,6 +5304,31 @@
       ]
     },
     {
+      "production": "RequirementConstraintUsage",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 2066-2071) gives the by-reference alternative CalculationBody where the specification gives RequirementBody, matching the adjacent ConstraintUsage and AssertConstraintUsage rules.",
+      "problem": "SysML 8.2.2.21.1 prints RequirementConstraintUsage : ConstraintUsage = OwnedReferenceSubsetting FeatureSpecializationPart? RequirementBody | ( UsageExtensionKeyword* 'constraint' | UsageExtensionKeyword+ ) ConstraintUsageDeclaration CalculationBody. The pilot narrows the first alternative's body to CalculationBody.",
+      "decision": "follow_spec",
+      "rationale": "The printed clause is well-formed, and the Tier B' transcription gives the same RequirementBody, so the specification's text is not in doubt. The pilot's narrowing has no predicate and no ambiguity to resolve: the two alternatives are distinguished before either body begins. No issue names RequirementConstraintUsage. The corpus does not decide it: its by-reference `require`/`assume` members with braced bodies hold only feature redefinitions, e.g. `require rangeRequirement { :>> actualRange = simulatedRange; }`, which both bodies accept. Adjudicated by the grammar-adjudicator on 2026-09-17.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.21.1 RequirementDefinitions (region_sha256 fd824f1d9da5f780)",
+          "note": "first alternative ends in RequirementBody"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/State Space Representation Examples/EVSample.sysml",
+          "note": "line 110: `require rangeRequirement { :>> actualRange = simulatedRange; }`, accepted by either body"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
       "production": "RequirementDefKeyword",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `RequirementDefKeyword: RequirementKeyword 'def';`.",
@@ -4794,6 +5549,41 @@
       ]
     },
     {
+      "production": "SatisfyRequirementUsage",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext writes SatisfyRequirementUsage as OccurrenceUsagePrefix 'assert'? ( isNegated ?= 'not' )? 'satisfy' ..., both keywords optional.",
+      "problem": "SysML 8.2.2.21.2 prints OccurrenceUsagePrefix 'assert' ( isNegated ?= 'not' ) 'satisfy' ... with no '?' on either, so literally every satisfy must be written `assert not satisfy`. Tier B' reproduces the text.",
+      "decision": "follow_xtext",
+      "rationale": "The specification's own prose and examples contradict the printed rule. SysML 7.21.4 writes `satisfy vehicleMaximumMass by vehicle1;` and `not satisfy vehicleMaximumMass by vehicle2;`, and says a satisfy is negated by placing `not` before `satisfy`; none of its examples writes `assert`. The sibling AssertConstraintUsage (8.2.2.20) prints ( isNegated ?= 'not' )? with the '?'. The corpus uses all four combinations in Simple Tests/RequirementTest.sysml lines 21, 22, 26 and 27 (`satisfy r by p;`, `assert satisfy r by q;`, `not satisfy r1 by p;`, `assert not satisfy r1 by q;`), and the adjudicator counted 19 of 22 corpus satisfy statements with neither keyword. Only the two '?' change; the clause's 'requirement' UsageDeclaration is kept, the Xtext's UsageDeclaration? being redundant. No SysML issue names the textual rule (open list read on 2026-09-17); SYSML21-671 and -672 concern the graphical notation and are not cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the corpus lines and 7.21.4 were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.21.2 RequirementUsages (region_sha256 6c4f3553daaa3162)",
+          "note": "'assert' ( isNegated ?= 'not' ) 'satisfy', no '?'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 7.21.4 Satisfy-Requirement-Usages (region_sha256 05678331cdfe23ad)",
+          "note": "`not satisfy vehicleMaximumMass by vehicle2;` and examples without 'assert'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.20 ConstraintsTextualNotation (region_sha256 fa7fb8d5154241ee)",
+          "note": "AssertConstraintUsage: 'assert' ( isNegated ?= 'not' )?"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/RequirementTest.sysml",
+          "note": "lines 21, 22, 26, 27: `satisfy r by p;`, `assert satisfy r by q;`, `not satisfy r1 by p;`, `assert not satisfy r1 by q;`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
       "production": "SelectExpression",
       "bucket": "spec_only",
       "upstream": "The Pilot Xtext declares no rule named `SelectExpression`. Either it inlines this production into the rule that uses it, or it reaches the same construct under a different name.",
@@ -4850,6 +5640,76 @@
           "kind": "file_id",
           "ref": "ptc/25-02-15",
           "note": "Xtext side read from the pinned grammar: body `ownedRelatedElement += EmptyFeature`."
+        }
+      ]
+    },
+    {
+      "production": "SendNode",
+      "bucket": "conflict",
+      "upstream": "SysML.xtext:1499 writes ActionNodeUsageDeclaration? where the clause's own SendNode line writes ActionUsageDeclaration?. The three sibling declarations in 8.2.2.17.4 and 8.2.2.17.5 \u2014 SendNodeDeclaration, AcceptNodeDeclaration and AssignmentNodeDeclaration \u2014 all use ActionNodeUsageDeclaration.",
+      "problem": "ActionUsageDeclaration (UsageDeclaration ValuePart?, no keyword) and ActionNodeUsageDeclaration ('action' UsageDeclaration?) are different productions, not two names for one. Read literally, SendNode cannot accept a leading 'action' keyword, but the pinned corpus contains exactly that: 'action publish send new Publish(someTopic, somePublication) via publicationPort;' in two files. It parses under ActionNodeUsageDeclaration and under no other production, because a plain ActionUsage requires its ActionBody \u2014 ';' or '{' \u2014 directly after the name, and 'send' follows instead.",
+      "decision": "follow_xtext",
+      "rationale": "The literal clause line is an isolated slip: it disagrees with its own three sibling declarations, with the pilot grammar, and with files the release ships. Following it would reject the specification's own published examples. The corpus and the Xtext agree, and SYSML21-624 confirms the defect independently against a third shipped example. Adjudicated by the grammar-adjudicator on 2026-09-17; the corpus instances and both issue pages were re-verified before this entry was written.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+          "note": "SendNode reads 'OccurrenceUsagePrefix ActionUsageDeclaration? send ...'; SendNodeDeclaration and AcceptNodeDeclaration in the same clause both read 'ActionNodeUsageDeclaration? ...'."
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "sysml clause 8.2.2.17.2 (ActionUsages.md, region_sha256 207a908873b90795)",
+          "note": "ActionUsageDeclaration = UsageDeclaration ValuePart?, with no keyword; ActionNodeUsageDeclaration = 'action' UsageDeclaration?, the keyword owned by the production."
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-2.sysml",
+          "note": "Line 23 'action publish send new Publish(someTopic, somePublication) via publicationPort;'. Parses only under ActionNodeUsageDeclaration."
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-2.sysml",
+          "note": "Line 19, a second independent occurrence of the same construct."
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml",
+          "note": "Line 34 'action snd send {', the construct SYSML21-624 names. A third instance the literal clause reading rejects."
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-624",
+          "note": "EXACT MATCH, page fetched and body read on 2026-09-17: 'SendNode production in EBNF is incorrect', status open, source Boeing (Greg Kimberly), reported Wed 1 Apr 2026. Quotes the literal production and states it 'will fail at \" action snd send \"' in the release's own ActionTest.sysml."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "SendReceiverPart-misspelling",
+      "bucket": "spec_only",
+      "upstream": "Not an Xtext matter: the pilot spells the rule correctly, SenderReceiverPart at SysML.xtext:1499. The defect is internal to the specification clause.",
+      "problem": "SysML 8.2.2.17.4 defines SenderReceiverPart two lines after using it, but SendNode's second alternative references SendReceiverPart, without the 'n'. Read literally, SendNode carries a dangling reference: nothing in either specification defines the misspelled form, so the rule cannot be derived at all until the reference is repaired.",
+      "decision": "follow_spec",
+      "rationale": "Follow the spelling the clause itself defines, SenderReceiverPart. The definition is the load-bearing occurrence and the misspelled reference resolves to nothing, so this is repaired from the specification's own text rather than by trusting the pilot. Same shape as the InstatiatedTypeMember-misspelling entry. Filed as SYSML21-408, open. Adjudicated by the grammar-adjudicator on 2026-09-17.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+          "note": "SendNode's second alternative reads '... EmptyParameterMember SendReceiverPart'; SenderReceiverPart is defined two lines later in the same clause."
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-408",
+          "note": "EXACT MATCH, page fetched and body read on 2026-09-17: '`SendReceiverPart` should be `SenderReceiverPart`', status open, source Emerson (Kent Johnson), reported Mon 3 Nov 2025, summary 'See SendNode grammar rule. I assume this was just a typo.'"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
         }
       ]
     },
@@ -5614,6 +6474,31 @@
       ]
     },
     {
+      "production": "TriggerExpression",
+      "bucket": "spec_only",
+      "upstream": "The pilot spells the literals correctly: TimeTriggerKind is `'at' | 'after'` and ChangeTriggerKind is `'when'` (SysML.xtext:1479 and 1483). The defect is internal to the specification clause.",
+      "problem": "SysML 8.2.2.17.4 prints `kind = ( 'at | 'after' )` with no closing quote after at. Read literally the first literal never terminates, so it swallows the text up to the next quote and the production cannot be derived. Every timed accept reaches this production, so the defect blocks `accept sig after 10[SI::s]` and `accept at <time>` alike.",
+      "decision": "follow_spec",
+      "rationale": "Close the quote: the intended literals are 'at' and 'after'. The clause's own second alternative spells 'when' correctly, the pilot spells all three correctly, and the repair is minimal, adding no alternative the clause does not state. Filed as SYSML21-400's sibling SYSML21-401, open. Same shape as the ControlNodePrefix entry, filed by the same reviewer on the same day.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+          "note": "Prints `kind = ( 'at | 'after' )`, the opening quote of at unmatched."
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-401",
+          "note": "EXACT MATCH, page fetched and body read on 2026-09-17: 'TriggerExpression missing closing quote after 'at', status open, source Emerson (Kent Johnson), reported Mon 27 Oct 2025. The body quotes the whole production."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
       "production": "TriggerFeatureKind",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `TriggerFeatureKind: trigger = 'accept';`.",
@@ -5645,6 +6530,46 @@
           "kind": "spec_clause",
           "ref": "KerML 8.2.4.1.1 (Types), PDF p.112",
           "note": "CLAUSE-LOCATED. Retrieved as wiki production atom Types, region_sha256 d5f980cd9c8a4387\u2026 Located by finding the definition of `TypeBodyElement` in the clause body, not by matching its name against a clause title."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "The KerML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "TypeDeclaration",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/KerML.xtext (lines 323-328) writes TypeDeclaration's ( SpecializationPart | ConjugationPart ) group exactly once, with no quantifier.",
+      "problem": "KerML 8.2.4.1.1 prints the group as ( SpecializationPart | ConjugationPart )+, which admits `type A :> B ~ C;` and `type A ~ B ~ C;`. The Xtext admits one part only. Both require at least one part, so `type A;` is rejected by both and is not in dispute. The models the '+' additionally admits are invalid: validateTypeAtMostOneConjugator (KerML 8.3.3.1.10) allows at most one owned Conjugation, and KerML 7.3.2.4 says a conjugated type cannot be the specific type of a Specialization. KerML 7.3.2.2 describes a type declaration as defining 'either one or more owned specializations ... or a conjugator'.",
+      "decision": "follow_spec",
+      "rationale": "Keep the printed '+' and leave the two rules to validation. The Xtext's single occurrence has no LL motive, as the adjudicator found; it encodes validation constraints in syntax, which is the same move this repository declined in PrefixMetadataTyping-chain: a requirement the specification states as a constraint parses and fails at validation, because validity gates writes, not reads (ADR-0002). Here the constraints are structural rather than name-resolving, which makes the syntactic narrowing possible but not required. KerML 7.3.2.2's 'either ... or' describes a valid model, and validateTypeAtMostOneConjugator says the same thing as a constraint; neither is a grammar rule. The printed clause and the Tier B' transcription (kebnf line 399) agree on '+'. The corpus is silent on the disputed forms: every type declaration in it has exactly one part, e.g. Simple Tests/Types.kerml lines 2-29, so a parser following either reading accepts it all. DISSENT RECORDED: the grammar-adjudicator recommended follow_xtext on the constraint and prose evidence above, and found no OMG issue naming the production after reading the open KerML issue list on 2026-09-17. Reversing this decision changes this production only.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.4.1.1 Types (region_sha256 d5f980cd9c8a4387)",
+          "note": "TypeDeclaration ... ( SpecializationPart | ConjugationPart )+ TypeRelationshipPart*"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 7.3.2.2 Type-Declaration (region_sha256 632d1e414ba3b9f2)",
+          "note": "'a type declaration defines either one or more owned specializations ... or a conjugator'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.3.3.1.10 Type (region_sha256 5200b0a51b33ed8e)",
+          "note": "validateTypeAtMostOneConjugator: 'A Type must have at most one owned Conjugation Relationship.'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 7.3.2.4 Conjugation (region_sha256 2107419a0c9d6844)",
+          "note": "'a conjugated type cannot be the specific type in any specialization relationship'"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Types.kerml",
+          "note": "lines 3, 28, 29: `type all x specializes A, Base::things;`, `type Conjugate3 conjugates Original;`, `type Conjugate4 ~ Conjugate1;`, each with one part"
         },
         {
           "kind": "file_id",
@@ -6050,811 +6975,6 @@
           "kind": "file_id",
           "ref": "ptc/25-02-15",
           "note": "Xtext side read from the pinned grammar: body `'xor'`, which references no non-literal production."
-        }
-      ]
-    },
-    {
-      "production": "PrefixMetadataTyping-chain",
-      "bucket": "conflict",
-      "upstream": "KerML.xtext:1094 and SysML.xtext:153 route PrefixMetadataFeature and PrefixMetadataUsage, and the non-prefix MetadataFeatureDeclaration and MetadataUsageDeclaration too, to a dedicated `MetadataTyping : type = [SysML::Metaclass | QualifiedName]`, which has no OwnedFeatureChain alternative. The Xtext's ordinary OwnedFeatureTyping (SysML.xtext:441) keeps that alternative.",
-      "problem": "KerML 8.2.5.12 and SysML 8.2.2.27 state all four metadata typings as `ownedRelationship += OwnedFeatureTyping`, which admits a QualifiedName or an OwnedFeatureChain. So `#a.b part x;` parses by the specification and is a syntax error by the pilot.",
-      "decision": "follow_spec",
-      "rationale": "The narrowing is not an LL workaround: it has no predicate and no inlining, and the Xtext accepts the chain alternative in ordinary feature typing. It moves a semantic requirement into syntax, namely that metadata be typed by a metaclass. KerML 8.3.4.12.3 states that requirement as the validation constraint validateMetadataFeatureMetaclass, not as grammar. The specification is also uniform across the prefix and non-prefix forms. Following it keeps the grammar free of name resolution, which the grammar cannot perform, and lets such text parse and fail at validation. That matches this project's rule that validity gates writes, not reads (ADR-0002). The corpus has no `#` followed by a dotted chain, so it is silent either way. No OMG issue on the point was found after searching both trackers. Decided by the grammar-adjudicator on 2026-09-17.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.2.5.12 MetadataConcreteSyntax (region_sha256 30fa0599ab27c325)",
-          "note": "PrefixMetadataFeature and MetadataFeatureDeclaration both type by `ownedRelationship += OwnedFeatureTyping`."
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.27 MetadataTextualNotation (region_sha256 69251565feee7639)",
-          "note": "PrefixMetadataUsage and MetadataUsageDeclaration both type by `ownedRelationship += OwnedFeatureTyping`."
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-04-04",
-          "note": "The KerML Tier A pin the governing clause belongs to."
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "FlowDeclaration",
-      "bucket": "conflict",
-      "upstream": "KerML.xtext writes FlowDeclaration's first alternative as `FeatureDeclaration? ValuePart? ( 'of' PayloadFeatureMember )? ( 'from' FlowEndMember 'to' FlowEndMember )?`, with the declaration optional.",
-      "problem": "KerML 8.2.5.9.2 writes `FeatureDeclaration ValuePart? ...` with no '?'. The specification's FeatureDeclaration (8.2.4.3.1) cannot derive the empty string, so as printed, `flow of P from a.b to c.d;` and `flow from a.b to c.d;` are rejected. The pilot accepts them.",
-      "decision": "follow_xtext",
-      "rationale": "EXTRAPOLATED, NOT CITED, and weaker than the Step entry this follows. KERML11-181 was fetched and read in full: it names only 8.2.5.7.2 Expression and 8.2.5.7.4 BooleanExpression/Invariant, not Flow or 8.2.5.9.2. KERML11-114, the one issue on this clause's flow productions, concerns only the stale ItemFlowDeclaration name. The decision rests on four points. First, the clause shape matches the Expression and Step productions KERML11-181 and the Step entry cover, `FeatureDeclaration? ValuePart?` in the pilot. Second, KerML 8.2.5.5.1 Connector writes `FeatureDeclaration?` explicitly in the specification text. Third, this production's own second alternative already permits a fully anonymous flow, `( 'all' )? FlowEndMember 'to' FlowEndMember`, so a mandatory declaration only when `of` or `from` is used would be an odd asymmetry. Fourth, the SysML FlowDeclaration, whose UsageDeclaration is nullable, is used declaration-less throughout the SysML corpus; that is indirect evidence only. It is weaker than Step because the pilot's FlowDeclaration is its own fragment, not a body shared with ExpressionDeclaration, and because no KerML corpus file uses the first alternative without a declaration. Revisit if an issue naming 8.2.5.9.2 is filed, or a KerML corpus instance appears either way. If this is wrong, nothing in this repository will notice. Adjudicated by the grammar-adjudicator on 2026-09-17; its premises were checked against the clause export.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.2.5.9.2 Flows (region_sha256 150b0ccc1e0d5422)",
-          "note": "FlowDeclaration = FeatureDeclaration ValuePart? ..., with no '?' on FeatureDeclaration."
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.2.4.3.1 Features (region_sha256 c9b4ff39176a7e05)",
-          "note": "FeatureDeclaration cannot derive the empty string: the FeatureIdentification | FeatureSpecializationPart | ConjugationPart group is required, and each branch consumes a token."
-        },
-        {
-          "kind": "omg_issue",
-          "ref": "KERML11-181",
-          "note": "PATTERN EVIDENCE ONLY, NOT AUTHORITY. Fetched and read in full on 2026-09-17. It names 8.2.5.7.2 and 8.2.5.7.4 only; it does not name Flow, SuccessionFlow or 8.2.5.9.2."
-        },
-        {
-          "kind": "omg_issue",
-          "ref": "KERML11-114",
-          "note": "Checked and excluded. 'Flow and SuccessionFlow reference missing ItemFlowDeclaration', open, filed 2 Nov 2025 against KerML 1.0. It concerns the name only, not declaration optionality. Fetched and read on 2026-09-17."
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.2.5.5.1 Connectors (region_sha256 ff47294b20bdba3f)",
-          "note": "Connector writes FeatureDeclaration? explicitly, the pattern the Step entry also relies on."
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Behaviors.kerml",
-          "note": "line 18: `flow a.y to b.x1;`, the second, declaration-less alternative. Not evidence for the first."
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-04-04",
-          "note": "The KerML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "FilterPackageImport",
-      "bucket": "conflict",
-      "upstream": "SysML.xtext (and KerML.xtext) define `FilterPackageImport: FilterPackageMembershipImport | FilterPackageNamespaceImport`, whose two helpers are ImportedMembership and ImportedNamespace. They admit the same import forms without the nested-FilterPackage alternative of NamespaceImport.",
-      "problem": "SysML 2.0 clause 8.2.2.5.1 uses FilterPackageImport in `FilterPackage : Package = ownedRelationship += FilterPackageImport ( ownedRelationship += FilterPackageMember )+` and never defines it. The PDF (page 199, printed 167) goes from FilterPackage straight to FilterPackageMember. As printed, SysML's filter-package syntax cannot be derived from the normative clause.",
-      "decision": "follow_spec",
-      "rationale": "Take the definition from the specification's own machine-readable BNF, Tier B' (vendor/spec-bnf/SysML-textual-bnf.kebnf line 172, clause 8.2.2.5.1): `FilterPackageImport : Import = ImportDeclaration { visibility = 'public' }`. It is not normative, but it is the specification's transcription, not the pilot's. KerML 8.2.3.4.2's FilterPackage uses ImportDeclaration directly, so the two languages then accept the same filter-package syntax. OMG has the omission as SYSML21-449, 'Undefined rules in the text notation grammar', which names FilterPackageImport as referenced on page 200 and undefined. The pilot's two helpers accept the same token sequences: a nested filter package only adds further bracketed members. So following Tier B' changes structure, not the language. Revisit when SYSML21-449 is resolved. The same issue names CalculationUsageDeclaration as undefined (page 188), which will need the same treatment when its unit comes up.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.5.1 Packages (region_sha256 3ee603b1b89d4345)",
-          "note": "FilterPackage references FilterPackageImport; no production defines it. Confirmed in the clause export and in the SysML 2.0 PDF, page 199."
-        },
-        {
-          "kind": "omg_issue",
-          "ref": "SYSML21-449",
-          "note": "EXACT MATCH. 'Undefined rules in the text notation grammar.', open, filed 11 Nov 2025 by Andrew Myers against SysML 2.0. It names FilterPackageImport, referenced on page 200, and CalculationUsageDeclaration, page 188, as undefined. Fetched and read on 2026-09-17."
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.2.3.4.2 Imports (region_sha256 a2610efd00be16cc)",
-          "note": "KerML's FilterPackage uses ImportDeclaration where SysML writes FilterPackageImport."
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "AnnotatingElement",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext (lines 75-80) writes SysML's AnnotatingElement as Comment | Documentation | TextualRepresentation | MetadataUsage.",
-      "problem": "SysML 8.2.2.4.1, in the PDF clause and in Tier B', writes `AnnotatingElement = Comment | Documentation | TextualRepresentation | MetadataFeature`, KerML 8.2.3.3.1's text word for word. MetadataFeature is KerML's production. Taken literally in SysML, it opens KerML's MetadataBody, and through NonFeatureMember the whole KerML kernel (Class, Association, Behavior and so on), inside SysML metadata annotations. SysML's own MetadataUsage is then unreachable from SysML's root.",
-      "decision": "follow_xtext",
-      "rationale": "A SysML-specific production the specification missed, not a pilot workaround. First, SysML's abstract syntax (8.3.27.3) makes MetadataUsage a MetadataFeature, so a MetadataUsage satisfies the printed alternative rather than contradicting it. Second, SysML already makes this substitution for the sibling productions in its own metadata clause: 8.2.2.27 restates PrefixMetadataAnnotation and PrefixMetadataMember over PrefixMetadataUsage in place of KerML's PrefixMetadataFeature. AnnotatingElement is the one it left as KerML wrote it. Third, it is the only place SysML's BNF names a KerML-only non-expression production that SysML has its own counterpart for; checked by scanning SysML's references to productions it does not state. Fourth, the SysML corpus uses `@X` and `metadata X about ...` 19 times at line start, and every name examined is a SysML metadata definition, not a KerML metaclass. No OMG issue names this wording; the SysML tracker was searched on 2026-09-17. SYSML21-419 treats 'MetadataUsages are AnnotatingElements' as settled, but it is about something else. Adjudicated by the grammar-adjudicator on 2026-09-17.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.4.1 Annotations (region_sha256 3c3db88367d002e9)",
-          "note": "AnnotatingElement = Comment | Documentation | TextualRepresentation | MetadataFeature"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.27 MetadataTextualNotation (region_sha256 69251565feee7639)",
-          "note": "PrefixMetadataAnnotation and PrefixMetadataMember restated over PrefixMetadataUsage : MetadataUsage, the substitution AnnotatingElement lacks"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.3.27.3 MetadataUsage",
-          "note": "MetadataUsage specializes MetadataFeature and ItemUsage"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/examples/Vehicle Example/SysML v2 Spec Annex A SimpleVehicleModel.sysml",
-          "note": "line 1128: `@Risk about engineTradeOffAnalysis::vehicle_b_engine4cyl {`, a metadata annotation typed by a SysML metadata definition"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "ExpressionBody",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext (lines 2436-2439) overrides `ExpressionBody returns SysML::Expression : CalculationBody`, so every SysML expression body, including select, collect and forAll bodies, reads SysML's calculation body.",
-      "problem": "SysML does not state ExpressionBody. Taken literally, it falls back to KerML 8.2.5.8.3, `ExpressionBody : Expression = '{' FunctionBodyPart '}'`, whose TypeBodyElement and ReturnFeatureMember (KerML 8.2.5.7.1) reach the KerML kernel. A SysML `{ ... }` expression body would then contain KerML elements, and SysML usages would be rejected in it.",
-      "decision": "follow_xtext",
-      "rationale": "Decided by the corpus, with the pilot agreeing. `vendor/corpus/sysml/src/validation/07-Variant Configuration/7b-Variant Configurations.sysml` line 127, `rearWheelChoice->forAll {in ref w; w == rearWheelChoice::narrowRimWheel}`, and `15-Properties-Values-Expressions/15_05-Unification of Expression and Constraint Definition.sysml` line 9, `wheelAssy->forAll {in ref w: WheelAssy;`, put `ref` in an expression body parameter. `ref` is SysML's usage prefix; KerML's BasicFeaturePrefix (8.2.4.3.1) has no such option. So these cannot parse under KerML's body. SysML itself states CalculationBody (8.2.2.19) as `';' | '{' CalculationBodyPart '}'` over SysML's ActionBodyItem, and the pilot routes every expression body through it. SysML's statement that it uses 'the expression notation from [KerML]' covers the operator and primary layer, and nothing in SysML says expression bodies hold KerML kernel elements. No OMG issue settles it; SysML and KerML trackers were searched on 2026-09-17. Adjudicated by the grammar-adjudicator on 2026-09-17; the corpus lines and KerML's BasicFeaturePrefix were checked directly.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.2.5.8.3 BaseExpressions",
-          "note": "ExpressionBody : Expression = '{' FunctionBodyPart '}', the literal fallback"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.19 CalculationsTextualNotation (region_sha256 ee541841395079da)",
-          "note": "CalculationBody = ';' | '{' CalculationBodyPart '}', over SysML usages"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.2.4.3.1 Features (region_sha256 c9b4ff39176a7e05)",
-          "note": "BasicFeaturePrefix has direction, derived, abstract, composite/portion and var/const, and no `ref`"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/validation/07-Variant Configuration/7b-Variant Configurations.sysml",
-          "note": "line 127: `rearWheelChoice->forAll {in ref w; w == rearWheelChoice::narrowRimWheel}`"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_05-Unification of Expression and Constraint Definition.sysml",
-          "note": "line 9: `wheelAssy->forAll {in ref w: WheelAssy;`"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "DefinitionElement",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext writes DefinitionElement with the specification's 29 alternatives plus AllocationDefinition, between InterfaceDefinition and PortDefinition. The Xtext also places MetadataDefinition after ItemDefinition, which does not change the language.",
-      "problem": "SysML 8.2.2.5.2 lists 29 DefinitionElement alternatives and omits AllocationDefinition, which SysML 8.2.2.15 defines as OccurrenceDefinitionPrefix 'allocation' 'def' Definition, the same shape as the listed ConnectionDefinition. In the clause export, AllocationDefinition appears only in its own clause (the keys AllocationDefinition, AllocationUsage and AllocationUsageDeclaration, which share one text). Taken literally, the specification defines AllocationDefinition and reaches it from nowhere, so `allocation def` cannot be written as a package member. The Usage side has no matching gap: SysML 8.2.2.6.4 lists AllocationUsage in StructureUsageElement.",
-      "decision": "follow_xtext",
-      "rationale": "An editorial omission in the enumeration, not a pilot workaround: the Xtext's extra alternative is a plain alternative in an unordered list, with no inlining, narrowing or predicate. The corpus decides it with the specification's own worked example: the Annex A SimpleVehicleModel has `allocation def LogicalToPhysical{` as a direct member of `package AllocationDefinitions{` at line 338, and Simple Tests/AllocationTest.sysml has `allocation def A;` and `allocation def Logical_to_Physical :> A {` as package members at lines 22 and 24. A grammar that follows the clause rejects its own Annex A. The adjudicator searched the SysML tracker's open and closed issue lists for AllocationDefinition and DefinitionElement on 2026-09-17 and found no issue naming this omission; no issue is cited because none was read. Adjudicated by the grammar-adjudicator on 2026-09-17; the clause texts and corpus lines were rechecked directly.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.5.2 PackageElements (region_sha256 15ebea5bc9c7f610)",
-          "note": "DefinitionElement = Package | ... | ExtendedDefinition, with no AllocationDefinition"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.15 AllocationsTextualNotation (region_sha256 c49ff28fffcd621a)",
-          "note": "AllocationDefinition = OccurrenceDefinitionPrefix 'allocation' 'def' Definition"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.6.4 BodyElements (region_sha256 ae188991c8997bec)",
-          "note": "StructureUsageElement includes AllocationUsage, so the Usage side has no parallel gap"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/examples/Vehicle Example/SysML v2 Spec Annex A SimpleVehicleModel.sysml",
-          "note": "line 338: `allocation def LogicalToPhysical{` inside `package AllocationDefinitions{`"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/AllocationTest.sysml",
-          "note": "lines 22 and 24: `allocation def A;` and `allocation def Logical_to_Physical :> A {` as package members"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "LibraryPackage",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/KerML.xtext writes LibraryPackage as `( isStandard ?= 'standard' )? 'library' ( ownedRelationship += PrefixMetadataMember )* PackageDeclaration PackageBody`, with 'standard' optional.",
-      "problem": "KerML 8.2.5.13 and SysML 8.2.2.5.1 both print `( isStandard ?= 'standard' ) 'library' ...` with no '?' on the group, which makes 'standard' mandatory and isStandard always true. As printed, the grammar rejects KerML 7.4.14's own example `library package AddressBooks {` and every library package in the corpus, none of which is standard.",
-      "decision": "follow_xtext",
-      "rationale": "The printed rule contradicts the specification around it. KerML 7.4.14 gives `library package AddressBooks {` without 'standard' and says only library packages from the Kernel Model Libraries or other recognized standard libraries should be identified as standard. The LibraryPackage metaclass (8.3.4.13.3) says isStandard 'should only be set to true' for those libraries, so false must be writable. The adjudicator found that the BNF's other standalone flag groups (isAbstract, isDerived, isReference, isImportAll and the rest) carry the trailing '?', and a bare `x ?= 'kw'` appears only where the keyword is the fixed opener of an alternative, which 'standard' is not. The corpus writes `library package` without 'standard' 9 times and never with it; the adjudicator reports that the pinned Tier A standard-library KPARs open with `standard library package` throughout. SysML restates KerML's text word for word, so it is one defect printed twice. The adjudicator read the KerML and SysML issue pages on 2026-09-17 and found no issue naming it; KERML11-10 (the keyword table) and SYSML21-267 (graphical notation) were read and are not about this. The pages may list open issues only, so the search is not conclusive, and no issue is cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the 7.4.14 and 8.3.4.13.3 wording and the corpus lines were rechecked directly.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.2.5.13 PackagesConcreteSyntax (region_sha256 2f4d82cdd704641c)",
-          "note": "LibraryPackage = ( isStandard ?= 'standard' ) 'library' ..., no '?' on the group"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.5.1 Packages (region_sha256 3ee603b1b89d4345)",
-          "note": "the same text"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 7.4.14 Packages (region_sha256 e880cedb0b8e7d88)",
-          "note": "`library package AddressBooks {`, and only recognized standard libraries should be identified as standard"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.3.4.13.3 LibraryPackage (region_sha256 f7889cd6519491ac)",
-          "note": "isStandard 'should only be set to true' for standard libraries"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/kerml/src/examples/Simple Tests/MetadataTest.kerml",
-          "note": "line 4: `library package 'User Defined Extensions' {`"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFCoreLib.sysml",
-          "note": "line 2: `library package AHFCoreLib {`"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-04-04",
-          "note": "The KerML Tier A pin the governing clause belongs to."
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the restated clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "DefinitionExtensionKeyWord-casing",
-      "bucket": "spec_only",
-      "upstream": "Not an Xtext matter: SysML.xtext's MetadataDefinition references DefinitionExtensionKeyword with the defined casing. This is a defect internal to the specification clause.",
-      "problem": "SysML 8.2.2.27 writes MetadataDefinition's body as `( isAbstract ?= 'abstract')? DefinitionExtensionKeyWord* 'metadata' 'def' Definition`, with a capital W. The production is defined as DefinitionExtensionKeyword in SysML 8.2.2.6.1 and referenced with that casing everywhere else, including ExtendedDefinition in the same clause. Read literally, MetadataDefinition contains a dangling reference.",
-      "decision": "follow_spec",
-      "rationale": "Follow the defined spelling, DefinitionExtensionKeyword. The definition is the load-bearing occurrence and the capitalised reference resolves to nothing; ExtendedDefinition, in the same clause, already uses the defined casing, so the clause disagrees with itself in one place. Tier B' writes DefinitionExtensionKeyword at SysML-textual-bnf.kebnf line 1669, repairing it without comment, the pattern recorded for InstatiatedTypeMember-misspelling and MetaClassificationTestOperator-casing. Whether an OMG issue names it was not searched, so none is cited.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.27 MetadataTextualNotation (region_sha256 69251565feee7639)",
-          "note": "MetadataDefinition reads DefinitionExtensionKeyWord*; ExtendedDefinition in the same clause reads DefinitionExtensionKeyword+"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.6.1 Definitions",
-          "note": "defines DefinitionExtensionKeyword : Definition"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "PayloadFeature",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/KerML.xtext and SysML.xtext both write the last alternative as `ownedRelationship += OwnedMultiplicity ownedRelationship += OwnedFeatureTyping`, with the typing mandatory.",
-      "problem": "KerML 8.2.5.9.2 prints PayloadFeature with three '(' and two ')', reported as KERML11-115, which asks whether a ')' is missing or a '(' is extra and does not answer. Either one-character repair leaves `( ownedRelationship += OwnedFeatureTyping )?` on the last alternative, so a bare OwnedMultiplicity with no typing would be a payload. Every well-formed source makes the typing mandatory there.",
-      "decision": "follow_spec",
-      "rationale": "Follow the specification's well-formed statement of the same production rather than a paren-count repair of the defective one. SysML 8.2.2.16 states PayloadFeature cleanly, with the last alternative `OwnedMultiplicity OwnedFeatureTyping`; the KerML and SysML Tier B' transcriptions (KerML-textual-bnf.kebnf from line 1323) write the same, with no stray parenthesis; both pilot Xtext grammars agree. Against the five, the defective clause differs by the stray '(' and by a `( ... )?` around the last typing, both explicable as a mis-copy of the `( X )?` idiom one line above. The KerML-only `Identification ValuePart` alternative is outside the defect and is kept. The corpus has typing-first payloads (`flow of Fuel from ...`, `flow call_getItems of CallGiveItems[1]`) and no payload that is a multiplicity alone or multiplicity-first, so it does not decide the disputed alternative either way; a negative case for `flow of [2] from a to b;` is therefore warranted. Adjudicated by the grammar-adjudicator on 2026-09-17; the Tier B', SysML clause and Xtext texts were rechecked directly.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.2.5.9.2 Flows (region_sha256 150b0ccc1e0d5422)",
-          "note": "PayloadFeature with three '(' and two ')'; the last alternative's typing wrapped in ( )?"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.16 FlowsTextualNotation (region_sha256 e03f363eef9b4cf1)",
-          "note": "well-formed; last alternative `ownedRelationship += OwnedMultiplicity ownedRelationship += OwnedFeatureTyping`"
-        },
-        {
-          "kind": "omg_issue",
-          "ref": "KERML11-115",
-          "note": "PayloadFeature's mismatched parentheses; open; does not say which repair is intended"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml",
-          "note": "line 89: `flow call_getItems of CallGiveItems[1]`, typing then multiplicity"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-04-04",
-          "note": "The KerML Tier A pin the governing clause belongs to."
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the corroborating clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "TypeDeclaration",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/KerML.xtext (lines 323-328) writes TypeDeclaration's ( SpecializationPart | ConjugationPart ) group exactly once, with no quantifier.",
-      "problem": "KerML 8.2.4.1.1 prints the group as ( SpecializationPart | ConjugationPart )+, which admits `type A :> B ~ C;` and `type A ~ B ~ C;`. The Xtext admits one part only. Both require at least one part, so `type A;` is rejected by both and is not in dispute. The models the '+' additionally admits are invalid: validateTypeAtMostOneConjugator (KerML 8.3.3.1.10) allows at most one owned Conjugation, and KerML 7.3.2.4 says a conjugated type cannot be the specific type of a Specialization. KerML 7.3.2.2 describes a type declaration as defining 'either one or more owned specializations ... or a conjugator'.",
-      "decision": "follow_spec",
-      "rationale": "Keep the printed '+' and leave the two rules to validation. The Xtext's single occurrence has no LL motive, as the adjudicator found; it encodes validation constraints in syntax, which is the same move this repository declined in PrefixMetadataTyping-chain: a requirement the specification states as a constraint parses and fails at validation, because validity gates writes, not reads (ADR-0002). Here the constraints are structural rather than name-resolving, which makes the syntactic narrowing possible but not required. KerML 7.3.2.2's 'either ... or' describes a valid model, and validateTypeAtMostOneConjugator says the same thing as a constraint; neither is a grammar rule. The printed clause and the Tier B' transcription (kebnf line 399) agree on '+'. The corpus is silent on the disputed forms: every type declaration in it has exactly one part, e.g. Simple Tests/Types.kerml lines 2-29, so a parser following either reading accepts it all. DISSENT RECORDED: the grammar-adjudicator recommended follow_xtext on the constraint and prose evidence above, and found no OMG issue naming the production after reading the open KerML issue list on 2026-09-17. Reversing this decision changes this production only.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.2.4.1.1 Types (region_sha256 d5f980cd9c8a4387)",
-          "note": "TypeDeclaration ... ( SpecializationPart | ConjugationPart )+ TypeRelationshipPart*"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 7.3.2.2 Type-Declaration (region_sha256 632d1e414ba3b9f2)",
-          "note": "'a type declaration defines either one or more owned specializations ... or a conjugator'"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.3.3.1.10 Type (region_sha256 5200b0a51b33ed8e)",
-          "note": "validateTypeAtMostOneConjugator: 'A Type must have at most one owned Conjugation Relationship.'"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 7.3.2.4 Conjugation (region_sha256 2107419a0c9d6844)",
-          "note": "'a conjugated type cannot be the specific type in any specialization relationship'"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Types.kerml",
-          "note": "lines 3, 28, 29: `type all x specializes A, Base::things;`, `type Conjugate3 conjugates Original;`, `type Conjugate4 ~ Conjugate1;`, each with one part"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-04-04",
-          "note": "The KerML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "AnnotatingMember",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext (line 71) writes AnnotatingMember as `MemberPrefix ownedRelatedElement += AnnotatingElement`, adding the nullable MemberPrefix the specification omits.",
-      "problem": "SysML 8.2.2.4.1 states AnnotatingMember : OwningMembership = ownedRelatedElement += AnnotatingElement, with no MemberPrefix. AnnotatingMember is referenced only from EnumerationBody (SysML 8.2.2.8), where it is the only route to a comment, doc, rep or metadata inside an `enum def { }` body. Everywhere else an AnnotatingElement is reached through a member production that carries MemberPrefix (PackageMember, DefinitionMember, KerML's NonFeatureMember), so literally only enumeration bodies forbid `private doc /* */`.",
-      "decision": "follow_xtext",
-      "rationale": "Filed by the SysML specification's editor as SYSML21-319, open, reported 17 July 2025 against SysML 2.0b2: AnnotatingMember lacks MemberPrefix, so AnnotatingElements in EnumerationBodies cannot have any visibility other than public, 'even though there is no such restriction in the abstract syntax'. The pilot already adds it. The corpus has no visibility keyword before comment, doc, rep or metadata anywhere, so it does not decide the point. The Xtext's `=>` predicate on EnumerationBody's EnumerationUsageMember alternative is not ported; the optional visibility is followed by a token that tells the two alternatives apart. Adjudicated by the grammar-adjudicator on 2026-09-17; the issue page was fetched and its summary read directly.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.4.1 Annotations (region_sha256 3c3db88367d002e9)",
-          "note": "AnnotatingMember : OwningMembership = ownedRelatedElement += AnnotatingElement, no MemberPrefix"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.8 EnumerationsTextualNotation (region_sha256 9c242a1f7811f8ef)",
-          "note": "EnumerationBody, the only production referencing AnnotatingMember"
-        },
-        {
-          "kind": "omg_issue",
-          "ref": "SYSML21-319",
-          "note": "AnnotatingMember does not allow visibility; open; Ed Seidewitz, 17 July 2025, updated 27 January 2026"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "FlowEndSubsetting",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext (lines 1325-1330) writes FlowEndSubsetting's first alternative as `referencedFeature = [SysML::Feature | QualifiedName] '.'`, with the trailing '.' the specification omits.",
-      "problem": "SysML 8.2.2.16 states FlowEndSubsetting = referencedFeature = [QualifiedName] | referencedFeature = FeatureChainPrefix, and FlowEnd = FlowEndSubsetting? FlowFeatureMember. QualifiedName separates segments with '::' only (KerML 8.2.3.4.1), and FeatureChainPrefix, ( OwnedFeatureChaining '.' )+ OwnedFeatureChaining '.', needs at least two chainings and two dots. So a two-segment end such as `p1.torque` has nowhere for its dot: the first alternative would read `from p1 torque`, and the second needs `a.b.` before the flow feature.",
-      "decision": "follow_xtext",
-      "rationale": "The dot is missing from the first alternative, not optional: nothing else in the clause can consume it, and SysML's own KerML base states FlowEnd with the dot (KerML 8.2.5.9.2, ( OwnedReferenceSubsetting '.' )? FlowFeatureMember). The corpus uses the two-segment form throughout; the adjudicator counted 121 flow ends of that shape, among them the Annex A model's first flow, `flow p1.torque to p2.torque;`. Three-segment ends parse through FeatureChainPrefix as written, so only the first alternative changes. No open SysML issue title names FlowEnd, FlowEndSubsetting or FeatureChainPrefix (the open list was read on 2026-09-17); closed issues were not searched. Adjudicated by the grammar-adjudicator on 2026-09-17; the clause, Xtext and corpus line were rechecked directly.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.16 FlowsTextualNotation (region_sha256 e03f363eef9b4cf1)",
-          "note": "FlowEndSubsetting's first alternative is [QualifiedName] with no '.'"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.2.3.4.1 Namespaces (region_sha256 893fa9cef98e60fc)",
-          "note": "QualifiedName segments are separated by '::' only"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.2.5.9.2 Flows (region_sha256 150b0ccc1e0d5422)",
-          "note": "FlowEnd = ( OwnedReferenceSubsetting '.' )? FlowFeatureMember, with the dot"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
-          "note": "line 316: `flow p1.torque to p2.torque;`"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "CaseBodyItem",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext writes CaseBodyItem as CalculationBodyItem | SubjectMember | ActorMember | ObjectiveMember, where CalculationBodyItem is ActionBodyItem | ReturnParameterMember (SysML 8.2.2.19).",
-      "problem": "SysML 8.2.2.22 states CaseBodyItem : Type = ActionBodyItem | SubjectMember | ActorMember | ObjectiveMember. 'return' is produced only by ReturnParameterMember, which ActionBodyItem does not reach, so the clause rejects a `return` member directly in a case, analysis, verification or use case body.",
-      "decision": "follow_xtext",
-      "rationale": "The specification contradicts its own grammar. SysML 7.22.2 declares a case 'a kind of calculation definition or usage', 7.19.2 lets a calculation declare its result with `return`, and the worked examples in 7.23.2 (`return fuelEconomyResult : DistancePerVolumeValue;` in analysis def FuelEconomyAnalysis) and 7.24.2 (`return verdict : VerdictKind = evaluateData.verdict;` in verification def VehicleMassTest) put `return` directly in case bodies. The corpus does the same in analysis and verification definitions and usages, including the Annex A model's `return :>> verdict = evaluatePassFail.verdict;`. The pilot reuses CalculationBodyItem, which is the reading the prose describes. No open SysML issue title names CaseBodyItem or return parameters in cases (the open list was read on 2026-09-17); issue bodies and closed issues were not searched, so none is cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the 7.22.2, 7.23.2 and 7.24.2 text was rechecked directly.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.22 CasesTextualNotation (region_sha256 3fa44e95d6e4ec23)",
-          "note": "CaseBodyItem without ReturnParameterMember"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 7.22.2 Case-Definitions-and-Usages (region_sha256 eb25a69f33cb475f)",
-          "note": "'a kind of calculation definition or usage'"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 7.23.2 Analysis-Case-Definitions-and-Usages (region_sha256 2aa2d6ceaad20fca)",
-          "note": "`return fuelEconomyResult : DistancePerVolumeValue;` in an analysis def body"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 7.24.2 Verification-Case-Definitions-and-Usages (region_sha256 d518fc8c6f0142e0)",
-          "note": "`return verdict : VerdictKind = evaluateData.verdict;` in a verification def body"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/training/33. Analysis/Analysis Case Definition Example.sysml",
-          "note": "line 84: `return fuelEconomyResult : DistancePerVolumeValue = solveForFuelConsumption.fuelEconomy;`"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
-          "note": "line 1235: `return :>> verdict = evaluatePassFail.verdict;`"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clauses belong to."
-        }
-      ]
-    },
-    {
-      "production": "DefaultReferenceUsage",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext (lines 630-633) writes DefaultReferenceUsage as `( isEnd ?= 'end' )? RefPrefix UsageDeclaration ValuePart? UsageBody`: an optional bare 'end' flag, and otherwise the specification's RefPrefix Usage unfolded. Its UsageDeclaration (FeatureDeclaration) is Identification FeatureSpecializationPart? | FeatureSpecializationPart with a non-nullable Identification, so a declaration is always present.",
-      "problem": "SysML 8.2.2.6.3 states DefaultReferenceUsage : ReferenceUsage = RefPrefix Usage, with no 'end'. Only InterfaceDefinition has its own end production (DefaultInterfaceEnd, 8.2.2.14.1); connection and allocation definition bodies reach a keyword-less member only through DefinitionBodyItem, NonOccurrenceUsageElement and DefaultReferenceUsage. Literally, `end logical : LogicalElement;` in an allocation def and `end end1;` in a connection def have no production that accepts them. Separately, by the clause's letter every part of DefaultReferenceUsage can be empty (RefPrefix, UsageDeclaration through the nullable Identification of KerML 8.2.3.1, ValuePart) and UsageBody can be ';', so a lone ';' is a member: `package Vehicle;;` and `public;` both parse.",
-      "decision": "follow_xtext",
-      "rationale": "The corpus writes keyword-less ends in connection and allocation definitions, and nothing else in the specification parses them: `end logical : LogicalElement;` (training 38, Allocation Definition Example.sysml line 32, and validation 12b-Allocation-1.sysml line 47), `end hitch : HitchBall;` (validation 3c, mod-1 and mod-2, line 13), `end end1;` (Simple Tests/ConnectionTest.sysml line 33). Only the bare 'end' flag the pilot uses is added, not EndUsagePrefix's OwnedCrossFeatureMember option, which nothing here needs. The adjudicator found that the pack's own corpus snippets for this unit do not exercise it (interface ends, comments, and `end item` members); the `end item` form points to the same gap in OccurrenceUsagePrefix, which is its own unit. No open SysML issue title names DefaultReferenceUsage or end usages without 'ref' (open list read on 2026-09-17); bodies and closed issues were not searched. Adjudicated by the grammar-adjudicator on 2026-09-17; two corpus lines were rechecked directly. SECOND CHANGE, 2026-09-17, at the user's direction: the declaration must not be empty (a name or a FeatureSpecializationPart), as in the pilot. An empty member is not a declaration of anything, and the project's negative cases stray-semicolon.sysml and package-member-visibility-without-element.sysml encode that; Spec42 also rejects `package Vehicle;;`, `public;` and `package P { ; }`. Spec42 does not calibrate the finer boundary, since it rejects `in x;` and `x;`, which the corpus uses. Anonymous declarations such as `: T;` and `:> x;` keep parsing through FeatureSpecializationPart.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.6.3 ReferenceUsages (region_sha256 27505145913280ac)",
-          "note": "DefaultReferenceUsage = RefPrefix Usage, no 'end'"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.14.1 InterfaceDefinitions (region_sha256 86fc09c62954e744)",
-          "note": "DefaultInterfaceEnd = isEnd ?= 'end' Usage, an end production for interfaces only"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/training/38. Allocation/Allocation Definition Example.sysml",
-          "note": "line 32: `end logical : LogicalElement;` in `allocation def LogicalToPhysical {`"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml",
-          "note": "line 33: `end end1;` in `abstract connection def C {`"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml",
-          "note": "line 33: `end end1;`, a keyword-less end with a name, still accepted"
-        }
-      ]
-    },
-    {
-      "production": "MetadataUsageDeclaration",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext (lines 149-150) writes the keyword alternative as DefinedByKeyword, ':' | 'defined' 'by' (lines 395-397), the same rule its TypedBy uses.",
-      "problem": "SysML 8.2.2.27 prints MetadataUsageDeclaration's keyword alternative as ( ':' | 'typed' 'by' ), KerML 8.2.5.12's MetadataFeatureDeclaration word for word. SysML does not reserve 'typed' (8.2.2.1.2) and defines no TYPED_BY; it reserves 'defined' and defines DEFINED_BY = ':' | 'defined' 'by', and its own TypedBy (8.2.2.6.5) is DEFINED_BY FeatureTyping where KerML's (8.2.4.3.1) is TYPED_BY OwnedFeatureTyping.",
-      "decision": "follow_xtext",
-      "rationale": "The 'typed' 'by' is an unadapted copy of KerML's text in a clause SysML otherwise converts to DEFINED_BY: SysML types every other feature with 'defined' 'by', and 'typed' is not one of its reserved words. The pilot's DefinedByKeyword is that conversion, with no predicate or inlining. Not a union: nothing supports 'typed' 'by' in SysML. The corpus is silent on the keyword spelling: typed metadata usages use ':', e.g. `metadata engineSelectionRationale : Rationale about engine4cyl {`. The OwnedFeatureTyping the clause prints is kept, per deviation PrefixMetadataTyping-chain. The adjudicator read the open SysML issue list on 2026-09-17: no issue names this; SYSML21-11 (8.2.2.1.2's missing reserved words) does not mention 'typed'. Adjudicated by the grammar-adjudicator on 2026-09-17; the two TypedBy clauses and SysML's reserved words were rechecked directly.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.27 MetadataTextualNotation (region_sha256 69251565feee7639)",
-          "note": "( ':' | 'typed' 'by' )"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.1.2 LexicalStructure (region_sha256 4ceb9d8215eb7e2b)",
-          "note": "reserves 'defined', not 'typed'; DEFINED_BY = ':' | 'defined' 'by'"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.6.5 Specialization (region_sha256 d0d5a04805076a67)",
-          "note": "TypedBy : Feature = DEFINED_BY ownedRelationship += FeatureTyping"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.2.5.12 MetadataConcreteSyntax (region_sha256 30fa0599ab27c325)",
-          "note": "MetadataFeatureDeclaration's ( ':' | 'typed' 'by' ), the text SysML copied"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/examples/Metadata Examples/RationaleMetadataExample.sysml",
-          "note": "line 11: `metadata engineSelectionRationale : Rationale about engine4cyl {`"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "EnumeratedValue",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext (lines 784-786) writes EnumeratedValue as `UsageExtensionKeyword* EnumerationUsageKeyword? Usage`, allowing prefix metadata before an enumerated value.",
-      "problem": "SysML 8.2.2.8 states EnumeratedValue : EnumerationUsage = 'enum'? Usage, with no UsageExtensionKeyword*. Every other usage takes prefix metadata through UsagePrefix or OccurrenceUsagePrefix (8.2.2.6.2, 8.2.2.9.2), and EnumerationDefinition in the same clause keeps DefinitionExtensionKeyword*. Literally, `#Security enum secret : ClassificationLevel = 2;` in an enumeration body cannot parse.",
-      "decision": "follow_xtext",
-      "rationale": "The corpus writes it: Simple Tests/MetadataTest.sysml line 9, `#Security enum secret : ClassificationLevel = 2;`, inside `#Security enum def ClassificationLevel :> ScalarValues::Natural {`. EnumeratedValue is the only usage production without extension keywords, and nothing in the specification says enumerated values cannot carry prefix metadata. The pilot's extra alternative has no predicate or inlining. No SysML issue names 8.2.2.8 or EnumeratedValue (open list read on 2026-09-17); SYSML21-360 corrects the same kind of omission in the graphical enumeration notation (8.2.3.8), a different clause, so it is not cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the corpus line was rechecked directly.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.8 EnumerationsTextualNotation (region_sha256 9c242a1f7811f8ef)",
-          "note": "EnumeratedValue = 'enum'? Usage, while EnumerationDefinition keeps DefinitionExtensionKeyword*"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.6.2 Usages (region_sha256 a6f6e20afeed05e4)",
-          "note": "UsagePrefix = UnextendedUsagePrefix UsageExtensionKeyword*"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/MetadataTest.sysml",
-          "note": "line 9: `#Security enum secret : ClassificationLevel = 2;`"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "OccurrenceUsagePrefix",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext (lines 836-843) writes OccurrenceUsagePrefix as ( EndUsagePrefix | BasicUsagePrefix ( 'individual' )? ( PortionKind )? ) UsageExtensionKeyword*, adding EndUsagePrefix as an alternative.",
-      "problem": "SysML 8.2.2.9.2 states OccurrenceUsagePrefix : OccurrenceUsage = BasicUsagePrefix ( isIndividual ?= 'individual' )? ( portionKind = PortionKind )? UsageExtensionKeyword*, with no EndUsagePrefix. Every item, part, port, connection, flow and action usage takes this prefix, so none can begin with 'end'. The general usage prefix has the alternative (UnextendedUsagePrefix = EndUsagePrefix | BasicUsagePrefix, 8.2.2.6.2), as does ReferenceUsage (8.2.2.6.3); only interface bodies have a separate bare end form (DefaultInterfaceEnd, 8.2.2.14.1), with no keyword. Literally, `end port supplierPort : FuelOutPort;` in a flow def and `end [1] item a : A {` in a connection def cannot parse.",
-      "decision": "follow_xtext",
-      "rationale": "The corpus writes keyworded ends throughout connection, flow and interface definitions and usages; the adjudicator counted 34 lines that no other production accepts, e.g. training 13 Flow Definition Example line 8, `end port supplierPort : FuelOutPort;`, and Simple Tests/ConnectionTest.sysml line 68, `end [1] item a : A {`, whose multiplicity exercises EndUsagePrefix's OwnedCrossFeatureMember. The pilot's addition reuses the specification's own EndUsagePrefix unchanged, the alternative 8.2.2.6.2 and 8.2.2.6.3 already give the other usage prefixes. It completes deviation DefaultReferenceUsage, which added the bare 'end' for keyword-less ends. No open SysML issue title names this; SYSML21-594 ('OccurrencePrefix is referenced but not specified') was read and concerns the graphical BNF, so it is not cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the two corpus lines were rechecked directly.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.9.2 OccurrenceUsages (region_sha256 6dfed224798030c3)",
-          "note": "OccurrenceUsagePrefix without EndUsagePrefix"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.6.2 Usages (region_sha256 a6f6e20afeed05e4)",
-          "note": "UnextendedUsagePrefix = EndUsagePrefix | BasicUsagePrefix"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.6.3 ReferenceUsages (region_sha256 27505145913280ac)",
-          "note": "ReferenceUsage = ( EndUsagePrefix | RefPrefix ) 'ref' Usage"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.14.1 InterfaceDefinitions (region_sha256 86fc09c62954e744)",
-          "note": "DefaultInterfaceEnd = isEnd ?= 'end' Usage, keyword-less, interfaces only"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/training/13. Flows/Flow Definition Example.sysml",
-          "note": "line 8: `end port supplierPort : FuelOutPort;` in `flow def FuelFlow {`"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml",
-          "note": "line 68: `end [1] item a : A {` in `connection def AB {`"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "SatisfyRequirementUsage",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext writes SatisfyRequirementUsage as OccurrenceUsagePrefix 'assert'? ( isNegated ?= 'not' )? 'satisfy' ..., both keywords optional.",
-      "problem": "SysML 8.2.2.21.2 prints OccurrenceUsagePrefix 'assert' ( isNegated ?= 'not' ) 'satisfy' ... with no '?' on either, so literally every satisfy must be written `assert not satisfy`. Tier B' reproduces the text.",
-      "decision": "follow_xtext",
-      "rationale": "The specification's own prose and examples contradict the printed rule. SysML 7.21.4 writes `satisfy vehicleMaximumMass by vehicle1;` and `not satisfy vehicleMaximumMass by vehicle2;`, and says a satisfy is negated by placing `not` before `satisfy`; none of its examples writes `assert`. The sibling AssertConstraintUsage (8.2.2.20) prints ( isNegated ?= 'not' )? with the '?'. The corpus uses all four combinations in Simple Tests/RequirementTest.sysml lines 21, 22, 26 and 27 (`satisfy r by p;`, `assert satisfy r by q;`, `not satisfy r1 by p;`, `assert not satisfy r1 by q;`), and the adjudicator counted 19 of 22 corpus satisfy statements with neither keyword. Only the two '?' change; the clause's 'requirement' UsageDeclaration is kept, the Xtext's UsageDeclaration? being redundant. No SysML issue names the textual rule (open list read on 2026-09-17); SYSML21-671 and -672 concern the graphical notation and are not cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the corpus lines and 7.21.4 were rechecked directly.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.21.2 RequirementUsages (region_sha256 6c4f3553daaa3162)",
-          "note": "'assert' ( isNegated ?= 'not' ) 'satisfy', no '?'"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 7.21.4 Satisfy-Requirement-Usages (region_sha256 05678331cdfe23ad)",
-          "note": "`not satisfy vehicleMaximumMass by vehicle2;` and examples without 'assert'"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.20 ConstraintsTextualNotation (region_sha256 fa7fb8d5154241ee)",
-          "note": "AssertConstraintUsage: 'assert' ( isNegated ?= 'not' )?"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/RequirementTest.sysml",
-          "note": "lines 21, 22, 26, 27: `satisfy r by p;`, `assert satisfy r by q;`, `not satisfy r1 by p;`, `assert not satisfy r1 by q;`"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "PayloadFeature-sysml-value-alternative",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext (lines 1302-1307) writes SysML's PayloadFeature through fragment Payload with four alternatives, the second `Identification? ValuePart`, as KerML.xtext does.",
-      "problem": "SysML 8.2.2.16 states PayloadFeature : Feature = Identification? PayloadFeatureSpecializationPart ValuePart? | OwnedFeatureTyping OwnedMultiplicity? | OwnedMultiplicity OwnedFeatureTyping: three alternatives. KerML 8.2.5.9.2 has a fourth, Identification ValuePart, and the pilot keeps it for SysML. So `flow of x = 4 from a to b;` is SysML by the pilot and not by the clause.",
-      "decision": "follow_spec",
-      "rationale": "Keep SysML's three alternatives. The clause is well-formed here, and nothing in the specification or the corpus asks for the fourth: the corpus has no payload of the form `of name = value` in either language (every payload is typed or `name : Type = value`), no SysML prose describes an untyped valued payload, and no filed issue reports the omission. SysML states its own concrete syntax and may state it narrower than KerML; that FlowUsage is a KerML Flow in the abstract syntax does not carry the concrete syntax with it. Every follow_xtext decision in this file rests on a corpus instance, specification prose, or a filed issue, and this one has none. DISSENT RECORDED: the grammar-adjudicator recommended follow_xtext on 2026-09-17, arguing that 8.2.2.16 is a defect hotspot (SYSML21-399, -402 and -404 are filed against the same clause) and that the payload is one kernel metaclass; it found no issue naming this alternative. Reversing this decision adds `Identification? ValuePart` to PayloadFeature@sysml only.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.16 FlowsTextualNotation (region_sha256 e03f363eef9b4cf1)",
-          "note": "PayloadFeature with three alternatives"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "KerML 8.2.5.9.2 Flows (region_sha256 150b0ccc1e0d5422)",
-          "note": "the fourth alternative, Identification ValuePart, in KerML"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml",
-          "note": "line 89: `flow call_getItems of CallGiveItems[1]`, a typed payload; no corpus payload has the disputed form"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "EntryTransitionMember",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext (line 1796) writes the second alternative as 'then' ownedRelatedElement += TransitionSuccession.",
-      "problem": "SysML 8.2.2.18.1 prints EntryTransitionMember : FeatureMembership : MemberPrefix ( GuardedTargetSuccession | 'then' TargetSuccession ) ';'. TargetSuccession (8.2.2.17.8) is SourceEndMember 'then' ConnectorEndMember and carries its own 'then', so the printed alternative reads `then then target;`. TransitionSuccession (8.2.2.18.3) is EmptyEndMember ConnectorEndMember, with no 'then'. The header also ends in ':' where '=' belongs.",
-      "decision": "follow_xtext",
-      "rationale": "TargetSuccession is written where TransitionSuccession is meant: the two names differ by one word and sit in adjacent clauses, and the printed form doubles 'then'. The corpus writes a single 'then' after an entry action, e.g. Arrowhead Framework Example/AHFNorwayTopics.sysml lines 60-61, `entry send new CallGiveItems(\"All the items\") via apisp.APIS_HTTP;` then `then Wait;`, and no doubled 'then' occurs anywhere. The malformed header is filed as item 8 of SYSML21-402 (open, page read), which does not mention the succession; the substitution is unfiled as far as the open SysML issue list shows (read 2026-09-17). Adjudicated by the grammar-adjudicator on 2026-09-17; both succession bodies, the corpus lines and SYSML21-402 were rechecked directly.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.18.1 StateDefinitions (region_sha256 0119cca482071cd3)",
-          "note": "'then' ownedRelatedElement += TargetSuccession, header ending ':'"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.17.8 ActionSuccessions (region_sha256 e5f3ae624be80231)",
-          "note": "TargetSuccession = SourceEndMember 'then' ConnectorEndMember"
-        },
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.18.3 TransitionUsages (region_sha256 2da333dc19880d39)",
-          "note": "TransitionSuccession = EmptyEndMember ConnectorEndMember"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml",
-          "note": "lines 60-61: `entry send new CallGiveItems(\"All the items\") via apisp.APIS_HTTP;` / `then Wait;`"
-        },
-        {
-          "kind": "omg_issue",
-          "ref": "SYSML21-402",
-          "note": "item 8, `EntryTransitionMember : FeatureMembership :`, the malformed header only"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "FramedConcernUsage",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext (lines 2082-2087) gives both alternatives RequirementBody, and the keyword alternative ConstraintUsageDeclaration; the Tier B' transcription writes the same.",
-      "problem": "SysML 8.2.2.21.1 prints FramedConcernUsage : ConcernUsage = OwnedReferenceSubsetting FeatureSpecializationPart? CalculationBody | ( UsageExtensionKeyword* 'concern' | UsageExtensionKeyword+ ) CalculationUsageDeclaration CalculationBody. CalculationUsageDeclaration is defined nowhere, and a concern is a requirement usage, whose body is RequirementBody.",
-      "decision": "follow_xtext",
-      "rationale": "The printed production is defective and filed: SYSML21-366 (open, Ed Seidewitz, page read) reports that CalculationUsageDeclaration is not defined in the grammar, and SYSML21-449 (open, page read earlier this session) lists it among undefined rules at page 188. The pilot and Tier B' both read it as RequirementUsage reads its own declaration and body, ConstraintUsageDeclaration RequirementBody; ConcernUsage specializes RequirementUsage in the abstract syntax, and only RequirementBody holds subject, stakeholder and nested require, assume and frame members. The corpus has three `frame concern` members, all with ';' bodies (e.g. `frame concern vs:VehicleSafety;`), so it does not exercise the body. Adjudicated by the grammar-adjudicator on 2026-09-17; SYSML21-366 was rechecked directly.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.21.1 RequirementDefinitions (region_sha256 fd824f1d9da5f780)",
-          "note": "FramedConcernUsage with CalculationBody and the undefined CalculationUsageDeclaration"
-        },
-        {
-          "kind": "omg_issue",
-          "ref": "SYSML21-366",
-          "note": "Error in FramedConcernUsage production: CalculationUsageDeclaration is not defined"
-        },
-        {
-          "kind": "omg_issue",
-          "ref": "SYSML21-449",
-          "note": "lists CalculationUsageDeclaration as undefined, page 188"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
-          "note": "line 1546: `frame concern vs:VehicleSafety;`"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
-        }
-      ]
-    },
-    {
-      "production": "RequirementConstraintUsage",
-      "bucket": "conflict",
-      "upstream": "vendor/pilot/SysML.xtext (lines 2066-2071) gives the by-reference alternative CalculationBody where the specification gives RequirementBody, matching the adjacent ConstraintUsage and AssertConstraintUsage rules.",
-      "problem": "SysML 8.2.2.21.1 prints RequirementConstraintUsage : ConstraintUsage = OwnedReferenceSubsetting FeatureSpecializationPart? RequirementBody | ( UsageExtensionKeyword* 'constraint' | UsageExtensionKeyword+ ) ConstraintUsageDeclaration CalculationBody. The pilot narrows the first alternative's body to CalculationBody.",
-      "decision": "follow_spec",
-      "rationale": "The printed clause is well-formed, and the Tier B' transcription gives the same RequirementBody, so the specification's text is not in doubt. The pilot's narrowing has no predicate and no ambiguity to resolve: the two alternatives are distinguished before either body begins. No issue names RequirementConstraintUsage. The corpus does not decide it: its by-reference `require`/`assume` members with braced bodies hold only feature redefinitions, e.g. `require rangeRequirement { :>> actualRange = simulatedRange; }`, which both bodies accept. Adjudicated by the grammar-adjudicator on 2026-09-17.",
-      "evidence": [
-        {
-          "kind": "spec_clause",
-          "ref": "SysML 8.2.2.21.1 RequirementDefinitions (region_sha256 fd824f1d9da5f780)",
-          "note": "first alternative ends in RequirementBody"
-        },
-        {
-          "kind": "corpus_file",
-          "ref": "vendor/corpus/sysml/src/examples/State Space Representation Examples/EVSample.sysml",
-          "note": "line 110: `require rangeRequirement { :>> actualRange = simulatedRange; }`, accepted by either body"
-        },
-        {
-          "kind": "file_id",
-          "ref": "ptc/25-02-15",
-          "note": "The SysML Tier A pin the governing clause belongs to."
         }
       ]
     }

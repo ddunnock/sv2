@@ -3,7 +3,7 @@
   "production": "ActionNodePrefix",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "1d21a99bccb8810f3e974cbe685772d27ca61795e03b0cfdb71408760696f3d8",
     "xtext_rule": "252ff731667ba1802bf473b29a17ca14728551938c27a259ff5863e6867c49f5",
@@ -16,5 +16,51 @@
     "xtext_rule_text": "fragment ActionNodePrefix returns SysML::ActionUsage :\n\tOccurrenceUsagePrefix ActionNodeUsageDeclaration?\n;",
     "metaclass": "SysML::ActionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "OccurrenceUsagePrefix"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "ActionNodeUsageDeclaration"
+        }
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.2. The clause and the Xtext state this production identically \u2014 `OccurrenceUsagePrefix ActionNodeUsageDeclaration?` in both \u2014 so there is nothing to weigh. Both parts can derive empty, so the prefix as a whole is optional in effect, which is why `if i < 0 {` needs nothing before the keyword. It is the shared head of the structured control nodes, where the node keyword follows it; the simpler control nodes use ControlNodePrefix instead, which is a different production.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.2 (ActionUsages.md, region_sha256 207a908873b90795)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/StructuredControlTest.sysml",
+      "note": "Line 7 `if i < 0 {` and line 20 `while i > 0 {` each have an empty ActionNodePrefix before the node keyword."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext ActionNodePrefix",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:55:06Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:55:07Z"
 }

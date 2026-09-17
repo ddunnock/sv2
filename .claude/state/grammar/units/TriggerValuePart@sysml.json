@@ -3,7 +3,7 @@
   "production": "TriggerValuePart",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "4d0090a6548ad98b5663779527589d178f631881488de14f2848a1b1d1beb6a0",
@@ -16,5 +16,39 @@
     "xtext_rule_text": "fragment TriggerValuePart returns SysML::Feature :\n\townedRelationship += TriggerFeatureValue\n;",
     "metaclass": "SysML::Feature"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "ref",
+    "name": "TriggerFeatureValue"
+  },
+  "decision": "A transcription of SysML 8.2.2.17.4. The clause and the Xtext state this production identically \u2014 `ownedRelationship += TriggerFeatureValue` in both \u2014 so there is nothing to weigh. It contributes no tokens; the trigger's keyword and argument are below it. The Xtext declares it a fragment, an inlining mechanism of that parser generator rather than a claim about the language.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml",
+      "note": "In line 18 `then accept sig after 10[SI::s];` this production holds `after 10[SI::s]`; in line 22 `then accept when b.f;` it holds `when b.f`."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext TriggerValuePart",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T19:05:04Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T19:05:04Z"
 }

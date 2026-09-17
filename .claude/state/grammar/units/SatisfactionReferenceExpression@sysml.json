@@ -3,7 +3,7 @@
   "production": "SatisfactionReferenceExpression",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "fc398636b89ed7f38aee585cc6eb3e6281af4853d57aab1490de3e1306db12d3",
     "xtext_rule": "38aa4b2a632d47d062cbb97c1833f410f286ff366229c0152d5ab63b7dcde69c",
@@ -16,5 +16,39 @@
     "xtext_rule_text": "SatisfactionReferenceExpression returns SysML::FeatureReferenceExpression :\n\townedRelationship += FeatureChainMember\n;",
     "metaclass": "SysML::FeatureReferenceExpression"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "ref",
+    "name": "FeatureChainMember"
+  },
+  "decision": "A transcription of SysML 8.2.2.21.2. The clause and the Xtext state this production identically \u2014 `ownedRelationship += FeatureChainMember` in both \u2014 so there is nothing to weigh. It contributes no tokens: it is the feature reference expression that wraps the subject of a satisfaction, and everything written is the chain below it. Being a FeatureChainMember rather than a plain name is what lets the subject be `vehicle_design.engine_v1` as readily as `vehicle_design`.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.21.2 (RequirementUsages.md, region_sha256 6c4f3553daaa3162)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/32. Requirements/Requirement Satisfaction.sysml",
+      "note": "Line 22 `satisfy vehicleSpecification by vehicle_design;` reaches this production with a single-segment chain; line 23 `satisfy engineSpecification by vehicle_design.engine_v1;` with a two-segment one."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext SatisfactionReferenceExpression",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:55:06Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:55:07Z"
 }

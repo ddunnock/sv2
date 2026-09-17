@@ -3,7 +3,7 @@
   "production": "AssignmentTargetBinding",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "a268475e162e29768dbefce1071203c8c52c4eea909b9561a878f0d79d91c939",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -16,5 +16,34 @@
     "xtext_rule_text": "",
     "metaclass": ""
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No xtext evidence: the pilot has no AssignmentTargetBinding rule. This production is also the one place NonFeatureChainPrimaryExpression earns its existence, which bears on the standing question of why the NonFeatureChainPrimaryArgument pair is unreachable.",
+  "rule": {
+    "k": "ref",
+    "name": "NonFeatureChainPrimaryExpression"
+  },
+  "decision": "A transcription of SysML 8.2.2.17.5: `ownedRelatedElement += NonFeatureChainPrimaryExpression`. It contributes no tokens of its own; the prefix expression it holds is written below it. The choice of NonFeatureChainPrimaryExpression rather than a general expression is the load-bearing part and is the clause's own: a feature chain is excluded here precisely because the '.' that would continue the chain belongs to AssignmentTargetParameter, so admitting one would make `counter.count` ambiguous between a chain and a prefix-plus-feature. There is no second opinion to weigh: the pinned pilot grammar has no rule of this name, reaching the same position through TargetBinding behind a '=>' syntactic predicate.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.5 (AssignmentActionUsages.md, region_sha256 dfe847fa0a5c6846)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml",
+      "note": "In line 20 `entry assign counter.count := 0;` this production holds `counter`, the part before the '.' that AssignmentTargetParameter carries."
+    }
+  ],
+  "derived_utc": "2026-09-17T19:05:04Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T19:05:04Z"
 }

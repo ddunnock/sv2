@@ -3,7 +3,7 @@
   "production": "TransitionSendActionUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -16,5 +16,67 @@
     "xtext_rule_text": "",
     "metaclass": ""
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No xtext evidence: the pilot grammar has no TransitionSendActionUsage rule.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "SendNodeDeclaration"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "{"
+            },
+            {
+              "k": "star",
+              "item": {
+                "k": "ref",
+                "name": "ActionBodyItem"
+              }
+            },
+            {
+              "k": "kw",
+              "text": "}"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.18.3: `SendNodeDeclaration ( '{' ActionBodyItem* '}' )?`. There is no second opinion to weigh \u2014 the pinned pilot grammar defines no rule of this name. The tail is braces or nothing rather than an ActionBody, which is what the corpus shows: a send effect runs straight into the transition's 'then' with no terminator between them.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "Line 60 `do send new StartSignal() to controller` is this production with the braced tail absent, and line 61 `then starting;` follows it directly \u2014 which is why the tail cannot be an ActionBody ending in ';'."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/25. Transitions/Transition Actions.sysml",
+      "note": "Line 31 `do send new ControllerStartSignal() to controller` is the same, followed by `then on;` on line 32."
+    }
+  ],
+  "derived_utc": "2026-09-17T19:01:54Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T19:01:54Z"
 }

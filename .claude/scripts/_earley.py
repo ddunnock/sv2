@@ -32,7 +32,17 @@ Item = tuple[str, int, int, int]
 #: (`/* ... */`) is NOT trivia. It is the body of a Comment element, and a bare one is a
 #: Comment in the model, so it is a token the grammar must see.
 _SKIPPED = ("WS", "ML_NOTE", "SL_NOTE")
-MAX_STATES = 400_000
+#: Earley items allowed per input token, the guard against a pathologically
+#: ambiguous grammar. A per-token budget rather than an absolute cap, because
+#: linear growth is the property actually being guarded: an unambiguous grammar
+#: costs a bounded number of items per position however long the input, while
+#: real ambiguity grows super-linearly and so trips this at ANY file size. An
+#: absolute cap cannot make that distinction — it only asks whether the file is
+#: big. Measured 2026-09-17 over the whole pinned corpus with the SysML grammar
+#: complete at 849 productions: the two largest files (~6,970 tokens, the two
+#: copies of SimpleVehicleModel) need ~996k items, or ~143 per token, and time
+#: scales linearly in the input. 2_000 leaves roughly fourteen times that.
+STATES_PER_TOKEN = 2_000
 
 
 def make_lexer(keywords: Iterable[str], operators: Iterable[str]) -> Callable[[str], list[Token]]:
@@ -172,11 +182,16 @@ class _Chart:
 
 
 def recognize(
-    prods: Productions, start: str, tokens: list[Token], max_states: int = MAX_STATES
+    prods: Productions, start: str, tokens: list[Token], max_states: int | None = None
 ) -> tuple[bool, str]:
-    """Earley recognition of ``tokens`` from ``start``. Returns (accepted, reason)."""
+    """Earley recognition of ``tokens`` from ``start``. Returns (accepted, reason).
+
+    ``max_states`` defaults to STATES_PER_TOKEN per token; pass one to override it.
+    """
     if start not in prods:
         return False, f"start symbol {start!r} is not defined"
+    if max_states is None:
+        max_states = STATES_PER_TOKEN * (len(tokens) + 1)
 
     sets: list[set[Item]] = [set() for _ in range(len(tokens) + 1)]
     chart = _Chart(prods, tokens, sets, nullable_nonterminals(prods))

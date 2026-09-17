@@ -3,7 +3,7 @@
   "production": "TriggerExpression",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "acd22f4e4ac035746a9134ffc37e865c5145c48647d04ce731aef0f5b73c8a2d",
@@ -16,5 +16,85 @@
     "xtext_rule_text": "TriggerExpression returns SysML::TriggerInvocationExpression :\n\t  kind = TimeTriggerKind\n\t  ownedRelationship += ArgumentMember\n\t| kind = ChangeTriggerKind\n\t  ownedRelationship += ArgumentExpressionMember\n;",
     "metaclass": "SysML::TriggerInvocationExpression"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "alt",
+            "items": [
+              {
+                "k": "kw",
+                "text": "at"
+              },
+              {
+                "k": "kw",
+                "text": "after"
+              }
+            ]
+          },
+          {
+            "k": "ref",
+            "name": "ArgumentMember"
+          }
+        ]
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "kw",
+            "text": "when"
+          },
+          {
+            "k": "ref",
+            "name": "ArgumentExpressionMember"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.17.4 states this production, but prints `kind = ( 'at | 'after' )` with no closing quote after at, so read literally the first literal never terminates and no rule can be derived. The quote is closed: the intended literals are 'at' and 'after', which the clause's own correctly-spelled 'when' beside them and the pilot grammar both confirm. Recorded as the deviation TriggerExpression, follow_spec; the defect is filed as SYSML21-401, open. Otherwise the clause is transcribed. The `kind =` assignments contribute no tokens, and the Xtext reaches the same three literals through two enums, TimeTriggerKind `'at' | 'after'` (SysML.xtext:1479) and ChangeTriggerKind `'when'` (1483) \u2014 the same device it uses for Expose's visibility and the transition feature kinds. The two branches differ in more than their keyword: a time trigger takes an ArgumentMember and a change trigger an ArgumentExpressionMember, which is the laziness distinction \u2014 the change trigger wraps its value in a reference so the expression is re-evaluated rather than evaluated once.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+      "note": "States the production; the rule is its transcription with the unterminated literal closed."
+    },
+    {
+      "kind": "deviation",
+      "ref": "TriggerExpression",
+      "note": "Why the first literal reads 'at' rather than running to the next quote."
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "SYSML21-401",
+      "note": "Open. 'TriggerExpression missing closing quote after 'at'. Page fetched and body read on 2026-09-17."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml",
+      "note": "Line 18 `then accept sig after 10[SI::s];` takes 'after' with an ArgumentMember. Line 19 `then accept at new Time::Iso8601DateTime(\"2022-01-30T01:00:00Z\");` takes 'at'. Line 22 `then accept when b.f;` takes the change branch with an ArgumentExpressionMember."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext TriggerExpression",
+      "note": "Second opinion. Same three literals once TimeTriggerKind (1479) and ChangeTriggerKind (1483) are unwound."
+    }
+  ],
+  "derived_utc": "2026-09-17T19:05:04Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T19:05:04Z"
 }

@@ -3,7 +3,7 @@
   "production": "ControlNodePrefix",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "9f6ad15d3c6276977efc7f4191cc5ceb74786e4a088c6dbbebcd16e6dd6dec08",
     "xtext_rule": "38f352c33740f81ef74f666024fea006ec4ff9863bad1cd5e45267fa3b2b4393",
@@ -16,5 +16,75 @@
     "xtext_rule_text": "fragment ControlNodePrefix returns SysML::OccurrenceUsage :\n\t  RefPrefix\n\t  ( isIndividual ?= 'individual' )?\n\t  ( portionKind = PortionKind )?\n\t  UsageExtensionKeyword*\n;",
     "metaclass": "SysML::OccurrenceUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "RefPrefix"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "kw",
+          "text": "individual"
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "PortionKind"
+        }
+      },
+      {
+        "k": "star",
+        "item": {
+          "k": "ref",
+          "name": "UsageExtensionKeyword"
+        }
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.17.3 states this production, but prints `( isIndividual ?= 'individual )?` with no closing quote, so read literally the literal never terminates and no rule can be derived. The quote is closed: the intended literal is 'individual', which the attribute name isIndividual, the `?=` idiom and the pilot grammar all agree on, and which is the minimal repair. Recorded as the deviation ControlNodePrefix, follow_spec; the defect is filed as SYSML21-400, open. Otherwise the clause is transcribed: `isIndividual ?=` and the `{ isPortion = true }` beside PortionKind are assignments into the abstract syntax and contribute no tokens, so the rule carries the keyword and the kind alone.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.3 (ControlNodes.md, region_sha256 08ce249947265cb2)",
+      "note": "States the production; the rule is its transcription with the unterminated literal closed."
+    },
+    {
+      "kind": "deviation",
+      "ref": "ControlNodePrefix",
+      "note": "Why the literal reads 'individual' rather than running to the end of the clause."
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "SYSML21-400",
+      "note": "Open. 'ControlNodePrefix missing closing quote after 'individual'. Page fetched and body read on 2026-09-17."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml",
+      "note": "Line 12 `join J;` and line 34 `merge M;` each take this prefix in its wholly empty form, every part being optional or a star."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext ControlNodePrefix",
+      "note": "Second opinion. Identical once the quote is closed; it writes `( isIndividual ?= 'individual' )?`."
+    }
+  ],
+  "derived_utc": "2026-09-17T19:00:51Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T19:00:51Z"
 }

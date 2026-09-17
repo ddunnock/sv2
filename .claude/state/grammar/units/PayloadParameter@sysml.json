@@ -3,7 +3,7 @@
   "production": "PayloadParameter",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "a68732f839eaf30a543d5fd5b1f9dbdec56315309b43c6b859b22d4aeab5e9fc",
@@ -16,5 +16,64 @@
     "xtext_rule_text": "PayloadParameter returns SysML::ReferenceUsage :\n\t  Payload\n\t| Identification? PayloadFeatureSpecializationPart? TriggerValuePart\n;",
     "metaclass": "SysML::ReferenceUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "PayloadFeature"
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "Identification"
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "ref",
+              "name": "PayloadFeatureSpecializationPart"
+            }
+          },
+          {
+            "k": "ref",
+            "name": "TriggerValuePart"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.4. The Xtext differs in two ways and neither is a disagreement. It names its first alternative Payload, a rule that appears in no specification clause, where the clause writes PayloadFeature, which is a production with its own unit; the clause's name is taken. And it writes `Identification?` where the clause writes `Identification`, which is redundant rather than wider, because Identification is `( '<' NAME '>' )? ( declaredName = NAME )?` (8.2.2.2) and so already derives empty \u2014 the MultiplicityRange@kerml case again, and no deviation. The second alternative is what carries a timed or change trigger: TriggerValuePart is mandatory there, which is what separates `accept sig after 10[SI::s]` from the plain payload of `accept S`.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+      "note": "States the production; the rule is its transcription. The pack flags this clause as malformed, but the defect is in TriggerExpression (SYSML21-401) and not in this production."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml",
+      "note": "Line 17 `then accept S;` takes the PayloadFeature alternative. Line 18 `then accept sig after 10[SI::s];` takes the second: `sig` is the Identification and `after 10[SI::s]` the TriggerValuePart. Line 22 `then accept when b.f;` takes the second with no Identification at all, which is what the nullability of Identification allows."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext PayloadParameter",
+      "note": "Second opinion. Same two alternatives; its Payload appears in no clause and its `Identification?` is redundant."
+    }
+  ],
+  "derived_utc": "2026-09-17T19:05:04Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T19:05:04Z"
 }

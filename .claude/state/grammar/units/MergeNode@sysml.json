@@ -3,7 +3,7 @@
   "production": "MergeNode",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "9f6ad15d3c6276977efc7f4191cc5ceb74786e4a088c6dbbebcd16e6dd6dec08",
     "xtext_rule": "e2e76ce94019575b33a6a6012cacd78a1b0684e933523879ab6c0f861a9dd66e",
@@ -16,5 +16,56 @@
     "xtext_rule_text": "MergeNode returns SysML::MergeNode :\n\tControlNodePrefix \n\tisComposite ?= 'merge' UsageDeclaration?\n\tActionBody\n;",
     "metaclass": "SysML::MergeNode"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "ControlNodePrefix"
+      },
+      {
+        "k": "kw",
+        "text": "merge"
+      },
+      {
+        "k": "ref",
+        "name": "UsageDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "ActionBody"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.3: `ControlNodePrefix isComposite ?= 'merge' UsageDeclaration ActionBody`. The `isComposite ?=` is an assignment into the abstract syntax attached to the keyword, not a token, so the concrete rule is the keyword itself. The Xtext writes `UsageDeclaration?` where the clause writes `UsageDeclaration`; that is redundant rather than wider, because UsageDeclaration is `Identification FeatureSpecializationPart?` (8.2.2.6.2) and Identification is `( '<' NAME '>' )? ( declaredName = NAME )?` (8.2.2.2), so it already derives empty. The two accept the same language \u2014 the MultiplicityRange@kerml case again \u2014 and the clause's form is kept, so no deviation is recorded.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.3 (ControlNodes.md, region_sha256 08ce249947265cb2)",
+      "note": "States the production; the rule is its transcription. The pack flags this clause as malformed, but the defect is in ControlNodePrefix (SYSML21-400) and not in this production."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml",
+      "note": "Line 34 `merge M;` is this production with an empty ControlNodePrefix, `M` as the UsageDeclaration and `;` as the ActionBody."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext MergeNode",
+      "note": "Second opinion. Same tokens; its `UsageDeclaration?` is redundant against a nullable UsageDeclaration."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:58:18Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:58:18Z"
 }

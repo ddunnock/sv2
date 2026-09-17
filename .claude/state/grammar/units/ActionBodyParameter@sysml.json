@@ -3,7 +3,7 @@
   "production": "ActionBodyParameter",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
     "xtext_rule": "94d18411647dfd40d2b15d9042989bacf2354b88f633eed342b0f8a384a944b0",
@@ -16,5 +16,79 @@
     "xtext_rule_text": "ActionBodyParameter returns SysML::ActionUsage :\n\t{SysML::ActionUsage} ( ActionUsageKeyword UsageDeclaration? )? '{' => ActionBodyItem* '}'\n;",
     "metaclass": "SysML::ActionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "action"
+            },
+            {
+              "k": "opt",
+              "item": {
+                "k": "ref",
+                "name": "UsageDeclaration"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "k": "kw",
+        "text": "{"
+      },
+      {
+        "k": "star",
+        "item": {
+          "k": "ref",
+          "name": "ActionBodyItem"
+        }
+      },
+      {
+        "k": "kw",
+        "text": "}"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.7: `( 'action' UsageDeclaration? )? '{' ActionBodyItem* '}'`. The Xtext agrees on every token \u2014 its ActionUsageKeyword resolves through ActionKeyword to the single literal 'action' \u2014 with two things not carried over. `{SysML::ActionUsage}` is an object-creating action that consumes no input. The '=>' before `ActionBodyItem*` is a syntactic predicate, an LL workaround for a parser generator this project does not use, and porting it would make the grammar describe the pilot rather than the language. The braces are mandatory here, unlike an ActionBody, which is what makes a branch or loop body always a block and never a bare ';'.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.7 (StructuredControlActionUsages.md, region_sha256 90c294385874fdc1)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/StructuredControlTest.sysml",
+      "note": "The body opened on line 7 by `if i < 0 {` takes the form with the optional declaration absent \u2014 braces alone."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/17. Control/Control Structures Example.sysml",
+      "note": "Line 14 `loop action charging {` takes the declaration branch: 'action' then the UsageDeclaration `charging`, then the brace."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext ActionBodyParameter (line 1607)",
+      "note": "Second opinion. Same tokens; its '=>' predicate and object action are declined."
+    }
+  ],
+  "derived_utc": "2026-09-17T19:02:53Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T19:02:53Z"
 }

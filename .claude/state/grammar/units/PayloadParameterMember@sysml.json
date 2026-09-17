@@ -3,7 +3,7 @@
   "production": "PayloadParameterMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "9b0dbb58e81d8540b2d63be59570317867cab4f1c20ef389f4b523acfa08c9e4",
@@ -16,5 +16,39 @@
     "xtext_rule_text": "PayloadParameterMember returns SysML::ParameterMembership :\n\townedRelatedElement += PayloadParameter \n;",
     "metaclass": "SysML::ParameterMembership"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No xtext evidence: the pinned SysML.xtext has no rule of this name, reaching the payload through its own arrangement of AcceptParameterPart.",
+  "rule": {
+    "k": "ref",
+    "name": "PayloadParameter"
+  },
+  "decision": "A transcription of SysML 8.2.2.17.4: `ownedRelatedElement += PayloadParameter`. It contributes no tokens; the payload's own syntax, including the trigger expression forms, is entirely in PayloadParameter. It is the mandatory part of AcceptParameterPart, which is why every accept has a payload even where the text names only a type.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+      "note": "States the production; the rule is its transcription. The pack flags this clause as malformed, but the defect is in TriggerExpression (SYSML21-401) and not in this production."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "In line 58 `accept ignitionCmd:IgnitionCmd via ignitionCmdPort` this member holds `ignitionCmd:IgnitionCmd`, the part before 'via'."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml",
+      "note": "In line 17 `then accept S;` it holds the bare type name `S`; in line 18 `then accept sig after 10[SI::s];` a name and a trigger expression."
+    }
+  ],
+  "derived_utc": "2026-09-17T19:02:53Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T19:02:53Z"
 }

@@ -2,7 +2,7 @@
 # Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 import pytest
 
-from _earley import make_lexer, nullable_nonterminals, recognize
+from _earley import STATES_PER_TOKEN, make_lexer, nullable_nonterminals, recognize
 
 
 def kw(text):
@@ -223,3 +223,45 @@ def test_reserved_word_is_not_a_name():
 def test_keyword_symbol_does_not_accept_a_different_name():
     lex = make_lexer([], [])
     assert recognize({"S": [[kw("new")]]}, "S", lex("old"))[0] is False
+
+
+def test_input_length_alone_does_not_trip_the_state_guard():
+    # The budget is per token, so a long input under a linear grammar is accepted
+    # however long it gets. Under the absolute cap this guard used to carry, length
+    # alone was enough to fail a file: the two copies of SimpleVehicleModel need
+    # ~996k items at ~143 per token, and the cap was 400_000.
+    lex = make_lexer(["part"], [";"])
+    prods = {"S": [[nt("S"), nt("Item")], []], "Item": [[kw("part"), ("tok", "NAME"), kw(";")]]}
+    assert recognize(prods, "S", lex("part a ; " * 2000)) == (True, "ok")
+
+
+def test_the_default_budget_is_the_per_token_one():
+    # Pins the default to STATES_PER_TOKEN per token rather than to a constant: an
+    # input given exactly that budget behaves the same as one given the default,
+    # and one token's worth less is not enough for this grammar.
+    lex = make_lexer(["part"], [";"])
+    prods = {"S": [[nt("S"), nt("Item")], []], "Item": [[kw("part"), ("tok", "NAME"), kw(";")]]}
+    tokens = lex("part a ; " * 200)
+    assert recognize(prods, "S", tokens) == (True, "ok")
+    assert recognize(prods, "S", tokens, max_states=STATES_PER_TOKEN * (len(tokens) + 1)) == (
+        True,
+        "ok",
+    )
+
+
+def test_exhausting_the_budget_reports_explosion_rather_than_no_parse():
+    # The guard's own message, distinct from an ordinary rejection. A caller that
+    # cannot tell the two apart would read a resource limit as a grammar defect.
+    lex = make_lexer(["part"], [";"])
+    prods = {"S": [[kw("part"), ("tok", "NAME"), kw(";")]]}
+    ok, why = recognize(prods, "S", lex("part a ;"), max_states=1)
+    assert ok is False
+    assert "state explosion" in why
+
+
+def test_an_explicit_max_states_still_overrides_the_per_token_budget():
+    # grammar_validate.py relies on the default, but the diagnostic that calibrated
+    # STATES_PER_TOKEN raises it deliberately. The override must keep working.
+    lex = make_lexer(["part"], [";"])
+    prods = {"S": [[kw("part"), ("tok", "NAME"), kw(";")]]}
+    assert recognize(prods, "S", lex("part a ;"), max_states=10_000) == (True, "ok")

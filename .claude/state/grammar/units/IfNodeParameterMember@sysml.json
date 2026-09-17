@@ -3,7 +3,7 @@
   "production": "IfNodeParameterMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
     "xtext_rule": "2c11bb91ea4c8e808936994b502b0925d253fb37de976dbeb19c16a2e9f099f8",
@@ -16,5 +16,39 @@
     "xtext_rule_text": "IfNodeParameterMember returns SysML::ParameterMembership :\n\townedRelatedElement += IfNode \n;",
     "metaclass": "SysML::ParameterMembership"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "ref",
+    "name": "IfNode"
+  },
+  "decision": "A transcription of SysML 8.2.2.17.7. The clause and the Xtext state this production identically \u2014 `ownedRelatedElement += IfNode` in both \u2014 so there is nothing to weigh. It contributes no tokens, and its only purpose is to sit in IfNode's else position so that an else branch may be another if. That is what makes `else if` a nesting of this production rather than a separate keyword pair, and it is the source of the rule's recursion.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.7 (StructuredControlActionUsages.md, region_sha256 90c294385874fdc1)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/StructuredControlTest.sysml",
+      "note": "Line 9 `} else if i == 0 {` is this member: the else of the if opened on line 7 holds a second IfNode rather than a body."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext IfNodeParameterMember",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:55:06Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:55:07Z"
 }

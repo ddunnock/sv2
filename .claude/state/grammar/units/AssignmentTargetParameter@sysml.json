@@ -3,7 +3,7 @@
   "production": "AssignmentTargetParameter",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "a268475e162e29768dbefce1071203c8c52c4eea909b9561a878f0d79d91c939",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -16,5 +16,46 @@
     "xtext_rule_text": "",
     "metaclass": ""
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No xtext evidence: the pilot has no AssignmentTargetParameter rule, and its nearest analogue TargetParameter carries a '=>' syntactic predicate and an extra TargetFeatureMember. See AssignmentTargetMember for why that decomposition was not taken.",
+  "rule": {
+    "k": "opt",
+    "item": {
+      "k": "seq",
+      "items": [
+        {
+          "k": "ref",
+          "name": "AssignmentTargetBinding"
+        },
+        {
+          "k": "kw",
+          "text": "."
+        }
+      ]
+    }
+  },
+  "decision": "A transcription of SysML 8.2.2.17.5: `( ownedRelationship += AssignmentTargetBinding '.' )?`. The whole production is optional, so it derives the empty string where an assignment names its target with no prefix. The '.' is part of this production rather than of the feature that follows, which is what splits `counter.count` into a target parameter `counter.` here and a FeatureChainMember `count` beside it in AssignmentNodeDeclaration. There is no second opinion to weigh: the pinned pilot grammar has no rule of this name, reaching the same tokens through TargetParameter, which folds in the assigned feature as well; that decomposition was declined on AssignmentTargetMember.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.5 (AssignmentActionUsages.md, region_sha256 dfe847fa0a5c6846)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml",
+      "note": "In line 20 `entry assign counter.count := 0;` this production holds `counter.`; in line 29 `do assign counter.count := counter.count + 1;` the same, the right-hand `counter.count` being an expression and not this production."
+    }
+  ],
+  "derived_utc": "2026-09-17T19:02:53Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T19:02:54Z"
 }
