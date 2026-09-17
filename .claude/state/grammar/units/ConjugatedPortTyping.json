@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ConjugatedPortTyping",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "5471b257abf8680830d0b23a122517730b75daa86ca89a3638f89da2550a5fd8",
     "xtext_rule": "248ab7447ccb4d9ced86d5b428ca22f83c69fba7c9cf64899d7a71dba3730f5e",
@@ -14,5 +14,48 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ConjugatedPortTyping returns SysML::ConjugatedPortTyping :\n\tconjugatedPortDefinition = [SysML::ConjugatedPortDefinition | ConjugatedQualifiedName]\n;",
     "metaclass": "SysML::ConjugatedPortTyping"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "~"
+      },
+      {
+        "k": "ref",
+        "name": "QualifiedName"
+      }
+    ]
+  },
+  "decision": "As SysML 8.2.2.12 states it: `~` followed by `~[QualifiedName]`. Note 2 of the clause says that notation parses an ordinary QualifiedName from the text and changes only how it resolves: to the conjugated port definition named `'~C'` inside `A::B::C`. So syntactically it is `~` then a QualifiedName. The Xtext writes `conjugatedPortDefinition = [SysML::ConjugatedPortDefinition | ConjugatedQualifiedName]`, where its ConjugatedQualifiedName rule is `'~' QualifiedName`: the same tokens. The clause names the property `originalPortDefinition` and the Xtext `conjugatedPortDefinition`; a property name consumes no tokens.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.12",
+      "note": "ConjugatedPortTyping : ConjugatedPortTyping = '~' originalPortDefinition = ~[QualifiedName], with Note 2 defining ~[QualifiedName] as a QualifiedName parsed normally and resolved to the conjugated definition"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "line 116: `port engineControlPort: ~ControlPort;`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "ConjugatedPortTyping: conjugatedPortDefinition = [SysML::ConjugatedPortDefinition | ConjugatedQualifiedName], with ConjugatedQualifiedName: '~' QualifiedName (SysML.xtext line 976). The same tokens."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:37:34Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:37:34Z"
 }

@@ -3,7 +3,7 @@
   "production": "FilterPackage",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "412be9f0ca437ea7e6b8a3f6b16b15b44b94cff79584fab25ef6c38285d7ced4",
     "xtext_rule": "6f08794e4df7b67a7ddc3fc1ea3ec9f7efb5183696596ccd1e49740fb984d08e",
@@ -15,5 +15,51 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "FilterPackage returns SysML::Package :\n\townedRelationship += FilterPackageImport\n\t( ownedRelationship += FilterPackageMember )+\n;",
     "metaclass": "SysML::Package"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "ImportDeclaration"
+      },
+      {
+        "k": "plus",
+        "item": {
+          "k": "ref",
+          "name": "FilterPackageMember"
+        }
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.3.4.2 states it: an ImportDeclaration, then one or more FilterPackageMembers, each a bracketed OwnedExpression. This is the KerML variant (ADR-0014); the SysML clause states the production differently, which is why it is split. The Xtext writes FilterPackageImport where this clause writes ImportDeclaration. This clause does not define a FilterPackageImport, and the rule follows the clause's ImportDeclaration. The clause's ImportDeclaration makes the rule indirectly recursive: ImportDeclaration includes NamespaceImport, whose second alternative is a FilterPackage. So `a::*[x][y]` can parse as one filter package with two members, or as a filter package nested inside another. The token language is the same either way, since a nested filter package only adds more bracketed members. The Earley oracle accepts the ambiguity; a recursive-descent implementation must choose the flat reading. The clause is followed.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.2",
+      "note": "FilterPackage : Package = ownedRelationship += ImportDeclaration ( ownedRelationship += FilterPackageMember )+"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Filtering.kerml",
+      "note": "lines 34-36: `private import DesignModel::**[@Structure] [(as Annotations::ApprovalAnnotation).approved and (as Annotations::ApprovalAnnotation).level > 1];`, a recursive MembershipImport filtered by two members"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "FilterPackage: ownedRelationship += FilterPackageImport ( ownedRelationship += FilterPackageMember )+. A different import production from the clause's ImportDeclaration; the clause is followed."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:39:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:39:20Z"
 }

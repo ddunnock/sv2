@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Identification",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "585c82e63390013dbf92a7de18fe16debc88ae3bf10fde4cf45e858dcc5d5aab",
     "xtext_rule": "4bdfa44e6640876076446c9e93a0e6618b68ef908bb0e85d6067c0194beac07a",
@@ -14,5 +14,77 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment Identification returns SysML::Element :\n\t  '<' declaredShortName = Name '>' ( declaredName = Name )?\n\t| declaredName = Name\n;",
     "metaclass": "SysML::Element"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "<"
+            },
+            {
+              "k": "tok",
+              "name": "NAME"
+            },
+            {
+              "k": "kw",
+              "text": ">"
+            }
+          ]
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "tok",
+          "name": "NAME"
+        }
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.3.1 and SysML 8.2.2.2 both state it, in the same words, so one shared unit: an optional short name in angle brackets, then an optional name. Both parts are optional, so Identification derives the empty string, and every production that uses it admits an anonymous element. The Xtext fragment is not nullable: `'<' Name '>' Name? | Name` requires at least one name. That is a real difference in this production, but not necessarily in the language, because a caller can restore the empty case by writing `Identification?`. Whether every Xtext caller does so is not visible from this pack, and phase 5's oracle is where a gap would show. The clause is the source and is followed. A recursive-descent implementation must treat Identification as possibly empty.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.1",
+      "note": "Identification : Element = ( '<' declaredShortName = NAME '>' )? ( declaredName = NAME )?"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.2",
+      "note": "the same production"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml",
+      "note": "line 11: `abstract class <'2'> B {`, a short name and a name"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_19a-Materials with Properties.sysml",
+      "note": "line 23: `attribute <'N/mm\u00b2'> 'newton per square millimetre' : ...`, a quoted short name and a quoted name"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment Identification: '<' declaredShortName = Name '>' ( declaredName = Name )? | declaredName = Name. Not nullable, unlike the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:37:34Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:37:34Z"
 }

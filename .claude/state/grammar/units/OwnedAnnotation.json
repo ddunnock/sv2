@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedAnnotation",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cea5b326f1c9673eb114633ab5faef43829847f948f20214e31d2d04b1a5e5bc",
     "xtext_rule": "5753f78892cee94918f09584f9493d4370499a240bd3e7fb17aeb37deeccd00e",
@@ -14,5 +14,39 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "OwnedAnnotation returns SysML::Annotation :\n\townedRelatedElement += AnnotatingElement\n;",
     "metaclass": "SysML::Annotation"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "AnnotatingElement"
+  },
+  "decision": "As KerML 8.2.3.3.1 and SysML 8.2.2.4.1 both state it, so one shared unit: an annotation that owns exactly one AnnotatingElement, with no tokens of its own. The Xtext rule is identical.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.3.1",
+      "note": "OwnedAnnotation : Annotation = ownedRelatedElement += AnnotatingElement"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.4.1",
+      "note": "the same production"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "OwnedAnnotation: ownedRelatedElement += AnnotatingElement. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:39:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:39:20Z"
 }

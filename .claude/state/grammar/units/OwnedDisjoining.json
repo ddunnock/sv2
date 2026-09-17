@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedDisjoining",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "b0a5c53932fc360b89a0c462ecfef9f5ab7e2f60993a2a4aaf578becc01d898a",
     "xtext_rule": "922b061cf900c0f20f1a7c062ddf3b040ef3e4ab4262130a27456f48c6f85bcf",
@@ -14,5 +14,53 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "OwnedDisjoining returns SysML::Disjoining :\n\t  disjoiningType = [SysML::Type | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain\n;",
     "metaclass": "SysML::Disjoining"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "QualifiedName"
+      },
+      {
+        "k": "ref",
+        "name": "FeatureChain"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.1.4 states it: the disjoining type, either as a cross-reference `[QualifiedName]` or as a FeatureChain owned by the relationship. The clause writes FeatureChain where the Xtext writes OwnedFeatureChain. KerML 8.2.4.3.5 defines `OwnedFeatureChain : Feature = FeatureChain`, so the two accept exactly the same tokens, and the rule follows the clause. The same clause's Disjoining production writes FeatureChain in both of its positions.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.4",
+      "note": "OwnedDisjoining : Disjoining = disjoiningType = [QualifiedName] | disjoiningType = FeatureChain { ownedRelatedElement += disjoiningType }"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.5",
+      "note": "OwnedFeatureChain : Feature = FeatureChain, which makes the Xtext's alternative token-identical to the clause's"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml",
+      "note": "line 31: `... disjoint from h1;`, the QualifiedName alternative"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "OwnedDisjoining: disjoiningType = [SysML::Type | QualifiedName] | ownedRelatedElement += OwnedFeatureChain. The same tokens."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:37:34Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:37:34Z"
 }

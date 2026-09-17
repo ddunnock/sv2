@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "AnnotatingElement",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cea5b326f1c9673eb114633ab5faef43829847f948f20214e31d2d04b1a5e5bc",
     "xtext_rule": "b9d348ee9e9305c35f33f0a35c99ad8b6f39359f80c2369e21e7acbc28be2d4a",
@@ -14,5 +14,66 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "AnnotatingElement returns SysML::AnnotatingElement :\n\t  Comment\n\t| Documentation\n\t| TextualRepresentation\n\t| MetadataFeature\n;",
     "metaclass": "SysML::AnnotatingElement"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "Comment"
+      },
+      {
+        "k": "ref",
+        "name": "Documentation"
+      },
+      {
+        "k": "ref",
+        "name": "TextualRepresentation"
+      },
+      {
+        "k": "ref",
+        "name": "MetadataFeature"
+      }
+    ]
+  },
+  "decision": "Four alternatives, as KerML 8.2.3.3.1 and SysML 8.2.2.4.1 both state them, so one shared unit. The Xtext rule lists the same four. The clause's note says MetadataFeature is defined in the Kernel layer (8.2.5.12). None of the four is defined in this pack, so whether they overlap is for their own units to establish.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.3.1",
+      "note": "AnnotatingElement = Comment | Documentation | TextualRepresentation | MetadataFeature"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.4.1",
+      "note": "the same production"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml",
+      "note": "line 32: `comment cmt /* Named Comment */`, the Comment alternative"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/TextualRepresentation.kerml",
+      "note": "line 7: `rep inOCL language \"ocl\"`, the TextualRepresentation alternative"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "AnnotatingElement: Comment | Documentation | TextualRepresentation | MetadataFeature. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:39:19Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:39:19Z"
 }
