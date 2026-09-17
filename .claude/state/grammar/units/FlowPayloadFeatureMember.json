@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FlowPayloadFeatureMember",
   "language": "shared",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "f503f360d20207704de75664ced4bbe1f57e024983fed96db8f3731cd57ee6a9",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -14,5 +14,29 @@
     "xtext_file": "",
     "xtext_rule_text": "",
     "metaclass": ""
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "FlowPayloadFeature"
+  },
+  "decision": "As SysML 8.2.2.16 states it: a membership wrapping one FlowPayloadFeature, with no tokens of its own. The same clause defines FlowPayloadFeature as PayloadFeature. The pilot SysML Xtext has no rule of this name; it uses PayloadFeatureMember directly, which accepts the same tokens. The clause's production is followed.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.16",
+      "note": "FlowPayloadFeatureMember : FeatureMembership = ownedRelatedElement += FlowPayloadFeature"
+    }
+  ],
+  "derived_utc": "2026-09-17T13:48:36Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:48:36Z"
 }

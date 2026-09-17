@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedRelatedElement",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "060222b6e0d7f88f1bd754f29cbce2b084d17eb97fc88e0f20f89315d518bfa4",
     "xtext_rule": "31b2235ce6ae21cbef2ff053501e5298dcae12328112a1ea3b79adcc24719571",
@@ -14,5 +14,43 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "OwnedRelatedElement returns SysML::Element :\n    NonFeatureElement | FeatureElement\n;",
     "metaclass": "SysML::Element"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "NonFeatureElement"
+      },
+      {
+        "k": "ref",
+        "name": "FeatureElement"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.3.1 states it: a NonFeatureElement or a FeatureElement. The Xtext rule is identical.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.1",
+      "note": "OwnedRelatedElement : Element = NonFeatureElement | FeatureElement"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "OwnedRelatedElement: NonFeatureElement | FeatureElement. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:48:36Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:48:36Z"
 }

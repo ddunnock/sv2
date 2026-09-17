@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Comment",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "62a537245f4e89af9d0387c1dcc33d30497b4ee8376c46e58a7187b99262f58d",
     "xtext_rule": "534ec5fef1f3908a2b11f6ba55f4e9f3e83fc203ebd180de5dc5a8192e118503",
@@ -14,5 +14,133 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "Comment returns SysML::Comment :\n\t( 'comment' Identification? \n\t  ('about' ownedRelationship += Annotation\n\t     ( ',' ownedRelationship += Annotation )* )? \n\t)?\n\t( 'locale' locale = STRING_VALUE )?\n\tbody = REGULAR_COMMENT\n;",
     "metaclass": "SysML::Comment"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "comment"
+            },
+            {
+              "k": "ref",
+              "name": "Identification"
+            },
+            {
+              "k": "opt",
+              "item": {
+                "k": "seq",
+                "items": [
+                  {
+                    "k": "kw",
+                    "text": "about"
+                  },
+                  {
+                    "k": "ref",
+                    "name": "Annotation"
+                  },
+                  {
+                    "k": "star",
+                    "item": {
+                      "k": "seq",
+                      "items": [
+                        {
+                          "k": "kw",
+                          "text": ","
+                        },
+                        {
+                          "k": "ref",
+                          "name": "Annotation"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "locale"
+            },
+            {
+              "k": "tok",
+              "name": "STRING_VALUE"
+            }
+          ]
+        }
+      },
+      {
+        "k": "tok",
+        "name": "REGULAR_COMMENT"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.3.3.2 and SysML 8.2.2.4.2 both state it, so one shared unit. An optional `comment` header comes first: an Identification and an optional `about` list of Annotations. Then an optional `locale` string, then the REGULAR_COMMENT body. Everything before the body is optional, so a bare `/* ... */` is a Comment element in the model, not trivia. A parser and the oracle's lexer must deliver REGULAR_COMMENT as a token, not discard it. The Xtext writes `Identification?`, which is the same language, because the specification's Identification is nullable (KerML 8.2.3.1). The KerML clause misspells the first property `ownedRelationsip`, which consumes no tokens. KERML11-109 lists 'Relationsip' on page 79 without naming a production; whether that page holds this clause is not established here.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.3.2",
+      "note": "Comment = ( 'comment' Identification ( 'about' ownedRelationsip += Annotation ( ',' ownedRelationship += Annotation )* )? )? ( 'locale' locale = STRING_VALUE )? body = REGULAR_COMMENT"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.4.2",
+      "note": "the same production, with the property spelled correctly"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.1",
+      "note": "Identification is nullable, so the Xtext's Identification? is redundant"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml",
+      "note": "line 33: `comment cmt_cmt about cmt /* Other Comment about Comment */`, the header with `about`"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Vehicle Example/VehicleUsages.kerml",
+      "note": "line 9: `/* VALUES */`, alone in a package body with no header, a bare Comment element"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml",
+      "note": "lines 1-2: `/* AAA */` then `//a lexical comment (\"note\") is not a part of model`, the corpus's own statement that `/* */` is a model element and `//` is not"
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "KERML11-109",
+      "note": "PARTIAL, NOT CONFIRMED AS THIS OCCURRENCE. It lists 'Relationsip' on page 79 and names no production. Fetched and read on 2026-09-17."
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "Comment: ( 'comment' Identification? ( 'about' Annotation ( ',' Annotation )* )? )? ( 'locale' STRING_VALUE )? REGULAR_COMMENT. The same language."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:49:24Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:49:25Z"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TextualRepresentation",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "4c5eea0f8438552b561decca82d2114f95c514a10dc4ef01f2412ae2778fdf4a",
     "xtext_rule": "45ba6fefd212aabd33a564b3c8263fafe4233c1ce976c2f45345f19e1ee24a96",
@@ -14,5 +14,73 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "TextualRepresentation returns SysML::TextualRepresentation :\n    ( 'rep' Identification? )?\n    'language' language = STRING_VALUE \n    body = REGULAR_COMMENT\n;",
     "metaclass": "SysML::TextualRepresentation"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "rep"
+            },
+            {
+              "k": "ref",
+              "name": "Identification"
+            }
+          ]
+        }
+      },
+      {
+        "k": "kw",
+        "text": "language"
+      },
+      {
+        "k": "tok",
+        "name": "STRING_VALUE"
+      },
+      {
+        "k": "tok",
+        "name": "REGULAR_COMMENT"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.3.3.3 and SysML 8.2.2.4.3 both state it, so one shared unit. An optional `rep` with an Identification, then `language` and a string naming the language, then the REGULAR_COMMENT body holding the text in that language. The Xtext writes `Identification?` inside the optional group, which is the same language because Identification is nullable.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.3.3",
+      "note": "TextualRepresentation = ( 'rep' Identification )? 'language' language = STRING_VALUE body = REGULAR_COMMENT"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.4.3",
+      "note": "the same production"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/TextualRepresentation.kerml",
+      "note": "line 7: `rep inOCL language \"ocl\"`, followed by the comment body"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "TextualRepresentation: ( 'rep' Identification? )? 'language' STRING_VALUE REGULAR_COMMENT. The same language."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:49:25Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:49:25Z"
 }
