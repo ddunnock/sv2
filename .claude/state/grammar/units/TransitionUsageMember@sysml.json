@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "TransitionUsageMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "6f7cd7408a7b364e4a1c9cb070f712b9229c02405be681c2ba1907ce42b2860a",
+    "xtext_rule": "8440cd6c079c4b96d68bb07edbe2f186a4a5f61c674f9bfc3acb671793cb8864",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "e665cc257ccf43121247819ebd789d33194b5132f6a2e89e4c7dc8e71704413f"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.18.1 (StateDefinitions.md, region_sha256 0119cca482071cd3)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "TransitionUsageMember returns SysML::FeatureMembership :\n\tMemberPrefix ownedRelatedElement += TransitionUsage \n;",
+    "metaclass": "SysML::FeatureMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

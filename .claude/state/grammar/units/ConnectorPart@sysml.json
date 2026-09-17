@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ConnectorPart",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "e5834f81a35a28ed92e55b1809dac0c6626c8fa9a77c3720bef1f1827c87c885",
+    "xtext_rule": "91d5d88cf6b90cf4c42888ca70953b8b15a3b203adb2d1828e79d08b96256db2",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "c29f5430190c8ca544b7d98fa74ee71aca24bbe5e48dcab75a88eb982f6782f1"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.13.1 (ConnectionDefinitionandUsage.md, region_sha256 614b54fa6eb5405a)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment ConnectorPart returns SysML::ConnectionUsage :\n\tBinaryConnectorPart | NaryConnectorPart\n;",
+    "metaclass": "SysML::ConnectionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

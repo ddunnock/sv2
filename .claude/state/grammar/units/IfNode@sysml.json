@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "IfNode",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
+    "xtext_rule": "51e48c1b6ab5eba2bac7563c5b686a2b8f5cc075810e95e37ffda86d2d5a83fa",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "3866e9d6a9c8ccae18fc0172c91f002c42a989bd93d576375a2bce95d56ea147"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.7 (StructuredControlActionUsages.md, region_sha256 90c294385874fdc1)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "IfNode returns SysML::IfActionUsage :\n\tActionNodePrefix \n\t'if' ownedRelationship += ExpressionParameterMember\n\townedRelationship += ActionBodyParameterMember\n\t( 'else' ownedRelationship += ( ActionBodyParameterMember | IfNodeParameterMember ) )?\n;",
+    "metaclass": "SysML::IfActionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

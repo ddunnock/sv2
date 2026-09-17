@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ActionNode",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "1d21a99bccb8810f3e974cbe685772d27ca61795e03b0cfdb71408760696f3d8",
+    "xtext_rule": "1609d951bef2d6244222dc4ba7d09da719832fa0c4d8bcc514329f1e6e0313e1",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "7ca945e5439917a14aeba9ee9fb8fec67d54ce859ded421bd64f1098eccb4a5b"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.2 (ActionUsages.md, region_sha256 207a908873b90795)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ActionNode returns SysML::ActionUsage :\n\t  SendNode | AcceptNode | AssignmentNode \n\t| IfNode | WhileLoopNode | ForLoopNode\n\t| TerminateNode\n\t| ControlNode\n;",
+    "metaclass": "SysML::ActionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

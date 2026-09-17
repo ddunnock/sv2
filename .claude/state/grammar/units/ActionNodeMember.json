@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ActionNodeMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "123fdd535dd69454a171e663a98bdb2619ca5518f3656d521f100f63eb3d01b2",
     "xtext_rule": "8ac8460f190ed774f5809fa323f53ea18da1533df78bd93943cd0c51c23e0df1",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ActionNodeMember returns SysML::FeatureMembership :\n\tMemberPrefix ownedRelatedElement += ActionNode \n;",
     "metaclass": "SysML::FeatureMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ActionNodeMember@sysml"
 }

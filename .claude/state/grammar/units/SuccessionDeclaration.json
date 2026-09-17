@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "SuccessionDeclaration",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "c4405700cf6540a16a46d528e534ca9b83310ce2288e1c5e44e354aadeb57981",
     "xtext_rule": "48a4e7d4458314940b188dc70c2047f5125901fb4e1c54d6c98ac82803f19953",
@@ -126,5 +126,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T13:40:28Z"
+  "verified_utc": "2026-09-17T13:40:28Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in SuccessionDeclaration@kerml"
 }

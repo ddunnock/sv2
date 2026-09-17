@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "EmptyMultiplicity",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "729e11bfb00a5a13f3ba4b6f6db4994e5bd6df5d4d6eb952ac3b8f19436b9f97",
     "xtext_rule": "b09fff7c6abde4500ab7f27574b5e26760a382f387a6fc790570b4c79263a260",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "EmptyMultiplicity returns SysML::Multiplicity :\n\t{SysML::Multiplicity}\n;",
     "metaclass": "SysML::Multiplicity"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in EmptyMultiplicity@sysml"
 }

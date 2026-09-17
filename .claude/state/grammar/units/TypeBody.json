@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TypeBody",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
     "xtext_rule": "13c1d6dfc15c0a7660d43059f14b6f6414f350e214d98ffb8e8cd6f8366b3e7d",
@@ -45,7 +45,7 @@
     ]
   },
   "decision": "A semicolon, or braces around any number of type body elements, as KerML 8.2.4.1.1 states it.",
-  "notes": "THE XTEXT INLINES TypeBodyElement and is not followed. The pilot writes the four alternatives directly inside the braces; the clause names TypeBodyElement, and TypeBodyElement is its own verified unit. The accepted text is the same.",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in TypeBody@kerml\nTHE XTEXT INLINES TypeBodyElement and is not followed. The pilot writes the four alternatives directly inside the braces; the clause names TypeBodyElement, and TypeBodyElement is its own verified unit. The accepted text is the same.",
   "evidence": [
     {
       "kind": "clause",

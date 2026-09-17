@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ActionNodePrefix",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "1d21a99bccb8810f3e974cbe685772d27ca61795e03b0cfdb71408760696f3d8",
     "xtext_rule": "252ff731667ba1802bf473b29a17ca14728551938c27a259ff5863e6867c49f5",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment ActionNodePrefix returns SysML::ActionUsage :\n\tOccurrenceUsagePrefix ActionNodeUsageDeclaration?\n;",
     "metaclass": "SysML::ActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ActionNodePrefix@sysml"
 }

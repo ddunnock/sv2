@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "production": "PackageMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "7adb5037a495d9b1fa9625a133c60b86062a3335060e19b2235c7aef00e993be",
+    "xtext_rule": "c495052bfc68a9a466542f18bb8a59e9e7a679f14bd4e98647601340ce39be22",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "34a7b5070c1fec7ef47b2174aa2afd974b2619675f24ad821f14325da0e41496"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.5.1 (Packages.md, region_sha256 3ee603b1b89d4345)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "PackageMember returns SysML::OwningMembership : \n\tMemberPrefix\t\t\n\t( ownedRelatedElement += DefinitionElement\n\t| ownedRelatedElement += UsageElement \n\t)\n;",
+    "metaclass": "SysML::OwningMembership"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "MemberPrefix"
+      },
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "ref",
+            "name": "DefinitionElement"
+          },
+          {
+            "k": "ref",
+            "name": "UsageElement"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "A member prefix, then a definition element or a usage element, as SysML 8.2.2.5.1 states it.",
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nTwo notational slips in the SysML clause, recorded because the clause is the source and a literal reader would stumble on both, and neither changes what parses. `PackageMember : OwningMembership` is followed by its body with no `=`. And its two alternatives assign differently \u2014 `ownedRelatedElement += DefinitionElement` but `ownedRelatedElement = UsageElement` \u2014 where the Xtext uses `+=` for both.\n\nThe clause and SysML.xtext agree on the structure.\n\nFOR A PARSER AUTHOR: sv2-syntax implements this production today with one DefinitionElement, Package, and no UsageElement. DefinitionElement and UsageElement are the two large SysML alternations; which one applies is decided after the optional visibility, by the element's own keywords.\n\nFILED WITH OMG: the missing `=` is SYSML21-335. The `+=` / `=` asymmetry between the alternatives is not mentioned in that issue and has no issue this derivation found.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.5.1",
+      "note": "states PackageMember as MemberPrefix ( DefinitionElement | UsageElement ), missing its `=`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "the same structure, with `+=` on both alternatives"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "`package SimpleVehicleModel{` at the root is a PackageMember"
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "SYSML21-335",
+      "note": "MATCH FOR THE MISSING `=` ONLY. 'No Equals Sign for PackageMember', open, filed 24 Aug 2025 by George Edward Roberts against SysML 2.0b4; quotes the production and says 'there is no equal sign here'. It does NOT mention the `+=` / `=` asymmetry between the two alternatives, which remains recorded here unfiled. Fetched and read in full on 2026-09-17, not taken from a summary."
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:57Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

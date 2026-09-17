@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "InterfaceDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8e1a8617b6490e5ffe56b25437884cec824953583966b0cc211d0086da41e061",
     "xtext_rule": "d4f99a239701fd93e97a05386005d4ee80d2c7d9b75c096b6648d6828bb3a50d",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "InterfaceDefinition returns SysML::InterfaceDefinition :\n\tOccurrenceDefinitionPrefix InterfaceDefKeyword DefinitionDeclaration InterfaceBody\n;",
     "metaclass": "SysML::InterfaceDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in InterfaceDefinition@sysml"
 }

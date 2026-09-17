@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "VariantReference",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "a9884f0ac6f89d1725bb21e9aeed86b913bb1d5b1e7a5984ba1cbbb0d0acdcc2",
+    "xtext_rule": "cf7dce4f0f8b922084e23a62b4d81fca98b445ca7bb4f681ded10ef2e8b26344",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "38fff8bf988002e3b3437d6b4ff85a13dc50be018cdd61f7436898bb01cc43ce"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.6.3 (ReferenceUsages.md, region_sha256 27505145913280ac)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "VariantReference returns SysML::ReferenceUsage :\n\townedRelationship += OwnedReferenceSubsetting \n\tFeatureSpecialization* UsageBody\n;",
+    "metaclass": "SysML::ReferenceUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

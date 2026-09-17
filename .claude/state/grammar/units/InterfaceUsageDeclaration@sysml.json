@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "InterfaceUsageDeclaration",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "bffd8b9322d613cb8c3a15449371ae9a03700ef3ca5dde0052db50b7149ba822",
+    "xtext_rule": "170fdea78d6440c50fb570176582413fa2018c8476888120244f02691d7ed4a5",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "f81babb187b1dae57165732a92162f97bc8b9ec10fc0b44bbca1bc6ffaed79ca"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.14.2 (InterfaceUsages.md, region_sha256 e490b9536f83631d)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment InterfaceUsageDeclaration returns SysML::InterfaceUsage :\n\t  UsageDeclaration? ValuePart? ( ConnectorKeyword InterfacePart )? \n\t| InterfacePart\n;",
+    "metaclass": "SysML::InterfaceUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

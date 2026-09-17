@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ConstraintUsageDeclaration",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "47fe8fcfd43177311a472736911d09a1442457b9613ea3d8a52b6ede27cb25cb",
+    "xtext_rule": "fa30da70223d6e5d17ba86e00ebc788243150198b3d77269d846f3ec8cd19671",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "095b6fdafb0d7123f8a54e4e0bba66bef6ad0d9c3ec30d64c0aa09d0594edf43"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.20 (ConstraintsTextualNotation.md, region_sha256 fa7fb8d5154241ee)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment ConstraintUsageDeclaration returns SysML::ConstraintUsage :\n\t  UsageDeclaration? ValuePart?\n;",
+    "metaclass": "SysML::ConstraintUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

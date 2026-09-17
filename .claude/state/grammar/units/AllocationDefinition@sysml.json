@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "AllocationDefinition",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "cdcac22d144dab18c6832109fc69e75bca7271a2159ea7c99c78fe2f1508cacb",
+    "xtext_rule": "88a86ee468f9c700e67ff3c4e136dcc54ade8bde38b788f5305f3d8ed339943a",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "e26727b1be48249dcd440e660e9e24db81e2cc9d1500689b2e3f9c3426846681"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.15 (AllocationsTextualNotation.md, region_sha256 c49ff28fffcd621a)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "AllocationDefinition returns SysML::AllocationDefinition :\n\tOccurrenceDefinitionPrefix AllocationDefKeyword Definition\n;",
+    "metaclass": "SysML::AllocationDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

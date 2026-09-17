@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "SuccessionAsUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "88d4a032989fb39554f61959507068916ad3c326f622a456217e784591881e9c",
     "xtext_rule": "d2c5153a7e6b586f530c27ef0859e04d4b78d5b591877596067eb88890c3c096",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "SuccessionAsUsage returns SysML::SuccessionAsUsage :\n\tUsagePrefix ( SuccessionKeyword UsageDeclaration? )? \n\t'first' ownedRelationship += ConnectorEndMember \n\t'then' ownedRelationship += ConnectorEndMember \n\tDefinitionBody\n;",
     "metaclass": "SysML::SuccessionAsUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in SuccessionAsUsage@sysml"
 }

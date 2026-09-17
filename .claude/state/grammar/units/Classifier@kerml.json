@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Classifier",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "11c8984ff24597dee63bdc75c014e37379025dd429cf69db5be06483357f9a63",
+    "xtext_rule": "257fcc4fe8f4ed15bcef1ace86b23e61a626672b69808df3ddefd0afc48da04b",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "64383a950ae53af43e4de2f98490e17ef985767fd227669b5c86bf73a516b3a3"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.2.1 (Classifiers.md, region_sha256 73248677d5fad211)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Classifier returns SysML::Classifier :\n\tTypePrefix 'classifier' \n\tClassifierDeclaration TypeBody\n;",
+    "metaclass": "SysML::Classifier"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

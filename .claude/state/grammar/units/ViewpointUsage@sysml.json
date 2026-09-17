@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ViewpointUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "7459f39ab652479ee981a5de77eafaa36aacdb763486ea4e70579adf871ea143",
+    "xtext_rule": "3952c482c396059beba067c347cfaa26bbb659bbeb5e0f0817dbaa756326ddf2",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "3ff198fe6a6c01ae10a6df01ea1112540ee03b4705e5654c2e773618eeb0caef"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.26.3 (Viewpoints.md, region_sha256 02e0365b9fde25b3)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ViewpointUsage returns SysML::ViewpointUsage :\n\tOccurrenceUsagePrefix ViewpointUsageKeyword ConstraintUsageDeclaration RequirementBody\n;",
+    "metaclass": "SysML::ViewpointUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

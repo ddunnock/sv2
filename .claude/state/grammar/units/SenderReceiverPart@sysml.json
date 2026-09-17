@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "SenderReceiverPart",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
+    "xtext_rule": "b0acc49d8a06f09475ca618912b3e27e9098b3007d8d27752cb899ea6c884558",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "b4ae01e0e6f56a94a279540fc38ffc54eaee7055b8a3a514247f43c0444cc8ad"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment SenderReceiverPart returns SysML::ActionUsage :\n\t'via' ownedRelationship += NodeParameterMember \n\t  ( 'to' ownedRelationship += NodeParameterMember )?\n\t| ownedRelationship += EmptyParameterMember\n\t  'to' ownedRelationship += NodeParameterMember\n;",
+    "metaclass": "SysML::ActionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

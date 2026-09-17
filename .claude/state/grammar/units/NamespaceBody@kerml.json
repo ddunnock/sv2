@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "NamespaceBody",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "05d6d5f37d8b9f1e7ac7d05e166f70177a93aa02d6a11aa9711bf654061a4fca",
+    "xtext_rule": "69074d9d754704c034f2955448d9aafe69bef9a86bffd742ca1d9b3a409deed8",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "24b7382bfc29d26a9afe19494417f30aa78e472e2aeae53f406fc47a66dc8bf6"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.3.4.1 (Namespaces.md, region_sha256 893fa9cef98e60fc)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment NamespaceBody returns SysML::Namespace :\n\t  ';' \n\t| '{' ( // Note: PackageBodyElement is expanded here to avoid\n\t\t\t// infinite loops in the incremental parser.\n\t\t    ownedRelationship += NamespaceMember \n\t      | ownedRelationship += AliasMember\n\t      | ownedRelationship += Import )* \n\t  '}'\n;",
+    "metaclass": "SysML::Namespace"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

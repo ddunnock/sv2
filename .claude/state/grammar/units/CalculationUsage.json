@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "CalculationUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "abc851f79d420fb31d8d7518538400aa03794ce96b1c7f0ed791b9375eeee723",
     "xtext_rule": "076730fdce011fea31557e81277e168b557c5db90e613f1b5cb1deeb5721e682",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "CalculationUsage returns SysML::CalculationUsage :\n\tOccurrenceUsagePrefix CalculationUsageKeyword ActionUsageDeclaration CalculationBody\n;",
     "metaclass": "SysML::CalculationUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in CalculationUsage@sysml"
 }

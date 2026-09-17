@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "PayloadParameter",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
+    "xtext_rule": "a68732f839eaf30a543d5fd5b1f9dbdec56315309b43c6b859b22d4aeab5e9fc",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "3a9b26d269e45a0588ceea8441b07d3e15b8cf6caffaa87b3cefef0d0c5fbde8"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "PayloadParameter returns SysML::ReferenceUsage :\n\t  Payload\n\t| Identification? PayloadFeatureSpecializationPart? TriggerValuePart\n;",
+    "metaclass": "SysML::ReferenceUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

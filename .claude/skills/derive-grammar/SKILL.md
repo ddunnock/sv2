@@ -40,7 +40,8 @@ whose inputs have moved. Never edit a unit file to change the plan; change the i
 re-run.
 
 A production KerML and SysML state differently becomes two units, `Name@kerml` and
-`Name@sysml` (ADR-0014). Name the variant when asking for a pack or checking one:
+`Name@sysml` (ADR-0014). One that only one language's grammar reaches is that language's
+variant alone (ADR-0015); the plan prints how many of each. Name the variant when asking for a pack or checking one:
 `grammar_next.py RootNamespace@sysml`. Phases 4 and 5 run once per language.
 
 ## Phase 3 — derive, one unit at a time

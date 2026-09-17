@@ -6157,6 +6157,81 @@
           "note": "The SysML Tier A pin the governing clause belongs to."
         }
       ]
+    },
+    {
+      "production": "AnnotatingElement",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 75-80) writes SysML's AnnotatingElement as Comment | Documentation | TextualRepresentation | MetadataUsage.",
+      "problem": "SysML 8.2.2.4.1, in the PDF clause and in Tier B', writes `AnnotatingElement = Comment | Documentation | TextualRepresentation | MetadataFeature`, KerML 8.2.3.3.1's text word for word. MetadataFeature is KerML's production. Taken literally in SysML, it opens KerML's MetadataBody, and through NonFeatureMember the whole KerML kernel (Class, Association, Behavior and so on), inside SysML metadata annotations. SysML's own MetadataUsage is then unreachable from SysML's root.",
+      "decision": "follow_xtext",
+      "rationale": "A SysML-specific production the specification missed, not a pilot workaround. First, SysML's abstract syntax (8.3.27.3) makes MetadataUsage a MetadataFeature, so a MetadataUsage satisfies the printed alternative rather than contradicting it. Second, SysML already makes this substitution for the sibling productions in its own metadata clause: 8.2.2.27 restates PrefixMetadataAnnotation and PrefixMetadataMember over PrefixMetadataUsage in place of KerML's PrefixMetadataFeature. AnnotatingElement is the one it left as KerML wrote it. Third, it is the only place SysML's BNF names a KerML-only non-expression production that SysML has its own counterpart for; checked by scanning SysML's references to productions it does not state. Fourth, the SysML corpus uses `@X` and `metadata X about ...` 19 times at line start, and every name examined is a SysML metadata definition, not a KerML metaclass. No OMG issue names this wording; the SysML tracker was searched on 2026-09-17. SYSML21-419 treats 'MetadataUsages are AnnotatingElements' as settled, but it is about something else. Adjudicated by the grammar-adjudicator on 2026-09-17.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.4.1 Annotations (region_sha256 3c3db88367d002e9)",
+          "note": "AnnotatingElement = Comment | Documentation | TextualRepresentation | MetadataFeature"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.27 MetadataTextualNotation (region_sha256 69251565feee7639)",
+          "note": "PrefixMetadataAnnotation and PrefixMetadataMember restated over PrefixMetadataUsage : MetadataUsage, the substitution AnnotatingElement lacks"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.3.27.3 MetadataUsage",
+          "note": "MetadataUsage specializes MetadataFeature and ItemUsage"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Vehicle Example/SysML v2 Spec Annex A SimpleVehicleModel.sysml",
+          "note": "line 1128: `@Risk about engineTradeOffAnalysis::vehicle_b_engine4cyl {`, a metadata annotation typed by a SysML metadata definition"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "ExpressionBody",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 2436-2439) overrides `ExpressionBody returns SysML::Expression : CalculationBody`, so every SysML expression body, including select, collect and forAll bodies, reads SysML's calculation body.",
+      "problem": "SysML does not state ExpressionBody. Taken literally, it falls back to KerML 8.2.5.8.3, `ExpressionBody : Expression = '{' FunctionBodyPart '}'`, whose TypeBodyElement and ReturnFeatureMember (KerML 8.2.5.7.1) reach the KerML kernel. A SysML `{ ... }` expression body would then contain KerML elements, and SysML usages would be rejected in it.",
+      "decision": "follow_xtext",
+      "rationale": "Decided by the corpus, with the pilot agreeing. `vendor/corpus/sysml/src/validation/07-Variant Configuration/7b-Variant Configurations.sysml` line 127, `rearWheelChoice->forAll {in ref w; w == rearWheelChoice::narrowRimWheel}`, and `15-Properties-Values-Expressions/15_05-Unification of Expression and Constraint Definition.sysml` line 9, `wheelAssy->forAll {in ref w: WheelAssy;`, put `ref` in an expression body parameter. `ref` is SysML's usage prefix; KerML's BasicFeaturePrefix (8.2.4.3.1) has no such option. So these cannot parse under KerML's body. SysML itself states CalculationBody (8.2.2.19) as `';' | '{' CalculationBodyPart '}'` over SysML's ActionBodyItem, and the pilot routes every expression body through it. SysML's statement that it uses 'the expression notation from [KerML]' covers the operator and primary layer, and nothing in SysML says expression bodies hold KerML kernel elements. No OMG issue settles it; SysML and KerML trackers were searched on 2026-09-17. Adjudicated by the grammar-adjudicator on 2026-09-17; the corpus lines and KerML's BasicFeaturePrefix were checked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.8.3 BaseExpressions",
+          "note": "ExpressionBody : Expression = '{' FunctionBodyPart '}', the literal fallback"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.19 CalculationsTextualNotation (region_sha256 ee541841395079da)",
+          "note": "CalculationBody = ';' | '{' CalculationBodyPart '}', over SysML usages"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.4.3.1 Features (region_sha256 c9b4ff39176a7e05)",
+          "note": "BasicFeaturePrefix has direction, derived, abstract, composite/portion and var/const, and no `ref`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/validation/07-Variant Configuration/7b-Variant Configurations.sysml",
+          "note": "line 127: `rearWheelChoice->forAll {in ref w; w == rearWheelChoice::narrowRimWheel}`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_05-Unification of Expression and Constraint Definition.sysml",
+          "note": "line 9: `wheelAssy->forAll {in ref w: WheelAssy;`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
     }
   ],
   "unpatched": []

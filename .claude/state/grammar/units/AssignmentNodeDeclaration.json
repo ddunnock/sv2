@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "AssignmentNodeDeclaration",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "a268475e162e29768dbefce1071203c8c52c4eea909b9561a878f0d79d91c939",
     "xtext_rule": "32a7d38f7c90da35bcaeab03ff686dcbf14148a0d2a6b2f5ad9e8a9e829f2052",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment AssignmentNodeDeclaration returns SysML::ActionUsage :\n\tActionNodeUsageDeclaration? 'assign' \n\townedRelationship += AssignmentTargetMember\n\townedRelationship += FeatureChainMember ':=' \n\townedRelationship += NodeParameterMember\n;",
     "metaclass": "SysML::ActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in AssignmentNodeDeclaration@sysml"
 }

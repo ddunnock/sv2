@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "production": "BooleanExpression",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "b857760bf227cea6c897c67d39bd0aec44370c8d1236e3b31ea7179500e6e418",
+    "xtext_rule": "9ba3e3d3d8225f26984513126697b9f7480a85ded9edaad37806f0b4eab5235a",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "6e42a5eb690893aa8f259773ee0c6a86502156323e68588fac0bd58446a1a4bd"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.7.4 (BooleanExpressionsandInvariants.md, region_sha256 ccb286733135f5a1)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "BooleanExpression returns SysML::BooleanExpression :\n\tFeaturePrefix 'bool' \n\tExpressionDeclaration FunctionBody\n;",
+    "metaclass": "SysML::BooleanExpression"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nCONFLICT: IS THE FEATURE DECLARATION MANDATORY OR OPTIONAL? The same divergence as Invariant, Step and Expression, reached here through the ExpressionDeclaration fragment.\n\nREADING A \u2014 the clause. KerML 8.2.5.7.4 states:\n    BooleanExpression = FeaturePrefix 'bool' FeatureDeclaration ValuePart? FunctionBody\nFeatureDeclaration carries no `?`, so `bool { ... }` does not parse.\n\nREADING B \u2014 the Xtext. The pilot rule is:\n    BooleanExpression : FeaturePrefix 'bool' ExpressionDeclaration FunctionBody\nand `fragment ExpressionDeclaration : FeatureDeclaration? ValuePart?`. Expanded, the declaration is OPTIONAL.\n\nTHE CORPUS IS SILENT ON THIS PRODUCTION ENTIRELY. A sweep of the pinned corpus found NO `bool` declarations at all \u2014 not with a declaration, not without one. So there is no corpus evidence for this production in either direction, and an oracle sweep will not exercise it. That is worth stating plainly: whatever is decided here rests on the clause and the Xtext alone, and a mistake in it will not be caught by the corpus.\n\nWHERE THE EVIDENCE IS. Invariant shares this divergence through the same ExpressionDeclaration fragment and has a discriminating instance, `inv { age >= 35 }`, favouring reading B. A ruling on that fragment settles this production too, which is the only reason this one can be settled at all.\n\n---\nRESOLVED by adjudication, on a verified citation.\n\nTHE RULING: FeatureDeclaration is OPTIONAL. Reading B, the Xtext's, is followed.\n\nKERML11-181 WAS VERIFIED BY FETCHING IT, not taken from a summary. 'FeatureDefinition should not be mandatory in Expression productions', status open, filed 20 Feb 2026 by Mr. Ed Seidewitz of Model Driven Solutions against KerML 1.0. Its body reads: 'In the following productions, FeatureDefinition should not be mandatory (i.e., the reference should be \"FeatureDefinition?\")', and it then quotes 8.2.5.7.4 Boolean Expressions and Invariants, and this production verbatim.\n\nA WRINKLE IN THE ISSUE ITSELF, recorded because it matters to anyone rereading it: the issue says 'FeatureDefinition' in its title AND in its body prose, while the productions it quotes say 'FeatureDeclaration'. There is no production named FeatureDefinition in this grammar or in the Xtext inventory \u2014 checked \u2014 so the intent is unambiguous and the slip is in the issue's prose, not in the grammar it quotes.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "FeaturePrefix"
+      },
+      {
+        "k": "kw",
+        "text": "bool"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "FeatureDeclaration"
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "ValuePart"
+        }
+      },
+      {
+        "k": "ref",
+        "name": "FunctionBody"
+      }
+    ]
+  },
+  "decision": "A feature prefix, `bool`, an optional declaration, an optional value and a function body. The declaration is OPTIONAL: KERML11-181 names clause 8.2.5.7.4 and quotes this production, so the missing `?` is an acknowledged defect. Note that `bool` appears nowhere in the pinned corpus, so nothing here is corpus-confirmed and the citation is the only backstop.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.7.4",
+      "note": "states the production with FeatureDeclaration carrying no '?' \u2014 the defect"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the pilot reaches FeatureDeclaration? through its declaration fragment, which is what this rule follows"
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "KERML11-181",
+      "note": "Fetched from https://issues.omg.org/issues/spec/KerML and read in full on 2026-09-16, not taken from a summary. Open, filed 20 Feb 2026 by Mr. Ed Seidewitz (Model Driven Solutions) against KerML 1.0. Quotes this production verbatim and states its FeatureDeclaration reference should be optional."
+    },
+    {
+      "kind": "deviation",
+      "ref": "BooleanExpression",
+      "note": "recorded in deviations.json with the adjudicated decision"
+    },
+    {
+      "kind": "file_id",
+      "ref": "ptc/25-04-04",
+      "note": "The KerML Tier A pin the governing clause belongs to."
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:53Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

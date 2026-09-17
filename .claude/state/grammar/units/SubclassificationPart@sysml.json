@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "SubclassificationPart",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "cfded74d2cf0cfb153d8baa7f9d319b0c205cfafeefe3c75503be435428404a1",
+    "xtext_rule": "3fe2466f9433e139f35090173536d4e4d30ca0cfd532224a8df14ed90fc5e85f",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "32d980085332875615fdff148fb2ae7fba3c0c522199b6b4284b0c8e246e25f9"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.6.5 (Specialization.md, region_sha256 d0d5a04805076a67)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment SubclassificationPart returns SysML::Classifier :\n\tSpecializesKeyword ownedRelationship += OwnedSubclassification \n\t( ',' ownedRelationship += OwnedSubclassification )*\n;",
+    "metaclass": "SysML::Classifier"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

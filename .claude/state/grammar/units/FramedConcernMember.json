@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FramedConcernMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
     "xtext_rule": "2504b58939b5c4b7fc25326d1e96235cfed5e1677fb9d04ad871bad2d0c5721f",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "FramedConcernMember returns SysML::FramedConcernMembership :\n\tMemberPrefix kind = FramedConcernKind \n\townedRelatedElement += FramedConcernUsage \n;",
     "metaclass": "SysML::FramedConcernMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in FramedConcernMember@sysml"
 }

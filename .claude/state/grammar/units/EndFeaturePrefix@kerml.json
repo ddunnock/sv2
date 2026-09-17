@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "production": "EndFeaturePrefix",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "9e2b3655417d8748bd8cfe4e1f390d0cff6fd052368ea0581d687ef7c9b0d081",
+    "xtext_rule": "b07c4dd7e5c7c305cc8afeef4fcd627b6b2a20f98316ba7e9ddf5d06276d685f",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "173a4865ded70c11fb843291e9c6a52a36eb9e535abfe8604a6be9e2802e7aa5"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.3.1 (Features.md, region_sha256 c9b4ff39176a7e05)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment EndFeaturePrefix returns SysML::Feature :\n    ( isConstant ?= 'const')? isEnd ?= 'end'\n;",
+    "metaclass": "SysML::Feature"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "kw",
+          "text": "const"
+        }
+      },
+      {
+        "k": "kw",
+        "text": "end"
+      }
+    ]
+  },
+  "decision": "An optional `const` and then `end`, as KerML 8.2.4.3.1 states it.",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nTHE CLAUSE IS FLAGGED MALFORMED AND THIS PRODUCTION IS NOT AFFECTED. The pack reports an unmatched `)` on line 8 of the Features clause. That line is inside the Feature production \u2014 its own parentheses close at -1 \u2014 and this production's parentheses balance on their own, so it is derived from the clause as written. The repair of Feature is recorded on the Feature unit.\n\nThe clause's `{ isVariable = true }` after `const` is an abstract-syntax action that sets a property; it consumes no text and is not carried into the rule.\n\nThe clause and KerML.xtext agree on what parses; the Xtext's `fragment` is not carried across.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "states EndFeaturePrefix as ( 'const' )? 'end'"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the same keywords, without the isVariable action"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml",
+      "note": "line 11, `end [0..1] feature cart: ShoppingCart[1];` \u2014 `end` with no `const` before it"
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:54Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

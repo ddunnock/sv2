@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "AcceptNode",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "07fc0857b7f452c4fc6433292adc095e223da6c6e164090d4a2270279716dabe",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "AcceptNode returns SysML::AcceptActionUsage :\n\tOccurrenceUsagePrefix AcceptNodeDeclaration ActionBody\n;",
     "metaclass": "SysML::AcceptActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in AcceptNode@sysml"
 }

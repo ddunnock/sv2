@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ActionNodeUsageDeclaration",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "1d21a99bccb8810f3e974cbe685772d27ca61795e03b0cfdb71408760696f3d8",
+    "xtext_rule": "b54e6f77029daf133808c9cc29fca5531d77b0818ae27caf8e91bc88777fe7c5",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "d30fc6ec042529636b9683f139d779558511d6c1993342d81ddde942987c42b8"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.2 (ActionUsages.md, region_sha256 207a908873b90795)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment ActionNodeUsageDeclaration returns SysML::ActionUsage :\n\tActionUsageKeyword UsageDeclaration?\n;",
+    "metaclass": "SysML::ActionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

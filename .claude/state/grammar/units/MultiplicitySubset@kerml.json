@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "MultiplicitySubset",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "8495e77a2c661ef306d5c397c34b70d3e5b299f9d00d7c0b98bdc36f47423af3",
+    "xtext_rule": "3d828f98fea4921ceb7742e2f9968fe6d40b56b22b8137bee67c0ec48bb95107",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "63a9e1711470790834e4be4b94efa782c6012ecddcf808aea63e7a8b569e40c4"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.11 (MultiplicitiesConcreteSyntax.md, region_sha256 01e46f53f28bef82)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "MultiplicitySubset returns SysML::Multiplicity :\n\t'multiplicity' Identification? Subsets TypeBody\n;",
+    "metaclass": "SysML::Multiplicity"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

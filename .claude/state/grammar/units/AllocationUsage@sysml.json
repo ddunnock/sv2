@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "AllocationUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "cdcac22d144dab18c6832109fc69e75bca7271a2159ea7c99c78fe2f1508cacb",
+    "xtext_rule": "c907666a6bb27844805214e073be50e1c4ad523005e58dccaa5a208da011da23",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "dffedb28910b338d4ac6162a57a791da36b8d0688ca6e0bca5af94b54fe663dd"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.15 (AllocationsTextualNotation.md, region_sha256 c49ff28fffcd621a)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "AllocationUsage returns SysML::AllocationUsage :\t \n\tOccurrenceUsagePrefix AllocationUsageDeclaration UsageBody\n;",
+    "metaclass": "SysML::AllocationUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

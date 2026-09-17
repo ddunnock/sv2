@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ConstraintDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "47fe8fcfd43177311a472736911d09a1442457b9613ea3d8a52b6ede27cb25cb",
     "xtext_rule": "93167b189971d1139b4059ec63802c0c86469404bd294222814f4d4f9b811495",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ConstraintDefinition returns SysML::ConstraintDefinition :\n\tOccurrenceDefinitionPrefix ConstraintDefKeyword DefinitionDeclaration CalculationBody  \n;",
     "metaclass": "SysML::ConstraintDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ConstraintDefinition@sysml"
 }

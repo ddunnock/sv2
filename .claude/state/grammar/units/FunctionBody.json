@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FunctionBody",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8424c7798f166fa9186918bfbb6d4192303bf44e0025da69f4bccddf2615ab77",
     "xtext_rule": "140d49883c81b0176eec0d47309b92da06acfe99983d12d8f3707060dc7fe63b",
@@ -42,7 +42,7 @@
     ]
   },
   "decision": "A semicolon, or braces around a function body part, as KerML 8.2.5.7.1 states it.",
-  "notes": "The clause and KerML.xtext agree exactly; the Xtext's `fragment` is not carried across. The body part carries the members and the optional trailing result expression.",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in FunctionBody@kerml\nThe clause and KerML.xtext agree exactly; the Xtext's `fragment` is not carried across. The body part carries the members and the optional trailing result expression.",
   "evidence": [
     {
       "kind": "clause",

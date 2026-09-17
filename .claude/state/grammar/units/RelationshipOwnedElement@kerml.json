@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "production": "RelationshipOwnedElement",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "060222b6e0d7f88f1bd754f29cbce2b084d17eb97fc88e0f20f89315d518bfa4",
+    "xtext_rule": "1d3185476d924e7c9fdb515dc555929328738838f09962bd9a7c87d2833fcd96",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "63577f87b1732f9b4daeb0c18a891079a277fdb4d87fa20670a85f82250c93f3"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.3.1 (ElementsandRelationshipsConcreteSyntax.md, region_sha256 804243ef8968f378)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment RelationshipOwnedElement returns SysML::Relationship:\n      ownedRelatedElement += OwnedRelatedElement\n    | ownedRelationship += OwnedAnnotation\n;",
+    "metaclass": "SysML::Relationship"
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "OwnedRelatedElement"
+      },
+      {
+        "k": "ref",
+        "name": "OwnedAnnotation"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.3.1 states it: an owned related element, which the same clause defines as NonFeatureElement | FeatureElement, or an owned annotation. The Xtext fragment is identical. RelationshipBody, in the same clause, repeats this inside braces.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.1",
+      "note": "RelationshipOwnedElement : Relationship = ownedRelatedElement += OwnedRelatedElement | ownedRelationship += OwnedAnnotation"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment RelationshipOwnedElement: ownedRelatedElement += OwnedRelatedElement | ownedRelationship += OwnedAnnotation. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:39:19Z",
+  "verified_utc": "2026-09-17T14:22:58Z",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "IndividualDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "729e11bfb00a5a13f3ba4b6f6db4994e5bd6df5d4d6eb952ac3b8f19436b9f97",
     "xtext_rule": "66b4c8a0214cc0e6a535dced6a5d5bd1c3998a6d2316ac6e61dd78f7dbed936c",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "IndividualDefinition returns SysML::OccurrenceDefinition :\n\tBasicDefinitionPrefix? isIndividual ?= 'individual' \n\townedRelationship += EmptyMultiplicityMember\n\tDefinitionExtensionKeyword* 'def' Definition\n;",
     "metaclass": "SysML::OccurrenceDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in IndividualDefinition@sysml"
 }

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "AnalysisCaseDefinition",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "3f547f59cdfdc6bf686f4983601e95114cf5a7533054bace604c5c143988abb2",
+    "xtext_rule": "b7336298980c20a4b7ec38be5cb3f987acc3cabfa62b02bd4a3c0f7a39a4c48b",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "fc611ba5fdedbbf81f1cff59a5848922d03ff61dd7454b5d959ece66b5f1c09f"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.23 (AnalysisCasesTextualNotation.md, region_sha256 4cc422ae06b4314e)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "AnalysisCaseDefinition returns SysML::AnalysisCaseDefinition :\n\tOccurrenceDefinitionPrefix AnalysisCaseDefKeyword DefinitionDeclaration CaseBody\n;",
+    "metaclass": "SysML::AnalysisCaseDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

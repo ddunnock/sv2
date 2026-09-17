@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ForLoopNode",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
     "xtext_rule": "10a7a1d85402ae5f2f181f9488e46cd0238cd85bc83d7da8938a4853d72d7659",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ForLoopNode returns SysML::ForLoopActionUsage :\n\tActionNodePrefix\n\t'for' ownedRelationship += ForVariableDeclarationMember\n\t'in' ownedRelationship += NodeParameterMember\n\townedRelationship += ActionBodyParameterMember\n;",
     "metaclass": "SysML::ForLoopActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ForLoopNode@sysml"
 }

@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "production": "BasicFeaturePrefix",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "9e2b3655417d8748bd8cfe4e1f390d0cff6fd052368ea0581d687ef7c9b0d081",
+    "xtext_rule": "0a332703960711955f3141300c50c2c7c9d4280a1ebb84f7e68875d7eb9bdbc4",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "05e5f18dcd66485484b87fabd4ae269abc14f1b2558af54b59986d565b887cd6"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.3.1 (Features.md, region_sha256 c9b4ff39176a7e05)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment BasicFeaturePrefix returns SysML::Feature :\t\n\t( direction = FeatureDirection )?\n\t( isDerived ?= 'derived' )?\n\t( isAbstract ?= 'abstract' )?\n\t( isComposite ?= 'composite' | isPortion ?= 'portion' )? \n\t( isVariable ?= 'var' | isConstant ?= 'const' )?\n;",
+    "metaclass": "SysML::Feature"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "FeatureDirection"
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "kw",
+          "text": "derived"
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "kw",
+          "text": "abstract"
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "alt",
+          "items": [
+            {
+              "k": "kw",
+              "text": "composite"
+            },
+            {
+              "k": "kw",
+              "text": "portion"
+            }
+          ]
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "alt",
+          "items": [
+            {
+              "k": "kw",
+              "text": "var"
+            },
+            {
+              "k": "kw",
+              "text": "const"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "decision": "An optional direction, then optional `derived`, `abstract`, `composite` or `portion`, and `var` or `const`, in that fixed order, as KerML 8.2.4.3.1 states it. Every part is optional, so the prefix can be empty.",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nTHE CLAUSE IS FLAGGED MALFORMED AND THIS PRODUCTION IS NOT AFFECTED. The pack reports an unmatched `)` on line 8 of the Features clause. That line is inside the Feature production \u2014 its own parentheses close at -1 \u2014 and this production's parentheses balance on their own, so it is derived from the clause as written. The repair of Feature is recorded on the Feature unit.\n\nA NOTATIONAL SLIP in the clause, recorded and not acted on: the head reads `BasicFeaturePrefix : Feature :` with a colon where every other production has `=`. Nothing about what parses turns on it.\n\nTHE ORDER IS FIXED. The modifiers are a sequence of options, not a set: `abstract derived` is not this production. The `{ isVariable = true }` action after `const` consumes no text.\n\nThe clause and KerML.xtext agree on what parses; the Xtext's `fragment` is not carried across.\n\nNULLABLE, which is what makes FeaturePrefix, and the second alternative of Feature, impossible to recognise by lookahead alone.\n\nFILED WITH OMG: the notational slip recorded above is KERML11-108, item 3. It concerns how the rule is written, not what it accepts, so it is recorded as a citation and not as a deviation.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "states BasicFeaturePrefix as the ordered optional modifiers, with a `:` for its `=`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the same ordered modifiers"
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "KERML11-108",
+      "note": "EXACT MATCH, item 3: lists `BasicFeaturePrefix : Feature :` ending with `:`. 'Grammar rules missing \"=\" or incorrectly using \":\"', open, filed 30 Oct 2025 by Kent Johnson (Emerson) against KerML 1.0. Fetched and read in full on 2026-09-17, not taken from a summary."
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:53Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

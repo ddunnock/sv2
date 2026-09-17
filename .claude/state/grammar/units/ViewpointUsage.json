@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ViewpointUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7459f39ab652479ee981a5de77eafaa36aacdb763486ea4e70579adf871ea143",
     "xtext_rule": "3952c482c396059beba067c347cfaa26bbb659bbeb5e0f0817dbaa756326ddf2",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ViewpointUsage returns SysML::ViewpointUsage :\n\tOccurrenceUsagePrefix ViewpointUsageKeyword ConstraintUsageDeclaration RequirementBody\n;",
     "metaclass": "SysML::ViewpointUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ViewpointUsage@sysml"
 }

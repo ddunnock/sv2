@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "MetadataBodyUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
+    "xtext_rule": "6ecf269b7ecf2e2d21e5faac8e086eebed274239583e56220d63b75e228f7f72",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "cf2b13f760168caceabe2015a675a9947b5faba3bec13b02e48e46a6f70c03d3"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.27 (MetadataTextualNotation.md, region_sha256 69251565feee7639)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "MetadataBodyUsage returns SysML::ReferenceUsage :\n\t'ref'? ( ':>>' | 'redefines' )? ownedRelationship += OwnedRedefinition \n\tFeatureSpecializationPart? ValuePart?\n\tMetadataBody\n;",
+    "metaclass": "SysML::ReferenceUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

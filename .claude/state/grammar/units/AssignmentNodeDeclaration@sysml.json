@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "AssignmentNodeDeclaration",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "a268475e162e29768dbefce1071203c8c52c4eea909b9561a878f0d79d91c939",
+    "xtext_rule": "32a7d38f7c90da35bcaeab03ff686dcbf14148a0d2a6b2f5ad9e8a9e829f2052",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "78c27ef11b78cc18a27837189772d9575143531ca69d7894614ef23ce1c72727"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.5 (AssignmentActionUsages.md, region_sha256 dfe847fa0a5c6846)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment AssignmentNodeDeclaration returns SysML::ActionUsage :\n\tActionNodeUsageDeclaration? 'assign' \n\townedRelationship += AssignmentTargetMember\n\townedRelationship += FeatureChainMember ':=' \n\townedRelationship += NodeParameterMember\n;",
+    "metaclass": "SysML::ActionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

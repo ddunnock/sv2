@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "TriggerExpression",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
+    "xtext_rule": "acd22f4e4ac035746a9134ffc37e865c5145c48647d04ce731aef0f5b73c8a2d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "66ea4eda478005e32eab0a08fc47bd77337e4871df0b18592f5f77e3a86e4516"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "TriggerExpression returns SysML::TriggerInvocationExpression :\n\t  kind = TimeTriggerKind\n\t  ownedRelationship += ArgumentMember\n\t| kind = ChangeTriggerKind\n\t  ownedRelationship += ArgumentExpressionMember\n;",
+    "metaclass": "SysML::TriggerInvocationExpression"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

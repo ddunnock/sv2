@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Namespace",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "05d6d5f37d8b9f1e7ac7d05e166f70177a93aa02d6a11aa9711bf654061a4fca",
     "xtext_rule": "1f1fd101ec66e7523182c9f9eede3ca6ab241ec04cd82cdea6ccb6e2e9ca9d23",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "Namespace returns SysML::Namespace :\n\t( ownedRelationship += PrefixMetadataMember )*\n\tNamespaceDeclaration NamespaceBody\n;",
     "metaclass": "SysML::Namespace"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in Namespace@kerml"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "CaseDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "e3a278925d36146fdb1fe9b1da78351269daeb41617744492f5e30c352341669",
     "xtext_rule": "ab919e89c36e6f6116402fa0d9a5217e9b99664b1ddbebebbea4f26ff2b65625",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "CaseDefinition returns SysML::CaseDefinition :\n\tOccurrenceDefinitionPrefix CaseDefKeyword DefinitionDeclaration CaseBody\n;",
     "metaclass": "SysML::CaseDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in CaseDefinition@sysml"
 }

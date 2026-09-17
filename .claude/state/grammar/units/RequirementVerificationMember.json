@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "RequirementVerificationMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "1db5b44a338a0a23c3e3429dca4d9c556047a96149d863f795e58b73b149d1f2",
     "xtext_rule": "9030e7c35f256c52798c6b521a68218e4864d50a4c06082dbe46f2a7bee4f1db",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "RequirementVerificationMember returns SysML::RequirementVerificationMembership :\n\tMemberPrefix kind = RequirementVerificationKind \n\townedRelatedElement += RequirementVerificationUsage \n;",
     "metaclass": "SysML::RequirementVerificationMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in RequirementVerificationMember@sysml"
 }

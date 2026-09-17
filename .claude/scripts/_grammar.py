@@ -234,6 +234,102 @@ def divergent_productions(rules: list[Json]) -> set[str]:
     }
 
 
+#: A production name in a Tier B' body. Literals are removed first, so a keyword never
+#: counts; lowercase property names never match, because productions are capitalized.
+_LITERAL = re.compile(r"'(?:[^'\\]|\\.)*'")
+_IDENT = re.compile(r"\b[A-Z][A-Za-z0-9_]*\b")
+
+#: Where SysML does not take KerML's production as the Tier B' text would have it. Each
+#: entry is a recorded deviation, and the body is what SysML reads instead. A production
+#: named here is split, because its two languages then read different bodies. ADR-0015.
+SYSML_BOUNDARY: dict[str, str] = {
+    # deviation AnnotatingElement: SysML 8.2.2.4.1 names KerML's MetadataFeature, which
+    # opens KerML's kernel inside SysML metadata. SysML's own metadata is MetadataUsage.
+    "AnnotatingElement": "Comment | Documentation | TextualRepresentation | MetadataUsage",
+    # deviation ExpressionBody: SysML does not state it, and KerML's body holds KerML
+    # elements. The SysML corpus writes `forAll {in ref w; ...}`, which only SysML's
+    # CalculationBody (8.2.2.19) accepts.
+    "ExpressionBody": "CalculationBody",
+}
+
+
+def body_references(body: str, known: set[str]) -> set[str]:
+    """The productions a Tier B' body references, restricted to ``known`` non-terminals."""
+    text = _LITERAL.sub(" ", re.sub(r"//[^\n]*", " ", body))
+    return {n for n in _IDENT.findall(text) if n in known and not TERMINAL_NAME.match(n)}
+
+
+def _language_definitions(rules: list[Json]) -> dict[str, dict[str, list[str]]]:
+    defs: dict[str, dict[str, list[str]]] = {scope: {} for scope in SCOPES}
+    for rule in rules:
+        scope = "kerml" if str(rule["file"]).startswith("KerML") else "sysml"
+        defs[scope].setdefault(rule["name"], []).append(str(rule["body"]))
+    return defs
+
+
+def reachable(
+    rules: list[Json], scope: str, boundary: dict[str, str], root: str = "RootNamespace"
+) -> set[str]:
+    """Every production one language's grammar reaches from its root.
+
+    KerML reads only KerML's productions. SysML reads its own, then KerML's for any it
+    does not state, because it uses KerML's expression notation (SysML 8.2.2.17.4 and
+    the notes that cite [KerML, 8.2.5.8]). The boundary replaces a production's body in
+    SysML where that fallback is recorded as wrong.
+    """
+    defs = _language_definitions(rules)
+    known = set(defs["kerml"]) | set(defs["sysml"])
+    seen: set[str] = set()
+    stack = [root]
+    while stack:
+        name = stack.pop()
+        if name in seen:
+            continue
+        seen.add(name)
+        if scope == "sysml" and name in boundary:
+            bodies = [boundary[name]]
+        else:
+            bodies = defs[scope].get(name) or (
+                defs["kerml"].get(name, []) if scope == "sysml" else []
+            )
+        for body in bodies:
+            stack.extend(body_references(body, known) - seen)
+    return seen
+
+
+def production_scopes(
+    rules: list[Json], boundary: dict[str, str] | None = None
+) -> dict[str, tuple[str | None, ...]]:
+    """The unit scopes the plan gives each production: (None,) shared, one language, or both.
+
+    Deterministic from the Tier B' inventory and the recorded boundary. ADR-0015.
+      - stated differently in the two languages, or named in the boundary: split into
+        both variants (ADR-0014)
+      - stated identically in both: shared
+      - stated in one language: shared if both grammars reach it, otherwise that
+        language's alone. A production neither grammar reaches keeps the language that
+        states it.
+    """
+    boundary = SYSML_BOUNDARY if boundary is None else boundary
+    defs = _language_definitions(rules)
+    divergent = divergent_productions(rules) | set(boundary)
+    reach = {scope: reachable(rules, scope, boundary) for scope in SCOPES}
+    scopes: dict[str, tuple[str | None, ...]] = {}
+    for name in sorted(set(defs["kerml"]) | set(defs["sysml"])):
+        stated = tuple(scope for scope in SCOPES if name in defs[scope])
+        if name in divergent:
+            scopes[name] = SCOPES
+        elif len(stated) == len(SCOPES):
+            scopes[name] = (None,)
+        else:
+            reached = tuple(scope for scope in SCOPES if name in reach[scope])
+            if len(reached) == len(SCOPES):
+                scopes[name] = (None,)
+            else:
+                scopes[name] = reached or stated
+    return scopes
+
+
 def clause_for_scope(entry: Json, scope: str | None) -> tuple[str, str]:
     """(ref, text) of a clause export entry, narrowed to one language.
 

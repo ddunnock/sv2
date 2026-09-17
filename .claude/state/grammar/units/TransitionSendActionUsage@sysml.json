@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "TransitionSendActionUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
+    "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "008412c0de560e035d7b6914ed06d72d1fcd785c0822389fae2d29a91eaff814"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+    "xtext_file": "",
+    "xtext_rule_text": "",
+    "metaclass": ""
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

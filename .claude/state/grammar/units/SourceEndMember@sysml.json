@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "SourceEndMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "b890f4492c1572fe8e51c37c4f3a3bc4c205a6aa1d8619eca3af292f9380673c",
+    "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "8e51004d61c7cb9541ef99cbe25d39b3a58b3e587194311569863d73b43f9a0d"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.9.3 (OccurrenceSuccessions.md, region_sha256 1f4477d014699468)",
+    "xtext_file": "",
+    "xtext_rule_text": "",
+    "metaclass": ""
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

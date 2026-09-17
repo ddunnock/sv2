@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "OccurrenceUsagePrefix",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "465ccd42d9aa0196c8527be21292803c8fcc974662a742655dbd027182d072c3",
+    "xtext_rule": "904c4b3ebf46864909d878250b6f00b17c2e01cb9b786851b6e9109c62090eb9",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "8fe1c0fd2057138465af59ac05dac4ba6aeae76aa14946921c4a369652776df8"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.9.2 (OccurrenceUsages.md, region_sha256 6dfed224798030c3)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment OccurrenceUsagePrefix returns SysML::OccurrenceUsage :\n\t( EndUsagePrefix\n\t| BasicUsagePrefix\n\t  ( isIndividual ?= 'individual' )?\n\t  ( portionKind = PortionKind )?\n\t)\n\tUsageExtensionKeyword*\n;",
+    "metaclass": "SysML::OccurrenceUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

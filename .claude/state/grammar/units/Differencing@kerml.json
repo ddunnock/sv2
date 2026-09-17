@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "production": "Differencing",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "892bc9035c96b6d4c80836e286912851df3c5c4adc15a47a7c97cb4f93ff27b2",
+    "xtext_rule": "c9e84d00719fc95237f7244a1cf591b9308cca99f57aef365a532ec4a4c4f17b",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "37a1c867d9880398573a0b78b44113eb42a39efe98488eb02ceb7ca12632a320"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.1.5 (UnioningIntersectingandDifferencing.md, region_sha256 e330e45e0bddfd9d)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Differencing returns SysML::Differencing :\n\t  differencingType = [SysML::Type | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain\n;",
+    "metaclass": "SysML::Differencing"
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "QualifiedName"
+      },
+      {
+        "k": "ref",
+        "name": "OwnedFeatureChain"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.1.5 states it: the differencing type, as a cross-reference `[QualifiedName]` or as an owned OwnedFeatureChain. The Xtext rule is identical.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.5",
+      "note": "Differencing = differencingType = [QualifiedName] | ownedRelatedElement += OwnedFeatureChain"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml",
+      "note": "line 31: `feature h2 differences b.f, b.a ...`, two chains"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "Differencing: differencingType = [SysML::Type | QualifiedName] | ownedRelatedElement += OwnedFeatureChain. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:37:34Z",
+  "verified_utc": "2026-09-17T14:22:54Z",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

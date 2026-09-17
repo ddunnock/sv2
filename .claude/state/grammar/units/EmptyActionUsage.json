@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "EmptyActionUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "6f7cd7408a7b364e4a1c9cb070f712b9229c02405be681c2ba1907ce42b2860a",
     "xtext_rule": "f35724262b7724db4d495830bf2838baf27ac9ffe3f898e2ec145d3284aff707",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "EmptyActionUsage returns SysML::ActionUsage :\n\t{SysML::ActionUsage}\n;",
     "metaclass": "SysML::ActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in EmptyActionUsage@sysml"
 }

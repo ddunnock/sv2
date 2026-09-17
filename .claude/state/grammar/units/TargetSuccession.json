@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TargetSuccession",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "bf230844585015a55800fd98050d6e2879682c9a5988b5261223ac6eb481d35b",
     "xtext_rule": "00b87b5926dac9d932d4fca9ffe069864527bb5daa8b1e1e8aac50ad9c64d7b0",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "TargetSuccession returns SysML::SuccessionAsUsage :\n\townedRelationship += MultiplicitySourceEndMember\n\t'then' ownedRelationship += ConnectorEndMember\n;",
     "metaclass": "SysML::SuccessionAsUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in TargetSuccession@sysml"
 }

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "RequirementConstraintMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
+    "xtext_rule": "ea9fa77ea876c93421cdd62d8c03a674b360f4d56c13ede3b230f99c27b858a6",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "241dc2c0b7862cf3759d644eb559136f3c307d52cd68e24aeedec380e3a2be58"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.1 (RequirementDefinitions.md, region_sha256 fd824f1d9da5f780)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "RequirementConstraintMember returns SysML::RequirementConstraintMembership :\n\tMemberPrefix kind = RequirementConstraintKind \n\townedRelatedElement += RequirementConstraintUsage \n;",
+    "metaclass": "SysML::RequirementConstraintMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

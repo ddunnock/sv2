@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ForkNode",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "9f6ad15d3c6276977efc7f4191cc5ceb74786e4a088c6dbbebcd16e6dd6dec08",
     "xtext_rule": "175a1a2bc2062f263ef0a3cee7dda2e71cd1a0134a1a0186258b940ca30afd3d",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ForkNode returns SysML::ForkNode :\n\tControlNodePrefix \n\tisComposite ?= 'fork' UsageDeclaration?\n\tActionBody\n;",
     "metaclass": "SysML::ForkNode"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ForkNode@sysml"
 }

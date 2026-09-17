@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "PortionKind",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "465ccd42d9aa0196c8527be21292803c8fcc974662a742655dbd027182d072c3",
+    "xtext_rule": "3f46ee79a3085a2b6d7fc26451ceda26cbf9547adb23ff3ec72abdb97e14c15e",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "906731154e852f43cf6f0288d3785b08d72b48dcdc074eced5fc132c26bb3211"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.9.2 (OccurrenceUsages.md, region_sha256 6dfed224798030c3)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "enum PortionKind returns SysML::PortionKind :\n\t// Literal keywords identified explicitly so they can be found by syntax highlighting script\n\tsnapshot = 'snapshot' | timeslice = 'timeslice'\n;",
+    "metaclass": "SysML::PortionKind"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

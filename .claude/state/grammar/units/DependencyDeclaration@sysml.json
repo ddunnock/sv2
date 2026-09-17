@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "DependencyDeclaration",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "07bde0629a199f5427c393e924bdfce65b1c4685a735743ccbfb6899ec99307f",
+    "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "3e42cdb73a6d18cc0005a5463e21954eae035053405cb510e6be397a6413806c"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.3 (DependenciesTextualNotation.md, region_sha256 7cacbc0dcb99a475)",
+    "xtext_file": "",
+    "xtext_rule_text": "",
+    "metaclass": ""
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

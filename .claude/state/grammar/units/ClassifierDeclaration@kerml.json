@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ClassifierDeclaration",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "11c8984ff24597dee63bdc75c014e37379025dd429cf69db5be06483357f9a63",
+    "xtext_rule": "4eb6879d311d30f7d2e91e7a44c78ff2ae1f5eb565efde5e25bd7068fcbb81dd",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "7fa8986e032e9786305ee265fef5aed46816d666fc6fcfcc3b1fd9c5e0bc8dab"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.2.1 (Classifiers.md, region_sha256 73248677d5fad211)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment ClassifierDeclaration returns SysML::Classifier :\t\n    (isSufficient ?= 'all' )? Identification?\n\t( ownedRelationship += OwnedMultiplicity )?\n\t( SuperclassingPart | ClassifierConjugationPart )?\n\tTypeRelationshipPart*\n;",
+    "metaclass": "SysML::Classifier"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

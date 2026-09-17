@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "AnnotatingMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "d87d1ab982342f8c81e2a5560e39822563a1d479a63df9bbce3daf823109348b",
+    "xtext_rule": "73bcaf36834cef38f0a4c306df1dbb94adf5691f283328f66167a6f1fd1710ee",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "9e4f4424ebc752e79bcde7876995c4c4dbd7f09aab9578bea682b78b83f0c48d"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.4.1 (Annotations.md, region_sha256 3c3db88367d002e9)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "AnnotatingMember returns SysML::OwningMembership :\n\tMemberPrefix ownedRelatedElement += AnnotatingElement \n;",
+    "metaclass": "SysML::OwningMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

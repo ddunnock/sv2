@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "PerformActionUsageDeclaration",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "1d21a99bccb8810f3e974cbe685772d27ca61795e03b0cfdb71408760696f3d8",
     "xtext_rule": "dc5a02fae24fc18538a54a5d8ccac36864a890ca9e3a6188c28583a1b7b15c05",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment PerformActionUsageDeclaration returns SysML::ActionUsage :\n   \t( ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?\n   \t| ActionUsageKeyword UsageDeclaration? )\n    ValuePart?\n;",
     "metaclass": "SysML::ActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in PerformActionUsageDeclaration@sysml"
 }

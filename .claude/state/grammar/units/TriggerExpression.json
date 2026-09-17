@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TriggerExpression",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "acd22f4e4ac035746a9134ffc37e865c5145c48647d04ce731aef0f5b73c8a2d",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "TriggerExpression returns SysML::TriggerInvocationExpression :\n\t  kind = TimeTriggerKind\n\t  ownedRelationship += ArgumentMember\n\t| kind = ChangeTriggerKind\n\t  ownedRelationship += ArgumentExpressionMember\n;",
     "metaclass": "SysML::TriggerInvocationExpression"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in TriggerExpression@sysml"
 }

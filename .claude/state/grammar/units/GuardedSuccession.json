@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "GuardedSuccession",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "bf230844585015a55800fd98050d6e2879682c9a5988b5261223ac6eb481d35b",
     "xtext_rule": "16482a3b831271ee072dfe8016b78c0d7bd7e44c4cb2d8bd058b5381c7655e0a",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "GuardedSuccession returns SysML::TransitionUsage :\n\t( SuccessionKeyword UsageDeclaration )? 'first'\n\townedRelationship += TransitionSourceMember \n\townedRelationship += EmptyParameterMember\n\townedRelationship += GuardExpressionMember\n\t'then' ownedRelationship += TransitionSuccessionMember\n\tUsageBody\n;",
     "metaclass": "SysML::TransitionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in GuardedSuccession@sysml"
 }

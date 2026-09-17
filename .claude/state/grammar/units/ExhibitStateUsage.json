@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ExhibitStateUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8ccbf293e22630ecd9dee2be74eb644388b000ac1b77b211d17cb81d7c7711c5",
     "xtext_rule": "a492527bb29a53592b66082f0018900a6052abf6a588b093cb5ca15fa95d5ac2",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ExhibitStateUsage returns SysML::ExhibitStateUsage :\n    OccurrenceUsagePrefix 'exhibit' \n    ( ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?\n    | StateUsageKeyword UsageDeclaration?\n    )\n    ValuePart? StateUsageBody\n;",
     "metaclass": "SysML::ExhibitStateUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ExhibitStateUsage@sysml"
 }

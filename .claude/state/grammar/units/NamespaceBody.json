@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "NamespaceBody",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "05d6d5f37d8b9f1e7ac7d05e166f70177a93aa02d6a11aa9711bf654061a4fca",
     "xtext_rule": "69074d9d754704c034f2955448d9aafe69bef9a86bffd742ca1d9b3a409deed8",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment NamespaceBody returns SysML::Namespace :\n\t  ';' \n\t| '{' ( // Note: PackageBodyElement is expanded here to avoid\n\t\t\t// infinite loops in the incremental parser.\n\t\t    ownedRelationship += NamespaceMember \n\t      | ownedRelationship += AliasMember\n\t      | ownedRelationship += Import )* \n\t  '}'\n;",
     "metaclass": "SysML::Namespace"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in NamespaceBody@kerml"
 }

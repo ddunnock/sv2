@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ControlNodePrefix",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "9f6ad15d3c6276977efc7f4191cc5ceb74786e4a088c6dbbebcd16e6dd6dec08",
+    "xtext_rule": "38f352c33740f81ef74f666024fea006ec4ff9863bad1cd5e45267fa3b2b4393",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "5863ba782c07fb89ae9b1587afd2fe28b9f74db7102f0c9375e0d3c1275a7af9"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.3 (ControlNodes.md, region_sha256 08ce249947265cb2)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment ControlNodePrefix returns SysML::OccurrenceUsage :\n\t  RefPrefix\n\t  ( isIndividual ?= 'individual' )?\n\t  ( portionKind = PortionKind )?\n\t  UsageExtensionKeyword*\n;",
+    "metaclass": "SysML::OccurrenceUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Succession",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "c4405700cf6540a16a46d528e534ca9b83310ce2288e1c5e44e354aadeb57981",
     "xtext_rule": "5c92bea70384158183b4071f5e222b9ec3e2df69815e0f81fb220ae41f827137",
@@ -37,7 +37,7 @@
     ]
   },
   "decision": "A feature prefix, `succession`, the declaration, and the body, exactly as KerML 8.2.5.5.3 states it. The Xtext agrees. It is the same four-part shape as BindingConnector, with `first`/`then` in place of `of`/`=` inside the declaration.",
-  "notes": "The clause and the Xtext agree exactly on THIS production. Nothing is inlined and there is no workaround to decline.\n\nA DEFECT IN THE SAME CLAUSE, BELONGING TO THE NEXT UNIT, NOT THIS ONE. The clause's SuccessionDeclaration production reads `( s.isSufficient ?= 'all' )?` \u2014 a stray `s.` qualifier on the assignment target, where every comparable production writes plain `isSufficient ?= 'all'`. That is the same shape of transcription defect as the already-recorded PositionalArgumentList stray `e.` in deviations.json. It is noted here because it was seen while deriving this unit, and it is deliberately NOT resolved here: it is SuccessionDeclaration's defect and belongs to that unit's derivation, which has its own clause reading to do. Nothing about this production's rule turns on it \u2014 the assignment is abstract syntax either way and does not affect what parses.\n\nFOR A PARSER AUTHOR: as with BindingConnector, everything that varies lives in the declaration. `succession first a then b;` and a bare `succession;` both reduce to this same four-part shape.\n\nCORPUS: `succession first operated then inOperable;` and `succession first startShot then driven;` exercise the keyword, the `first`/`then` declaration and the `;` body.",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in Succession@kerml\nThe clause and the Xtext agree exactly on THIS production. Nothing is inlined and there is no workaround to decline.\n\nA DEFECT IN THE SAME CLAUSE, BELONGING TO THE NEXT UNIT, NOT THIS ONE. The clause's SuccessionDeclaration production reads `( s.isSufficient ?= 'all' )?` \u2014 a stray `s.` qualifier on the assignment target, where every comparable production writes plain `isSufficient ?= 'all'`. That is the same shape of transcription defect as the already-recorded PositionalArgumentList stray `e.` in deviations.json. It is noted here because it was seen while deriving this unit, and it is deliberately NOT resolved here: it is SuccessionDeclaration's defect and belongs to that unit's derivation, which has its own clause reading to do. Nothing about this production's rule turns on it \u2014 the assignment is abstract syntax either way and does not affect what parses.\n\nFOR A PARSER AUTHOR: as with BindingConnector, everything that varies lives in the declaration. `succession first a then b;` and a bare `succession;` both reduce to this same four-part shape.\n\nCORPUS: `succession first operated then inOperable;` and `succession first startShot then driven;` exercise the keyword, the `first`/`then` declaration and the `;` body.",
   "evidence": [
     {
       "kind": "clause",

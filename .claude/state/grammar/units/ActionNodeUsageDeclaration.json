@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ActionNodeUsageDeclaration",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "1d21a99bccb8810f3e974cbe685772d27ca61795e03b0cfdb71408760696f3d8",
     "xtext_rule": "b54e6f77029daf133808c9cc29fca5531d77b0818ae27caf8e91bc88777fe7c5",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment ActionNodeUsageDeclaration returns SysML::ActionUsage :\n\tActionUsageKeyword UsageDeclaration?\n;",
     "metaclass": "SysML::ActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ActionNodeUsageDeclaration@sysml"
 }

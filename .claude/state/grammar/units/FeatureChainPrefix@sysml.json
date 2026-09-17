@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "FeatureChainPrefix",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "f503f360d20207704de75664ced4bbe1f57e024983fed96db8f3731cd57ee6a9",
+    "xtext_rule": "003e2b152ba3ecbd6ad7dee5b9356b4cd2091036555ea8488751da4167c10163",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "a3a8ebd8a22837c3dde73d1db7b7fe9e1143f092f9146f9891785f5114fcd2ce"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.16 (FlowsTextualNotation.md, region_sha256 e03f363eef9b4cf1)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "FeatureChainPrefix returns SysML::Feature :\n\t( ownedRelationship += OwnedFeatureChaining '.' )+\n\townedRelationship += OwnedFeatureChaining '.'\n;",
+    "metaclass": "SysML::Feature"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

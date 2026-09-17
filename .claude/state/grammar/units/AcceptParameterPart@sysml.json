@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "AcceptParameterPart",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
+    "xtext_rule": "22ae0d8aead30cddd3fa86a4d4e42150f3ec184c545320fb125c04fc72b38222",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "03611ec0aba9da420e2c92d9d5ba923c4638e48cbb304de7cf61481a8353ca17"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment AcceptParameterPart returns SysML::ActionUsage :\n\townedRelationship += PayloadParameterMember\n\t( 'via' ownedRelationship += NodeParameterMember )?\n;",
+    "metaclass": "SysML::ActionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

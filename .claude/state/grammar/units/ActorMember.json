@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ActorMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
     "xtext_rule": "ae4b10633803c5e4aa7b5f330c3b605b8361af1b6f54942a19c37b8b305b4e81",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ActorMember returns SysML::ActorMembership :\n\tMemberPrefix\n\townedRelatedElement += ActorUsage \n;",
     "metaclass": "SysML::ActorMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ActorMember@sysml"
 }

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Usage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "75719cca5586b38df687a0107da0631912855d8761fb90c9ddda65858c3f8a4b",
+    "xtext_rule": "bdfbdd37c5a9b9052bd136c2f2022e8a76dbb4357d5fc6370cf3817e762a6b90",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "7f5aef3cbe3defe412c1672243485da458c010aa7e4c0b91cc4186ace9b5dacf"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.6.2 (Usages.md, region_sha256 a6f6e20afeed05e4)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment Usage returns SysML::Usage :\n\tUsageDeclaration? UsageCompletion\n;",
+    "metaclass": "SysML::Usage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

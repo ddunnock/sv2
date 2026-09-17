@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "RequirementUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "fc398636b89ed7f38aee585cc6eb3e6281af4853d57aab1490de3e1306db12d3",
+    "xtext_rule": "4d254b930c6942699491e4f2468fdb0e030c01a3ab3806ba9360720eb7bdd537",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "8fa0f4de2c6bf4837aca8c68d720432b7ede4899eea81e75e6fffe153465add1"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.2 (RequirementUsages.md, region_sha256 6c4f3553daaa3162)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "RequirementUsage returns SysML::RequirementUsage :\n\tOccurrenceUsagePrefix RequirementUsageKeyword ConstraintUsageDeclaration RequirementBody\n;",
+    "metaclass": "SysML::RequirementUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

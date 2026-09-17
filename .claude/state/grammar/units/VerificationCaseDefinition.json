@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "VerificationCaseDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "1db5b44a338a0a23c3e3429dca4d9c556047a96149d863f795e58b73b149d1f2",
     "xtext_rule": "8da2cda2b35dec2108700aac6dc781018b8baa8d9f0c4aaa124504b304bd4b7c",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "VerificationCaseDefinition returns SysML::VerificationCaseDefinition :\n\tOccurrenceDefinitionPrefix VerificationCaseDefKeyword DefinitionDeclaration CaseBody\n;",
     "metaclass": "SysML::VerificationCaseDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in VerificationCaseDefinition@sysml"
 }

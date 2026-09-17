@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "SatisfactionParameter",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "fc398636b89ed7f38aee585cc6eb3e6281af4853d57aab1490de3e1306db12d3",
+    "xtext_rule": "33d2bcba6a1ef732369351552a885798479e5d376e2e863611649dd6bded0470",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "a475cdae5d7d0b789add55e70d2009d2cf0c332b6de80a713bf64529680a295f"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.2 (RequirementUsages.md, region_sha256 6c4f3553daaa3162)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "SatisfactionParameter returns SysML::ReferenceUsage :\n\townedRelationship += SatisfactionFeatureValue\n;",
+    "metaclass": "SysML::ReferenceUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

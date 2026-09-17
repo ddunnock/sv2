@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "MetadataDefinition",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
+    "xtext_rule": "c2b1d7d24e8eef08a0cf4c39a79c9c295a113748a6b57d2119bfcd42e7d8da79",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "b9644ea254aad3c23a06c6ca53dafb246b0f3119f88341a1aa699801a2e3c18e"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.27 (MetadataTextualNotation.md, region_sha256 69251565feee7639)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "MetadataDefinition returns SysML::MetadataDefinition :\n\t( isAbstract ?= 'abstract')? \n\tDefinitionExtensionKeyword* MetadataDefKeyword \n\tDefinition\n;",
+    "metaclass": "SysML::MetadataDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

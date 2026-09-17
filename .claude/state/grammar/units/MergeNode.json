@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MergeNode",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "9f6ad15d3c6276977efc7f4191cc5ceb74786e4a088c6dbbebcd16e6dd6dec08",
     "xtext_rule": "e2e76ce94019575b33a6a6012cacd78a1b0684e933523879ab6c0f861a9dd66e",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "MergeNode returns SysML::MergeNode :\n\tControlNodePrefix \n\tisComposite ?= 'merge' UsageDeclaration?\n\tActionBody\n;",
     "metaclass": "SysML::MergeNode"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in MergeNode@sysml"
 }

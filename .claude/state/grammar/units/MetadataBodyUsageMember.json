@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MetadataBodyUsageMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
     "xtext_rule": "f471186ca9ce8630e55ab9225789ef54f5db0da53c3aa4f21e6e9edc5e77b818",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "MetadataBodyUsageMember returns SysML::FeatureMembership :\n\townedRelatedElement += MetadataBodyUsage\n;",
     "metaclass": "SysML::FeatureMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in MetadataBodyUsageMember@sysml"
 }

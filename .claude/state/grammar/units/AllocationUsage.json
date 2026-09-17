@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "AllocationUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "cdcac22d144dab18c6832109fc69e75bca7271a2159ea7c99c78fe2f1508cacb",
     "xtext_rule": "c907666a6bb27844805214e073be50e1c4ad523005e58dccaa5a208da011da23",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "AllocationUsage returns SysML::AllocationUsage :\t \n\tOccurrenceUsagePrefix AllocationUsageDeclaration UsageBody\n;",
     "metaclass": "SysML::AllocationUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in AllocationUsage@sysml"
 }

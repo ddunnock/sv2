@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "FlowDefinition",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "f503f360d20207704de75664ced4bbe1f57e024983fed96db8f3731cd57ee6a9",
+    "xtext_rule": "d7c30ead3771df3362074a3eb2a99ba1851dc1bdcc6dee7a62a5c636ce369e2b",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "6c2bfbf5ab35b169899a5e32b207bbe78a68e9017d836b2e3e491876745e9632"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.16 (FlowsTextualNotation.md, region_sha256 e03f363eef9b4cf1)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "FlowDefinition returns SysML::FlowDefinition :\n\tOccurrenceDefinitionPrefix FlowDefKeyword Definition\n;",
+    "metaclass": "SysML::FlowDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

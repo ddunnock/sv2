@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "InterfaceBodyItem",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8e1a8617b6490e5ffe56b25437884cec824953583966b0cc211d0086da41e061",
     "xtext_rule": "98204a1f7e589bc032b11a9011d107d3a7c1ff0a5de55ec805d5c36a5198f2da",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment InterfaceBodyItem returns SysML::Type :\n\t  ownedRelationship += DefinitionMember \n\t| ownedRelationship += VariantUsageMember\n\t| ownedRelationship += InterfaceNonOccurrenceUsageMember\n\t| ( ownedRelationship += EmptySuccessionMember )?\n\t  ownedRelationship += InterfaceOccurrenceUsageMember\n\t| ownedRelationship += AliasMember\n\t| => ownedRelationship += Import\n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in InterfaceBodyItem@sysml"
 }

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ConjugatedPortDefinitionMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "5471b257abf8680830d0b23a122517730b75daa86ca89a3638f89da2550a5fd8",
+    "xtext_rule": "2a704dea624ffe1a5d979e1bf2838d3bedc4b4594565702315a4d46a5e5e551a",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "6d16c2bb5524d3932981b7ce016ad23a813871164b75a66653d827cfae9b8c70"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.12 (PortsTextualNotation.md, region_sha256 6e34790c29521657)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ConjugatedPortDefinitionMember returns SysML::OwningMembership :\n\townedRelatedElement += ConjugatedPortDefinition \n;",
+    "metaclass": "SysML::OwningMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

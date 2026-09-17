@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "RequirementUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "fc398636b89ed7f38aee585cc6eb3e6281af4853d57aab1490de3e1306db12d3",
     "xtext_rule": "4d254b930c6942699491e4f2468fdb0e030c01a3ab3806ba9360720eb7bdd537",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "RequirementUsage returns SysML::RequirementUsage :\n\tOccurrenceUsagePrefix RequirementUsageKeyword ConstraintUsageDeclaration RequirementBody\n;",
     "metaclass": "SysML::RequirementUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in RequirementUsage@sysml"
 }

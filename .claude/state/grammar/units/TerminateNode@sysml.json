@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "TerminateNode",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "af77497e3129ea87405dc94b0a92ca6e92bd57a36fd4ba585deb4c37946f29ec",
+    "xtext_rule": "b38a587596b1e0263191e35e6385eaff54a33f6d7a01cebdcbbfc139775ef7e0",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "54d8c3a35e17449317e56543a7875001c532e63e9ea9592e4891ab4b1ea0a1b6"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.6 (TerminateActionUsages.md, region_sha256 2cf5148c7a8b7de1)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "TerminateNode returns SysML::TerminateActionUsage :\n\tOccurrenceUsagePrefix ActionNodeUsageDeclaration? \n\t'terminate' \n\t( ActionBody\n\t| -> ownedRelationship += NodeParameterMember\n\t  ActionBody\n\t)\n;",
+    "metaclass": "SysML::TerminateActionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

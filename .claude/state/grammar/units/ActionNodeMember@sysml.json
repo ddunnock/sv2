@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ActionNodeMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "123fdd535dd69454a171e663a98bdb2619ca5518f3656d521f100f63eb3d01b2",
+    "xtext_rule": "8ac8460f190ed774f5809fa323f53ea18da1533df78bd93943cd0c51c23e0df1",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "72fec2bd7fc933912ee8c7a0e839276b076c8e9157522eeeb61feef2acfe92b3"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.1 (ActionDefinitions.md, region_sha256 4e3ffb79f011ef83)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ActionNodeMember returns SysML::FeatureMembership :\n\tMemberPrefix ownedRelatedElement += ActionNode \n;",
+    "metaclass": "SysML::FeatureMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

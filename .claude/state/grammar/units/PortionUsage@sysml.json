@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "PortionUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "465ccd42d9aa0196c8527be21292803c8fcc974662a742655dbd027182d072c3",
+    "xtext_rule": "0ced92540e66eb35b03f95f970baa3c5c4b6db79f08a6bd0a970fe7810f957ef",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "23a7b1baa7bdff46223cddcce25856c43169059f177b387ab5801f44b34e792f"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.9.2 (OccurrenceUsages.md, region_sha256 6dfed224798030c3)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "PortionUsage returns SysML::OccurrenceUsage :\n\tBasicUsagePrefix ( isIndividual ?= 'individual' )?\n\tportionKind = PortionKind\n\tUsageExtensionKeyword* Usage\n;",
+    "metaclass": "SysML::OccurrenceUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

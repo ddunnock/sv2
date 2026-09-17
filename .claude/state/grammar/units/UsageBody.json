@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "UsageBody",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "75719cca5586b38df687a0107da0631912855d8761fb90c9ddda65858c3f8a4b",
     "xtext_rule": "57b481c2c5077aede380f2c1171b956ef48ec6456e807a6f018b8f0f58bdad8f",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment UsageBody returns SysML::Usage :\n\tDefinitionBody\n;",
     "metaclass": "SysML::Usage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in UsageBody@sysml"
 }

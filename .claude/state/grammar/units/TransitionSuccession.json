@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TransitionSuccession",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "ed27e58db83b630f5104309963153b21d43ad821a76cdf513196cdbf06381fef",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "TransitionSuccession returns SysML::SuccessionAsUsage :\n\townedRelationship += EmptySourceEndMember \n\townedRelationship += ConnectorEndMember\n;",
     "metaclass": "SysML::SuccessionAsUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in TransitionSuccession@sysml"
 }

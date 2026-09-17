@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Redefinition",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "e0e556d4b6b7f497bb732ae05a8c23b64f718268bfc58aba63a36107bf5ee8c7",
+    "xtext_rule": "949618bbeb3b8c2f442a9f1c12adbb0739cb3bc0f1765e49b661472c7679da41",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "118951740ed5c902ed411f3d829673892570dac2e55b07e43a1a3d1ce0c035c3"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.3.4 (Redefinition.md, region_sha256 139aa2a3a2d3fb77)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Redefinition returns SysML::Redefinition :\n\t( 'specialization' Identification? )?\n    'redefinition' \n    ( redefiningFeature = [SysML::Feature | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain )\n    ( ':>>' | 'redefines' ) \n    ( redefinedFeature = [SysML::Feature | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain )\n\tRelationshipBody\n;",
+    "metaclass": "SysML::Redefinition"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

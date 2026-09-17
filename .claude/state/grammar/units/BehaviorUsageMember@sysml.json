@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "BehaviorUsageMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "bd840645a99d2e115ca0991f5dfe7a9ceb00ad3e7e94554acb92df502b67d3db",
+    "xtext_rule": "f5d626d3ced8b464792f15d108b37f24a647996aa8def393ee027a6d63d8dcc3",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "0c996e19bc093d8bd12585db2c8be07bc641a4768a02ee326e8a350dcaa8c718"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.6.1 (Definitions.md, region_sha256 3ce9c25432443aa0)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "BehaviorUsageMember returns SysML::FeatureMembership :\n\tMemberPrefix ownedRelatedElement += BehaviorUsageElement \n;",
+    "metaclass": "SysML::FeatureMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

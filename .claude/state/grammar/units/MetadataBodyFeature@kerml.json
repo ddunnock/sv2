@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "MetadataBodyFeature",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "814e74fbb17b63e9a835d6dc9a5ceb64c5393cec1e7ff119730c9fd1601fe160",
+    "xtext_rule": "6b2549bbdcc98d27caebbee315979968df6488d316e53ff77b550a1105ea1792",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "9193bc4e68a464fa65c1081191da1a061c934cc25371cde4c9fb76da19c2ff83"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.12 (MetadataConcreteSyntax.md, region_sha256 30fa0599ab27c325)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "MetadataBodyFeature returns SysML::Feature :\n\t'feature'? ( ':>>' | 'redefines' )? ownedRelationship += OwnedRedefinition \n\tFeatureSpecializationPart? ValuePart?\n\tMetadataBody\n;",
+    "metaclass": "SysML::Feature"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

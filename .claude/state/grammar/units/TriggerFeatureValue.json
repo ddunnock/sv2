@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TriggerFeatureValue",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "b5eafb9ac92538c6bc41b6bf8e95170c15f92be3efbc57f74bde679172771514",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "TriggerFeatureValue returns SysML::FeatureValue :\n\townedRelatedElement += TriggerExpression\n;",
     "metaclass": "SysML::FeatureValue"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in TriggerFeatureValue@sysml"
 }

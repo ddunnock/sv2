@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "EffectBehaviorMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
+    "xtext_rule": "f5aaf95a70e9c5761f35840a917de06409e714de95f057ad5267b1965867525a",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "117b879507b36698ccecc4b7bc4de4a993ad9c8c7fe4da3aa33f015ee552763f"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "EffectBehaviorMember returns SysML::TransitionFeatureMembership :\n\tkind = EffectFeatureKind ownedRelatedElement += EffectBehaviorUsage \n;",
+    "metaclass": "SysML::TransitionFeatureMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

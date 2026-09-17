@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "TransitionSuccession",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
+    "xtext_rule": "ed27e58db83b630f5104309963153b21d43ad821a76cdf513196cdbf06381fef",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "2176648f8fdb525216c7e9acec8a7ca97c59fb519b7f7e90ca7a00a4a79cd1d3"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "TransitionSuccession returns SysML::SuccessionAsUsage :\n\townedRelationship += EmptySourceEndMember \n\townedRelationship += ConnectorEndMember\n;",
+    "metaclass": "SysML::SuccessionAsUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

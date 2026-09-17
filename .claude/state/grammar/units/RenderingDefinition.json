@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "RenderingDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "c2bea09b840a27b2b628e6bd8e597e5d3fa0d6b0f694471563597b7770dddc41",
     "xtext_rule": "8a2067ff0dd7115911957468de2a682f0f83af1fe233d695f65b84234d800a52",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "RenderingDefinition returns SysML::RenderingDefinition :\n\tOccurrenceDefinitionPrefix RenderingDefKeyword Definition\n;",
     "metaclass": "SysML::RenderingDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in RenderingDefinition@sysml"
 }

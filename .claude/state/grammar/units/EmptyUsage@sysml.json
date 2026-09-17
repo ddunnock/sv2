@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "EmptyUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
+    "xtext_rule": "5ae2df29b57d0b4e2edf8d2650115d1d218741b4b6c978fc8da59aa15ed7b7d5",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "b3fde175c6e82d3dfdb151b448eca0fdb5600160e9e4018aa9ca3c8262dadc0b"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "EmptyUsage returns SysML::ReferenceUsage :\n\t{SysML::ReferenceUsage}\n;",
+    "metaclass": "SysML::ReferenceUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

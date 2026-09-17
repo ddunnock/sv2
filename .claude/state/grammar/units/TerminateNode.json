@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TerminateNode",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "af77497e3129ea87405dc94b0a92ca6e92bd57a36fd4ba585deb4c37946f29ec",
     "xtext_rule": "b38a587596b1e0263191e35e6385eaff54a33f6d7a01cebdcbbfc139775ef7e0",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "TerminateNode returns SysML::TerminateActionUsage :\n\tOccurrenceUsagePrefix ActionNodeUsageDeclaration? \n\t'terminate' \n\t( ActionBody\n\t| -> ownedRelationship += NodeParameterMember\n\t  ActionBody\n\t)\n;",
     "metaclass": "SysML::TerminateActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in TerminateNode@sysml"
 }

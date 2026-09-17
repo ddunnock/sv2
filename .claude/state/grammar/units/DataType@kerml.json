@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "DataType",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "376e762ed796b3075e1f2cec00636632dae0ef252367a6c1904be9c0b65ca82d",
+    "xtext_rule": "acd4fbfc884fd89616d8536dc11b6f18414346f01c60780a61cd47c3b6519286",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "49b49cbab8f92422119a7c7f6f4d570d468dd8817eddb8b2e896e0d9a4943ff1"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.1 (DataTypesConcreteSyntax.md, region_sha256 11225651ca9c874c)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "DataType returns SysML::DataType :\n\tTypePrefix 'datatype' \n\tClassifierDeclaration TypeBody\n;",
+    "metaclass": "SysML::DataType"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

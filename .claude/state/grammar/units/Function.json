@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Function",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8424c7798f166fa9186918bfbb6d4192303bf44e0025da69f4bccddf2615ab77",
     "xtext_rule": "7f0fd49de20b26df4dd3b130b00661d08559b151bd625efc9ce2e7a227b7b9c6",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "Function returns SysML::Function :\n\tTypePrefix 'function' \n\tClassifierDeclaration FunctionBody  \n;",
     "metaclass": "SysML::Function"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in Function@kerml"
 }

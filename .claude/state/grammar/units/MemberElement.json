@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MemberElement",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "13ffd4d40b20f950fa8816fdd0b24cf1b00ec029f03ac056dbecc33e8c33d5db",
     "xtext_rule": "ebfe4bddc93e9710849d48b9d1190ab142aa40509f9816f15c7f96a090a33cda",
@@ -29,7 +29,7 @@
     ]
   },
   "decision": "Two alternatives, as KerML 8.2.3.4.3 states them: an annotating element, or a non-feature element. Together with FeatureElement in the same clause, this is what partitions everything that can be a member of a namespace \u2014 the clause states all three productions side by side and MemberElement is the half that is not a feature.",
-  "notes": "The clause and the Xtext agree exactly.\n\nFOR A PARSER AUTHOR: a pure alternation with no terminal of its own, so the decision is made entirely by the leading token of whichever alternative applies. AnnotatingElement covers the comment and documentation forms, NonFeatureElement the twenty-six kinds the same clause lists; each alternative's own unit states its prefix.\n\nThe empty corpus_instances is expected for a production that contributes no text of its own.",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in MemberElement@kerml\nThe clause and the Xtext agree exactly.\n\nFOR A PARSER AUTHOR: a pure alternation with no terminal of its own, so the decision is made entirely by the leading token of whichever alternative applies. AnnotatingElement covers the comment and documentation forms, NonFeatureElement the twenty-six kinds the same clause lists; each alternative's own unit states its prefix.\n\nThe empty corpus_instances is expected for a production that contributes no text of its own.",
   "evidence": [
     {
       "kind": "clause",

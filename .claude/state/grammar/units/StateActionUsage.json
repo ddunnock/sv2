@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "StateActionUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "6f7cd7408a7b364e4a1c9cb070f712b9229c02405be681c2ba1907ce42b2860a",
     "xtext_rule": "b99df1a7417c4ae11c67c22559177842b97bf0c318ef7de7ce409839216a8dc2",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "StateActionUsage returns SysML::ActionUsage :\n\tEmptyActionUsage ';' | PerformedActionUsage ActionBody\n;",
     "metaclass": "SysML::ActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in StateActionUsage@sysml"
 }

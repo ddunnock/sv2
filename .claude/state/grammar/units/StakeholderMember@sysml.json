@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "StakeholderMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
+    "xtext_rule": "a8df4ab41de864a84cf6817146fe83030e10d2f83c374871699da6362f6ed01c",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "d2bdfe4f4d0f72e19ab6c1b775a5fd122306c9d3569571f6e75acc252e2d9e4d"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.1 (RequirementDefinitions.md, region_sha256 fd824f1d9da5f780)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "StakeholderMember returns SysML::StakeholderMembership :\n\tMemberPrefix\n\townedRelatedElement += StakeholderUsage \n;",
+    "metaclass": "SysML::StakeholderMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

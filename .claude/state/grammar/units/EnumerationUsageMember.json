@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "EnumerationUsageMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "6586cda95c280b8bf6c2a527d7307c54570015c949555a4f61aad144b2c03162",
     "xtext_rule": "1bf648f2e7b6760c8d973170cb9efb2cd6135d67473083336abb5ed5973dc8f0",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "EnumerationUsageMember returns SysML::VariantMembership :\n\tMemberPrefix ownedRelatedElement += EnumeratedValue \n;",
     "metaclass": "SysML::VariantMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in EnumerationUsageMember@sysml"
 }

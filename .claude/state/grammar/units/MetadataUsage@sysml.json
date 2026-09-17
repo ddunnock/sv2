@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "MetadataUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
+    "xtext_rule": "901a39b29a30f65c827d1d9db26afda3d2ebb8f4a8d895ebb2573e5b946495e8",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "aa3d114f65a12b5461f266e98141c4304eaba4d3a42e0e13dd19e257352ea063"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.27 (MetadataTextualNotation.md, region_sha256 69251565feee7639)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "MetadataUsage returns SysML::MetadataUsage :\n\tUsageExtensionKeyword*\n\tMetadataUsageKeyword MetadataUsageDeclaration \n\t( 'about' ownedRelationship += Annotation \n\t\t( ',' ownedRelationship += Annotation )*\n\t)?\n\tMetadataBody\n;",
+    "metaclass": "SysML::MetadataUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

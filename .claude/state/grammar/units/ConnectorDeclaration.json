@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ConnectorDeclaration",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "c1e318934ef719fe9b3c71f39eee3aa1cc9f0f6a2f5e99efb1eb38f03598d1da",
     "xtext_rule": "a9de4131b0b729328b8f4ccc3157732a9981d007cdaa7a0216d59a46c7e1e67f",
@@ -62,5 +62,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T13:40:27Z"
+  "verified_utc": "2026-09-17T13:40:27Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in ConnectorDeclaration@kerml"
 }

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ReferenceUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "a9884f0ac6f89d1725bb21e9aeed86b913bb1d5b1e7a5984ba1cbbb0d0acdcc2",
+    "xtext_rule": "09765a086683c7e147902a2bc0a3010030dd33dbd7025d7f131edc1a8bce1cf9",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "a45d5a4b5c05e77d70671e3b35bb7616813a8d499d8c38aa77b7acb861aaa050"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.6.3 (ReferenceUsages.md, region_sha256 27505145913280ac)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ReferenceUsage returns SysML::ReferenceUsage :\n\t( EndUsagePrefix | RefPrefix) \n\tReferenceUsageKeyword Usage\n;",
+    "metaclass": "SysML::ReferenceUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

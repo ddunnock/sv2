@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "IndividualUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "465ccd42d9aa0196c8527be21292803c8fcc974662a742655dbd027182d072c3",
     "xtext_rule": "4e14c24785f5a9677f5fe7fe2260bd3b7a7d8da10a8c672e346c2b9fd8024433",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "IndividualUsage returns SysML::OccurrenceUsage :\n\tBasicUsagePrefix isIndividual ?= 'individual' \n\tUsageExtensionKeyword* Usage\n;",
     "metaclass": "SysML::OccurrenceUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in IndividualUsage@sysml"
 }

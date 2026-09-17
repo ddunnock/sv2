@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "CaseDefinition",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "e3a278925d36146fdb1fe9b1da78351269daeb41617744492f5e30c352341669",
+    "xtext_rule": "ab919e89c36e6f6116402fa0d9a5217e9b99664b1ddbebebbea4f26ff2b65625",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "13a40fc163402b012e29d14c7c75b5c6526aa103c6340a2a2a3c9cfbc654412f"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.22 (CasesTextualNotation.md, region_sha256 3fa44e95d6e4ec23)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "CaseDefinition returns SysML::CaseDefinition :\n\tOccurrenceDefinitionPrefix CaseDefKeyword DefinitionDeclaration CaseBody\n;",
+    "metaclass": "SysML::CaseDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

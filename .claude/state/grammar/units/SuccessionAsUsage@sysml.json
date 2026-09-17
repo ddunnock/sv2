@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "SuccessionAsUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "88d4a032989fb39554f61959507068916ad3c326f622a456217e784591881e9c",
+    "xtext_rule": "d2c5153a7e6b586f530c27ef0859e04d4b78d5b591877596067eb88890c3c096",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "0491268b078089abcb45694cdc2371557d9f4ad4fde0b486348dd5e9791a8b67"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.13.3 (Successions.md, region_sha256 b9e0de2c285451a0)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "SuccessionAsUsage returns SysML::SuccessionAsUsage :\n\tUsagePrefix ( SuccessionKeyword UsageDeclaration? )? \n\t'first' ownedRelationship += ConnectorEndMember \n\t'then' ownedRelationship += ConnectorEndMember \n\tDefinitionBody\n;",
+    "metaclass": "SysML::SuccessionAsUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

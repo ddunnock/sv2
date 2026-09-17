@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "RequirementBody",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
     "xtext_rule": "44b4b8345b63305e887ca3a4b15ec8e0f3f53249edd172fcc0aa5122b83acafe",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment RequirementBody returns SysML::Type :\n\t  ';' | '{' => RequirementBodyItem* '}'\n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in RequirementBody@sysml"
 }

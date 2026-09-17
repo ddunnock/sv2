@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "SatisfyRequirementUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "fc398636b89ed7f38aee585cc6eb3e6281af4853d57aab1490de3e1306db12d3",
     "xtext_rule": "8cb6ee9b96a1503f48f717bb6378b58ee9990da06cc7a1a53350c795c9043e31",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "SatisfyRequirementUsage returns SysML::SatisfyRequirementUsage :\n\tOccurrenceUsagePrefix 'assert'? ( isNegated ?= 'not' )? 'satisfy' \n\t( ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?\n    | RequirementUsageKeyword UsageDeclaration? \n    )\n    ValuePart?\n    ( 'by' ownedRelationship += SatisfactionSubjectMember )?\n     RequirementBody\n;",
     "metaclass": "SysML::SatisfyRequirementUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in SatisfyRequirementUsage@sysml"
 }

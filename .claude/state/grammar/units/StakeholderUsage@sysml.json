@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "StakeholderUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
+    "xtext_rule": "47ad2d3d04dd33f3fb0d558c4aed3507f18dc5bba7554ff539ba6c72ab4d4fa6",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "792fb7046655be720bd16c5738b6ae27c2f1c3c9ac8d53a62b0bb70ddaa4f683"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.1 (RequirementDefinitions.md, region_sha256 fd824f1d9da5f780)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "StakeholderUsage returns SysML::PartUsage :\n      'stakeholder' UsageExtensionKeyword* Usage\n;",
+    "metaclass": "SysML::PartUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

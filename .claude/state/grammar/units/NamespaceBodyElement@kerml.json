@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "production": "NamespaceBodyElement",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "05d6d5f37d8b9f1e7ac7d05e166f70177a93aa02d6a11aa9711bf654061a4fca",
+    "xtext_rule": "3f62967ca1c4b433499473b6c3a175d484e1d856a2a1e107fded4327f3d84323",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "307096390ed7490d967211af5065d4733cb0bfa2bb967a6f3670673af4247649"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.3.4.1 (Namespaces.md, region_sha256 893fa9cef98e60fc)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment NamespaceBodyElement returns SysML::Namespace :\n\t  ownedRelationship += NamespaceMember\n\t| ownedRelationship += AliasMember\n\t| ownedRelationship += Import\n;",
+    "metaclass": "SysML::Namespace"
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "NamespaceMember"
+      },
+      {
+        "k": "ref",
+        "name": "AliasMember"
+      },
+      {
+        "k": "ref",
+        "name": "Import"
+      }
+    ]
+  },
+  "decision": "Three alternatives, as KerML 8.2.3.4.1 states them: a namespace member, an alias member, or an import. This is what a KerML root namespace, and a KerML namespace body, is a sequence of.",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nThe clause and KerML.xtext agree exactly. The Xtext marks it `fragment`, an inlining directive, which is not carried across: the specification names the production and so does this grammar.\n\nA KERML PRODUCTION WITH NO SYSML COUNTERPART OF THE SAME NAME. It is a shared unit because only one language states it, so it is visible in both grammars; the SysML grammar does not reach it, because SysML's root is PackageBodyElement* (ADR-0014).\n\nFOR A PARSER AUTHOR: none of the three alternatives is identified by its first token alone. All three begin with a visibility indicator that MemberPrefix leaves optional and Import makes mandatory, and the decision follows it: `alias` selects AliasMember, `import` selects Import, and anything else is a NamespaceMember.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.1",
+      "note": "states NamespaceBodyElement as NamespaceMember | AliasMember | Import"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the same three alternatives, as a fragment"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml",
+      "note": "`package Classes { feature f: A; ... }` \u2014 the package and the feature inside it are each a NamespaceMember"
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:56Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

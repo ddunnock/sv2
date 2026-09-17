@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Subsetting",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "9fec6a75a3420ce84afe2ccf6a31caa7bbeda485d136cfc79e4912c587348976",
     "xtext_rule": "ec11dce084363adcc83b252afbd5cb68e77846e5c317337bfb51c931f3a79182",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "Subsetting returns SysML::Subsetting :\n\t( 'specialization' Identification? )?\n    'subset' \n    ( subsettingFeature = [SysML::Feature | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain )\n    ( ':>' | 'subsets' ) \n    ( subsettedFeature = [SysML::Feature | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain )\n\tRelationshipBody\n;",
     "metaclass": "SysML::Subsetting"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in Subsetting@kerml"
 }

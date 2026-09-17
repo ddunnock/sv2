@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "RequirementVerificationUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "1db5b44a338a0a23c3e3429dca4d9c556047a96149d863f795e58b73b149d1f2",
     "xtext_rule": "a4212f99a6b657333bd4a3de4576a51d1224131544b522aff493244e6c6cdfe3",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "RequirementVerificationUsage returns SysML::RequirementUsage :\n      ownedRelationship += OwnedReferenceSubsetting FeatureSpecialization* \n      RequirementBody\n    | ( UsageExtensionKeyword* RequirementUsageKeyword | UsageExtensionKeyword+ )\n      ConstraintUsageDeclaration RequirementBody\n;",
     "metaclass": "SysML::RequirementUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in RequirementVerificationUsage@sysml"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "BasicDefinitionPrefix",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "bd840645a99d2e115ca0991f5dfe7a9ceb00ad3e7e94554acb92df502b67d3db",
     "xtext_rule": "4fd283600330510dd91ba71f0fb320c8505d1d01d5700f62397af39dbf833481",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment BasicDefinitionPrefix returns SysML::Definition :\n\tisAbstract ?= 'abstract' | isVariation ?= 'variation'\n;",
     "metaclass": "SysML::Definition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in BasicDefinitionPrefix@sysml"
 }

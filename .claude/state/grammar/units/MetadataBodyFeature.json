@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MetadataBodyFeature",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "814e74fbb17b63e9a835d6dc9a5ceb64c5393cec1e7ff119730c9fd1601fe160",
     "xtext_rule": "6b2549bbdcc98d27caebbee315979968df6488d316e53ff77b550a1105ea1792",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "MetadataBodyFeature returns SysML::Feature :\n\t'feature'? ( ':>>' | 'redefines' )? ownedRelationship += OwnedRedefinition \n\tFeatureSpecializationPart? ValuePart?\n\tMetadataBody\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in MetadataBodyFeature@kerml"
 }

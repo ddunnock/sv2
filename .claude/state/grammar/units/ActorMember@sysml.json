@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ActorMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
+    "xtext_rule": "ae4b10633803c5e4aa7b5f330c3b605b8361af1b6f54942a19c37b8b305b4e81",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "f0ed0e4c4f7387caac15f3cc8df255e5fe6627f47fdcdc20b66859b990969a2c"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.1 (RequirementDefinitions.md, region_sha256 fd824f1d9da5f780)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ActorMember returns SysML::ActorMembership :\n\tMemberPrefix\n\townedRelatedElement += ActorUsage \n;",
+    "metaclass": "SysML::ActorMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

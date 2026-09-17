@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "EnumerationBody",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "6586cda95c280b8bf6c2a527d7307c54570015c949555a4f61aad144b2c03162",
+    "xtext_rule": "637c673ee63c53c96d2ba332a71b19edaee303df5f12897361c1c83ac2225650",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "cc90144e57eb6ca7f34fc9aa41c02d7549ac93a934162a41184c1eaee1f51ac0"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.8 (EnumerationsTextualNotation.md, region_sha256 9c242a1f7811f8ef)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment EnumerationBody returns SysML::EnumerationDefinition :\n\t  ';' \n\t| '{' ( ownedRelationship += AnnotatingMember\n\t\t  | => ownedRelationship += EnumerationUsageMember \n\t\t  )* \n\t  '}'\n;",
+    "metaclass": "SysML::EnumerationDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

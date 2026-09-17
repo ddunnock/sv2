@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ActionNode",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "1d21a99bccb8810f3e974cbe685772d27ca61795e03b0cfdb71408760696f3d8",
     "xtext_rule": "1609d951bef2d6244222dc4ba7d09da719832fa0c4d8bcc514329f1e6e0313e1",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ActionNode returns SysML::ActionUsage :\n\t  SendNode | AcceptNode | AssignmentNode \n\t| IfNode | WhileLoopNode | ForLoopNode\n\t| TerminateNode\n\t| ControlNode\n;",
     "metaclass": "SysML::ActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ActionNode@sysml"
 }

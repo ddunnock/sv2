@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Message",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "f503f360d20207704de75664ced4bbe1f57e024983fed96db8f3731cd57ee6a9",
     "xtext_rule": "cda0738a8ed298a8fcb9ecfc40fa4c53baf433424853a401a7d3f326d571e027",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "Message returns SysML::FlowUsage :\n\tOccurrenceUsagePrefix MessageKeyword MessageDeclaration DefinitionBody\n;",
     "metaclass": "SysML::FlowUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in Message@sysml"
 }

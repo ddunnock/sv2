@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "EmptyEndMember",
   "language": "shared",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -14,5 +14,6 @@
     "xtext_file": "",
     "xtext_rule_text": "",
     "metaclass": ""
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in EmptyEndMember@sysml"
 }

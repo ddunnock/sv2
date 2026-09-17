@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ForkNode",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "9f6ad15d3c6276977efc7f4191cc5ceb74786e4a088c6dbbebcd16e6dd6dec08",
+    "xtext_rule": "175a1a2bc2062f263ef0a3cee7dda2e71cd1a0134a1a0186258b940ca30afd3d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "6e5fcc8dd529676657d9899f3cb8ba04a30a25009f446576ac43f98f249435c6"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.3 (ControlNodes.md, region_sha256 08ce249947265cb2)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ForkNode returns SysML::ForkNode :\n\tControlNodePrefix \n\tisComposite ?= 'fork' UsageDeclaration?\n\tActionBody\n;",
+    "metaclass": "SysML::ForkNode"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

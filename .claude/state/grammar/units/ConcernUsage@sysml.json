@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ConcernUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "33301f7393b32148336fe36ffd2c76ff1165025435284ac7f0eb7889aef161fd",
+    "xtext_rule": "2ceb486c2ce4d7e27b82e6835a7bde00aba445ee2c2847647c89648e3da02452",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "d94ce4da7ec55d44ab07d08a56b1444f6c9f7eeb0210fe9cbdf4891455cbaaf0"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.3 (Concerns.md, region_sha256 4bf4e293b263a1eb)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ConcernUsage returns SysML::ConcernUsage :\n\tOccurrenceUsagePrefix ConcernUsageKeyword ConstraintUsageDeclaration RequirementBody\n;",
+    "metaclass": "SysML::ConcernUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "AnnotatingElement",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "cea5b326f1c9673eb114633ab5faef43829847f948f20214e31d2d04b1a5e5bc",
     "xtext_rule": "b9d348ee9e9305c35f33f0a35c99ad8b6f39359f80c2369e21e7acbc28be2d4a",
@@ -75,5 +75,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T13:39:19Z"
+  "verified_utc": "2026-09-17T13:39:19Z",
+  "notes": "split per language (ADR-0014): KerML and SysML state this production differently, so it is derived as one variant per language instead"
 }

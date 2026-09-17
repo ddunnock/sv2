@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ControlNode",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "9f6ad15d3c6276977efc7f4191cc5ceb74786e4a088c6dbbebcd16e6dd6dec08",
     "xtext_rule": "b42cdfe21f09825e5381c2b424d8a9b7a8de444bf41da009ba0ee428c33fee9f",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ControlNode returns SysML::ControlNode :\n\t  MergeNode\n\t| DecisionNode\n\t| JoinNode\n\t| ForkNode\n;",
     "metaclass": "SysML::ControlNode"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ControlNode@sysml"
 }

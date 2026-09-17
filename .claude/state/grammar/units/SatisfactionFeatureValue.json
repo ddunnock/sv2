@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "SatisfactionFeatureValue",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "fc398636b89ed7f38aee585cc6eb3e6281af4853d57aab1490de3e1306db12d3",
     "xtext_rule": "cfb5f55bab4494f4a25ae3a7e385e49cd89cd99a9aacabb964dec88a78aaee3f",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "SatisfactionFeatureValue returns SysML::FeatureValue :\n\townedRelatedElement += SatisfactionReferenceExpression\n;",
     "metaclass": "SysML::FeatureValue"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in SatisfactionFeatureValue@sysml"
 }

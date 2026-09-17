@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "TypePrefix",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
+    "xtext_rule": "c29478da45af99b66c54b2b6eb073826a52fd7aee34a14031429c81252cc7d92",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "2618b9f9cda844ae5e4dbb00066a32ae8698c8c6818edbd22229dfc05e9d6937"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.1.1 (Types.md, region_sha256 d5f980cd9c8a4387)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment TypePrefix returns SysML::Type :\n\t( isAbstract ?= 'abstract' )? \n\t( ownedRelationship += PrefixMetadataMember )*\n;",
+    "metaclass": "SysML::Type"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

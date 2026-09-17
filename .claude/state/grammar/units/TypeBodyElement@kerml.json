@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "production": "TypeBodyElement",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
+    "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "c4e87143f9232de9df01eb04fa33ba21b31ee6ff0ed654327a83033a2e699ffe"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.1.1 (Types.md, region_sha256 d5f980cd9c8a4387)",
+    "xtext_file": "",
+    "xtext_rule_text": "",
+    "metaclass": ""
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "NonFeatureMember"
+      },
+      {
+        "k": "ref",
+        "name": "FeatureMember"
+      },
+      {
+        "k": "ref",
+        "name": "AliasMember"
+      },
+      {
+        "k": "ref",
+        "name": "Import"
+      }
+    ]
+  },
+  "decision": "Four alternatives, exactly as KerML 8.2.4.1.1 states them: a non-feature member, a feature member, an alias member, or an import. This is the single production that says what may appear inside any type body, and TypeBody reaches it as `';' | '{' TypeBodyElement* '}'`.",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nTHE XTEXT HAS NO SUCH RULE, which is why xtext_rule_text is empty. The pilot inlines these same four alternatives at each of its body sites \u2014 FunctionBodyPart writes `ownedRelationship += NonFeatureMember | ownedRelationship += FeatureMember | ownedRelationship += AliasMember | ownedRelationship += Import | ownedRelationship += ReturnFeatureMember` directly rather than referring to a shared rule. That is the manual-inlining LL workaround described in .claude/rules/grammar.md, not a statement that the production does not exist, and it is not ported here: the specification names TypeBodyElement and this grammar keeps it named.\n\nThe absence of a corpus_instances entry is expected and is not weak evidence. TypeBodyElement is a pure alternation over four named productions and contributes no terminal of its own, so no span of corpus text is attributable to it rather than to whichever alternative matched. Its corpus support is the support of its alternatives.\n\nNOT DECIDED HERE: ReturnFeatureMember is a fifth alternative at the FunctionBodyPart site only, and FunctionBodyPart already carries it as its own alternative alongside this production. It is deliberately not folded in, because the specification does not put it in a type body generally \u2014 only in a function body.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.1",
+      "note": "TypeBodyElement is stated there, as the four-way alternation transcribed into the rule"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "supports the negative claim in the notes: the file defines no TypeBodyElement rule, and instead inlines the same four alternatives at two separate sites \u2014 `fragment TypeBody` and `fragment FunctionBodyPart`, the latter adding ReturnFeatureMember as a fifth. Both sites were read; the absence is the evidence."
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:58Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

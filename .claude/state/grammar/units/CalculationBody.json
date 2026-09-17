@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "CalculationBody",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "abc851f79d420fb31d8d7518538400aa03794ce96b1c7f0ed791b9375eeee723",
     "xtext_rule": "ad84fd0f66688bfc10e2d42d496056e6e93f6557dd709b8312acdc933b383efd",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment CalculationBody returns SysML::Type :\n\t';' | '{' CalculationBodyPart '}' \n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in CalculationBody@sysml"
 }

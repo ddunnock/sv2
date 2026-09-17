@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "MetadataFeature",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "814e74fbb17b63e9a835d6dc9a5ceb64c5393cec1e7ff119730c9fd1601fe160",
+    "xtext_rule": "4619c37b57abec376095a44b25a49e59d14448cbe8ec5cb22a28c050ae918741",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "97fe8f881d1fa1e982284522fdb28367c5f6333fb3efdeb0b05454d94bfdaed8"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.12 (MetadataConcreteSyntax.md, region_sha256 30fa0599ab27c325)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "MetadataFeature returns SysML::MetadataFeature :\n\t( ownedRelationship += PrefixMetadataMember )*\n\t( '@' | 'metadata' ) MetadataFeatureDeclaration \n\t( 'about' ownedRelationship += Annotation \n\t\t( ',' ownedRelationship += Annotation )*\n\t)?\n\tMetadataBody\n;",
+    "metaclass": "SysML::MetadataFeature"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

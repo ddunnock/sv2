@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "InterfaceDefinition",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "8e1a8617b6490e5ffe56b25437884cec824953583966b0cc211d0086da41e061",
+    "xtext_rule": "d4f99a239701fd93e97a05386005d4ee80d2c7d9b75c096b6648d6828bb3a50d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "c17b6f553d370ee99c490334bca5a4ce6cf1898c18bacfd0ba67991e996e117d"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.14.1 (InterfaceDefinitions.md, region_sha256 86fc09c62954e744)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "InterfaceDefinition returns SysML::InterfaceDefinition :\n\tOccurrenceDefinitionPrefix InterfaceDefKeyword DefinitionDeclaration InterfaceBody\n;",
+    "metaclass": "SysML::InterfaceDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

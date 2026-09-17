@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "DecisionNode",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "9f6ad15d3c6276977efc7f4191cc5ceb74786e4a088c6dbbebcd16e6dd6dec08",
     "xtext_rule": "913856bec724b1176fb7b38dbbb3b56bb939083b7de6ebb252d548828248e76e",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "DecisionNode returns SysML::DecisionNode :\n\tControlNodePrefix \n\tisComposite ?= 'decide' UsageDeclaration?\n\tActionBody\n;",
     "metaclass": "SysML::DecisionNode"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in DecisionNode@sysml"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MetadataDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
     "xtext_rule": "c2b1d7d24e8eef08a0cf4c39a79c9c295a113748a6b57d2119bfcd42e7d8da79",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "MetadataDefinition returns SysML::MetadataDefinition :\n\t( isAbstract ?= 'abstract')? \n\tDefinitionExtensionKeyword* MetadataDefKeyword \n\tDefinition\n;",
     "metaclass": "SysML::MetadataDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in MetadataDefinition@sysml"
 }

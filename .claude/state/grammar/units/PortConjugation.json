@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "PortConjugation",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "5471b257abf8680830d0b23a122517730b75daa86ca89a3638f89da2550a5fd8",
     "xtext_rule": "c68623c5f001aa644fe5936e27c889fc730e29b58fe2ad6ef3b3fa0c2e364235",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "PortConjugation returns SysML::PortConjugation :\n\t{SysML::PortConjugation}\n;",
     "metaclass": "SysML::PortConjugation"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in PortConjugation@sysml"
 }

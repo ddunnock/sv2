@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ActorUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
     "xtext_rule": "ea1680d7a9bc46e3a2cfaa82f76421a6b9b8f443e16677d556b4f6215b7e32b9",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ActorUsage returns SysML::PartUsage :\n      'actor' UsageExtensionKeyword* Usage\n;",
     "metaclass": "SysML::PartUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ActorUsage@sysml"
 }

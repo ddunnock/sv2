@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "PortionUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "465ccd42d9aa0196c8527be21292803c8fcc974662a742655dbd027182d072c3",
     "xtext_rule": "0ced92540e66eb35b03f95f970baa3c5c4b6db79f08a6bd0a970fe7810f957ef",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "PortionUsage returns SysML::OccurrenceUsage :\n\tBasicUsagePrefix ( isIndividual ?= 'individual' )?\n\tportionKind = PortionKind\n\tUsageExtensionKeyword* Usage\n;",
     "metaclass": "SysML::OccurrenceUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in PortionUsage@sysml"
 }

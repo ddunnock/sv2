@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TypeFeatureMember",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "d95fc40510a2050d40b76837537e9bec4c895b088bc7e4760c8aff4d536e1750",
     "xtext_rule": "593cca4f69363c23463cf072c42031b086689e133e18abb6ff993ea0b798cfd2",
@@ -33,7 +33,7 @@
     ]
   },
   "decision": "A member prefix, the `member` keyword, and a feature element, exactly as KerML 8.2.4.1.6 states it. The keyword is the entire concrete-syntax difference from OwnedFeatureMember, which is otherwise the identical shape.",
-  "notes": "The clause and the Xtext agree exactly.\n\nFOR A PARSER AUTHOR: `member` is the deciding token, and it is reached only after the nullable MemberPrefix, so the decision is on the token following any visibility indicator rather than on the first token of the member.\n\nCORPUS EVIDENCE IS NOT CITED HERE, DELIBERATELY. The context pack offered one corpus instance, `// A is a member of P2a because of the import.` in vendor/corpus/sysml/src/examples/Import Tests/QualifiedNameImportTest.sysml. That is a line comment containing the English word \"member\", not an instance of this production. Citing it would satisfy the evidence check while proving nothing, which is precisely the failure the evidence rule exists to prevent, so this unit rests on the clause and the Xtext instead. The absence of a real corpus instance is worth knowing on its own: `member` appears to be exercised by no file in the pinned corpus, so nothing here is corpus-confirmed and an oracle sweep will not catch a mistake in it.",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in TypeFeatureMember@kerml\nThe clause and the Xtext agree exactly.\n\nFOR A PARSER AUTHOR: `member` is the deciding token, and it is reached only after the nullable MemberPrefix, so the decision is on the token following any visibility indicator rather than on the first token of the member.\n\nCORPUS EVIDENCE IS NOT CITED HERE, DELIBERATELY. The context pack offered one corpus instance, `// A is a member of P2a because of the import.` in vendor/corpus/sysml/src/examples/Import Tests/QualifiedNameImportTest.sysml. That is a line comment containing the English word \"member\", not an instance of this production. Citing it would satisfy the evidence check while proving nothing, which is precisely the failure the evidence rule exists to prevent, so this unit rests on the clause and the Xtext instead. The absence of a real corpus instance is worth knowing on its own: `member` appears to be exercised by no file in the pinned corpus, so nothing here is corpus-confirmed and an oracle sweep will not catch a mistake in it.",
   "evidence": [
     {
       "kind": "clause",

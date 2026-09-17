@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Interaction",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "5f212de9fb1adc58c774247bf73bcf7885fbba7a2ed11dc588774deb6b5682d0",
     "xtext_rule": "67fe69e4471cc7425c471f01100314f3cafbfd72c20f890c0dfbb0a0ebfb2a89",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "Interaction returns SysML::Interaction :\n\tTypePrefix 'interaction' \n\tClassifierDeclaration TypeBody\n;",
     "metaclass": "SysML::Interaction"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in Interaction@kerml"
 }

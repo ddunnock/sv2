@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ViewRenderingMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "ee624722b91fd28dd540ce074f7c2db4f5caf3cb2d07fa533811eac7969424dd",
+    "xtext_rule": "74b9f28d1d24abad7746b585d69a394404a0d1da49821dd7ac9c12e04b3331ad",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "7d455d1a264e0ece3988a9a8cb9f2ce5ffe751f5cf9293bd862118e63bfe9fcb"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.26.1 (ViewDefinitions.md, region_sha256 5198c1a94438ed0c)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ViewRenderingMember returns SysML::ViewRenderingMembership :\n\tMemberPrefix 'render' \n\townedRelatedElement += ViewRenderingUsage \n;",
+    "metaclass": "SysML::ViewRenderingMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

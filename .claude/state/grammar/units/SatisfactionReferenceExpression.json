@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "SatisfactionReferenceExpression",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "fc398636b89ed7f38aee585cc6eb3e6281af4853d57aab1490de3e1306db12d3",
     "xtext_rule": "38aa4b2a632d47d062cbb97c1833f410f286ff366229c0152d5ab63b7dcde69c",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "SatisfactionReferenceExpression returns SysML::FeatureReferenceExpression :\n\townedRelationship += FeatureChainMember\n;",
     "metaclass": "SysML::FeatureReferenceExpression"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in SatisfactionReferenceExpression@sysml"
 }

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "DefinitionMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "bd840645a99d2e115ca0991f5dfe7a9ceb00ad3e7e94554acb92df502b67d3db",
+    "xtext_rule": "9cab1c625f2219e0d0902df7643e9b4925a7567bee43b6e9961dcaa0e8b3fb2c",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "7440d137f126930aef05712adddafe265c909a5801e54818e8c955fa129520e8"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.6.1 (Definitions.md, region_sha256 3ce9c25432443aa0)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "DefinitionMember returns SysML::OwningMembership : \n\tMemberPrefix \n\townedRelatedElement += DefinitionElement \n;",
+    "metaclass": "SysML::OwningMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

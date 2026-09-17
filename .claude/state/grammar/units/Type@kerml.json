@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Type",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
+    "xtext_rule": "aecf465530f702f43af01c2815e006e6fbc2e9024df5a268d895ef0b80039dfb",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "5047d27ec70a8ffbecc7a28e147aca5a5a82afda6786ffd28940666f8e9ac371"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.1.1 (Types.md, region_sha256 d5f980cd9c8a4387)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Type returns SysML::Type :\n    TypePrefix 'type' \n    TypeDeclaration TypeBody\n;",
+    "metaclass": "SysML::Type"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

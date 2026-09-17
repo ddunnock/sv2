@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "StateSendActionUsage",
   "language": "shared",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "6f7cd7408a7b364e4a1c9cb070f712b9229c02405be681c2ba1907ce42b2860a",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -14,5 +14,6 @@
     "xtext_file": "",
     "xtext_rule_text": "",
     "metaclass": ""
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in StateSendActionUsage@sysml"
 }

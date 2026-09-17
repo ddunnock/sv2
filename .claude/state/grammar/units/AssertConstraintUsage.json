@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "AssertConstraintUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "47fe8fcfd43177311a472736911d09a1442457b9613ea3d8a52b6ede27cb25cb",
     "xtext_rule": "381f3a7e0fb5fe22b7c18a8a50bf626f17c3d31a5ab2b6cbff27ad800ca52095",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "AssertConstraintUsage returns SysML::AssertConstraintUsage :\n\tOccurrenceUsagePrefix 'assert' ( isNegated ?= 'not' )?\n    ( ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?\n    | ConstraintUsageKeyword ConstraintUsageDeclaration\n    )\n    CalculationBody\n;",
     "metaclass": "SysML::AssertConstraintUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in AssertConstraintUsage@sysml"
 }

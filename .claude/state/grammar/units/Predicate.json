@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Predicate",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "39b0b96006758eccd61f91bd6c759148930865aace56b0551ecbacd397f430d4",
     "xtext_rule": "f2612817a598046be3443cc49897e964069e36d381f075a52f2255a4ff937d40",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "Predicate returns SysML::Predicate :\n\tTypePrefix 'predicate' \n\tClassifierDeclaration FunctionBody  \n;",
     "metaclass": "SysML::Predicate"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in Predicate@kerml"
 }

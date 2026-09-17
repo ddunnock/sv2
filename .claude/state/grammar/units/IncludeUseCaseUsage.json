@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "IncludeUseCaseUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "16b5afa0d9b60d2b0f7cbb58c16e0a43d1d423f018aed1726c774040d045ca35",
     "xtext_rule": "c9ceb9545c629721f2e7f61201d70b49eed3ae54ba1f1c7efcde2885ddce8c27",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "IncludeUseCaseUsage returns SysML::IncludeUseCaseUsage :\n\tOccurrenceUsagePrefix 'include' \n   \t( ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?\n   \t| UseCaseUsageKeyword UsageDeclaration? )\n    ValuePart?\n\tCaseBody\n;",
     "metaclass": "SysML::IncludeUseCaseUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in IncludeUseCaseUsage@sysml"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "DefaultReferenceUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "a9884f0ac6f89d1725bb21e9aeed86b913bb1d5b1e7a5984ba1cbbb0d0acdcc2",
     "xtext_rule": "7933982d2cbe29b0a64536832b8da04259b8f970ab2608d584f0fed08e1d3d9f",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "DefaultReferenceUsage returns SysML::ReferenceUsage :\n\t( isEnd ?= 'end' )? RefPrefix \n\tUsageDeclaration ValuePart? UsageBody\n;",
     "metaclass": "SysML::ReferenceUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in DefaultReferenceUsage@sysml"
 }

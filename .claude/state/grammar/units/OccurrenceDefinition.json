@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OccurrenceDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "729e11bfb00a5a13f3ba4b6f6db4994e5bd6df5d4d6eb952ac3b8f19436b9f97",
     "xtext_rule": "9d819dc6e0847e02aade826799c2dff93f827479b13198d48f479333d698d131",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "OccurrenceDefinition returns SysML::OccurrenceDefinition :\n\tOccurrenceDefinitionPrefix OccurrenceDefKeyword Definition\n;",
     "metaclass": "SysML::OccurrenceDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in OccurrenceDefinition@sysml"
 }

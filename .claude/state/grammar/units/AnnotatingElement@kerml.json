@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "production": "AnnotatingElement",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "d27b3f44bc6c2cb47319b3ea6e4cd87a7585368085e4a4d05d935438d52ef4b3",
+    "xtext_rule": "b9d348ee9e9305c35f33f0a35c99ad8b6f39359f80c2369e21e7acbc28be2d4a",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "d531f6c9da8e611c80e11e728425888114b03f317e56dfafbb08ecce030f2a9e"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.3.3.1 (Annotations.md, region_sha256 62a5a543dd622776)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "AnnotatingElement returns SysML::AnnotatingElement :\n\t  Comment\n\t| Documentation\n\t| TextualRepresentation\n\t| MetadataFeature\n;",
+    "metaclass": "SysML::AnnotatingElement"
+  }
+}

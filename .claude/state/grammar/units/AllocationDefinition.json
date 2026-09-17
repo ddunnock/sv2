@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "AllocationDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "cdcac22d144dab18c6832109fc69e75bca7271a2159ea7c99c78fe2f1508cacb",
     "xtext_rule": "88a86ee468f9c700e67ff3c4e136dcc54ade8bde38b788f5305f3d8ed339943a",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "AllocationDefinition returns SysML::AllocationDefinition :\n\tOccurrenceDefinitionPrefix AllocationDefKeyword Definition\n;",
     "metaclass": "SysML::AllocationDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in AllocationDefinition@sysml"
 }

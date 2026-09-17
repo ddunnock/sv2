@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "BindingConnectorAsUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "d597ff2aa4f38be910a377588ce6819176f248354eb00e21f6ce185069a61cdb",
+    "xtext_rule": "2551281620f893e1fdfd06c35884e7d5af77753d7092fb6f657091f6966755d9",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "6bc1550d2beb6ea8ca8d8fe26d66a9c6064ef7d22bbba4d8da50eb1b48d9d917"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.13.2 (BindingConnectors.md, region_sha256 6c24121f5d7a9670)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "BindingConnectorAsUsage returns SysML::BindingConnectorAsUsage :\n\tUsagePrefix ( BindingKeyword UsageDeclaration? )?\n\t'bind' ownedRelationship += ConnectorEndMember \n\t'=' ownedRelationship += ConnectorEndMember \n\tDefinitionBody\t\n;",
+    "metaclass": "SysML::BindingConnectorAsUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

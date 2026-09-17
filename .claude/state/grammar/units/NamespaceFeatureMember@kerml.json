@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "production": "NamespaceFeatureMember",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "05d6d5f37d8b9f1e7ac7d05e166f70177a93aa02d6a11aa9711bf654061a4fca",
+    "xtext_rule": "a2245886846e481b57226a8def6979811514318b89d6290b9cd764932c0ec34e",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "19c68dfbd27f44642f28c7a0c71341959366f8a9801d237fdbf99fcf8457b14e"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.3.4.1 (Namespaces.md, region_sha256 893fa9cef98e60fc)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "NamespaceFeatureMember returns SysML::OwningMembership :\n\tMemberPrefix ownedRelatedElement += FeatureElement \n;",
+    "metaclass": "SysML::OwningMembership"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "MemberPrefix"
+      },
+      {
+        "k": "ref",
+        "name": "FeatureElement"
+      }
+    ]
+  },
+  "decision": "A member prefix and a feature element, as KerML 8.2.3.4.1 states it.",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nThe clause and KerML.xtext agree exactly.\n\nSHAPE-IDENTICAL TO OwnedFeatureMember from clause 8.2.4.1.6 \u2014 also MemberPrefix followed by FeatureElement. The two are told apart by context, not text: this one is reached through NamespaceMember in a namespace body, that one through FeatureMember in a type body. The difference is the membership metaclass, which is abstract syntax.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.1",
+      "note": "states NamespaceFeatureMember as MemberPrefix FeatureElement"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the same body"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml",
+      "note": "`feature f: A;` directly inside a package is a namespace feature member"
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:56Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

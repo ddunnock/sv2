@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ForVariableDeclarationMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
     "xtext_rule": "d0423e4e8f642392bad26aad85fd3144d062fa134c546d436d28c601795fbf67",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ForVariableDeclarationMember returns SysML::FeatureMembership :\n\townedRelatedElement += ForVariableDeclaration \n;",
     "metaclass": "SysML::FeatureMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ForVariableDeclarationMember@sysml"
 }

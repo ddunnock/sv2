@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "BehaviorUsageElement",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "c04c53d39fc6b7e3513d955ce26ea0034cc1bc1147436f284e82d65d9c2764b3",
     "xtext_rule": "132bdb5e49c3e336c9daa64edcab48c5b4aa73129e5c33f4ab657a1ed212527f",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "BehaviorUsageElement returns SysML::Usage :\n\t  ActionUsage\n\t| CalculationUsage\n\t| StateUsage\n\t| ConstraintUsage\n\t| RequirementUsage\n\t| ConcernUsage\n\t| CaseUsage\n\t| AnalysisCaseUsage\n\t| VerificationCaseUsage\n\t| UseCaseUsage\n\t| ViewpointUsage\n\t| PerformActionUsage\n\t| ExhibitStateUsage\n\t| IncludeUseCaseUsage\n\t| AssertConstraintUsage\n\t| SatisfyRequirementUsage\n;",
     "metaclass": "SysML::Usage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in BehaviorUsageElement@sysml"
 }

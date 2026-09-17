@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "production": "ExpressionBody",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "xtext_rule": "fe8ab5439de154d74c2f0b4bf3dad8b0aaae435ebe5679ea05bc035ca886ab35",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "c5fbd617308ce08d83466d487875b18284ce1fa3832deba26d18e0ffbc2cb3bd"
+  },
+  "inputs": {
+    "spec_clause_ref": "",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ExpressionBody returns SysML::Expression :\n\tCalculationBody\n;",
+    "metaclass": "SysML::Expression"
+  }
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "AttributeDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "6d206d23052352721d14b67a13e29271a3afc1bb2d86a759033442afe6f73c92",
     "xtext_rule": "752cbaf08546eccf0dd2c4a33aa902803ca0f5df99a5a97d0af6c5a439d115a0",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "AttributeDefinition returns SysML::AttributeDefinition :\n\tDefinitionPrefix AttributeDefKeyword Definition\n;",
     "metaclass": "SysML::AttributeDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in AttributeDefinition@sysml"
 }

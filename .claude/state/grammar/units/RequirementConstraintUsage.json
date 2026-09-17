@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "RequirementConstraintUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
     "xtext_rule": "9e7ba291fb0e6c612793adffb41a12e7853ba657d60a71da2fddb22f98ca2225",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "RequirementConstraintUsage returns SysML::ConstraintUsage :\n      ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart? \n      CalculationBody\n    | ( UsageExtensionKeyword* ConstraintUsageKeyword | UsageExtensionKeyword+ )\n      ConstraintUsageDeclaration CalculationBody\n;",
     "metaclass": "SysML::ConstraintUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in RequirementConstraintUsage@sysml"
 }

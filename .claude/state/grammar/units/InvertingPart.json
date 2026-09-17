@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "InvertingPart",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "9e2b3655417d8748bd8cfe4e1f390d0cff6fd052368ea0581d687ef7c9b0d081",
     "xtext_rule": "88b9155e332347c449fdc93a80c9645f482749050b4a34eaff721d454bb05162",
@@ -61,5 +61,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T13:01:12Z"
+  "verified_utc": "2026-09-17T13:01:12Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in InvertingPart@kerml"
 }

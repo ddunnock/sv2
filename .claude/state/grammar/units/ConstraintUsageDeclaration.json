@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ConstraintUsageDeclaration",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "47fe8fcfd43177311a472736911d09a1442457b9613ea3d8a52b6ede27cb25cb",
     "xtext_rule": "fa30da70223d6e5d17ba86e00ebc788243150198b3d77269d846f3ec8cd19671",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment ConstraintUsageDeclaration returns SysML::ConstraintUsage :\n\t  UsageDeclaration? ValuePart?\n;",
     "metaclass": "SysML::ConstraintUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ConstraintUsageDeclaration@sysml"
 }

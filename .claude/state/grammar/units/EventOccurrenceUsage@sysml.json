@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "EventOccurrenceUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "465ccd42d9aa0196c8527be21292803c8fcc974662a742655dbd027182d072c3",
+    "xtext_rule": "69d6086d7d22806a8f32203e0d2771386c7ea1acc560bc261870eebc5b4a1a4b",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "bd6701a3b65ff0cbc247e4bd7cae7a2b95560cf9e082ef992de5e87debac100e"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.9.2 (OccurrenceUsages.md, region_sha256 6dfed224798030c3)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "EventOccurrenceUsage returns SysML::EventOccurrenceUsage :\n\t OccurrenceUsagePrefix 'event'\n\t( ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?\n   \t| OccurrenceUsageKeyword UsageDeclaration? )\n    UsageCompletion\n;",
+    "metaclass": "SysML::EventOccurrenceUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "NonBehaviorBodyItem",
   "language": "shared",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "123fdd535dd69454a171e663a98bdb2619ca5518f3656d521f100f63eb3d01b2",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -14,5 +14,6 @@
     "xtext_file": "",
     "xtext_rule_text": "",
     "metaclass": ""
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in NonBehaviorBodyItem@sysml"
 }

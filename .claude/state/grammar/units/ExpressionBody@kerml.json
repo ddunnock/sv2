@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "production": "ExpressionBody",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "95ab32e456a3a33bfaf472ff96283869448e139365e245cd001a9df85d57e59f",
+    "xtext_rule": "4ecfb21f8d56827da09d4b3ee08f7cce9d4f80ef2f47f3b60e3e2f235b9c44de",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "961725067d1180a390c16e17ecd9a37d0cbfb97a60bbe703ca4cea24a4861cd3"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.8.3 (BaseExpressions.md, region_sha256 7b4c569d6bcfacac)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "ExpressionBody returns SysML::Expression :\n\t'{' FunctionBodyPart '}'\n;",
+    "metaclass": "SysML::Expression"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "{"
+      },
+      {
+        "k": "ref",
+        "name": "FunctionBodyPart"
+      },
+      {
+        "k": "kw",
+        "text": "}"
+      }
+    ]
+  },
+  "decision": "Braces around a function body part.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.3",
+      "note": "ExpressionBody is stated there"
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:54Z",
+  "notes": "re-scoped from the shared unit to kerml as one of its two variants (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "AssignmentTargetBinding",
   "language": "shared",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "a268475e162e29768dbefce1071203c8c52c4eea909b9561a878f0d79d91c939",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -14,5 +14,6 @@
     "xtext_file": "",
     "xtext_rule_text": "",
     "metaclass": ""
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in AssignmentTargetBinding@sysml"
 }

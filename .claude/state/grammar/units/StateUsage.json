@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "StateUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8ccbf293e22630ecd9dee2be74eb644388b000ac1b77b211d17cb81d7c7711c5",
     "xtext_rule": "f17a42074f31b87d3a9a43f645991cc7fe09b86c069ae223f8d25452707a5e52",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "StateUsage returns SysML::StateUsage :\n\tOccurrenceUsagePrefix StateUsageKeyword ActionUsageDeclaration StateUsageBody\n;",
     "metaclass": "SysML::StateUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in StateUsage@sysml"
 }

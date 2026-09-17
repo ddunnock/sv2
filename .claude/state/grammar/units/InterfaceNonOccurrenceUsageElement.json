@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "InterfaceNonOccurrenceUsageElement",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8e1a8617b6490e5ffe56b25437884cec824953583966b0cc211d0086da41e061",
     "xtext_rule": "d21341c46fd1207de635ad1544d65ab732c5d7c568ccfd5bf4935070250399b6",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "InterfaceNonOccurrenceUsageElement returns SysML::Usage :\n\t  ReferenceUsage\n\t| AttributeUsage\n\t| EnumerationUsage\n\t| BindingConnectorAsUsage\n\t| SuccessionAsUsage\n;",
     "metaclass": "SysML::Usage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in InterfaceNonOccurrenceUsageElement@sysml"
 }

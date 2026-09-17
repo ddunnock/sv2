@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "RequirementBodyItem",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
+    "xtext_rule": "e06679a642efcb971a1a973189d388275b5494057b74718e456dc435f9a05e85",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "669320f1471a16e541e3686793d7853e68a15880de8c3471c4826e6875cb1410"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.1 (RequirementDefinitions.md, region_sha256 fd824f1d9da5f780)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment RequirementBodyItem returns SysML::Type :\n\t  DefinitionBodyItem\n\t| ownedRelationship += SubjectMember\n\t| ownedRelationship += RequirementConstraintMember\n\t| ownedRelationship += FramedConcernMember\n\t| ownedRelationship += RequirementVerificationMember\n\t| ownedRelationship += ActorMember\n\t| ownedRelationship += StakeholderMember\n;",
+    "metaclass": "SysML::Type"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

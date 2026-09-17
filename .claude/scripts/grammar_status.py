@@ -31,14 +31,27 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     counts = Counter(u["status"] for u in units.values())
-    total, verified = len(units), counts["verified"]
-    print(f"grammar derivation: {verified}/{total} verified ({100.0 * verified / total:.1f}%)")
+    # Retired units are history, not work: re-scoping and splitting leave one behind for
+    # every unit they replace, so counting them would shrink progress each time.
+    total, verified = len(units) - counts["retired"], counts["verified"]
+    share = 100.0 * verified / total if total else 0.0
+    print(f"grammar derivation: {verified}/{total} live units verified ({share:.1f}%)")
     for status in STATUSES:
         if counts[status]:
             print(f"  {status:9s} {counts[status]}")
-    split = {u["production"] for u in units.values() if u.get("scope") and u["status"] != "retired"}
+    scoped: dict[str, set[str]] = {}
+    for u in units.values():
+        if u.get("scope") and u["status"] != "retired":
+            scoped.setdefault(u["production"], set()).add(u["scope"])
+    split = sum(1 for langs in scoped.values() if len(langs) > 1)
+    alone = Counter(next(iter(langs)) for langs in scoped.values() if len(langs) == 1)
     if split:
-        print(f"  {len(split)} production(s) split into a KerML and a SysML variant (ADR-0014)")
+        print(f"  {split} production(s) split into a KerML and a SysML variant (ADR-0014)")
+    if alone:
+        print(
+            f"  {alone['kerml']} KerML-only and {alone['sysml']} SysML-only production(s),"
+            " reached by one grammar alone (ADR-0015)"
+        )
 
     oracle = load_json(GRAMMAR / "validation.json")
     if oracle:

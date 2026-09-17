@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "production": "PrefixMetadataUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
+    "xtext_rule": "0363b98423d9cf1c1533aa8e2350668cbd1094d102e7d489dcd1be0b98e27c54",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "b96c8fc8235899e1f9be487d43042d744654725cd30db27014a1e7f1339f675a"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.27 (MetadataTextualNotation.md, region_sha256 69251565feee7639)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "PrefixMetadataUsage returns SysML::MetadataUsage :\n\townedRelationship += MetadataTyping\n//\t( ownedRelationship += MetadataBodyUsageMember )*\n;",
+    "metaclass": "SysML::MetadataUsage"
+  },
+  "rule": {
+    "k": "ref",
+    "name": "OwnedFeatureTyping"
+  },
+  "decision": "As SysML 8.2.2.27 states it: one OwnedFeatureTyping, the metadata usage's definition. The Xtext calls a MetadataTyping rule where the clause writes OwnedFeatureTyping, and also carries a commented-out repetition of MetadataBodyUsageMember. Where the Xtext narrows this to MetadataTyping, a QualifiedName naming a metaclass, the sources disagreed. The grammar-adjudicator decided follow_spec, because the metaclass requirement is a validation constraint, not syntax; see notes and the deviation PrefixMetadataTyping-chain.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.27",
+      "note": "PrefixMetadataUsage : MetadataUsage = ownedRelationship += OwnedFeatureTyping"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/validation/14-Language Extensions/14c-Language Extensions.sysml",
+      "note": "line 145: `#fmeaspec requirement req1 {`, where `fmeaspec` is the typing"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "PrefixMetadataUsage: ownedRelationship += MetadataTyping. MetadataTyping is `type = [SysML::Metaclass | QualifiedName]`, which rejects a feature chain. Adjudicated follow_spec."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:11:59Z",
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nADJUDICATED follow_spec on 2026-09-17, recorded in deviations.json as PrefixMetadataTyping-chain. The Xtext's MetadataTyping (SysML.xtext:153) admits only [Metaclass | QualifiedName], so it rejects `#a.b`. The clause's OwnedFeatureTyping also admits an OwnedFeatureChain. The narrowing puts a semantic requirement into syntax: validateMetadataFeatureMetaclass, KerML 8.3.4.12.3, is a validation constraint, not a grammar rule. The specification uses OwnedFeatureTyping uniformly for the prefix and non-prefix metadata forms. The corpus has no `#` followed by a chain.",
+  "verified_utc": "2026-09-17T14:22:58Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

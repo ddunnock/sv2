@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ExtendedDefinition",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
+    "xtext_rule": "318e79577f55eff0154cd69ae5f0389e6d84be39fd3cbd2ee784e6e09e91fecb",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "a8cbded50ea72c2ab7ba714e04dd8d362f2f49f012754f705c6ba1745997f66e"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.27 (MetadataTextualNotation.md, region_sha256 69251565feee7639)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ExtendedDefinition returns SysML::Definition :\n\tBasicDefinitionPrefix? DefinitionExtensionKeyword+ 'def' Definition\n;",
+    "metaclass": "SysML::Definition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

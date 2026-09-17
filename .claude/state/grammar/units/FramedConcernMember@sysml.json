@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "FramedConcernMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
+    "xtext_rule": "2504b58939b5c4b7fc25326d1e96235cfed5e1677fb9d04ad871bad2d0c5721f",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "cd421cb9bd0862ef1c7a98740efd8bb6b13069fcc3372e45fad1cb954f7d6830"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.1 (RequirementDefinitions.md, region_sha256 fd824f1d9da5f780)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "FramedConcernMember returns SysML::FramedConcernMembership :\n\tMemberPrefix kind = FramedConcernKind \n\townedRelatedElement += FramedConcernUsage \n;",
+    "metaclass": "SysML::FramedConcernMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

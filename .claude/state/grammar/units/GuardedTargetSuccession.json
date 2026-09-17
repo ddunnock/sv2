@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "GuardedTargetSuccession",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "bf230844585015a55800fd98050d6e2879682c9a5988b5261223ac6eb481d35b",
     "xtext_rule": "b47f2ef11cd89453a16a9152b38bf81bf9caf12349c565b0a1ca6ae5cec2dc74",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "GuardedTargetSuccession returns SysML::TransitionUsage :\n\townedRelationship += EmptyParameterMember\n\townedRelationship += GuardExpressionMember\n\t'then' ownedRelationship += TransitionSuccessionMember\n;",
     "metaclass": "SysML::TransitionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in GuardedTargetSuccession@sysml"
 }

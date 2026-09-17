@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "AnalysisCaseUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "3f547f59cdfdc6bf686f4983601e95114cf5a7533054bace604c5c143988abb2",
+    "xtext_rule": "5dc944680392e34a1e9c6c3f479f9451ff7dc4d6f719c72819b0307d83872add",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "70c18894a6abe1e6e37094afa7cda7b4e6d20fa324243f0663f62473678580c3"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.23 (AnalysisCasesTextualNotation.md, region_sha256 4cc422ae06b4314e)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "AnalysisCaseUsage returns SysML::AnalysisCaseUsage :\n\tOccurrenceUsagePrefix AnalysisCaseUsageKeyword ActionUsageDeclaration CaseBody\n;",
+    "metaclass": "SysML::AnalysisCaseUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

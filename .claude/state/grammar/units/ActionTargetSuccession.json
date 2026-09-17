@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ActionTargetSuccession",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "bf230844585015a55800fd98050d6e2879682c9a5988b5261223ac6eb481d35b",
     "xtext_rule": "d5866508370e846a06c8fd6dbc9bb03ae0e5b28fbe45a2c92ca9974bfc97dd66",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ActionTargetSuccession returns SysML::Usage :\n\t( TargetSuccession | GuardedTargetSuccession | DefaultTargetSuccession )\n\tUsageBody\n;",
     "metaclass": "SysML::Usage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ActionTargetSuccession@sysml"
 }

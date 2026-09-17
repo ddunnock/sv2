@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MembershipExpose",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "549f4dd10d3f615fe5551a4a966bcf84c7f0bc1fec8a26c65080c95b9edafcce",
     "xtext_rule": "64a0c91546caf94502e20ddc3dec10fddbae08a93910e384cc9cd71443e0b432",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "MembershipExpose returns SysML::MembershipExpose :\n\tExposePrefix ImportedMembership\n;",
     "metaclass": "SysML::MembershipExpose"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in MembershipExpose@sysml"
 }

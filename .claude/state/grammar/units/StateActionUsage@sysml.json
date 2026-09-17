@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "StateActionUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "6f7cd7408a7b364e4a1c9cb070f712b9229c02405be681c2ba1907ce42b2860a",
+    "xtext_rule": "b99df1a7417c4ae11c67c22559177842b97bf0c318ef7de7ce409839216a8dc2",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "0d5695ee6af775fd1edcaab07ce7e095c8eb9466ca2d0c1c6df2ef81c77808fa"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.18.1 (StateDefinitions.md, region_sha256 0119cca482071cd3)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "StateActionUsage returns SysML::ActionUsage :\n\tEmptyActionUsage ';' | PerformedActionUsage ActionBody\n;",
+    "metaclass": "SysML::ActionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

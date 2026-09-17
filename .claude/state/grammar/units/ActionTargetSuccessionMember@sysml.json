@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ActionTargetSuccessionMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "123fdd535dd69454a171e663a98bdb2619ca5518f3656d521f100f63eb3d01b2",
+    "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "04c8cfd0f8ce950b3a9b2777a22a346a59028003a0fe2c5b094d49a5c97bf7ec"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.1 (ActionDefinitions.md, region_sha256 4e3ffb79f011ef83)",
+    "xtext_file": "",
+    "xtext_rule_text": "",
+    "metaclass": ""
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

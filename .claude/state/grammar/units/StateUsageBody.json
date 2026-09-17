@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "StateUsageBody",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8ccbf293e22630ecd9dee2be74eb644388b000ac1b77b211d17cb81d7c7711c5",
     "xtext_rule": "106d1c79c481f0adb16d40eedabde51616def73e7b044edc32561827c8ca7007",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment StateUsageBody returns SysML::StateUsage :\n\t';' | ( isParallel ?= 'parallel' )? '{' StateBodyPart '}'\n;",
     "metaclass": "SysML::StateUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in StateUsageBody@sysml"
 }

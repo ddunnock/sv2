@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "EnumerationUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "6586cda95c280b8bf6c2a527d7307c54570015c949555a4f61aad144b2c03162",
     "xtext_rule": "7f9e9fca799fc114ab62719b9eddd6bf97567e93025e495733d30571f8c8d9a2",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "EnumerationUsage returns SysML::EnumerationUsage :\n\tUsagePrefix EnumerationUsageKeyword Usage\n;",
     "metaclass": "SysML::EnumerationUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in EnumerationUsage@sysml"
 }

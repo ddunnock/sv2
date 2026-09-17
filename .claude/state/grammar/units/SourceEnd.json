@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "SourceEnd",
   "language": "shared",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "b890f4492c1572fe8e51c37c4f3a3bc4c205a6aa1d8619eca3af292f9380673c",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -14,5 +14,6 @@
     "xtext_file": "",
     "xtext_rule_text": "",
     "metaclass": ""
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in SourceEnd@sysml"
 }

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "InterfaceOccurrenceUsageMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "8e1a8617b6490e5ffe56b25437884cec824953583966b0cc211d0086da41e061",
+    "xtext_rule": "f30c90042ffb5b786663d00a7a3b0a21cdea8f33ddb83f0d3078156854555e80",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "e77b32677a8c1acf239d73587f1b18cc4f719a5fa652d2ef6cd50784f3b5a268"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.14.1 (InterfaceDefinitions.md, region_sha256 86fc09c62954e744)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "InterfaceOccurrenceUsageMember returns SysML::FeatureMembership :\n\tMemberPrefix ownedRelatedElement += InterfaceOccurrenceUsageElement \n;",
+    "metaclass": "SysML::FeatureMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

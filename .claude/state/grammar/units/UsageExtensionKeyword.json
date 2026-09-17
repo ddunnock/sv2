@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "UsageExtensionKeyword",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "75719cca5586b38df687a0107da0631912855d8761fb90c9ddda65858c3f8a4b",
     "xtext_rule": "d3fc8ac19d2e368073aadac93986014f43b425899627c98a00b95c8817d04a87",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment UsageExtensionKeyword returns SysML::Usage :\n\townedRelationship += PrefixMetadataMember\n;",
     "metaclass": "SysML::Usage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in UsageExtensionKeyword@sysml"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedConjugation",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "19a37282e94b6fce4326461870aa9124231777e22d5dace74e78eac47cc6ba4e",
     "xtext_rule": "25fb821ed19ceee21ef3490c6f654f7552e0d01160bed483656ad02244f050c7",
@@ -67,5 +67,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T13:11:58Z"
+  "verified_utc": "2026-09-17T13:11:58Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in OwnedConjugation@kerml"
 }

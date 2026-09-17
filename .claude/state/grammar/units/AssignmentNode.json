@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "AssignmentNode",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "a268475e162e29768dbefce1071203c8c52c4eea909b9561a878f0d79d91c939",
     "xtext_rule": "34e211bfc8394fcc61ce4b4b5baa37305ca8c5839df4473778258ba2ad116e2b",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "AssignmentNode returns SysML::AssignmentActionUsage :\n\tOccurrenceUsagePrefix AssignmentNodeDeclaration ActionBody\n;",
     "metaclass": "SysML::AssignmentActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in AssignmentNode@sysml"
 }

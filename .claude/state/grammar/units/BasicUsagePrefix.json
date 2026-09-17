@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "BasicUsagePrefix",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "75719cca5586b38df687a0107da0631912855d8761fb90c9ddda65858c3f8a4b",
     "xtext_rule": "eeb997aab7ac43409f2a64e8bba2ebeb5ef2c8b6558ff9d4a984d3ae58f8cf04",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment BasicUsagePrefix returns SysML::Usage :\n\tRefPrefix\n\t( isReference ?= 'ref' )?\n;",
     "metaclass": "SysML::Usage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in BasicUsagePrefix@sysml"
 }

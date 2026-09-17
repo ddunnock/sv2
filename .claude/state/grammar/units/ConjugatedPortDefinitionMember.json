@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ConjugatedPortDefinitionMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "5471b257abf8680830d0b23a122517730b75daa86ca89a3638f89da2550a5fd8",
     "xtext_rule": "2a704dea624ffe1a5d979e1bf2838d3bedc4b4594565702315a4d46a5e5e551a",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ConjugatedPortDefinitionMember returns SysML::OwningMembership :\n\townedRelatedElement += ConjugatedPortDefinition \n;",
     "metaclass": "SysML::OwningMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ConjugatedPortDefinitionMember@sysml"
 }

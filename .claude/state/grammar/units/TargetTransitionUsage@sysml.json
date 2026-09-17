@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "TargetTransitionUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
+    "xtext_rule": "afe87d0418686e9a7bfa86664455abeb8aefc9c73e3126aeb702ad61f51a6323",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "1c3105c8090cde21da42d839854217ee7f601bfa65f6fd7f364ceb29ca47dadd"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "TargetTransitionUsage returns SysML::TransitionUsage :\n\townedRelationship += EmptyParameterMember\n\t( TransitionUsageKeyword\n\t  ( ownedRelationship += EmptyParameterMember \n\t    ownedRelationship += TriggerActionMember )?\n\t  ( ownedRelationship += GuardExpressionMember )?\n\t  ( ownedRelationship += EffectBehaviorMember )?\n\t| ownedRelationship += EmptyParameterMember \n\t  ownedRelationship += TriggerActionMember\n\t  ( ownedRelationship += GuardExpressionMember )?\n\t  ( ownedRelationship += EffectBehaviorMember )?\n\t| ownedRelationship += GuardExpressionMember\n\t  ( ownedRelationship += EffectBehaviorMember )?\n\t)?\n\t'then' ownedRelationship += TransitionSuccessionMember\n\tActionBody\n;",
+    "metaclass": "SysML::TransitionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

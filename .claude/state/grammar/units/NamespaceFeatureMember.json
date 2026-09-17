@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "NamespaceFeatureMember",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "05d6d5f37d8b9f1e7ac7d05e166f70177a93aa02d6a11aa9711bf654061a4fca",
     "xtext_rule": "a2245886846e481b57226a8def6979811514318b89d6290b9cd764932c0ec34e",
@@ -29,7 +29,7 @@
     ]
   },
   "decision": "A member prefix and a feature element, as KerML 8.2.3.4.1 states it.",
-  "notes": "The clause and KerML.xtext agree exactly.\n\nSHAPE-IDENTICAL TO OwnedFeatureMember from clause 8.2.4.1.6 \u2014 also MemberPrefix followed by FeatureElement. The two are told apart by context, not text: this one is reached through NamespaceMember in a namespace body, that one through FeatureMember in a type body. The difference is the membership metaclass, which is abstract syntax.",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in NamespaceFeatureMember@kerml\nThe clause and KerML.xtext agree exactly.\n\nSHAPE-IDENTICAL TO OwnedFeatureMember from clause 8.2.4.1.6 \u2014 also MemberPrefix followed by FeatureElement. The two are told apart by context, not text: this one is reached through NamespaceMember in a namespace body, that one through FeatureMember in a type body. The difference is the membership metaclass, which is abstract syntax.",
   "evidence": [
     {
       "kind": "clause",

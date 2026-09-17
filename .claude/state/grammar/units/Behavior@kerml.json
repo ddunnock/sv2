@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Behavior",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "8e0d7e43222c89ded13ae22b6873dc4298fc09cb84a5283b09bfb55211491f83",
+    "xtext_rule": "f912cd12f749c6197002b54ad205e6309a70fa91be54486041902e829c51b13a",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "b35af7a5a4a8dd81bf588021d051a4c76fb01e5178ac9a002b6ac883494d0b32"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.6.1 (Behaviors.md, region_sha256 2fdc9f865b70dc5e)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Behavior returns SysML::Behavior :\n\tTypePrefix 'behavior' \n\tClassifierDeclaration TypeBody\n;",
+    "metaclass": "SysML::Behavior"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

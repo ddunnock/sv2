@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "FramedConcernUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
+    "xtext_rule": "45bbdae69722034168504c3c6d2077292a541b94267b33105e47fb64616713dc",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "07e522b7a5e6957bf856e045ef92724ff19624d329bf7c0d09f42e17199f7796"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.1 (RequirementDefinitions.md, region_sha256 fd824f1d9da5f780)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "FramedConcernUsage returns SysML::ConcernUsage :\n      ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart? \n      RequirementBody\n    | ( UsageExtensionKeyword* ConcernUsageKeyword | UsageExtensionKeyword+ ) \n      ConstraintUsageDeclaration RequirementBody\n;",
+    "metaclass": "SysML::ConcernUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

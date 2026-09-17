@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "SubjectMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
+    "xtext_rule": "ddfe290cb9d7d66afe14dc9e0cca08e0a81e7af8873cfdc83a851a822cd78f82",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "2a13664acffafcb51e846165a7338484814f5480d8afc0322f10c5205686d5ee"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.1 (RequirementDefinitions.md, region_sha256 fd824f1d9da5f780)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "SubjectMember returns SysML::SubjectMembership :\n\tMemberPrefix ownedRelatedElement += SubjectUsage \n;",
+    "metaclass": "SysML::SubjectMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

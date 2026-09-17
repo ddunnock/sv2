@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "EffectBehaviorMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "f5aaf95a70e9c5761f35840a917de06409e714de95f057ad5267b1965867525a",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "EffectBehaviorMember returns SysML::TransitionFeatureMembership :\n\tkind = EffectFeatureKind ownedRelatedElement += EffectBehaviorUsage \n;",
     "metaclass": "SysML::TransitionFeatureMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in EffectBehaviorMember@sysml"
 }

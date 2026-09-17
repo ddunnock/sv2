@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "production": "TypeBody",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
+    "xtext_rule": "13c1d6dfc15c0a7660d43059f14b6f6414f350e214d98ffb8e8cd6f8366b3e7d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "b8cd982f51af73c06680cead7fbeb672f41f971cb0701d170e1a063b90801503"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.1.1 (Types.md, region_sha256 d5f980cd9c8a4387)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment TypeBody returns SysML::Type :\n\t ';' \n\t| '{' ( ownedRelationship += NonFeatureMember \n\t\t  | ownedRelationship += FeatureMember \n\t\t  | ownedRelationship += AliasMember\n\t\t  | ownedRelationship += Import\n\t      )* \n\t  '}'\n;",
+    "metaclass": "SysML::Type"
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "kw",
+        "text": ";"
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "kw",
+            "text": "{"
+          },
+          {
+            "k": "star",
+            "item": {
+              "k": "ref",
+              "name": "TypeBodyElement"
+            }
+          },
+          {
+            "k": "kw",
+            "text": "}"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "A semicolon, or braces around any number of type body elements, as KerML 8.2.4.1.1 states it.",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nTHE XTEXT INLINES TypeBodyElement and is not followed. The pilot writes the four alternatives directly inside the braces; the clause names TypeBodyElement, and TypeBodyElement is its own verified unit. The accepted text is the same.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.1",
+      "note": "states TypeBody as ';' | '{' TypeBodyElement* '}'"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the same body with TypeBodyElement's alternatives inlined"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml",
+      "note": "`feature capacity: Real;` ends in the `;` form"
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:58Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

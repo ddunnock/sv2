@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ViewBody",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "549f4dd10d3f615fe5551a4a966bcf84c7f0bc1fec8a26c65080c95b9edafcce",
     "xtext_rule": "7c3fd8b8dfe923c3703d9441ee138dd193ccb3fed85ea55d2f6a3c1bbf728615",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment ViewBody returns SysML::ViewUsage :\n\t';' | '{' ViewBodyItem* '}'\n;",
     "metaclass": "SysML::ViewUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ViewBody@sysml"
 }

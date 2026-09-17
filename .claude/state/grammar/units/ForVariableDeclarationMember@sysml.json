@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ForVariableDeclarationMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
+    "xtext_rule": "d0423e4e8f642392bad26aad85fd3144d062fa134c546d436d28c601795fbf67",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "2c7140da8d27892929ea5da31f56226d099e80e4045cfc1d0a6459d0a3ed5a30"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.7 (StructuredControlActionUsages.md, region_sha256 90c294385874fdc1)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ForVariableDeclarationMember returns SysML::FeatureMembership :\n\townedRelatedElement += ForVariableDeclaration \n;",
+    "metaclass": "SysML::FeatureMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

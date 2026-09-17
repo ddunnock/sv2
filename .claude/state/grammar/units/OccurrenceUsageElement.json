@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OccurrenceUsageElement",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "c04c53d39fc6b7e3513d955ce26ea0034cc1bc1147436f284e82d65d9c2764b3",
     "xtext_rule": "d753c767d0ec96b33e15add11bcd91f208013895c51119a40fca1cae3fed8746",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "OccurrenceUsageElement returns SysML::Usage :\n\tStructureUsageElement | BehaviorUsageElement\n;",
     "metaclass": "SysML::Usage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in OccurrenceUsageElement@sysml"
 }

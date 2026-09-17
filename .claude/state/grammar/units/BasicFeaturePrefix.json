@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "BasicFeaturePrefix",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "9e2b3655417d8748bd8cfe4e1f390d0cff6fd052368ea0581d687ef7c9b0d081",
     "xtext_rule": "0a332703960711955f3141300c50c2c7c9d4280a1ebb84f7e68875d7eb9bdbc4",
@@ -74,7 +74,7 @@
     ]
   },
   "decision": "An optional direction, then optional `derived`, `abstract`, `composite` or `portion`, and `var` or `const`, in that fixed order, as KerML 8.2.4.3.1 states it. Every part is optional, so the prefix can be empty.",
-  "notes": "THE CLAUSE IS FLAGGED MALFORMED AND THIS PRODUCTION IS NOT AFFECTED. The pack reports an unmatched `)` on line 8 of the Features clause. That line is inside the Feature production \u2014 its own parentheses close at -1 \u2014 and this production's parentheses balance on their own, so it is derived from the clause as written. The repair of Feature is recorded on the Feature unit.\n\nA NOTATIONAL SLIP in the clause, recorded and not acted on: the head reads `BasicFeaturePrefix : Feature :` with a colon where every other production has `=`. Nothing about what parses turns on it.\n\nTHE ORDER IS FIXED. The modifiers are a sequence of options, not a set: `abstract derived` is not this production. The `{ isVariable = true }` action after `const` consumes no text.\n\nThe clause and KerML.xtext agree on what parses; the Xtext's `fragment` is not carried across.\n\nNULLABLE, which is what makes FeaturePrefix, and the second alternative of Feature, impossible to recognise by lookahead alone.\n\nFILED WITH OMG: the notational slip recorded above is KERML11-108, item 3. It concerns how the rule is written, not what it accepts, so it is recorded as a citation and not as a deviation.",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in BasicFeaturePrefix@kerml\nTHE CLAUSE IS FLAGGED MALFORMED AND THIS PRODUCTION IS NOT AFFECTED. The pack reports an unmatched `)` on line 8 of the Features clause. That line is inside the Feature production \u2014 its own parentheses close at -1 \u2014 and this production's parentheses balance on their own, so it is derived from the clause as written. The repair of Feature is recorded on the Feature unit.\n\nA NOTATIONAL SLIP in the clause, recorded and not acted on: the head reads `BasicFeaturePrefix : Feature :` with a colon where every other production has `=`. Nothing about what parses turns on it.\n\nTHE ORDER IS FIXED. The modifiers are a sequence of options, not a set: `abstract derived` is not this production. The `{ isVariable = true }` action after `const` consumes no text.\n\nThe clause and KerML.xtext agree on what parses; the Xtext's `fragment` is not carried across.\n\nNULLABLE, which is what makes FeaturePrefix, and the second alternative of Feature, impossible to recognise by lookahead alone.\n\nFILED WITH OMG: the notational slip recorded above is KERML11-108, item 3. It concerns how the rule is written, not what it accepts, so it is recorded as a citation and not as a deviation.",
   "evidence": [
     {
       "kind": "clause",

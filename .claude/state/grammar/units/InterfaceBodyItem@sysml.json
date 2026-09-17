@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "InterfaceBodyItem",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "8e1a8617b6490e5ffe56b25437884cec824953583966b0cc211d0086da41e061",
+    "xtext_rule": "98204a1f7e589bc032b11a9011d107d3a7c1ff0a5de55ec805d5c36a5198f2da",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "8e4eddd532dd2d9dbf6ee9cebf460714e79dc91ca61615e7abd5bf86d7966ca6"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.14.1 (InterfaceDefinitions.md, region_sha256 86fc09c62954e744)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment InterfaceBodyItem returns SysML::Type :\n\t  ownedRelationship += DefinitionMember \n\t| ownedRelationship += VariantUsageMember\n\t| ownedRelationship += InterfaceNonOccurrenceUsageMember\n\t| ( ownedRelationship += EmptySuccessionMember )?\n\t  ownedRelationship += InterfaceOccurrenceUsageMember\n\t| ownedRelationship += AliasMember\n\t| => ownedRelationship += Import\n;",
+    "metaclass": "SysML::Type"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "DefinitionElement",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "634b5a02530d590c18a51d97968e31ad5861f11902fa24300799ebc80387ee20",
     "xtext_rule": "1ef23b90f60be47351e584eab4c50b516d715dca768ee610a2662f89f5e41b07",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "DefinitionElement returns SysML::Element :\n\t  Package\n\t| LibraryPackage\n\t| AnnotatingElement\n\t| Dependency\n\t| AttributeDefinition\n\t| EnumerationDefinition\n\t| OccurrenceDefinition\n\t| IndividualDefinition\n\t| ItemDefinition\n\t| MetadataDefinition\n\t| PartDefinition\n\t| ConnectionDefinition\n\t| FlowDefinition\n\t| InterfaceDefinition\n\t| AllocationDefinition\n\t| PortDefinition\n\t| ActionDefinition\n\t| CalculationDefinition\n\t| StateDefinition\n\t| ConstraintDefinition\n\t| RequirementDefinition\n\t| ConcernDefinition\n\t| CaseDefinition\n\t| AnalysisCaseDefinition\n\t| VerificationCaseDefinition\n\t| UseCaseDefinition\n\t| ViewDefinition\n\t| ViewpointDefinition\n\t| RenderingDefinition\n\t| ExtendedDefinition\n;",
     "metaclass": "SysML::Element"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in DefinitionElement@sysml"
 }

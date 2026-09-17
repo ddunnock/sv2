@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "IfNode",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
     "xtext_rule": "51e48c1b6ab5eba2bac7563c5b686a2b8f5cc075810e95e37ffda86d2d5a83fa",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "IfNode returns SysML::IfActionUsage :\n\tActionNodePrefix \n\t'if' ownedRelationship += ExpressionParameterMember\n\townedRelationship += ActionBodyParameterMember\n\t( 'else' ownedRelationship += ( ActionBodyParameterMember | IfNodeParameterMember ) )?\n;",
     "metaclass": "SysML::IfActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in IfNode@sysml"
 }

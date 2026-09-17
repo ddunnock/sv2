@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "NamespaceMember",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "05d6d5f37d8b9f1e7ac7d05e166f70177a93aa02d6a11aa9711bf654061a4fca",
     "xtext_rule": "9658eca16ecb102ed39f97aec3226e304924dfe74e3d5eedf0a3fdc431af7b51",
@@ -29,7 +29,7 @@
     ]
   },
   "decision": "A non-feature member or a namespace feature member, as KerML 8.2.3.4.1 states it.",
-  "notes": "The clause and KerML.xtext agree exactly.\n\nFOR A PARSER AUTHOR: the two alternatives are shape-identical \u2014 MemberPrefix followed by an element \u2014 and are told apart only by whether the element after the optional visibility is a feature. That is decided by MemberElement's and FeatureElement's leading keywords.",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in NamespaceMember@kerml\nThe clause and KerML.xtext agree exactly.\n\nFOR A PARSER AUTHOR: the two alternatives are shape-identical \u2014 MemberPrefix followed by an element \u2014 and are told apart only by whether the element after the optional visibility is a feature. That is decided by MemberElement's and FeatureElement's leading keywords.",
   "evidence": [
     {
       "kind": "clause",

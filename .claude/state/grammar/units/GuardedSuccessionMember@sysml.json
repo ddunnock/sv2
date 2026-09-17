@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "GuardedSuccessionMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "123fdd535dd69454a171e663a98bdb2619ca5518f3656d521f100f63eb3d01b2",
+    "xtext_rule": "7c67387a72d809620412943892bede2bafb6ad804988fa61d8c0de47aa1dcbea",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "043025bcc6608516cd0dcb530fb8905d980f99ee5ea0a08f5d1091dc112b287b"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.1 (ActionDefinitions.md, region_sha256 4e3ffb79f011ef83)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "GuardedSuccessionMember returns SysML::FeatureMembership :\n\tMemberPrefix ownedRelatedElement += GuardedSuccession \n;",
+    "metaclass": "SysML::FeatureMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

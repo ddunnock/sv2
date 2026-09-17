@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "DefaultTargetSuccession",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "bf230844585015a55800fd98050d6e2879682c9a5988b5261223ac6eb481d35b",
     "xtext_rule": "053a9ed5f99d3ab4a2b7ed1df3e21e0a0cf06dffeb5fe328840e66b37dfc8b25",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "DefaultTargetSuccession returns SysML::TransitionUsage :\n\townedRelationship += EmptyParameterMember\n\t'else' ownedRelationship += TransitionSuccessionMember\n;",
     "metaclass": "SysML::TransitionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in DefaultTargetSuccession@sysml"
 }

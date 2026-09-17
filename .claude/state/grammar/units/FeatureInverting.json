@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FeatureInverting",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7d4f74931218a74baf123f0e5410e142d8f6475ea12d68f4cb756ef02f45fdfd",
     "xtext_rule": "c3b9f3be114f488dd85464215fbdbfca63425a32cda11c90e62aed887497f469",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "FeatureInverting returns SysML::FeatureInverting :\n\t( 'inverting' Identification? )?\n\t'inverse' \n\t( featureInverted = [SysML::Feature| QualifiedName] \n\t| ownedRelatedElement += OwnedFeatureChain )\n\t'of' \n\t( invertingFeature = [SysML::Feature | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain )\n\tRelationshipBody\n;",
     "metaclass": "SysML::FeatureInverting"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in FeatureInverting@kerml"
 }

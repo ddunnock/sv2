@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "production": "SuccessionDeclaration",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "c4405700cf6540a16a46d528e534ca9b83310ce2288e1c5e44e354aadeb57981",
+    "xtext_rule": "48a4e7d4458314940b188dc70c2047f5125901fb4e1c54d6c98ac82803f19953",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "96a339047a297bbdc3976a6c9b858274f9eda4d2096e5a530a60632a09a9800f"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.5.3 (Successions.md, region_sha256 e9666728c093a155)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment SuccessionDeclaration returns SysML::Succession :\n\t  FeatureDeclaration\n\t  ( 'first' ownedRelationship += ConnectorEndMember \n\t    'then' ownedRelationship += ConnectorEndMember )?\n    | ( isSufficient ?= 'all' )?\n\t  ( 'first'? ownedRelationship += ConnectorEndMember \n\t    'then' ownedRelationship += ConnectorEndMember )?\n;",
+    "metaclass": "SysML::Succession"
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "FeatureDeclaration"
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "seq",
+              "items": [
+                {
+                  "k": "kw",
+                  "text": "first"
+                },
+                {
+                  "k": "ref",
+                  "name": "ConnectorEndMember"
+                },
+                {
+                  "k": "kw",
+                  "text": "then"
+                },
+                {
+                  "k": "ref",
+                  "name": "ConnectorEndMember"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "opt",
+            "item": {
+              "k": "kw",
+              "text": "all"
+            }
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "seq",
+              "items": [
+                {
+                  "k": "opt",
+                  "item": {
+                    "k": "kw",
+                    "text": "first"
+                  }
+                },
+                {
+                  "k": "ref",
+                  "name": "ConnectorEndMember"
+                },
+                {
+                  "k": "kw",
+                  "text": "then"
+                },
+                {
+                  "k": "ref",
+                  "name": "ConnectorEndMember"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.5.5.3 states it, with two alternatives. The first is a FeatureDeclaration, optionally followed by `first` end `then` end. The second is an optional `all`, then optionally the two ends, with `first` itself optional. The Xtext fragment is identical. The second alternative derives the empty string. The clause writes the property as `s.isSufficient`, with a stray `s.` that no other production has. A property name consumes no tokens, so the rule is unaffected. Whether OMG has filed it was not searched. No corpus file uses the empty form or `all`; those rest on the clause and the Xtext.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.5.3",
+      "note": "SuccessionDeclaration : Succession = FeatureDeclaration ( 'first' ConnectorEndMember 'then' ConnectorEndMember )? | ( s.isSufficient ?= 'all' )? ( 'first'? ConnectorEndMember 'then' ConnectorEndMember )?"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml",
+      "note": "line 18: `succession p_before_d first [1] paint then [1] dry;`, the first alternative"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/TimeVaryingSteps.kerml",
+      "note": "line 31: `succession first [0..1] startShot then [1] merge::TakePicture_snapshots.merge;`, the second alternative with `first`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment SuccessionDeclaration: the same two alternatives, with `isSufficient`. Agrees in syntax."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:40:28Z",
+  "verified_utc": "2026-09-17T14:22:58Z",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

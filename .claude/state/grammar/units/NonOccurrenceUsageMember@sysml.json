@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "NonOccurrenceUsageMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "bd840645a99d2e115ca0991f5dfe7a9ceb00ad3e7e94554acb92df502b67d3db",
+    "xtext_rule": "9e06a544b876d81f0ff2a3114108f9e36b675556fa97d2f19aa1a7c151a13ae5",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "2d426f9a1c0ef1e65078a5f3c13f0cbaed41206dfffb54cf8ff81cb907cd4697"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.6.1 (Definitions.md, region_sha256 3ce9c25432443aa0)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "NonOccurrenceUsageMember returns SysML::FeatureMembership :\n\tMemberPrefix ownedRelatedElement += NonOccurrenceUsageElement \n;",
+    "metaclass": "SysML::FeatureMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

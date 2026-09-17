@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "JoinNode",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "9f6ad15d3c6276977efc7f4191cc5ceb74786e4a088c6dbbebcd16e6dd6dec08",
     "xtext_rule": "b66fbaed5783a04740dd5f3926b10918e6238806ce753d4cbb51bbd1abc9d7ee",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "JoinNode returns SysML::JoinNode :\n\tControlNodePrefix \n\tisComposite ?= 'join' UsageDeclaration?\n\tActionBody\n;",
     "metaclass": "SysML::JoinNode"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in JoinNode@sysml"
 }

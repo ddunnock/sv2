@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "UnioningPart",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
     "xtext_rule": "19c661711bde41399e1b259446f25a552e22545b13164c76217f93b9ba935bfa",
@@ -78,5 +78,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T13:29:20Z"
+  "verified_utc": "2026-09-17T13:29:20Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in UnioningPart@kerml"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ViewRenderingMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "ee624722b91fd28dd540ce074f7c2db4f5caf3cb2d07fa533811eac7969424dd",
     "xtext_rule": "74b9f28d1d24abad7746b585d69a394404a0d1da49821dd7ac9c12e04b3331ad",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ViewRenderingMember returns SysML::ViewRenderingMembership :\n\tMemberPrefix 'render' \n\townedRelatedElement += ViewRenderingUsage \n;",
     "metaclass": "SysML::ViewRenderingMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ViewRenderingMember@sysml"
 }

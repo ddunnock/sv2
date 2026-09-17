@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "SubjectMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
     "xtext_rule": "ddfe290cb9d7d66afe14dc9e0cca08e0a81e7af8873cfdc83a851a822cd78f82",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "SubjectMember returns SysML::SubjectMembership :\n\tMemberPrefix ownedRelatedElement += SubjectUsage \n;",
     "metaclass": "SysML::SubjectMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in SubjectMember@sysml"
 }

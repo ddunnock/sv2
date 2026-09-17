@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "production": "FeatureDeclaration",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "9e2b3655417d8748bd8cfe4e1f390d0cff6fd052368ea0581d687ef7c9b0d081",
+    "xtext_rule": "329946a7f8fbd0e5bc02231d80aab8e050cb4dda5c08418e18e28d7822952cc2",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "97088c0f02267c8ef5c98fdd6959ec4d7f4882cfd12b9e7accc933f589cba352"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.3.1 (Features.md, region_sha256 c9b4ff39176a7e05)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment FeatureDeclaration returns SysML::Feature :\n\t( isSufficient ?= 'all' )? \n\t( Identification ( FeatureSpecializationPart | FeatureConjugationPart )?\n\t| FeatureSpecializationPart\n\t| FeatureConjugationPart\n\t)\n\tFeatureRelationshipPart*\n;",
+    "metaclass": "SysML::Feature"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "kw",
+          "text": "all"
+        }
+      },
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "seq",
+            "items": [
+              {
+                "k": "ref",
+                "name": "FeatureIdentification"
+              },
+              {
+                "k": "opt",
+                "item": {
+                  "k": "alt",
+                  "items": [
+                    {
+                      "k": "ref",
+                      "name": "FeatureSpecializationPart"
+                    },
+                    {
+                      "k": "ref",
+                      "name": "ConjugationPart"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "k": "ref",
+            "name": "FeatureSpecializationPart"
+          },
+          {
+            "k": "ref",
+            "name": "ConjugationPart"
+          }
+        ]
+      },
+      {
+        "k": "star",
+        "item": {
+          "k": "ref",
+          "name": "FeatureRelationshipPart"
+        }
+      }
+    ]
+  },
+  "decision": "An optional `all`, then an identification with an optional specialization or conjugation part, or one of those parts alone, then any number of relationship parts \u2014 as KerML 8.2.4.3.1 states it. It cannot be empty: every alternative needs a name or a part.",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nTHE CLAUSE IS FLAGGED MALFORMED AND THIS PRODUCTION IS NOT AFFECTED. The pack reports an unmatched `)` on line 8 of the Features clause. That line is inside the Feature production \u2014 its own parentheses close at -1 \u2014 and this production's parentheses balance on their own, so it is derived from the clause as written. The repair of Feature is recorded on the Feature unit.\n\nTHE XTEXT DIFFERS AND IS NOT FOLLOWED. The pilot writes `Identification` where the clause writes `FeatureIdentification`, and `FeatureConjugationPart` where it writes `ConjugationPart`. The first is not a rename. The pilot's Identification is `( '<' Name '>' )? Name?`, both parts optional, so its FeatureDeclaration can match nothing; the clause's FeatureIdentification requires a name. So where a declaration is mandatory \u2014 the second alternative of Feature, `EndFeaturePrefix FeatureDeclaration` \u2014 the pilot accepts a bare `end;` and the clause does not.\n\nTHE CORPUS DOES NOT DECIDE IT. No KerML file writes `end` with no declaration after it; the forms are `end feature ...` (70), `end [0..1]`, and `end cart:`, all of which both readings accept. The clause is normative and the corpus does not contradict it, so it is followed, and the difference is recorded rather than raised as a conflict \u2014 the same footing as the Import unit.\n\nFOR A PARSER AUTHOR: after the optional `all`, a NAME or `<` starts the first alternative, and a specialization or conjugation token starts the other two.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "states FeatureDeclaration with FeatureIdentification and ConjugationPart"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "writes Identification (all-optional) and FeatureConjugationPart instead"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml",
+      "note": "`feature main1[1] subsets tanks = tanks#(1);` \u2014 an identification followed by a specialization part"
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:54Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

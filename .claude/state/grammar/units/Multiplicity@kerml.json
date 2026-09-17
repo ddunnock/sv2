@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Multiplicity",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "8495e77a2c661ef306d5c397c34b70d3e5b299f9d00d7c0b98bdc36f47423af3",
+    "xtext_rule": "c57803e5e9dd690fc6330353932ee6ccdfe0e8834cebba0e87a810f0a528d0e3",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "6e74dd8dc6c1f85a7728e57aff31f7d9d0ee249643ad8922e9f428cf64d97720"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.11 (MultiplicitiesConcreteSyntax.md, region_sha256 01e46f53f28bef82)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Multiplicity returns SysML::Multiplicity :\n\tMultiplicitySubset | MultiplicityRange\n;",
+    "metaclass": "SysML::Multiplicity"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

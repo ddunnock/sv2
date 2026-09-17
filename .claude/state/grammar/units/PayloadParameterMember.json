@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "PayloadParameterMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "9b0dbb58e81d8540b2d63be59570317867cab4f1c20ef389f4b523acfa08c9e4",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "PayloadParameterMember returns SysML::ParameterMembership :\n\townedRelatedElement += PayloadParameter \n;",
     "metaclass": "SysML::ParameterMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in PayloadParameterMember@sysml"
 }

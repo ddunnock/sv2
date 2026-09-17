@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ItemDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "b9795a6db6cf2bdeaf62f2330cabfe65fdaa3a068aeadf7ee2ccfb7d6699ccdd",
     "xtext_rule": "625034d87b6018446ea880621327ab1de5b67db041a67f010e1d68300b6aff15",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ItemDefinition returns SysML::ItemDefinition :\n\tOccurrenceDefinitionPrefix ItemDefKeyword Definition\n;",
     "metaclass": "SysML::ItemDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ItemDefinition@sysml"
 }

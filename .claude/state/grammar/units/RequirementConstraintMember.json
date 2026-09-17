@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "RequirementConstraintMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
     "xtext_rule": "ea9fa77ea876c93421cdd62d8c03a674b360f4d56c13ede3b230f99c27b858a6",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "RequirementConstraintMember returns SysML::RequirementConstraintMembership :\n\tMemberPrefix kind = RequirementConstraintKind \n\townedRelatedElement += RequirementConstraintUsage \n;",
     "metaclass": "SysML::RequirementConstraintMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in RequirementConstraintMember@sysml"
 }

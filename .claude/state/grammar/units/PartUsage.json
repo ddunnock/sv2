@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "PartUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "71a5951c403645c75a2a84211a571ea2da924e7a531d517dab317cf70ee9030d",
     "xtext_rule": "5a956a767f4810b115fd406102968248837b2a429b18893e64fbcd1f464c69c0",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "PartUsage returns SysML::PartUsage :\n\tOccurrenceUsagePrefix PartUsageKeyword Usage\n;",
     "metaclass": "SysML::PartUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in PartUsage@sysml"
 }

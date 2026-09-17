@@ -96,6 +96,13 @@
       "status": "accepted",
       "date": "2026-09-17",
       "file": "docs/adr/0014-kerml-and-sysml-are-two-grammars.md"
+    },
+    {
+      "id": "0015",
+      "title": "A production belongs to the grammars that reach it",
+      "status": "accepted",
+      "date": "2026-09-17",
+      "file": "docs/adr/0015-a-production-belongs-to-the-grammars-that-reach-it.md"
     }
   ]
 }

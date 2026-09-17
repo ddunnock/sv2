@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "SatisfactionReferenceExpression",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "fc398636b89ed7f38aee585cc6eb3e6281af4853d57aab1490de3e1306db12d3",
+    "xtext_rule": "38aa4b2a632d47d062cbb97c1833f410f286ff366229c0152d5ab63b7dcde69c",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "1beee7b4c25a9e3e0b18b972210bfe8fb7c81dbe1b3eb251810d6ab409e3334e"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.2 (RequirementUsages.md, region_sha256 6c4f3553daaa3162)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "SatisfactionReferenceExpression returns SysML::FeatureReferenceExpression :\n\townedRelationship += FeatureChainMember\n;",
+    "metaclass": "SysML::FeatureReferenceExpression"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

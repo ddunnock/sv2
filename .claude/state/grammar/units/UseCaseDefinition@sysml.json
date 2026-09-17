@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "UseCaseDefinition",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "16b5afa0d9b60d2b0f7cbb58c16e0a43d1d423f018aed1726c774040d045ca35",
+    "xtext_rule": "ff62447bb90e94b4bf5d452546d2ac89751dba0da7622f77637c41571252ae7e",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "8fdcf30f9e477e63224b0cc2354c73e38aca22c3ea5adf9a9aa3e41862c756bb"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.25 (UseCasesTextualNotation.md, region_sha256 c0467083ee779c0b)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "UseCaseDefinition returns SysML::UseCaseDefinition :\n\tOccurrenceDefinitionPrefix UseCaseDefKeyword DefinitionDeclaration CaseBody\n;",
+    "metaclass": "SysML::UseCaseDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

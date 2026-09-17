@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "CaseBodyItem",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "e3a278925d36146fdb1fe9b1da78351269daeb41617744492f5e30c352341669",
     "xtext_rule": "c5490bd7e51c533c04bd1fe0ea04ef4c6b5e13bc9007d331c984f70fbcf0f3fc",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment CaseBodyItem returns SysML::Type :\n\t  CalculationBodyItem\n\t| ownedRelationship += SubjectMember \n\t| ownedRelationship += ActorMember\n\t| ownedRelationship += ObjectiveMember\n\t\n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in CaseBodyItem@sysml"
 }

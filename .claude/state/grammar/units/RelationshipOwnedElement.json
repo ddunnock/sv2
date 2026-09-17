@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "RelationshipOwnedElement",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "060222b6e0d7f88f1bd754f29cbce2b084d17eb97fc88e0f20f89315d518bfa4",
     "xtext_rule": "1d3185476d924e7c9fdb515dc555929328738838f09962bd9a7c87d2833fcd96",
@@ -52,5 +52,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T13:39:19Z"
+  "verified_utc": "2026-09-17T13:39:19Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in RelationshipOwnedElement@kerml"
 }

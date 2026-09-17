@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ExtendedDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
     "xtext_rule": "318e79577f55eff0154cd69ae5f0389e6d84be39fd3cbd2ee784e6e09e91fecb",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ExtendedDefinition returns SysML::Definition :\n\tBasicDefinitionPrefix? DefinitionExtensionKeyword+ 'def' Definition\n;",
     "metaclass": "SysML::Definition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ExtendedDefinition@sysml"
 }

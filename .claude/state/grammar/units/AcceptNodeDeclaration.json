@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "AcceptNodeDeclaration",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "8cea10e1d6cd1e6698c2d0f60578ac1a2eb289d01aed2157220092c8fb89d6b6",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment AcceptNodeDeclaration returns SysML::ActionUsage :\n\tActionNodeUsageDeclaration? 'accept' AcceptParameterPart\n;",
     "metaclass": "SysML::ActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in AcceptNodeDeclaration@sysml"
 }

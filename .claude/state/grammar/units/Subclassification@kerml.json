@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Subclassification",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "53f31d5bf9b9f50a28265fdf78900984f2cc6886cf99e8eab3c068b08b4e7852",
+    "xtext_rule": "1a7cca591488b87c0013b50623bf108a901d256f7af6992876a73d33df488c8a",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "f61d2518a2cd6cf8e17594bd04c8661ea9b9b71ab3534fdd49dc679ca6891b38"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.2.2 (Subclassification.md, region_sha256 a733cd7fd3e651fe)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Subclassification returns SysML::Subclassification :\n\t( 'specialization' Identification? )?\n    'subclassifier' subclassifier = [SysML::Classifier | QualifiedName]\n    ( ':>' | 'specializes') superclassifier = [SysML::Classifier | QualifiedName]\n    RelationshipBody\n;",
+    "metaclass": "SysML::Subclassification"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

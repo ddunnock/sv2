@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TransitionUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "881c75bf07c1c6ea5c67608f905d1f80907cb685f87ea4ad2d66a041d02c238f",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "TransitionUsage returns SysML::TransitionUsage :\n\tTransitionUsageKeyword ( UsageDeclaration? 'first' )? \n\townedRelationship += TransitionSourceMember\n\townedRelationship += EmptyParameterMember\n\t( ownedRelationship += EmptyParameterMember \n\t  ownedRelationship += TriggerActionMember )?\n\t( ownedRelationship += GuardExpressionMember )?\n\t( ownedRelationship += EffectBehaviorMember )?\n\t'then' ownedRelationship += TransitionSuccessionMember\n\tActionBody\n;",
     "metaclass": "SysML::TransitionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in TransitionUsage@sysml"
 }

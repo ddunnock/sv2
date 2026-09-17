@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "NamespaceDeclaration",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "05d6d5f37d8b9f1e7ac7d05e166f70177a93aa02d6a11aa9711bf654061a4fca",
     "xtext_rule": "b7a99cac0e3edf8cce63dfcf9625ff8ef0a4cb304454d46bb78cf8e426951616",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment NamespaceDeclaration returns SysML::Namespace :\n\t'namespace' Identification? \n;",
     "metaclass": "SysML::Namespace"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in NamespaceDeclaration@kerml"
 }

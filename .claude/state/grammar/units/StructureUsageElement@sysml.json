@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "StructureUsageElement",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "c04c53d39fc6b7e3513d955ce26ea0034cc1bc1147436f284e82d65d9c2764b3",
+    "xtext_rule": "8057621077e11db5e4ff0729be792b6328bebf2a18bc88cd07e25a0525171ec4",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "396f61922de60a51ff4269b72b568ce6690d0c4c978415aee775b068fe00bfd3"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.6.4 (BodyElements.md, region_sha256 ae188991c8997bec)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "StructureUsageElement returns SysML::Usage :\n\t  OccurrenceUsage\n\t| IndividualUsage\n\t| PortionUsage\n\t| EventOccurrenceUsage\n\t| ItemUsage\n\t| PartUsage\n\t| ViewUsage\n\t| RenderingUsage\n\t| PortUsage\n\t| ConnectionUsage\n\t| InterfaceUsage\n\t| AllocationUsage\n\t| Message\n\t| FlowUsage\n\t| SuccessionFlowUsage\n;",
+    "metaclass": "SysML::Usage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "EffectBehaviorUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
+    "xtext_rule": "ec3e56bff331422582903f296c7fc9e375c31a93929c157c1dfc3af44b6bf34b",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "8d483ccdc75849d7865c1c4704e9cd2ed6aecc4f439f9e6be72fd77358f157b3"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "EffectBehaviorUsage returns SysML::ActionUsage :\n\t  EmptyActionUsage | PerformedActionUsage ( '{' ActionBodyItem* '}' )?\n;",
+    "metaclass": "SysML::ActionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

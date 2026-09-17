@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "PortionKind",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "465ccd42d9aa0196c8527be21292803c8fcc974662a742655dbd027182d072c3",
     "xtext_rule": "3f46ee79a3085a2b6d7fc26451ceda26cbf9547adb23ff3ec72abdb97e14c15e",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "enum PortionKind returns SysML::PortionKind :\n\t// Literal keywords identified explicitly so they can be found by syntax highlighting script\n\tsnapshot = 'snapshot' | timeslice = 'timeslice'\n;",
     "metaclass": "SysML::PortionKind"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in PortionKind@sysml"
 }

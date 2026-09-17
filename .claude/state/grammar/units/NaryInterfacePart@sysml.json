@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "NaryInterfacePart",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "bffd8b9322d613cb8c3a15449371ae9a03700ef3ca5dde0052db50b7149ba822",
+    "xtext_rule": "234b0fecd24ba76b3e7ecda220f84c61f49c395efa4e78221faefa63e11abc36",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "6172aa075986e44f776691f206e57ff65d5aa2e3648b4ef3b3da1628fbdf13dd"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.14.2 (InterfaceUsages.md, region_sha256 e490b9536f83631d)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment NaryInterfacePart returns SysML::Connector :\n\t'(' ownedRelationship += InterfaceEndMember ',' \n\t    ownedRelationship += InterfaceEndMember\n\t    ( ',' ownedRelationship += InterfaceEndMember )* ')'\n;",
+    "metaclass": "SysML::Connector"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

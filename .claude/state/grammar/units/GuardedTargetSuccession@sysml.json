@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "GuardedTargetSuccession",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "bf230844585015a55800fd98050d6e2879682c9a5988b5261223ac6eb481d35b",
+    "xtext_rule": "b47f2ef11cd89453a16a9152b38bf81bf9caf12349c565b0a1ca6ae5cec2dc74",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "2dde2377c895bd555f5133ceabb06af50330e59c4cfe4f5fd7e972589a03241c"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.8 (ActionSuccessions.md, region_sha256 e5f3ae624be80231)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "GuardedTargetSuccession returns SysML::TransitionUsage :\n\townedRelationship += EmptyParameterMember\n\townedRelationship += GuardExpressionMember\n\t'then' ownedRelationship += TransitionSuccessionMember\n;",
+    "metaclass": "SysML::TransitionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

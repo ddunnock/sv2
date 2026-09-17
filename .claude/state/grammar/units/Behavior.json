@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Behavior",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8e0d7e43222c89ded13ae22b6873dc4298fc09cb84a5283b09bfb55211491f83",
     "xtext_rule": "f912cd12f749c6197002b54ad205e6309a70fa91be54486041902e829c51b13a",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "Behavior returns SysML::Behavior :\n\tTypePrefix 'behavior' \n\tClassifierDeclaration TypeBody\n;",
     "metaclass": "SysML::Behavior"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in Behavior@kerml"
 }

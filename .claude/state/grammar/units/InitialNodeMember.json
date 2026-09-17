@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "InitialNodeMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "123fdd535dd69454a171e663a98bdb2619ca5518f3656d521f100f63eb3d01b2",
     "xtext_rule": "367f36c25fcc64623255929668ead47fa5b35cf16c9a14c72af3b25e8cc782b6",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "InitialNodeMember returns SysML::Membership :\n\tMemberPrefix 'first' memberElement = [SysML::Feature|QualifiedName]\n\tRelationshipBody\t\n;",
     "metaclass": "SysML::Membership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in InitialNodeMember@sysml"
 }

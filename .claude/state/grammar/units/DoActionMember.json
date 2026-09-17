@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "DoActionMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "6f7cd7408a7b364e4a1c9cb070f712b9229c02405be681c2ba1907ce42b2860a",
     "xtext_rule": "d49901f7e3f79f323b9a193b1f60e31d61cf1cc9e4e6ae5a826e960e17cce603",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "DoActionMember returns SysML::StateSubactionMembership :\n\tMemberPrefix kind = DoActionKind ownedRelatedElement += StateActionUsage \n;",
     "metaclass": "SysML::StateSubactionMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in DoActionMember@sysml"
 }

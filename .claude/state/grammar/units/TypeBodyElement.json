@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TypeBodyElement",
   "language": "shared",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -37,7 +37,7 @@
     ]
   },
   "decision": "Four alternatives, exactly as KerML 8.2.4.1.1 states them: a non-feature member, a feature member, an alias member, or an import. This is the single production that says what may appear inside any type body, and TypeBody reaches it as `';' | '{' TypeBodyElement* '}'`.",
-  "notes": "THE XTEXT HAS NO SUCH RULE, which is why xtext_rule_text is empty. The pilot inlines these same four alternatives at each of its body sites \u2014 FunctionBodyPart writes `ownedRelationship += NonFeatureMember | ownedRelationship += FeatureMember | ownedRelationship += AliasMember | ownedRelationship += Import | ownedRelationship += ReturnFeatureMember` directly rather than referring to a shared rule. That is the manual-inlining LL workaround described in .claude/rules/grammar.md, not a statement that the production does not exist, and it is not ported here: the specification names TypeBodyElement and this grammar keeps it named.\n\nThe absence of a corpus_instances entry is expected and is not weak evidence. TypeBodyElement is a pure alternation over four named productions and contributes no terminal of its own, so no span of corpus text is attributable to it rather than to whichever alternative matched. Its corpus support is the support of its alternatives.\n\nNOT DECIDED HERE: ReturnFeatureMember is a fifth alternative at the FunctionBodyPart site only, and FunctionBodyPart already carries it as its own alternative alongside this production. It is deliberately not folded in, because the specification does not put it in a type body generally \u2014 only in a function body.",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in TypeBodyElement@kerml\nTHE XTEXT HAS NO SUCH RULE, which is why xtext_rule_text is empty. The pilot inlines these same four alternatives at each of its body sites \u2014 FunctionBodyPart writes `ownedRelationship += NonFeatureMember | ownedRelationship += FeatureMember | ownedRelationship += AliasMember | ownedRelationship += Import | ownedRelationship += ReturnFeatureMember` directly rather than referring to a shared rule. That is the manual-inlining LL workaround described in .claude/rules/grammar.md, not a statement that the production does not exist, and it is not ported here: the specification names TypeBodyElement and this grammar keeps it named.\n\nThe absence of a corpus_instances entry is expected and is not weak evidence. TypeBodyElement is a pure alternation over four named productions and contributes no terminal of its own, so no span of corpus text is attributable to it rather than to whichever alternative matched. Its corpus support is the support of its alternatives.\n\nNOT DECIDED HERE: ReturnFeatureMember is a fifth alternative at the FunctionBodyPart site only, and FunctionBodyPart already carries it as its own alternative alongside this production. It is deliberately not folded in, because the specification does not put it in a type body generally \u2014 only in a function body.",
   "evidence": [
     {
       "kind": "clause",

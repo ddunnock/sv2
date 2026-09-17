@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "EntryTransitionMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "6f7cd7408a7b364e4a1c9cb070f712b9229c02405be681c2ba1907ce42b2860a",
     "xtext_rule": "b5e340a4cebe76d11d9506b62b6d7535695ce8b26998f7681e9a9712ea9186a3",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "EntryTransitionMember returns SysML::FeatureMembership :\n\tMemberPrefix \n\t( ownedRelatedElement += GuardedTargetSuccession \n\t| 'then' ownedRelatedElement += TransitionSuccession \n\t) ';'\n;",
     "metaclass": "SysML::FeatureMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in EntryTransitionMember@sysml"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "IfNodeParameterMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
     "xtext_rule": "2c11bb91ea4c8e808936994b502b0925d253fb37de976dbeb19c16a2e9f099f8",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "IfNodeParameterMember returns SysML::ParameterMembership :\n\townedRelatedElement += IfNode \n;",
     "metaclass": "SysML::ParameterMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in IfNodeParameterMember@sysml"
 }

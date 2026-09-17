@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "NamespaceExpose",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "549f4dd10d3f615fe5551a4a966bcf84c7f0bc1fec8a26c65080c95b9edafcce",
+    "xtext_rule": "c83b83e7bafceb7be110f8c15d42226ea3b90b809c615b6eee6543dd61a03a13",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "c8225cc28812bf68b34e3426b83901be7cd8b9e84e2d87a70a610299981e1db4"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.26.2 (ViewUsages.md, region_sha256 f49a7d5fda3165a3)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "NamespaceExpose returns SysML::NamespaceExpose :\n\tExposePrefix \n\t( ImportedNamespace\n\t| ownedRelatedElement += FilterPackage\n\t)\n;",
+    "metaclass": "SysML::NamespaceExpose"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

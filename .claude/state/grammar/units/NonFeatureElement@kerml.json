@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "production": "NonFeatureElement",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "13ffd4d40b20f950fa8816fdd0b24cf1b00ec029f03ac056dbecc33e8c33d5db",
+    "xtext_rule": "99e96093b062a27eec7020d29100134f1151d27f02ab3f593d85bb71418e0345",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "f9183c5e732253beb26a5f53e111f0eefc63b6ef64ab3aaa975f2955dd8aa905"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.3.4.3 (NamespaceElements.md, region_sha256 53f64147b73a1ef2)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "NonFeatureElement returns SysML::Element :\n\t  Dependency\n\t| Namespace\n\t| Package\n\t| LibraryPackage \n\t| Multiplicity\n\t| Type\n\t| Classifier \n\t| Class\n\t| Structure\n\t| Metaclass\n\t| DataType \n\t| Association\n\t| AssociationStructure\n\t| Interaction\n\t| Behavior\n\t| Function\n\t| Predicate\n\t| Specialization\n\t| Conjugation\n\t| FeatureTyping\n\t| Subclassification\n\t| Disjoining\n\t| FeatureInverting\n\t| Subsetting\n\t| Redefinition\n\t| TypeFeaturing\n;",
+    "metaclass": "SysML::Element"
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "Dependency"
+      },
+      {
+        "k": "ref",
+        "name": "Namespace"
+      },
+      {
+        "k": "ref",
+        "name": "Type"
+      },
+      {
+        "k": "ref",
+        "name": "Classifier"
+      },
+      {
+        "k": "ref",
+        "name": "DataType"
+      },
+      {
+        "k": "ref",
+        "name": "Class"
+      },
+      {
+        "k": "ref",
+        "name": "Structure"
+      },
+      {
+        "k": "ref",
+        "name": "Metaclass"
+      },
+      {
+        "k": "ref",
+        "name": "Association"
+      },
+      {
+        "k": "ref",
+        "name": "AssociationStructure"
+      },
+      {
+        "k": "ref",
+        "name": "Interaction"
+      },
+      {
+        "k": "ref",
+        "name": "Behavior"
+      },
+      {
+        "k": "ref",
+        "name": "Function"
+      },
+      {
+        "k": "ref",
+        "name": "Predicate"
+      },
+      {
+        "k": "ref",
+        "name": "Multiplicity"
+      },
+      {
+        "k": "ref",
+        "name": "Package"
+      },
+      {
+        "k": "ref",
+        "name": "LibraryPackage"
+      },
+      {
+        "k": "ref",
+        "name": "Specialization"
+      },
+      {
+        "k": "ref",
+        "name": "Conjugation"
+      },
+      {
+        "k": "ref",
+        "name": "Subclassification"
+      },
+      {
+        "k": "ref",
+        "name": "Disjoining"
+      },
+      {
+        "k": "ref",
+        "name": "FeatureInverting"
+      },
+      {
+        "k": "ref",
+        "name": "FeatureTyping"
+      },
+      {
+        "k": "ref",
+        "name": "Subsetting"
+      },
+      {
+        "k": "ref",
+        "name": "Redefinition"
+      },
+      {
+        "k": "ref",
+        "name": "TypeFeaturing"
+      }
+    ]
+  },
+  "decision": "Twenty-six alternatives, as KerML 8.2.3.4.3 states them, in the clause's order. The Xtext lists the same twenty-six in a different order. Order in an alternation does not change the language the grammar describes, and the rule follows the clause's order. The alternatives are the non-feature declarations: namespaces, packages, types and their kinds, and the standalone relationship declarations. None is defined in this pack, so their overlap is for their own units.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.3",
+      "note": "NonFeatureElement : Element = Dependency | Namespace | Type | Classifier | DataType | Class | Structure | Metaclass | Association | AssociationStructure | Interaction | Behavior | Function | Predicate | Multiplicity | Package | LibraryPackage | Specialization | Conjugation | Subclassification | Disjoining | FeatureInverting | FeatureTyping | Subsetting | Redefinition | TypeFeaturing"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/TimeVaryingSteps.kerml",
+      "note": "line 2: `behavior TakePicture {`, the Behavior alternative"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Types.kerml",
+      "note": "line 28: `type Conjugate3 conjugates Original;`, the Type alternative"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "NonFeatureElement: the same twenty-six alternatives in a different order. The same language."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:39:19Z",
+  "verified_utc": "2026-09-17T14:22:56Z",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

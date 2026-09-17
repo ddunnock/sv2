@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "BehaviorUsageElement",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "c04c53d39fc6b7e3513d955ce26ea0034cc1bc1147436f284e82d65d9c2764b3",
+    "xtext_rule": "132bdb5e49c3e336c9daa64edcab48c5b4aa73129e5c33f4ab657a1ed212527f",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "94bdfc7e152f65dc5e8db4a120e8c2be9bb7c1a416a514b2b877082e2dc70449"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.6.4 (BodyElements.md, region_sha256 ae188991c8997bec)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "BehaviorUsageElement returns SysML::Usage :\n\t  ActionUsage\n\t| CalculationUsage\n\t| StateUsage\n\t| ConstraintUsage\n\t| RequirementUsage\n\t| ConcernUsage\n\t| CaseUsage\n\t| AnalysisCaseUsage\n\t| VerificationCaseUsage\n\t| UseCaseUsage\n\t| ViewpointUsage\n\t| PerformActionUsage\n\t| ExhibitStateUsage\n\t| IncludeUseCaseUsage\n\t| AssertConstraintUsage\n\t| SatisfyRequirementUsage\n;",
+    "metaclass": "SysML::Usage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

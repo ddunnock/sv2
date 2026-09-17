@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "PayloadFeatureMember",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "41e1ec157d2dbb7927c23174c05181a1f4fbf25643ae9771de472916bc3c4275",
     "xtext_rule": "279a3f8217474e1b673b807500dfb64c8e266b40614b7464242da132c9135179",
@@ -53,5 +53,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T13:48:36Z"
+  "verified_utc": "2026-09-17T13:48:36Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in PayloadFeatureMember@kerml"
 }

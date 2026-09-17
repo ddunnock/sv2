@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "BindingConnector",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "391531e6e650814a25fb5633fbbab082d043e33faeb928c07c60defac7c17ae9",
     "xtext_rule": "5c74bf222e2cb832dc2d18a4e35423ff0f8d0aeeef1732ed61d91ec4c9ad0c1e",
@@ -37,7 +37,7 @@
     ]
   },
   "decision": "A feature prefix, `binding`, the declaration, and the body \u2014 four parts, exactly as KerML 8.2.5.5.2 states it, and the Xtext agrees. Everything that varies about a binding connector lives in BindingConnectorDeclaration and belongs to that unit.",
-  "notes": "The clause and the Xtext agree exactly; nothing is inlined and there is no workaround to decline.\n\nHOW THE DECLARATION-LESS FORM IS REACHED, since it bears on a conflict elsewhere: BindingConnectorDeclaration offers the optionality through ALTERNATION rather than through a `?` on FeatureDeclaration. Its first alternative requires a FeatureDeclaration and then an optional `of ... = ...`; its second omits the declaration entirely and takes an optional `'of'? end '=' end`. So `binding a = b;` parses via the second alternative. That is a different mechanism from the `FeatureDeclaration?` this grammar meets in Connector, and different again from the four productions where the clause writes it mandatory while the Xtext makes it optional. Recorded because the three mechanisms are easy to conflate; resolved nowhere here.\n\nFOR A PARSER AUTHOR: the deciding token for BindingConnectorDeclaration's two alternatives is not at their start \u2014 both can begin with a name \u2014 but at whether `of` or `=` follows. That is that unit's problem, not this one's.\n\nCORPUS: `binding a = b;` and `binding result.portionOf = that;` exercise the keyword and the declaration-less alternative with a `;` body.",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in BindingConnector@kerml\nThe clause and the Xtext agree exactly; nothing is inlined and there is no workaround to decline.\n\nHOW THE DECLARATION-LESS FORM IS REACHED, since it bears on a conflict elsewhere: BindingConnectorDeclaration offers the optionality through ALTERNATION rather than through a `?` on FeatureDeclaration. Its first alternative requires a FeatureDeclaration and then an optional `of ... = ...`; its second omits the declaration entirely and takes an optional `'of'? end '=' end`. So `binding a = b;` parses via the second alternative. That is a different mechanism from the `FeatureDeclaration?` this grammar meets in Connector, and different again from the four productions where the clause writes it mandatory while the Xtext makes it optional. Recorded because the three mechanisms are easy to conflate; resolved nowhere here.\n\nFOR A PARSER AUTHOR: the deciding token for BindingConnectorDeclaration's two alternatives is not at their start \u2014 both can begin with a name \u2014 but at whether `of` or `=` follows. That is that unit's problem, not this one's.\n\nCORPUS: `binding a = b;` and `binding result.portionOf = that;` exercise the keyword and the declaration-less alternative with a `;` body.",
   "evidence": [
     {
       "kind": "clause",

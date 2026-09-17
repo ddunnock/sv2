@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MetadataBodyFeatureMember",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "814e74fbb17b63e9a835d6dc9a5ceb64c5393cec1e7ff119730c9fd1601fe160",
     "xtext_rule": "07cbf8318f5c8da25835798fd32ffee8c87c127bd05fa25c6582945def25e453",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "MetadataBodyFeatureMember returns SysML::FeatureMembership :\n\townedRelatedElement += MetadataBodyFeature\n;",
     "metaclass": "SysML::FeatureMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in MetadataBodyFeatureMember@kerml"
 }

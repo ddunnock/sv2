@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "AcceptNode",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
+    "xtext_rule": "07fc0857b7f452c4fc6433292adc095e223da6c6e164090d4a2270279716dabe",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "c5b0657991935c584fd764f2f3c2b2cd7b04d5fb1387bed2eb69f6b7a4bd310f"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "AcceptNode returns SysML::AcceptActionUsage :\n\tOccurrenceUsagePrefix AcceptNodeDeclaration ActionBody\n;",
+    "metaclass": "SysML::AcceptActionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

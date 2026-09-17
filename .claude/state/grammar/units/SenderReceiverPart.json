@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "SenderReceiverPart",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "b0acc49d8a06f09475ca618912b3e27e9098b3007d8d27752cb899ea6c884558",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment SenderReceiverPart returns SysML::ActionUsage :\n\t'via' ownedRelationship += NodeParameterMember \n\t  ( 'to' ownedRelationship += NodeParameterMember )?\n\t| ownedRelationship += EmptyParameterMember\n\t  'to' ownedRelationship += NodeParameterMember\n;",
     "metaclass": "SysML::ActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in SenderReceiverPart@sysml"
 }

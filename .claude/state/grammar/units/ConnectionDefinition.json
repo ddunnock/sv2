@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ConnectionDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "e5834f81a35a28ed92e55b1809dac0c6626c8fa9a77c3720bef1f1827c87c885",
     "xtext_rule": "bef6f362da0fecd42337060ee7a08aadd724982267f7afa74fcff71c34a4a6b0",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ConnectionDefinition returns SysML::ConnectionDefinition :\n\tOccurrenceDefinitionPrefix ConnectionDefKeyword Definition\n;",
     "metaclass": "SysML::ConnectionDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ConnectionDefinition@sysml"
 }

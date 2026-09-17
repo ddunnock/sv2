@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "EnumeratedValue",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "6586cda95c280b8bf6c2a527d7307c54570015c949555a4f61aad144b2c03162",
+    "xtext_rule": "2a3e2ded5cfc5bf1c5be56985ed05b28707c151cf36792ec19cdcf0fee86846e",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "56fc30b907ba0cfbac5bc2c4446aca336e64923d03efb47b0bbe5550c67ff8c4"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.8 (EnumerationsTextualNotation.md, region_sha256 9c242a1f7811f8ef)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "EnumeratedValue returns SysML::EnumerationUsage :\n\tUsageExtensionKeyword* EnumerationUsageKeyword? Usage\n;",
+    "metaclass": "SysML::EnumerationUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

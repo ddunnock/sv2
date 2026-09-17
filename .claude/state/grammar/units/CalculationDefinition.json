@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "CalculationDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "abc851f79d420fb31d8d7518538400aa03794ce96b1c7f0ed791b9375eeee723",
     "xtext_rule": "059e1d6499912b9dea0c79a7dae8a29da22979bc643f1762da30e84076f5733a",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "CalculationDefinition returns SysML::CalculationDefinition :\n\tOccurrenceDefinitionPrefix CalculationDefKeyword DefinitionDeclaration \n\tCalculationBody\n;",
     "metaclass": "SysML::CalculationDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in CalculationDefinition@sysml"
 }

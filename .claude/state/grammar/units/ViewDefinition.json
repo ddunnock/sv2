@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ViewDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "ee624722b91fd28dd540ce074f7c2db4f5caf3cb2d07fa533811eac7969424dd",
     "xtext_rule": "aef2fd609dd506c6541ac9f7819dd20d54aefab9ae8f45bb7c57f70ad27be694",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ViewDefinition returns SysML::ViewDefinition :\n\tOccurrenceDefinitionPrefix ViewDefKeyword DefinitionDeclaration ViewDefinitionBody\n;",
     "metaclass": "SysML::ViewDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ViewDefinition@sysml"
 }

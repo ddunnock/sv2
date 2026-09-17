@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "EndUsagePrefix",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "75719cca5586b38df687a0107da0631912855d8761fb90c9ddda65858c3f8a4b",
+    "xtext_rule": "aef51b59ef943131b8853c2485b25c721c76973aaa6d89d4e1e9371df805a80b",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "6e7d7f06dbd44706249eb324f6aa5434a610983bd5b05b1bdc191cebfa7c0a33"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.6.2 (Usages.md, region_sha256 a6f6e20afeed05e4)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment EndUsagePrefix returns SysML::Usage :\n\tisEnd ?= 'end' ( ownedRelationship += OwnedCrossFeatureMember )?\n;",
+    "metaclass": "SysML::Usage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

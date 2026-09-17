@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedDisjoining",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "b0a5c53932fc360b89a0c462ecfef9f5ab7e2f60993a2a4aaf578becc01d898a",
     "xtext_rule": "922b061cf900c0f20f1a7c062ddf3b040ef3e4ab4262130a27456f48c6f85bcf",
@@ -62,5 +62,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T13:37:34Z"
+  "verified_utc": "2026-09-17T13:37:34Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in OwnedDisjoining@kerml"
 }

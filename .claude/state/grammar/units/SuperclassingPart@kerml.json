@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "SuperclassingPart",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "11c8984ff24597dee63bdc75c014e37379025dd429cf69db5be06483357f9a63",
+    "xtext_rule": "7e4c59e31cc1dd523bf70f6899520060296161f5296810c991c03af13b11befd",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "84b9346a55ab1c1effd3d5ffd48d485758c568fa13b2f2a9883bf502828f47b6"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.2.1 (Classifiers.md, region_sha256 73248677d5fad211)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment SuperclassingPart returns SysML::Classifier :\n\t( ':>' | 'specializes' ) ownedRelationship += Ownedsubclassification \n\t( ',' ownedRelationship += Ownedsubclassification )*\n;",
+    "metaclass": "SysML::Classifier"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

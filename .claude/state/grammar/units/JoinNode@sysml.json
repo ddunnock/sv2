@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "JoinNode",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "9f6ad15d3c6276977efc7f4191cc5ceb74786e4a088c6dbbebcd16e6dd6dec08",
+    "xtext_rule": "b66fbaed5783a04740dd5f3926b10918e6238806ce753d4cbb51bbd1abc9d7ee",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "689dcb56ba46888cf96e702710b68169175bf550250228a5c7e798761c64742c"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.3 (ControlNodes.md, region_sha256 08ce249947265cb2)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "JoinNode returns SysML::JoinNode :\n\tControlNodePrefix \n\tisComposite ?= 'join' UsageDeclaration?\n\tActionBody\n;",
+    "metaclass": "SysML::JoinNode"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "NonFeatureChainPrimaryArgument",
   "language": "shared",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "a0ac8d0c418826e95262789248a224e62ec9367279a83a5b8c4df179218244a2",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -20,7 +20,7 @@
     "name": "NonFeatureChainPrimaryArgumentValue"
   },
   "decision": "`ownedRelationship += NonFeatureChainPrimaryArgumentValue`.",
-  "notes": "DEFINED AND NEVER REFERENCED. The only production that could plausibly reference it, NonFeatureChainPrimaryArgumentMember, references PrimaryArgument instead. That is not a transcription artifact: the specification clause and Tier B' agree (KerML-textual-bnf.kebnf:1097), and nothing in the SysML grammar references it either. Derived as stated rather than repaired, because both pinned sources say the same thing and inventing a reference would be writing a rule the language does not have. grammar_consistency.py will report this production as unreachable before freeze, which is the right moment for it to become a question.",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in NonFeatureChainPrimaryArgument@kerml\nDEFINED AND NEVER REFERENCED. The only production that could plausibly reference it, NonFeatureChainPrimaryArgumentMember, references PrimaryArgument instead. That is not a transcription artifact: the specification clause and Tier B' agree (KerML-textual-bnf.kebnf:1097), and nothing in the SysML grammar references it either. Derived as stated rather than repaired, because both pinned sources say the same thing and inventing a reference would be writing a rule the language does not have. grammar_consistency.py will report this production as unreachable before freeze, which is the right moment for it to become a question.",
   "evidence": [
     {
       "kind": "clause",

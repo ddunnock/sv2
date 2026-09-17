@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ConnectionDefinition",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "e5834f81a35a28ed92e55b1809dac0c6626c8fa9a77c3720bef1f1827c87c885",
+    "xtext_rule": "bef6f362da0fecd42337060ee7a08aadd724982267f7afa74fcff71c34a4a6b0",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "62332aafa282d99b8a648f584efbeef079a63e28d7e1ef144d729e82efa6cc6f"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.13.1 (ConnectionDefinitionandUsage.md, region_sha256 614b54fa6eb5405a)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ConnectionDefinition returns SysML::ConnectionDefinition :\n\tOccurrenceDefinitionPrefix ConnectionDefKeyword Definition\n;",
+    "metaclass": "SysML::ConnectionDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

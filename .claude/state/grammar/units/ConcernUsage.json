@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ConcernUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "33301f7393b32148336fe36ffd2c76ff1165025435284ac7f0eb7889aef161fd",
     "xtext_rule": "2ceb486c2ce4d7e27b82e6835a7bde00aba445ee2c2847647c89648e3da02452",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ConcernUsage returns SysML::ConcernUsage :\n\tOccurrenceUsagePrefix ConcernUsageKeyword ConstraintUsageDeclaration RequirementBody\n;",
     "metaclass": "SysML::ConcernUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ConcernUsage@sysml"
 }

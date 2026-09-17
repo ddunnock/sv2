@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "production": "FeatureChain",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "05b2a66fe9cecc9194cf0d87ab79e460f1d9238d692ef3a1c3346dbe45db6bfb",
+    "xtext_rule": "0c4f5f693308cf701e4d4dc7796a24336854aacfdee283e5a0bf6baf3afe1079",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "1a0ed92aad8e3ffadb999827b0af59146f61220d8d68fc6d03fbfce6ebf429ac"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.3.5 (FeatureChaining.md, region_sha256 c4ec248a1af3f390)",
+    "xtext_file": "KerMLExpressions.xtext",
+    "xtext_rule_text": "fragment FeatureChain returns SysML::Feature :\n\townedRelationship += OwnedFeatureChaining\n\t( '.' ownedRelationship += OwnedFeatureChaining )+\n;",
+    "metaclass": "SysML::Feature"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "OwnedFeatureChaining"
+      },
+      {
+        "k": "plus",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "."
+            },
+            {
+              "k": "ref",
+              "name": "OwnedFeatureChaining"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "decision": "One chaining feature, then ONE OR MORE dotted continuations. The repetition is '+' and not '*', so a feature chain has at least two segments by construction: a single name is not a chain.",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nThat is what divides FeatureChainMember's two alternatives. A single name goes through FeatureReferenceMember and only two or more reach OwnedFeatureChainMember, so the two alternatives do not overlap and no lookahead is needed past the first dot.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.5",
+      "note": "FeatureChain is stated there"
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:54Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

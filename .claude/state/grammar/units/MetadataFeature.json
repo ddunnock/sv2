@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MetadataFeature",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "814e74fbb17b63e9a835d6dc9a5ceb64c5393cec1e7ff119730c9fd1601fe160",
     "xtext_rule": "4619c37b57abec376095a44b25a49e59d14448cbe8ec5cb22a28c050ae918741",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "MetadataFeature returns SysML::MetadataFeature :\n\t( ownedRelationship += PrefixMetadataMember )*\n\t( '@' | 'metadata' ) MetadataFeatureDeclaration \n\t( 'about' ownedRelationship += Annotation \n\t\t( ',' ownedRelationship += Annotation )*\n\t)?\n\tMetadataBody\n;",
     "metaclass": "SysML::MetadataFeature"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in MetadataFeature@kerml"
 }

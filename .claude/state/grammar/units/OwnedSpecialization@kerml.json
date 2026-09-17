@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "OwnedSpecialization",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "ad96227dff1b1e1fe965c513743ba092b1ac32efd3d7c1c466cdfba35b0dc720",
+    "xtext_rule": "69deeaf9b8cb8563aa081007c1391f574109ba343968cb6e20726e3d441ccfd1",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "e9eda8a941254c30964611c278bf6ecfd50d43f552bdcf1601f75875e3585599"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.1.2 (Specialization.md, region_sha256 7eb140186fbf97b2)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "OwnedSpecialization returns SysML::Specialization :\n\t  general = [SysML::Type | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain\n;",
+    "metaclass": "SysML::Specialization"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

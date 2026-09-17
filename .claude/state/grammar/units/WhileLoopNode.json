@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "WhileLoopNode",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
     "xtext_rule": "2801cd270a1c682eb59be75d2b148f9d9a5b095347a12c76e05230425e6b7ff9",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "WhileLoopNode returns SysML::WhileLoopActionUsage :\n\tActionNodePrefix\n\t( 'while' ownedRelationship += ExpressionParameterMember\n\t| 'loop' ownedRelationship += EmptyParameterMember\n\t)\n\townedRelationship += ActionBodyParameterMember\n\t( 'until' ownedRelationship += ExpressionParameterMember ';' )?\n;",
     "metaclass": "SysML::WhileLoopActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in WhileLoopNode@sysml"
 }

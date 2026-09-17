@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FeaturePrefix",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "9e2b3655417d8748bd8cfe4e1f390d0cff6fd052368ea0581d687ef7c9b0d081",
     "xtext_rule": "abfecdf11094b8961abd346cc60feabc374d96f8d61a89349310872610375b4f",
@@ -53,7 +53,7 @@
     ]
   },
   "decision": "An end prefix with an optional owned cross feature member, or a basic prefix; then any number of prefix metadata members \u2014 as KerML 8.2.4.3.1 states it.",
-  "notes": "THE CLAUSE IS FLAGGED MALFORMED AND THIS PRODUCTION IS NOT AFFECTED. The pack reports an unmatched `)` on line 8 of the Features clause. That line is inside the Feature production \u2014 its own parentheses close at -1 \u2014 and this production's parentheses balance on their own, so it is derived from the clause as written. The repair of Feature is recorded on the Feature unit.\n\nA NOTATIONAL SLIP in the clause: the head is `FeaturePrefix :` with no metaclass and no `=`. Nothing about what parses turns on it.\n\nTHE XTEXT NAMES A DIFFERENT PRODUCTION: it writes `OwnedCrossingFeatureMember` where the clause writes `OwnedCrossFeatureMember`. The clause's name is the one in the specification's inventory and is used here; the pilot's is a pilot name.\n\nPrefixMetadataMember is stated differently in the two languages and is split (ADR-0014); this shared unit reaches whichever variant belongs to the grammar it is read in.\n\nFILED WITH OMG: the notational slip recorded above is KERML11-108, item 4. It concerns how the rule is written, not what it accepts, so it is recorded as a citation and not as a deviation.",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in FeaturePrefix@kerml\nTHE CLAUSE IS FLAGGED MALFORMED AND THIS PRODUCTION IS NOT AFFECTED. The pack reports an unmatched `)` on line 8 of the Features clause. That line is inside the Feature production \u2014 its own parentheses close at -1 \u2014 and this production's parentheses balance on their own, so it is derived from the clause as written. The repair of Feature is recorded on the Feature unit.\n\nA NOTATIONAL SLIP in the clause: the head is `FeaturePrefix :` with no metaclass and no `=`. Nothing about what parses turns on it.\n\nTHE XTEXT NAMES A DIFFERENT PRODUCTION: it writes `OwnedCrossingFeatureMember` where the clause writes `OwnedCrossFeatureMember`. The clause's name is the one in the specification's inventory and is used here; the pilot's is a pilot name.\n\nPrefixMetadataMember is stated differently in the two languages and is split (ADR-0014); this shared unit reaches whichever variant belongs to the grammar it is read in.\n\nFILED WITH OMG: the notational slip recorded above is KERML11-108, item 4. It concerns how the rule is written, not what it accepts, so it is recorded as a citation and not as a deviation.",
   "evidence": [
     {
       "kind": "clause",

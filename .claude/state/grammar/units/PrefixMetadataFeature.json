@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "PrefixMetadataFeature",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "814e74fbb17b63e9a835d6dc9a5ceb64c5393cec1e7ff119730c9fd1601fe160",
     "xtext_rule": "856a67afe673e882882ce27ebc3da1a9bf7f8f7150fe30e5a898e5f44fcc6ab1",
@@ -43,7 +43,7 @@
     }
   ],
   "derived_utc": "2026-09-17T13:11:58Z",
-  "notes": "ADJUDICATED follow_spec on 2026-09-17, recorded in deviations.json as PrefixMetadataTyping-chain. The Xtext's MetadataTyping (KerML.xtext:1094) admits only [Metaclass | QualifiedName], so it rejects `#a.b`. The clause's OwnedFeatureTyping also admits an OwnedFeatureChain. The narrowing puts a semantic requirement into syntax: validateMetadataFeatureMetaclass, KerML 8.3.4.12.3, is a validation constraint, not a grammar rule. The specification uses OwnedFeatureTyping uniformly for the prefix and non-prefix metadata forms. The corpus has no `#` followed by a chain.",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in PrefixMetadataFeature@kerml\nADJUDICATED follow_spec on 2026-09-17, recorded in deviations.json as PrefixMetadataTyping-chain. The Xtext's MetadataTyping (KerML.xtext:1094) admits only [Metaclass | QualifiedName], so it rejects `#a.b`. The clause's OwnedFeatureTyping also admits an OwnedFeatureChain. The narrowing puts a semantic requirement into syntax: validateMetadataFeatureMetaclass, KerML 8.3.4.12.3, is a validation constraint, not a grammar rule. The specification uses OwnedFeatureTyping uniformly for the prefix and non-prefix metadata forms. The corpus has no `#` followed by a chain.",
   "acceptance": {
     "has_rule": "pass",
     "has_evidence": "pass",

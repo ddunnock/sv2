@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "EndUsagePrefix",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "75719cca5586b38df687a0107da0631912855d8761fb90c9ddda65858c3f8a4b",
     "xtext_rule": "aef51b59ef943131b8853c2485b25c721c76973aaa6d89d4e1e9371df805a80b",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment EndUsagePrefix returns SysML::Usage :\n\tisEnd ?= 'end' ( ownedRelationship += OwnedCrossFeatureMember )?\n;",
     "metaclass": "SysML::Usage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in EndUsagePrefix@sysml"
 }

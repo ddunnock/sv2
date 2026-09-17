@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ViewpointDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7459f39ab652479ee981a5de77eafaa36aacdb763486ea4e70579adf871ea143",
     "xtext_rule": "42d393ee20d33c211d724ce400b270192d798906cd519bc610f13e18d89866aa",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ViewpointDefinition returns SysML::ViewpointDefinition :\n\tOccurrenceDefinitionPrefix ViewpointDefKeyword DefinitionDeclaration RequirementBody  \n;",
     "metaclass": "SysML::ViewpointDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ViewpointDefinition@sysml"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ChainingPart",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "9e2b3655417d8748bd8cfe4e1f390d0cff6fd052368ea0581d687ef7c9b0d081",
     "xtext_rule": "c8c02132111487bb7864897763ac547f384f4f66a42feacf532174a6d27b3400",
@@ -71,5 +71,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T13:01:11Z"
+  "verified_utc": "2026-09-17T13:01:11Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in ChainingPart@kerml"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "EmptyParameterMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "51563d50f62ef104216d455e22963a8f278a8f24ff793a7b8a257ff839d1dc6e",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "EmptyParameterMember returns SysML::ParameterMembership :\n\townedRelatedElement += EmptyUsage \n;",
     "metaclass": "SysML::ParameterMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in EmptyParameterMember@sysml"
 }

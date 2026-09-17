@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "CalculationBodyPart",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "abc851f79d420fb31d8d7518538400aa03794ce96b1c7f0ed791b9375eeee723",
+    "xtext_rule": "bdb95ddf2c434574e98fb2138f5c11838e5cf0fd9d616782998e681575679fdd",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "d3582cf9b0dfcb3a72a7987b45aa0732de2bfc8192dcb62197f47aa9c029ab8f"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.19 (CalculationsTextualNotation.md, region_sha256 ee541841395079da)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment CalculationBodyPart returns SysML::Type :\n\t=> CalculationBodyItem*\n\t( ownedRelationship += ResultExpressionMember )?\n;",
+    "metaclass": "SysML::Type"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedFeatureInverting",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7d4f74931218a74baf123f0e5410e142d8f6475ea12d68f4cb756ef02f45fdfd",
     "xtext_rule": "9abddc75364cfa2f245451ac648a69655d509d8946991826609dad364f672f79",
@@ -57,5 +57,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T13:11:58Z"
+  "verified_utc": "2026-09-17T13:11:58Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in OwnedFeatureInverting@kerml"
 }

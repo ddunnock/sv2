@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "SendNode",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "cf0bf22ae362f1a28f8dcf30bcf950e410f18b018592d5a5c0fd0b5cc7625d12",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "SendNode returns SysML::SendActionUsage :\n\tOccurrenceUsagePrefix ActionNodeUsageDeclaration? 'send' \n\t( ActionBody\n\t| ( => \n\t\t( ownedRelationship += NodeParameterMember SenderReceiverPart?\n\t    | ownedRelationship += EmptyParameterMember SenderReceiverPart\n\t    )\n\t    ActionBody\n\t  )\n\t)\n;",
     "metaclass": "SysML::SendActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in SendNode@sysml"
 }

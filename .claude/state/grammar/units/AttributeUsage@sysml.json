@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "AttributeUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "6d206d23052352721d14b67a13e29271a3afc1bb2d86a759033442afe6f73c92",
+    "xtext_rule": "fedb01682538b947fba328e8766a53ed7afcb619e8feaf5522aefd688a37b630",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "106e9fcd3f13024ad41c539317f7cd80e24dea735b175b85f67ee9c0b5211d5c"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.7 (AttributesTextualNotation.md, region_sha256 cba6aa952912cd22)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "AttributeUsage returns SysML::AttributeUsage :\n\tUsagePrefix AttributeUsageKeyword Usage\n;",
+    "metaclass": "SysML::AttributeUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

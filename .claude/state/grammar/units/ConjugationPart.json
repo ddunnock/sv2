@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ConjugationPart",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
     "xtext_rule": "d23c6de397066bebb8be111e6748799ed1d5ca37d36abdb80aace1b160d4d736",
@@ -76,5 +76,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T12:58:58Z"
+  "verified_utc": "2026-09-17T12:58:58Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in ConjugationPart@kerml"
 }

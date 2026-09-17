@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "production": "SuccessionFlow",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "41e1ec157d2dbb7927c23174c05181a1f4fbf25643ae9771de472916bc3c4275",
+    "xtext_rule": "1d92e6d24eff11ee3575ea1923f980df15eed82890db091f44073cbf332638d4",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "5b182334856d74fa72fc614cda0cf373b74f6e4cb29e7f0dc08001baa775074c"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.9.2 (Flows.md, region_sha256 150b0ccc1e0d5422)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "SuccessionFlow returns SysML::SuccessionFlow :\n\tFeaturePrefix 'succession' 'flow' FlowDeclaration TypeBody\n;",
+    "metaclass": "SysML::SuccessionFlow"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "FeaturePrefix"
+      },
+      {
+        "k": "kw",
+        "text": "succession"
+      },
+      {
+        "k": "kw",
+        "text": "flow"
+      },
+      {
+        "k": "ref",
+        "name": "FlowDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "TypeBody"
+      }
+    ]
+  },
+  "decision": "Two keywords, `succession` then `flow`, around the same FlowDeclaration and TypeBody that Flow takes. The pair is what distinguishes this production, and the two words are separate keywords rather than one token.",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nTHE SAME NAMING DEFECT AS Flow. The clause writes `SuccessionFlow = FeaturePrefix 'succession' 'flow' ItemFlowDeclaration TypeBody`, and ItemFlowDeclaration is defined nowhere while the clause's own FlowDeclaration is referenced nowhere. Checked, not assumed: ItemFlowDeclaration is absent from every derivation unit and from the Xtext production inventory. The pilot rule is `SuccessionFlow : FeaturePrefix 'succession' 'flow' FlowDeclaration TypeBody`. This rule uses FlowDeclaration, for the reasons set out at length on the Flow unit.\n\n`succession` AND `flow` ARE TWO TOKENS, NOT ONE. Both the clause and the Xtext write them as separate quoted literals, and both are independently in the pinned token set \u2014 `succession` opens a Succession and `flow` opens a Flow. Nothing lexical joins them.\n\nFOR A PARSER AUTHOR: this is the reason `succession` cannot be committed to on sight. Seeing `succession`, a parser must look at the next token to know whether it is parsing a Succession or a SuccessionFlow, and the corpus contains both \u2014 `succession first operated then inOperable;` and `succession flow exposure[1] of Exposure from step1.xrsl to step2.xsf;`. One token of lookahead past the keyword is enough, but zero is not.\n\nThe unbalanced parenthesis in this clause belongs to PayloadFeature, not to this production; see the Flow unit.\n\nCORPUS: `succession flow exposure[1] of Exposure from step1.xrsl to step2.xsf;` exercises both keywords, the `of` payload form, the `from`/`to` ends and the `;` body.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.9.2",
+      "note": "states SuccessionFlow with the two keywords, subject to the ItemFlowDeclaration naming defect described in the notes"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "`SuccessionFlow : FeaturePrefix 'succession' 'flow' FlowDeclaration TypeBody`"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Behavior Examples/TakePicture.kerml",
+      "note": "contains `succession flow exposure[1] of Exposure from step1.xrsl to step2.xsf;`, which also shows why `succession` alone cannot decide the production"
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:58Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

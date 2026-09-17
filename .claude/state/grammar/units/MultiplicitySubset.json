@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MultiplicitySubset",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8495e77a2c661ef306d5c397c34b70d3e5b299f9d00d7c0b98bdc36f47423af3",
     "xtext_rule": "3d828f98fea4921ceb7742e2f9968fe6d40b56b22b8137bee67c0ec48bb95107",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "MultiplicitySubset returns SysML::Multiplicity :\n\t'multiplicity' Identification? Subsets TypeBody\n;",
     "metaclass": "SysML::Multiplicity"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in MultiplicitySubset@kerml"
 }

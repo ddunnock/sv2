@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "RequirementVerificationUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "1db5b44a338a0a23c3e3429dca4d9c556047a96149d863f795e58b73b149d1f2",
+    "xtext_rule": "a4212f99a6b657333bd4a3de4576a51d1224131544b522aff493244e6c6cdfe3",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "3979b346876a58bcffafc9b4b0e59a7b425a9d9a23f479bca6f58cd076bd3b74"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.24 (VerificationCasesTextualNotation.md, region_sha256 a699e664918dcb65)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "RequirementVerificationUsage returns SysML::RequirementUsage :\n      ownedRelationship += OwnedReferenceSubsetting FeatureSpecialization* \n      RequirementBody\n    | ( UsageExtensionKeyword* RequirementUsageKeyword | UsageExtensionKeyword+ )\n      ConstraintUsageDeclaration RequirementBody\n;",
+    "metaclass": "SysML::RequirementUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

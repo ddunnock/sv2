@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ActionBodyItem",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "123fdd535dd69454a171e663a98bdb2619ca5518f3656d521f100f63eb3d01b2",
+    "xtext_rule": "5c8f36779f2bcf9b0a564c1bd53fcb946fe76c195debc760637a6e3fd8f12d55",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "b23b8e7e53d6c8ae220a73729323f839ceba9f5a55edafe10518899bb6d3720c"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.1 (ActionDefinitions.md, region_sha256 4e3ffb79f011ef83)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment ActionBodyItem returns SysML::Type :\n\t  ownedRelationship += Import\n\t| ownedRelationship += AliasMember\n\t| ownedRelationship += DefinitionMember \n\t| ownedRelationship += VariantUsageMember\n\t| ownedRelationship += NonOccurrenceUsageMember\n\t| ( ownedRelationship += EmptySuccessionMember )?\n\t  ownedRelationship += StructureUsageMember\n\t| ownedRelationship += InitialNodeMember\n\t  ( => ownedRelationship += TargetSuccessionMember )*\n\t| ( ownedRelationship += EmptySuccessionMember )? \n\t  ownedRelationship += ( BehaviorUsageMember | ActionNodeMember )\n\t  ( => ownedRelationship += TargetSuccessionMember )*\n\t| ownedRelationship += GuardedSuccessionMember\n;",
+    "metaclass": "SysML::Type"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "EmptyMultiplicity",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "729e11bfb00a5a13f3ba4b6f6db4994e5bd6df5d4d6eb952ac3b8f19436b9f97",
+    "xtext_rule": "b09fff7c6abde4500ab7f27574b5e26760a382f387a6fc790570b4c79263a260",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "2616e3c29ed56c5ef9cb56dd72532690268be4f8cc5916ad3a4eaec77a2e2566"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.9.1 (OccurrenceDefinitions.md, region_sha256 2a70ef572e61dedf)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "EmptyMultiplicity returns SysML::Multiplicity :\n\t{SysML::Multiplicity}\n;",
+    "metaclass": "SysML::Multiplicity"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

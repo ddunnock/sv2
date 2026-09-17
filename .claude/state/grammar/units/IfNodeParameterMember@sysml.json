@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "IfNodeParameterMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
+    "xtext_rule": "2c11bb91ea4c8e808936994b502b0925d253fb37de976dbeb19c16a2e9f099f8",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "68621e9cac7ba8be0ff20ccb495fbbc3ed2f8f0fba07d67e05e1933cfa8c0687"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.7 (StructuredControlActionUsages.md, region_sha256 90c294385874fdc1)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "IfNodeParameterMember returns SysML::ParameterMembership :\n\townedRelatedElement += IfNode \n;",
+    "metaclass": "SysML::ParameterMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Namespace",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "05d6d5f37d8b9f1e7ac7d05e166f70177a93aa02d6a11aa9711bf654061a4fca",
+    "xtext_rule": "1f1fd101ec66e7523182c9f9eede3ca6ab241ec04cd82cdea6ccb6e2e9ca9d23",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "3189657d9d9a8f6d9a7b08406999b6d3a09e92fb5c6f274e30dc7afa2276b434"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.3.4.1 (Namespaces.md, region_sha256 893fa9cef98e60fc)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Namespace returns SysML::Namespace :\n\t( ownedRelationship += PrefixMetadataMember )*\n\tNamespaceDeclaration NamespaceBody\n;",
+    "metaclass": "SysML::Namespace"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

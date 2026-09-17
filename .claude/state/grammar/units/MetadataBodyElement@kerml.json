@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "MetadataBodyElement",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "814e74fbb17b63e9a835d6dc9a5ceb64c5393cec1e7ff119730c9fd1601fe160",
+    "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "31447a76278d4f6aac84ac2e81c8dd8c51287ec47e4c754f2f57c712d2f23fcc"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.12 (MetadataConcreteSyntax.md, region_sha256 30fa0599ab27c325)",
+    "xtext_file": "",
+    "xtext_rule_text": "",
+    "metaclass": ""
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MetadataBodyUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
     "xtext_rule": "6ecf269b7ecf2e2d21e5faac8e086eebed274239583e56220d63b75e228f7f72",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "MetadataBodyUsage returns SysML::ReferenceUsage :\n\t'ref'? ( ':>>' | 'redefines' )? ownedRelationship += OwnedRedefinition \n\tFeatureSpecializationPart? ValuePart?\n\tMetadataBody\n;",
     "metaclass": "SysML::ReferenceUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in MetadataBodyUsage@sysml"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OccurrenceUsagePrefix",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "465ccd42d9aa0196c8527be21292803c8fcc974662a742655dbd027182d072c3",
     "xtext_rule": "904c4b3ebf46864909d878250b6f00b17c2e01cb9b786851b6e9109c62090eb9",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment OccurrenceUsagePrefix returns SysML::OccurrenceUsage :\n\t( EndUsagePrefix\n\t| BasicUsagePrefix\n\t  ( isIndividual ?= 'individual' )?\n\t  ( portionKind = PortionKind )?\n\t)\n\tUsageExtensionKeyword*\n;",
     "metaclass": "SysML::OccurrenceUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in OccurrenceUsagePrefix@sysml"
 }

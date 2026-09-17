@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "DataType",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "376e762ed796b3075e1f2cec00636632dae0ef252367a6c1904be9c0b65ca82d",
     "xtext_rule": "acd4fbfc884fd89616d8536dc11b6f18414346f01c60780a61cd47c3b6519286",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "DataType returns SysML::DataType :\n\tTypePrefix 'datatype' \n\tClassifierDeclaration TypeBody\n;",
     "metaclass": "SysML::DataType"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in DataType@kerml"
 }

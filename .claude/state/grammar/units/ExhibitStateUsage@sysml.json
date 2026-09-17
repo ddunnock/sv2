@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ExhibitStateUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "8ccbf293e22630ecd9dee2be74eb644388b000ac1b77b211d17cb81d7c7711c5",
+    "xtext_rule": "a492527bb29a53592b66082f0018900a6052abf6a588b093cb5ca15fa95d5ac2",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "6bb3cf0545627de9430d6f3466caf765294b4b984f3322e1ce969a3a23a8d9a4"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.18.2 (StateUsages.md, region_sha256 01ed9dadf35f24a7)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ExhibitStateUsage returns SysML::ExhibitStateUsage :\n    OccurrenceUsagePrefix 'exhibit' \n    ( ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?\n    | StateUsageKeyword UsageDeclaration?\n    )\n    ValuePart? StateUsageBody\n;",
+    "metaclass": "SysML::ExhibitStateUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

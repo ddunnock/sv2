@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ConjugatedPortDefinition",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "5471b257abf8680830d0b23a122517730b75daa86ca89a3638f89da2550a5fd8",
+    "xtext_rule": "7e483e4e7ca61b37ee74fca8f402c86be41e2291a52152a7fcc4cef91af1fddf",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "0851cdaa365b642c39df3ca1606d80698111fc1181770cdb96bffb4f4e232440"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.12 (PortsTextualNotation.md, region_sha256 6e34790c29521657)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ConjugatedPortDefinition returns SysML::ConjugatedPortDefinition :\n\townedRelationship += PortConjugation\n;",
+    "metaclass": "SysML::ConjugatedPortDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

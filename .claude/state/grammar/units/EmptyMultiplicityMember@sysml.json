@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "EmptyMultiplicityMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "729e11bfb00a5a13f3ba4b6f6db4994e5bd6df5d4d6eb952ac3b8f19436b9f97",
+    "xtext_rule": "cf6a73a25c0b57f92f7dc18e88e3282668816998a61dad6b5b35f206ffce5a97",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "c74e48d7a2483795658046110e0cfde499d53afc38a921dd1934d4f8b2dd9662"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.9.1 (OccurrenceDefinitions.md, region_sha256 2a70ef572e61dedf)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "EmptyMultiplicityMember returns SysML::OwningMembership :\n        ownedRelatedElement += EmptyMultiplicity\n;",
+    "metaclass": "SysML::OwningMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

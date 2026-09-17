@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "StateUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "8ccbf293e22630ecd9dee2be74eb644388b000ac1b77b211d17cb81d7c7711c5",
+    "xtext_rule": "f17a42074f31b87d3a9a43f645991cc7fe09b86c069ae223f8d25452707a5e52",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "fcf819e1de092fa71def844a56fd7d570eb0d8a9d085b13e44e6fc614ca7ce32"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.18.2 (StateUsages.md, region_sha256 01ed9dadf35f24a7)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "StateUsage returns SysML::StateUsage :\n\tOccurrenceUsagePrefix StateUsageKeyword ActionUsageDeclaration StateUsageBody\n;",
+    "metaclass": "SysML::StateUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

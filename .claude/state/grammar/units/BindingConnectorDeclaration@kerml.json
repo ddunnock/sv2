@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "production": "BindingConnectorDeclaration",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "391531e6e650814a25fb5633fbbab082d043e33faeb928c07c60defac7c17ae9",
+    "xtext_rule": "ee5764a4f1919b7292035dc7feeeea0031bb5e320b54e5bf6be429118c6f7004",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "fc538ae7910e1cd75bb59e3638e7767d1d143b61e450ca37c7c9a1ce641acf5e"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.5.2 (BindingConnectors.md, region_sha256 025789963d4c8b5d)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment BindingConnectorDeclaration returns SysML::BindingConnector :\n\t  FeatureDeclaration\n\t  ( 'of' ownedRelationship += ConnectorEndMember \n\t    '=' ownedRelationship += ConnectorEndMember )?\n\t| ( isSufficient ?= 'all' )?\n\t  ( 'of'? ownedRelationship += ConnectorEndMember \n\t    '=' ownedRelationship += ConnectorEndMember )?\n;",
+    "metaclass": "SysML::BindingConnector"
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "FeatureDeclaration"
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "seq",
+              "items": [
+                {
+                  "k": "kw",
+                  "text": "of"
+                },
+                {
+                  "k": "ref",
+                  "name": "ConnectorEndMember"
+                },
+                {
+                  "k": "kw",
+                  "text": "="
+                },
+                {
+                  "k": "ref",
+                  "name": "ConnectorEndMember"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "opt",
+            "item": {
+              "k": "kw",
+              "text": "all"
+            }
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "seq",
+              "items": [
+                {
+                  "k": "opt",
+                  "item": {
+                    "k": "kw",
+                    "text": "of"
+                  }
+                },
+                {
+                  "k": "ref",
+                  "name": "ConnectorEndMember"
+                },
+                {
+                  "k": "kw",
+                  "text": "="
+                },
+                {
+                  "k": "ref",
+                  "name": "ConnectorEndMember"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.5.5.2 states it, with two alternatives. The first is a FeatureDeclaration, optionally followed by `of` end `=` end. The second is an optional `all`, then optionally the two ends, with `of` itself optional. The Xtext fragment is identical. The second alternative derives the empty string, so `binding;` alone is a BindingConnector. Where there is no FeatureDeclaration, `of` may be omitted, giving the common `binding a = b;`. No corpus file uses the empty form or `all`; those rest on the clause and the Xtext.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.5.2",
+      "note": "BindingConnectorDeclaration : BindingConnector = FeatureDeclaration ( 'of' ConnectorEndMember '=' ConnectorEndMember )? | ( isSufficient ?= 'all' )? ( 'of'? ConnectorEndMember '=' ConnectorEndMember )?"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Connectors.kerml",
+      "note": "line 14: `binding a = b;`, the second alternative without `of`"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/ExtendedOccurrences.kerml",
+      "note": "line 21: `binding result.portionOf = that;`, with chained ends"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment BindingConnectorDeclaration: the same two alternatives. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:40:27Z",
+  "verified_utc": "2026-09-17T14:22:53Z",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

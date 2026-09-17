@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ObjectiveMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "e3a278925d36146fdb1fe9b1da78351269daeb41617744492f5e30c352341669",
     "xtext_rule": "1466de95e7192d9eb6ce3757acd826b81df1100614e4d95c77f64de89c7aa2c8",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ObjectiveMember returns SysML::ObjectiveMembership :\n\tMemberPrefix 'objective' ownedRelatedElement += ObjectiveRequirementUsage \n;",
     "metaclass": "SysML::ObjectiveMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ObjectiveMember@sysml"
 }

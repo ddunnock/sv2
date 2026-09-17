@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ItemUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "b9795a6db6cf2bdeaf62f2330cabfe65fdaa3a068aeadf7ee2ccfb7d6699ccdd",
+    "xtext_rule": "478c60a85c1950357859cb6a025bec1df16237e7fc3c972a648a69fadfed6685",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "db3e6b798e623075fd480b28817ada33cf6d06a97823bf79ab4482e092a049a8"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.10 (ItemsTextualNotation.md, region_sha256 ee6f17dc0bf0b805)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ItemUsage returns SysML::ItemUsage :\n\tOccurrenceUsagePrefix ItemUsageKeyword Usage\n;",
+    "metaclass": "SysML::ItemUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

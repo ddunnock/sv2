@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Conjugation",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "19a37282e94b6fce4326461870aa9124231777e22d5dace74e78eac47cc6ba4e",
+    "xtext_rule": "d0734391274363888ca1eaa3136b614480547d40ff1e1adca651ca8a875d47a2",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "e25d2d6be44f3a4dcb5beff0e8eb98680e66f3719f66d28588bd0651270fe57f"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.1.3 (Conjugation.md, region_sha256 45b19bd161ba41dc)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Conjugation returns SysML::Conjugation :\n\t( 'conjugation' Identification? )?\n    'conjugate' \n    ( conjugatedType = [SysML::Type | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain )\n    ( '~' | 'conjugates') \n    ( originalType = [SysML::Type | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain )\n\tRelationshipBody\n;",
+    "metaclass": "SysML::Conjugation"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

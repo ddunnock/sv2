@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "MetadataUsageDeclaration",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
+    "xtext_rule": "6a528fc9a0be68a13e1d250b22316b0fadfa4d596eb70e87777be8e3a4300bd7",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "e8bafe68148a33490c08593ffb6897edbc20c8b33920b0244e09b48a5928c792"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.27 (MetadataTextualNotation.md, region_sha256 69251565feee7639)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment MetadataUsageDeclaration returns SysML::MetadataUsage :\n\t( Identification? DefinedByKeyword )? ownedRelationship += MetadataTyping\n;",
+    "metaclass": "SysML::MetadataUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

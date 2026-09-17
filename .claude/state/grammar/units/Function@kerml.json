@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Function",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "8424c7798f166fa9186918bfbb6d4192303bf44e0025da69f4bccddf2615ab77",
+    "xtext_rule": "7f0fd49de20b26df4dd3b130b00661d08559b151bd625efc9ce2e7a227b7b9c6",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "2a5d3da11a55ce396ef33670252dc4edcd1694e6524ae31c04d218ebcea3b4c7"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.7.1 (Functions.md, region_sha256 f8fd09bcff0e258a)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Function returns SysML::Function :\n\tTypePrefix 'function' \n\tClassifierDeclaration FunctionBody  \n;",
+    "metaclass": "SysML::Function"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

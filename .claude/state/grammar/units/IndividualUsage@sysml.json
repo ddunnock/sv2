@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "IndividualUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "465ccd42d9aa0196c8527be21292803c8fcc974662a742655dbd027182d072c3",
+    "xtext_rule": "4e14c24785f5a9677f5fe7fe2260bd3b7a7d8da10a8c672e346c2b9fd8024433",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "12e34beb1379b05dabfce36a265e7b7f5688cd6b3e60e075f76291ed833b340d"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.9.2 (OccurrenceUsages.md, region_sha256 6dfed224798030c3)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "IndividualUsage returns SysML::OccurrenceUsage :\n\tBasicUsagePrefix isIndividual ?= 'individual' \n\tUsageExtensionKeyword* Usage\n;",
+    "metaclass": "SysML::OccurrenceUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

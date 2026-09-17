@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "UsageExtensionKeyword",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "75719cca5586b38df687a0107da0631912855d8761fb90c9ddda65858c3f8a4b",
+    "xtext_rule": "d3fc8ac19d2e368073aadac93986014f43b425899627c98a00b95c8817d04a87",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "a1541b7c2f42a4b4c407dc542f52b1cfc9063cbc7ec2172f2c9ec3c93d525556"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.6.2 (Usages.md, region_sha256 a6f6e20afeed05e4)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment UsageExtensionKeyword returns SysML::Usage :\n\townedRelationship += PrefixMetadataMember\n;",
+    "metaclass": "SysML::Usage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

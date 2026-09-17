@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "OccurrenceDefinitionPrefix",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "729e11bfb00a5a13f3ba4b6f6db4994e5bd6df5d4d6eb952ac3b8f19436b9f97",
+    "xtext_rule": "15889918d5d067e524906809fa8dc581795c5e4b3a2ca91f13891c81a8fcfbc3",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "3c0b2aee78ea9c91d7e033ae4fb435a6647e0758a7a5866ee8a74501786d33f9"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.9.1 (OccurrenceDefinitions.md, region_sha256 2a70ef572e61dedf)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment OccurrenceDefinitionPrefix returns SysML::OccurrenceDefinition :\n\tBasicDefinitionPrefix?\n\t( isIndividual ?= 'individual' \n\t  ownedRelationship += EmptyMultiplicityMember\n\t)?\n\tDefinitionExtensionKeyword*\n;",
+    "metaclass": "SysML::OccurrenceDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

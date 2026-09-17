@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Class",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "72e97363a606fc5b34b822ff70dc9658e2c0c2046e2999c7d8f5a29aa40425bd",
+    "xtext_rule": "44996063792031c22ea3ab19f1a180c6b9fa974b650511fe13b8067cccbd29a7",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "3c7def7837f688001661cf8305ce83cc43cc599bf0099ccb67e5137aef54bdeb"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.2 (ClassesConcreteSyntax.md, region_sha256 edf748ee822dc591)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Class returns SysML::Class :\n\tTypePrefix 'class' \n\tClassifierDeclaration TypeBody\n;",
+    "metaclass": "SysML::Class"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

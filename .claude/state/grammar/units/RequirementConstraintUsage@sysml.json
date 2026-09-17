@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "RequirementConstraintUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
+    "xtext_rule": "9e7ba291fb0e6c612793adffb41a12e7853ba657d60a71da2fddb22f98ca2225",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "f14b1c10969ed4a54ab2b7a560d5530b21e81d2f61932e5a53e2a7e81e1ac455"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.1 (RequirementDefinitions.md, region_sha256 fd824f1d9da5f780)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "RequirementConstraintUsage returns SysML::ConstraintUsage :\n      ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart? \n      CalculationBody\n    | ( UsageExtensionKeyword* ConstraintUsageKeyword | UsageExtensionKeyword+ )\n      ConstraintUsageDeclaration CalculationBody\n;",
+    "metaclass": "SysML::ConstraintUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

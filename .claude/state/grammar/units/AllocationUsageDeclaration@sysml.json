@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "AllocationUsageDeclaration",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "cdcac22d144dab18c6832109fc69e75bca7271a2159ea7c99c78fe2f1508cacb",
+    "xtext_rule": "12ce1d0d1aa708545bc496d3987f8fd1826dd49214a50f295f71ca9f5a0ffccb",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "4d479125dc4f5a4719a7ea1c9a2cacf4d6456833a3f7aee46e77a33c1ca16c45"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.15 (AllocationsTextualNotation.md, region_sha256 c49ff28fffcd621a)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment AllocationUsageDeclaration returns SysML::AllocationUsage :\n\t    AllocationUsageKeyword UsageDeclaration? ( AllocateKeyword ConnectorPart )?\n\t  | AllocateKeyword ConnectorPart\n;",
+    "metaclass": "SysML::AllocationUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

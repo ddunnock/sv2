@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "InterfacePart",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "bffd8b9322d613cb8c3a15449371ae9a03700ef3ca5dde0052db50b7149ba822",
     "xtext_rule": "a250683a8aacaac3a465f3b66b2fa58b8601fe00eb24facfcaec6c2743615053",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment InterfacePart returns SysML::ConnectionUsage :\n\tBinaryInterfacePart | NaryInterfacePart\n;",
     "metaclass": "SysML::ConnectionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in InterfacePart@sysml"
 }

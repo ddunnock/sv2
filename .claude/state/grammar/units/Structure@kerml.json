@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Structure",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "d064530ac2edb0f8ad7374817c251a3fae8417b90fd593c0606f90b81667cfdb",
+    "xtext_rule": "bb78d8fec9454b58d5a2263c25c6d16cc6211ae2a84bdcb39952798512e6befe",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "cacdcd8999ae63acdf4cd73d2a30253a87d32a380615cfd22bb14d81ca150672"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.3 (StructuresConcreteSyntax.md, region_sha256 c6317df5ac7f5f9f)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Structure returns SysML::Structure :\n\tTypePrefix 'struct' \n\tClassifierDeclaration TypeBody\n;",
+    "metaclass": "SysML::Structure"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

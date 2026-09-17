@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "production": "BindingConnector",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "391531e6e650814a25fb5633fbbab082d043e33faeb928c07c60defac7c17ae9",
+    "xtext_rule": "5c74bf222e2cb832dc2d18a4e35423ff0f8d0aeeef1732ed61d91ec4c9ad0c1e",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "23c27d37de1150566ebed1d834260494f625eeb001471d46fcc27fa840a6c441"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.5.2 (BindingConnectors.md, region_sha256 025789963d4c8b5d)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "BindingConnector returns SysML::BindingConnector :\n\tFeaturePrefix 'binding' \n\tBindingConnectorDeclaration TypeBody\t\n;",
+    "metaclass": "SysML::BindingConnector"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "FeaturePrefix"
+      },
+      {
+        "k": "kw",
+        "text": "binding"
+      },
+      {
+        "k": "ref",
+        "name": "BindingConnectorDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "TypeBody"
+      }
+    ]
+  },
+  "decision": "A feature prefix, `binding`, the declaration, and the body \u2014 four parts, exactly as KerML 8.2.5.5.2 states it, and the Xtext agrees. Everything that varies about a binding connector lives in BindingConnectorDeclaration and belongs to that unit.",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nThe clause and the Xtext agree exactly; nothing is inlined and there is no workaround to decline.\n\nHOW THE DECLARATION-LESS FORM IS REACHED, since it bears on a conflict elsewhere: BindingConnectorDeclaration offers the optionality through ALTERNATION rather than through a `?` on FeatureDeclaration. Its first alternative requires a FeatureDeclaration and then an optional `of ... = ...`; its second omits the declaration entirely and takes an optional `'of'? end '=' end`. So `binding a = b;` parses via the second alternative. That is a different mechanism from the `FeatureDeclaration?` this grammar meets in Connector, and different again from the four productions where the clause writes it mandatory while the Xtext makes it optional. Recorded because the three mechanisms are easy to conflate; resolved nowhere here.\n\nFOR A PARSER AUTHOR: the deciding token for BindingConnectorDeclaration's two alternatives is not at their start \u2014 both can begin with a name \u2014 but at whether `of` or `=` follows. That is that unit's problem, not this one's.\n\nCORPUS: `binding a = b;` and `binding result.portionOf = that;` exercise the keyword and the declaration-less alternative with a `;` body.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.5.2",
+      "note": "states BindingConnector as FeaturePrefix 'binding' BindingConnectorDeclaration TypeBody"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "identical body"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Connectors.kerml",
+      "note": "contains `binding a = b;`"
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:53Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

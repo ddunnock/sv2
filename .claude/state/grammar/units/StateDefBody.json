@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "StateDefBody",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "6f7cd7408a7b364e4a1c9cb070f712b9229c02405be681c2ba1907ce42b2860a",
     "xtext_rule": "38e5311e2ffc8e0ef1a73b7dc6fb1438f01b501163612cff4a1a8a633916033e",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment StateDefBody returns SysML::StateDefinition :\n\t';' | ( isParallel ?= 'parallel' )? '{' StateBodyPart '}'\n;",
     "metaclass": "SysML::StateDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in StateDefBody@sysml"
 }

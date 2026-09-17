@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "TransitionUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
+    "xtext_rule": "881c75bf07c1c6ea5c67608f905d1f80907cb685f87ea4ad2d66a041d02c238f",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "4f3f2b380385578ee23398eee683fdb8af3f2c6fe077652c7482778e07bcf71d"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "TransitionUsage returns SysML::TransitionUsage :\n\tTransitionUsageKeyword ( UsageDeclaration? 'first' )? \n\townedRelationship += TransitionSourceMember\n\townedRelationship += EmptyParameterMember\n\t( ownedRelationship += EmptyParameterMember \n\t  ownedRelationship += TriggerActionMember )?\n\t( ownedRelationship += GuardExpressionMember )?\n\t( ownedRelationship += EffectBehaviorMember )?\n\t'then' ownedRelationship += TransitionSuccessionMember\n\tActionBody\n;",
+    "metaclass": "SysML::TransitionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

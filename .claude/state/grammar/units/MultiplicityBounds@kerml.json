@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "production": "MultiplicityBounds",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "8495e77a2c661ef306d5c397c34b70d3e5b299f9d00d7c0b98bdc36f47423af3",
+    "xtext_rule": "04f019b5c29b4e10033ff9fbb38a27317d1c3ef53328a6759c69742c06403dc3",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "29b4f85238336eb98e448a87d12013849e0e3acae37b2454fd98a3597633da39"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.11 (MultiplicitiesConcreteSyntax.md, region_sha256 01e46f53f28bef82)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment MultiplicityBounds returns SysML::MultiplicityRange :\n\t// TODO: Allow general expressions for bounds. (Causes LL parsing issues.)\n\t'[' ownedRelationship += MultiplicityExpressionMember\n\t      ( '..' ownedRelationship += MultiplicityExpressionMember )? ']'\n;",
+    "metaclass": "SysML::MultiplicityRange"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "["
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "ref",
+              "name": "MultiplicityExpressionMember"
+            },
+            {
+              "k": "kw",
+              "text": ".."
+            }
+          ]
+        }
+      },
+      {
+        "k": "ref",
+        "name": "MultiplicityExpressionMember"
+      },
+      {
+        "k": "kw",
+        "text": "]"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.5.11 states it: `[`, an optional lower bound followed by `..`, the upper bound, and `]`. So a single member is the upper bound. The Xtext groups it the other way, as `'[' member ( '..' member )? ']'`, which accepts the same token sequences. It differs only in whether a lone member is the first or the second member, and that is a matter for the abstract syntax, where the clause governs. The Xtext also carries a TODO to allow general expressions for the bounds, which 'causes LL parsing issues'. The clause does not allow them either: MultiplicityExpressionMember is limited to a LiteralExpression or a FeatureReferenceExpression. So nothing is narrowed relative to the specification, and nothing is ported.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.11",
+      "note": "MultiplicityBounds : MultiplicityRange = '[' ( ownedRelationship += MultiplicityExpressionMember '..' )? ownedRelationship += MultiplicityExpressionMember ']'"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/TimeVaryingFeaturesEnhanced.kerml",
+      "note": "line 71: `portion operated [0..*] :> timeSlices {`, both bounds"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Behavior Examples/TakePicture.kerml",
+      "note": "line 4: `feature camera: Camera[1] subsets involvedObjects;`, a single bound"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment MultiplicityBounds: '[' member ( '..' member )? ']', with a TODO that general expressions cause LL parsing issues. The same tokens as the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:28:33Z",
+  "verified_utc": "2026-09-17T14:22:56Z",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

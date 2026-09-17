@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "InterfaceOccurrenceUsageMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8e1a8617b6490e5ffe56b25437884cec824953583966b0cc211d0086da41e061",
     "xtext_rule": "f30c90042ffb5b786663d00a7a3b0a21cdea8f33ddb83f0d3078156854555e80",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "InterfaceOccurrenceUsageMember returns SysML::FeatureMembership :\n\tMemberPrefix ownedRelatedElement += InterfaceOccurrenceUsageElement \n;",
     "metaclass": "SysML::FeatureMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in InterfaceOccurrenceUsageMember@sysml"
 }

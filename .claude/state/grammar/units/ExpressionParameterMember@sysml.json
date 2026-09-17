@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ExpressionParameterMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
+    "xtext_rule": "5cb19663fe96eb17dbdbf0a76f3201f35961af2423111f46442bf9fef25970e8",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "4ead759f0ed879a0ca6a56ca1d2e10db5b8f995c383115d53a83455a507d12eb"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.7 (StructuredControlActionUsages.md, region_sha256 90c294385874fdc1)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ExpressionParameterMember returns SysML::ParameterMembership :\n\townedRelatedElement += OwnedExpression \n;",
+    "metaclass": "SysML::ParameterMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

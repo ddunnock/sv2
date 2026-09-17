@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ActionBody",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "123fdd535dd69454a171e663a98bdb2619ca5518f3656d521f100f63eb3d01b2",
     "xtext_rule": "b521e0bf050a1042f67b18cc76e622435b416cd9c13bb23f839f0eaaa25df8e6",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment ActionBody returns SysML::Type :\n\t  ';' \n\t  // Note: Using a syntactic predicate here seems to avoid a possible infinite loop\n\t  // while incrementally parsing.\n\t| '{' => ActionBodyItem* '}' \n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ActionBody@sysml"
 }

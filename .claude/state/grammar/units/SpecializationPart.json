@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "SpecializationPart",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
     "xtext_rule": "0f4a98e5b85e91b1f6601fdc46821db4512999581bcc828dfe49616354917775",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment SpecializationPart returns SysML::Type :\n      ( ':>' | 'specializes' ) ownedRelationship += OwnedSpecialization\n      ( ',' ownedRelationship += OwnedSpecialization )*\n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in SpecializationPart@kerml"
 }

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "InterfaceOccurrenceUsageElement",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "8e1a8617b6490e5ffe56b25437884cec824953583966b0cc211d0086da41e061",
+    "xtext_rule": "8c0145e31dd4db3d59b58c88ef06c075f9c1e8daa8d82d240a756698ba6b1631",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "0940757f21655be95ceb67cf1effed2a4bc5641504ee424e396bd0e7cb5fbd61"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.14.1 (InterfaceDefinitions.md, region_sha256 86fc09c62954e744)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "InterfaceOccurrenceUsageElement returns SysML::Usage :\n\tDefaultInterfaceEnd | StructureUsageElement | BehaviorUsageElement\n;",
+    "metaclass": "SysML::Usage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

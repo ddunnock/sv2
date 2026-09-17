@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "production": "OwnedExpressionReferenceMember",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "dfcf21afde47835f1a859f96a3517e36df8afbbcf70345c2f910b60f1cb700ef",
+    "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "9d0045edcd6c8524a7141fe3068f27d7782d2747af1de6078b898241a65d93e1"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.8.1 (OperatorExpressions.md, region_sha256 423205c742ed7cc2)",
+    "xtext_file": "",
+    "xtext_rule_text": "",
+    "metaclass": ""
+  },
+  "rule": {
+    "k": "ref",
+    "name": "OwnedExpressionReference"
+  },
+  "decision": "`ownedRelationship += OwnedExpressionReference`.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.1",
+      "note": "OwnedExpressionReferenceMember is stated in OperatorExpressions"
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:57Z",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

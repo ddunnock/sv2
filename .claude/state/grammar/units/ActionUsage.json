@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ActionUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "1d21a99bccb8810f3e974cbe685772d27ca61795e03b0cfdb71408760696f3d8",
     "xtext_rule": "12902e564a5666af400c023c4295429182f43806fc213d75b3588870a72bd240",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ActionUsage returns SysML::ActionUsage :\n\tOccurrenceUsagePrefix ActionUsageKeyword ActionUsageDeclaration ActionBody\n;",
     "metaclass": "SysML::ActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ActionUsage@sysml"
 }

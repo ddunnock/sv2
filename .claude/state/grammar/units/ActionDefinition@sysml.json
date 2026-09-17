@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ActionDefinition",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "123fdd535dd69454a171e663a98bdb2619ca5518f3656d521f100f63eb3d01b2",
+    "xtext_rule": "e0b0d990484b22de5edb1f88ebd13a0a479cf33366feaf2a3245aef5a353c44d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "0a5e1c9e5c7efe4d2e5786a3878c55bc7ff8571f407b2f9a86ba0fb6e2b6ca4c"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.1 (ActionDefinitions.md, region_sha256 4e3ffb79f011ef83)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ActionDefinition returns SysML::ActionDefinition :\n\tOccurrenceDefinitionPrefix ActionDefKeyword DefinitionDeclaration ActionBody\n;",
+    "metaclass": "SysML::ActionDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

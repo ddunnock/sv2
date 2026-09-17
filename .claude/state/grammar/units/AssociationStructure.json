@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "AssociationStructure",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "d69efed553a55e016333f7042f86790f5591437c9a208717313276863802d7a4",
     "xtext_rule": "7b3391172f1860cde0ccdebe351794255e3b66dfc28e5915a0c3f90f69e38199",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "AssociationStructure returns SysML::AssociationStructure :\n\tTypePrefix 'assoc' 'struct'\n\tClassifierDeclaration TypeBody\n;",
     "metaclass": "SysML::AssociationStructure"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in AssociationStructure@kerml"
 }

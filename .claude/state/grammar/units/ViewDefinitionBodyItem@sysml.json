@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ViewDefinitionBodyItem",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "ee624722b91fd28dd540ce074f7c2db4f5caf3cb2d07fa533811eac7969424dd",
+    "xtext_rule": "f5b5057f67a3bfd6edf6ddcb0454b97b0b985df5e72f7822cb0000c3b9937f82",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "e5b1b75f5c95bf613ac598192020c1e40b64947dbfb720e5af70144559cd3341"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.26.1 (ViewDefinitions.md, region_sha256 5198c1a94438ed0c)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment ViewDefinitionBodyItem returns SysML::ViewDefinition :\n\t  DefinitionBodyItem\n\t| ownedRelationship += ElementFilterMember\n\t| ownedRelationship += ViewRenderingMember\n;",
+    "metaclass": "SysML::ViewDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

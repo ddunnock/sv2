@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "production": "TypeFeatureMember",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "d95fc40510a2050d40b76837537e9bec4c895b088bc7e4760c8aff4d536e1750",
+    "xtext_rule": "593cca4f69363c23463cf072c42031b086689e133e18abb6ff993ea0b798cfd2",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "becb9c24ce8262460a00832092370f577e84eb4d2ce2b0c8a2f160dd9537e8d1"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.1.6 (FeatureMembership.md, region_sha256 f9beb2f2ceb8c566)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "TypeFeatureMember returns SysML::OwningMembership :\n\tMemberPrefix 'member' ownedRelatedElement += FeatureElement \n;",
+    "metaclass": "SysML::OwningMembership"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "MemberPrefix"
+      },
+      {
+        "k": "kw",
+        "text": "member"
+      },
+      {
+        "k": "ref",
+        "name": "FeatureElement"
+      }
+    ]
+  },
+  "decision": "A member prefix, the `member` keyword, and a feature element, exactly as KerML 8.2.4.1.6 states it. The keyword is the entire concrete-syntax difference from OwnedFeatureMember, which is otherwise the identical shape.",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nThe clause and the Xtext agree exactly.\n\nFOR A PARSER AUTHOR: `member` is the deciding token, and it is reached only after the nullable MemberPrefix, so the decision is on the token following any visibility indicator rather than on the first token of the member.\n\nCORPUS EVIDENCE IS NOT CITED HERE, DELIBERATELY. The context pack offered one corpus instance, `// A is a member of P2a because of the import.` in vendor/corpus/sysml/src/examples/Import Tests/QualifiedNameImportTest.sysml. That is a line comment containing the English word \"member\", not an instance of this production. Citing it would satisfy the evidence check while proving nothing, which is precisely the failure the evidence rule exists to prevent, so this unit rests on the clause and the Xtext instead. The absence of a real corpus instance is worth knowing on its own: `member` appears to be exercised by no file in the pinned corpus, so nothing here is corpus-confirmed and an oracle sweep will not catch a mistake in it.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.6",
+      "note": "TypeFeatureMember is stated there as MemberPrefix 'member' FeatureElement"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the pilot rule has the same body, including the 'member' keyword"
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:58Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TriggerValuePart",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "4d0090a6548ad98b5663779527589d178f631881488de14f2848a1b1d1beb6a0",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment TriggerValuePart returns SysML::Feature :\n\townedRelationship += TriggerFeatureValue\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in TriggerValuePart@sysml"
 }

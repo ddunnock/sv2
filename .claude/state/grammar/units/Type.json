@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Type",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
     "xtext_rule": "aecf465530f702f43af01c2815e006e6fbc2e9024df5a268d895ef0b80039dfb",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "Type returns SysML::Type :\n    TypePrefix 'type' \n    TypeDeclaration TypeBody\n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in Type@kerml"
 }

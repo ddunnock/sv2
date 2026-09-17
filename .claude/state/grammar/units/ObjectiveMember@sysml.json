@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ObjectiveMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "e3a278925d36146fdb1fe9b1da78351269daeb41617744492f5e30c352341669",
+    "xtext_rule": "1466de95e7192d9eb6ce3757acd826b81df1100614e4d95c77f64de89c7aa2c8",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "85d834e3429201c14547196c1d329954d4a639843737a66bcf5817f13dac3f84"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.22 (CasesTextualNotation.md, region_sha256 3fa44e95d6e4ec23)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ObjectiveMember returns SysML::ObjectiveMembership :\n\tMemberPrefix 'objective' ownedRelatedElement += ObjectiveRequirementUsage \n;",
+    "metaclass": "SysML::ObjectiveMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Expose",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "549f4dd10d3f615fe5551a4a966bcf84c7f0bc1fec8a26c65080c95b9edafcce",
+    "xtext_rule": "1fd88ceef48bae2fcf4d8212b9701221f13ac6ff7d268c82b24b6f3b447a7423",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "5b2891b02dbdb2b1d24da31e20e0248e6c684a03d6f4013298060b6d703ccdff"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.26.2 (ViewUsages.md, region_sha256 f49a7d5fda3165a3)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "Expose returns SysML::Expose :\n\t( MembershipExpose | NamespaceExpose )\n\tRelationshipBody\n;",
+    "metaclass": "SysML::Expose"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

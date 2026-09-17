@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TriggerActionMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "faa2ae07e7d60c8d45f30b25036baf4f4fd4620794ae1b1eca489b2c9987d8cf",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "TriggerActionMember returns SysML::TransitionFeatureMembership :\n\tkind = TriggerFeatureKind ownedRelatedElement += TriggerAction \n;",
     "metaclass": "SysML::TransitionFeatureMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in TriggerActionMember@sysml"
 }

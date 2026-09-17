@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "production": "AnnotatingElement",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "d87d1ab982342f8c81e2a5560e39822563a1d479a63df9bbce3daf823109348b",
+    "xtext_rule": "db86b384524a408387ad072018574f0a92cc2690e5a0db6d07aaae13b11284c1",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "976453dce7f6294cf270c7deaeeadac04cd5dc5b751b92f5f76429479f6687fa"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.4.1 (Annotations.md, region_sha256 3c3db88367d002e9)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "AnnotatingElement returns SysML::AnnotatingElement :\n\t  Comment \n\t| Documentation\n\t| TextualRepresentation\n\t| MetadataUsage\n;",
+    "metaclass": "SysML::AnnotatingElement"
+  }
+}

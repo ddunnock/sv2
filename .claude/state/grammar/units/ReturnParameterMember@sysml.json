@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ReturnParameterMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "abc851f79d420fb31d8d7518538400aa03794ce96b1c7f0ed791b9375eeee723",
+    "xtext_rule": "387f5d8f0b1d7f39b66da0a9f9c577bd722ca6959d12ffe670b044f71b86ebd5",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "92c3dea64e07d949d1c3b7f566259806907e851de4122b59dbef0f6d12acd3e6"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.19 (CalculationsTextualNotation.md, region_sha256 ee541841395079da)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ReturnParameterMember returns SysML::ReturnParameterMembership :\n\tMemberPrefix 'return' \n\townedRelatedElement += UsageElement \n;",
+    "metaclass": "SysML::ReturnParameterMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

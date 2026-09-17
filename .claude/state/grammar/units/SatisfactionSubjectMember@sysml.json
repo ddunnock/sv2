@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "SatisfactionSubjectMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "fc398636b89ed7f38aee585cc6eb3e6281af4853d57aab1490de3e1306db12d3",
+    "xtext_rule": "e8930ca51a13c7e8cd0bd41ee848d5b3c4e36661d92314f0c3a6f75bcf9b37c8",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "1408631ee4b287f530f14a6bb8707f278ec17320d13c9557889e3c7ccd9a13c1"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.2 (RequirementUsages.md, region_sha256 6c4f3553daaa3162)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "SatisfactionSubjectMember returns SysML::SubjectMembership :\n\townedRelatedElement += SatisfactionParameter \n;",
+    "metaclass": "SysML::SubjectMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

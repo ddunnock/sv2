@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "MembershipExpose",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "549f4dd10d3f615fe5551a4a966bcf84c7f0bc1fec8a26c65080c95b9edafcce",
+    "xtext_rule": "64a0c91546caf94502e20ddc3dec10fddbae08a93910e384cc9cd71443e0b432",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "d541d77a6ed04dce6a6903e52b04cfd1535b24196cda28abd344e9a3f839e9f9"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.26.2 (ViewUsages.md, region_sha256 f49a7d5fda3165a3)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "MembershipExpose returns SysML::MembershipExpose :\n\tExposePrefix ImportedMembership\n;",
+    "metaclass": "SysML::MembershipExpose"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

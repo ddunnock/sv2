@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "DifferencingPart",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
     "xtext_rule": "25d361e9530b775841734814439ea6f2ad23e09dad172a89991c5f93ba8a2bdf",
@@ -78,5 +78,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T13:29:21Z"
+  "verified_utc": "2026-09-17T13:29:21Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in DifferencingPart@kerml"
 }

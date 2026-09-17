@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Interaction",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "5f212de9fb1adc58c774247bf73bcf7885fbba7a2ed11dc588774deb6b5682d0",
+    "xtext_rule": "67fe69e4471cc7425c471f01100314f3cafbfd72c20f890c0dfbb0a0ebfb2a89",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "fd3304e524774670f6ade8a9eb3bc9ee971c74832429e60e3afd0b96cfb11d34"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.9.1 (Interactions.md, region_sha256 aad316c55ed433c0)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Interaction returns SysML::Interaction :\n\tTypePrefix 'interaction' \n\tClassifierDeclaration TypeBody\n;",
+    "metaclass": "SysML::Interaction"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

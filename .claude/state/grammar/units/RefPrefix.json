@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "RefPrefix",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "75719cca5586b38df687a0107da0631912855d8761fb90c9ddda65858c3f8a4b",
     "xtext_rule": "ae50dadaf9b31d68424879ce8a9c2a90673a74ffc8f21540e3ba0decdd978530",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment RefPrefix returns SysML::Usage :\n    ( direction = FeatureDirection )?\n    ( isDerived ?= 'derived' )?\n    ( isAbstract ?= 'abstract' | isVariation ?= 'variation')?\n    ( isConstant ?= 'constant' )?\n;",
     "metaclass": "SysML::Usage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in RefPrefix@sysml"
 }

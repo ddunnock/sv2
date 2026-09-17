@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "EmptyUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "5ae2df29b57d0b4e2edf8d2650115d1d218741b4b6c978fc8da59aa15ed7b7d5",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "EmptyUsage returns SysML::ReferenceUsage :\n\t{SysML::ReferenceUsage}\n;",
     "metaclass": "SysML::ReferenceUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in EmptyUsage@sysml"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "RequirementDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
     "xtext_rule": "737c91d7b7cd2937cd88d66e189a9d45f42cb37abf320ce04654d8e0d6294831",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "RequirementDefinition returns SysML::RequirementDefinition :\n\tOccurrenceDefinitionPrefix RequirementDefKeyword DefinitionDeclaration RequirementBody  \n;",
     "metaclass": "SysML::RequirementDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in RequirementDefinition@sysml"
 }

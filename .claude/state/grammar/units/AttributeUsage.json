@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "AttributeUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "6d206d23052352721d14b67a13e29271a3afc1bb2d86a759033442afe6f73c92",
     "xtext_rule": "fedb01682538b947fba328e8766a53ed7afcb619e8feaf5522aefd688a37b630",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "AttributeUsage returns SysML::AttributeUsage :\n\tUsagePrefix AttributeUsageKeyword Usage\n;",
     "metaclass": "SysML::AttributeUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in AttributeUsage@sysml"
 }

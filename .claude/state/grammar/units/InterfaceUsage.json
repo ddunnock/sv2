@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "InterfaceUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "bffd8b9322d613cb8c3a15449371ae9a03700ef3ca5dde0052db50b7149ba822",
     "xtext_rule": "ad62615fa41dcf8be81d9fc38f61cff43cd4fe17689987adc72d974237b30531",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "InterfaceUsage returns SysML::InterfaceUsage :\t \n\tOccurrenceUsagePrefix InterfaceUsageKeyword \n\tInterfaceUsageDeclaration InterfaceBody\n;",
     "metaclass": "SysML::InterfaceUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in InterfaceUsage@sysml"
 }

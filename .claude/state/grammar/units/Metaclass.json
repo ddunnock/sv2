@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Metaclass",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "814e74fbb17b63e9a835d6dc9a5ceb64c5393cec1e7ff119730c9fd1601fe160",
     "xtext_rule": "e4dd891b13327c649694e5fee373dead8581040dc41245b5b2101523e5b93cfb",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "Metaclass returns SysML::Metaclass :\n\tTypePrefix 'metaclass' \n\tClassifierDeclaration TypeBody\n;",
     "metaclass": "SysML::Metaclass"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in Metaclass@kerml"
 }

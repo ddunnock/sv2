@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "EffectBehaviorUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "ec3e56bff331422582903f296c7fc9e375c31a93929c157c1dfc3af44b6bf34b",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "EffectBehaviorUsage returns SysML::ActionUsage :\n\t  EmptyActionUsage | PerformedActionUsage ( '{' ActionBodyItem* '}' )?\n;",
     "metaclass": "SysML::ActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in EffectBehaviorUsage@sysml"
 }

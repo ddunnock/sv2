@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Definition",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "bd840645a99d2e115ca0991f5dfe7a9ceb00ad3e7e94554acb92df502b67d3db",
+    "xtext_rule": "f30ef649f87bf1c6002a861b7849019ff1e79f1095b05e0d2be531f0f0d3b97d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "6ac0d9e3d673ad7efa0a4f0ac411b092abd109d1e114f9a5f3a9e0b33bfa8de7"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.6.1 (Definitions.md, region_sha256 3ce9c25432443aa0)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment Definition returns SysML::Definition :\n\tDefinitionDeclaration DefinitionBody\n;",
+    "metaclass": "SysML::Definition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

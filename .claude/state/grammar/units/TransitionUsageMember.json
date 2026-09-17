@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TransitionUsageMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "6f7cd7408a7b364e4a1c9cb070f712b9229c02405be681c2ba1907ce42b2860a",
     "xtext_rule": "8440cd6c079c4b96d68bb07edbe2f186a4a5f61c674f9bfc3acb671793cb8864",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "TransitionUsageMember returns SysML::FeatureMembership :\n\tMemberPrefix ownedRelatedElement += TransitionUsage \n;",
     "metaclass": "SysML::FeatureMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in TransitionUsageMember@sysml"
 }

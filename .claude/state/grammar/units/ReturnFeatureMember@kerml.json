@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "production": "ReturnFeatureMember",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "8424c7798f166fa9186918bfbb6d4192303bf44e0025da69f4bccddf2615ab77",
+    "xtext_rule": "0b325b7fb271349afb90492d45a9a5bffeefe79bc0267c7a749f746aac3ad6ea",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "b7447e2aa48324c3e5412c7578c0206993f37b86ee5650468e3f16a473accda9"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.7.1 (Functions.md, region_sha256 f8fd09bcff0e258a)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "ReturnFeatureMember returns SysML::ReturnParameterMembership :\n\tMemberPrefix 'return' \n\townedRelatedElement += FeatureElement \n;",
+    "metaclass": "SysML::ReturnParameterMembership"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "MemberPrefix"
+      },
+      {
+        "k": "kw",
+        "text": "return"
+      },
+      {
+        "k": "ref",
+        "name": "FeatureElement"
+      }
+    ]
+  },
+  "decision": "A member prefix, `return`, then the feature returned.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.7.1",
+      "note": "ReturnFeatureMember is stated there"
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:58Z",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

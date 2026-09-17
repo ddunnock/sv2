@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ControlNodePrefix",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "9f6ad15d3c6276977efc7f4191cc5ceb74786e4a088c6dbbebcd16e6dd6dec08",
     "xtext_rule": "38f352c33740f81ef74f666024fea006ec4ff9863bad1cd5e45267fa3b2b4393",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment ControlNodePrefix returns SysML::OccurrenceUsage :\n\t  RefPrefix\n\t  ( isIndividual ?= 'individual' )?\n\t  ( portionKind = PortionKind )?\n\t  UsageExtensionKeyword*\n;",
     "metaclass": "SysML::OccurrenceUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ControlNodePrefix@sysml"
 }

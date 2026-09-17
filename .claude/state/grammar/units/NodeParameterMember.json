@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "NodeParameterMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "1c82217562a69ca5996d0ed3b40072df86204c4dd15af547a897cf8cc5b7c1f7",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "NodeParameterMember returns SysML::ParameterMembership :\n\townedRelatedElement += NodeParameter \n;",
     "metaclass": "SysML::ParameterMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in NodeParameterMember@sysml"
 }

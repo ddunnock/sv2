@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Structure",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "d064530ac2edb0f8ad7374817c251a3fae8417b90fd593c0606f90b81667cfdb",
     "xtext_rule": "bb78d8fec9454b58d5a2263c25c6d16cc6211ae2a84bdcb39952798512e6befe",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "Structure returns SysML::Structure :\n\tTypePrefix 'struct' \n\tClassifierDeclaration TypeBody\n;",
     "metaclass": "SysML::Structure"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in Structure@kerml"
 }

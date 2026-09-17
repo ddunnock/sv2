@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "BinaryConnectorDeclaration",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "c1e318934ef719fe9b3c71f39eee3aa1cc9f0f6a2f5e99efb1eb38f03598d1da",
     "xtext_rule": "9fae15e324ee2ece84821461f137b6298a088471366ec17e1495152d504949fe",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment BinaryConnectorDeclaration returns SysML::Connector :\n\t( FeatureDeclaration? 'from' | isSufficient ?= 'all' 'from'? )?\n\townedRelationship += ConnectorEndMember 'to' \n\townedRelationship += ConnectorEndMember\n;",
     "metaclass": "SysML::Connector"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in BinaryConnectorDeclaration@kerml"
 }

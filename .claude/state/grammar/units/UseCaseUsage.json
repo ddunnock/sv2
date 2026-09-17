@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "UseCaseUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "16b5afa0d9b60d2b0f7cbb58c16e0a43d1d423f018aed1726c774040d045ca35",
     "xtext_rule": "447f21938db33659b429c10806311c6a255cc758b8ce562ebd3ec84fbba0dc69",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "UseCaseUsage returns SysML::UseCaseUsage :\n\tOccurrenceUsagePrefix UseCaseUsageKeyword ActionUsageDeclaration CaseBody\n;",
     "metaclass": "SysML::UseCaseUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in UseCaseUsage@sysml"
 }

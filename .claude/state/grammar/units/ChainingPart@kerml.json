@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "production": "ChainingPart",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "9e2b3655417d8748bd8cfe4e1f390d0cff6fd052368ea0581d687ef7c9b0d081",
+    "xtext_rule": "c8c02132111487bb7864897763ac547f384f4f66a42feacf532174a6d27b3400",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "6a4a6598c82b987447b8ef4bceef037a8bd48ab13da4ae861fec01c5d2cd5a7f"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.3.1 (Features.md, region_sha256 c9b4ff39176a7e05)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment ChainingPart returns SysML::Feature :\n\t'chains' ( ownedRelationship += OwnedFeatureChaining | FeatureChain )\n;",
+    "metaclass": "SysML::Feature"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "chains"
+      },
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "ref",
+            "name": "OwnedFeatureChaining"
+          },
+          {
+            "k": "ref",
+            "name": "FeatureChain"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.3.1 states it: `chains`, then either an OwnedFeatureChaining or a FeatureChain. The Xtext fragment is identical. Neither alternative is defined in this clause, so whether they can overlap is for their own units to establish. FeatureDeclaration repeats FeatureRelationshipPart, so a feature may carry more than one ChainingPart, and the corpus has exactly that.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "ChainingPart : Feature = 'chains' ( ownedRelationship += OwnedFeatureChaining | FeatureChain )"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml",
+      "note": "`feature obPiP chains objectToFinish.beforePaint.isPainted = false;`, a dotted chain"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml",
+      "note": "`feature b_f_a chains b chains f.a;`, two ChainingParts, the first a single name and the second a dotted chain"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment ChainingPart: 'chains' ( ownedRelationship += OwnedFeatureChaining | FeatureChain ). Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:01:11Z",
+  "verified_utc": "2026-09-17T14:22:53Z",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

@@ -25,14 +25,20 @@ fingerprint that no longer describes what produced it.
 
 ## Two languages: shared units and variants
 
-KerML and SysML are two grammars sharing a vocabulary (ADR-0014). A production both state
-the same way is one shared unit, `Name.json`, and belongs to both. A production they state
-differently is two variants, `Name@kerml.json` and `Name@sysml.json`, each carrying
-`"scope"`. The plan decides which, deterministically; derivation never splits or merges a
-unit, and never argues that one language's body stands in for the other's.
+KerML and SysML are two grammars sharing a vocabulary (ADR-0014), and a production belongs
+to the grammars that reach it (ADR-0015). The plan gives each production its units, and
+derivation never splits, merges or re-scopes one:
+
+- `Name.json`, shared: stated identically in both, or stated in KerML and reached by both,
+  as the expression layer is.
+- `Name@kerml.json` or `Name@sysml.json` alone: only that language's grammar reaches it.
+- both variants: the two languages state it differently, or the SysML boundary in
+  `_grammar.py` replaces SysML's body, as for `AnnotatingElement` and `ExpressionBody`.
 
 A variant is derived from its own language's clause only, which is all its pack contains.
-A shared unit's references must resolve in both grammars, and the checker enforces it.
+Never argue that one language's body stands in for the other's. A shared unit's references
+must resolve in both grammars, and the checker enforces it. A SysML variant with no SysML
+clause, one the boundary created, is derived from its deviation.
 
 ## The specification is the source; the Xtext is a second opinion
 

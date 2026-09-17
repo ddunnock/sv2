@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "NamespaceExpose",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "549f4dd10d3f615fe5551a4a966bcf84c7f0bc1fec8a26c65080c95b9edafcce",
     "xtext_rule": "c83b83e7bafceb7be110f8c15d42226ea3b90b809c615b6eee6543dd61a03a13",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "NamespaceExpose returns SysML::NamespaceExpose :\n\tExposePrefix \n\t( ImportedNamespace\n\t| ownedRelatedElement += FilterPackage\n\t)\n;",
     "metaclass": "SysML::NamespaceExpose"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in NamespaceExpose@sysml"
 }

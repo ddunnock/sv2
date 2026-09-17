@@ -12,14 +12,17 @@ import pytest
 
 import _grammar
 from _grammar import (
+    body_references,
     clause_for_scope,
     divergent_productions,
     grammar_view,
+    production_scopes,
+    reachable,
     shadowed,
     unit_key,
 )
 from grammar_freeze import blockers
-from grammar_plan import expected_keys
+from grammar_plan import _rescope, expected_keys
 
 
 def u(production, scope=None, status="verified", **extra):
@@ -135,12 +138,112 @@ def test_a_production_stated_in_one_language_only_does_not_split():
     )
 
 
-def test_the_plan_gives_a_divergent_production_one_unit_per_language():
-    assert expected_keys(["Import", "RootNamespace"], {"RootNamespace"}) == [
+def test_the_plan_gives_each_production_the_units_its_scopes_name():
+    scopes = {"RootNamespace": ("kerml", "sysml"), "Feature": ("kerml",)}
+    assert expected_keys(["Import", "RootNamespace", "Feature"], scopes) == [
         ("Import", None),
         ("RootNamespace", "kerml"),
         ("RootNamespace", "sysml"),
+        ("Feature", "kerml"),
     ]
+
+
+# ---- which grammar reaches a production (ADR-0015) -------------------------------
+
+K, S = "KerML-textual-bnf.kebnf", "SysML-textual-bnf.kebnf"
+
+#: A miniature of the real shape: KerML's kernel, an expression layer both use, a
+#: SysML-only usage layer, and one reference from the expression layer back into
+#: KerML's kernel.
+MINI = [
+    rule("RootNamespace", K, "Element*"),
+    rule("Element", K, "Class | Expr"),
+    rule("Class", K, "'class' NAME Body"),
+    rule("Body", K, "';' | '{' Element* '}'"),
+    rule("Expr", K, "'(' Expr ')' | ExprBody | NAME"),
+    rule("ExprBody", K, "'{' Element* '}'"),
+    rule("RootNamespace", S, "Usage*"),
+    rule("Usage", S, "'part' NAME ( '=' Expr )? ';'"),
+    rule("Calc", S, "'{' Usage* '}'"),
+]
+
+
+def test_body_references_ignore_literals_properties_and_terminals():
+    known = {"Expr", "Usage", "QualifiedName", "NAME"}
+    body = "'Expr' value = Expr [QualifiedName] { isUsage = true } NAME // Usage"
+    assert body_references(body, known) == {"Expr", "QualifiedName"}
+
+
+def test_sysml_falls_back_to_kerml_only_for_what_it_does_not_state():
+    kerml, sysml = reachable(MINI, "kerml", {}), reachable(MINI, "sysml", {})
+    assert "Usage" not in kerml  # KerML never borrows from SysML
+    assert {"Usage", "Expr", "ExprBody"} <= sysml
+    # ExprBody's `Element*` carries KerML's kernel into SysML: the leak the boundary cuts.
+    assert "Class" in sysml
+
+
+def test_a_boundary_entry_cuts_the_fallback_and_splits_the_production():
+    boundary = {"ExprBody": "Calc"}
+    assert "Class" not in reachable(MINI, "sysml", boundary)
+    scopes = production_scopes(MINI, boundary)
+    assert scopes["ExprBody"] == ("kerml", "sysml")
+    assert scopes["Class"] == ("kerml",)
+    assert scopes["Body"] == ("kerml",)
+    assert scopes["Expr"] == (None,)  # stated once, reached by both: shared
+    assert scopes["Usage"] == ("sysml",)
+    assert scopes["RootNamespace"] == ("kerml", "sysml")
+
+
+def test_without_the_boundary_the_leaked_kernel_stays_shared():
+    scopes = production_scopes(MINI, {})
+    assert scopes["Class"] == (None,)
+
+
+def test_a_production_no_grammar_reaches_keeps_the_language_that_states_it():
+    scopes = production_scopes([*MINI, rule("Orphan", S, "'orphan'")], {})
+    assert scopes["Orphan"] == ("sysml",)
+
+
+def test_rescoping_carries_the_work_and_re_checks_it(tmp_path, monkeypatch):
+    monkeypatch.setattr(_grammar, "UNITS", tmp_path)
+    fp = {"combined": "same", "spec_clause": "a", "xtext_rule": "b"}
+    shared = u(
+        "Class",
+        rule={"k": "kw", "text": "class"},
+        decision="as the clause states it",
+        evidence=[{"kind": "clause", "ref": "kerml clause 8.2.4.2"}],
+        acceptance={"has_rule": "pass"},
+        fingerprint=fp,
+        inputs={"spec_clause_ref": "x"},
+    )
+    fresh = u("Class", "kerml", status="pending", language="kerml", fingerprint=fp, inputs={})
+    assert _rescope(shared, fresh, single=True) == "rescoped"
+    moved = _grammar.load_units()["Class@kerml"]
+    assert moved["rule"] == shared["rule"]
+    assert moved["decision"] == shared["decision"]
+    assert moved["status"] == "derived"  # verified again only against its own grammar
+    assert "acceptance" not in moved
+    assert moved["notes"].startswith("re-scoped from the shared unit to kerml alone")
+
+
+def test_rescoping_a_unit_whose_inputs_moved_sends_it_back_to_pending(tmp_path, monkeypatch):
+    monkeypatch.setattr(_grammar, "UNITS", tmp_path)
+    shared = u(
+        "Class", rule={"k": "kw", "text": "class"}, fingerprint={"combined": "old"}, inputs={}
+    )
+    fresh = u(
+        "Class",
+        "kerml",
+        status="pending",
+        language="kerml",
+        fingerprint={"combined": "new"},
+        inputs={},
+    )
+    _rescope(shared, fresh, single=True)
+    moved = _grammar.load_units()["Class@kerml"]
+    assert moved["status"] == "pending"
+    assert moved["rule"] == shared["rule"]
+    assert "must be re-derived" in moved["notes"]
 
 
 # ---- clauses --------------------------------------------------------------------
@@ -175,3 +278,34 @@ def test_a_shared_unit_is_given_both_clauses():
 def test_an_oracle_that_skipped_a_language_does_not_permit_a_freeze():
     clean_but_partial = {"accepted": 10, "missed": 0, "caught": 3, "leaked": 0, "skipped": 4}
     assert any("skipped" in b for b in blockers({"A": u("A")}, clean_but_partial))
+
+
+def test_a_split_variant_with_the_shared_units_inputs_carries_its_work(tmp_path, monkeypatch):
+    # The boundary splits ExpressionBody: KerML's variant has exactly the shared unit's
+    # inputs, so its derivation stands; SysML's reads a different body and starts fresh.
+    monkeypatch.setattr(_grammar, "UNITS", tmp_path)
+    shared = u(
+        "ExpressionBody",
+        rule={"k": "ref", "name": "FunctionBodyPart"},
+        fingerprint={"combined": "k"},
+        inputs={},
+    )
+    kerml = u(
+        "ExpressionBody",
+        "kerml",
+        status="pending",
+        language="kerml",
+        fingerprint={"combined": "k"},
+        inputs={},
+    )
+    sysml = u(
+        "ExpressionBody",
+        "sysml",
+        status="pending",
+        language="sysml",
+        fingerprint={"combined": "s"},
+        inputs={},
+    )
+    assert _rescope(shared, kerml, single=False) == "rescoped"
+    assert _rescope(shared, sysml, single=False) is None
+    assert set(_grammar.load_units()) == {"ExpressionBody@kerml"}

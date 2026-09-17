@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "InterfaceBody",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8e1a8617b6490e5ffe56b25437884cec824953583966b0cc211d0086da41e061",
     "xtext_rule": "875bf34c14d211be56fedc0f5770e8d3ff48310ce8d59214645fc7f5da03488b",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment InterfaceBody returns SysML::Type :\n\t';' | '{' InterfaceBodyItem* '}'\n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in InterfaceBody@sysml"
 }

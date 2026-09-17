@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedExpressionReferenceMember",
   "language": "shared",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "dfcf21afde47835f1a859f96a3517e36df8afbbcf70345c2f910b60f1cb700ef",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -36,5 +36,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-16T20:22:03Z"
+  "verified_utc": "2026-09-16T20:22:03Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in OwnedExpressionReferenceMember@kerml"
 }

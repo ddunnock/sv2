@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "TriggerValuePart",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
+    "xtext_rule": "4d0090a6548ad98b5663779527589d178f631881488de14f2848a1b1d1beb6a0",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "df953c761e8ece92ffe1e728fa02336ed24bc09e80b835cc2b85d48547fc73b7"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment TriggerValuePart returns SysML::Feature :\n\townedRelationship += TriggerFeatureValue\n;",
+    "metaclass": "SysML::Feature"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

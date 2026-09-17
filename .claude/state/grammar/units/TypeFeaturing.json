@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TypeFeaturing",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "cc073fa4ee7ef6a81cff2e5b45972ea00c32b9057bed734b769a354cc42d3244",
     "xtext_rule": "3b6882babe3c2c132db4baf4f244de2e563af314fa8e36bcea7dad16c3ed1161",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "TypeFeaturing returns SysML::TypeFeaturing :\n\t'featuring' ( Identification? 'of')?\n\tfeatureOfType = [SysML::Feature | QualifiedName]\n\t'by' featuringType = [SysML::Feature | QualifiedName]\n\tRelationshipBody\n;",
     "metaclass": "SysML::TypeFeaturing"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in TypeFeaturing@kerml"
 }

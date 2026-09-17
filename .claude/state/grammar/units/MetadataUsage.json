@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MetadataUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
     "xtext_rule": "901a39b29a30f65c827d1d9db26afda3d2ebb8f4a8d895ebb2573e5b946495e8",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "MetadataUsage returns SysML::MetadataUsage :\n\tUsageExtensionKeyword*\n\tMetadataUsageKeyword MetadataUsageDeclaration \n\t( 'about' ownedRelationship += Annotation \n\t\t( ',' ownedRelationship += Annotation )*\n\t)?\n\tMetadataBody\n;",
     "metaclass": "SysML::MetadataUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in MetadataUsage@sysml"
 }

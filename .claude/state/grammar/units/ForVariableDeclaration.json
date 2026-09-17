@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ForVariableDeclaration",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
     "xtext_rule": "26ed2f36a8dcd8e7a898eb8fedc65295ab0a25870a5b346d21404e7401ae9781",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ForVariableDeclaration returns SysML::ReferenceUsage :\n\tUsageDeclaration\n;",
     "metaclass": "SysML::ReferenceUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ForVariableDeclaration@sysml"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "RequirementBodyItem",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
     "xtext_rule": "e06679a642efcb971a1a973189d388275b5494057b74718e456dc435f9a05e85",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment RequirementBodyItem returns SysML::Type :\n\t  DefinitionBodyItem\n\t| ownedRelationship += SubjectMember\n\t| ownedRelationship += RequirementConstraintMember\n\t| ownedRelationship += FramedConcernMember\n\t| ownedRelationship += RequirementVerificationMember\n\t| ownedRelationship += ActorMember\n\t| ownedRelationship += StakeholderMember\n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in RequirementBodyItem@sysml"
 }

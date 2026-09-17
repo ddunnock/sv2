@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "production": "Connector",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "c1e318934ef719fe9b3c71f39eee3aa1cc9f0f6a2f5e99efb1eb38f03598d1da",
+    "xtext_rule": "9c5669658b8e2424cb5cb9dfaea15b5c6dd14d05bbb7eedd520e1e212241df8e",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "b36a47b3ceb2c2ed1d1ef75e1ac726d7b02e983ded41e2545728e73db3c80348"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.5.1 (Connectors.md, region_sha256 ff47294b20bdba3f)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Connector returns SysML::Connector :\t \n\tFeaturePrefix 'connector' \n\t( FeatureDeclaration? ValuePart?\n\t| ConnectorDeclaration\n\t) \n\tTypeBody\t  \n;",
+    "metaclass": "SysML::Connector"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "FeaturePrefix"
+      },
+      {
+        "k": "kw",
+        "text": "connector"
+      },
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "seq",
+            "items": [
+              {
+                "k": "opt",
+                "item": {
+                  "k": "ref",
+                  "name": "FeatureDeclaration"
+                }
+              },
+              {
+                "k": "opt",
+                "item": {
+                  "k": "ref",
+                  "name": "ValuePart"
+                }
+              }
+            ]
+          },
+          {
+            "k": "ref",
+            "name": "ConnectorDeclaration"
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "TypeBody"
+      }
+    ]
+  },
+  "decision": "A feature prefix, `connector`, then either a plain optional declaration with an optional value or a full connector declaration, then the body. Exactly as KerML 8.2.5.5.1 states it, and the Xtext agrees character for character.",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nThe clause and the Xtext agree exactly. No LL workaround to decline.\n\nBOTH PARTS OF THE FIRST ALTERNATIVE ARE OPTIONAL, so that alternative can match nothing at all, and `connector;` is therefore accepted: the alternation reduces to the empty string and TypeBody supplies the `;`. That is what the clause says and it is not narrowed here.\n\nWORTH RECORDING FOR THE CONFLICT ON Step / Expression / BooleanExpression / Invariant: this clause writes `FeatureDeclaration?` WITH the question mark, and the Xtext matches. So the specification does mark this construct optional explicitly in a directly comparable production. Those four productions write FeatureDeclaration with no `?` while their Xtext fragments make it optional, which is the substance of that conflict. This unit is evidence in it, in both directions \u2014 either the spec distinguishes the cases deliberately, or it is inconsistent where the pilot is uniform. That is not settled here and this unit does not assume either way.\n\nFOR A PARSER AUTHOR: the two alternatives are not distinguishable at their first token. ConnectorDeclaration's binary form may itself begin with a FeatureDeclaration before `from`, so the decision is made at the `from`, `to` or `(` that follows, not at the point the alternation opens.\n\nCORPUS: `connector eng to tanks.main1;` exercises the ConnectorDeclaration alternative in its binary form with no leading declaration, and the `;` TypeBody.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.5.1",
+      "note": "states Connector as the prefix, keyword, two-way alternation and TypeBody transcribed into the rule"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "identical body, including the explicit `?` on FeatureDeclaration"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml",
+      "note": "contains `connector eng to tanks.main1;` and `connector tanks.main1 to tanks.aux1;`"
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:54Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

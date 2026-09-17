@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "PartDefinition",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "71a5951c403645c75a2a84211a571ea2da924e7a531d517dab317cf70ee9030d",
+    "xtext_rule": "b994d974a29644643b622953e476b224491150ffe3263b7573e0861b7437c2e0",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "7d4a7005641be62b16c8765d2d66528d6b4392db2de23caa4a1533aedddeb53f"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.11 (PartsTextualNotation.md, region_sha256 bb70446a3b699d71)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "PartDefinition returns SysML::PartDefinition :\n\tOccurrenceDefinitionPrefix PartDefKeyword Definition\n;",
+    "metaclass": "SysML::PartDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

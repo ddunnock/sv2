@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "Metaclass",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "814e74fbb17b63e9a835d6dc9a5ceb64c5393cec1e7ff119730c9fd1601fe160",
+    "xtext_rule": "e4dd891b13327c649694e5fee373dead8581040dc41245b5b2101523e5b93cfb",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "bbf7635e67f73310a4b0576158f6108bd77978526049c2976748161cbc63ddb8"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.12 (MetadataConcreteSyntax.md, region_sha256 30fa0599ab27c325)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Metaclass returns SysML::Metaclass :\n\tTypePrefix 'metaclass' \n\tClassifierDeclaration TypeBody\n;",
+    "metaclass": "SysML::Metaclass"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

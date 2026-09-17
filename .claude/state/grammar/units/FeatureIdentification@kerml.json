@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "production": "FeatureIdentification",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "9e2b3655417d8748bd8cfe4e1f390d0cff6fd052368ea0581d687ef7c9b0d081",
+    "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "b77324e4268bd6dffd1e20c468c15d6f76106f5ae5cea3a99f84c3ea707a83e8"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.3.1 (Features.md, region_sha256 c9b4ff39176a7e05)",
+    "xtext_file": "",
+    "xtext_rule_text": "",
+    "metaclass": ""
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "kw",
+            "text": "<"
+          },
+          {
+            "k": "tok",
+            "name": "NAME"
+          },
+          {
+            "k": "kw",
+            "text": ">"
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "tok",
+              "name": "NAME"
+            }
+          }
+        ]
+      },
+      {
+        "k": "tok",
+        "name": "NAME"
+      }
+    ]
+  },
+  "decision": "Written as the clause states it: a short name in angle brackets optionally followed by a name, or a name alone. The pilot Xtext has no rule of this name, so there is no second opinion to weigh. The two alternatives do not overlap, since the first begins with '<' and the second with NAME. Short name and name are both the NAME terminal, which covers both the basic and the quoted unrestricted form.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "FeatureIdentification : Feature = '<' declaredShortName = NAME '>' ( declaredName = NAME )? | declaredName = NAME"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml",
+      "note": "line 8: `feature capacity: Real;`, the name-only alternative. No corpus file gives a feature a short name; that alternative rests on the clause alone."
+    }
+  ],
+  "derived_utc": "2026-09-17T12:56:23Z",
+  "verified_utc": "2026-09-17T14:22:55Z",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

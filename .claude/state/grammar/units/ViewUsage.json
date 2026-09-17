@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ViewUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "549f4dd10d3f615fe5551a4a966bcf84c7f0bc1fec8a26c65080c95b9edafcce",
     "xtext_rule": "2de8489978b39e3c6390b75ba33625b353e10fc03c4dce931f086e35b6860f26",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ViewUsage returns SysML::ViewUsage :\n\tOccurrenceUsagePrefix ViewUsageKeyword UsageDeclaration? ValuePart? ViewBody\n;",
     "metaclass": "SysML::ViewUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ViewUsage@sysml"
 }

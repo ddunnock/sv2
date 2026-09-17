@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedMultiplicityRange",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8495e77a2c661ef306d5c397c34b70d3e5b299f9d00d7c0b98bdc36f47423af3",
     "xtext_rule": "fd65261aff7624f65b530cc46ebcf639effe31cb4836d7a7dff1c57468a34249",
@@ -48,5 +48,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T13:28:34Z"
+  "verified_utc": "2026-09-17T13:28:34Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in OwnedMultiplicityRange@kerml"
 }

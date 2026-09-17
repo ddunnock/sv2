@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "EventOccurrenceUsage",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "465ccd42d9aa0196c8527be21292803c8fcc974662a742655dbd027182d072c3",
     "xtext_rule": "69d6086d7d22806a8f32203e0d2771386c7ea1acc560bc261870eebc5b4a1a4b",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "EventOccurrenceUsage returns SysML::EventOccurrenceUsage :\n\t OccurrenceUsagePrefix 'event'\n\t( ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?\n   \t| OccurrenceUsageKeyword UsageDeclaration? )\n    UsageCompletion\n;",
     "metaclass": "SysML::EventOccurrenceUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in EventOccurrenceUsage@sysml"
 }

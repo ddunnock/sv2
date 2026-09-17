@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FeatureChain",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "05b2a66fe9cecc9194cf0d87ab79e460f1d9238d692ef3a1c3346dbe45db6bfb",
     "xtext_rule": "0c4f5f693308cf701e4d4dc7796a24336854aacfdee283e5a0bf6baf3afe1079",
@@ -41,7 +41,7 @@
     ]
   },
   "decision": "One chaining feature, then ONE OR MORE dotted continuations. The repetition is '+' and not '*', so a feature chain has at least two segments by construction: a single name is not a chain.",
-  "notes": "That is what divides FeatureChainMember's two alternatives. A single name goes through FeatureReferenceMember and only two or more reach OwnedFeatureChainMember, so the two alternatives do not overlap and no lookahead is needed past the first dot.",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in FeatureChain@kerml\nThat is what divides FeatureChainMember's two alternatives. A single name goes through FeatureReferenceMember and only two or more reach OwnedFeatureChainMember, so the two alternatives do not overlap and no lookahead is needed past the first dot.",
   "evidence": [
     {
       "kind": "clause",

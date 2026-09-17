@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "StateUsageBody",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "8ccbf293e22630ecd9dee2be74eb644388b000ac1b77b211d17cb81d7c7711c5",
+    "xtext_rule": "106d1c79c481f0adb16d40eedabde51616def73e7b044edc32561827c8ca7007",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "93e45ffe129fd99a0ef2ab545b81c4acee228d8552eb1a85a93098d60ccab957"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.18.2 (StateUsages.md, region_sha256 01ed9dadf35f24a7)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment StateUsageBody returns SysML::StateUsage :\n\t';' | ( isParallel ?= 'parallel' )? '{' StateBodyPart '}'\n;",
+    "metaclass": "SysML::StateUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

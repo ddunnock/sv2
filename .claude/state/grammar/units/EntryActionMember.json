@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "EntryActionMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "6f7cd7408a7b364e4a1c9cb070f712b9229c02405be681c2ba1907ce42b2860a",
     "xtext_rule": "b4baa0710f0dbc7c2f608d6af010c11bb6204e29fd70671fd102aeabbdb34cec",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "EntryActionMember returns SysML::StateSubactionMembership :\n\tMemberPrefix kind = EntryActionKind ownedRelatedElement += StateActionUsage \n;",
     "metaclass": "SysML::StateSubactionMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in EntryActionMember@sysml"
 }

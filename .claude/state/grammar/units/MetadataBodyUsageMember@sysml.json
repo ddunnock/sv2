@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "MetadataBodyUsageMember",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
+    "xtext_rule": "f471186ca9ce8630e55ab9225789ef54f5db0da53c3aa4f21e6e9edc5e77b818",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "7bbd04ca79f5153181be92ac9fae215c959c7ad7b55f6d4538c04e4553168156"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.27 (MetadataTextualNotation.md, region_sha256 69251565feee7639)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "MetadataBodyUsageMember returns SysML::FeatureMembership :\n\townedRelatedElement += MetadataBodyUsage\n;",
+    "metaclass": "SysML::FeatureMembership"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

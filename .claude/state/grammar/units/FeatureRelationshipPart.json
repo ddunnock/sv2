@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FeatureRelationshipPart",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "9e2b3655417d8748bd8cfe4e1f390d0cff6fd052368ea0581d687ef7c9b0d081",
     "xtext_rule": "5a729d57f45f8ad3aa5c76bbcc63ab97232da8145d77fe92e5355b8676d64caf",
@@ -65,5 +65,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T12:57:24Z"
+  "verified_utc": "2026-09-17T12:57:24Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in FeatureRelationshipPart@kerml"
 }

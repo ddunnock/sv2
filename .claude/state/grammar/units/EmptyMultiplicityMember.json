@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "EmptyMultiplicityMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "729e11bfb00a5a13f3ba4b6f6db4994e5bd6df5d4d6eb952ac3b8f19436b9f97",
     "xtext_rule": "cf6a73a25c0b57f92f7dc18e88e3282668816998a61dad6b5b35f206ffce5a97",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "EmptyMultiplicityMember returns SysML::OwningMembership :\n        ownedRelatedElement += EmptyMultiplicity\n;",
     "metaclass": "SysML::OwningMembership"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in EmptyMultiplicityMember@sysml"
 }

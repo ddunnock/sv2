@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ViewBodyItem",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "549f4dd10d3f615fe5551a4a966bcf84c7f0bc1fec8a26c65080c95b9edafcce",
+    "xtext_rule": "99762396c132da743d4a70266a3714b252ff78085618e4793628fac4f050bff5",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "4feb0b1cecc3d1da1a13154b0e7947069cb9f47b123e42b67312d87492e65cc1"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.26.2 (ViewUsages.md, region_sha256 f49a7d5fda3165a3)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "fragment ViewBodyItem returns SysML::ViewUsage :\n\t  DefinitionBodyItem\n\t| ownedRelationship += ElementFilterMember\n\t| ownedRelationship += Expose\n\t| ownedRelationship += ViewRenderingMember\n;",
+    "metaclass": "SysML::ViewUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

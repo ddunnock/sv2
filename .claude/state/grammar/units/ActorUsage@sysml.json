@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ActorUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
+    "xtext_rule": "ea1680d7a9bc46e3a2cfaa82f76421a6b9b8f443e16677d556b4f6215b7e32b9",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "270406b277148557a3f8e4d90eb926de236e04a5cf4f0d246919d16123584fc0"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.1 (RequirementDefinitions.md, region_sha256 fd824f1d9da5f780)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ActorUsage returns SysML::PartUsage :\n      'actor' UsageExtensionKeyword* Usage\n;",
+    "metaclass": "SysML::PartUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

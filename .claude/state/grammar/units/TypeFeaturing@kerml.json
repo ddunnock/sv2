@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "TypeFeaturing",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "cc073fa4ee7ef6a81cff2e5b45972ea00c32b9057bed734b769a354cc42d3244",
+    "xtext_rule": "3b6882babe3c2c132db4baf4f244de2e563af314fa8e36bcea7dad16c3ed1161",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "9730eaa74a70a53f9822466e3f6fa3e7d3de2c2c4d9aaf488ce6e5019cbe469a"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.3.7 (TypeFeaturing.md, region_sha256 28b7202aa8b09990)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "TypeFeaturing returns SysML::TypeFeaturing :\n\t'featuring' ( Identification? 'of')?\n\tfeatureOfType = [SysML::Feature | QualifiedName]\n\t'by' featuringType = [SysML::Feature | QualifiedName]\n\tRelationshipBody\n;",
+    "metaclass": "SysML::TypeFeaturing"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TypePrefix",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
     "xtext_rule": "c29478da45af99b66c54b2b6eb073826a52fd7aee34a14031429c81252cc7d92",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment TypePrefix returns SysML::Type :\n\t( isAbstract ?= 'abstract' )? \n\t( ownedRelationship += PrefixMetadataMember )*\n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in TypePrefix@kerml"
 }

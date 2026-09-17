@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "production": "Step",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "4f9a5b021ff9f875dbd0e68c04e3d8c58fa58342db026aeffbc3b23c13e47a3f",
+    "xtext_rule": "bf76082b20affca3e6423bd5cde54ea1c71463166ca7b304cf0802a3cca73af4",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "c3c8d94d485e37d60bd42cc2c1f87b74f09991f2f0eb5b1e667d0e1ad208f8a4"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.6.2 (Steps.md, region_sha256 43e85f839503f89f)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "Step returns SysML::Step :\n\tFeaturePrefix 'step' \n\tStepDeclaration TypeBody\n;",
+    "metaclass": "SysML::Step"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone\nCONFLICT: IS THE FEATURE DECLARATION MANDATORY OR OPTIONAL? The same divergence as Invariant, Expression and BooleanExpression, reached here through the StepDeclaration fragment.\n\nREADING A \u2014 the clause. KerML 8.2.5.6.2 states:\n    Step = FeaturePrefix 'step' FeatureDeclaration ValuePart? TypeBody\nFeatureDeclaration carries no `?`, so `step;` does not parse.\n\nREADING B \u2014 the Xtext. The pilot rule is:\n    Step : FeaturePrefix 'step' StepDeclaration TypeBody\nand `fragment StepDeclaration : FeatureDeclaration? ValuePart?`. Expanded, the declaration is OPTIONAL and `step;` parses.\n\nTHE CORPUS DOES NOT DISCRIMINATE HERE. A sweep of the pinned corpus for `step` followed directly by `{` or `;` found nothing: every instance carries a declaration, as in `step step1: Focus[1];`. So this production has no evidence of its own either way, and that absence is itself the reason not to decide it here. A corpus that always writes an optional thing is indistinguishable from one where the thing is required.\n\nWHERE THE EVIDENCE IS. Invariant, which shares this divergence exactly, does have a discriminating instance \u2014 `inv { age >= 35 }` with no declaration \u2014 and it favours reading B. This unit should follow whatever is adjudicated there unless there is a stated reason to treat steps differently.\n\nThe StepDeclaration fragment is not itself the disagreement; it is a factoring of `FeatureDeclaration? ValuePart?` that would not be ported either way. The disagreement is the `?` inside it.\n\n---\nRESOLVED by adjudication, ON ANALOGY AND NOT ON A CITATION. This is the weakest of the four and is marked so deliberately.\n\nTHE RULING: FeatureDeclaration is OPTIONAL, the same as its three siblings.\n\nKERML11-181 DOES NOT NAME THIS PRODUCTION. The issue was fetched and read in full; it names 8.2.5.7.2 and 8.2.5.7.4 and says nothing about 8.2.5.6.2 or about Step. So unlike Expression, BooleanExpression and Invariant, this ruling is not backed by a filed defect.\n\nWHAT IT RESTS ON INSTEAD: the clause is identical in shape to Expression's, differing only in keyword and body kind; the pilot's StepDeclaration fragment is body-for-body identical to ExpressionDeclaration; and KerML 8.2.5.5.1 Connector already writes FeatureDeclaration? with an explicit '?' in the specification text, so declaration-less forms are an established pattern here rather than pilot idiosyncrasy. No semantic reason separates an anonymous step from an anonymous expression.\n\nWHAT WOULD UPGRADE OR OVERTURN IT: a filed issue naming 8.2.5.6.2, or a corpus instance either of a declaration-less `step` or of one that requires a name. The corpus has neither today, so no oracle sweep will catch a mistake here in either direction. If this is wrong, nothing in this repository will notice \u2014 which is why it is written down at this length.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "FeaturePrefix"
+      },
+      {
+        "k": "kw",
+        "text": "step"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "FeatureDeclaration"
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "ValuePart"
+        }
+      },
+      {
+        "k": "ref",
+        "name": "TypeBody"
+      }
+    ]
+  },
+  "decision": "A feature prefix, `step`, an optional declaration, an optional value and a type body. The declaration is OPTIONAL \u2014 BY ANALOGY WITH ITS THREE SIBLINGS AND NOT ON A CITATION. KERML11-181 does not name this clause. See the notes; this is the weakest of the four rulings and the corpus cannot check it.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.6.2",
+      "note": "states the production with FeatureDeclaration carrying no '?' \u2014 the defect"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the pilot reaches FeatureDeclaration? through its declaration fragment, which is what this rule follows"
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "KERML11-181",
+      "note": "PARTIAL MATCH ONLY, cited as pattern evidence and not as authority for this production. Fetched and read in full on 2026-09-16: it names 8.2.5.7.2 and 8.2.5.7.4 and does NOT name Step or 8.2.5.6.2, despite the identical clause shape and a body-identical Xtext fragment."
+    },
+    {
+      "kind": "deviation",
+      "ref": "Step",
+      "note": "recorded in deviations.json with the adjudicated decision"
+    },
+    {
+      "kind": "file_id",
+      "ref": "ptc/25-04-04",
+      "note": "The KerML Tier A pin the governing clause belongs to."
+    }
+  ],
+  "verified_utc": "2026-09-17T14:22:58Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

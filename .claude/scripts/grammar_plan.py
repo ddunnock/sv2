@@ -13,6 +13,7 @@ export the plan refuses to run; see `_clause_export`.
 from __future__ import annotations
 
 import argparse
+import collections
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,9 +25,9 @@ from _grammar import (
     TERMINAL_NAME,
     UNITS,
     clause_for_scope,
-    divergent_productions,
     hash_parts,
     load_units,
+    production_scopes,
     save_unit,
     unit_key,
     xtext_rule_text,
@@ -101,18 +102,62 @@ def _language(xtext_file: str | None, scope: str | None) -> str:
     return "sysml" if "SysML" in xtext_file else "kerml"
 
 
-def expected_keys(derivable: list[str], divergent: set[str]) -> list[tuple[str, str | None]]:
+def expected_keys(
+    derivable: list[str], scopes: dict[str, tuple[str | None, ...]]
+) -> list[tuple[str, str | None]]:
     """(production, scope) for every unit the inventory calls for, in a stable order.
 
-    A production the two languages state differently gets one variant per language;
-    every other production gets one shared unit.
+    ``scopes`` is `production_scopes`: a production the two languages state differently
+    gets one variant per language (ADR-0014); one only a single language's grammar
+    reaches gets that language's variant alone (ADR-0015); every other production gets
+    one shared unit.
     """
-    return [
-        (name, scope) for name in derivable for scope in (SCOPES if name in divergent else (None,))
-    ]
+    return [(name, scope) for name in derivable for scope in scopes.get(name, (None,))]
 
 
-def _plan_one(name: str, scope: str | None, units: dict[str, Json], src: Sources) -> str:
+def _rescope(shared: Json, fresh: Json, *, single: bool) -> str | None:
+    """Carry a shared unit's work into the variant replacing it, where that is sound.
+
+    ADR-0015. A shared unit gives way to variants in two cases. Either only one grammar
+    reaches the production (``single``), or the SysML boundary splits it. Its rule,
+    reasoning and evidence carry over when the variant's inputs hash the same as the
+    shared unit's did: the same clause and the same Xtext, so the same derivation. The
+    checks never carry, because they ran against both grammars, so a carried verified
+    unit becomes derived and grammar_check_unit.py verifies it again against its own.
+
+    Where the inputs differ, a single-language variant keeps the rule as the previous
+    one and goes back to pending, as any unit whose inputs moved does. A split variant
+    whose inputs differ is new work, because its language reads a different body, and
+    nothing carries: returns None, and the caller creates it fresh.
+    """
+    same_inputs = shared["fingerprint"]["combined"] == fresh["fingerprint"]["combined"]
+    if not same_inputs and not single:
+        return None
+    moved = {
+        k: v
+        for k, v in shared.items()
+        if k not in ("scope", "fingerprint", "inputs", "acceptance", "diagnostics")
+    }
+    unit = {**fresh, **moved, "scope": fresh["scope"], "language": fresh["language"]}
+    how = "alone" if single else "as one of its two variants"
+    note = f"re-scoped from the shared unit to {fresh['scope']} {how} (ADR-0015)"
+    if not same_inputs and unit["status"] in STALEABLE:
+        unit["status"] = "pending"
+        note += (
+            "; its inputs as a variant differ, so the rule below is the previous one"
+            " and must be re-derived"
+        )
+    elif unit["status"] == "verified":
+        unit["status"] = "derived"
+        note += "; awaiting grammar_check_unit.py against this language's grammar alone"
+    unit["notes"] = (note + "\n" + shared.get("notes", "")).strip()
+    save_unit(unit)
+    return "rescoped"
+
+
+def _plan_one(
+    name: str, scope: str | None, units: dict[str, Json], src: Sources, *, single: bool = False
+) -> str:
     """Create, re-stale, revive or carry forward one unit. Returns which happened."""
     xtext_file, xtext = xtext_rule_text(name, scope)
     ref, text = clause_for_scope(src.clauses.get(name, {}), scope)
@@ -141,6 +186,11 @@ def _plan_one(name: str, scope: str | None, units: dict[str, Json], src: Sources
         },
     }
     unit = units.get(unit_key(fresh))
+    shared = units.get(name)
+    if unit is None and scope and shared and shared["status"] != "retired":
+        carried = _rescope(shared, fresh, single=single)
+        if carried:
+            return carried
     if unit is None:
         save_unit(fresh)
         return "created"
@@ -196,15 +246,21 @@ def _strip_retired_inputs(units: dict[str, Json]) -> int:
     return stripped
 
 
-def _retire_undeclared(expected: set[str], divergent: set[str]) -> int:
+def _retire_undeclared(expected: set[str], scopes: dict[str, tuple[str | None, ...]]) -> int:
     retired = 0
     for key, unit in load_units().items():
         if key in expected or unit["status"] == "retired":
             continue
-        if not unit.get("scope") and unit["production"] in divergent:
+        planned = scopes.get(unit["production"], (None,))
+        if not unit.get("scope") and planned == SCOPES:
             reason = (
                 "split per language (ADR-0014): KerML and SysML state this production "
                 "differently, so it is derived as one variant per language instead"
+            )
+        elif not unit.get("scope") and len(planned) == 1 and planned[0]:
+            reason = (
+                f"re-scoped (ADR-0015): only the {planned[0]} grammar reaches this "
+                f"production, so its work now lives in {unit['production']}@{planned[0]}"
             )
         else:
             reason = "no longer declared in the pinned grammar"
@@ -247,21 +303,27 @@ def main(argv: list[str] | None = None) -> int:
 
     names: list[str] = inventory["productions"]
     derivable = [n for n in names if n not in _terminals(names)]
-    divergent = divergent_productions(inventory["rules"]) & set(derivable)
-    keys = expected_keys(derivable, divergent)
+    scopes = production_scopes(inventory["rules"])
+    keys = expected_keys(derivable, scopes)
 
-    outcomes = {"created": 0, "restale": 0, "revived": 0, "carried": 0}
+    outcomes = {"created": 0, "restale": 0, "revived": 0, "carried": 0, "rescoped": 0}
     for name, scope in keys:
-        outcomes[_plan_one(name, scope, units, src)] += 1
+        single = len(scopes.get(name, (None,))) == 1
+        outcomes[_plan_one(name, scope, units, src, single=single)] += 1
 
     expected = {f"{name}@{scope}" if scope else name for name, scope in keys}
-    retired = _retire_undeclared(expected, divergent)
+    retired = _retire_undeclared(expected, scopes)
     print(
         f"plan: {outcomes['created']} new, {outcomes['restale']} stale (inputs moved), "
         f"{outcomes['revived']} revived, {outcomes['carried']} carried forward, "
-        f"{retired} retired"
+        f"{outcomes['rescoped']} re-scoped to one language, {retired} retired"
     )
-    print(f"      {len(divergent)} production(s) split into a KerML and a SysML variant")
+    split = sum(1 for n in derivable if scopes.get(n) == SCOPES)
+    alone = collections.Counter(
+        s[0] for n in derivable if len(s := scopes.get(n, (None,))) == 1 and s[0]
+    )
+    print(f"      {split} production(s) split into a KerML and a SysML variant")
+    print(f"      {alone['kerml']} KerML-only and {alone['sysml']} SysML-only production(s)")
     print(f"      units at {UNITS}")
     return 0
 

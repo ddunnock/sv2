@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TriggerAction",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "eaea0dbca1468b09549e81bb1e287bfb4d7dc777cef031fc8fe48a601d3e0d45",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "TriggerAction returns SysML::AcceptActionUsage :\n\tAcceptParameterPart\n;",
     "metaclass": "SysML::AcceptActionUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in TriggerAction@sysml"
 }

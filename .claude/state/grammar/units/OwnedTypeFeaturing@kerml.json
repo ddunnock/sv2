@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "production": "OwnedTypeFeaturing",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "cc073fa4ee7ef6a81cff2e5b45972ea00c32b9057bed734b769a354cc42d3244",
+    "xtext_rule": "3cc8d0190e2619db90dff983823aaa9fbdc80e4983b24203478084c2be03b85d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "468ccdf5a9311dc8fbb657acb184e6efccdd38c2efd55c915fff0c692844bc0b"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.3.7 (TypeFeaturing.md, region_sha256 28b7202aa8b09990)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "OwnedTypeFeaturing returns SysML::TypeFeaturing :\n\tfeaturingType = [SysML::Type | QualifiedName]\n;",
+    "metaclass": "SysML::TypeFeaturing"
+  },
+  "rule": {
+    "k": "ref",
+    "name": "QualifiedName"
+  },
+  "decision": "As KerML 8.2.4.3.7 states it: `featuringType = [QualifiedName]`, a cross-reference only. Unlike the Owned* specialization targets, it has no feature-chain alternative. The Xtext rule is the same. The pack cites only the KerML clause, and the plan makes this one shared unit.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.7",
+      "note": "OwnedTypeFeaturing : TypeFeaturing = featuringType = [QualifiedName]"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml",
+      "note": "`member feature inCart: ShoppingCart[0..1] featured by Product;`, where `Product` is the featuring type"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "OwnedTypeFeaturing: featuringType = [SysML::Type | QualifiedName]. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:27:22Z",
+  "verified_utc": "2026-09-17T14:22:57Z",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

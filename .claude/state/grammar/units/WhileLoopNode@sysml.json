@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "WhileLoopNode",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
+    "xtext_rule": "2801cd270a1c682eb59be75d2b148f9d9a5b095347a12c76e05230425e6b7ff9",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "55851c86519218c74f1d30b5fa62f720db3900abac06f69876a6b2339fe963b5"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.7 (StructuredControlActionUsages.md, region_sha256 90c294385874fdc1)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "WhileLoopNode returns SysML::WhileLoopActionUsage :\n\tActionNodePrefix\n\t( 'while' ownedRelationship += ExpressionParameterMember\n\t| 'loop' ownedRelationship += EmptyParameterMember\n\t)\n\townedRelationship += ActionBodyParameterMember\n\t( 'until' ownedRelationship += ExpressionParameterMember ';' )?\n;",
+    "metaclass": "SysML::WhileLoopActionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

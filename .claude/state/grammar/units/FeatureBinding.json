@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FeatureBinding",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "c7c1ae555e1203990c8578de25e8e0fa336f462635ac033c824457ae468ef266",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "FeatureBinding returns SysML::FeatureValue :\n\townedRelatedElement += OwnedExpression\n;",
     "metaclass": "SysML::FeatureValue"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in FeatureBinding@sysml"
 }

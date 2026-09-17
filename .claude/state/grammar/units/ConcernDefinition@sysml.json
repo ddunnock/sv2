@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "ConcernDefinition",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "33301f7393b32148336fe36ffd2c76ff1165025435284ac7f0eb7889aef161fd",
+    "xtext_rule": "f0a2b6877934ad06dc06cee069759150497f5859c1f90444a8c02fcb79688bcc",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "fc2842c99adb739ef809d47c8df267889e348bb8a9e13557097aa96ed9f5bbc8"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.3 (Concerns.md, region_sha256 4bf4e293b263a1eb)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "ConcernDefinition returns SysML::ConcernDefinition :\n\tOccurrenceDefinitionPrefix ConcernDefKeyword DefinitionDeclaration RequirementBody  \n;",
+    "metaclass": "SysML::ConcernDefinition"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Definition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "bd840645a99d2e115ca0991f5dfe7a9ceb00ad3e7e94554acb92df502b67d3db",
     "xtext_rule": "f30ef649f87bf1c6002a861b7849019ff1e79f1095b05e0d2be531f0f0d3b97d",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment Definition returns SysML::Definition :\n\tDefinitionDeclaration DefinitionBody\n;",
     "metaclass": "SysML::Definition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in Definition@sysml"
 }

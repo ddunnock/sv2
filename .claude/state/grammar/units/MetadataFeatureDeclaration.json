@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MetadataFeatureDeclaration",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "814e74fbb17b63e9a835d6dc9a5ceb64c5393cec1e7ff119730c9fd1601fe160",
     "xtext_rule": "eded2e2cf375db6c4f3f54e0e4fa1f0aed0d9e88eb7e84a22b6a22abf60113f4",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment MetadataFeatureDeclaration returns SysML::MetadataFeature :\n\t( Identification? ( ':' | 'typed' 'by' ) )? ownedRelationship += MetadataTyping\n;",
     "metaclass": "SysML::MetadataFeature"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in MetadataFeatureDeclaration@kerml"
 }

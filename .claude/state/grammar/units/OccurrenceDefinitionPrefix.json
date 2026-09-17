@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OccurrenceDefinitionPrefix",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "729e11bfb00a5a13f3ba4b6f6db4994e5bd6df5d4d6eb952ac3b8f19436b9f97",
     "xtext_rule": "15889918d5d067e524906809fa8dc581795c5e4b3a2ca91f13891c81a8fcfbc3",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment OccurrenceDefinitionPrefix returns SysML::OccurrenceDefinition :\n\tBasicDefinitionPrefix?\n\t( isIndividual ?= 'individual' \n\t  ownedRelationship += EmptyMultiplicityMember\n\t)?\n\tDefinitionExtensionKeyword*\n;",
     "metaclass": "SysML::OccurrenceDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in OccurrenceDefinitionPrefix@sysml"
 }

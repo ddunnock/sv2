@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "TriggerFeatureValue",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
+    "xtext_rule": "b5eafb9ac92538c6bc41b6bf8e95170c15f92be3efbc57f74bde679172771514",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "b2b87c1344952929afa932776da8dd8313da707744db220bf37250fbacce344d"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "TriggerFeatureValue returns SysML::FeatureValue :\n\townedRelatedElement += TriggerExpression\n;",
+    "metaclass": "SysML::FeatureValue"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

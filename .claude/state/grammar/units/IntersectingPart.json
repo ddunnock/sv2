@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "IntersectingPart",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
     "xtext_rule": "c8fe205746694fec3b2752b90318f2bdc78ad0446f14ef3d2a42f7e7537f03fa",
@@ -73,5 +73,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T13:29:20Z"
+  "verified_utc": "2026-09-17T13:29:20Z",
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in IntersectingPart@kerml"
 }

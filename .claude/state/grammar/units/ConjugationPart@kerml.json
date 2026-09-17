@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "production": "ConjugationPart",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
+    "xtext_rule": "d23c6de397066bebb8be111e6748799ed1d5ca37d36abdb80aace1b160d4d736",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "37502c440a6a7838059a2ace5f7fe66d675a6f983ae48ada9edc54d286ec9e42"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.4.1.1 (Types.md, region_sha256 d5f980cd9c8a4387)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment ConjugationPart returns SysML::Type :\n\t( '~' | 'conjugates' ) ownedRelationship += OwnedConjugation\n;",
+    "metaclass": "SysML::Type"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "kw",
+            "text": "~"
+          },
+          {
+            "k": "kw",
+            "text": "conjugates"
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "OwnedConjugation"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.1.1 states it: the CONJUGATES terminal followed by one OwnedConjugation. CONJUGATES is not a production. It is one of the special lexical terminals of KerML 8.2.2.7, `CONJUGATES = '~' | 'conjugates'`, which match either the symbol or the keyword, so the rule writes it out as that two-way choice. The Xtext fragment expands it the same way. Unlike SpecializationPart, which the same clause states just above, there is no comma-separated repetition: a type conjugates exactly one other type.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.1",
+      "note": "ConjugationPart : Type = CONJUGATES ownedRelationship += OwnedConjugation"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.2.7",
+      "note": "CONJUGATES = '~' | 'conjugates', one of the special lexical terminals that match either the symbol or the keyword"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Types.kerml",
+      "note": "`type Conjugate3 conjugates Original;`"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml",
+      "note": "`feature x conjugates f.a;`, the part after a FeatureIdentification, as FeatureDeclaration uses it"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment ConjugationPart: ( '~' | 'conjugates' ) ownedRelationship += OwnedConjugation. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T12:58:58Z",
+  "verified_utc": "2026-09-17T14:22:53Z",
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015); awaiting grammar_check_unit.py against this language's grammar alone",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  }
+}

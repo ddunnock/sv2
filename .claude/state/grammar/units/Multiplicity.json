@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Multiplicity",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8495e77a2c661ef306d5c397c34b70d3e5b299f9d00d7c0b98bdc36f47423af3",
     "xtext_rule": "c57803e5e9dd690fc6330353932ee6ccdfe0e8834cebba0e87a810f0a528d0e3",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "Multiplicity returns SysML::Multiplicity :\n\tMultiplicitySubset | MultiplicityRange\n;",
     "metaclass": "SysML::Multiplicity"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in Multiplicity@kerml"
 }

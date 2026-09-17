@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "SendNode",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
+    "xtext_rule": "cf0bf22ae362f1a28f8dcf30bcf950e410f18b018592d5a5c0fd0b5cc7625d12",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "b985b56f1b74b6fe2e107396e08cb199af57f9b9cd1bbc9baf6cea3239ac9a90"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "SendNode returns SysML::SendActionUsage :\n\tOccurrenceUsagePrefix ActionNodeUsageDeclaration? 'send' \n\t( ActionBody\n\t| ( => \n\t\t( ownedRelationship += NodeParameterMember SenderReceiverPart?\n\t    | ownedRelationship += EmptyParameterMember SenderReceiverPart\n\t    )\n\t    ActionBody\n\t  )\n\t)\n;",
+    "metaclass": "SysML::SendActionUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

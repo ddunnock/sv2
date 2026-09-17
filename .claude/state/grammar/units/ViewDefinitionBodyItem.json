@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ViewDefinitionBodyItem",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "ee624722b91fd28dd540ce074f7c2db4f5caf3cb2d07fa533811eac7969424dd",
     "xtext_rule": "f5b5057f67a3bfd6edf6ddcb0454b97b0b985df5e72f7822cb0000c3b9937f82",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment ViewDefinitionBodyItem returns SysML::ViewDefinition :\n\t  DefinitionBodyItem\n\t| ownedRelationship += ElementFilterMember\n\t| ownedRelationship += ViewRenderingMember\n;",
     "metaclass": "SysML::ViewDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ViewDefinitionBodyItem@sysml"
 }

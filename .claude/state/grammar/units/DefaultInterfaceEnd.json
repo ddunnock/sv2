@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "DefaultInterfaceEnd",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "8e1a8617b6490e5ffe56b25437884cec824953583966b0cc211d0086da41e061",
     "xtext_rule": "0992a8e2a3a2f8406833957c82315ab56f7574c3b056854bb1f46e569e92694c",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "DefaultInterfaceEnd returns SysML::PortUsage :\n    isEnd ?= 'end' Usage\n;",
     "metaclass": "SysML::PortUsage"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in DefaultInterfaceEnd@sysml"
 }

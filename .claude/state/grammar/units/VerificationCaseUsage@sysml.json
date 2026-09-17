@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "VerificationCaseUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "1db5b44a338a0a23c3e3429dca4d9c556047a96149d863f795e58b73b149d1f2",
+    "xtext_rule": "5c73b46565b99d0fc9e005a50baee1892e6dbced818d5f33990a633dcb0a3663",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "7648ff548e2be26d2111c026bab6eaf173532ad3068ba588ab523aa57349e99e"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.24 (VerificationCasesTextualNotation.md, region_sha256 a699e664918dcb65)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "VerificationCaseUsage returns SysML::VerificationCaseUsage :\n\tOccurrenceUsagePrefix VerificationCaseUsageKeyword ActionUsageDeclaration CaseBody\n;",
+    "metaclass": "SysML::VerificationCaseUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

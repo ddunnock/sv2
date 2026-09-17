@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "PartDefinition",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "71a5951c403645c75a2a84211a571ea2da924e7a531d517dab317cf70ee9030d",
     "xtext_rule": "b994d974a29644643b622953e476b224491150ffe3263b7573e0861b7437c2e0",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "PartDefinition returns SysML::PartDefinition :\n\tOccurrenceDefinitionPrefix PartDefKeyword Definition\n;",
     "metaclass": "SysML::PartDefinition"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in PartDefinition@sysml"
 }

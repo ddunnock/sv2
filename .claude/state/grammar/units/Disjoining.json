@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Disjoining",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "b0a5c53932fc360b89a0c462ecfef9f5ab7e2f60993a2a4aaf578becc01d898a",
     "xtext_rule": "a6c34ef19a78ad1f63866069dbb2e37b179126969636679cf046a2ad7f362a74",
@@ -14,5 +14,6 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "Disjoining returns SysML::Disjoining :\n\t( 'disjoining' Identification? )?\n\t'disjoint' \n\t( typeDisjoined = [SysML::Type | QualifiedName] \n\t| ownedRelatedElement += OwnedFeatureChain )\n\t'from' \n\t( disjoiningType = [SysML::Type | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain )\n\tRelationshipBody\n;",
     "metaclass": "SysML::Disjoining"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in Disjoining@kerml"
 }

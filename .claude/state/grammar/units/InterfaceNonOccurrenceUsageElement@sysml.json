@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "InterfaceNonOccurrenceUsageElement",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "8e1a8617b6490e5ffe56b25437884cec824953583966b0cc211d0086da41e061",
+    "xtext_rule": "d21341c46fd1207de635ad1544d65ab732c5d7c568ccfd5bf4935070250399b6",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "dcff42de8203be9a01a9b0e7a6ca5cb788ba5c4bef8b93469d3ba60d0fbdfaef"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.14.1 (InterfaceDefinitions.md, region_sha256 86fc09c62954e744)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "InterfaceNonOccurrenceUsageElement returns SysML::Usage :\n\t  ReferenceUsage\n\t| AttributeUsage\n\t| EnumerationUsage\n\t| BindingConnectorAsUsage\n\t| SuccessionAsUsage\n;",
+    "metaclass": "SysML::Usage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

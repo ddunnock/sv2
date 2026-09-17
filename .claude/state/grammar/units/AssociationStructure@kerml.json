@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "AssociationStructure",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "d69efed553a55e016333f7042f86790f5591437c9a208717313276863802d7a4",
+    "xtext_rule": "7b3391172f1860cde0ccdebe351794255e3b66dfc28e5915a0c3f90f69e38199",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "258fcbc5ce8ab49633b5991e087d274ee763bebfd1935002531e45970c9c5bde"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.4 (AssociationsConcreteSyntax.md, region_sha256 d168bccad08efa80)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "AssociationStructure returns SysML::AssociationStructure :\n\tTypePrefix 'assoc' 'struct'\n\tClassifierDeclaration TypeBody\n;",
+    "metaclass": "SysML::AssociationStructure"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

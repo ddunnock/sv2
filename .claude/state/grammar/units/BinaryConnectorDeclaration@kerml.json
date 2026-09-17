@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "BinaryConnectorDeclaration",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "c1e318934ef719fe9b3c71f39eee3aa1cc9f0f6a2f5e99efb1eb38f03598d1da",
+    "xtext_rule": "9fae15e324ee2ece84821461f137b6298a088471366ec17e1495152d504949fe",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "0397bab17933a463359a6df41ebe33e4e89374940e103ca34c774319a8e34e84"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.5.1 (Connectors.md, region_sha256 ff47294b20bdba3f)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "fragment BinaryConnectorDeclaration returns SysML::Connector :\n\t( FeatureDeclaration? 'from' | isSufficient ?= 'all' 'from'? )?\n\townedRelationship += ConnectorEndMember 'to' \n\townedRelationship += ConnectorEndMember\n;",
+    "metaclass": "SysML::Connector"
+  },
+  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+}

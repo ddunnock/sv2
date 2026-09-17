@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "SatisfyRequirementUsage",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "fc398636b89ed7f38aee585cc6eb3e6281af4853d57aab1490de3e1306db12d3",
+    "xtext_rule": "8cb6ee9b96a1503f48f717bb6378b58ee9990da06cc7a1a53350c795c9043e31",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "3ba9f09714b6ac01f7d5b67d172032478ecc5cd14e515d773fc58c36aabbf3d0"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.21.2 (RequirementUsages.md, region_sha256 6c4f3553daaa3162)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "SatisfyRequirementUsage returns SysML::SatisfyRequirementUsage :\n\tOccurrenceUsagePrefix 'assert'? ( isNegated ?= 'not' )? 'satisfy' \n\t( ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?\n    | RequirementUsageKeyword UsageDeclaration? \n    )\n    ValuePart?\n    ( 'by' ownedRelationship += SatisfactionSubjectMember )?\n     RequirementBody\n;",
+    "metaclass": "SysML::SatisfyRequirementUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

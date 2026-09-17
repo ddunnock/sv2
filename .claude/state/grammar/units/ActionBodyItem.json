@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ActionBodyItem",
   "language": "sysml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "123fdd535dd69454a171e663a98bdb2619ca5518f3656d521f100f63eb3d01b2",
     "xtext_rule": "5c8f36779f2bcf9b0a564c1bd53fcb946fe76c195debc760637a6e3fd8f12d55",
@@ -14,5 +14,6 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment ActionBodyItem returns SysML::Type :\n\t  ownedRelationship += Import\n\t| ownedRelationship += AliasMember\n\t| ownedRelationship += DefinitionMember \n\t| ownedRelationship += VariantUsageMember\n\t| ownedRelationship += NonOccurrenceUsageMember\n\t| ( ownedRelationship += EmptySuccessionMember )?\n\t  ownedRelationship += StructureUsageMember\n\t| ownedRelationship += InitialNodeMember\n\t  ( => ownedRelationship += TargetSuccessionMember )*\n\t| ( ownedRelationship += EmptySuccessionMember )? \n\t  ownedRelationship += ( BehaviorUsageMember | ActionNodeMember )\n\t  ( => ownedRelationship += TargetSuccessionMember )*\n\t| ownedRelationship += GuardedSuccessionMember\n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "notes": "re-scoped (ADR-0015): only the sysml grammar reaches this production, so its work now lives in ActionBodyItem@sysml"
 }

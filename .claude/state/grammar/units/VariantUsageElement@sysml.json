@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "VariantUsageElement",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "c04c53d39fc6b7e3513d955ce26ea0034cc1bc1147436f284e82d65d9c2764b3",
+    "xtext_rule": "528b220b3e1455ccbcb476deb74bb0e226f7ea28bcec0ad16d8655a6b2359ae3",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "878906f62314ff5c9ded9a4f6f8d5e7774b8e38f4d5a1bc018185307dba0403d"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.6.4 (BodyElements.md, region_sha256 ae188991c8997bec)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "VariantUsageElement returns SysML::Usage :\n\t  VariantReference\n\t| ReferenceUsage\n\t| AttributeUsage\n\t| BindingConnectorAsUsage\n\t| SuccessionAsUsage\n\t| OccurrenceUsage\n\t| IndividualUsage\n\t| PortionUsage\n\t| EventOccurrenceUsage\n\t| ItemUsage\n\t| PartUsage\n\t| ViewUsage\n\t| RenderingUsage\n\t| PortUsage\n\t| ConnectionUsage\n\t| InterfaceUsage\n\t| AllocationUsage\n\t| Message\n\t| FlowUsage\n\t| SuccessionFlowUsage\n\t| BehaviorUsageElement\n;",
+    "metaclass": "SysML::Usage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}

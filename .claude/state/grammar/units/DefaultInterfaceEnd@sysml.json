@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "production": "DefaultInterfaceEnd",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "pending",
+  "fingerprint": {
+    "spec_clause": "8e1a8617b6490e5ffe56b25437884cec824953583966b0cc211d0086da41e061",
+    "xtext_rule": "0992a8e2a3a2f8406833957c82315ab56f7574c3b056854bb1f46e569e92694c",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "5cec613ec512a6be1d9e408fb2d53f79d221e6115ed60c2cd311b1366bd8d153"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.14.1 (InterfaceDefinitions.md, region_sha256 86fc09c62954e744)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "DefaultInterfaceEnd returns SysML::PortUsage :\n    isEnd ?= 'end' Usage\n;",
+    "metaclass": "SysML::PortUsage"
+  },
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+}
