@@ -402,12 +402,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbbb5d9659141646ae647b42fe094daf6c6192d1620870b449d9557f748b2daa"
 
 [[package]]
+name = "sv2-ast"
+version = "0.1.0"
+
+[[package]]
 name = "sv2-cli"
 version = "0.1.0"
 dependencies = [
  "sv2-syntax",
  "thiserror",
 ]
+
+[[package]]
+name = "sv2-hir"
+version = "0.1.0"
 
 [[package]]
 name = "sv2-syntax"
