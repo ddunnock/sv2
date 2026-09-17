@@ -246,6 +246,56 @@ impl<'a> Parser<'a> {
         self.nth_is_keyword(n, "package") || self.at_part_definition(n)
     }
 
+    /// Whether an implemented element of either kind starts at the `n`th token.
+    ///
+    /// `PackageMember = MemberPrefix ( DefinitionElement | UsageElement )`
+    /// (`SysML` 8.2.2.6.1), and a definition body admits usages too, which is what
+    /// makes `part def Vehicle { part engine : Engine; }` one definition holding one
+    /// usage. `PartUsage` is the only `UsageElement` implemented.
+    fn at_member_element(&self, n: usize) -> bool {
+        self.at_definition_element(n) || self.at_part_usage(n)
+    }
+
+    /// The index just past an `OccurrenceUsagePrefix` written from the `n`th token.
+    ///
+    /// `OccurrenceUsagePrefix = ( EndUsagePrefix | BasicUsagePrefix 'individual'?
+    /// PortionKind? ) UsageExtensionKeyword*` (`SysML` 8.2.2.9.2), over
+    /// `BasicUsagePrefix = RefPrefix 'ref'?` and `RefPrefix = FeatureDirection?
+    /// 'derived'? ( 'abstract' | 'variation' )? 'constant'?` (8.2.2.6.2). Each part is
+    /// optional, so this returns `n` unchanged when none is written.
+    ///
+    /// The keywords are counted in the clause's order, and each at most once: that is
+    /// what makes `abstract in part p;` two errors rather than a longer prefix.
+    /// `EndUsagePrefix` and `UsageExtensionKeyword` are not implemented and are not
+    /// looked past, so a usage carrying one is reported rather than silently accepted.
+    fn skip_usage_prefix(&self, n: usize) -> usize {
+        let mut n = n;
+        for words in [
+            &["in", "out", "inout"][..],
+            &["derived"],
+            &["abstract", "variation"],
+            &["constant"],
+            &["ref"],
+            &["individual"],
+            &["snapshot", "timeslice"],
+        ] {
+            if words.iter().any(|word| self.nth_is_keyword(n, word)) {
+                n += 1;
+            }
+        }
+        n
+    }
+
+    /// Whether a `PartUsage` starts at the `n`th meaningful token.
+    ///
+    /// `PartUsage = OccurrenceUsagePrefix 'part' Usage` (`SysML` 8.2.2.11). A usage and
+    /// a definition share every prefix keyword and the `part` after them, so the only
+    /// thing that separates them is the `def` a definition has and a usage does not.
+    fn at_part_usage(&self, n: usize) -> bool {
+        let n = self.skip_usage_prefix(n);
+        self.nth_is_keyword(n, "part") && !self.nth_is_keyword(n + 1, "def")
+    }
+
     /// Whether an implemented `AnnotatingElement` starts here (`SysML` 8.2.2.4.1).
     ///
     /// `Comment` may open with `comment`, `locale` or its bare `REGULAR_COMMENT` body;
@@ -398,7 +448,7 @@ impl<'a> Parser<'a> {
                 self.import();
             } else if self.at_element_keyword("alias") {
                 self.alias_member();
-            } else if self.at_definition_element(usize::from(self.at_visibility())) {
+            } else if self.at_member_element(usize::from(self.at_visibility())) {
                 self.membership(member);
             } else {
                 self.error_token();
@@ -464,7 +514,11 @@ impl<'a> Parser<'a> {
     // says which alternative was taken, so a node here would add a level carrying
     // nothing. Neither is marked for coverage: `Package` and `PartDefinition` are
     // the only two of `DefinitionElement`'s 30 alternatives implemented, and
-    // `UsageElement` none.
+    // `PartUsage` is the only one of `UsageElement`'s.
+    //
+    // A definition is tried before a usage. The two share every prefix keyword and
+    // the `part` after them, so `at_part_definition` — which requires the `def` —
+    // must decide first; `at_part_usage` is what is left.
     fn membership(&mut self, member: SyntaxKind) {
         self.eat_trivia();
         self.start_node(member);
@@ -473,9 +527,304 @@ impl<'a> Parser<'a> {
             self.package();
         } else if self.at_part_definition(0) {
             self.part_definition();
+        } else if self.at_part_usage(0) {
+            self.part_usage();
         } else {
-            self.error_expected("a package or a part definition");
+            self.error_expected("a package, a part definition or a part usage");
         }
+        self.finish_node();
+    }
+
+    // production: PartUsage
+    //
+    // PartUsage = OccurrenceUsagePrefix 'part' Usage             (SysML 8.2.2.11)
+    fn part_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PartUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("part");
+        self.usage();
+        self.finish_node();
+    }
+
+    // OccurrenceUsagePrefix : OccurrenceUsage =
+    //     ( EndUsagePrefix
+    //     | BasicUsagePrefix ( isIndividual ?= 'individual' )?
+    //       ( portionKind = PortionKind )?
+    //     ) UsageExtensionKeyword*                               (SysML 8.2.2.9.2)
+    //
+    // NOT marked for coverage. Two parts are unimplemented, and each is a construct
+    // the language has rather than an optional slot left empty:
+    //
+    //   - EndUsagePrefix (`'end' OwnedCrossFeatureMember?`), the whole first
+    //     alternative. The corpus writes no `end part`, but the clause admits it, and
+    //     tests/rejection/end-usage-prefix-is-not-implemented.sysml holds the absence.
+    //   - UsageExtensionKeyword (`#` prefix metadata, a PrefixMetadataMember), as on
+    //     OccurrenceDefinitionPrefix. `at_part_usage` does not look past a `#`, so a
+    //     usage carrying one never reaches here.
+    //
+    // The node is built even when every slot is empty, as MemberPrefix's is.
+    fn occurrence_usage_prefix(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OccurrenceUsagePrefix);
+        if self.at_basic_usage_prefix() {
+            self.basic_usage_prefix();
+        }
+        if self.at_keyword("individual") {
+            self.bump_as(keyword("individual").unwrap_or(SyntaxKind::BasicName));
+        }
+        if self.at_keyword("snapshot") || self.at_keyword("timeslice") {
+            self.portion_kind();
+        }
+        self.finish_node();
+    }
+
+    /// Whether any keyword of a `BasicUsagePrefix` is written here.
+    fn at_basic_usage_prefix(&self) -> bool {
+        [
+            "in",
+            "out",
+            "inout",
+            "derived",
+            "abstract",
+            "variation",
+            "constant",
+            "ref",
+        ]
+        .iter()
+        .any(|word| self.at_keyword(word))
+    }
+
+    // production: BasicUsagePrefix
+    //
+    // BasicUsagePrefix : Usage = RefPrefix ( isReference ?= 'ref' )?
+    //                                                            (SysML 8.2.2.6.2)
+    fn basic_usage_prefix(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::BasicUsagePrefix);
+        self.ref_prefix();
+        if self.at_keyword("ref") {
+            self.bump_as(keyword("ref").unwrap_or(SyntaxKind::BasicName));
+        }
+        self.finish_node();
+    }
+
+    // production: RefPrefix
+    //
+    // RefPrefix : Usage = ( direction = FeatureDirection )?
+    //     ( isDerived ?= 'derived' )?
+    //     ( isAbstract ?= 'abstract' | isVariation ?= 'variation' )?
+    //     ( isConstant ?= 'constant' )?                          (SysML 8.2.2.6.2)
+    //
+    // Every part is optional, so the node may be empty — `ref part p;` writes a
+    // BasicUsagePrefix whose RefPrefix holds nothing.
+    fn ref_prefix(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::RefPrefix);
+        if self.at_keyword("in") || self.at_keyword("out") || self.at_keyword("inout") {
+            self.feature_direction();
+        }
+        self.eat_optional_keyword("derived");
+        // `isAbstract ?= 'abstract' | isVariation ?= 'variation'` is an alternation,
+        // so taking one forecloses the other: `abstract variation part p;` leaves
+        // `variation` for the caller to report rather than consuming both.
+        if let Some(word) = ["abstract", "variation"]
+            .iter()
+            .find(|word| self.at_keyword(word))
+        {
+            self.bump_as(keyword(word).unwrap_or(SyntaxKind::BasicName));
+        }
+        self.eat_optional_keyword("constant");
+        self.finish_node();
+    }
+
+    /// Consume `text` if it is written here, leaving the position alone if it is not.
+    fn eat_optional_keyword(&mut self, text: &str) {
+        if self.at_keyword(text) {
+            self.bump_as(keyword(text).unwrap_or(SyntaxKind::BasicName));
+        }
+    }
+
+    // production: FeatureDirection
+    //
+    // FeatureDirection : FeatureDirectionKind = 'in' | 'out' | 'inout'
+    //                                                            (SysML 8.2.2.6.2)
+    fn feature_direction(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FeatureDirection);
+        match ["in", "out", "inout"]
+            .iter()
+            .find(|word| self.at_keyword(word))
+        {
+            Some(word) => self.bump_as(keyword(word).unwrap_or(SyntaxKind::BasicName)),
+            None => self.error_expected("`in`, `out` or `inout`"),
+        }
+        self.finish_node();
+    }
+
+    // production: PortionKind
+    //
+    // PortionKind = 'snapshot' | 'timeslice'                     (SysML 8.2.2.9.2)
+    fn portion_kind(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PortionKind);
+        match ["snapshot", "timeslice"]
+            .iter()
+            .find(|word| self.at_keyword(word))
+        {
+            Some(word) => self.bump_as(keyword(word).unwrap_or(SyntaxKind::BasicName)),
+            None => self.error_expected("`snapshot` or `timeslice`"),
+        }
+        self.finish_node();
+    }
+
+    // production: Usage
+    //
+    // Usage = UsageDeclaration UsageCompletion                   (SysML 8.2.2.6.2)
+    fn usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Usage);
+        self.usage_declaration();
+        self.usage_completion();
+        self.finish_node();
+    }
+
+    // production: UsageDeclaration
+    //
+    // UsageDeclaration : Usage = Identification FeatureSpecializationPart?
+    //                                                            (SysML 8.2.2.6.2)
+    fn usage_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::UsageDeclaration);
+        self.identification();
+        if self.at_feature_specialization() {
+            self.feature_specialization_part();
+        }
+        self.finish_node();
+    }
+
+    /// Whether an implemented `FeatureSpecialization` is written here.
+    ///
+    /// Only `Typings` of the five alternatives is implemented, so only its two
+    /// spellings are recognised (`SysML` 8.2.2.6.5).
+    fn at_feature_specialization(&self) -> bool {
+        self.at(SyntaxKind::Colon) || (self.at_keyword("defined") && self.nth_is_keyword(1, "by"))
+    }
+
+    // FeatureSpecializationPart : Feature =
+    //     ( -> FeatureSpecialization )+ MultiplicityPart? FeatureSpecialization*
+    //     | MultiplicityPart FeatureSpecialization*              (KerML 8.2.4.3.1)
+    //
+    // FeatureSpecialization = Typings | Subsettings | References | Crosses
+    //                       | Redefinitions                      (SysML 8.2.2.6.5)
+    //
+    // NOT marked for coverage, and neither is FeatureSpecialization. One of the five
+    // alternatives is implemented, Typings; Subsettings, References, Crosses and
+    // Redefinitions are not. MultiplicityPart is not either — it reaches
+    // OwnedMultiplicity and so an expression parser, which does not exist yet — which
+    // is why the whole second alternative is absent and why this method takes
+    // specializations only. tests/rejection/multiplicity-part-is-not-implemented.sysml
+    // holds that absence.
+    //
+    // The `->` in the clause is a syntactic predicate, an LL workaround for the Pilot's
+    // parser generator; it is not ported.
+    fn feature_specialization_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FeatureSpecializationPart);
+        while self.at_feature_specialization() {
+            self.typings();
+        }
+        self.finish_node();
+    }
+
+    // production: Typings
+    //
+    // Typings : Feature = TypedBy ( ',' ownedRelationship += FeatureTyping )*
+    //                                                            (SysML 8.2.2.6.5)
+    fn typings(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Typings);
+        self.typed_by();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.feature_typing();
+        }
+        self.finish_node();
+    }
+
+    // production: TypedBy
+    //
+    // TypedBy : Feature = DEFINED_BY ownedRelationship += FeatureTyping
+    //                                                            (SysML 8.2.2.6.5)
+    //
+    // DEFINED_BY = ':' | 'defined' 'by'                          (SysML 8.2.2.1.2)
+    //
+    // SysML reserves `defined`, not `typed`: KerML's TypedBy spells the same position
+    // `':' | 'typed' 'by'`, and deviations.json records that split under
+    // MetadataUsageDeclaration.
+    fn typed_by(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TypedBy);
+        if self.at(SyntaxKind::Colon) {
+            self.bump();
+        } else {
+            self.expect_keyword("defined");
+            self.expect_keyword("by");
+        }
+        self.feature_typing();
+        self.finish_node();
+    }
+
+    // production: FeatureTyping
+    //
+    // FeatureTyping = OwnedFeatureTyping | ConjugatedPortTyping  (SysML 8.2.2.6.5)
+    //
+    // ConjugatedPortTyping (`~` a port definition) is not implemented; a usage typed
+    // by one is reported rather than accepted.
+    fn feature_typing(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FeatureTyping);
+        self.owned_feature_typing();
+        self.finish_node();
+    }
+
+    // production: OwnedFeatureTyping
+    //
+    // OwnedFeatureTyping : FeatureTyping =
+    //     type = [QualifiedName] | ownedRelatedElement += OwnedFeatureChain
+    //                                                            (SysML 8.2.2.6.5)
+    //
+    // OwnedFeatureChain needs two or more segments joined by '.', and a FeatureChain
+    // has at least two by construction, so a bare QualifiedName is never ambiguous
+    // with one. The chain alternative is not implemented.
+    fn owned_feature_typing(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OwnedFeatureTyping);
+        self.qualified_name();
+        self.finish_node();
+    }
+
+    // UsageCompletion : Usage = ValuePart? UsageBody             (SysML 8.2.2.6.2)
+    //
+    // NOT marked for coverage. ValuePart (`ValuePart = FeatureValue`, and
+    // `FeatureValue = ( '=' | ':=' | 'default' ( '=' | ':=' )? ) OwnedExpression`)
+    // reaches an expression parser, which does not exist yet, so a usage carrying a
+    // value is reported rather than accepted;
+    // tests/rejection/value-part-is-not-implemented.sysml holds that absence.
+    fn usage_completion(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::UsageCompletion);
+        self.usage_body();
+        self.finish_node();
+    }
+
+    // production: UsageBody
+    //
+    // UsageBody : Usage = DefinitionBody                         (SysML 8.2.2.6.2)
+    fn usage_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::UsageBody);
+        self.definition_body();
         self.finish_node();
     }
 

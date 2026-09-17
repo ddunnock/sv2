@@ -1,0 +1,30 @@
+---
+source: crates/sv2-syntax/tests/parser.rs
+assertion_line: 948
+expression: render(&parsed.syntax())
+---
+RootNamespace
+  PackageMember
+    MemberPrefix
+    PartUsage
+      OccurrenceUsagePrefix
+      KwPart "part"
+      Whitespace " "
+      Usage
+        UsageDeclaration
+          Identification
+            BasicName "engine"
+          Whitespace " "
+          FeatureSpecializationPart
+            Typings
+              TypedBy
+                Colon ":"
+                Whitespace " "
+                FeatureTyping
+                  OwnedFeatureTyping
+                    QualifiedName
+                      BasicName "Engine"
+        UsageCompletion
+          UsageBody
+            DefinitionBody
+              Semicolon ";"

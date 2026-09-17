@@ -57,6 +57,15 @@ fn subtree(rendered: &str, kind: &str) -> String {
         .join("\n")
 }
 
+/// How many nodes in `rendered` are exactly `kind`.
+///
+/// Whole lines, not substrings: several node names contain another's, so
+/// `FeatureTyping` counted as a substring also finds every `OwnedFeatureTyping`.
+/// A node line is its name alone; a token line carries its text after it.
+fn nodes_named(rendered: &str, kind: &str) -> usize {
+    rendered.lines().filter(|l| l.trim() == kind).count()
+}
+
 fn write_element(out: &mut String, element: SyntaxElement, depth: usize) {
     let indent = "  ".repeat(depth);
     match element {
@@ -135,16 +144,15 @@ fn an_unclosed_brace_is_reported_and_the_contents_are_kept() {
 
 #[test]
 fn text_no_implemented_production_accepts_becomes_an_error_node() {
-    // This case was `part def Engine;`, a rejection by absence that stopped being
-    // true when PartDefinition landed: SysML 8.2.2.11 makes it a well-formed
-    // PartDefinition (`OccurrenceDefinitionPrefix 'part' 'def' Definition`), and
-    // the positive cases below now hold it. The property the test protects is
-    // unchanged — text this parser cannot read is reported, not silently accepted —
-    // so it moves to a construct that is still unimplemented. `part engine : Engine;`
-    // is a PartUsage (SysML 8.2.2.11), valid SysML that no production here reads.
-    // It is a rejection by absence too, and says so; replace it again when
-    // PartUsage lands.
-    let parsed = parse_rejected("part engine : Engine;");
+    // This case was `part def Engine;`, then `part engine : Engine;`. Each stopped
+    // being a rejection when its production landed — PartDefinition, then PartUsage
+    // (both SysML 8.2.2.11) — and the positive cases below now hold both. The
+    // property the test protects is unchanged: text this parser cannot read is
+    // reported, not silently accepted. So it moves again, to a construct that is
+    // still unimplemented. `attribute mass : Real;` is an AttributeUsage
+    // (SysML 8.2.2.7), valid SysML that no production here reads. It is a rejection
+    // by absence too, and says so; replace it again when AttributeUsage lands.
+    let parsed = parse_rejected("attribute mass : Real;");
     assert!(render(&parsed.syntax()).contains("Error"));
 }
 
@@ -881,12 +889,15 @@ fn a_reserved_word_cannot_name_a_part_definition() {
 
 #[test]
 fn unimplemented_definition_body_items_are_reported_at_the_body() {
-    // `part engine : Engine;` is a PartUsage, an OccurrenceUsageMember — valid SysML
-    // this parser does not implement. It must be reported, and the definition after
-    // it must still parse: recovery happens at the enclosing body.
-    let parsed = parse_rejected("part def Vehicle { part engine : Engine; part def Wheel; }");
+    // This case was `part engine : Engine;`, which PartUsage now reads; a part usage
+    // in a definition body is exercised as a positive case below. The property is
+    // unchanged, so the unimplemented item moves: `attribute mass : Real;` is an
+    // AttributeUsage (SysML 8.2.2.7) that no production here reads. It must be
+    // reported, and the definition after it must still parse — recovery happens at
+    // the enclosing body.
+    let parsed = parse_rejected("part def Vehicle { attribute mass : Real; part def Wheel; }");
     let rendered = render(&parsed.syntax());
-    assert_eq!(rendered.matches("PartDefinition").count(), 2, "{rendered}");
+    assert_eq!(nodes_named(&rendered, "PartDefinition"), 2, "{rendered}");
 }
 
 #[test]
@@ -900,6 +911,195 @@ fn prefix_metadata_on_a_definition_is_reported_not_accepted() {
 #[test]
 fn parsing_annotations_and_definitions_never_panics_on_truncated_input() {
     let source = "public abstract individual part def <V> Vehicle :> A::B, C {\n  alias X for Y { comment c about Z locale \"en\" /* b */ rep r language \"l\" /* t */ }\n}";
+    for end in 0..=source.len() {
+        if let Some(prefix) = source.get(..end) {
+            assert_eq!(parse(prefix).text(), prefix);
+        }
+    }
+}
+
+// -- PartUsage, SysML 8.2.2.11 ----------------------------------------------------
+//
+//   PartUsage              = OccurrenceUsagePrefix 'part' Usage
+//   OccurrenceUsagePrefix  = ( EndUsagePrefix
+//                            | BasicUsagePrefix 'individual'? PortionKind? )
+//                            UsageExtensionKeyword*                (8.2.2.9.2)
+//   BasicUsagePrefix       = RefPrefix 'ref'?                      (8.2.2.6.2)
+//   RefPrefix              = FeatureDirection? 'derived'?
+//                            ( 'abstract' | 'variation' )? 'constant'?
+//   FeatureDirection       = 'in' | 'out' | 'inout'
+//   PortionKind            = 'snapshot' | 'timeslice'              (8.2.2.9.2)
+//   Usage                  = UsageDeclaration UsageCompletion      (8.2.2.6.2)
+//   UsageDeclaration       = Identification FeatureSpecializationPart?
+//   UsageCompletion        = ValuePart? UsageBody
+//   UsageBody              = DefinitionBody
+//   FeatureSpecializationPart = FeatureSpecialization+ MultiplicityPart?
+//                               FeatureSpecialization*
+//                             | MultiplicityPart FeatureSpecialization*  (KerML 8.2.4.3.1)
+//   Typings                = TypedBy ( ',' FeatureTyping )*        (8.2.2.6.5)
+//   TypedBy                = ( ':' | 'defined' 'by' ) FeatureTyping
+//   FeatureTyping          = OwnedFeatureTyping | ConjugatedPortTyping
+//   OwnedFeatureTyping     = QualifiedName | OwnedFeatureChain
+
+#[test]
+fn a_part_usage_is_a_package_member() {
+    // The rejection-by-absence case this replaces, now accepted.
+    let parsed = parse_accepted("part engine : Engine;");
+    insta::assert_snapshot!(render(&parsed.syntax()));
+}
+
+#[test]
+fn part_usages_as_the_corpus_writes_them() {
+    // Each line is from the pinned corpus.
+    parse_accepted("part vehicle : Vehicle { }");
+    parse_accepted("part eng : Engine;");
+    parse_accepted("part interior { }");
+    // "Interaction Sequencing Examples/ServerSequenceModel.sysml" line 8.
+    parse_accepted("ref part subscriber;");
+    // SimpleVehicleModel.sysml line 1491.
+    parse_accepted("abstract part vehicleFamily { }");
+    // "10-Analysis and Trades/10b-Trade-off Among Alternative Configurations" line 40.
+    parse_accepted("variation part engineChoice;");
+    // The same file, line 80.
+    parse_accepted("in part anEngine;");
+}
+
+#[test]
+fn a_part_usage_builds_the_nodes_the_grammar_names() {
+    let parsed = parse_accepted("part engine : Engine, Base::Motor { }");
+    let rendered = render(&parsed.syntax());
+    for node in [
+        "PackageMember",
+        "PartUsage",
+        "OccurrenceUsagePrefix",
+        "KwPart",
+        "Usage",
+        "UsageDeclaration",
+        "Identification",
+        "FeatureSpecializationPart",
+        "Typings",
+        "TypedBy",
+        "FeatureTyping",
+        "OwnedFeatureTyping",
+        "QualifiedName",
+        "UsageCompletion",
+        "UsageBody",
+        "DefinitionBody",
+    ] {
+        assert!(rendered.contains(node), "no {node} node:\n{rendered}");
+    }
+    // Typings = TypedBy ( ',' FeatureTyping )* — two types, one TypedBy.
+    // Counted as whole lines: `FeatureTyping` is a substring of `OwnedFeatureTyping`,
+    // so a substring count would report four.
+    assert_eq!(nodes_named(&rendered, "FeatureTyping"), 2, "{rendered}");
+    assert_eq!(
+        nodes_named(&rendered, "OwnedFeatureTyping"),
+        2,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "TypedBy"), 1, "{rendered}");
+    // No prefix keyword was written, so none of the prefix's parts is built.
+    assert!(!rendered.contains("BasicUsagePrefix"), "{rendered}");
+    assert!(!rendered.contains("RefPrefix"), "{rendered}");
+}
+
+#[test]
+fn a_part_usage_need_not_be_typed() {
+    // UsageDeclaration = Identification FeatureSpecializationPart?, both nullable
+    // (SysML 8.2.2.6.2, and Identification at 8.2.2.2).
+    parse_accepted("part engine;");
+    parse_accepted("part;");
+    let parsed = parse_accepted("part engine;");
+    assert!(
+        !render(&parsed.syntax()).contains("FeatureSpecializationPart"),
+        "an untyped usage builds no specialization part"
+    );
+}
+
+#[test]
+fn typed_by_may_be_spelled_out() {
+    // TypedBy = ( ':' | 'defined' 'by' ) FeatureTyping (SysML 8.2.2.6.5). The corpus
+    // writes only ':' — every 'defined by' in it is prose inside a comment — so this
+    // expectation comes from the clause.
+    parse_accepted("part engine defined by Engine;");
+}
+
+#[test]
+fn the_usage_prefix_takes_its_keywords_in_the_order_the_clause_gives() {
+    // RefPrefix = FeatureDirection? 'derived'? ( 'abstract' | 'variation' )?
+    // 'constant'?, then BasicUsagePrefix adds 'ref'?, then OccurrenceUsagePrefix
+    // adds 'individual'? and PortionKind? (SysML 8.2.2.6.2, 8.2.2.9.2).
+    let parsed = parse_accepted("in derived abstract constant ref individual snapshot part p;");
+    let rendered = render(&parsed.syntax());
+    for node in [
+        "OccurrenceUsagePrefix",
+        "BasicUsagePrefix",
+        "RefPrefix",
+        "FeatureDirection",
+        "PortionKind",
+    ] {
+        assert!(rendered.contains(node), "no {node} node:\n{rendered}");
+    }
+}
+
+#[test]
+fn each_feature_direction_and_portion_kind_is_accepted() {
+    for direction in ["in", "out", "inout"] {
+        parse_accepted(&format!("{direction} part p;"));
+    }
+    for portion in ["snapshot", "timeslice"] {
+        parse_accepted(&format!("{portion} part p;"));
+    }
+}
+
+#[test]
+fn a_part_usage_is_not_a_part_definition() {
+    // The two differ only by 'def' (SysML 8.2.2.11). Each must build its own node.
+    let usage = render(&parse_accepted("part Engine;").syntax());
+    assert!(usage.contains("PartUsage"), "{usage}");
+    assert!(!usage.contains("PartDefinition"), "{usage}");
+
+    let definition = render(&parse_accepted("part def Engine;").syntax());
+    assert!(definition.contains("PartDefinition"), "{definition}");
+    assert!(!definition.contains("PartUsage"), "{definition}");
+}
+
+#[test]
+fn a_part_usage_holds_members_in_its_body() {
+    // UsageBody = DefinitionBody = ';' | '{' DefinitionBodyItem* '}' (SysML 8.2.2.6.1).
+    let parsed = parse_accepted("part vehicle : Vehicle { part engine : Engine; }");
+    let rendered = render(&parsed.syntax());
+    assert_eq!(rendered.matches("PartUsage").count(), 2, "{rendered}");
+}
+
+#[test]
+fn a_multiplicity_on_a_usage_is_reported_not_accepted() {
+    // `part frontSeat[2];` is valid SysML and appears in the corpus, but
+    // MultiplicityPart (KerML 8.2.4.3.1) needs an expression parser and is not
+    // implemented: a rejection by absence. Replace this when MultiplicityPart lands.
+    parse_rejected("part frontSeat[2];");
+}
+
+#[test]
+fn a_value_on_a_usage_is_reported_not_accepted() {
+    // ValuePart = FeatureValue = ( '=' | ':=' | 'default' ... ) OwnedExpression
+    // (SysML 8.2.2.6.2). FeatureValue needs an expression parser and is not
+    // implemented: a rejection by absence. Replace this when ValuePart lands.
+    parse_rejected("part engine : Engine = x;");
+}
+
+#[test]
+fn an_end_usage_prefix_is_reported_not_accepted() {
+    // OccurrenceUsagePrefix's other alternative, EndUsagePrefix = 'end'
+    // OwnedCrossFeatureMember? (SysML 8.2.2.9.2, 8.2.2.6.2), is not implemented:
+    // a rejection by absence. The corpus writes no `end part`, but the clause admits
+    // it. Replace this when EndUsagePrefix lands.
+    parse_rejected("end part p;");
+}
+
+#[test]
+fn parsing_a_part_usage_never_panics_on_truncated_input() {
+    let source = "in derived abstract constant ref individual snapshot part <e> engine : Engine, Base::Motor { part inner; }";
     for end in 0..=source.len() {
         if let Some(prefix) = source.get(..end) {
             assert_eq!(parse(prefix).text(), prefix);

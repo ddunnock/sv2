@@ -167,6 +167,39 @@ NODES = [
     ("OwnedSubclassification", "`superClassifier = [QualifiedName]`. `SysML` 8.2.2.6.5."),
     ("DefinitionBody", "`';' | '{' DefinitionBodyItem* '}'`. `SysML` 8.2.2.6.1."),
     ("DefinitionMember", "`MemberPrefix DefinitionElement`. `SysML` 8.2.2.6.1."),
+    ("PartUsage", "`OccurrenceUsagePrefix 'part' Usage`. `SysML` 8.2.2.11."),
+    (
+        "OccurrenceUsagePrefix",
+        (
+            "`( EndUsagePrefix | BasicUsagePrefix 'individual'? PortionKind? ) "
+            "UsageExtensionKeyword*`. `SysML` 8.2.2.9.2."
+        ),
+    ),
+    ("BasicUsagePrefix", "`RefPrefix 'ref'?`. `SysML` 8.2.2.6.2."),
+    (
+        "RefPrefix",
+        (
+            "`FeatureDirection? 'derived'? ( 'abstract' | 'variation' )? 'constant'?`. "
+            "`SysML` 8.2.2.6.2."
+        ),
+    ),
+    ("FeatureDirection", "`'in' | 'out' | 'inout'`. `SysML` 8.2.2.6.2."),
+    ("PortionKind", "`'snapshot' | 'timeslice'`. `SysML` 8.2.2.9.2."),
+    ("Usage", "`UsageDeclaration UsageCompletion`. `SysML` 8.2.2.6.2."),
+    ("UsageDeclaration", "`Identification FeatureSpecializationPart?`. `SysML` 8.2.2.6.2."),
+    ("UsageCompletion", "`ValuePart? UsageBody`. `SysML` 8.2.2.6.2."),
+    ("UsageBody", "`DefinitionBody`. `SysML` 8.2.2.6.2."),
+    (
+        "FeatureSpecializationPart",
+        (
+            "`FeatureSpecialization+ MultiplicityPart? FeatureSpecialization* "
+            "| MultiplicityPart FeatureSpecialization*`. `KerML` 8.2.4.3.1."
+        ),
+    ),
+    ("Typings", "`TypedBy ( ',' FeatureTyping )*`. `SysML` 8.2.2.6.5."),
+    ("TypedBy", "`( ':' | 'defined' 'by' ) FeatureTyping`. `SysML` 8.2.2.6.5."),
+    ("FeatureTyping", "`OwnedFeatureTyping | ConjugatedPortTyping`. `SysML` 8.2.2.6.5."),
+    ("OwnedFeatureTyping", "`QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5."),
     ("Error", "recovered-over text; carries its bytes so the tree stays lossless"),
 ]
 

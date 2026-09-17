@@ -535,6 +535,36 @@ pub enum SyntaxKind {
     DefinitionBody,
     /// `MemberPrefix DefinitionElement`. `SysML` 8.2.2.6.1.
     DefinitionMember,
+    /// `OccurrenceUsagePrefix 'part' Usage`. `SysML` 8.2.2.11.
+    PartUsage,
+    /// `( EndUsagePrefix | BasicUsagePrefix 'individual'? PortionKind? ) UsageExtensionKeyword*`. `SysML` 8.2.2.9.2.
+    OccurrenceUsagePrefix,
+    /// `RefPrefix 'ref'?`. `SysML` 8.2.2.6.2.
+    BasicUsagePrefix,
+    /// `FeatureDirection? 'derived'? ( 'abstract' | 'variation' )? 'constant'?`. `SysML` 8.2.2.6.2.
+    RefPrefix,
+    /// `'in' | 'out' | 'inout'`. `SysML` 8.2.2.6.2.
+    FeatureDirection,
+    /// `'snapshot' | 'timeslice'`. `SysML` 8.2.2.9.2.
+    PortionKind,
+    /// `UsageDeclaration UsageCompletion`. `SysML` 8.2.2.6.2.
+    Usage,
+    /// `Identification FeatureSpecializationPart?`. `SysML` 8.2.2.6.2.
+    UsageDeclaration,
+    /// `ValuePart? UsageBody`. `SysML` 8.2.2.6.2.
+    UsageCompletion,
+    /// `DefinitionBody`. `SysML` 8.2.2.6.2.
+    UsageBody,
+    /// `FeatureSpecialization+ MultiplicityPart? FeatureSpecialization* | MultiplicityPart FeatureSpecialization*`. `KerML` 8.2.4.3.1.
+    FeatureSpecializationPart,
+    /// `TypedBy ( ',' FeatureTyping )*`. `SysML` 8.2.2.6.5.
+    Typings,
+    /// `( ':' | 'defined' 'by' ) FeatureTyping`. `SysML` 8.2.2.6.5.
+    TypedBy,
+    /// `OwnedFeatureTyping | ConjugatedPortTyping`. `SysML` 8.2.2.6.5.
+    FeatureTyping,
+    /// `QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5.
+    OwnedFeatureTyping,
     /// recovered-over text; carries its bytes so the tree stays lossless
     Error,
 
@@ -808,6 +838,21 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::OwnedSubclassification,
     SyntaxKind::DefinitionBody,
     SyntaxKind::DefinitionMember,
+    SyntaxKind::PartUsage,
+    SyntaxKind::OccurrenceUsagePrefix,
+    SyntaxKind::BasicUsagePrefix,
+    SyntaxKind::RefPrefix,
+    SyntaxKind::FeatureDirection,
+    SyntaxKind::PortionKind,
+    SyntaxKind::Usage,
+    SyntaxKind::UsageDeclaration,
+    SyntaxKind::UsageCompletion,
+    SyntaxKind::UsageBody,
+    SyntaxKind::FeatureSpecializationPart,
+    SyntaxKind::Typings,
+    SyntaxKind::TypedBy,
+    SyntaxKind::FeatureTyping,
+    SyntaxKind::OwnedFeatureTyping,
     SyntaxKind::Error,
     SyntaxKind::Tombstone,
 ];
