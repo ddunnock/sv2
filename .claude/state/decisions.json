@@ -3,7 +3,9 @@
   "_note": "Index only. docs/adr/ is the source of truth.",
   "open": [
     "0009",
-    "0013"
+    "0013",
+    "0016",
+    "0017"
   ],
   "decisions": [
     {
@@ -103,6 +105,20 @@
       "status": "accepted",
       "date": "2026-09-17",
       "file": "docs/adr/0015-a-production-belongs-to-the-grammars-that-reach-it.md"
+    },
+    {
+      "id": "0016",
+      "title": "ADR-0016: Stable element identity via petname IDs carried in inline textual notes",
+      "status": "proposed",
+      "date": "2026-09-17",
+      "file": "docs/adr/0016-element-identity-via-petname-notes.md"
+    },
+    {
+      "id": "0017",
+      "title": "ADR-0017: Use view-scoped JSON Lines sidecar files for diagram layout and styling",
+      "status": "proposed",
+      "date": "2026-09-17",
+      "file": "docs/adr/0017-view-scoped-json-lines-sidecar-for-diagram-layout-and-styling.md"
     }
   ]
 }
