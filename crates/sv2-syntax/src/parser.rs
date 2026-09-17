@@ -251,24 +251,41 @@ impl<'a> Parser<'a> {
     /// `PackageMember = MemberPrefix ( DefinitionElement | UsageElement )`
     /// (`SysML` 8.2.2.6.1), and a definition body admits usages too, which is what
     /// makes `part def Vehicle { part engine : Engine; }` one definition holding one
-    /// usage. `PartUsage` is the only `UsageElement` implemented.
+    /// usage. `PartUsage` and `AttributeUsage` are the `UsageElement`s implemented.
     fn at_member_element(&self, n: usize) -> bool {
-        self.at_definition_element(n) || self.at_part_usage(n)
+        self.at_definition_element(n) || self.at_part_usage(n) || self.at_attribute_usage(n)
     }
 
-    /// The index just past an `OccurrenceUsagePrefix` written from the `n`th token.
+    /// Whether an `AttributeUsage` starts at the `n`th meaningful token.
     ///
-    /// `OccurrenceUsagePrefix = ( EndUsagePrefix | BasicUsagePrefix 'individual'?
-    /// PortionKind? ) UsageExtensionKeyword*` (`SysML` 8.2.2.9.2), over
-    /// `BasicUsagePrefix = RefPrefix 'ref'?` and `RefPrefix = FeatureDirection?
-    /// 'derived'? ( 'abstract' | 'variation' )? 'constant'?` (8.2.2.6.2). Each part is
-    /// optional, so this returns `n` unchanged when none is written.
+    /// `AttributeUsage = UsagePrefix 'attribute' Usage` (`SysML` 8.2.2.7). As with a
+    /// part, the `def` is what separates the usage from the definition, and
+    /// `AttributeDefinition` is not implemented.
     ///
-    /// The keywords are counted in the clause's order, and each at most once: that is
+    /// The prefix looked past is a `UsagePrefix`, which has no `'individual'` and no
+    /// `PortionKind`: an attribute is not an occurrence. Writing one is an error
+    /// rather than a longer prefix, which is what
+    /// `an_attribute_is_not_an_occurrence_and_takes_no_portion_kind` holds.
+    fn at_attribute_usage(&self, n: usize) -> bool {
+        let n = self.skip_basic_usage_prefix(n);
+        self.nth_is_keyword(n, "attribute") && !self.nth_is_keyword(n + 1, "def")
+    }
+
+    /// The index just past a `BasicUsagePrefix` written from the `n`th token.
+    ///
+    /// `BasicUsagePrefix = RefPrefix 'ref'?` over `RefPrefix = FeatureDirection?
+    /// 'derived'? ( 'abstract' | 'variation' )? 'constant'?` (`SysML` 8.2.2.6.2).
+    /// Every part is optional, so this returns `n` unchanged when none is written.
+    ///
+    /// The keywords are counted in the clause's order and each at most once, which is
     /// what makes `abstract in part p;` two errors rather than a longer prefix.
-    /// `EndUsagePrefix` and `UsageExtensionKeyword` are not implemented and are not
-    /// looked past, so a usage carrying one is reported rather than silently accepted.
-    fn skip_usage_prefix(&self, n: usize) -> usize {
+    ///
+    /// This is also the whole of a `UsagePrefix` as implemented: `UsagePrefix =
+    /// UnextendedUsagePrefix UsageExtensionKeyword*` and `UnextendedUsagePrefix =
+    /// EndUsagePrefix | BasicUsagePrefix`, and neither `EndUsagePrefix` nor
+    /// `UsageExtensionKeyword` is implemented, so neither is looked past — a usage
+    /// carrying one is reported rather than silently accepted.
+    fn skip_basic_usage_prefix(&self, n: usize) -> usize {
         let mut n = n;
         for words in [
             &["in", "out", "inout"][..],
@@ -276,9 +293,22 @@ impl<'a> Parser<'a> {
             &["abstract", "variation"],
             &["constant"],
             &["ref"],
-            &["individual"],
-            &["snapshot", "timeslice"],
         ] {
+            if words.iter().any(|word| self.nth_is_keyword(n, word)) {
+                n += 1;
+            }
+        }
+        n
+    }
+
+    /// The index just past an `OccurrenceUsagePrefix` written from the `n`th token.
+    ///
+    /// `OccurrenceUsagePrefix = ( EndUsagePrefix | BasicUsagePrefix 'individual'?
+    /// PortionKind? ) UsageExtensionKeyword*` (`SysML` 8.2.2.9.2) — a
+    /// `BasicUsagePrefix` and the two keywords only an occurrence may carry.
+    fn skip_usage_prefix(&self, n: usize) -> usize {
+        let mut n = self.skip_basic_usage_prefix(n);
+        for words in [&["individual"][..], &["snapshot", "timeslice"]] {
             if words.iter().any(|word| self.nth_is_keyword(n, word)) {
                 n += 1;
             }
@@ -529,8 +559,45 @@ impl<'a> Parser<'a> {
             self.part_definition();
         } else if self.at_part_usage(0) {
             self.part_usage();
+        } else if self.at_attribute_usage(0) {
+            self.attribute_usage();
         } else {
-            self.error_expected("a package, a part definition or a part usage");
+            self.error_expected("a package, a part definition, a part usage or an attribute usage");
+        }
+        self.finish_node();
+    }
+
+    // production: AttributeUsage
+    //
+    // AttributeUsage = UsagePrefix 'attribute' Usage             (SysML 8.2.2.7)
+    fn attribute_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::AttributeUsage);
+        self.usage_prefix();
+        self.expect_keyword("attribute");
+        self.usage();
+        self.finish_node();
+    }
+
+    // UsagePrefix : Usage = UnextendedUsagePrefix UsageExtensionKeyword*
+    //                                                            (SysML 8.2.2.6.2)
+    //
+    // UnextendedUsagePrefix = EndUsagePrefix | BasicUsagePrefix
+    //
+    // NOT marked for coverage, and neither is UnextendedUsagePrefix. EndUsagePrefix,
+    // one of the two alternatives, is unimplemented, and so is UsageExtensionKeyword
+    // (`#` prefix metadata) — the same two gaps OccurrenceUsagePrefix has, and held
+    // by the same rejection case.
+    //
+    // UnextendedUsagePrefix gets no node: it is an alternation, and the alternative
+    // that matched says which was taken.
+    //
+    // The node is built even when empty, as MemberPrefix's is.
+    fn usage_prefix(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::UsagePrefix);
+        if self.at_basic_usage_prefix() {
+            self.basic_usage_prefix();
         }
         self.finish_node();
     }
@@ -703,12 +770,208 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    /// Whether an implemented `FeatureSpecialization` is written here.
+    /// Whether a `FeatureSpecialization` is written here.
     ///
-    /// Only `Typings` of the five alternatives is implemented, so only its two
-    /// spellings are recognised (`SysML` 8.2.2.6.5).
+    /// `FeatureSpecialization = Typings | Subsettings | References | Crosses
+    /// | Redefinitions` (`SysML` 8.2.2.6.5). Each opens with one of the special
+    /// lexical terminals of 8.2.2.1.2, which has a symbol form and a word form, and
+    /// the five are told apart on that one token.
+    ///
+    /// The symbols are checked before the words because the lexer produces a distinct
+    /// kind for each symbol, while every word arrives as a `BasicName`.
     fn at_feature_specialization(&self) -> bool {
-        self.at(SyntaxKind::Colon) || (self.at_keyword("defined") && self.nth_is_keyword(1, "by"))
+        const SYMBOLS: [SyntaxKind; 5] = [
+            SyntaxKind::Colon,        // DEFINED_BY
+            SyntaxKind::ColonGt,      // SUBSETS
+            SyntaxKind::ColonGtGt,    // REDEFINES
+            SyntaxKind::ColonColonGt, // REFERENCES
+            SyntaxKind::FatArrow,     // CROSSES
+        ];
+        SYMBOLS.iter().any(|kind| self.at(*kind))
+            || ["subsets", "redefines", "references", "crosses"]
+                .iter()
+                .any(|word| self.at_keyword(word))
+            || (self.at_keyword("defined") && self.nth_is_keyword(1, "by"))
+    }
+
+    // FeatureSpecialization = Typings | Subsettings | References | Crosses
+    //                       | Redefinitions                      (SysML 8.2.2.6.5)
+    //
+    // No node of its own, as DefinitionElement and UsageElement have none: it is an
+    // alternation, and the alternative that matched already says which was taken, so
+    // a node here would add a level carrying nothing. It is not marked for coverage
+    // for the same reason — there is no method that is it.
+    fn feature_specialization(&mut self) {
+        if self.at(SyntaxKind::ColonGt) || self.at_keyword("subsets") {
+            self.subsettings();
+        } else if self.at(SyntaxKind::ColonGtGt) || self.at_keyword("redefines") {
+            self.redefinitions();
+        } else if self.at(SyntaxKind::ColonColonGt) || self.at_keyword("references") {
+            self.references();
+        } else if self.at(SyntaxKind::FatArrow) || self.at_keyword("crosses") {
+            self.crosses();
+        } else {
+            self.typings();
+        }
+    }
+
+    // production: Subsettings
+    //
+    // Subsettings : Feature = Subsets ( ',' ownedRelationship += OwnedSubsetting )*
+    //                                                            (SysML 8.2.2.6.5)
+    fn subsettings(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Subsettings);
+        self.subsets();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.owned_subsetting();
+        }
+        self.finish_node();
+    }
+
+    // production: Subsets
+    //
+    // Subsets : Feature = SUBSETS ownedRelationship += OwnedSubsetting
+    //                                                            (SysML 8.2.2.6.5)
+    //
+    // SUBSETS = ':>' | 'subsets'                                 (SysML 8.2.2.1.2)
+    fn subsets(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Subsets);
+        self.terminal(SyntaxKind::ColonGt, "subsets", "`:>` or `subsets`");
+        self.owned_subsetting();
+        self.finish_node();
+    }
+
+    // production: OwnedSubsetting
+    //
+    // OwnedSubsetting : Subsetting =
+    //     subsettedFeature = [QualifiedName]
+    //     | ownedRelatedElement += OwnedFeatureChain              (SysML 8.2.2.6.5)
+    //
+    // The OwnedFeatureChain alternative is not implemented; see owned_feature_typing.
+    fn owned_subsetting(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OwnedSubsetting);
+        self.qualified_name();
+        self.finish_node();
+    }
+
+    // production: Redefinitions
+    //
+    // Redefinitions : Feature =
+    //     Redefines ( ',' ownedRelationship += OwnedRedefinition )*
+    //                                                            (SysML 8.2.2.6.5)
+    fn redefinitions(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Redefinitions);
+        self.redefines();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.owned_redefinition();
+        }
+        self.finish_node();
+    }
+
+    // production: Redefines
+    //
+    // Redefines : Feature = REDEFINES ownedRelationship += OwnedRedefinition
+    //                                                            (SysML 8.2.2.6.5)
+    //
+    // REDEFINES = ':>>' | 'redefines'                            (SysML 8.2.2.1.2)
+    fn redefines(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Redefines);
+        self.terminal(SyntaxKind::ColonGtGt, "redefines", "`:>>` or `redefines`");
+        self.owned_redefinition();
+        self.finish_node();
+    }
+
+    // production: OwnedRedefinition
+    //
+    // OwnedRedefinition : Redefinition =
+    //     redefinedFeature = [QualifiedName]
+    //     | ownedRelatedElement += OwnedFeatureChain              (SysML 8.2.2.6.5)
+    fn owned_redefinition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OwnedRedefinition);
+        self.qualified_name();
+        self.finish_node();
+    }
+
+    // production: References
+    //
+    // References : Feature =
+    //     REFERENCES ownedRelationship += OwnedReferenceSubsetting
+    //                                                            (SysML 8.2.2.6.5)
+    //
+    // REFERENCES = '::>' | 'references'                          (SysML 8.2.2.1.2)
+    //
+    // One target, with no repetition — unlike Subsettings and Redefinitions beside
+    // it, so a ',' after the target belongs to whatever encloses this.
+    fn references(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::References);
+        self.terminal(
+            SyntaxKind::ColonColonGt,
+            "references",
+            "`::>` or `references`",
+        );
+        self.owned_reference_subsetting();
+        self.finish_node();
+    }
+
+    // production: OwnedReferenceSubsetting
+    //
+    // OwnedReferenceSubsetting : ReferenceSubsetting =
+    //     referencedFeature = [QualifiedName]
+    //     | ownedRelatedElement += OwnedFeatureChain              (SysML 8.2.2.6.5)
+    fn owned_reference_subsetting(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OwnedReferenceSubsetting);
+        self.qualified_name();
+        self.finish_node();
+    }
+
+    // production: Crosses
+    //
+    // Crosses : Feature = CROSSES ownedRelationship += OwnedCrossSubsetting
+    //                                                            (SysML 8.2.2.6.5)
+    //
+    // CROSSES = '=>' | 'crosses'                                 (SysML 8.2.2.1.2)
+    //
+    // One target, as References has.
+    fn crosses(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Crosses);
+        self.terminal(SyntaxKind::FatArrow, "crosses", "`=>` or `crosses`");
+        self.owned_cross_subsetting();
+        self.finish_node();
+    }
+
+    // production: OwnedCrossSubsetting
+    //
+    // OwnedCrossSubsetting : CrossSubsetting =
+    //     crossedFeature = [QualifiedName]
+    //     | ownedRelatedElement += OwnedFeatureChain              (SysML 8.2.2.6.5)
+    fn owned_cross_subsetting(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OwnedCrossSubsetting);
+        self.qualified_name();
+        self.finish_node();
+    }
+
+    /// Consume one of the special lexical terminals of `SysML` 8.2.2.1.2, in either
+    /// spelling: the operator `symbol`, or `word` written out.
+    fn terminal(&mut self, symbol: SyntaxKind, word: &str, what: &str) {
+        if self.at(symbol) {
+            self.bump();
+        } else if self.at_keyword(word) {
+            self.bump_as(keyword(word).unwrap_or(SyntaxKind::BasicName));
+        } else {
+            self.error_expected(what);
+        }
     }
 
     // FeatureSpecializationPart : Feature =
@@ -718,13 +981,12 @@ impl<'a> Parser<'a> {
     // FeatureSpecialization = Typings | Subsettings | References | Crosses
     //                       | Redefinitions                      (SysML 8.2.2.6.5)
     //
-    // NOT marked for coverage, and neither is FeatureSpecialization. One of the five
-    // alternatives is implemented, Typings; Subsettings, References, Crosses and
-    // Redefinitions are not. MultiplicityPart is not either — it reaches
-    // OwnedMultiplicity and so an expression parser, which does not exist yet — which
-    // is why the whole second alternative is absent and why this method takes
-    // specializations only. tests/rejection/multiplicity-part-is-not-implemented.sysml
-    // holds that absence.
+    // NOT marked for coverage. All five FeatureSpecialization alternatives are
+    // implemented, but MultiplicityPart is not — it reaches OwnedMultiplicity and so
+    // an expression parser, which does not exist yet — so the whole second
+    // alternative is absent and the first cannot take its optional MultiplicityPart.
+    // This method therefore reads `FeatureSpecialization+` and nothing more;
+    // tests/rejection/multiplicity-part-is-not-implemented.sysml holds that absence.
     //
     // The `->` in the clause is a syntactic predicate, an LL workaround for the Pilot's
     // parser generator; it is not ported.
@@ -732,7 +994,7 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::FeatureSpecializationPart);
         while self.at_feature_specialization() {
-            self.typings();
+            self.feature_specialization();
         }
         self.finish_node();
     }

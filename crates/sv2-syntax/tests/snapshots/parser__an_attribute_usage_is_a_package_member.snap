@@ -1,0 +1,30 @@
+---
+source: crates/sv2-syntax/tests/parser.rs
+assertion_line: 1230
+expression: render(&parsed.syntax())
+---
+RootNamespace
+  PackageMember
+    MemberPrefix
+    AttributeUsage
+      UsagePrefix
+      KwAttribute "attribute"
+      Whitespace " "
+      Usage
+        UsageDeclaration
+          Identification
+            BasicName "mass"
+          Whitespace " "
+          FeatureSpecializationPart
+            Typings
+              TypedBy
+                Colon ":"
+                Whitespace " "
+                FeatureTyping
+                  OwnedFeatureTyping
+                    QualifiedName
+                      BasicName "MassValue"
+        UsageCompletion
+          UsageBody
+            DefinitionBody
+              Semicolon ";"

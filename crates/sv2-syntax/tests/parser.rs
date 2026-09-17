@@ -144,15 +144,17 @@ fn an_unclosed_brace_is_reported_and_the_contents_are_kept() {
 
 #[test]
 fn text_no_implemented_production_accepts_becomes_an_error_node() {
-    // This case was `part def Engine;`, then `part engine : Engine;`. Each stopped
-    // being a rejection when its production landed — PartDefinition, then PartUsage
-    // (both SysML 8.2.2.11) — and the positive cases below now hold both. The
-    // property the test protects is unchanged: text this parser cannot read is
-    // reported, not silently accepted. So it moves again, to a construct that is
-    // still unimplemented. `attribute mass : Real;` is an AttributeUsage
-    // (SysML 8.2.2.7), valid SysML that no production here reads. It is a rejection
-    // by absence too, and says so; replace it again when AttributeUsage lands.
-    let parsed = parse_rejected("attribute mass : Real;");
+    // This case has now been `part def Engine;`, `part engine : Engine;` and
+    // `attribute mass : Real;`. Each stopped being a rejection when its production
+    // landed — PartDefinition, PartUsage (both SysML 8.2.2.11), AttributeUsage
+    // (8.2.2.7) — and the positive cases below hold all three. The property the test
+    // protects never changes: text this parser cannot read is reported, not silently
+    // accepted. Only the example has to move, and it will move again, because every
+    // usage production that lands takes the previous example with it.
+    //
+    // `item wheel : Wheel;` is an ItemUsage (SysML 8.2.2.10), valid SysML that no
+    // production here reads. Replace it when ItemUsage lands.
+    let parsed = parse_rejected("item wheel : Wheel;");
     assert!(render(&parsed.syntax()).contains("Error"));
 }
 
@@ -889,13 +891,13 @@ fn a_reserved_word_cannot_name_a_part_definition() {
 
 #[test]
 fn unimplemented_definition_body_items_are_reported_at_the_body() {
-    // This case was `part engine : Engine;`, which PartUsage now reads; a part usage
-    // in a definition body is exercised as a positive case below. The property is
-    // unchanged, so the unimplemented item moves: `attribute mass : Real;` is an
-    // AttributeUsage (SysML 8.2.2.7) that no production here reads. It must be
-    // reported, and the definition after it must still parse — recovery happens at
-    // the enclosing body.
-    let parsed = parse_rejected("part def Vehicle { attribute mass : Real; part def Wheel; }");
+    // The unimplemented item here moves for the same reason as the case above, and
+    // for the third time: both `part engine : Engine;` and `attribute mass : Real;`
+    // are now read, and a part usage and an attribute usage in a definition body are
+    // exercised as positive cases below. `item wheel : Wheel;` is an ItemUsage
+    // (SysML 8.2.2.10) that no production here reads. It must be reported, and the
+    // definition after it must still parse — recovery happens at the enclosing body.
+    let parsed = parse_rejected("part def Vehicle { item wheel : Wheel; part def Wheel; }");
     let rendered = render(&parsed.syntax());
     assert_eq!(nodes_named(&rendered, "PartDefinition"), 2, "{rendered}");
 }
@@ -1105,4 +1107,180 @@ fn parsing_a_part_usage_never_panics_on_truncated_input() {
             assert_eq!(parse(prefix).text(), prefix);
         }
     }
+}
+
+// -- FeatureSpecialization's other alternatives, SysML 8.2.2.6.5 ------------------
+//
+//   FeatureSpecialization = Typings | Subsettings | References | Crosses
+//                         | Redefinitions
+//   Subsettings           = Subsets ( ',' OwnedSubsetting )*
+//   Subsets               = SUBSETS OwnedSubsetting
+//   Redefinitions         = Redefines ( ',' OwnedRedefinition )*
+//   Redefines             = REDEFINES OwnedRedefinition
+//   References            = REFERENCES OwnedReferenceSubsetting
+//   Crosses               = CROSSES OwnedCrossSubsetting
+//   SUBSETS   = ':>'  | 'subsets'                                (SysML 8.2.2.1.2)
+//   REDEFINES = ':>>' | 'redefines'
+//   REFERENCES = '::>' | 'references'
+//   CROSSES   = '=>'  | 'crosses'
+
+#[test]
+fn a_usage_may_subset_another() {
+    // SimpleVehicleModel.sysml line 1241.
+    let parsed = parse_accepted("part vehicle_UnitUnderTest :> vehicle_b;");
+    let rendered = render(&parsed.syntax());
+    for node in [
+        "FeatureSpecializationPart",
+        "Subsettings",
+        "Subsets",
+        "OwnedSubsetting",
+    ] {
+        assert!(rendered.contains(node), "no {node} node:\n{rendered}");
+    }
+    // "29. Expressions/Car Mass Rollup Example 2.sysml" line 14.
+    parse_accepted("part engine :> carParts { }");
+}
+
+#[test]
+fn a_usage_may_redefine_another() {
+    // "27. Occurrences/Message Payload Example.sysml" line 21.
+    let parsed = parse_accepted("ref part vehicle :>> vehicle1;");
+    let rendered = render(&parsed.syntax());
+    for node in ["Redefinitions", "Redefines", "OwnedRedefinition"] {
+        assert!(rendered.contains(node), "no {node} node:\n{rendered}");
+    }
+}
+
+#[test]
+fn a_usage_may_reference_or_cross_another() {
+    // Neither spelling appears on a usage in the pinned corpus — the corpus's only
+    // '::>' is an InterfaceEnd's `NAME REFERENCES` (SysML 8.2.2.14.2), which is a
+    // different production, and it writes no '=>' at all. Both expectations come
+    // from the clause.
+    let referenced = render(&parse_accepted("part p ::> q;").syntax());
+    for node in ["References", "OwnedReferenceSubsetting"] {
+        assert!(referenced.contains(node), "no {node} node:\n{referenced}");
+    }
+    let crossed = render(&parse_accepted("part p => q;").syntax());
+    for node in ["Crosses", "OwnedCrossSubsetting"] {
+        assert!(crossed.contains(node), "no {node} node:\n{crossed}");
+    }
+}
+
+#[test]
+fn every_specialization_operator_may_be_spelled_out() {
+    // SysML 8.2.2.1.2 gives each a word form as well as a symbol.
+    parse_accepted("part p subsets q;");
+    parse_accepted("part p redefines q;");
+    parse_accepted("part p references q;");
+    parse_accepted("part p crosses q;");
+    // And ':' | 'defined' 'by' for Typings, already covered above.
+}
+
+#[test]
+fn subsettings_and_redefinitions_take_a_comma_separated_list() {
+    // Subsettings = Subsets ( ',' OwnedSubsetting )*, and Redefinitions likewise.
+    let subsets = render(&parse_accepted("part p :> a, b, c;").syntax());
+    assert_eq!(nodes_named(&subsets, "OwnedSubsetting"), 3, "{subsets}");
+    let redefines = render(&parse_accepted("part p :>> a, b;").syntax());
+    assert_eq!(
+        nodes_named(&redefines, "OwnedRedefinition"),
+        2,
+        "{redefines}"
+    );
+}
+
+#[test]
+fn references_and_crosses_take_exactly_one_target() {
+    // Unlike Subsettings and Redefinitions, neither carries a repetition
+    // (SysML 8.2.2.6.5), so a comma after the target is not part of them.
+    parse_rejected("part p ::> a, b;");
+    parse_rejected("part p => a, b;");
+}
+
+#[test]
+fn specializations_may_be_written_together() {
+    // FeatureSpecializationPart = FeatureSpecialization+ ... (KerML 8.2.4.3.1), so
+    // more than one may appear, in any order.
+    let parsed = parse_accepted("part p : Engine :> carParts :>> old;");
+    let rendered = render(&parsed.syntax());
+    for node in ["Typings", "Subsettings", "Redefinitions"] {
+        assert!(rendered.contains(node), "no {node} node:\n{rendered}");
+    }
+    assert_eq!(
+        nodes_named(&rendered, "FeatureSpecializationPart"),
+        1,
+        "{rendered}"
+    );
+}
+
+// -- AttributeUsage, SysML 8.2.2.7 ------------------------------------------------
+//
+//   AttributeUsage         = UsagePrefix 'attribute' Usage
+//   UsagePrefix            = UnextendedUsagePrefix UsageExtensionKeyword*  (8.2.2.6.2)
+//   UnextendedUsagePrefix  = EndUsagePrefix | BasicUsagePrefix
+//
+// An attribute's prefix is UsagePrefix, not OccurrenceUsagePrefix: an attribute is
+// not an occurrence, so it carries no 'individual' and no PortionKind.
+
+#[test]
+fn an_attribute_usage_is_a_package_member() {
+    // The rejection-by-absence case this replaces, now accepted.
+    let parsed = parse_accepted("attribute mass : MassValue;");
+    insta::assert_snapshot!(render(&parsed.syntax()));
+}
+
+#[test]
+fn attribute_usages_as_the_corpus_writes_them() {
+    // Each line is from the pinned corpus.
+    parse_accepted("attribute mass : MassValue;");
+    parse_accepted("attribute mass :> ISQ::mass;");
+    parse_accepted("attribute m : MassValue;");
+    parse_accepted("attribute isMandatory : Boolean;");
+}
+
+#[test]
+fn an_attribute_usage_builds_the_nodes_the_grammar_names() {
+    let parsed = parse_accepted("ref attribute mass :> ISQ::mass;");
+    let rendered = render(&parsed.syntax());
+    for node in [
+        "AttributeUsage",
+        "UsagePrefix",
+        "BasicUsagePrefix",
+        "KwAttribute",
+        "Usage",
+        "UsageDeclaration",
+        "Subsettings",
+        "UsageBody",
+    ] {
+        assert!(rendered.contains(node), "no {node} node:\n{rendered}");
+    }
+    // An attribute is not an occurrence, so its prefix is UsagePrefix and it builds
+    // no OccurrenceUsagePrefix (SysML 8.2.2.7 against 8.2.2.11).
+    assert!(!rendered.contains("OccurrenceUsagePrefix"), "{rendered}");
+}
+
+#[test]
+fn an_attribute_is_not_an_occurrence_and_takes_no_portion_kind() {
+    // UsagePrefix has no 'individual' and no PortionKind; those belong to
+    // OccurrenceUsagePrefix (SysML 8.2.2.9.2), which an attribute does not use.
+    parse_rejected("snapshot attribute mass : MassValue;");
+    parse_rejected("individual attribute mass : MassValue;");
+}
+
+#[test]
+fn an_attribute_usage_is_not_an_attribute_definition() {
+    // The two differ by 'def', as part usage and part definition do. AttributeDefinition
+    // is not implemented, so it is still reported: a rejection by absence.
+    let usage = render(&parse_accepted("attribute Mass;").syntax());
+    assert!(usage.contains("AttributeUsage"), "{usage}");
+    parse_rejected("attribute def Mass;");
+}
+
+#[test]
+fn an_attribute_may_be_a_member_of_a_part() {
+    let parsed = parse_accepted("part engine : Engine { attribute mass : MassValue; }");
+    let rendered = render(&parsed.syntax());
+    assert!(rendered.contains("PartUsage"), "{rendered}");
+    assert!(rendered.contains("AttributeUsage"), "{rendered}");
 }

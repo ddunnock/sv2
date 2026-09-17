@@ -168,6 +168,8 @@ NODES = [
     ("DefinitionBody", "`';' | '{' DefinitionBodyItem* '}'`. `SysML` 8.2.2.6.1."),
     ("DefinitionMember", "`MemberPrefix DefinitionElement`. `SysML` 8.2.2.6.1."),
     ("PartUsage", "`OccurrenceUsagePrefix 'part' Usage`. `SysML` 8.2.2.11."),
+    ("AttributeUsage", "`UsagePrefix 'attribute' Usage`. `SysML` 8.2.2.7."),
+    ("UsagePrefix", "`UnextendedUsagePrefix UsageExtensionKeyword*`. `SysML` 8.2.2.6.2."),
     (
         "OccurrenceUsagePrefix",
         (
@@ -197,6 +199,28 @@ NODES = [
         ),
     ),
     ("Typings", "`TypedBy ( ',' FeatureTyping )*`. `SysML` 8.2.2.6.5."),
+    ("Subsettings", "`Subsets ( ',' OwnedSubsetting )*`. `SysML` 8.2.2.6.5."),
+    ("Subsets", "`SUBSETS OwnedSubsetting`, `SUBSETS = ':>' | 'subsets'`. `SysML` 8.2.2.6.5."),
+    ("OwnedSubsetting", "`QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5."),
+    ("Redefinitions", "`Redefines ( ',' OwnedRedefinition )*`. `SysML` 8.2.2.6.5."),
+    (
+        "Redefines",
+        "`REDEFINES OwnedRedefinition`, `REDEFINES = ':>>' | 'redefines'`. `SysML` 8.2.2.6.5.",
+    ),
+    ("OwnedRedefinition", "`QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5."),
+    (
+        "References",
+        (
+            "`REFERENCES OwnedReferenceSubsetting`, `REFERENCES = '::>' | 'references'`. "
+            "`SysML` 8.2.2.6.5."
+        ),
+    ),
+    ("OwnedReferenceSubsetting", "`QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5."),
+    (
+        "Crosses",
+        "`CROSSES OwnedCrossSubsetting`, `CROSSES = '=>' | 'crosses'`. `SysML` 8.2.2.6.5.",
+    ),
+    ("OwnedCrossSubsetting", "`QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5."),
     ("TypedBy", "`( ':' | 'defined' 'by' ) FeatureTyping`. `SysML` 8.2.2.6.5."),
     ("FeatureTyping", "`OwnedFeatureTyping | ConjugatedPortTyping`. `SysML` 8.2.2.6.5."),
     ("OwnedFeatureTyping", "`QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5."),

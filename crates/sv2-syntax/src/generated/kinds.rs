@@ -537,6 +537,10 @@ pub enum SyntaxKind {
     DefinitionMember,
     /// `OccurrenceUsagePrefix 'part' Usage`. `SysML` 8.2.2.11.
     PartUsage,
+    /// `UsagePrefix 'attribute' Usage`. `SysML` 8.2.2.7.
+    AttributeUsage,
+    /// `UnextendedUsagePrefix UsageExtensionKeyword*`. `SysML` 8.2.2.6.2.
+    UsagePrefix,
     /// `( EndUsagePrefix | BasicUsagePrefix 'individual'? PortionKind? ) UsageExtensionKeyword*`. `SysML` 8.2.2.9.2.
     OccurrenceUsagePrefix,
     /// `RefPrefix 'ref'?`. `SysML` 8.2.2.6.2.
@@ -559,6 +563,26 @@ pub enum SyntaxKind {
     FeatureSpecializationPart,
     /// `TypedBy ( ',' FeatureTyping )*`. `SysML` 8.2.2.6.5.
     Typings,
+    /// `Subsets ( ',' OwnedSubsetting )*`. `SysML` 8.2.2.6.5.
+    Subsettings,
+    /// `SUBSETS OwnedSubsetting`, `SUBSETS = ':>' | 'subsets'`. `SysML` 8.2.2.6.5.
+    Subsets,
+    /// `QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5.
+    OwnedSubsetting,
+    /// `Redefines ( ',' OwnedRedefinition )*`. `SysML` 8.2.2.6.5.
+    Redefinitions,
+    /// `REDEFINES OwnedRedefinition`, `REDEFINES = ':>>' | 'redefines'`. `SysML` 8.2.2.6.5.
+    Redefines,
+    /// `QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5.
+    OwnedRedefinition,
+    /// `REFERENCES OwnedReferenceSubsetting`, `REFERENCES = '::>' | 'references'`. `SysML` 8.2.2.6.5.
+    References,
+    /// `QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5.
+    OwnedReferenceSubsetting,
+    /// `CROSSES OwnedCrossSubsetting`, `CROSSES = '=>' | 'crosses'`. `SysML` 8.2.2.6.5.
+    Crosses,
+    /// `QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5.
+    OwnedCrossSubsetting,
     /// `( ':' | 'defined' 'by' ) FeatureTyping`. `SysML` 8.2.2.6.5.
     TypedBy,
     /// `OwnedFeatureTyping | ConjugatedPortTyping`. `SysML` 8.2.2.6.5.
@@ -839,6 +863,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::DefinitionBody,
     SyntaxKind::DefinitionMember,
     SyntaxKind::PartUsage,
+    SyntaxKind::AttributeUsage,
+    SyntaxKind::UsagePrefix,
     SyntaxKind::OccurrenceUsagePrefix,
     SyntaxKind::BasicUsagePrefix,
     SyntaxKind::RefPrefix,
@@ -850,6 +876,16 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::UsageBody,
     SyntaxKind::FeatureSpecializationPart,
     SyntaxKind::Typings,
+    SyntaxKind::Subsettings,
+    SyntaxKind::Subsets,
+    SyntaxKind::OwnedSubsetting,
+    SyntaxKind::Redefinitions,
+    SyntaxKind::Redefines,
+    SyntaxKind::OwnedRedefinition,
+    SyntaxKind::References,
+    SyntaxKind::OwnedReferenceSubsetting,
+    SyntaxKind::Crosses,
+    SyntaxKind::OwnedCrossSubsetting,
     SyntaxKind::TypedBy,
     SyntaxKind::FeatureTyping,
     SyntaxKind::OwnedFeatureTyping,
