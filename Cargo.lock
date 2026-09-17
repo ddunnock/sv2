@@ -418,6 +418,10 @@ name = "sv2-hir"
 version = "0.1.0"
 
 [[package]]
+name = "sv2-resolve"
+version = "0.1.0"
+
+[[package]]
 name = "sv2-syntax"
 version = "0.1.0"
 dependencies = [
