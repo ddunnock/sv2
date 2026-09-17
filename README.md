@@ -62,7 +62,7 @@ tests/corpus, tests/rejection
 
 ## How the anti-drift layers fit together
 
-They are deliberately layered by strength, because the weak ones are the ones people
+They are deliberately layered by strength because the weak ones are the ones people
 usually reach for first.
 
 | Layer       | Mechanism                          | Strength                                                            |
@@ -74,7 +74,7 @@ usually reach for first.
 | Truth       | Grammar pin, coverage gate, corpus | Independent of the agent entirely.                                  |
 
 Claude Code's own documentation is explicit that CLAUDE.md is context rather than enforced
-configuration, and directs you to a `PreToolUse` hook when something must be blocked
+ configuration and directs you to a `PreToolUse` hook when something must be blocked
 regardless of what the model decides. The design above takes that literally: the top two
 rows explain, the bottom three enforce.
 
@@ -115,11 +115,11 @@ Everything an agent reads for context or progress is JSON: validatable against a
 diffable precisely, and unambiguous about structure. The schemas are not decoration — the
 `minLength` on `next_step` exists to stop `"TBD"` from being accepted as a handoff.
 
-`.claude/` is Claude Code's configuration namespace, so work state gets its own
+`.claude/` is Claude Code's configuration namespace, so the work state gets its own
 subdirectory rather than sitting beside `settings.json`. Nothing there loads automatically;
 the SessionStart hook is what puts it in context.
 
-Two things stay markdown because they cannot be otherwise: `CLAUDE.md` and
+Two things stay Markdown because they cannot be otherwise: `CLAUDE.md` and
 `.claude/rules/*.md` are the only formats Claude Code reads as instructions, and `docs/adr/`
 holds arguments, which do not become more useful as JSON. `decisions.json` indexes the
 ADRs; it does not replace them.
@@ -145,10 +145,10 @@ under Memory files. If it does not, nothing in the top two layers is doing anyth
 ## Licence
 
 MIT — see `LICENSE`. Every source file carries the two-line SPDX and copyright
-header, enforced by `scripts/check_headers.py`, so the licence and the author travel
+header, enforced by `scripts/check_headers.py`, so the license and the author travel
 with any file copied out of the repository.
 
-Vendored inputs under `vendor/` keep their own licences: the OMG artifacts under their
+Vendored inputs under `vendor/` keep their own licenses: the OMG artifacts under their
 published IPR terms, the Pilot Xtext under EPL-2.0 with its notice intact. None of it
 is compiled into the crates.
 

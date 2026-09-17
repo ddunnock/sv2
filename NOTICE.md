@@ -43,13 +43,13 @@ the document's table, prose or formatting.
 
 ## OMG — machine-readable artifacts (`vendor/omg/`)
 
-The normative XMI, JSON Schema and model library files published by OMG alongside the
+The normative XMI, JSON Schema, and model library files, published by OMG alongside the
 specifications, pinned by sha256 and OMG File ID in `vendor/sources.lock.toml`.
 
 ## Eclipse Public License 2.0 (`vendor/pilot/`, `vendor/spec-bnf/`)
 
 From the **SysML v2 Pilot Implementation** and the **SysML v2 Release** repositories
-of the Systems-Modeling organisation, both under the Eclipse Public License 2.0:
+of the Systems-Modeling organization, both under the Eclipse Public License 2.0:
 
 - `vendor/pilot/*.xtext` — the Pilot's Xtext grammars. This project treats them as a
   second opinion and never as the source (`docs/DERIVATION.md`). Each derivation unit
@@ -74,5 +74,5 @@ Group, Inc. Used here for identification only.
 
 ## If something here is wrong
 
-Open an issue. Attribution errors are corrected on report, and a file whose licence
-cannot be honoured is removed rather than argued about.
+Open an issue. Attribution errors are corrected on report and a file whose license
+cannot be honored is removed rather than argued about.
