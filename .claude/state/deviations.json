@@ -6752,6 +6752,106 @@
           "note": "The SysML Tier A pin the governing clause belongs to."
         }
       ]
+    },
+    {
+      "production": "EntryTransitionMember",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (line 1796) writes the second alternative as 'then' ownedRelatedElement += TransitionSuccession.",
+      "problem": "SysML 8.2.2.18.1 prints EntryTransitionMember : FeatureMembership : MemberPrefix ( GuardedTargetSuccession | 'then' TargetSuccession ) ';'. TargetSuccession (8.2.2.17.8) is SourceEndMember 'then' ConnectorEndMember and carries its own 'then', so the printed alternative reads `then then target;`. TransitionSuccession (8.2.2.18.3) is EmptyEndMember ConnectorEndMember, with no 'then'. The header also ends in ':' where '=' belongs.",
+      "decision": "follow_xtext",
+      "rationale": "TargetSuccession is written where TransitionSuccession is meant: the two names differ by one word and sit in adjacent clauses, and the printed form doubles 'then'. The corpus writes a single 'then' after an entry action, e.g. Arrowhead Framework Example/AHFNorwayTopics.sysml lines 60-61, `entry send new CallGiveItems(\"All the items\") via apisp.APIS_HTTP;` then `then Wait;`, and no doubled 'then' occurs anywhere. The malformed header is filed as item 8 of SYSML21-402 (open, page read), which does not mention the succession; the substitution is unfiled as far as the open SysML issue list shows (read 2026-09-17). Adjudicated by the grammar-adjudicator on 2026-09-17; both succession bodies, the corpus lines and SYSML21-402 were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.18.1 StateDefinitions (region_sha256 0119cca482071cd3)",
+          "note": "'then' ownedRelatedElement += TargetSuccession, header ending ':'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.17.8 ActionSuccessions (region_sha256 e5f3ae624be80231)",
+          "note": "TargetSuccession = SourceEndMember 'then' ConnectorEndMember"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.18.3 TransitionUsages (region_sha256 2da333dc19880d39)",
+          "note": "TransitionSuccession = EmptyEndMember ConnectorEndMember"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml",
+          "note": "lines 60-61: `entry send new CallGiveItems(\"All the items\") via apisp.APIS_HTTP;` / `then Wait;`"
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-402",
+          "note": "item 8, `EntryTransitionMember : FeatureMembership :`, the malformed header only"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "FramedConcernUsage",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 2082-2087) gives both alternatives RequirementBody, and the keyword alternative ConstraintUsageDeclaration; the Tier B' transcription writes the same.",
+      "problem": "SysML 8.2.2.21.1 prints FramedConcernUsage : ConcernUsage = OwnedReferenceSubsetting FeatureSpecializationPart? CalculationBody | ( UsageExtensionKeyword* 'concern' | UsageExtensionKeyword+ ) CalculationUsageDeclaration CalculationBody. CalculationUsageDeclaration is defined nowhere, and a concern is a requirement usage, whose body is RequirementBody.",
+      "decision": "follow_xtext",
+      "rationale": "The printed production is defective and filed: SYSML21-366 (open, Ed Seidewitz, page read) reports that CalculationUsageDeclaration is not defined in the grammar, and SYSML21-449 (open, page read earlier this session) lists it among undefined rules at page 188. The pilot and Tier B' both read it as RequirementUsage reads its own declaration and body, ConstraintUsageDeclaration RequirementBody; ConcernUsage specializes RequirementUsage in the abstract syntax, and only RequirementBody holds subject, stakeholder and nested require, assume and frame members. The corpus has three `frame concern` members, all with ';' bodies (e.g. `frame concern vs:VehicleSafety;`), so it does not exercise the body. Adjudicated by the grammar-adjudicator on 2026-09-17; SYSML21-366 was rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.21.1 RequirementDefinitions (region_sha256 fd824f1d9da5f780)",
+          "note": "FramedConcernUsage with CalculationBody and the undefined CalculationUsageDeclaration"
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-366",
+          "note": "Error in FramedConcernUsage production: CalculationUsageDeclaration is not defined"
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-449",
+          "note": "lists CalculationUsageDeclaration as undefined, page 188"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+          "note": "line 1546: `frame concern vs:VehicleSafety;`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "RequirementConstraintUsage",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 2066-2071) gives the by-reference alternative CalculationBody where the specification gives RequirementBody, matching the adjacent ConstraintUsage and AssertConstraintUsage rules.",
+      "problem": "SysML 8.2.2.21.1 prints RequirementConstraintUsage : ConstraintUsage = OwnedReferenceSubsetting FeatureSpecializationPart? RequirementBody | ( UsageExtensionKeyword* 'constraint' | UsageExtensionKeyword+ ) ConstraintUsageDeclaration CalculationBody. The pilot narrows the first alternative's body to CalculationBody.",
+      "decision": "follow_spec",
+      "rationale": "The printed clause is well-formed, and the Tier B' transcription gives the same RequirementBody, so the specification's text is not in doubt. The pilot's narrowing has no predicate and no ambiguity to resolve: the two alternatives are distinguished before either body begins. No issue names RequirementConstraintUsage. The corpus does not decide it: its by-reference `require`/`assume` members with braced bodies hold only feature redefinitions, e.g. `require rangeRequirement { :>> actualRange = simulatedRange; }`, which both bodies accept. Adjudicated by the grammar-adjudicator on 2026-09-17.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.21.1 RequirementDefinitions (region_sha256 fd824f1d9da5f780)",
+          "note": "first alternative ends in RequirementBody"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/State Space Representation Examples/EVSample.sysml",
+          "note": "line 110: `require rangeRequirement { :>> actualRange = simulatedRange; }`, accepted by either body"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
     }
   ],
   "unpatched": []

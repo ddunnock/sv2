@@ -3,7 +3,7 @@
   "production": "FramedConcernUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
     "xtext_rule": "45bbdae69722034168504c3c6d2077292a541b94267b33105e47fb64616713dc",
@@ -16,5 +16,106 @@
     "xtext_rule_text": "FramedConcernUsage returns SysML::ConcernUsage :\n      ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart? \n      RequirementBody\n    | ( UsageExtensionKeyword* ConcernUsageKeyword | UsageExtensionKeyword+ ) \n      ConstraintUsageDeclaration RequirementBody\n;",
     "metaclass": "SysML::ConcernUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "Adjudicated from a pending clause/Xtext disagreement.",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "OwnedReferenceSubsetting"
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "ref",
+              "name": "FeatureSpecializationPart"
+            }
+          },
+          {
+            "k": "ref",
+            "name": "RequirementBody"
+          }
+        ]
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "alt",
+            "items": [
+              {
+                "k": "seq",
+                "items": [
+                  {
+                    "k": "star",
+                    "item": {
+                      "k": "ref",
+                      "name": "UsageExtensionKeyword"
+                    }
+                  },
+                  {
+                    "k": "kw",
+                    "text": "concern"
+                  }
+                ]
+              },
+              {
+                "k": "plus",
+                "item": {
+                  "k": "ref",
+                  "name": "UsageExtensionKeyword"
+                }
+              }
+            ]
+          },
+          {
+            "k": "ref",
+            "name": "ConstraintUsageDeclaration"
+          },
+          {
+            "k": "ref",
+            "name": "RequirementBody"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.21.1 prints FramedConcernUsage with CalculationBody and an undefined CalculationUsageDeclaration. Deviation FramedConcernUsage (follow_xtext, SYSML21-366, SYSML21-449) reads it with ConstraintUsageDeclaration and RequirementBody, as the SysML Xtext and Tier B' do. The alternatives' structure is the clause's.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.21.1 (RequirementDefinitions.md, region_sha256 fd824f1d9da5f780)",
+      "note": "CalculationBody, CalculationUsageDeclaration"
+    },
+    {
+      "kind": "deviation",
+      "ref": "FramedConcernUsage",
+      "note": "follow_xtext: ConstraintUsageDeclaration RequirementBody"
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "SYSML21-366",
+      "note": "CalculationUsageDeclaration undefined"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext FramedConcernUsage",
+      "note": "RequirementBody in both alternatives"
+    }
+  ],
+  "derived_utc": "2026-09-17T17:01:46Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T17:01:46Z"
 }

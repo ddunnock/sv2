@@ -3,7 +3,7 @@
   "production": "RequirementConstraintUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "5a4c8b221921a02b3db948fbe3524004d517f6417d319714dcfa0af141af350d",
     "xtext_rule": "9e7ba291fb0e6c612793adffb41a12e7853ba657d60a71da2fddb22f98ca2225",
@@ -16,5 +16,101 @@
     "xtext_rule_text": "RequirementConstraintUsage returns SysML::ConstraintUsage :\n      ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart? \n      CalculationBody\n    | ( UsageExtensionKeyword* ConstraintUsageKeyword | UsageExtensionKeyword+ )\n      ConstraintUsageDeclaration CalculationBody\n;",
     "metaclass": "SysML::ConstraintUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "Adjudicated from a pending clause/Xtext disagreement.",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "OwnedReferenceSubsetting"
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "ref",
+              "name": "FeatureSpecializationPart"
+            }
+          },
+          {
+            "k": "ref",
+            "name": "RequirementBody"
+          }
+        ]
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "alt",
+            "items": [
+              {
+                "k": "seq",
+                "items": [
+                  {
+                    "k": "star",
+                    "item": {
+                      "k": "ref",
+                      "name": "UsageExtensionKeyword"
+                    }
+                  },
+                  {
+                    "k": "kw",
+                    "text": "constraint"
+                  }
+                ]
+              },
+              {
+                "k": "plus",
+                "item": {
+                  "k": "ref",
+                  "name": "UsageExtensionKeyword"
+                }
+              }
+            ]
+          },
+          {
+            "k": "ref",
+            "name": "ConstraintUsageDeclaration"
+          },
+          {
+            "k": "ref",
+            "name": "CalculationBody"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.21.1 states RequirementConstraintUsage : ConstraintUsage = ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart? RequirementBody | ( UsageExtensionKeyword* 'constraint' | UsageExtensionKeyword+ ) ConstraintUsageDeclaration CalculationBody. The SysML Xtext gives the first alternative CalculationBody; deviation RequirementConstraintUsage (follow_spec) keeps RequirementBody. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.21.1 (RequirementDefinitions.md, region_sha256 fd824f1d9da5f780)",
+      "note": "RequirementBody, then CalculationBody"
+    },
+    {
+      "kind": "deviation",
+      "ref": "RequirementConstraintUsage",
+      "note": "follow_spec: first alternative keeps RequirementBody"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext RequirementConstraintUsage",
+      "note": "CalculationBody in both alternatives"
+    }
+  ],
+  "derived_utc": "2026-09-17T17:01:46Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T17:01:46Z"
 }
