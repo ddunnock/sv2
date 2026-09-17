@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedSubclassification",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "16c96332246fb30e93b19d4a6577a44239965a440ed5ce63796dab1c88f52e21",
     "xtext_rule": "5db1471b0e86e806247edc00e7aac78e2a2c9e22909e87e3882ff8a295e20a40",
@@ -14,5 +14,40 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "OwnedSubclassification returns SysML::Subclassification:\n\tsuperclassifier = [SysML::Classifier | QualifiedName]\n;",
     "metaclass": "SysML::Subclassification"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "QualifiedName"
+  },
+  "decision": "KerML 8.2.4.2.2 states OwnedSubclassification : Subclassification = superclassifier = [QualifiedName], and SysML 8.2.2.6.5 states the same cross-reference, spelling the property superClassifier. The property name is abstract syntax; the syntax is one cross-reference in both, so the unit is shared. The KerML Xtext agrees. A cross-reference [QualifiedName] is a ref to QualifiedName by the derivation's convention.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.2.2 (Subclassification.md, region_sha256 a733cd7fd3e651fe)",
+      "note": "superclassifier = [QualifiedName]"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.5 (Specialization.md, region_sha256 d0d5a04805076a67)",
+      "note": "superClassifier = [QualifiedName]"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext OwnedSubclassification",
+      "note": "superclassifier = [SysML::Classifier | QualifiedName]"
+    }
+  ],
+  "notes": "SysML's `superClassifier` differs in case from KerML's `superclassifier` and from the metaclass property; it names an attribute, not a production, so it does not affect the grammar.",
+  "derived_utc": "2026-09-17T15:21:07Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T15:21:07Z"
 }
