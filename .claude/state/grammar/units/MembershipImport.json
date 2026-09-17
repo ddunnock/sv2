@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MembershipImport",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "e935229250003d639b33d0cb7021c2612a38f19a19d6ea4fc601279e4de98945",
     "xtext_rule": "4b1e1f36d30eed398bb5abcc0e32dcf1cbebc856a7893023617468fd0a70122e",
@@ -56,5 +56,59 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::MembershipImport"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "QualifiedName"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "::"
+            },
+            {
+              "k": "kw",
+              "text": "**"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "decision": "A qualified name, optionally followed by `::**` to import recursively, as KerML 8.2.3.4.2 states it and SysML repeats.",
+  "notes": "THE XTEXT IS NOT PORTED. The pilot rule opens with an ImportPrefix fragment that carries the visibility, `import` and `all` which the specification puts in Import itself \u2014 the manual inlining recorded on the Import unit. Here that prefix belongs to Import, and this production starts at the imported name.\n\nThe name is `[QualifiedName]`, a reference resolved later; the rule carries the QualifiedName and resolution is not concrete syntax.\n\n`**` IS ONE TOKEN. It is in the pinned token set as the exponent operator, which is why `A::**` lexes as `A`, `::`, `**` and not as two stars.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.2",
+      "note": "states MembershipImport as [QualifiedName] ( '::' '**' )?"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.5.1",
+      "note": "states the same body"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "ImportPrefix ImportedMembership \u2014 the same name and recursion, behind the inlined prefix"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T11:57:04Z"
 }

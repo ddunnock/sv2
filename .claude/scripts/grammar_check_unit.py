@@ -44,6 +44,8 @@ from _grammar import (
 from _state import REPO_ROOT, utc_now
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from _state import Json
 
     #: The grammars a unit is checked against, by scope, each keyed by production.
@@ -78,6 +80,24 @@ def _presence_checks(unit: Json) -> list[Check]:
         Check("has_evidence", bool(unit.get("evidence")), "no evidence"),
         Check("has_decision", bool(unit.get("decision")), "no decision"),
     ]
+
+
+def _evidence_check(unit: Json, file_exists: Callable[[str], bool]) -> Check:
+    """Corpus evidence must name a file that exists.
+
+    Evidence that merely exists is not evidence. A path that resolves to nothing
+    passed every other check and looked exactly as authoritative as a real one; ten
+    refs missing their `corpus/` segment were verified that way before this existed.
+    This proves only that the file is there, not that it holds the quoted instance.
+    """
+    missing = sorted(
+        e["ref"]
+        for e in unit.get("evidence") or []
+        if e.get("kind") == "corpus" and not file_exists(str(e.get("ref", "")))
+    )
+    return Check(
+        "corpus_evidence_resolves", not missing, f"corpus evidence names no file: {missing}"
+    )
 
 
 def _vocabulary_checks(rule: Json, allowed_kw: set[str], views: Views) -> list[Check]:
@@ -175,9 +195,18 @@ def views_for(unit: Json, units: dict[str, Json]) -> Views:
     return {scope: grammar_view(units, scope) for scope in scopes}
 
 
-def evaluate(unit: Json, views: Views, allowed_kw: set[str]) -> bool:
-    """Run every acceptance check and record the outcome on the unit. No I/O."""
-    checks = _presence_checks(unit)
+def evaluate(
+    unit: Json,
+    views: Views,
+    allowed_kw: set[str],
+    file_exists: Callable[[str], bool] = os.path.isfile,
+) -> bool:
+    """Run every acceptance check and record the outcome on the unit.
+
+    Writes nothing. The one read, whether a cited corpus file exists, goes through
+    `file_exists` so a test can supply the filesystem.
+    """
+    checks = [*_presence_checks(unit), _evidence_check(unit, file_exists)]
     if unit.get("rule"):
         checks += _rule_checks(unit, views, allowed_kw)
     return _record(unit, checks)

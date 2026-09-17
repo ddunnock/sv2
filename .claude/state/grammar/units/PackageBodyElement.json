@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "PackageBodyElement",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "7adb5037a495d9b1fa9625a133c60b86062a3335060e19b2235c7aef00e993be",
     "xtext_rule": "b0ec6c822e6e6639569ee7891949160097e48546eb39f02f9b2f268d0416e729",
@@ -56,5 +56,55 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Namespace"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "PackageMember"
+      },
+      {
+        "k": "ref",
+        "name": "ElementFilterMember"
+      },
+      {
+        "k": "ref",
+        "name": "AliasMember"
+      },
+      {
+        "k": "ref",
+        "name": "Import"
+      }
+    ]
+  },
+  "decision": "Four alternatives, as SysML 8.2.2.5.1 states them: a package member, an element filter member, an alias member, or an import. This is what a SysML root namespace, and a SysML package body, is a sequence of.",
+  "notes": "The clause and SysML.xtext agree exactly. The Xtext marks it `fragment`, an inlining directive, which is not carried across.\n\nA SYSML PRODUCTION WITH NO KERML COUNTERPART OF THE SAME NAME. It is a shared unit because only one language states it, so it is visible in both grammars; the KerML grammar does not reach it from its root (ADR-0014). ElementFilterMember is what SysML's root admits that KerML's NamespaceBodyElement does not.\n\nFOR A PARSER AUTHOR: as with NamespaceBodyElement, the decision follows an optional visibility indicator \u2014 `filter` selects ElementFilterMember, `alias` AliasMember, `import` Import, and anything else a PackageMember. sv2-syntax already implements PackageMember, AliasMember and Import under this production; ElementFilterMember is the fourth.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.5.1",
+      "note": "states PackageBodyElement as PackageMember | ElementFilterMember | AliasMember | Import"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "the same four alternatives, as a fragment"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "`package SimpleVehicleModel{ public import Definitions::*; ...` \u2014 a PackageMember at the root, an Import inside it"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T11:55:35Z"
 }

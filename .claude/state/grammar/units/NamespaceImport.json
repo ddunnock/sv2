@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "NamespaceImport",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "e935229250003d639b33d0cb7021c2612a38f19a19d6ea4fc601279e4de98945",
     "xtext_rule": "630c4f565f9c5479266d1fd46e851b330156fbaf8a608807562af9b6fbc0769e",
@@ -56,5 +56,82 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::NamespaceImport"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "QualifiedName"
+          },
+          {
+            "k": "kw",
+            "text": "::"
+          },
+          {
+            "k": "kw",
+            "text": "*"
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "seq",
+              "items": [
+                {
+                  "k": "kw",
+                  "text": "::"
+                },
+                {
+                  "k": "kw",
+                  "text": "**"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "FilterPackage"
+      }
+    ]
+  },
+  "decision": "Either a qualified name followed by `::*`, optionally `::**` to recurse, or a filter package \u2014 as KerML 8.2.3.4.2 states it and SysML repeats.",
+  "notes": "THE XTEXT IS NOT PORTED. The pilot rule opens with an ImportPrefix fragment that carries the visibility, `import` and `all` which the specification puts in Import itself \u2014 the manual inlining recorded on the Import unit. Here that prefix belongs to Import, and this production starts at the imported name.\n\nA notational slip in the SysML clause, recorded and not acted on: its second alternative assigns to `importedNamspace`, missing an `e`, where the first assigns to `importedNamespace`. It names an abstract-syntax slot and changes nothing about what parses.\n\nFilterPackage is stated differently in the two languages and is split (ADR-0014); this shared unit reaches whichever variant belongs to the grammar it is read in.\n\nFOR A PARSER AUTHOR: `*` here is the namespace wildcard, and the same symbol is also LiteralInfinity and a BinaryOperator. Nothing lexical separates the three; position does.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.2",
+      "note": "states NamespaceImport as [QualifiedName] '::' '*' ( '::' '**' )? | FilterPackage"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.5.1",
+      "note": "states the same body, with the importedNamspace misspelling"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "ImportPrefix ( ImportedNamespace | FilterPackage ) \u2014 same alternatives behind the inlined prefix"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "`public import Definitions::*;` \u2014 the wildcard form"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T11:57:04Z"
 }

@@ -3,7 +3,7 @@
   "production": "RelationshipBody",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "060222b6e0d7f88f1bd754f29cbce2b084d17eb97fc88e0f20f89315d518bfa4",
     "xtext_rule": "9d7336c48abc5cb6e81a7dea2b4ce71e77ce23ccb0236400b933ca7b32c821f1",
@@ -57,5 +57,58 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Relationship"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "kw",
+        "text": ";"
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "kw",
+            "text": "{"
+          },
+          {
+            "k": "star",
+            "item": {
+              "k": "ref",
+              "name": "RelationshipOwnedElement"
+            }
+          },
+          {
+            "k": "kw",
+            "text": "}"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "A semicolon, or braces around any number of relationship-owned elements, as KerML 8.2.3.1 states it.",
+  "notes": "THIS IS THE KERML VARIANT (ADR-0014). SysML's body admits only owned annotations inside the braces; KerML's admits any RelationshipOwnedElement. That variant is a separate unit.\n\nThe clause and KerML.xtext agree; the Xtext's `fragment` is an inlining directive and is not carried across.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.1",
+      "note": "states RelationshipBody as ';' | '{' RelationshipOwnedElement* '}'"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the same body, as a fragment"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T11:57:04Z"
 }

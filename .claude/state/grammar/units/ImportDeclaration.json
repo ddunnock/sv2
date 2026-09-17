@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ImportDeclaration",
   "language": "shared",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "e935229250003d639b33d0cb7021c2612a38f19a19d6ea4fc601279e4de98945",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -56,5 +56,42 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": ""
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "MembershipImport"
+      },
+      {
+        "k": "ref",
+        "name": "NamespaceImport"
+      }
+    ]
+  },
+  "decision": "A membership import or a namespace import, as KerML 8.2.3.4.2 and SysML 8.2.2.5.1 both state it.",
+  "notes": "Both languages agree on the body. A notational slip in the KerML clause, recorded because it would trip anyone reading it literally: `ImportDeclaration : Import` is followed by its body with no `=`, where every other production, and SysML's statement of this one, has it. Nothing about what parses turns on it.\n\nThere is no Xtext rule of this name; the pilot distributes the two alternatives into its Import rule.\n\nFOR A PARSER AUTHOR: the two alternatives share a leading qualified name and are told apart only after it \u2014 `::*` makes a NamespaceImport, anything else a MembershipImport \u2014 and `[` opens the filter-package form of NamespaceImport.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.2",
+      "note": "states ImportDeclaration as MembershipImport | NamespaceImport, missing its `=`"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.5.1",
+      "note": "states the same body, with the `=`"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T11:57:04Z"
 }

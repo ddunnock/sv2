@@ -3,7 +3,7 @@
   "production": "RelationshipBody",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "330e9104c2ea80aed12caf9377f69ac9d34a46f10addf0462276ac71f6c15bf6",
     "xtext_rule": "5a4e741f517e838e11d43bd01456bb75da1b54b6713baa3fb981671e8fa3af5d",
@@ -57,5 +57,64 @@
       "vendor/corpus/sysml/src/examples/Metadata Examples/RationaleMetadataExample.sysml"
     ],
     "metaclass": "SysML::Relationship"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "kw",
+        "text": ";"
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "kw",
+            "text": "{"
+          },
+          {
+            "k": "star",
+            "item": {
+              "k": "ref",
+              "name": "OwnedAnnotation"
+            }
+          },
+          {
+            "k": "kw",
+            "text": "}"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "A semicolon, or braces around any number of owned annotations, as SysML 8.2.2.2 states it.",
+  "notes": "THIS IS THE SYSML VARIANT (ADR-0014). KerML's body admits any RelationshipOwnedElement inside the braces; SysML narrows it to owned annotations. That variant is a separate unit.\n\nThe clause and SysML.xtext agree; the Xtext's `fragment` is an inlining directive and is not carried across.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.2",
+      "note": "states RelationshipBody as ';' | '{' OwnedAnnotation* '}'"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "the same body, as a fragment"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/01. Packages/Documentation Example.sysml",
+      "note": "`alias Car for Automobile {` with a `doc` comment inside: the braced form holding an annotation"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T11:57:04Z"
 }

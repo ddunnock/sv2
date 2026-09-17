@@ -150,3 +150,28 @@ def test_a_shared_unit_must_resolve_its_refs_in_both_languages():
 def test_a_variant_is_checked_only_against_its_own_language():
     u = unit(rule={"k": "ref", "name": "PackageBodyElement"}, scope="sysml")
     assert evaluate(u, {"sysml": grammar("PackageBodyElement")}, ALLOWED_KW) is True
+
+
+def test_corpus_evidence_naming_no_file_fails():
+    # Ten refs missing their `corpus/` path segment were once verified, because no
+    # check looked. Evidence that resolves to nothing is not evidence.
+    u = unit(evidence=[{"kind": "corpus", "ref": "vendor/omg/Missing.sysml"}])
+    assert (
+        evaluate(u, {"kerml": grammar(*DECLARED)}, ALLOWED_KW, file_exists=lambda _: False) is False
+    )
+    assert u["acceptance"]["corpus_evidence_resolves"] == "fail"
+    assert any("vendor/omg/Missing.sysml" in d for d in u["diagnostics"])
+
+
+def test_corpus_evidence_naming_a_real_file_passes():
+    u = unit(evidence=[{"kind": "corpus", "ref": "vendor/corpus/omg/Real.sysml"}])
+    assert (
+        evaluate(u, {"kerml": grammar(*DECLARED)}, ALLOWED_KW, file_exists=lambda _: True) is True
+    )
+
+
+def test_clause_evidence_is_not_looked_up_as_a_file():
+    u = unit(evidence=[{"kind": "clause", "ref": "kerml clause 1.2.3"}])
+    assert (
+        evaluate(u, {"kerml": grammar(*DECLARED)}, ALLOWED_KW, file_exists=lambda _: False) is True
+    )
