@@ -16,7 +16,7 @@
     "xtext_rule_text": "DefaultReferenceUsage returns SysML::ReferenceUsage :\n\t( isEnd ?= 'end' )? RefPrefix \n\tUsageDeclaration ValuePart? UsageBody\n;",
     "metaclass": "SysML::ReferenceUsage"
   },
-  "notes": "Adjudicated from a pending clause/Xtext disagreement. OccurrenceUsagePrefix@sysml has the same gap (the Xtext adds EndUsagePrefix as an alternative; the clause has none) and needs its own adjudication when derived.",
+  "notes": "Adjudicated. The non-empty declaration was added at the user's direction on 2026-09-17, after the oracle accepted tests/rejection/stray-semicolon.sysml (`package Vehicle;;`) and package-member-visibility-without-element.sysml (`public;`); Spec42 rejects both. Only this production needs it: every other usage that can be empty starts with a keyword.",
   "rule": {
     "k": "seq",
     "items": [
@@ -32,12 +32,66 @@
         "name": "RefPrefix"
       },
       {
+        "k": "alt",
+        "items": [
+          {
+            "k": "seq",
+            "items": [
+              {
+                "k": "alt",
+                "items": [
+                  {
+                    "k": "seq",
+                    "items": [
+                      {
+                        "k": "kw",
+                        "text": "<"
+                      },
+                      {
+                        "k": "tok",
+                        "name": "NAME"
+                      },
+                      {
+                        "k": "kw",
+                        "text": ">"
+                      },
+                      {
+                        "k": "opt",
+                        "item": {
+                          "k": "tok",
+                          "name": "NAME"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "k": "tok",
+                    "name": "NAME"
+                  }
+                ]
+              },
+              {
+                "k": "opt",
+                "item": {
+                  "k": "ref",
+                  "name": "FeatureSpecializationPart"
+                }
+              }
+            ]
+          },
+          {
+            "k": "ref",
+            "name": "FeatureSpecializationPart"
+          }
+        ]
+      },
+      {
         "k": "ref",
-        "name": "Usage"
+        "name": "UsageCompletion"
       }
     ]
   },
-  "decision": "SysML 8.2.2.6.3 states DefaultReferenceUsage : ReferenceUsage = RefPrefix Usage. Deviation DefaultReferenceUsage (follow_xtext) adds the optional bare 'end' the SysML Xtext has, which connection and allocation definitions need for keyword-less ends. The Xtext's unfolding of Usage into UsageDeclaration ValuePart? UsageBody is not ported; the clause's Usage says the same.",
+  "decision": "SysML 8.2.2.6.3 states DefaultReferenceUsage : ReferenceUsage = RefPrefix Usage. Deviation DefaultReferenceUsage (follow_xtext) makes two changes, both the SysML Xtext's: an optional bare 'end', and a declaration that is not empty. By the clause's letter RefPrefix, UsageDeclaration (through a nullable Identification) and ValuePart can all be empty and UsageBody can be ';', so a lone ';' is a member. The Xtext's UsageDeclaration requires a name or a FeatureSpecializationPart. The rule writes Usage out as its declaration and UsageCompletion so the declaration can be required: a name, short and/or long, optionally specialized, or a FeatureSpecializationPart alone, as Identification (KerML 8.2.3.1) and UsageDeclaration (SysML 8.2.2.6.2) state them.",
   "evidence": [
     {
       "kind": "clause",
@@ -60,7 +114,7 @@
       "note": "( isEnd ?= 'end' )? RefPrefix UsageDeclaration ValuePart? UsageBody"
     }
   ],
-  "derived_utc": "2026-09-17T16:33:51Z",
+  "derived_utc": "2026-09-17T18:01:53Z",
   "acceptance": {
     "has_rule": "pass",
     "has_evidence": "pass",
