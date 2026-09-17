@@ -3,7 +3,7 @@
   "production": "SatisfyRequirementUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "fc398636b89ed7f38aee585cc6eb3e6281af4853d57aab1490de3e1306db12d3",
     "xtext_rule": "8cb6ee9b96a1503f48f717bb6378b58ee9990da06cc7a1a53350c795c9043e31",
@@ -16,5 +16,128 @@
     "xtext_rule_text": "SatisfyRequirementUsage returns SysML::SatisfyRequirementUsage :\n\tOccurrenceUsagePrefix 'assert'? ( isNegated ?= 'not' )? 'satisfy' \n\t( ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?\n    | RequirementUsageKeyword UsageDeclaration? \n    )\n    ValuePart?\n    ( 'by' ownedRelationship += SatisfactionSubjectMember )?\n     RequirementBody\n;",
     "metaclass": "SysML::SatisfyRequirementUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "Adjudicated from a pending clause/Xtext disagreement.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "OccurrenceUsagePrefix"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "kw",
+          "text": "assert"
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "kw",
+          "text": "not"
+        }
+      },
+      {
+        "k": "kw",
+        "text": "satisfy"
+      },
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "seq",
+            "items": [
+              {
+                "k": "ref",
+                "name": "OwnedReferenceSubsetting"
+              },
+              {
+                "k": "opt",
+                "item": {
+                  "k": "ref",
+                  "name": "FeatureSpecializationPart"
+                }
+              }
+            ]
+          },
+          {
+            "k": "seq",
+            "items": [
+              {
+                "k": "kw",
+                "text": "requirement"
+              },
+              {
+                "k": "ref",
+                "name": "UsageDeclaration"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "ValuePart"
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "by"
+            },
+            {
+              "k": "ref",
+              "name": "SatisfactionSubjectMember"
+            }
+          ]
+        }
+      },
+      {
+        "k": "ref",
+        "name": "RequirementBody"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.21.2 states SatisfyRequirementUsage = OccurrenceUsagePrefix 'assert' ( isNegated ?= 'not' ) 'satisfy' ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'requirement' UsageDeclaration ) ValuePart? ( 'by' SatisfactionSubjectMember )? RequirementBody. Deviation SatisfyRequirementUsage (follow_xtext) makes 'assert' and 'not' optional, as the SysML Xtext does and SysML 7.21.4 and the corpus require. The rest is the clause as written; the Xtext's UsageDeclaration? adds nothing, UsageDeclaration being nullable.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.21.2 (RequirementUsages.md, region_sha256 6c4f3553daaa3162)",
+      "note": "'assert' ( isNegated ?= 'not' ) 'satisfy'"
+    },
+    {
+      "kind": "deviation",
+      "ref": "SatisfyRequirementUsage",
+      "note": "follow_xtext: 'assert'? and 'not'?"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/RequirementTest.sysml",
+      "note": "`not satisfy r1 by p;`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext SatisfyRequirementUsage",
+      "note": "'assert'? ( isNegated ?= 'not' )? 'satisfy'"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:52:30Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:52:30Z"
 }

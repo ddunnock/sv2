@@ -6687,6 +6687,71 @@
           "note": "The SysML Tier A pin the governing clause belongs to."
         }
       ]
+    },
+    {
+      "production": "SatisfyRequirementUsage",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext writes SatisfyRequirementUsage as OccurrenceUsagePrefix 'assert'? ( isNegated ?= 'not' )? 'satisfy' ..., both keywords optional.",
+      "problem": "SysML 8.2.2.21.2 prints OccurrenceUsagePrefix 'assert' ( isNegated ?= 'not' ) 'satisfy' ... with no '?' on either, so literally every satisfy must be written `assert not satisfy`. Tier B' reproduces the text.",
+      "decision": "follow_xtext",
+      "rationale": "The specification's own prose and examples contradict the printed rule. SysML 7.21.4 writes `satisfy vehicleMaximumMass by vehicle1;` and `not satisfy vehicleMaximumMass by vehicle2;`, and says a satisfy is negated by placing `not` before `satisfy`; none of its examples writes `assert`. The sibling AssertConstraintUsage (8.2.2.20) prints ( isNegated ?= 'not' )? with the '?'. The corpus uses all four combinations in Simple Tests/RequirementTest.sysml lines 21, 22, 26 and 27 (`satisfy r by p;`, `assert satisfy r by q;`, `not satisfy r1 by p;`, `assert not satisfy r1 by q;`), and the adjudicator counted 19 of 22 corpus satisfy statements with neither keyword. Only the two '?' change; the clause's 'requirement' UsageDeclaration is kept, the Xtext's UsageDeclaration? being redundant. No SysML issue names the textual rule (open list read on 2026-09-17); SYSML21-671 and -672 concern the graphical notation and are not cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the corpus lines and 7.21.4 were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.21.2 RequirementUsages (region_sha256 6c4f3553daaa3162)",
+          "note": "'assert' ( isNegated ?= 'not' ) 'satisfy', no '?'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 7.21.4 Satisfy-Requirement-Usages (region_sha256 05678331cdfe23ad)",
+          "note": "`not satisfy vehicleMaximumMass by vehicle2;` and examples without 'assert'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.20 ConstraintsTextualNotation (region_sha256 fa7fb8d5154241ee)",
+          "note": "AssertConstraintUsage: 'assert' ( isNegated ?= 'not' )?"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/RequirementTest.sysml",
+          "note": "lines 21, 22, 26, 27: `satisfy r by p;`, `assert satisfy r by q;`, `not satisfy r1 by p;`, `assert not satisfy r1 by q;`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "PayloadFeature-sysml-value-alternative",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 1302-1307) writes SysML's PayloadFeature through fragment Payload with four alternatives, the second `Identification? ValuePart`, as KerML.xtext does.",
+      "problem": "SysML 8.2.2.16 states PayloadFeature : Feature = Identification? PayloadFeatureSpecializationPart ValuePart? | OwnedFeatureTyping OwnedMultiplicity? | OwnedMultiplicity OwnedFeatureTyping: three alternatives. KerML 8.2.5.9.2 has a fourth, Identification ValuePart, and the pilot keeps it for SysML. So `flow of x = 4 from a to b;` is SysML by the pilot and not by the clause.",
+      "decision": "follow_spec",
+      "rationale": "Keep SysML's three alternatives. The clause is well-formed here, and nothing in the specification or the corpus asks for the fourth: the corpus has no payload of the form `of name = value` in either language (every payload is typed or `name : Type = value`), no SysML prose describes an untyped valued payload, and no filed issue reports the omission. SysML states its own concrete syntax and may state it narrower than KerML; that FlowUsage is a KerML Flow in the abstract syntax does not carry the concrete syntax with it. Every follow_xtext decision in this file rests on a corpus instance, specification prose, or a filed issue, and this one has none. DISSENT RECORDED: the grammar-adjudicator recommended follow_xtext on 2026-09-17, arguing that 8.2.2.16 is a defect hotspot (SYSML21-399, -402 and -404 are filed against the same clause) and that the payload is one kernel metaclass; it found no issue naming this alternative. Reversing this decision adds `Identification? ValuePart` to PayloadFeature@sysml only.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.16 FlowsTextualNotation (region_sha256 e03f363eef9b4cf1)",
+          "note": "PayloadFeature with three alternatives"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.9.2 Flows (region_sha256 150b0ccc1e0d5422)",
+          "note": "the fourth alternative, Identification ValuePart, in KerML"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml",
+          "note": "line 89: `flow call_getItems of CallGiveItems[1]`, a typed payload; no corpus payload has the disputed form"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
     }
   ],
   "unpatched": []
