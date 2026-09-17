@@ -36,7 +36,7 @@ MAX_STATES = 400_000
 
 
 def make_lexer(keywords: Iterable[str], operators: Iterable[str]) -> Callable[[str], list[Token]]:
-    """A lexer that classifies names as keywords using the pinned keyword set."""
+    """A lexer that classifies names as keywords using one language's reserved words."""
     # Longest-first so ':>>' wins over ':>' and ':'.
     ops = sorted(operators, key=len, reverse=True)
     kws = set(keywords)
@@ -81,6 +81,20 @@ def make_lexer(keywords: Iterable[str], operators: Iterable[str]) -> Callable[[s
         return tokens
 
     return lex
+
+
+def _scans(token: Token, kind: str, value: str) -> bool:
+    """Whether a token satisfies a keyword or token-class symbol.
+
+    A keyword symbol also accepts a NAME with the same text. A reserved word never
+    lexes as a NAME, so this only matters for a word a rule uses that its language
+    does not reserve, which is then a contextual keyword: KerML's constructor
+    expression writes `'new'`, and 8.2.2.6 does not reserve `new` (KERML11-200, open).
+    SysML 8.2.2.1.2 does reserve it.
+    """
+    if token[0] == kind and token[1] == value:
+        return True
+    return kind == "kw" and token[0] == "tok" and token[1] == "NAME" and token[2] == value
 
 
 def nullable_nonterminals(prods: Productions) -> frozenset[str]:
@@ -139,7 +153,7 @@ class _Chart:
             if value in self.nullable:
                 self.add(i, agenda, (name, alt_i, dot + 1, origin))
             return None
-        if i < len(self.tokens) and self.tokens[i][0] == kind and self.tokens[i][1] == value:
+        if i < len(self.tokens) and _scans(self.tokens[i], kind, value):
             self.sets[i + 1].add((name, alt_i, dot + 1, origin))
         return None
 

@@ -11,7 +11,10 @@ than one checking itself.
 Each file is recognized by its own language's grammar, chosen by suffix: a .kerml
 file against the KerML grammar, a .sysml file against the SysML one (ADR-0014).
 Checking both against one merged grammar would let a SysML construct in a KerML
-file pass, and a positive-only corpus would never notice.
+file pass, and a positive-only corpus would never notice. For the same reason each
+file is lexed with its own language's reserved words: KerML 8.2.2.6 and SysML
+8.2.2.1.2 reserve different sets, and a SysML word reserved in a KerML file turns
+a valid name into a keyword.
 
     python3.11 .claude/scripts/grammar_validate.py
 """
@@ -34,6 +37,7 @@ from _grammar import (
     load_units,
     normalize,
     pinned_tokens,
+    reserved_keywords,
 )
 from _state import REPO_ROOT
 
@@ -76,16 +80,25 @@ def grammars_by_scope(units: dict[str, Json]) -> dict[str, Productions]:
     return grammars
 
 
+def lexers_by_scope(scopes: list[str]) -> dict[str, Callable[[str], list[Token]]]:
+    """A lexer per language, for each language whose reserved words are pinned."""
+    _, operators = pinned_tokens()
+    return {s: make_lexer(words, operators) for s in scopes if (words := reserved_keywords(s))}
+
+
 def sweep(
-    files: list[Path], grammars: dict[str, Productions], lex: Callable[[str], list[Token]]
+    files: list[Path],
+    grammars: dict[str, Productions],
+    lexers: dict[str, Callable[[str], list[Token]]],
 ) -> tuple[list[str], list[dict[str, str]], int]:
     """(accepted, rejected with the reason, skipped) — each file by its own language."""
     accepted: list[str] = []
     rejected: list[dict[str, str]] = []
     skipped = 0
     for f in files:
-        prods = grammars.get(SCOPE_OF_SUFFIX.get(f.suffix, ""))
-        if prods is None:
+        scope = SCOPE_OF_SUFFIX.get(f.suffix, "")
+        prods, lex = grammars.get(scope), lexers.get(scope)
+        if prods is None or lex is None:
             skipped += 1
             continue
         ok, why = _accepts(prods, lex, f)
@@ -109,12 +122,15 @@ def main(argv: list[str] | None = None) -> int:
         # One language checked is not a clean oracle: its files are simply not looked at.
         print(f"    note: {START} not derived for {', '.join(inert)} — those files are skipped")
 
-    lex = make_lexer(*pinned_tokens())
+    lexers = lexers_by_scope(sorted(grammars))
+    if unlexed := [s for s in sorted(grammars) if s not in lexers]:
+        # No fallback to the union of both languages' words: it is wrong for each.
+        print(f"    note: no RESERVED_KEYWORD pinned for {', '.join(unlexed)} — files skipped")
     positive = model_files("vendor/corpus", "tests/corpus")
     negative = [f for f in model_files("tests/rejection") if "known-permissive" not in f.parts]
-    accepted, missed, skipped_positive = sweep(positive, grammars, lex)
+    accepted, missed, skipped_positive = sweep(positive, grammars, lexers)
     # For the negative set the directions invert: accepting a file is the failure.
-    leaked, rejected, skipped_negative = sweep(negative, grammars, lex)
+    leaked, rejected, skipped_negative = sweep(negative, grammars, lexers)
     caught = [r["file"] for r in rejected]
     skipped = skipped_positive + skipped_negative
 

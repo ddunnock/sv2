@@ -352,6 +352,29 @@ def pinned_tokens() -> tuple[list[str], list[str]]:
     return tokens.get("keywords", []), tokens.get("operators", [])
 
 
+#: The Tier B' file that states each language's RESERVED_KEYWORD production: KerML
+#: 8.2.2.6 and SysML 8.2.2.1.2. The two lists differ both ways — `at`, `merge` and
+#: `while` are reserved in SysML only, `class`, `feature` and `type` in KerML only.
+RESERVED_SOURCE = {"kerml": "KerML-textual-bnf.kebnf", "sysml": "SysML-textual-bnf.kebnf"}
+
+
+def reserved_keywords(scope: str, rules: list[Json] | None = None) -> list[str]:
+    """The words one language reserves, from its pinned RESERVED_KEYWORD production.
+
+    Lexing a language's files with the other language's reserved words turns valid
+    names into keywords: `expr at` and `step merge` are KerML, because 8.2.2.6 does
+    not reserve `at` or `merge`. Empty when the production is absent, so the caller
+    can refuse rather than fall back to a union that is wrong for both languages.
+    """
+    if rules is None:
+        rules = load_json(GRAMMAR / "bnf-productions.json", {}).get("rules", [])
+    source = RESERVED_SOURCE.get(scope)
+    for rule in rules:
+        if rule.get("name") == "RESERVED_KEYWORD" and rule.get("file") == source:
+            return sorted(set(re.findall(r"'([^'\n]+)'", str(rule.get("body", "")))))
+    return []
+
+
 def xtext_rule_text(name: str, scope: str | None = None) -> tuple[str | None, str | None]:
     """(file name, raw text) of one Xtext rule, from the pinned grammars. Input, not truth.
 

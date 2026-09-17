@@ -2,7 +2,15 @@
 # Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 import pytest
 
-from _grammar import kws_of, normalize, referable_productions, refs_of, render_ebnf, xtext_rule_text
+from _grammar import (
+    kws_of,
+    normalize,
+    referable_productions,
+    refs_of,
+    render_ebnf,
+    reserved_keywords,
+    xtext_rule_text,
+)
 
 
 def kw(t):
@@ -106,3 +114,31 @@ def test_referable_productions_are_the_specification_non_terminals():
     inventory = {"productions": ["GeneralType", "NAME", "REGULAR_COMMENT", "Feature"]}
     assert referable_productions(inventory) == ["Feature", "GeneralType"]
     assert referable_productions({}) == []
+
+
+def _reserved(file, body):
+    return {"name": "RESERVED_KEYWORD", "file": file, "body": body}
+
+
+def test_reserved_keywords_reads_each_language_from_its_own_file():
+    rules = [
+        _reserved("KerML-textual-bnf.kebnf", "    'about' | 'class'\n    | 'type'"),
+        _reserved("SysML-textual-bnf.kebnf", "    'about' | 'at' | 'merge'"),
+        {"name": "RESERVED_SYMBOL", "file": "KerML-textual-bnf.kebnf", "body": "'~' | '{'"},
+    ]
+    assert reserved_keywords("kerml", rules) == ["about", "class", "type"]
+    assert reserved_keywords("sysml", rules) == ["about", "at", "merge"]
+
+
+def test_reserved_keywords_is_empty_when_the_production_is_absent():
+    assert reserved_keywords("kerml", []) == []
+    assert reserved_keywords("nonesuch", [_reserved("KerML-textual-bnf.kebnf", "'a'")]) == []
+
+
+def test_pinned_reserved_words_differ_between_the_languages():
+    # KerML 8.2.2.6 and SysML 8.2.2.1.2, from the pinned Tier B' transcription.
+    kerml, sysml = set(reserved_keywords("kerml")), set(reserved_keywords("sysml"))
+    if not kerml or not sysml:
+        pytest.skip("bnf-productions.json not generated")
+    assert {"at", "merge", "while"} <= sysml - kerml
+    assert {"class", "feature", "type"} <= kerml - sysml

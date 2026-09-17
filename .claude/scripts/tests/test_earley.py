@@ -197,3 +197,29 @@ def test_nullable_nonterminals_reaches_fixed_point():
         "D": [[nt("Undefined")]],
     }
     assert nullable_nonterminals(prods) == {"A", "B", "C"}
+
+
+def test_keyword_symbol_accepts_a_name_the_language_does_not_reserve():
+    # KerML's constructor expression writes 'new', and KerML 8.2.2.6 does not reserve
+    # it: the word lexes as a NAME and still satisfies the literal, as a contextual keyword.
+    lex = make_lexer(["expr"], ["(", ")"])
+    prods = {"S": [[kw("new"), ("tok", "NAME"), kw("("), kw(")")]]}
+    assert recognize(prods, "S", lex("new T()")) == (True, "ok")
+
+
+def test_unreserved_word_stays_usable_as_a_name():
+    # `expr at` is KerML: `at` is reserved in SysML only.
+    lex = make_lexer(["expr"], ["{", "}"])
+    prods = {"S": [[kw("expr"), ("tok", "NAME"), kw("{"), kw("}")]]}
+    assert recognize(prods, "S", lex("expr at { }")) == (True, "ok")
+
+
+def test_reserved_word_is_not_a_name():
+    lex = make_lexer(["expr", "at"], ["{", "}"])
+    prods = {"S": [[kw("expr"), ("tok", "NAME"), kw("{"), kw("}")]]}
+    assert recognize(prods, "S", lex("expr at { }"))[0] is False
+
+
+def test_keyword_symbol_does_not_accept_a_different_name():
+    lex = make_lexer([], [])
+    assert recognize({"S": [[kw("new")]]}, "S", lex("old"))[0] is False
