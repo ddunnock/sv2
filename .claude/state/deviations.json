@@ -6347,6 +6347,86 @@
           "note": "The SysML Tier A pin the governing clause belongs to."
         }
       ]
+    },
+    {
+      "production": "PayloadFeature",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/KerML.xtext and SysML.xtext both write the last alternative as `ownedRelationship += OwnedMultiplicity ownedRelationship += OwnedFeatureTyping`, with the typing mandatory.",
+      "problem": "KerML 8.2.5.9.2 prints PayloadFeature with three '(' and two ')', reported as KERML11-115, which asks whether a ')' is missing or a '(' is extra and does not answer. Either one-character repair leaves `( ownedRelationship += OwnedFeatureTyping )?` on the last alternative, so a bare OwnedMultiplicity with no typing would be a payload. Every well-formed source makes the typing mandatory there.",
+      "decision": "follow_spec",
+      "rationale": "Follow the specification's well-formed statement of the same production rather than a paren-count repair of the defective one. SysML 8.2.2.16 states PayloadFeature cleanly, with the last alternative `OwnedMultiplicity OwnedFeatureTyping`; the KerML and SysML Tier B' transcriptions (KerML-textual-bnf.kebnf from line 1323) write the same, with no stray parenthesis; both pilot Xtext grammars agree. Against the five, the defective clause differs by the stray '(' and by a `( ... )?` around the last typing, both explicable as a mis-copy of the `( X )?` idiom one line above. The KerML-only `Identification ValuePart` alternative is outside the defect and is kept. The corpus has typing-first payloads (`flow of Fuel from ...`, `flow call_getItems of CallGiveItems[1]`) and no payload that is a multiplicity alone or multiplicity-first, so it does not decide the disputed alternative either way; a negative case for `flow of [2] from a to b;` is therefore warranted. Adjudicated by the grammar-adjudicator on 2026-09-17; the Tier B', SysML clause and Xtext texts were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.9.2 Flows (region_sha256 150b0ccc1e0d5422)",
+          "note": "PayloadFeature with three '(' and two ')'; the last alternative's typing wrapped in ( )?"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.16 FlowsTextualNotation (region_sha256 e03f363eef9b4cf1)",
+          "note": "well-formed; last alternative `ownedRelationship += OwnedMultiplicity ownedRelationship += OwnedFeatureTyping`"
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "KERML11-115",
+          "note": "PayloadFeature's mismatched parentheses; open; does not say which repair is intended"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml",
+          "note": "line 89: `flow call_getItems of CallGiveItems[1]`, typing then multiplicity"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "The KerML Tier A pin the governing clause belongs to."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the corroborating clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "TypeDeclaration",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/KerML.xtext (lines 323-328) writes TypeDeclaration's ( SpecializationPart | ConjugationPart ) group exactly once, with no quantifier.",
+      "problem": "KerML 8.2.4.1.1 prints the group as ( SpecializationPart | ConjugationPart )+, which admits `type A :> B ~ C;` and `type A ~ B ~ C;`. The Xtext admits one part only. Both require at least one part, so `type A;` is rejected by both and is not in dispute. The models the '+' additionally admits are invalid: validateTypeAtMostOneConjugator (KerML 8.3.3.1.10) allows at most one owned Conjugation, and KerML 7.3.2.4 says a conjugated type cannot be the specific type of a Specialization. KerML 7.3.2.2 describes a type declaration as defining 'either one or more owned specializations ... or a conjugator'.",
+      "decision": "follow_spec",
+      "rationale": "Keep the printed '+' and leave the two rules to validation. The Xtext's single occurrence has no LL motive, as the adjudicator found; it encodes validation constraints in syntax, which is the same move this repository declined in PrefixMetadataTyping-chain: a requirement the specification states as a constraint parses and fails at validation, because validity gates writes, not reads (ADR-0002). Here the constraints are structural rather than name-resolving, which makes the syntactic narrowing possible but not required. KerML 7.3.2.2's 'either ... or' describes a valid model, and validateTypeAtMostOneConjugator says the same thing as a constraint; neither is a grammar rule. The printed clause and the Tier B' transcription (kebnf line 399) agree on '+'. The corpus is silent on the disputed forms: every type declaration in it has exactly one part, e.g. Simple Tests/Types.kerml lines 2-29, so a parser following either reading accepts it all. DISSENT RECORDED: the grammar-adjudicator recommended follow_xtext on the constraint and prose evidence above, and found no OMG issue naming the production after reading the open KerML issue list on 2026-09-17. Reversing this decision changes this production only.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.4.1.1 Types (region_sha256 d5f980cd9c8a4387)",
+          "note": "TypeDeclaration ... ( SpecializationPart | ConjugationPart )+ TypeRelationshipPart*"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 7.3.2.2 Type-Declaration (region_sha256 632d1e414ba3b9f2)",
+          "note": "'a type declaration defines either one or more owned specializations ... or a conjugator'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.3.3.1.10 Type (region_sha256 5200b0a51b33ed8e)",
+          "note": "validateTypeAtMostOneConjugator: 'A Type must have at most one owned Conjugation Relationship.'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 7.3.2.4 Conjugation (region_sha256 2107419a0c9d6844)",
+          "note": "'a conjugated type cannot be the specific type in any specialization relationship'"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Types.kerml",
+          "note": "lines 3, 28, 29: `type all x specializes A, Base::things;`, `type Conjugate3 conjugates Original;`, `type Conjugate4 ~ Conjugate1;`, each with one part"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "The KerML Tier A pin the governing clause belongs to."
+        }
+      ]
     }
   ],
   "unpatched": []

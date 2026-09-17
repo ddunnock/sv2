@@ -3,7 +3,7 @@
   "production": "DefinitionDeclaration",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "bd840645a99d2e115ca0991f5dfe7a9ceb00ad3e7e94554acb92df502b67d3db",
     "xtext_rule": "81fde741ce49adb55077058ea9a7d0c470d733ae99153111faec3f69713476f2",
@@ -16,5 +16,46 @@
     "xtext_rule_text": "fragment DefinitionDeclaration returns SysML::Definition :\t\n\tIdentification? SubclassificationPart?\n;",
     "metaclass": "SysML::Definition"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "Malformed header, the same shape as FlowDefinition's; whether it is filed was not searched.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "Identification"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "SubclassificationPart"
+        }
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.6.1 states DefinitionDeclaration : Definition Identification SubclassificationPart?. The SysML Xtext writes Identification? SubclassificationPart?; whether the '?' on Identification changes the language depends on Identification's rule, which is not in this pack, so it is not read as a disagreement. The clause's header lacks its '=' (`DefinitionDeclaration : Definition` followed directly by the body); the body is unambiguous and is taken as written. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.1 (Definitions.md, region_sha256 3ce9c25432443aa0)",
+      "note": "DefinitionDeclaration : Definition Identification SubclassificationPart?"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext DefinitionDeclaration",
+      "note": "writes Identification? SubclassificationPart?; whether the '?' on Identification changes the language depends on Identification's rule, which is not in this pack, so it is not read as a disagreement"
+    }
+  ],
+  "derived_utc": "2026-09-17T15:13:14Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T15:13:16Z"
 }

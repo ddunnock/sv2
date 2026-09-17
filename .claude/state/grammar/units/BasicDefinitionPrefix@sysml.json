@@ -3,7 +3,7 @@
   "production": "BasicDefinitionPrefix",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "bd840645a99d2e115ca0991f5dfe7a9ceb00ad3e7e94554acb92df502b67d3db",
     "xtext_rule": "4fd283600330510dd91ba71f0fb320c8505d1d01d5700f62397af39dbf833481",
@@ -16,5 +16,53 @@
     "xtext_rule_text": "fragment BasicDefinitionPrefix returns SysML::Definition :\n\tisAbstract ?= 'abstract' | isVariation ?= 'variation'\n;",
     "metaclass": "SysML::Definition"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "kw",
+        "text": "abstract"
+      },
+      {
+        "k": "kw",
+        "text": "variation"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.6.1 states BasicDefinitionPrefix = isAbstract ?= 'abstract' | isVariation ?= 'variation'. The SysML Xtext is identical. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.1 (Definitions.md, region_sha256 3ce9c25432443aa0)",
+      "note": "BasicDefinitionPrefix = isAbstract ?= 'abstract' | isVariation ?= 'variation'"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "`variation part def TransmissionChoices:>Transmission {`"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "`abstract part def Software;`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext BasicDefinitionPrefix",
+      "note": "is identical"
+    }
+  ],
+  "derived_utc": "2026-09-17T15:13:14Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T15:13:16Z"
 }

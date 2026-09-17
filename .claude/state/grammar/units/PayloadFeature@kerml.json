@@ -3,7 +3,7 @@
   "production": "PayloadFeature",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "41e1ec157d2dbb7927c23174c05181a1f4fbf25643ae9771de472916bc3c4275",
     "xtext_rule": "36dcec8bed9023b92d7fadd7ac4170730db32355ada06a74715f5b1381c8b4a1",
@@ -15,5 +15,108 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "PayloadFeature returns SysML::PayloadFeature :\n\t  Identification? PayloadFeatureSpecializationPart ValuePart?\n\t| Identification? ValuePart\n    | ownedRelationship += OwnedFeatureTyping ( ownedRelationship += OwnedMultiplicity )?\n    | ownedRelationship += OwnedMultiplicity ownedRelationship += OwnedFeatureTyping\n;",
     "metaclass": "SysML::PayloadFeature"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "Identification"
+          },
+          {
+            "k": "ref",
+            "name": "PayloadFeatureSpecializationPart"
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "ref",
+              "name": "ValuePart"
+            }
+          }
+        ]
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "Identification"
+          },
+          {
+            "k": "ref",
+            "name": "ValuePart"
+          }
+        ]
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "OwnedFeatureTyping"
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "ref",
+              "name": "OwnedMultiplicity"
+            }
+          }
+        ]
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "OwnedMultiplicity"
+          },
+          {
+            "k": "ref",
+            "name": "OwnedFeatureTyping"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "KerML 8.2.5.9.2's PayloadFeature is malformed (three '(' and two ')', KERML11-115), so it is not derived as written. Deviation PayloadFeature (follow_spec) repairs it to the reading every well-formed source states: the first two alternatives as printed, `OwnedFeatureTyping OwnedMultiplicity?`, and `OwnedMultiplicity OwnedFeatureTyping` with the typing mandatory. The minimal paren repair would instead make a bare multiplicity a payload; the deviation records why that reading is rejected. The Xtext agrees with the repaired rule, apart from writing Identification? on the first two alternatives.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.9.2 (Flows.md, region_sha256 150b0ccc1e0d5422)",
+      "note": "malformed PayloadFeature"
+    },
+    {
+      "kind": "deviation",
+      "ref": "PayloadFeature",
+      "note": "follow_spec: repaired reading, typing mandatory after a leading multiplicity"
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "KERML11-115",
+      "note": "mismatched parentheses, open"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext PayloadFeature",
+      "note": "same four alternatives, typing mandatory in the last"
+    }
+  ],
+  "notes": "What was wrong: an unclosed '(' before the third alternative's OwnedFeatureTyping, and a ( )? around the last alternative's typing. Why this repair: SysML 8.2.2.16, both Tier B' transcriptions and both Xtext grammars state the mandatory-typing reading; the paren-count repair alone contradicts all five. The corpus does not exercise the last alternative, so a negative test for `flow of [2] from a to b;` belongs with the parser work.",
+  "derived_utc": "2026-09-17T15:18:47Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T15:18:47Z"
 }

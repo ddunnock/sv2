@@ -3,7 +3,7 @@
   "production": "MetadataBody",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "814e74fbb17b63e9a835d6dc9a5ceb64c5393cec1e7ff119730c9fd1601fe160",
     "xtext_rule": "c4e761294eadb2bbf2a2ae71a59a6596e200c5d9b249966bc42824c934c17c95",
@@ -15,5 +15,60 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment MetadataBody returns SysML::Feature :\n\t  ';' \n\t| '{' ( ownedRelationship += NonFeatureMember \n\t\t  | ownedRelationship += MetadataBodyFeatureMember \n\t\t  | ownedRelationship += AliasMember\n\t\t  | ownedRelationship += Import\n\t      )* \n\t  '}'\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "kw",
+        "text": ";"
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "kw",
+            "text": "{"
+          },
+          {
+            "k": "star",
+            "item": {
+              "k": "ref",
+              "name": "MetadataBodyElement"
+            }
+          },
+          {
+            "k": "kw",
+            "text": "}"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "KerML 8.2.5.12 states MetadataBody : Feature = ';' | '{' ( ownedRelationship += MetadataBodyElement )* '}'. The KerML Xtext expands MetadataBodyElement into NonFeatureMember | MetadataBodyFeatureMember | AliasMember | Import. The expansion is not ported; the rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.12 (MetadataConcreteSyntax.md, region_sha256 30fa0599ab27c325)",
+      "note": "MetadataBody : Feature = ';' | '{' ( ownedRelationship += MetadataBodyElement )* '}'"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext MetadataBody",
+      "note": "inlined MetadataBodyElement; declined"
+    }
+  ],
+  "notes": "",
+  "derived_utc": "2026-09-17T15:11:58Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T15:12:00Z"
 }

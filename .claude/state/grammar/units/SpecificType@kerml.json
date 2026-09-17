@@ -3,7 +3,7 @@
   "production": "SpecificType",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "ad96227dff1b1e1fe965c513743ba092b1ac32efd3d7c1c466cdfba35b0dc720",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -16,5 +16,48 @@
     "xtext_rule_text": "",
     "metaclass": ""
   },
-  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "QualifiedName"
+      },
+      {
+        "k": "ref",
+        "name": "OwnedFeatureChain"
+      }
+    ]
+  },
+  "decision": "KerML 8.2.4.1.2 states SpecificType : Specialization : specific = [QualifiedName] | specific += OwnedFeatureChain { ownedRelatedElement += specific }. The definition line ends in ':' where '=' belongs; deviation SpecificType (follow_spec, citing KERML11-108) reads it as a definition, as the production is referenced from Specialization, Subsetting and Redefinition. The pilot Xtext has no SpecificType rule; it inlines the two alternatives. The body is unambiguous: a cross-reference, a ref to QualifiedName by convention, or an OwnedFeatureChain. The `{ ownedRelatedElement += specific }` action is abstract syntax.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.2 (Specialization.md, region_sha256 7eb140186fbf97b2)",
+      "note": "SpecificType : Specialization : specific = [QualifiedName] | specific += OwnedFeatureChain { ownedRelatedElement += specific }"
+    },
+    {
+      "kind": "deviation",
+      "ref": "SpecificType",
+      "note": "malformed header read as a definition"
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "KERML11-108",
+      "note": "names SpecificType among productions whose header ends in ':'"
+    }
+  ],
+  "derived_utc": "2026-09-17T15:11:58Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T15:12:00Z"
 }
