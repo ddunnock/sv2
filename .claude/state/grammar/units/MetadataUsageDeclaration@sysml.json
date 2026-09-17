@@ -3,7 +3,7 @@
   "production": "MetadataUsageDeclaration",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
     "xtext_rule": "6a528fc9a0be68a13e1d250b22316b0fadfa4d596eb70e87777be8e3a4300bd7",
@@ -16,5 +16,83 @@
     "xtext_rule_text": "fragment MetadataUsageDeclaration returns SysML::MetadataUsage :\n\t( Identification? DefinedByKeyword )? ownedRelationship += MetadataTyping\n;",
     "metaclass": "SysML::MetadataUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "Adjudicated from a pending clause/Xtext disagreement. The Xtext's Identification? inside the group adds nothing: the specification's Identification is nullable.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "ref",
+              "name": "Identification"
+            },
+            {
+              "k": "alt",
+              "items": [
+                {
+                  "k": "kw",
+                  "text": ":"
+                },
+                {
+                  "k": "seq",
+                  "items": [
+                    {
+                      "k": "kw",
+                      "text": "defined"
+                    },
+                    {
+                      "k": "kw",
+                      "text": "by"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "k": "ref",
+        "name": "OwnedFeatureTyping"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.27 states MetadataUsageDeclaration : MetadataUsage = ( Identification ( ':' | 'typed' 'by' ) )? ownedRelationship += OwnedFeatureTyping. Deviation MetadataUsageDeclaration (follow_xtext) reads the keyword pair as SysML's DEFINED_BY, ':' | 'defined' 'by'. The typing stays OwnedFeatureTyping as the clause prints it, not the Xtext's MetadataTyping, per deviation PrefixMetadataTyping-chain.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.27 (MetadataTextualNotation.md, region_sha256 69251565feee7639)",
+      "note": "( Identification ( ':' | 'typed' 'by' ) )? OwnedFeatureTyping"
+    },
+    {
+      "kind": "deviation",
+      "ref": "MetadataUsageDeclaration",
+      "note": "follow_xtext: DEFINED_BY in place of ':' | 'typed' 'by'"
+    },
+    {
+      "kind": "deviation",
+      "ref": "PrefixMetadataTyping-chain",
+      "note": "follow_spec: OwnedFeatureTyping, not MetadataTyping"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext MetadataUsageDeclaration",
+      "note": "( Identification? DefinedByKeyword )? MetadataTyping"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:49:38Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:49:38Z"
 }

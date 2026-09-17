@@ -3,7 +3,7 @@
   "production": "OccurrenceUsagePrefix",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "465ccd42d9aa0196c8527be21292803c8fcc974662a742655dbd027182d072c3",
     "xtext_rule": "904c4b3ebf46864909d878250b6f00b17c2e01cb9b786851b6e9109c62090eb9",
@@ -16,5 +16,84 @@
     "xtext_rule_text": "fragment OccurrenceUsagePrefix returns SysML::OccurrenceUsage :\n\t( EndUsagePrefix\n\t| BasicUsagePrefix\n\t  ( isIndividual ?= 'individual' )?\n\t  ( portionKind = PortionKind )?\n\t)\n\tUsageExtensionKeyword*\n;",
     "metaclass": "SysML::OccurrenceUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "Adjudicated from a pending clause/Xtext disagreement.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "ref",
+            "name": "EndUsagePrefix"
+          },
+          {
+            "k": "seq",
+            "items": [
+              {
+                "k": "ref",
+                "name": "BasicUsagePrefix"
+              },
+              {
+                "k": "opt",
+                "item": {
+                  "k": "kw",
+                  "text": "individual"
+                }
+              },
+              {
+                "k": "opt",
+                "item": {
+                  "k": "ref",
+                  "name": "PortionKind"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "k": "star",
+        "item": {
+          "k": "ref",
+          "name": "UsageExtensionKeyword"
+        }
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.9.2 states OccurrenceUsagePrefix : OccurrenceUsage = BasicUsagePrefix ( isIndividual ?= 'individual' )? ( portionKind = PortionKind { isPortion = true } )? UsageExtensionKeyword*. Deviation OccurrenceUsagePrefix (follow_xtext) adds EndUsagePrefix as an alternative to the BasicUsagePrefix group, as the SysML Xtext does and the general usage prefix already does. The `{ isPortion = true }` action is abstract syntax.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.9.2 (OccurrenceUsages.md, region_sha256 6dfed224798030c3)",
+      "note": "BasicUsagePrefix ( 'individual' )? ( PortionKind )? UsageExtensionKeyword*"
+    },
+    {
+      "kind": "deviation",
+      "ref": "OccurrenceUsagePrefix",
+      "note": "follow_xtext: EndUsagePrefix alternative added"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml",
+      "note": "`end [1] item a : A {`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext OccurrenceUsagePrefix",
+      "note": "( EndUsagePrefix | BasicUsagePrefix ... ) UsageExtensionKeyword*"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:50:56Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:50:56Z"
 }

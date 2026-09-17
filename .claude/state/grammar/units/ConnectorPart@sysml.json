@@ -3,7 +3,7 @@
   "production": "ConnectorPart",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "e5834f81a35a28ed92e55b1809dac0c6626c8fa9a77c3720bef1f1827c87c885",
     "xtext_rule": "91d5d88cf6b90cf4c42888ca70953b8b15a3b203adb2d1828e79d08b96256db2",
@@ -16,5 +16,43 @@
     "xtext_rule_text": "fragment ConnectorPart returns SysML::ConnectionUsage :\n\tBinaryConnectorPart | NaryConnectorPart\n;",
     "metaclass": "SysML::ConnectionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "BinaryConnectorPart"
+      },
+      {
+        "k": "ref",
+        "name": "NaryConnectorPart"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.13.1 states ConnectorPart : ConnectionUsage = BinaryConnectorPart | NaryConnectorPart. The SysML Xtext is identical. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.13.1 (ConnectionDefinitionandUsage.md, region_sha256 614b54fa6eb5405a)",
+      "note": "ConnectorPart : ConnectionUsage = BinaryConnectorPart | NaryConnectorPart"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext ConnectorPart",
+      "note": "is identical"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:47:32Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:47:35Z"
 }

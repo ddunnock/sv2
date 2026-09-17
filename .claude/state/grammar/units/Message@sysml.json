@@ -3,7 +3,7 @@
   "production": "Message",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "f503f360d20207704de75664ced4bbe1f57e024983fed96db8f3731cd57ee6a9",
     "xtext_rule": "cda0738a8ed298a8fcb9ecfc40fa4c53baf433424853a401a7d3f326d571e027",
@@ -16,5 +16,51 @@
     "xtext_rule_text": "Message returns SysML::FlowUsage :\n\tOccurrenceUsagePrefix MessageKeyword MessageDeclaration DefinitionBody\n;",
     "metaclass": "SysML::FlowUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "OccurrenceUsagePrefix"
+      },
+      {
+        "k": "kw",
+        "text": "message"
+      },
+      {
+        "k": "ref",
+        "name": "MessageDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "DefinitionBody"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.16 states Message : FlowUsage = OccurrenceUsagePrefix 'message' MessageDeclaration DefinitionBody { isAbstract = true }. The SysML Xtext factors the keyword into a keyword rule, a renaming. The `{ isAbstract = true }` action is abstract syntax. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.16 (FlowsTextualNotation.md, region_sha256 e03f363eef9b4cf1)",
+      "note": "Message : FlowUsage = OccurrenceUsagePrefix 'message' MessageDeclaration DefinitionBody { isAbstract = true }"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext Message",
+      "note": "factors the keyword into a keyword rule, a renaming"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:45:03Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:45:06Z"
 }

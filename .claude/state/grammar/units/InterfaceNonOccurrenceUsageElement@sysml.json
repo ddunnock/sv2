@@ -3,7 +3,7 @@
   "production": "InterfaceNonOccurrenceUsageElement",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "8e1a8617b6490e5ffe56b25437884cec824953583966b0cc211d0086da41e061",
     "xtext_rule": "d21341c46fd1207de635ad1544d65ab732c5d7c568ccfd5bf4935070250399b6",
@@ -16,5 +16,55 @@
     "xtext_rule_text": "InterfaceNonOccurrenceUsageElement returns SysML::Usage :\n\t  ReferenceUsage\n\t| AttributeUsage\n\t| EnumerationUsage\n\t| BindingConnectorAsUsage\n\t| SuccessionAsUsage\n;",
     "metaclass": "SysML::Usage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "ReferenceUsage"
+      },
+      {
+        "k": "ref",
+        "name": "AttributeUsage"
+      },
+      {
+        "k": "ref",
+        "name": "EnumerationUsage"
+      },
+      {
+        "k": "ref",
+        "name": "BindingConnectorAsUsage"
+      },
+      {
+        "k": "ref",
+        "name": "SuccessionAsUsage"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.14.1 states InterfaceNonOccurrenceUsageElement : Usage = ReferenceUsage | AttributeUsage | EnumerationUsage | BindingConnectorAsUsage | SuccessionAsUsage. The SysML Xtext is identical. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.14.1 (InterfaceDefinitions.md, region_sha256 86fc09c62954e744)",
+      "note": "InterfaceNonOccurrenceUsageElement : Usage = ReferenceUsage | AttributeUsage | EnumerationUsage | BindingConnectorAsUsage | SuccessionAsUsage"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext InterfaceNonOccurrenceUsageElement",
+      "note": "is identical"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:47:32Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:47:35Z"
 }

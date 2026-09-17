@@ -3,7 +3,7 @@
   "production": "ReturnParameterMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "abc851f79d420fb31d8d7518538400aa03794ce96b1c7f0ed791b9375eeee723",
     "xtext_rule": "387f5d8f0b1d7f39b66da0a9f9c577bd722ca6959d12ffe670b044f71b86ebd5",
@@ -16,5 +16,55 @@
     "xtext_rule_text": "ReturnParameterMember returns SysML::ReturnParameterMembership :\n\tMemberPrefix 'return' \n\townedRelatedElement += UsageElement \n;",
     "metaclass": "SysML::ReturnParameterMembership"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "MemberPrefix"
+        }
+      },
+      {
+        "k": "kw",
+        "text": "return"
+      },
+      {
+        "k": "ref",
+        "name": "UsageElement"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.19 states ReturnParameterMember : ReturnParameterMembership = MemberPrefix? 'return' ownedRelatedElement += UsageElement. The SysML Xtext writes MemberPrefix without the '?'. The clause writes MemberPrefix?; MemberPrefix is ( visibility = VisibilityIndicator )? and already nullable, so the '?' is kept as written and changes nothing. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.19 (CalculationsTextualNotation.md, region_sha256 ee541841395079da)",
+      "note": "ReturnParameterMember : ReturnParameterMembership = MemberPrefix? 'return' ownedRelatedElement += UsageElement"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "`return dpv :> distancePerVolume = 1/f;`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext ReturnParameterMember",
+      "note": "writes MemberPrefix without the '?'"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:47:32Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:47:34Z"
 }

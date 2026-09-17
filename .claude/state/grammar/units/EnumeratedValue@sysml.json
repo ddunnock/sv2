@@ -3,7 +3,7 @@
   "production": "EnumeratedValue",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "6586cda95c280b8bf6c2a527d7307c54570015c949555a4f61aad144b2c03162",
     "xtext_rule": "2a3e2ded5cfc5bf1c5be56985ed05b28707c151cf36792ec19cdcf0fee86846e",
@@ -16,5 +16,58 @@
     "xtext_rule_text": "EnumeratedValue returns SysML::EnumerationUsage :\n\tUsageExtensionKeyword* EnumerationUsageKeyword? Usage\n;",
     "metaclass": "SysML::EnumerationUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "Adjudicated from a pending clause/Xtext disagreement.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "star",
+        "item": {
+          "k": "ref",
+          "name": "UsageExtensionKeyword"
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "kw",
+          "text": "enum"
+        }
+      },
+      {
+        "k": "ref",
+        "name": "Usage"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.8 states EnumeratedValue : EnumerationUsage = 'enum'? Usage. Deviation EnumeratedValue (follow_xtext) adds the leading UsageExtensionKeyword* the SysML Xtext has and every other usage production carries, which the corpus uses. The Xtext's EnumerationUsageKeyword is 'enum' under a keyword rule and is not ported.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.8 (EnumerationsTextualNotation.md, region_sha256 9c242a1f7811f8ef)",
+      "note": "'enum'? Usage"
+    },
+    {
+      "kind": "deviation",
+      "ref": "EnumeratedValue",
+      "note": "follow_xtext: UsageExtensionKeyword* added"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext EnumeratedValue",
+      "note": "UsageExtensionKeyword* EnumerationUsageKeyword? Usage"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:50:07Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:50:07Z"
 }

@@ -3,7 +3,7 @@
   "production": "ViewRenderingMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "ee624722b91fd28dd540ce074f7c2db4f5caf3cb2d07fa533811eac7969424dd",
     "xtext_rule": "74b9f28d1d24abad7746b585d69a394404a0d1da49821dd7ac9c12e04b3331ad",
@@ -16,5 +16,52 @@
     "xtext_rule_text": "ViewRenderingMember returns SysML::ViewRenderingMembership :\n\tMemberPrefix 'render' \n\townedRelatedElement += ViewRenderingUsage \n;",
     "metaclass": "SysML::ViewRenderingMembership"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "MemberPrefix"
+      },
+      {
+        "k": "kw",
+        "text": "render"
+      },
+      {
+        "k": "ref",
+        "name": "ViewRenderingUsage"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.26.1 states ViewRenderingMember : ViewRenderingMembership = MemberPrefix 'render' ownedRelatedElement += ViewRenderingUsage. The SysML Xtext is identical. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.26.1 (ViewDefinitions.md, region_sha256 5198c1a94438ed0c)",
+      "note": "ViewRenderingMember : ViewRenderingMembership = MemberPrefix 'render' ownedRelatedElement += ViewRenderingUsage"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "`render asTreeDiagram;`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext ViewRenderingMember",
+      "note": "is identical"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:47:32Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:47:34Z"
 }

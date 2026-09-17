@@ -3,7 +3,7 @@
   "production": "InterfaceNonOccurrenceUsageMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "8e1a8617b6490e5ffe56b25437884cec824953583966b0cc211d0086da41e061",
     "xtext_rule": "7af79a1fa9bad749c19e3c4427e7ec7c8f6ac8453a9f13a82fe57ef4ae99353e",
@@ -16,5 +16,43 @@
     "xtext_rule_text": "InterfaceNonOccurrenceUsageMember returns SysML::FeatureMembership :\n\tMemberPrefix ownedRelatedElement += InterfaceNonOccurrenceUsageElement \n;",
     "metaclass": "SysML::FeatureMembership"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "MemberPrefix"
+      },
+      {
+        "k": "ref",
+        "name": "InterfaceNonOccurrenceUsageElement"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.14.1 states InterfaceNonOccurrenceUsageMember : FeatureMembership = MemberPrefix ownedRelatedElement += InterfaceNonOccurrenceUsageElement. The SysML Xtext is identical. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.14.1 (InterfaceDefinitions.md, region_sha256 86fc09c62954e744)",
+      "note": "InterfaceNonOccurrenceUsageMember : FeatureMembership = MemberPrefix ownedRelatedElement += InterfaceNonOccurrenceUsageElement"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext InterfaceNonOccurrenceUsageMember",
+      "note": "is identical"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:45:03Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:45:05Z"
 }

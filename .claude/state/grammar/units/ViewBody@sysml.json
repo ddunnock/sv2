@@ -3,7 +3,7 @@
   "production": "ViewBody",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "549f4dd10d3f615fe5551a4a966bcf84c7f0bc1fec8a26c65080c95b9edafcce",
     "xtext_rule": "7c3fd8b8dfe923c3703d9441ee138dd193ccb3fed85ea55d2f6a3c1bbf728615",
@@ -16,5 +16,59 @@
     "xtext_rule_text": "fragment ViewBody returns SysML::ViewUsage :\n\t';' | '{' ViewBodyItem* '}'\n;",
     "metaclass": "SysML::ViewUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "kw",
+        "text": ";"
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "kw",
+            "text": "{"
+          },
+          {
+            "k": "star",
+            "item": {
+              "k": "ref",
+              "name": "ViewBodyItem"
+            }
+          },
+          {
+            "k": "kw",
+            "text": "}"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.26.2 states ViewBody : ViewUsage = ';' | '{' ViewBodyItem* '}'. The SysML Xtext is identical. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.26.2 (ViewUsages.md, region_sha256 f49a7d5fda3165a3)",
+      "note": "ViewBody : ViewUsage = ';' | '{' ViewBodyItem* '}'"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext ViewBody",
+      "note": "is identical"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:47:32Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:47:34Z"
 }

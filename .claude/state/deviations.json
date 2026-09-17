@@ -6572,6 +6572,121 @@
           "note": "The SysML Tier A pin the governing clause belongs to."
         }
       ]
+    },
+    {
+      "production": "MetadataUsageDeclaration",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 149-150) writes the keyword alternative as DefinedByKeyword, ':' | 'defined' 'by' (lines 395-397), the same rule its TypedBy uses.",
+      "problem": "SysML 8.2.2.27 prints MetadataUsageDeclaration's keyword alternative as ( ':' | 'typed' 'by' ), KerML 8.2.5.12's MetadataFeatureDeclaration word for word. SysML does not reserve 'typed' (8.2.2.1.2) and defines no TYPED_BY; it reserves 'defined' and defines DEFINED_BY = ':' | 'defined' 'by', and its own TypedBy (8.2.2.6.5) is DEFINED_BY FeatureTyping where KerML's (8.2.4.3.1) is TYPED_BY OwnedFeatureTyping.",
+      "decision": "follow_xtext",
+      "rationale": "The 'typed' 'by' is an unadapted copy of KerML's text in a clause SysML otherwise converts to DEFINED_BY: SysML types every other feature with 'defined' 'by', and 'typed' is not one of its reserved words. The pilot's DefinedByKeyword is that conversion, with no predicate or inlining. Not a union: nothing supports 'typed' 'by' in SysML. The corpus is silent on the keyword spelling: typed metadata usages use ':', e.g. `metadata engineSelectionRationale : Rationale about engine4cyl {`. The OwnedFeatureTyping the clause prints is kept, per deviation PrefixMetadataTyping-chain. The adjudicator read the open SysML issue list on 2026-09-17: no issue names this; SYSML21-11 (8.2.2.1.2's missing reserved words) does not mention 'typed'. Adjudicated by the grammar-adjudicator on 2026-09-17; the two TypedBy clauses and SysML's reserved words were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.27 MetadataTextualNotation (region_sha256 69251565feee7639)",
+          "note": "( ':' | 'typed' 'by' )"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.1.2 LexicalStructure (region_sha256 4ceb9d8215eb7e2b)",
+          "note": "reserves 'defined', not 'typed'; DEFINED_BY = ':' | 'defined' 'by'"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.5 Specialization (region_sha256 d0d5a04805076a67)",
+          "note": "TypedBy : Feature = DEFINED_BY ownedRelationship += FeatureTyping"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.12 MetadataConcreteSyntax (region_sha256 30fa0599ab27c325)",
+          "note": "MetadataFeatureDeclaration's ( ':' | 'typed' 'by' ), the text SysML copied"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Metadata Examples/RationaleMetadataExample.sysml",
+          "note": "line 11: `metadata engineSelectionRationale : Rationale about engine4cyl {`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "EnumeratedValue",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 784-786) writes EnumeratedValue as `UsageExtensionKeyword* EnumerationUsageKeyword? Usage`, allowing prefix metadata before an enumerated value.",
+      "problem": "SysML 8.2.2.8 states EnumeratedValue : EnumerationUsage = 'enum'? Usage, with no UsageExtensionKeyword*. Every other usage takes prefix metadata through UsagePrefix or OccurrenceUsagePrefix (8.2.2.6.2, 8.2.2.9.2), and EnumerationDefinition in the same clause keeps DefinitionExtensionKeyword*. Literally, `#Security enum secret : ClassificationLevel = 2;` in an enumeration body cannot parse.",
+      "decision": "follow_xtext",
+      "rationale": "The corpus writes it: Simple Tests/MetadataTest.sysml line 9, `#Security enum secret : ClassificationLevel = 2;`, inside `#Security enum def ClassificationLevel :> ScalarValues::Natural {`. EnumeratedValue is the only usage production without extension keywords, and nothing in the specification says enumerated values cannot carry prefix metadata. The pilot's extra alternative has no predicate or inlining. No SysML issue names 8.2.2.8 or EnumeratedValue (open list read on 2026-09-17); SYSML21-360 corrects the same kind of omission in the graphical enumeration notation (8.2.3.8), a different clause, so it is not cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the corpus line was rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.8 EnumerationsTextualNotation (region_sha256 9c242a1f7811f8ef)",
+          "note": "EnumeratedValue = 'enum'? Usage, while EnumerationDefinition keeps DefinitionExtensionKeyword*"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.2 Usages (region_sha256 a6f6e20afeed05e4)",
+          "note": "UsagePrefix = UnextendedUsagePrefix UsageExtensionKeyword*"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/MetadataTest.sysml",
+          "note": "line 9: `#Security enum secret : ClassificationLevel = 2;`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "OccurrenceUsagePrefix",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext (lines 836-843) writes OccurrenceUsagePrefix as ( EndUsagePrefix | BasicUsagePrefix ( 'individual' )? ( PortionKind )? ) UsageExtensionKeyword*, adding EndUsagePrefix as an alternative.",
+      "problem": "SysML 8.2.2.9.2 states OccurrenceUsagePrefix : OccurrenceUsage = BasicUsagePrefix ( isIndividual ?= 'individual' )? ( portionKind = PortionKind )? UsageExtensionKeyword*, with no EndUsagePrefix. Every item, part, port, connection, flow and action usage takes this prefix, so none can begin with 'end'. The general usage prefix has the alternative (UnextendedUsagePrefix = EndUsagePrefix | BasicUsagePrefix, 8.2.2.6.2), as does ReferenceUsage (8.2.2.6.3); only interface bodies have a separate bare end form (DefaultInterfaceEnd, 8.2.2.14.1), with no keyword. Literally, `end port supplierPort : FuelOutPort;` in a flow def and `end [1] item a : A {` in a connection def cannot parse.",
+      "decision": "follow_xtext",
+      "rationale": "The corpus writes keyworded ends throughout connection, flow and interface definitions and usages; the adjudicator counted 34 lines that no other production accepts, e.g. training 13 Flow Definition Example line 8, `end port supplierPort : FuelOutPort;`, and Simple Tests/ConnectionTest.sysml line 68, `end [1] item a : A {`, whose multiplicity exercises EndUsagePrefix's OwnedCrossFeatureMember. The pilot's addition reuses the specification's own EndUsagePrefix unchanged, the alternative 8.2.2.6.2 and 8.2.2.6.3 already give the other usage prefixes. It completes deviation DefaultReferenceUsage, which added the bare 'end' for keyword-less ends. No open SysML issue title names this; SYSML21-594 ('OccurrencePrefix is referenced but not specified') was read and concerns the graphical BNF, so it is not cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the two corpus lines were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.9.2 OccurrenceUsages (region_sha256 6dfed224798030c3)",
+          "note": "OccurrenceUsagePrefix without EndUsagePrefix"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.2 Usages (region_sha256 a6f6e20afeed05e4)",
+          "note": "UnextendedUsagePrefix = EndUsagePrefix | BasicUsagePrefix"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.3 ReferenceUsages (region_sha256 27505145913280ac)",
+          "note": "ReferenceUsage = ( EndUsagePrefix | RefPrefix ) 'ref' Usage"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.14.1 InterfaceDefinitions (region_sha256 86fc09c62954e744)",
+          "note": "DefaultInterfaceEnd = isEnd ?= 'end' Usage, keyword-less, interfaces only"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/training/13. Flows/Flow Definition Example.sysml",
+          "note": "line 8: `end port supplierPort : FuelOutPort;` in `flow def FuelFlow {`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml",
+          "note": "line 68: `end [1] item a : A {` in `connection def AB {`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
     }
   ],
   "unpatched": []

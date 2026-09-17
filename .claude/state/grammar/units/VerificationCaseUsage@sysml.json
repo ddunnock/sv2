@@ -3,7 +3,7 @@
   "production": "VerificationCaseUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "1db5b44a338a0a23c3e3429dca4d9c556047a96149d863f795e58b73b149d1f2",
     "xtext_rule": "5c73b46565b99d0fc9e005a50baee1892e6dbced818d5f33990a633dcb0a3663",
@@ -16,5 +16,51 @@
     "xtext_rule_text": "VerificationCaseUsage returns SysML::VerificationCaseUsage :\n\tOccurrenceUsagePrefix VerificationCaseUsageKeyword ActionUsageDeclaration CaseBody\n;",
     "metaclass": "SysML::VerificationCaseUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "OccurrenceUsagePrefix"
+      },
+      {
+        "k": "kw",
+        "text": "verification"
+      },
+      {
+        "k": "ref",
+        "name": "ConstraintUsageDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "CaseBody"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.24 states VerificationCaseUsage = OccurrenceUsagePrefix 'verification' ConstraintUsageDeclaration CaseBody. The SysML Xtext writes ActionUsageDeclaration where the clause writes ConstraintUsageDeclaration, and factors the keyword into a keyword rule; SysML 8.2.2.17.2 and 8.2.2.20 give both declarations the same body, UsageDeclaration ValuePart?, so neither difference changes the language. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.24 (VerificationCasesTextualNotation.md, region_sha256 a699e664918dcb65)",
+      "note": "VerificationCaseUsage = OccurrenceUsagePrefix 'verification' ConstraintUsageDeclaration CaseBody"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext VerificationCaseUsage",
+      "note": "writes ActionUsageDeclaration where the clause writes ConstraintUsageDeclaration, and factors the keyword into a keyword rule; SysML 8.2.2.17.2 and 8.2.2.20 give both declarations the same body, UsageDeclaration ValuePart?, so neither difference changes the language"
+    }
+  ],
+  "derived_utc": "2026-09-17T16:46:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T16:46:22Z"
 }
