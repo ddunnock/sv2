@@ -9,7 +9,7 @@ now says so up front, and in particular the two ways it could be useless: missin
 a real defect, or crying wolf on a clause that is fine.
 """
 
-from _grammar import clause_defects
+from _grammar import clause_defects, defective_productions, split_productions
 
 
 def ebnf(body):
@@ -66,3 +66,36 @@ def test_every_block_in_a_clause_is_checked_not_only_the_first():
 def test_nesting_is_tracked_rather_than_counted():
     # A naive depth counter calls this balanced; the brackets interleave.
     assert clause_defects(ebnf("X =\n    ( A ]")) == ["an unmatched ']' on line 2"]
+
+
+# ---- locating the defect -------------------------------------------------------
+
+
+def test_a_defect_is_charged_to_the_production_that_contains_it():
+    # KerML 8.2.4.3.1 as pinned: the stray ')' is Feature's, and its sibling in the
+    # same clause is well-formed. Charged per clause, it flagged 24 productions.
+    text = ebnf(
+        "Feature =\n    ( A\n      )\n    | B\n    )\n\n"
+        "EndFeaturePrefix : Feature =\n    'const'? 'end'"
+    )
+    assert defective_productions(text) == {"Feature": ["an unmatched ')' on line 5"]}
+
+
+def test_production_heads_are_found_even_when_written_without_an_equals_sign():
+    # KERML11-108 and SYSML21-335 report heads written `Name :` or `Name : Meta`
+    # with no `=`. A splitter that required `=` would merge them into their neighbour.
+    block = (
+        "BasicFeaturePrefix : Feature :\n    'derived'?\n"
+        "FeaturePrefix :\n    A\n"
+        "PackageMember : OwningMembership\nMemberPrefix\n( A | B )"
+    )
+    assert [n for n, _ in split_productions(block)] == [
+        "BasicFeaturePrefix",
+        "FeaturePrefix",
+        "PackageMember",
+    ]
+
+
+def test_a_body_line_that_mentions_a_path_or_assignment_is_not_a_head():
+    block = "MembershipImport =\n    Name ( '::' '**' )?\n    Other := x"
+    assert [n for n, _ in split_productions(block)] == ["MembershipImport"]

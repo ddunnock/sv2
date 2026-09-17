@@ -32,6 +32,7 @@ from _grammar import (
     SCOPE_OF_SUFFIX,
     clause_defects,
     clause_for_scope,
+    defective_productions,
     load_units,
     pinned_tokens,
     unit_key,
@@ -128,19 +129,28 @@ def clause_text(name: str, scope: str | None = None) -> tuple[str, str]:
     _, text = clause_for_scope(entry, scope)
     if not text:
         return "", f"{name} has no {scope} clause in {CLAUSES}"
-    defects = clause_defects(text)
+    broken = defective_productions(text)
+    if name not in broken and broken:
+        # The clause is flawed elsewhere; this production's own text is not. Saying so
+        # stops a deriver repairing text that needs no repair.
+        where = ", ".join(sorted(broken))
+        return text, (
+            f"Note: this clause is malformed in {where}, not in {name}. {name}'s own text "
+            "is well-formed; derive it as written."
+        )
+    defects = broken.get(name) or ([] if broken else clause_defects(text))
     if defects:
         # The clause is the source. Saying this up front is the difference between
         # repairing it deliberately and not noticing it needed repair.
         return text, (
-            f"THE CLAUSE TEXT IS MALFORMED: it has {', and '.join(defects)}. "
+            f"THE CLAUSE TEXT IS MALFORMED in {name} itself: it has {', and '.join(defects)}. "
             "Do not derive from it as written. Work out the repair, check it against "
             "the Tier B' transcription in vendor/spec-bnf and against the Xtext, and "
             "if exactly one repair is coherent, derive from that and record on the "
             "unit what was wrong and why the repair is the only reading. If more than "
             "one repair is coherent, the unit is a conflict. Do not assert whether the "
-            "defect is in the OMG document or in the wiki's extraction of it unless "
-            "you have checked the PDF."
+            "defect is in the OMG document or in the wiki's extraction of it unless you "
+            "have checked the PDF, or have fetched and read an OMG issue reporting it."
         )
     return text, ""
 

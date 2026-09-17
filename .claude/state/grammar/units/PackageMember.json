@@ -80,7 +80,7 @@
     ]
   },
   "decision": "A member prefix, then a definition element or a usage element, as SysML 8.2.2.5.1 states it.",
-  "notes": "Two notational slips in the SysML clause, recorded because the clause is the source and a literal reader would stumble on both, and neither changes what parses. `PackageMember : OwningMembership` is followed by its body with no `=`. And its two alternatives assign differently \u2014 `ownedRelatedElement += DefinitionElement` but `ownedRelatedElement = UsageElement` \u2014 where the Xtext uses `+=` for both.\n\nThe clause and SysML.xtext agree on the structure.\n\nFOR A PARSER AUTHOR: sv2-syntax implements this production today with one DefinitionElement, Package, and no UsageElement. DefinitionElement and UsageElement are the two large SysML alternations; which one applies is decided after the optional visibility, by the element's own keywords.",
+  "notes": "Two notational slips in the SysML clause, recorded because the clause is the source and a literal reader would stumble on both, and neither changes what parses. `PackageMember : OwningMembership` is followed by its body with no `=`. And its two alternatives assign differently \u2014 `ownedRelatedElement += DefinitionElement` but `ownedRelatedElement = UsageElement` \u2014 where the Xtext uses `+=` for both.\n\nThe clause and SysML.xtext agree on the structure.\n\nFOR A PARSER AUTHOR: sv2-syntax implements this production today with one DefinitionElement, Package, and no UsageElement. DefinitionElement and UsageElement are the two large SysML alternations; which one applies is decided after the optional visibility, by the element's own keywords.\n\nFILED WITH OMG: the missing `=` is SYSML21-335. The `+=` / `=` asymmetry between the alternatives is not mentioned in that issue and has no issue this derivation found.",
   "evidence": [
     {
       "kind": "clause",
@@ -96,6 +96,11 @@
       "kind": "corpus",
       "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
       "note": "`package SimpleVehicleModel{` at the root is a PackageMember"
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "SYSML21-335",
+      "note": "MATCH FOR THE MISSING `=` ONLY. 'No Equals Sign for PackageMember', open, filed 24 Aug 2025 by George Edward Roberts against SysML 2.0b4; quotes the production and says 'there is no equal sign here'. It does NOT mention the `+=` / `=` asymmetry between the two alternatives, which remains recorded here unfiled. Fetched and read in full on 2026-09-17, not taken from a summary."
     }
   ],
   "acceptance": {

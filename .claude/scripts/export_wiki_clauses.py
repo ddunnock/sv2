@@ -39,7 +39,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
-from _grammar import clause_defects
+from _grammar import defective_productions
 
 ROOT = Path(__file__).resolve().parents[2]
 INVENTORY = ROOT / ".claude/state/grammar/bnf-productions.json"
@@ -139,29 +139,26 @@ def unnamed(export: dict[str, dict[str, str]]) -> list[str]:
 
 
 def report_malformed(export: dict[str, dict[str, str]]) -> None:
-    """Name the clause atoms whose grammar blocks do not parse as grammar.
+    """Name each production whose own clause text does not parse as grammar.
 
-    Grouped by atom, because one stray bracket in a clause reaches every
-    production that clause defines — the Features atom alone accounts for 24.
-    This is a report, not a failure: the defects are upstream of this repository
-    and the derivation repairs them per unit, with the repair recorded there.
+    A clause atom states many productions and one stray bracket belongs to one of
+    them, so the defect is reported against that production and not against every
+    production its clause happens to define. This is a report, not a failure: the
+    defects are upstream of this repository, and the derivation repairs them per
+    unit, with the repair recorded there.
     """
-    by_atom: dict[str, tuple[list[str], list[str]]] = {}
-    for name, entry in sorted(export.items()):
-        if defects := clause_defects(entry["text"]):
-            names, seen = by_atom.setdefault(entry["ref"].split(" | ")[0], ([], []))
-            names.append(name)
-            seen.extend(d for d in defects if d not in seen)
-    if not by_atom:
+    found: dict[str, tuple[str, list[str]]] = {}
+    for entry in export.values():
+        for name, defects in defective_productions(entry["text"]).items():
+            found.setdefault(name, (entry["ref"].split(" | ")[0], defects))
+    if not found:
         return
-    affected = sum(len(names) for names, _ in by_atom.values())
-    print(f"  MALFORMED grammar in {len(by_atom)} clause atom(s), reaching {affected} productions:")
-    for ref, (names, defects) in sorted(by_atom.items()):
-        print(f"    {ref}")
-        print(f"      {'; '.join(defects)}")
-        print(f"      {len(names)} productions, e.g. {', '.join(names[:4])}")
+    print(f"  MALFORMED grammar in {len(found)} production(s):")
+    for name, (ref, defects) in sorted(found.items()):
+        print(f"    {name} — {'; '.join(defects)}")
+        print(f"      {ref}")
     print("    Derive these against the Tier B' transcription and the Xtext, and record")
-    print("    the repair on each unit. grammar_next.py repeats this per production.")
+    print("    the repair on the unit. grammar_next.py repeats this for the production.")
 
 
 def main(argv: list[str] | None = None) -> int:

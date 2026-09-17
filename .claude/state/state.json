@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-16T21:09:19Z",
+    "regenerated_utc": "2026-09-17T12:09:31Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -26,7 +26,7 @@
       "unit": 89,
       "snapshots": 4,
       "corpus_files": 311,
-      "negative_cases": 28,
+      "negative_cases": 29,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
-      "63b236d Derive the literals, bodies and invocations of KerML 8.2.5.8.2 through 8.2.5.8.4",
-      "bece57a Adjudicate the InvocationTypeMember slot, on the editor's own account",
-      "5235d68 Derive the primary expressions of KerML 8.2.5.8.2",
-      "c5a3583 Derive QualifiedName and the base expressions of KerML 8.2.5.8.3",
-      "83a2772 Adjudicate the MetaClassificationTestOperator casing defect",
-      "e1526ae Derive the expression forms of KerML 8.2.5.8.1",
-      "3eaa618 Commit the derivation, keep the clause out of it, and say where everything came from",
-      "f0bf0dc Derive the operator vocabulary of KerML 8.2.5.8.1"
+      "f52b282 Connect both roots to the kernel, and refuse evidence that names no file",
+      "6b60bf9 Derive KerML and SysML as two grammars that share a vocabulary",
+      "4b35b61 Resolve the declaration-optionality conflict, on a verified issue for three of four",
+      "cbc960a Say when a clause is malformed, instead of leaving it to be noticed",
+      "8ca988a Derive the ten FeatureElement alternatives, six verified and four in conflict",
+      "4787e4e Make the unit schema describe units, and validate them against it",
+      "affa0af Stop the unit checker writing into the prose it checks",
+      "b720844 Open the type layer: derive the membership productions of KerML 8.2.3.4 and 8.2.4.1"
     ]
   },
   "authored": {

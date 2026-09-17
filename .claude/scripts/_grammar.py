@@ -60,6 +60,42 @@ def _block_defects(block: str) -> list[str]:
     return defects
 
 
+#: The head of a production inside a grammar block: a capitalised name followed by
+#: `=` or by `:` (a metaclass). `::` and `:=` are not heads. The clauses write heads
+#: several broken ways — `Name : Meta` with no `=`, `Name :` with no metaclass — so
+#: the head is recognised by its name and its first separator, not by a well-formed `=`.
+_HEAD = re.compile(r"^\s*([A-Z]\w*)\s*(?:=|:(?![:=]))")
+
+
+def split_productions(block: str) -> list[tuple[str, str]]:
+    """(name, text) for each production written in one grammar block, in order."""
+    found: list[tuple[str, list[str]]] = []
+    for line in block.splitlines():
+        head = _HEAD.match(_QUOTED.sub("''", line))
+        if head:
+            found.append((head.group(1), [line]))
+        elif found:
+            found[-1][1].append(line)
+    return [(name, "\n".join(lines)) for name, lines in found]
+
+
+def defective_productions(text: str) -> dict[str, list[str]]:
+    """Each production in a clause whose OWN text is malformed, with its defects.
+
+    A clause atom states many productions, and one stray bracket belongs to one of
+    them. Reported per clause, KerML 8.2.4.3.1's extra `)` flagged 24 productions
+    when only Feature carries it; reported here, it flags Feature.
+    """
+    found: dict[str, list[str]] = {}
+    for block in _FENCE.findall(text):
+        if not _DEFINES.search(block) or not _block_defects(block):
+            continue
+        for name, body in split_productions(block):
+            if defects := _block_defects(body):
+                found.setdefault(name, []).extend(defects)
+    return found
+
+
 def clause_defects(text: str) -> list[str]:
     """Structural defects in a clause's grammar blocks, worst first, or empty.
 

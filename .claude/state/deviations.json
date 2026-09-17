@@ -2149,6 +2149,31 @@
       ]
     },
     {
+      "production": "Feature-extra-parenthesis",
+      "bucket": "spec_only",
+      "upstream": "The Pilot Xtext's Feature rule is balanced and wraps the two-way alternation, with ValuePart? TypeBody outside it. The Tier B' transcription has the same balanced structure.",
+      "problem": "KerML 8.2.4.3.1 prints Feature with three opening parentheses and four closing: a stray `)` after `FeatureDeclaration?` in the first alternative. As printed the production does not parse as grammar.",
+      "decision": "follow_spec",
+      "rationale": "Follow the specification's evident structure by deleting the stray `)`, which wraps the alternation and applies ValuePart? TypeBody to both alternatives. The only other deletion would leave the first alternative with no body, and every feature in the corpus ends in `;` or a braced body. KERML11-110 confirms the defect is in the document, not in an extraction of it; it does not state the intended repair, so the repair rests on this reasoning and on Tier B' and the Xtext agreeing with it.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.4.3.1 Features (region_sha256 c9b4ff39176a7e05)",
+          "note": "Feature as printed, with the extra `)`."
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "KERML11-110",
+          "note": "EXACT MATCH. 'Feature grammar rule has extra close parenthesis', open, filed 2 Nov 2025 by Kent Johnson (Emerson) against KerML 1.0; quotes this production and counts 3 '(' against 4 ')'. Fetched and read in full on 2026-09-17."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "The KerML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
       "production": "FeatureChainExpression",
       "bucket": "spec_only",
       "upstream": "The Pilot Xtext declares no rule named `FeatureChainExpression`. Either it inlines this production into the rule that uses it, or it reaches the same construct under a different name.",
