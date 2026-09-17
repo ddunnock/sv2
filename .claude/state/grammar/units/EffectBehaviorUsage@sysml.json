@@ -3,7 +3,7 @@
   "production": "EffectBehaviorUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "ec3e56bff331422582903f296c7fc9e375c31a93929c157c1dfc3af44b6bf34b",
@@ -16,5 +16,55 @@
     "xtext_rule_text": "EffectBehaviorUsage returns SysML::ActionUsage :\n\t  EmptyActionUsage | PerformedActionUsage ( '{' ActionBodyItem* '}' )?\n;",
     "metaclass": "SysML::ActionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No xtext evidence is recorded: the pinned SysML.xtext has no EffectBehaviorUsage rule of this name. The five alternatives each have their own unit, and the choice between them is decidable on the leading keyword.",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "EmptyActionUsage"
+      },
+      {
+        "k": "ref",
+        "name": "TransitionPerformActionUsage"
+      },
+      {
+        "k": "ref",
+        "name": "TransitionAcceptActionUsage"
+      },
+      {
+        "k": "ref",
+        "name": "TransitionSendActionUsage"
+      },
+      {
+        "k": "ref",
+        "name": "TransitionAssignmentActionUsage"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.18.3. The five alternatives are the effect a transition may carry after 'do', and they mirror the five of StateActionUsage with one difference worth keeping in view: the Transition* forms end in `( '{' ActionBodyItem* '}' )?` where the State* forms end in ActionBody, so an effect's body is optional braces rather than a body that may be a ';'. That is why EmptyActionUsage appears here without a ';' after it, unlike in StateActionUsage where the first alternative is `EmptyActionUsage ';'`: a transition effect is followed by the 'then' of its succession, not by a terminator of its own.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "Line 60 `do send new StartSignal() to controller` takes the TransitionSendActionUsage alternative, with no braces after it and the transition's `then starting;` following on line 61."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:47:10Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:47:11Z"
 }

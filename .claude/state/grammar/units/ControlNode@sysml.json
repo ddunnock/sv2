@@ -3,7 +3,7 @@
   "production": "ControlNode",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "9f6ad15d3c6276977efc7f4191cc5ceb74786e4a088c6dbbebcd16e6dd6dec08",
     "xtext_rule": "b42cdfe21f09825e5381c2b424d8a9b7a8de444bf41da009ba0ee428c33fee9f",
@@ -16,5 +16,61 @@
     "xtext_rule_text": "ControlNode returns SysML::ControlNode :\n\t  MergeNode\n\t| DecisionNode\n\t| JoinNode\n\t| ForkNode\n;",
     "metaclass": "SysML::ControlNode"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "MergeNode"
+      },
+      {
+        "k": "ref",
+        "name": "DecisionNode"
+      },
+      {
+        "k": "ref",
+        "name": "JoinNode"
+      },
+      {
+        "k": "ref",
+        "name": "ForkNode"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.3. The clause and the Xtext offer the same four alternatives in the same order, so there is nothing to weigh. Each is told apart by its own keyword \u2014 'merge', 'decide', 'join', 'fork' \u2014 and the four share the identical shape below that (ControlNodePrefix, the keyword, a UsageDeclaration and an ActionBody), which is why the specification keeps them as four productions rather than one rule over a choice of keyword.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.3 (ControlNodes.md, region_sha256 08ce249947265cb2)",
+      "note": "States the production; the rule is its transcription. The pack flags this clause as malformed, but the defect is in ControlNodePrefix (an unterminated quote in `( isIndividual ?= 'individual )?`, SYSML21-400) and not in this production."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml",
+      "note": "Line 12 `join J;` takes the JoinNode alternative and line 34 `merge M;` the MergeNode alternative, each with an empty ControlNodePrefix and `;` as the ActionBody."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml",
+      "note": "Inside `action a1 {` on line 14: line 16 `then merge m;` is a MergeNode and line 23 `then decide;` a DecisionNode with its UsageDeclaration empty."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext ControlNode",
+      "note": "Second opinion. The same four alternatives in the same order."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:51:31Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:51:31Z"
 }

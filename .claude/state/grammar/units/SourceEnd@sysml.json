@@ -3,7 +3,7 @@
   "production": "SourceEnd",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "b890f4492c1572fe8e51c37c4f3a3bc4c205a6aa1d8619eca3af292f9380673c",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -16,5 +16,32 @@
     "xtext_rule_text": "",
     "metaclass": ""
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No xtext evidence, because the pinned SysML.xtext defines no SourceEnd; it reaches the same shape through MultiplicitySourceEnd, which belongs to TargetSuccession's chain rather than this one. No corpus evidence either: every instance found in the corpus takes the empty form, so no line of text distinguishes this production from its own absence.",
+  "rule": {
+    "k": "opt",
+    "item": {
+      "k": "ref",
+      "name": "OwnedMultiplicity"
+    }
+  },
+  "decision": "A transcription of SysML 8.2.2.9.3: `SourceEnd : ReferenceUsage = ( ownedRelationship += OwnedMultiplicity )?`. There is no second opinion to weigh \u2014 the pinned pilot grammar has no SourceEnd rule, as it has none for SourceEndMember or SourceSuccession above it \u2014 so the clause is the only source. The whole production is optional, so it derives the empty string, which is the usual case: a source succession names no source, because the source is the body item it follows. The multiplicity is the one thing that can be written for it.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.9.3 (OccurrenceSuccessions.md, region_sha256 1f4477d014699468)",
+      "note": "States the production; the rule is its transcription."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:47:10Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:47:11Z"
 }

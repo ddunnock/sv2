@@ -3,7 +3,7 @@
   "production": "SendNodeDeclaration",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "8120f73bea6c28984e05b919d99215f4da0e7a23e4ef51b856ced3a7856d6030",
@@ -16,5 +16,67 @@
     "xtext_rule_text": "fragment SendNodeDeclaration returns SysML::ActionUsage :\n\tActionNodeUsageDeclaration? 'send' \n\townedRelationship += NodeParameterMember SenderReceiverPart?\n;",
     "metaclass": "SysML::ActionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "ActionNodeUsageDeclaration"
+        }
+      },
+      {
+        "k": "kw",
+        "text": "send"
+      },
+      {
+        "k": "ref",
+        "name": "NodeParameterMember"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "SenderReceiverPart"
+        }
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.4: `ActionNodeUsageDeclaration? 'send' ownedRelationship += NodeParameterMember SenderReceiverPart?`. The pinned pilot grammar states it identically at SysML.xtext:1511, as a fragment \u2014 an inlining mechanism of that parser generator, not a claim about the language. The payload parameter is mandatory and the sender/receiver part is not, which is what makes a bare `send x;` legal; where the receiver is written, SenderReceiverPart supplies both the 'via' and 'to' spellings.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+      "note": "States the production; the rule is its transcription. The pack flags this clause as malformed, but the defect is in TriggerExpression (SYSML21-401) and not in this production."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml",
+      "note": "Line 21 `then send new S() to b;` takes the 'to' spelling of SenderReceiverPart, with `new S()` as the NodeParameterMember and no ActionNodeUsageDeclaration."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml",
+      "note": "Line 60 `entry send new CallGiveItems(\"All the items\") via apisp.APIS_HTTP;` takes the 'via' spelling."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext SendNodeDeclaration (line 1511)",
+      "note": "Second opinion, read from the pinned file: the pack supplied no xtext_rule_text for this production although it named the file, so the fragment was read directly. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:48:19Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:48:20Z"
 }

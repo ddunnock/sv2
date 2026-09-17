@@ -3,7 +3,7 @@
   "production": "InterfaceEnd",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "bffd8b9322d613cb8c3a15449371ae9a03700ef3ca5dde0052db50b7149ba822",
     "xtext_rule": "e12d854c48d6c94359abddccf815754730611ac5a31314060804413f19fb12f2",
@@ -16,5 +16,86 @@
     "xtext_rule_text": "InterfaceEnd returns SysML::PortUsage :\n\t( ownedRelationship += OwnedCrossMultiplicityMember )?\n\t( declaredName = Name ReferencesKeyword )? \n\townedRelationship += OwnedReferenceSubsetting\n;",
     "metaclass": "SysML::PortUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "The clause prints the header as `InterfaceEnd : PortUsage :`, ending in a second ':' where every sibling has '='. This is the same class of transcription defect recorded by hand on UsagePrefix, DefinitionDeclaration, IncludeUseCaseUsage, FlowDefinition and StateSendActionUsage. It does not change the rule, so no deviation is recorded; whether it is filed on the OMG tracker was not searched, and no issue is cited for it.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "OwnedCrossMultiplicityMember"
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "tok",
+              "name": "NAME"
+            },
+            {
+              "k": "alt",
+              "items": [
+                {
+                  "k": "kw",
+                  "text": "::>"
+                },
+                {
+                  "k": "kw",
+                  "text": "references"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "k": "ref",
+        "name": "OwnedReferenceSubsetting"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.14.2. REFERENCES is one of the special lexical terminals of 8.2.2.1.2 and is written out as its keyword alternatives, `'::>' | 'references'`, following the convention used for TYPED_BY and the rest; the Xtext's ReferencesKeyword (SysML.xtext:415) spells the same two literals. The Xtext's `declaredName = Name` against the clause's `declaredName = NAME` is the same position, and NAME is the terminal the specification names, so the token is written as NAME. Nothing else differs. The named-end form is what makes `mqget ::> ...` legal inside an n-ary interface part, where an end needs a name to be referred to later; the binary form usually omits it.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.14.2 (InterfaceUsages.md, region_sha256 e490b9536f83631d)",
+      "note": "States the production; the rule is its transcription, with the header's stray ':' read as '=' (see notes)."
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.1.2 (LexicalStructure.md, region_sha256 4ceb9d8215eb7e2b)",
+      "note": "Defines REFERENCES as `'::>' | 'references'`, which is why the terminal is written out as two keyword alternatives rather than referenced."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml",
+      "note": "Lines 78-83 hold six of these ends, each taking the named form: `tlu ::> AHFNorway_LocalCloudDD.TellUConsumer.apisp.APIS_HTTP` is a NAME, then REFERENCES spelled '::>', then the OwnedReferenceSubsetting."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/validation/02-Parts Interconnection/2a-Parts Interconnection.sysml",
+      "note": "Line 162 `interface differential.rightDiffPort to rearAxle.rightHalfAxle.axleToDiffPort;` has two ends taking the unnamed form: no multiplicity, no name, just the reference subsetting."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext InterfaceEnd",
+      "note": "Second opinion. Same three parts; its ReferencesKeyword (415) is the same two literals as REFERENCES."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:47:10Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:47:11Z"
 }

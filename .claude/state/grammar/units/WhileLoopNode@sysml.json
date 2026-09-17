@@ -3,7 +3,7 @@
   "production": "WhileLoopNode",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
     "xtext_rule": "2801cd270a1c682eb59be75d2b148f9d9a5b095347a12c76e05230425e6b7ff9",
@@ -16,5 +16,104 @@
     "xtext_rule_text": "WhileLoopNode returns SysML::WhileLoopActionUsage :\n\tActionNodePrefix\n\t( 'while' ownedRelationship += ExpressionParameterMember\n\t| 'loop' ownedRelationship += EmptyParameterMember\n\t)\n\townedRelationship += ActionBodyParameterMember\n\t( 'until' ownedRelationship += ExpressionParameterMember ';' )?\n;",
     "metaclass": "SysML::WhileLoopActionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "ActionNodePrefix"
+      },
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "seq",
+            "items": [
+              {
+                "k": "kw",
+                "text": "while"
+              },
+              {
+                "k": "ref",
+                "name": "ExpressionParameterMember"
+              }
+            ]
+          },
+          {
+            "k": "seq",
+            "items": [
+              {
+                "k": "kw",
+                "text": "loop"
+              },
+              {
+                "k": "ref",
+                "name": "EmptyParameterMember"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "ActionBodyParameterMember"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "until"
+            },
+            {
+              "k": "ref",
+              "name": "ExpressionParameterMember"
+            },
+            {
+              "k": "kw",
+              "text": ";"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.7. The clause and the Xtext state this production identically, token for token (SysML.xtext:1615), so there is nothing to weigh. The two head alternatives are the same loop with and without a condition: 'while' takes an expression, 'loop' takes an EmptyParameterMember and so contributes no tokens of its own, which is how an unconditional loop still carries a condition parameter in the model. The 'until' tail carries its own ';' inside the optional group, so a loop without an until clause is terminated by its body's closing brace and not by a semicolon.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.7 (StructuredControlActionUsages.md, region_sha256 90c294385874fdc1)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/StructuredControlTest.sysml",
+      "note": "Lines 20-22 `while i > 0 {` ... `} until b;` take the 'while' alternative with the until tail present, the ';' after `b` belonging to that tail. Lines 24-30 are the same shape following a 'then'."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/17. Control/Control Structures Example.sysml",
+      "note": "Lines 14-24 `loop action charging {` ... `} until charging.monitor.charge >= 100;` take the 'loop' alternative, where the EmptyParameterMember contributes nothing and the body is named by an action keyword and a declaration."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext WhileLoopNode (line 1615)",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:52:26Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:52:55Z"
 }

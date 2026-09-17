@@ -3,7 +3,7 @@
   "production": "TriggerAction",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "eaea0dbca1468b09549e81bb1e287bfb4d7dc777cef031fc8fe48a601d3e0d45",
@@ -16,5 +16,34 @@
     "xtext_rule_text": "TriggerAction returns SysML::AcceptActionUsage :\n\tAcceptParameterPart\n;",
     "metaclass": "SysML::AcceptActionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No xtext evidence is recorded: the pinned SysML.xtext has no TriggerAction rule, reaching the same text through its own arrangement of the trigger member. That is an absence in the pilot grammar, not a disagreement with the clause.",
+  "rule": {
+    "k": "ref",
+    "name": "AcceptParameterPart"
+  },
+  "decision": "A transcription of SysML 8.2.2.18.3: `TriggerAction : AcceptActionUsage = AcceptParameterPart`. The production is the body of a transition's trigger and carries no keyword: the 'accept' belongs to TriggerActionMember above it, which is why the same AcceptParameterPart serves here and inside a full accept action. That is what makes `accept ignitionCmd:IgnitionCmd via ignitionCmdPort` read as one trigger rather than as a nested accept action.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "Line 58 `accept ignitionCmd:IgnitionCmd via ignitionCmdPort`: everything after the 'accept' is this production, taking AcceptParameterPart's form with a payload parameter and a 'via' port."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:47:10Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:47:11Z"
 }

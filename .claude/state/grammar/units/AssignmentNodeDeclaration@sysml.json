@@ -3,7 +3,7 @@
   "production": "AssignmentNodeDeclaration",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "a268475e162e29768dbefce1071203c8c52c4eea909b9561a878f0d79d91c939",
     "xtext_rule": "32a7d38f7c90da35bcaeab03ff686dcbf14148a0d2a6b2f5ad9e8a9e829f2052",
@@ -16,5 +16,67 @@
     "xtext_rule_text": "fragment AssignmentNodeDeclaration returns SysML::ActionUsage :\n\tActionNodeUsageDeclaration? 'assign' \n\townedRelationship += AssignmentTargetMember\n\townedRelationship += FeatureChainMember ':=' \n\townedRelationship += NodeParameterMember\n;",
     "metaclass": "SysML::ActionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "The clause prints the header as `AssignmentNodeDeclaration: ActionUsage =`, with no space before the colon, and writes the first part as `( ActionNodeUsageDeclaration )?` where its siblings write `ActionNodeUsageDeclaration?`. Neither is a difference in the rule.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "ActionNodeUsageDeclaration"
+        }
+      },
+      {
+        "k": "kw",
+        "text": "assign"
+      },
+      {
+        "k": "ref",
+        "name": "AssignmentTargetMember"
+      },
+      {
+        "k": "ref",
+        "name": "FeatureChainMember"
+      },
+      {
+        "k": "kw",
+        "text": ":="
+      },
+      {
+        "k": "ref",
+        "name": "NodeParameterMember"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.5. The clause and the Xtext state this production identically, token for token (SysML.xtext, declared a fragment, which is an inlining mechanism rather than a claim about the language). The target is split across two members on purpose: AssignmentTargetMember carries the optional prefix expression and its '.', and FeatureChainMember carries the feature being assigned, so `counter.count := 0` binds `counter` as the target's prefix and `count` as the chain. The ':=' is this production's own token and is not the FeatureValue ':=' of 8.2.2.6.2.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.5 (AssignmentActionUsages.md, region_sha256 dfe847fa0a5c6846)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml",
+      "note": "Line 20 `entry assign counter.count := 0;` and line 29 `do assign counter.count := counter.count + 1;` both take this production with no ActionNodeUsageDeclaration, a dotted target, and an expression after ':='."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext AssignmentNodeDeclaration",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:48:19Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:48:20Z"
 }

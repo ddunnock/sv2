@@ -3,7 +3,7 @@
   "production": "ForLoopNode",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
     "xtext_rule": "10a7a1d85402ae5f2f181f9488e46cd0238cd85bc83d7da8938a4853d72d7659",
@@ -16,5 +16,69 @@
     "xtext_rule_text": "ForLoopNode returns SysML::ForLoopActionUsage :\n\tActionNodePrefix\n\t'for' ownedRelationship += ForVariableDeclarationMember\n\t'in' ownedRelationship += NodeParameterMember\n\townedRelationship += ActionBodyParameterMember\n;",
     "metaclass": "SysML::ForLoopActionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "ActionNodePrefix"
+      },
+      {
+        "k": "kw",
+        "text": "for"
+      },
+      {
+        "k": "ref",
+        "name": "ForVariableDeclarationMember"
+      },
+      {
+        "k": "kw",
+        "text": "in"
+      },
+      {
+        "k": "ref",
+        "name": "NodeParameterMember"
+      },
+      {
+        "k": "ref",
+        "name": "ActionBodyParameterMember"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.7. The clause and the Xtext state this production identically, token for token (SysML.xtext:1624), so there is nothing to weigh. Nothing here is optional: a for loop always declares a variable, always names a sequence after 'in', and always has a body. The variable's own syntax, including its optional type, is inside ForVariableDeclarationMember, and the sequence is a NodeParameterMember, which is what admits a parenthesised literal sequence as readily as a named feature.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.7 (StructuredControlActionUsages.md, region_sha256 90c294385874fdc1)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/StructuredControlTest.sysml",
+      "note": "Line 32 `for n : ScalarValues::Integer in (1, 2, 3) {` declares a typed variable and iterates a literal sequence."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/20. Assignment Actions/Assignment Example.sysml",
+      "note": "Line 25 `for vehiclePower in powerProfile {` is the untyped form over a named feature."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext ForLoopNode (line 1624)",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:52:26Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:52:26Z"
 }

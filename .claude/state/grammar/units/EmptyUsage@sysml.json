@@ -3,7 +3,7 @@
   "production": "EmptyUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "7a6a999d1ae9a43a228e7f5d4ba57a4c5bb5d3005fb92a5b4f247a0668c5bcd3",
     "xtext_rule": "5ae2df29b57d0b4e2edf8d2650115d1d218741b4b6c978fc8da59aa15ed7b7d5",
@@ -16,5 +16,34 @@
     "xtext_rule_text": "EmptyUsage returns SysML::ReferenceUsage :\n\t{SysML::ReferenceUsage}\n;",
     "metaclass": "SysML::ReferenceUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No corpus evidence is recorded, and none can be: the production matches the empty string, so no line of text is an instance of it in any way a reader could check.",
+  "rule": {
+    "k": "seq",
+    "items": []
+  },
+  "decision": "SysML 8.2.2.17.4 states this production as `EmptyUsage : ReferenceUsage = {}` \u2014 an empty right-hand side. The Xtext says the same in its own notation, `{SysML::ReferenceUsage}`, an object-creating action that consumes no input. Both derive the empty string, so the rule is an empty sequence. It is the usage that stands in an EmptyParameterMember, occupying a parameter position the concrete syntax leaves unwritten: it is what lets `send x to y`, which names no sender, build the same shape of model as `send x via s to y`.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.4 (SendandAcceptActionUsages.md, region_sha256 ccc8aaaf0c72526e)",
+      "note": "States the production as `{}`; the rule is the empty sequence that transcribes it. The pack flags this clause as malformed, but the defect is in TriggerExpression (SYSML21-401) and not in this production."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext EmptyUsage",
+      "note": "Second opinion. `{SysML::ReferenceUsage}` consumes no input, so it agrees the production derives the empty string."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:47:10Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:47:11Z"
 }

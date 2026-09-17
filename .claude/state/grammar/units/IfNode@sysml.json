@@ -3,7 +3,7 @@
   "production": "IfNode",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "e0d5b1e8f1862c080cd87c5d38ac2021c68a242fdbfe819e4d394b9cfd0287fc",
     "xtext_rule": "51e48c1b6ab5eba2bac7563c5b686a2b8f5cc075810e95e37ffda86d2d5a83fa",
@@ -16,5 +16,81 @@
     "xtext_rule_text": "IfNode returns SysML::IfActionUsage :\n\tActionNodePrefix \n\t'if' ownedRelationship += ExpressionParameterMember\n\townedRelationship += ActionBodyParameterMember\n\t( 'else' ownedRelationship += ( ActionBodyParameterMember | IfNodeParameterMember ) )?\n;",
     "metaclass": "SysML::IfActionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "ActionNodePrefix"
+      },
+      {
+        "k": "kw",
+        "text": "if"
+      },
+      {
+        "k": "ref",
+        "name": "ExpressionParameterMember"
+      },
+      {
+        "k": "ref",
+        "name": "ActionBodyParameterMember"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "else"
+            },
+            {
+              "k": "alt",
+              "items": [
+                {
+                  "k": "ref",
+                  "name": "ActionBodyParameterMember"
+                },
+                {
+                  "k": "ref",
+                  "name": "IfNodeParameterMember"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.7. The clause and the Xtext state this production identically, token for token (SysML.xtext:1596), so there is nothing to weigh. The else branch's choice between an ActionBodyParameterMember and an IfNodeParameterMember is what makes `else if` a chain rather than a special form: the second alternative nests another IfNode in the else position, and the clause's own recursion through IfNodeParameterMember is what terminates it.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.7 (StructuredControlActionUsages.md, region_sha256 90c294385874fdc1)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/StructuredControlTest.sysml",
+      "note": "Lines 7-12 exercise both else alternatives in one chain: `if i < 0 {` ... `} else if i == 0 {` takes the IfNodeParameterMember branch, nesting a second IfNode, and `} else {` on line 11 takes the ActionBodyParameterMember branch. Line 15 `if i > 0 {` is the form with no else at all."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext IfNode (line 1596)",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:52:26Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:52:26Z"
 }

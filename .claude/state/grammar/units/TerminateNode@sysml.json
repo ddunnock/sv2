@@ -3,7 +3,7 @@
   "production": "TerminateNode",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "af77497e3129ea87405dc94b0a92ca6e92bd57a36fd4ba585deb4c37946f29ec",
     "xtext_rule": "b38a587596b1e0263191e35e6385eaff54a33f6d7a01cebdcbbfc139775ef7e0",
@@ -16,5 +16,71 @@
     "xtext_rule_text": "TerminateNode returns SysML::TerminateActionUsage :\n\tOccurrenceUsagePrefix ActionNodeUsageDeclaration? \n\t'terminate' \n\t( ActionBody\n\t| -> ownedRelationship += NodeParameterMember\n\t  ActionBody\n\t)\n;",
     "metaclass": "SysML::TerminateActionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "OccurrenceUsagePrefix"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "ActionNodeUsageDeclaration"
+        }
+      },
+      {
+        "k": "kw",
+        "text": "terminate"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "NodeParameterMember"
+        }
+      },
+      {
+        "k": "ref",
+        "name": "ActionBody"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.6: `OccurrenceUsagePrefix ActionNodeUsageDeclaration? 'terminate' ( ownedRelationship += NodeParameterMember )? ActionBody`. The Xtext writes the tail as `( ActionBody | -> ownedRelationship += NodeParameterMember ActionBody )`, which is the same language with the optionality hoisted into an explicit choice and a '->' syntactic predicate added to steer the parser generator past the ambiguity between an absent parameter and a present one. That predicate exists to satisfy a generator this project does not use, so it is not ported; the clause's `( ... )? ActionBody` is kept.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.6 (TerminateActionUsages.md, region_sha256 2cf5148c7a8b7de1)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml",
+      "note": "`terminate c1;` takes the form with the optional NodeParameterMember present, `c1` being the parameter; `then terminate;` takes it absent."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/19. Terminate Actions/Terminate Actions Example-1.sysml",
+      "note": "Line 19 `then terminate;` is the bare form inside `action performCriticalActivity {`. Line 26 `action stop terminate;` takes the ActionNodeUsageDeclaration branch, `action stop` naming the node before the keyword."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext TerminateNode",
+      "note": "Second opinion. Same language; its '->' predicate is an LL workaround and is declined."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:51:31Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:51:32Z"
 }
