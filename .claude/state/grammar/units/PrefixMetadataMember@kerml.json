@@ -3,7 +3,7 @@
   "production": "PrefixMetadataMember",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "814e74fbb17b63e9a835d6dc9a5ceb64c5393cec1e7ff119730c9fd1601fe160",
     "xtext_rule": "3d69ed4696dc9f2eb2a7dc1e9fdfbfdc3497abe1602a280ed0b9e2d728664136",
@@ -15,5 +15,48 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "PrefixMetadataMember returns SysML::OwningMembership :\n\t'#' ownedRelatedElement += PrefixMetadataFeature \n;",
     "metaclass": "SysML::OwningMembership"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "#"
+      },
+      {
+        "k": "ref",
+        "name": "PrefixMetadataFeature"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.5.12 states it: `#` followed by one PrefixMetadataFeature, which the same clause defines as an OwnedFeatureTyping, so in practice `#` and a type name. This is the KerML variant (ADR-0014). SysML states the production with a PrefixMetadataUsage in place of the PrefixMetadataFeature, and that difference is why the production is split. The clause prints the PrefixMetadataFeature production with `:` where `=` belongs. That defect is in PrefixMetadataFeature's own text, not here, and its own unit should record it. The Xtext rule agrees.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.12",
+      "note": "PrefixMetadataMember : OwningMembership = '#' ownedRelatedElement += PrefixMetadataFeature"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-4-OneToUnrestrictedConnectors.kerml",
+      "note": "line 33: `#atom`, prefixing `classifier MyBikeBasket1 specializes BikeBasket;` on line 34"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "PrefixMetadataMember returns SysML::OwningMembership: '#' ownedRelatedElement += PrefixMetadataFeature. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T12:59:53Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T12:59:53Z"
 }

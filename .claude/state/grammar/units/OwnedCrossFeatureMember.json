@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedCrossFeatureMember",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "3b1c2f405fca5fb6cb61178744c76e1719ac67174eeeec2d47dd67c0f474fd9d",
     "xtext_rule": "74efdbbdf00d3946e8c8ece4cd6774582152fb966dcc03f0a2500a75767d609c",
@@ -14,5 +14,44 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "OwnedCrossFeatureMember returns SysML::OwningMembership :\n    ownedRelatedElement += OwnedCrossFeature\n;",
     "metaclass": "SysML::OwningMembership"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "OwnedCrossFeature"
+  },
+  "decision": "A membership that wraps exactly one OwnedCrossFeature, with no tokens of its own. KerML 8.2.4.3.1 and SysML 8.2.2.6.2 state the same body, `ownedRelatedElement += OwnedCrossFeature`, so this is one shared unit. The two languages do define OwnedCrossFeature differently: in KerML it is BasicFeaturePrefix FeatureDeclaration, and in SysML it is a ReferenceUsage, BasicUsagePrefix UsageDeclaration. That difference belongs to OwnedCrossFeature, not here, and the reference resolves to each language's own variant. The SysML Xtext rule agrees.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "OwnedCrossFeatureMember : OwningMembership = ownedRelatedElement += OwnedCrossFeature"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.2",
+      "note": "the same production"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml",
+      "note": "line 11: `end [0..1] feature cart: ShoppingCart[1];`. The `[0..1]` after `end` is the cross feature, a FeatureDeclaration made only of a MultiplicityPart, which EndFeaturePrefix's optional OwnedCrossFeatureMember admits."
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "OwnedCrossFeatureMember returns SysML::OwningMembership: ownedRelatedElement += OwnedCrossFeature. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T12:57:49Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T12:57:49Z"
 }

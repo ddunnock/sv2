@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "InvertingPart",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "9e2b3655417d8748bd8cfe4e1f390d0cff6fd052368ea0581d687ef7c9b0d081",
     "xtext_rule": "88b9155e332347c449fdc93a80c9645f482749050b4a34eaff721d454bb05162",
@@ -14,5 +14,52 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment InvertingPart returns SysML::Feature :\n\t'inverse' 'of' ownedRelationship += OwnedFeatureInverting\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "inverse"
+      },
+      {
+        "k": "kw",
+        "text": "of"
+      },
+      {
+        "k": "ref",
+        "name": "OwnedFeatureInverting"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.3.1 states it: the two keywords `inverse of`, then exactly one OwnedFeatureInverting, with no comma-separated repetition. The Xtext fragment is identical. The pack's corpus instances were matched on the word `of` alone, and most of them are prose or flow declarations, not instances of this rule. The corpus evidence below was found separately by searching for `inverse of`.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "InvertingPart : Feature = 'inverse' 'of' ownedRelationship += OwnedFeatureInverting"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Inverses.kerml",
+      "note": "line 3: `feature f : B inverse of B::g disjoint from h;`, followed by another relationship part. Line 14: `feature gg : A featured by B inverse of A::f;`, preceded by one."
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment InvertingPart: 'inverse' 'of' ownedRelationship += OwnedFeatureInverting. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:01:11Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:01:12Z"
 }

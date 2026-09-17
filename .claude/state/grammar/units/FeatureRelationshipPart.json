@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FeatureRelationshipPart",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "9e2b3655417d8748bd8cfe4e1f390d0cff6fd052368ea0581d687ef7c9b0d081",
     "xtext_rule": "5a729d57f45f8ad3aa5c76bbcc63ab97232da8145d77fe92e5355b8676d64caf",
@@ -14,5 +14,56 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment FeatureRelationshipPart returns SysML::Feature :\n\tTypeRelationshipPart | ChainingPart | InvertingPart | TypeFeaturingPart\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "TypeRelationshipPart"
+      },
+      {
+        "k": "ref",
+        "name": "ChainingPart"
+      },
+      {
+        "k": "ref",
+        "name": "InvertingPart"
+      },
+      {
+        "k": "ref",
+        "name": "TypeFeaturingPart"
+      }
+    ]
+  },
+  "decision": "Four alternatives, as KerML 8.2.4.3.1 states them, and the Xtext fragment lists the same four in the same order. The alternatives are separated by their leading keywords. ChainingPart begins with 'chains', InvertingPart with 'inverse', and TypeFeaturingPart with 'featured'. TypeRelationshipPart is not stated in this clause, so whether it is also keyword-led is for its own unit to establish. FeatureDeclaration repeats this part with `*`, so relationship parts may follow one another in any order.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "FeatureRelationshipPart : Feature = TypeRelationshipPart | ChainingPart | InvertingPart | TypeFeaturingPart"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Variable Feature Examples/TimeVaryingCarDriver.kerml",
+      "note": "line 65: `member feature isLicensed : Boolean [1] featured by Person_snapshots {`, the TypeFeaturingPart alternative after a FeatureSpecializationPart"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment FeatureRelationshipPart: TypeRelationshipPart | ChainingPart | InvertingPart | TypeFeaturingPart. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T12:57:24Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T12:57:24Z"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FeatureValue",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "19d88ff2aef6c53f197e97f1650d48abef9f99d32a98edc6dc5c0e50e2854ee0",
     "xtext_rule": "103689335fb35b2a82f779fbb2f04de6281d7309784a8e39f6dd14d4432199e3",
@@ -14,5 +14,97 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "FeatureValue returns SysML::FeatureValue :\n\t( '=' \n\t| isInitial ?= ':='\n\t| isDefault ?= 'default' ( '=' | isInitial ?= ':=' )?\n\t)\n\townedRelatedElement += OwnedExpression\n;",
     "metaclass": "SysML::FeatureValue"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "kw",
+            "text": "="
+          },
+          {
+            "k": "kw",
+            "text": ":="
+          },
+          {
+            "k": "seq",
+            "items": [
+              {
+                "k": "kw",
+                "text": "default"
+              },
+              {
+                "k": "opt",
+                "item": {
+                  "k": "alt",
+                  "items": [
+                    {
+                      "k": "kw",
+                      "text": "="
+                    },
+                    {
+                      "k": "kw",
+                      "text": ":="
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "OwnedExpression"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.5.10 and SysML 8.2.2.6.2 both state it, in the same words, so one shared unit. One of three introducers comes first, then an OwnedExpression. The introducers are `=` for a bound value, `:=` for an initial value, and `default` for a default, which may itself be followed by `=` or `:=`. The `{ isInitial }` and `{ isDefault }` assignments set properties and consume no tokens. A bare `default` followed directly by the expression is allowed; the clause makes the operator after it optional. The Xtext rule is the same.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.10",
+      "note": "FeatureValue = ( '=' | isInitial ?= ':=' | isDefault ?= 'default' ( '=' | isInitial ?= ':=' )? ) ownedRelatedElement += OwnedExpression"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.2",
+      "note": "the same production"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "line 558: `attribute redefines cargoMass default 0 [kg];`, a bare `default` with no operator after it"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml",
+      "note": "line 14: `feature fuelCapacity: Real = sum(tanks.capacity);`, the `=` alternative"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml",
+      "note": "line 26: `var feature isPainted : Boolean [1] := false;`, the `:=` alternative"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "FeatureValue: ( '=' | isInitial ?= ':=' | isDefault ?= 'default' ( '=' | isInitial ?= ':=' )? ) ownedRelatedElement += OwnedExpression. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T12:58:34Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T12:58:34Z"
 }

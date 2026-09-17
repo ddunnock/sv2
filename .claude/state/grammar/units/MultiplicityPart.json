@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "MultiplicityPart",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "11e2446c92e09d4682e6303be7b0e692b8719c2a8812c4a4ba4f6429d4515cea",
     "xtext_rule": "f3df587d6fe8c356f33214f24ccf7fce27b04b39d269fe7a87730f6fd98abc3a",
@@ -14,5 +14,103 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment MultiplicityPart returns SysML::Feature :\n\t  ownedRelationship += OwnedMultiplicity \n\t| ( ownedRelationship += OwnedMultiplicity )?\n\t  ( isOrdered ?= 'ordered' ( isUnique = Nonunique )?\n\t  | isUnique = Nonunique ( isOrdered ?= 'ordered' )?\n\t  )\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "OwnedMultiplicity"
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "opt",
+            "item": {
+              "k": "ref",
+              "name": "OwnedMultiplicity"
+            }
+          },
+          {
+            "k": "alt",
+            "items": [
+              {
+                "k": "seq",
+                "items": [
+                  {
+                    "k": "kw",
+                    "text": "ordered"
+                  },
+                  {
+                    "k": "opt",
+                    "item": {
+                      "k": "kw",
+                      "text": "nonunique"
+                    }
+                  }
+                ]
+              },
+              {
+                "k": "seq",
+                "items": [
+                  {
+                    "k": "kw",
+                    "text": "nonunique"
+                  },
+                  {
+                    "k": "opt",
+                    "item": {
+                      "k": "kw",
+                      "text": "ordered"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.3.1 and SysML 8.2.2.6.6 both state it, so one shared unit. Either a multiplicity alone, or an optional multiplicity followed by `ordered` and `nonunique` in either order, each at most once. The `{ isUnique = false }` actions set properties and consume no tokens. The Xtext writes `isUnique = Nonunique`, calling a one-keyword rule where the clause writes the literal 'nonunique'. The token sequence is identical, and the rule follows the clause's literal. The two outer alternatives do not overlap: the second always ends in `ordered` or `nonunique`, and the first never contains either.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "MultiplicityPart : Feature = ownedRelationship += OwnedMultiplicity | ( ownedRelationship += OwnedMultiplicity )? ( isOrdered ?= 'ordered' ( {isUnique = false} 'nonunique' )? | {isUnique = false} 'nonunique' ( isOrdered ?= 'ordered' )? )"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.6",
+      "note": "the same production"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml",
+      "note": "`composite tanks: Tank[1..*] ordered;`, a multiplicity then `ordered`"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml",
+      "note": "line 12: `end [0..*] nonunique feature selectedProduct: Product[1];`, a multiplicity then `nonunique`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment MultiplicityPart: the same structure, with the Nonunique rule in place of the literal. Same tokens."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:01:11Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:01:11Z"
 }

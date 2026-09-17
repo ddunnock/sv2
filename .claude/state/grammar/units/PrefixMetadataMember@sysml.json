@@ -3,7 +3,7 @@
   "production": "PrefixMetadataMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "146d9cc6aefb3e5e03ce6e6397a6c00142e565b2f324e85bdbab966a85bd971a",
     "xtext_rule": "5ec7aa97a1c696eeffd3782b1d98bfb4cc966de670179d57fc9b0a6eadcf67e4",
@@ -15,5 +15,53 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "PrefixMetadataMember returns SysML::OwningMembership :\n\t'#' ownedRelatedElement += PrefixMetadataUsage \n;",
     "metaclass": "SysML::OwningMembership"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "#"
+      },
+      {
+        "k": "ref",
+        "name": "PrefixMetadataUsage"
+      }
+    ]
+  },
+  "decision": "As SysML 8.2.2.27 states it: `#` followed by one PrefixMetadataUsage, which the same clause defines as an OwnedFeatureTyping, so in practice `#` and a metadata definition name. This is the SysML variant (ADR-0014); KerML states the production with a PrefixMetadataFeature. The clause prints the property as `ownedRelatedEleemnt` and assigns it with `=`. Neither affects the syntax, since a property name and its assignment operator consume no tokens. The misspelling is filed with OMG as SYSML21-336, and the rule is unaffected. The Xtext writes `ownedRelatedElement +=` and otherwise agrees.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.27",
+      "note": "PrefixMetadataMember : OwningMembership = '#' ownedRelatedEleemnt = PrefixMetadataUsage"
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "SYSML21-336",
+      "note": "EXACT MATCH. 'Element is not spelled correctly', open, filed 24 Aug 2025 against SysML 2.0b4. The description quotes this production with `ownedRelatedEleemnt`. SYSML21-399, filed 27 Oct 2025, lists 'Eleemnt' among five typos and cross-references SYSML21-336. Both pages fetched and read on 2026-09-17."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/validation/14-Language Extensions/14c-Language Extensions.sysml",
+      "note": "line 145: `#fmeaspec requirement req1 {`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "PrefixMetadataMember returns SysML::OwningMembership: '#' ownedRelatedElement += PrefixMetadataUsage. Agrees in syntax."
+    }
+  ],
+  "derived_utc": "2026-09-17T12:59:53Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T12:59:53Z"
 }

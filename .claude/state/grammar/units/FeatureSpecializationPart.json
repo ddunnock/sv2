@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FeatureSpecializationPart",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cf5a654bd41cc438687d0011c60ee58eb00af1bfd3e27bc6c9e2ea339a78d9b6",
     "xtext_rule": "85e260b7b11a68a7f678437ce8181632944442a06644283a62215b38b1815318",
@@ -14,5 +14,92 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment FeatureSpecializationPart returns SysML::Feature :\n\t  ( -> FeatureSpecialization )+ MultiplicityPart? FeatureSpecialization*\n\t| MultiplicityPart FeatureSpecialization*\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "plus",
+            "item": {
+              "k": "ref",
+              "name": "FeatureSpecialization"
+            }
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "ref",
+              "name": "MultiplicityPart"
+            }
+          },
+          {
+            "k": "star",
+            "item": {
+              "k": "ref",
+              "name": "FeatureSpecialization"
+            }
+          }
+        ]
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "MultiplicityPart"
+          },
+          {
+            "k": "star",
+            "item": {
+              "k": "ref",
+              "name": "FeatureSpecialization"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "As both clauses state it: KerML 8.2.4.3.1 and SysML 8.2.2.6.5 print the same two alternatives, so one shared unit serves both languages. Either at least one specialization comes first, with an optional multiplicity among them, or the multiplicity comes first. The Xtext marks the leading FeatureSpecialization+ with `->`, a syntactic predicate that commits the LL parser to the first alternative. That is a parser-generator workaround and is not ported. Without it the rule is ambiguous when no MultiplicityPart is present, because a run of specializations can split between the leading `+` and the trailing `*` in more than one way. Every split denotes the same list, so the ambiguity is harmless, but a recursive-descent implementation must read specializations greedily, not try each split. Note that this rule, as written, does not derive the empty string: a declaration with no specialization and no multiplicity omits this part through FeatureDeclaration's optionality.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "FeatureSpecializationPart : Feature = FeatureSpecialization+ MultiplicityPart? FeatureSpecialization* | MultiplicityPart FeatureSpecialization*"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.5",
+      "note": "the same production"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Behavior Examples/TakePicture.kerml",
+      "note": "line 4: `feature camera: Camera[1] subsets involvedObjects;`, specialization, multiplicity, specialization: the first alternative with all three parts"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Variable Feature Examples/TimeVaryingCarDriver.kerml",
+      "note": "line 26: `feature engine [1] :> carParts;`, multiplicity first: the second alternative"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment FeatureSpecializationPart: ( -> FeatureSpecialization )+ MultiplicityPart? FeatureSpecialization* | MultiplicityPart FeatureSpecialization*. Agrees apart from the `->` predicate, which is not ported."
+    }
+  ],
+  "derived_utc": "2026-09-17T12:57:07Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T12:57:07Z"
 }

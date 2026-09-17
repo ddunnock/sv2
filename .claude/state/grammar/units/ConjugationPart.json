@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ConjugationPart",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
     "xtext_rule": "d23c6de397066bebb8be111e6748799ed1d5ca37d36abdb80aace1b160d4d736",
@@ -14,5 +14,67 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment ConjugationPart returns SysML::Type :\n\t( '~' | 'conjugates' ) ownedRelationship += OwnedConjugation\n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "kw",
+            "text": "~"
+          },
+          {
+            "k": "kw",
+            "text": "conjugates"
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "OwnedConjugation"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.1.1 states it: the CONJUGATES terminal followed by one OwnedConjugation. CONJUGATES is not a production. It is one of the special lexical terminals of KerML 8.2.2.7, `CONJUGATES = '~' | 'conjugates'`, which match either the symbol or the keyword, so the rule writes it out as that two-way choice. The Xtext fragment expands it the same way. Unlike SpecializationPart, which the same clause states just above, there is no comma-separated repetition: a type conjugates exactly one other type.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.1",
+      "note": "ConjugationPart : Type = CONJUGATES ownedRelationship += OwnedConjugation"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.2.7",
+      "note": "CONJUGATES = '~' | 'conjugates', one of the special lexical terminals that match either the symbol or the keyword"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Types.kerml",
+      "note": "`type Conjugate3 conjugates Original;`"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml",
+      "note": "`feature x conjugates f.a;`, the part after a FeatureIdentification, as FeatureDeclaration uses it"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment ConjugationPart: ( '~' | 'conjugates' ) ownedRelationship += OwnedConjugation. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T12:58:58Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T12:58:58Z"
 }

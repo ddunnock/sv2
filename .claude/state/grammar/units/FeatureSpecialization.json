@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FeatureSpecialization",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cf5a654bd41cc438687d0011c60ee58eb00af1bfd3e27bc6c9e2ea339a78d9b6",
     "xtext_rule": "3595186c5aa86949ddcae61137dc932b8b216e42e73b9eee3e68d729fc062823",
@@ -14,5 +14,70 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment FeatureSpecialization returns SysML::Feature :\n\tTypings | Subsettings | References | Crossings | Redefinitions\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "Typings"
+      },
+      {
+        "k": "ref",
+        "name": "Subsettings"
+      },
+      {
+        "k": "ref",
+        "name": "References"
+      },
+      {
+        "k": "ref",
+        "name": "Crosses"
+      },
+      {
+        "k": "ref",
+        "name": "Redefinitions"
+      }
+    ]
+  },
+  "decision": "Five alternatives, as KerML 8.2.4.3.1 and SysML 8.2.2.6.5 both state them, so one shared unit. The fourth alternative is Crosses, the production both clauses define as `CROSSES ownedRelationship += OwnedCrossSubsetting`. The Xtext names it Crossings instead. That is the pilot's name for its own rule, not a different construct, and the rule follows the specification's name. Each alternative begins with its own special lexical terminal (TYPED_BY or DEFINED_BY, SUBSETS, REFERENCES, CROSSES, REDEFINES), so the alternatives do not overlap.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "FeatureSpecialization : Feature = Typings | Subsettings | References | Crosses | Redefinitions"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.5",
+      "note": "the same production"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Features.kerml",
+      "note": "line 8: `feature x typed by A, B references f subsets g;`, three alternatives in sequence: Typings, References, Subsettings"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml",
+      "note": "line 40: `end cart: ShoppingCart[1] redefines source crosses selectedProduct.inCart {`, the Redefinitions and Crosses alternatives"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment FeatureSpecialization: Typings | Subsettings | References | Crossings | Redefinitions. The fourth alternative has a different name; the specification's name is used."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:01:11Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:01:11Z"
 }
