@@ -17,4 +17,4 @@ mod parser;
 pub use crate::generated::kinds::SyntaxKind;
 pub use crate::language::{Sv2Language, SyntaxElement, SyntaxNode, SyntaxToken};
 pub use crate::lexer::{Token, is_trivia, tokenize};
-pub use crate::parser::{Parse, parse};
+pub use crate::parser::{Parse, infix_table_for_test, parse};

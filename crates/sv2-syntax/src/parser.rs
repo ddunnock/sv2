@@ -20,10 +20,28 @@
 //!                      'for' [QualifiedName] RelationshipBody
 //! RelationshipBody   = ';' | '{' OwnedAnnotation* '}'
 //! PartDefinition     = OccurrenceDefinitionPrefix 'part' 'def' Definition
+//! ElementFilterMember = MemberPrefix 'filter' OwnedExpression ';'
+//! OwnedExpression    = ConditionalExpression | ConditionalBinaryOperatorExpression
+//!                    | BinaryOperatorExpression | UnaryOperatorExpression
+//!                    | ClassificationExpression | MetaclassificationExpression
+//!                    | ExtentExpression | PrimaryExpression
+//! ValuePart          = FeatureValue
+//! MultiplicityPart   = OwnedMultiplicity
+//!                    | OwnedMultiplicity? ( 'ordered' 'nonunique'?
+//!                                         | 'nonunique' 'ordered'? )
 //! ```
 //!
-//! Three of the four `PackageBodyElement` alternatives are handled: `PackageMember`,
-//! `Import` and `AliasMember`. `ElementFilterMember` waits on `OwnedExpression`.
+//! `OwnedExpression` carries no precedence and cannot: `KerML` 8.2.5.8.1 note 2 states
+//! that the grouping of nested `OperatorExpression`s is not expressed in the
+//! productions and is given by that clause's table 6. The table is data at
+//! `docs/operator-precedence.toml`, and `INFIX` below is what the parser reads. The
+//! operator core reads all fifteen tiers; the postfix layer of 8.2.5.8.2 — `a.b`,
+//! `x[kg]`, `x#(1)`, `x->f()` — and `BodyExpression` are not implemented, each with a
+//! rejection case in `tests/rejection/` naming its clause.
+//!
+//! All four `PackageBodyElement` alternatives are handled: `PackageMember`, `Import`,
+//! `AliasMember` and `ElementFilterMember`, the last of which waited on the expression
+//! layer and needs only a bare classification operator (`filter @Safety;`).
 //! `Package` and `PartDefinition` are the two `DefinitionElement`s of thirty, and
 //! `Comment`, `Documentation` and `TextualRepresentation` the three `AnnotatingElement`s
 //! of four that a `RelationshipBody` may own. Everything else is unimplemented and
@@ -36,7 +54,7 @@
 
 use rowan::{GreenNode, GreenNodeBuilder, Language as _};
 
-use crate::generated::kinds::{KEYWORDS, SyntaxKind};
+use crate::generated::kinds::{KEYWORDS, OPERATORS, SyntaxKind};
 use crate::language::{Sv2Language, SyntaxNode};
 use crate::lexer::{Token, is_trivia, is_unterminated_comment, tokenize};
 
@@ -86,10 +104,385 @@ fn keyword(text: &str) -> Option<SyntaxKind> {
         .map(|(_, kind)| *kind)
 }
 
+/// The deepest nesting the parser will recurse into.
+///
+/// Invariant 3 is that the parser does not die on any input. A recursive-descent
+/// parser dies on deeply nested input by overflowing the stack, and a stack overflow
+/// ABORTS the process — it is not a panic and cannot be caught, so it is strictly
+/// worse than the thing the invariant forbids. Measured on this parser, the shallowest
+/// construct overflows somewhere between 2000 and 5000 levels; 400 is well inside that
+/// and far past anything a person writes.
+///
+/// Reaching it is reported and recovered from, not silently truncated: the tokens
+/// still enter the tree through the enclosing body's recovery, so the round-trip holds.
+const MAX_DEPTH: u32 = 400;
+
 /// The three `VisibilityIndicator` keywords, in the order the specification
 /// writes them (`SysML` 8.2.2.5.1). Looked up in the pinned token set like every
 /// other keyword; this is only the list of which ones the production names.
 const VISIBILITY: [&str; 3] = ["public", "private", "protected"];
+
+// -- the precedence table, KerML 8.2.5.8.1 table 6 -------------------------------
+//
+// PRECEDENCE IS NOT IN THE GRAMMAR AND CANNOT BE. KerML 8.2.5.8.1 note 2 states that
+// the grouping of nested OperatorExpressions is not expressed in the productions and
+// is determined by the precedence of the operators as given in table 6, and that every
+// BinaryOperator groups to the left except exponentiation, which groups to the right.
+//
+// The table is recorded as data at docs/operator-precedence.toml, cited to that clause
+// and table. What follows is that file's tiers in the form the parser reads them, and
+// `the_infix_table_is_the_recorded_precedence_table` holds the two against each other
+// so neither can be edited alone.
+
+/// How a tier groups when the same tier repeats.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Assoc {
+    /// `a - b - c` is `(a - b) - c`. Every binary tier but exponentiation.
+    Left,
+    /// `a ** b ** c` is `a ** (b ** c)`. Exponentiation alone, by note 2.
+    Right,
+}
+
+/// How an operator is written: a symbol the lexer gives its own kind, or a word that
+/// arrives as a `BasicName` and is separated from a name by the pinned keyword table.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Spelling {
+    Symbol(SyntaxKind),
+    Word(&'static str),
+}
+
+/// The membership an operand is owned through, which is not the same for every operator.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Operand {
+    /// `ArgumentMember` — an expression, evaluated as an argument.
+    Argument,
+    /// `ArgumentExpressionMember` — an expression, referenced rather than evaluated.
+    /// This is what makes `??`, `or`, `and` and `implies` short-circuit where `|`,
+    /// `&` and `xor` do not.
+    ArgumentExpression,
+    /// `TypeReferenceMember` — a type, named by a classification test.
+    TypeReference,
+    /// `TypeResultMember` — a type, named by a cast, whose type is its result.
+    TypeResult,
+}
+
+/// One infix operator: its spelling, its tier, how it groups, and what it builds.
+struct InfixOperator {
+    spelling: Spelling,
+    /// The tier from table 6. Lower binds tighter.
+    tier: u8,
+    assoc: Assoc,
+    /// The node this operator builds.
+    node: SyntaxKind,
+    /// The memberships the left operand is wrapped in, outermost first.
+    left: &'static [SyntaxKind],
+    /// The membership the right operand is read into.
+    right: Operand,
+}
+
+/// The membership chain an `ArgumentMember` left operand is wrapped in.
+const LEFT_ARGUMENT: &[SyntaxKind] = &[
+    SyntaxKind::ArgumentMember,
+    SyntaxKind::Argument,
+    SyntaxKind::ArgumentValue,
+];
+
+/// Tier 2, `UnaryOperatorExpression`. TIGHTER than exponentiation at tier 3, so
+/// `-2 ** 2` is `(-2) ** 2` — the opposite of the C and Python convention.
+const TIER_UNARY: u8 = 2;
+/// Tier 8, the classification and metaclassification operators.
+const TIER_CLASSIFICATION: u8 = 8;
+/// Tier 15, `ConditionalExpression`. The loosest tier in table 6.
+const TIER_CONDITIONAL: u8 = 15;
+/// The loosest tier an expression may open at, which is every tier.
+const TIER_LOOSEST: u8 = TIER_CONDITIONAL;
+
+/// `UnaryOperator = '+' | '-' | '~' | 'not'` (`KerML` 8.2.5.8.1), tier 2.
+const UNARY_OPERATORS: [Spelling; 4] = [
+    Spelling::Symbol(SyntaxKind::Plus),
+    Spelling::Symbol(SyntaxKind::Minus),
+    Spelling::Symbol(SyntaxKind::Tilde),
+    Spelling::Word("not"),
+];
+
+/// Every infix operator, tightest tier first.
+///
+/// Order matters only within a tier, where it does not decide anything: the spellings
+/// are disjoint, so `infix_operator_here` finds the one that is written. Tiers 3 to 14
+/// of table 6; tiers 1, 2 and 15 are prefix and are not here.
+///
+/// Three tiers mix two productions, and the difference is the right operand:
+///   tier 10  `&` is a `BinaryOperator` and `and` a `ConditionalBinaryOperator`
+///   tier 12  `|` is a `BinaryOperator` and `or`  a `ConditionalBinaryOperator`
+///   tier  8  `istype`, `hastype`, `@` test and `as` casts, into different memberships
+const INFIX: [InfixOperator; 27] = [
+    // Tier 3 — exponentiation, the one right-associative tier (note 2).
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::Caret),
+        tier: 3,
+        assoc: Assoc::Right,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::StarStar),
+        tier: 3,
+        assoc: Assoc::Right,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    // Tier 4 — multiplicative.
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::Star),
+        tier: 4,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::Slash),
+        tier: 4,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::Percent),
+        tier: 4,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    // Tier 5 — additive.
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::Plus),
+        tier: 5,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::Minus),
+        tier: 5,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    // Tier 6 — range. Left-associative by note 2, which is more permissive than the
+    // Pilot: its RangeExpression rule takes at most one `..` and rejects `a..b..c`.
+    // That is a property of its parser generator, not of the language.
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::DotDot),
+        tier: 6,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    // Tier 7 — relational.
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::LtEq),
+        tier: 7,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::GtEq),
+        tier: 7,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::Lt),
+        tier: 7,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::Gt),
+        tier: 7,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    // Tier 8 — classification. The right operand is a TYPE, not an expression, and a
+    // test and a cast name it through different memberships. `@@` and `meta` share
+    // the tier but not the left operand, so they are not here: see
+    // `metaclassification_expression`.
+    InfixOperator {
+        spelling: Spelling::Word("istype"),
+        tier: TIER_CLASSIFICATION,
+        assoc: Assoc::Left,
+        node: SyntaxKind::ClassificationExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::TypeReference,
+    },
+    InfixOperator {
+        spelling: Spelling::Word("hastype"),
+        tier: TIER_CLASSIFICATION,
+        assoc: Assoc::Left,
+        node: SyntaxKind::ClassificationExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::TypeReference,
+    },
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::At),
+        tier: TIER_CLASSIFICATION,
+        assoc: Assoc::Left,
+        node: SyntaxKind::ClassificationExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::TypeReference,
+    },
+    InfixOperator {
+        spelling: Spelling::Word("as"),
+        tier: TIER_CLASSIFICATION,
+        assoc: Assoc::Left,
+        node: SyntaxKind::ClassificationExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::TypeResult,
+    },
+    // Tier 9 — equality.
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::EqEqEq),
+        tier: 9,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::BangEqEq),
+        tier: 9,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::EqEq),
+        tier: 9,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::BangEq),
+        tier: 9,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    // Tier 10 — `&` conjoins and `and` short-circuits.
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::Amp),
+        tier: 10,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    InfixOperator {
+        spelling: Spelling::Word("and"),
+        tier: 10,
+        assoc: Assoc::Left,
+        node: SyntaxKind::ConditionalBinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::ArgumentExpression,
+    },
+    // Tier 11 — exclusive or, which has no short-circuiting spelling.
+    InfixOperator {
+        spelling: Spelling::Word("xor"),
+        tier: 11,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    // Tier 12 — `|` disjoins and `or` short-circuits.
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::Pipe),
+        tier: 12,
+        assoc: Assoc::Left,
+        node: SyntaxKind::BinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::Argument,
+    },
+    InfixOperator {
+        spelling: Spelling::Word("or"),
+        tier: 12,
+        assoc: Assoc::Left,
+        node: SyntaxKind::ConditionalBinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::ArgumentExpression,
+    },
+    // Tier 13 — implication.
+    InfixOperator {
+        spelling: Spelling::Word("implies"),
+        tier: 13,
+        assoc: Assoc::Left,
+        node: SyntaxKind::ConditionalBinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::ArgumentExpression,
+    },
+    // Tier 14 — null coalescing, the loosest infix tier.
+    InfixOperator {
+        spelling: Spelling::Symbol(SyntaxKind::QuestionQuestion),
+        tier: 14,
+        assoc: Assoc::Left,
+        node: SyntaxKind::ConditionalBinaryOperatorExpression,
+        left: LEFT_ARGUMENT,
+        right: Operand::ArgumentExpression,
+    },
+];
+
+/// The infix table as `(tier, operator, associativity)`, for the test that holds it
+/// against `docs/operator-precedence.toml`.
+///
+/// Exposed because an integration test reaches only the public API, and the check it
+/// makes is one of the more valuable in the crate: that the parser groups operators
+/// by the table the specification cites, rather than by a table that has drifted
+/// from it. `KerML` 8.2.5.8.1 note 2 is the reason the two files exist separately at
+/// all.
+///
+/// A symbol's text comes from `OPERATORS`, the pinned token set, rather than being
+/// written out again here — so an operator leaving the token set fails this test too.
+#[doc(hidden)]
+#[must_use]
+pub fn infix_table_for_test() -> Vec<(u8, String, String)> {
+    INFIX
+        .iter()
+        .map(|op| {
+            let operator = match op.spelling {
+                Spelling::Symbol(kind) => OPERATORS
+                    .iter()
+                    .find(|(_, k)| *k == kind)
+                    .map_or_else(String::new, |(text, _)| (*text).to_owned()),
+                Spelling::Word(word) => word.to_owned(),
+            };
+            let assoc = match op.assoc {
+                Assoc::Left => "left",
+                Assoc::Right => "right",
+            };
+            (op.tier, operator, assoc.to_owned())
+        })
+        .collect()
+}
 
 /// A usage production whose whole rule is `<prefix> KEYWORD Usage`.
 #[derive(Clone, Copy)]
@@ -153,6 +546,16 @@ struct Parser<'a> {
     pos: usize,
     builder: GreenNodeBuilder<'static>,
     errors: Vec<String>,
+    /// How many nesting levels of recursive production this parser is inside.
+    ///
+    /// Bounded by [`MAX_DEPTH`]. Invariant 3 is that the parser does not die on any
+    /// input, and a recursive-descent parser on deeply nested input dies by
+    /// overflowing the stack — which aborts the process rather than panicking, so it
+    /// is not even catchable. Counting the levels is what keeps that from happening.
+    depth: u32,
+    /// Whether the depth limit has already been reported, so it is said once rather
+    /// than once per level.
+    depth_reported: bool,
     /// Whether a `REGULAR_COMMENT` is a token here rather than trivia.
     ///
     /// `KerML` 8.2.2.2 makes `/* ... */` a token, and `Comment`, `Documentation` and
@@ -172,6 +575,8 @@ impl<'a> Parser<'a> {
             pos: 0,
             builder: GreenNodeBuilder::new(),
             errors: Vec::new(),
+            depth: 0,
+            depth_reported: false,
             comments_significant: false,
         }
     }
@@ -454,6 +859,19 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Report that the input is nested deeper than the parser will recurse.
+    ///
+    /// Said once rather than once per level: the limit is a property of the input as
+    /// a whole, and one diagnostic per level would bury every other one.
+    fn report_too_deep(&mut self) {
+        if self.depth_reported {
+            return;
+        }
+        self.depth_reported = true;
+        self.errors
+            .push(format!("nested deeper than {MAX_DEPTH} levels"));
+    }
+
     fn error_expected(&mut self, what: &str) {
         let found = self
             .peek()
@@ -490,8 +908,7 @@ impl<'a> Parser<'a> {
     /// `PackageBodyElement*` or `DefinitionBodyItem*`, up to `until` or end of input.
     ///
     /// `PackageBodyElement = PackageMember | ElementFilterMember | AliasMember |
-    /// Import` (`SysML` 8.2.2.5.1). All but `ElementFilterMember` are implemented,
-    /// and that one waits on `OwnedExpression`.
+    /// Import` (`SysML` 8.2.2.5.1). All four are implemented.
     ///
     /// `DefinitionBodyItem = DefinitionMember | VariantUsageMember |
     /// NonOccurrenceUsageMember | SourceSuccessionMember? OccurrenceUsageMember |
@@ -505,10 +922,23 @@ impl<'a> Parser<'a> {
     /// that vanishes on one bad token blanks the diagram on every keystroke.
     fn body_elements(&mut self, until: Option<SyntaxKind>, member: SyntaxKind) {
         while !self.at_end() && !until.is_some_and(|kind| self.at(kind)) {
-            if self.at_import() {
+            if self.depth >= MAX_DEPTH {
+                // Too deeply nested to recurse into another body. Recover one token
+                // at a time, exactly as unrecognised text is recovered: every byte
+                // still reaches the tree, and the stack does not grow (invariant 3).
+                self.report_too_deep();
+                self.error_token();
+            } else if self.at_import() {
                 self.import();
             } else if self.at_element_keyword("alias") {
                 self.alias_member();
+            } else if member == SyntaxKind::PackageMember && self.at_element_keyword("filter") {
+                // ElementFilterMember is a PackageBodyElement and NOT a
+                // DefinitionBodyItem (`SysML` 8.2.2.5.1 against 8.2.2.6.1), so a
+                // `filter` in a definition body is reported rather than accepted;
+                // tests/rejection/element-filter-member-is-not-a-definition-body-item.sysml
+                // holds that.
+                self.element_filter_member();
             } else if self.at_member_element(usize::from(self.at_visibility())) {
                 self.membership(member);
             } else {
@@ -824,7 +1254,7 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::UsageDeclaration);
         self.identification();
-        if self.at_feature_specialization() {
+        if self.at_feature_specialization() || self.at_multiplicity_part() {
             self.feature_specialization_part();
         }
         self.finish_node();
@@ -1035,26 +1465,45 @@ impl<'a> Parser<'a> {
     }
 
     // FeatureSpecializationPart : Feature =
-    //     ( -> FeatureSpecialization )+ MultiplicityPart? FeatureSpecialization*
+    //     FeatureSpecialization+ MultiplicityPart? FeatureSpecialization*
     //     | MultiplicityPart FeatureSpecialization*              (KerML 8.2.4.3.1)
     //
     // FeatureSpecialization = Typings | Subsettings | References | Crosses
     //                       | Redefinitions                      (SysML 8.2.2.6.5)
     //
-    // NOT marked for coverage. All five FeatureSpecialization alternatives are
-    // implemented, but MultiplicityPart is not — it reaches OwnedMultiplicity and so
-    // an expression parser, which does not exist yet — so the whole second
-    // alternative is absent and the first cannot take its optional MultiplicityPart.
-    // This method therefore reads `FeatureSpecialization+` and nothing more;
-    // tests/rejection/multiplicity-part-is-not-implemented.sysml holds that absence.
+    // production: FeatureSpecializationPart
     //
-    // The `->` in the clause is a syntactic predicate, an LL workaround for the Pilot's
-    // parser generator; it is not ported.
+    // The two alternatives differ only in where the MultiplicityPart may sit: the
+    // first requires at least one FeatureSpecialization before it, the second puts it
+    // first, and both allow FeatureSpecializations after it. Their union is therefore
+    // any number of FeatureSpecializations with AT MOST ONE MultiplicityPart anywhere
+    // among them, which is what the loop below reads — and neither alternative admits
+    // an empty part, which is why `usage_declaration` asks before entering.
+    //
+    // A second MultiplicityPart is what the one-shot flag rejects; neither
+    // alternative can produce one, and
+    // tests/rejection/multiplicity-part-appears-once.sysml holds that.
+    //
+    // The production above is the clause's, verbatim. The Pilot writes the first
+    // alternative as `( -> FeatureSpecialization )+` (SysML.xtext:366); that `->` is a
+    // syntactic predicate, an LL workaround for its parser generator, and it appears
+    // in NEITHER specification's BNF (KerML-textual-bnf.kebnf:632,
+    // SysML-textual-bnf.kebnf:440). It is not ported, and it is not quoted here as
+    // though the clause contained it — deviations.json makes Tier B `never_used_for`
+    // rule bodies, and a predicate copied into a citation is exactly that.
     fn feature_specialization_part(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::FeatureSpecializationPart);
-        while self.at_feature_specialization() {
-            self.feature_specialization();
+        let mut multiplicity_taken = false;
+        loop {
+            if self.at_feature_specialization() {
+                self.feature_specialization();
+            } else if !multiplicity_taken && self.at_multiplicity_part() {
+                self.multiplicity_part();
+                multiplicity_taken = true;
+            } else {
+                break;
+            }
         }
         self.finish_node();
     }
@@ -1126,18 +1575,1097 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // UsageCompletion : Usage = ValuePart? UsageBody             (SysML 8.2.2.6.2)
+    // production: UsageCompletion
     //
-    // NOT marked for coverage. ValuePart (`ValuePart = FeatureValue`, and
-    // `FeatureValue = ( '=' | ':=' | 'default' ( '=' | ':=' )? ) OwnedExpression`)
-    // reaches an expression parser, which does not exist yet, so a usage carrying a
-    // value is reported rather than accepted;
-    // tests/rejection/value-part-is-not-implemented.sysml holds that absence.
+    // UsageCompletion : Usage = ValuePart? UsageBody             (SysML 8.2.2.6.2)
     fn usage_completion(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::UsageCompletion);
+        if self.at_value_part() {
+            self.value_part();
+        }
         self.usage_body();
         self.finish_node();
+    }
+
+    /// Whether a `ValuePart` is written here (`SysML` 8.2.2.6.2).
+    ///
+    /// `FeatureValue` opens with `'='`, `':='` or `'default'`, and nothing else a
+    /// `UsageCompletion` may hold opens with any of them.
+    fn at_value_part(&self) -> bool {
+        self.at(SyntaxKind::Eq) || self.at(SyntaxKind::ColonEq) || self.at_keyword("default")
+    }
+
+    // production: ValuePart
+    //
+    // ValuePart : Usage = ownedRelationship += FeatureValue      (SysML 8.2.2.6.2)
+    fn value_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ValuePart);
+        self.feature_value();
+        self.finish_node();
+    }
+
+    // production: FeatureValue
+    //
+    // FeatureValue : FeatureValue =
+    //     ( '=' | isInitial ?= ':='
+    //     | isDefault ?= 'default' ( '=' | isInitial ?= ':=' )? )
+    //     ownedRelatedElement += OwnedExpression                 (SysML 8.2.2.6.2)
+    //
+    // The three prefixes are three flags on one relationship, not three productions:
+    // `=` binds, `:=` initialises, and `default` marks either as a default. After
+    // `default` the `=` is optional, so `default x` and `default = x` are the same
+    // FeatureValue with isDefault set.
+    fn feature_value(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FeatureValue);
+        if self.at_keyword("default") {
+            self.bump_as(SyntaxKind::KwDefault);
+            if self.at(SyntaxKind::Eq) || self.at(SyntaxKind::ColonEq) {
+                self.bump();
+            }
+        } else if self.at(SyntaxKind::Eq) || self.at(SyntaxKind::ColonEq) {
+            self.bump();
+        } else {
+            self.error_expected("`=`, `:=` or `default`");
+        }
+        self.owned_expression();
+        self.finish_node();
+    }
+
+    // production: ElementFilterMember
+    //
+    // ElementFilterMember : ElementFilterMembership =
+    //     MemberPrefix 'filter' ownedRelatedElement += OwnedExpression ';'
+    //                                                            (SysML 8.2.2.5.1)
+    //
+    // The fourth PackageBodyElement, and the one that waited on this layer. The
+    // corpus idiom is a bare classification operator — `filter @Safety;` — which is
+    // a ClassificationExpression with no ArgumentMember, the alternative the clause
+    // makes optional.
+    fn element_filter_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ElementFilterMember);
+        self.member_prefix();
+        self.expect_keyword("filter");
+        self.owned_expression();
+        self.expect(SyntaxKind::Semicolon, "`;`");
+        self.finish_node();
+    }
+
+    // -- multiplicity, SysML 8.2.2.6.6 ------------------------------------------
+
+    /// Whether a `MultiplicityPart` is written here (`SysML` 8.2.2.6.6).
+    ///
+    /// Either the `'['` of its `OwnedMultiplicity` or one of the two keywords its
+    /// second alternative may carry without one.
+    fn at_multiplicity_part(&self) -> bool {
+        self.at(SyntaxKind::LBracket) || self.at_keyword("ordered") || self.at_keyword("nonunique")
+    }
+
+    // production: MultiplicityPart
+    //
+    // MultiplicityPart : Feature =
+    //       ownedRelationship += OwnedMultiplicity
+    //     | ( ownedRelationship += OwnedMultiplicity )?
+    //       ( isOrdered ?= 'ordered' ( { isUnique = false } 'nonunique' )?
+    //       | { isUnique = false } 'nonunique' ( isOrdered ?= 'ordered' )? )
+    //                                                            (SysML 8.2.2.6.6)
+    //
+    // The two alternatives together admit an OwnedMultiplicity, the two keywords in
+    // either order, or both — and the first alternative is what makes the keywords
+    // optional. `nonunique` sets isUnique false in both orderings, which is why the
+    // keyword appears twice in the clause and once here.
+    fn multiplicity_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MultiplicityPart);
+        if self.at(SyntaxKind::LBracket) {
+            self.owned_multiplicity();
+        }
+        if self.at_keyword("ordered") {
+            self.bump_as(SyntaxKind::KwOrdered);
+            if self.at_keyword("nonunique") {
+                self.bump_as(SyntaxKind::KwNonunique);
+            }
+        } else if self.at_keyword("nonunique") {
+            self.bump_as(SyntaxKind::KwNonunique);
+            if self.at_keyword("ordered") {
+                self.bump_as(SyntaxKind::KwOrdered);
+            }
+        }
+        self.finish_node();
+    }
+
+    // production: OwnedMultiplicity
+    //
+    // OwnedMultiplicity : OwningMembership =
+    //     ownedRelatedElement += MultiplicityRange               (SysML 8.2.2.6.6)
+    //
+    // SysML's OwnedMultiplicity owns a MultiplicityRange directly. KerML writes
+    // `ownedRelatedElement += OwnedMultiplicityRange` over its own MultiplicityRange,
+    // which is the named `'multiplicity' Identification MultiplicityBounds TypeBody`
+    // element — a different production with the same name, split by scope in
+    // ADR-0015. This is the SysML reading.
+    fn owned_multiplicity(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OwnedMultiplicity);
+        self.multiplicity_range();
+        self.finish_node();
+    }
+
+    // production: MultiplicityRange
+    //
+    // MultiplicityRange : MultiplicityRange =
+    //     '[' ( ownedRelationship += MultiplicityExpressionMember '..' )?
+    //           ownedRelationship += MultiplicityExpressionMember ']'
+    //                                                            (SysML 8.2.2.6.6)
+    //
+    // The lower bound is the optional one, so `[2]` is an upper bound alone and
+    // `[0..*]` is both. Read left to right: one member, then the second only if a
+    // `'..'` separates them.
+    fn multiplicity_range(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MultiplicityRange);
+        self.expect(SyntaxKind::LBracket, "`[`");
+        self.multiplicity_expression_member();
+        if self.at(SyntaxKind::DotDot) {
+            self.bump();
+            self.multiplicity_expression_member();
+        }
+        self.expect(SyntaxKind::RBracket, "`]`");
+        self.finish_node();
+    }
+
+    // production: MultiplicityExpressionMember
+    //
+    // MultiplicityExpressionMember : OwningMembership =
+    //     ownedRelatedElement += ( LiteralExpression
+    //                            | FeatureReferenceExpression )  (SysML 8.2.2.6.6)
+    //
+    // A bound is a literal or a name and NOT an OwnedExpression: the clause names
+    // two alternatives, neither of which is an operator expression. `[1+1]` is
+    // therefore not a multiplicity, which is what keeps this production cheap and
+    // what tests/rejection/multiplicity-bound-is-not-an-operator-expression.sysml
+    // holds.
+    fn multiplicity_expression_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MultiplicityExpressionMember);
+        if self.at_literal_expression() {
+            self.literal_expression();
+        } else if self.at_feature_reference() {
+            self.feature_reference_expression();
+        } else {
+            self.error_expected("a literal or a name");
+        }
+        self.finish_node();
+    }
+
+    // -- the expression layer, KerML 8.2.5.8 -------------------------------------
+
+    // production: OwnedExpression
+    //
+    // OwnedExpression : Expression =
+    //       ConditionalExpression
+    //     | ConditionalBinaryOperatorExpression
+    //     | BinaryOperatorExpression
+    //     | UnaryOperatorExpression
+    //     | ClassificationExpression
+    //     | MetaclassificationExpression
+    //     | ExtentExpression
+    //     | PrimaryExpression                                    (KerML 8.2.5.8.1)
+    //
+    // THE ALTERNATION CARRIES NO PRECEDENCE, AND CANNOT. KerML 8.2.5.8.1 note 2
+    // states that the grouping of nested OperatorExpressions is not expressed in the
+    // productions above it, and is instead determined by the precedence of the
+    // operators as given in that clause's table 6. So this production is ambiguous
+    // on its own, by the specification's own construction, and any recursive-descent
+    // parser has to carry the table separately.
+    //
+    // deviations.json records the decision under BinaryOperatorExpression
+    // (spec_only/follow_spec): implement the specification's one-production shape and
+    // supply precedence from the table, rather than porting the Pilot's stratified
+    // cascade. The cascade is docs/DERIVATION.md's named example of an Xtext LL
+    // workaround; porting it would report coverage against a dozen productions the
+    // language does not have, and would move every precedence question from the
+    // table, where the specification answers it, to rule ordering.
+    //
+    // The table is data at docs/operator-precedence.toml, cited to the clause.
+    // `INFIX` and `UNARY_OPERATORS` below are that file's tiers; the test
+    // `the_infix_table_is_the_recorded_precedence_table` reads the file and holds the
+    // two against each other, so an edit to either alone fails.
+    fn owned_expression(&mut self) {
+        self.expression(TIER_LOOSEST);
+    }
+
+    /// An `OwnedExpression` whose top-level operator binds no looser than `tier`.
+    ///
+    /// This is the precedence climb. `tier` is the loosest tier this call may
+    /// consume: a caller that has just taken a tier-5 operator asks for tier 4 on
+    /// the right, and the `+` in `a + b + c` is therefore left for the caller's own
+    /// loop rather than nested, which is what makes the tier group to the left.
+    fn expression(&mut self, tier: u8) {
+        self.eat_trivia();
+        if self.depth >= MAX_DEPTH {
+            self.report_too_deep();
+            return;
+        }
+        self.depth += 1;
+        self.expression_inner(tier);
+        self.depth -= 1;
+    }
+
+    /// [`Parser::expression`] proper, entered one nesting level deeper.
+    fn expression_inner(&mut self, tier: u8) {
+        // ConditionalExpression is tier 15, the loosest, and is written prefix, so
+        // it is decided before anything else rather than found by the climb.
+        if tier >= TIER_CONDITIONAL && self.at_keyword("if") {
+            self.conditional_expression();
+            return;
+        }
+        let start = self.builder.checkpoint();
+        self.prefix_expression();
+        self.infix_tail(start, tier);
+    }
+
+    /// The `OwnedExpression` alternatives written with their operator first, and the
+    /// `PrimaryExpression` left when none of them is.
+    fn prefix_expression(&mut self) {
+        // ExtentExpression = 'all' TypeReferenceMember — tier 1, tighter than every
+        // binary operator.
+        if self.at_keyword("all") {
+            self.extent_expression();
+            return;
+        }
+        // MetaclassificationExpression's left operand is a MetadataArgumentMember,
+        // which reaches a QualifiedName and not an OwnedExpression, so it cannot be
+        // wrapped retroactively around an already-parsed expression the way the other
+        // tier-8 operators are. It is decided here instead, by looking past the name.
+        if self.at_metaclassification() {
+            self.metaclassification_expression();
+            return;
+        }
+        // ClassificationExpression's ArgumentMember is optional, so a classification
+        // operator may open one with nothing to its left. `filter @Safety;` is the
+        // corpus idiom for exactly that.
+        if self.at_leading_classification() {
+            self.classification_expression(None);
+            return;
+        }
+        // UnaryOperatorExpression = UnaryOperator ArgumentMember EmptyResultMember —
+        // tier 2, which binds TIGHTER than exponentiation at tier 3, so `-2 ** 2` is
+        // `(-2) ** 2`. That is the opposite of the C and Python convention and is
+        // what table 6 states.
+        if self.at_unary_operator() {
+            self.unary_operator_expression();
+            return;
+        }
+        self.primary_expression();
+    }
+
+    // production: BinaryOperatorExpression
+    //
+    // BinaryOperatorExpression : OperatorExpression =
+    //     ownedRelationship += ArgumentMember
+    //     operator = BinaryOperator
+    //     ownedRelationship += ArgumentMember
+    //     ownedRelationship += EmptyResultMember                 (KerML 8.2.5.8.1)
+    //
+    // production: ConditionalBinaryOperatorExpression
+    //
+    // ConditionalBinaryOperatorExpression : OperatorExpression =
+    //     ownedRelationship += ArgumentMember
+    //     operator = ConditionalBinaryOperator
+    //     ownedRelationship += ArgumentExpressionMember
+    //     ownedRelationship += EmptyResultMember                 (KerML 8.2.5.8.1)
+    //
+    // Both are built here rather than in a method each, because they differ only in
+    // the membership of their right operand and in which operators name them — and
+    // both of those are columns of the table. ClassificationExpression is reached
+    // from here too, but has its own method because its left operand is optional.
+    //
+    /// Consume infix operators at `max_tier` or tighter, folding the expression that
+    /// starts at `start` into each one's left operand.
+    ///
+    /// The left operand is already in the tree when the operator is read, so the
+    /// operator's node and the memberships around its left operand are both opened
+    /// retroactively at `start` — the same technique `import_declaration` uses for
+    /// two alternatives that share a prefix.
+    fn infix_tail(&mut self, start: rowan::Checkpoint, max_tier: u8) {
+        while let Some(op) = self.infix_operator_here() {
+            if op.tier > max_tier {
+                break;
+            }
+            self.start_node_at(start, op.node);
+            self.wrap_at(start, op.left);
+            self.bump_spelling(op.spelling);
+            self.right_operand(op);
+            // Every OperatorExpression the table reaches owns a result parameter,
+            // written nowhere in the text. ExtentExpression is the one that does not,
+            // and it is prefix, so it is not in the table.
+            self.empty_result_member();
+            self.finish_node();
+        }
+    }
+
+    /// The right operand of an infix operator, in the membership the clause names.
+    ///
+    /// The tier asked for is what makes the group: strictly tighter for a
+    /// left-associative operator, so a repeat is left to the caller's loop, and the
+    /// same tier for a right-associative one, so a repeat nests here.
+    fn right_operand(&mut self, op: &InfixOperator) {
+        let tier = match op.assoc {
+            Assoc::Left => op.tier.saturating_sub(1),
+            Assoc::Right => op.tier,
+        };
+        match op.right {
+            Operand::Argument => self.argument_member(tier),
+            Operand::ArgumentExpression => self.argument_expression_member(tier),
+            Operand::TypeReference => self.type_reference_member(SyntaxKind::TypeReferenceMember),
+            Operand::TypeResult => self.type_reference_member(SyntaxKind::TypeResultMember),
+        }
+    }
+
+    // production: ConditionalExpression
+    //
+    // ConditionalExpression : OperatorExpression =
+    //     operator = 'if'
+    //     ownedRelationship += ArgumentMember '?'
+    //     ownedRelationship += ArgumentExpressionMember 'else'
+    //     ownedRelationship += ArgumentExpressionMember
+    //     ownedRelationship += EmptyResultMember                 (KerML 8.2.5.8.1)
+    //
+    // Tier 15, the loosest. Both branches are ArgumentExpressionMembers and the
+    // condition is an ArgumentMember: the branches are referenced rather than
+    // evaluated, which is how the abstract syntax reifies the short circuit. The
+    // `else` branch is read at the same tier, so `if a? b else if c? d else e`
+    // nests to the right without parentheses; the condition is read one tier tighter,
+    // so a bare `if` there is not.
+    fn conditional_expression(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ConditionalExpression);
+        self.expect_keyword("if");
+        self.argument_member(TIER_CONDITIONAL - 1);
+        self.expect(SyntaxKind::Question, "`?`");
+        self.argument_expression_member(TIER_CONDITIONAL);
+        self.expect_keyword("else");
+        self.argument_expression_member(TIER_CONDITIONAL);
+        self.empty_result_member();
+        self.finish_node();
+    }
+
+    // production: UnaryOperatorExpression
+    //
+    // UnaryOperatorExpression : OperatorExpression =
+    //     operator = UnaryOperator
+    //     ownedRelationship += ArgumentMember
+    //     ownedRelationship += EmptyResultMember                 (KerML 8.2.5.8.1)
+    //
+    // UnaryOperator = '+' | '-' | '~' | 'not'                    (KerML 8.2.5.8.1)
+    //
+    // The operand is read at tier 2, which is what makes `- -a` nest — the
+    // specification's ArgumentMember reaches OwnedExpression, so a unary operand may
+    // itself be unary. The Pilot's UnaryExpression rule does not recurse and rejects
+    // it; that is a property of its parser generator, not of the language, and it is
+    // not ported.
+    fn unary_operator_expression(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::UnaryOperatorExpression);
+        self.bump_unary_operator();
+        self.argument_member(TIER_UNARY);
+        self.empty_result_member();
+        self.finish_node();
+    }
+
+    // production: ExtentExpression
+    //
+    // ExtentExpression : OperatorExpression =
+    //     operator = 'all'
+    //     ownedRelationship += TypeReferenceMember               (KerML 8.2.5.8.1)
+    //
+    // Tier 1, the tightest, and the one OperatorExpression in the clause that owns no
+    // EmptyResultMember — its result comes from the type, so none is written here.
+    fn extent_expression(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ExtentExpression);
+        self.expect_keyword("all");
+        self.type_reference_member(SyntaxKind::TypeReferenceMember);
+        self.finish_node();
+    }
+
+    // production: ClassificationExpression
+    //
+    // ClassificationExpression : OperatorExpression =
+    //     ( ownedRelationship += ArgumentMember )?
+    //     ( operator = ClassificationTestOperator
+    //       ownedRelationship += TypeReferenceMember
+    //     | operator = CastOperator
+    //       ownedRelationship += TypeResultMember )
+    //     ownedRelationship += EmptyResultMember                 (KerML 8.2.5.8.1)
+    //
+    // ClassificationTestOperator = 'istype' | 'hastype' | '@'    (KerML 8.2.5.8.1)
+    // CastOperator              = 'as'                           (KerML 8.2.5.8.1)
+    //
+    // The ArgumentMember is optional, so this is reached two ways: from `infix_tail`
+    // with a left operand already in the tree, and from `prefix_expression` with
+    // none. `start` is the checkpoint of the left operand, or `None` when there is
+    // no left operand to fold in.
+    //
+    // The right operand is a type and not an expression, in two different
+    // memberships: a test names a TypeReferenceMember and a cast a TypeResultMember.
+    fn classification_expression(&mut self, start: Option<rowan::Checkpoint>) {
+        self.eat_trivia();
+        match start {
+            Some(start) => {
+                self.start_node_at(start, SyntaxKind::ClassificationExpression);
+                self.wrap_at(start, LEFT_ARGUMENT);
+            }
+            None => self.start_node(SyntaxKind::ClassificationExpression),
+        }
+        let is_cast = self.at_keyword("as");
+        self.bump_classification_operator();
+        let member = if is_cast {
+            SyntaxKind::TypeResultMember
+        } else {
+            SyntaxKind::TypeReferenceMember
+        };
+        self.type_reference_member(member);
+        self.empty_result_member();
+        self.finish_node();
+    }
+
+    // production: MetaclassificationExpression
+    //
+    // MetaclassificationExpression : OperatorExpression =
+    //     ownedRelationship += MetadataArgumentMember
+    //     ( operator = MetaclassificationTestOperator
+    //       ownedRelationship += TypeReferenceMember
+    //     | operator = MetaCastOperator
+    //       ownedRelationship += TypeResultMember )
+    //     ownedRelationship += EmptyResultMember                 (KerML 8.2.5.8.1)
+    //
+    // MetaclassificationTestOperator = '@@'                      (KerML 8.2.5.8.1)
+    // MetaCastOperator               = 'meta'                    (KerML 8.2.5.8.1)
+    //
+    // Tier 8 with the classification operators, but NOT interchangeable with them:
+    // its left operand is a MetadataArgumentMember, and that reaches a QualifiedName
+    // (MetadataArgument -> MetadataValue -> MetadataReference ->
+    // ElementReferenceMember = [QualifiedName]) rather than an OwnedExpression. So
+    // the left operand of `meta` is a reference, never an expression, and
+    // `(a + b) meta T` is not something the clause can express. That also makes it
+    // unchainable: `x meta A meta B` would need a MetaclassificationExpression where
+    // a QualifiedName is required, so it is reported.
+    fn metaclassification_expression(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MetaclassificationExpression);
+        self.metadata_argument_member();
+        let is_cast = self.at_keyword("meta");
+        if is_cast {
+            self.bump_as(SyntaxKind::KwMeta);
+        } else {
+            self.expect(SyntaxKind::AtAt, "`@@`");
+        }
+        let member = if is_cast {
+            SyntaxKind::TypeResultMember
+        } else {
+            SyntaxKind::TypeReferenceMember
+        };
+        self.type_reference_member(member);
+        self.empty_result_member();
+        self.finish_node();
+    }
+
+    // production: MetadataArgumentMember
+    //
+    // MetadataArgumentMember : ParameterMembership =
+    //     ownedRelatedElement += MetadataArgument                (KerML 8.2.5.8.1)
+    //
+    // production: MetadataArgument
+    //
+    // MetadataArgument : Feature =
+    //     ownedRelationship += MetadataValue                     (KerML 8.2.5.8.1)
+    //
+    // production: MetadataValue
+    //
+    // MetadataValue : FeatureValue = value = MetadataReference   (KerML 8.2.5.8.1)
+    //
+    // production: MetadataReference
+    //
+    // MetadataReference : MetadataAccessExpression =
+    //     ownedRelationship += ElementReferenceMember            (KerML 8.2.5.8.1)
+    //
+    // production: ElementReferenceMember
+    //
+    // ElementReferenceMember : Membership =
+    //     memberElement = [QualifiedName]                        (KerML 8.2.5.8.3)
+    //
+    // Five memberships over one name. They are nodes rather than collapsed because
+    // the abstract syntax reifies each of them, and sv2-hir will need to walk them.
+    fn metadata_argument_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MetadataArgumentMember);
+        self.start_node(SyntaxKind::MetadataArgument);
+        self.start_node(SyntaxKind::MetadataValue);
+        self.start_node(SyntaxKind::MetadataReference);
+        self.start_node(SyntaxKind::ElementReferenceMember);
+        self.qualified_name();
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
+    }
+
+    // PrimaryExpression = FeatureChainExpression
+    //                   | NonFeatureChainPrimaryExpression       (KerML 8.2.5.8.2)
+    //
+    // NonFeatureChainPrimaryExpression = BracketExpression | IndexExpression
+    //     | SequenceExpression | SelectExpression | CollectExpression
+    //     | FunctionOperationExpression | BaseExpression         (KerML 8.2.5.8.2)
+    //
+    // BaseExpression = NullExpression | LiteralExpression
+    //     | FeatureReferenceExpression | MetadataAccessExpression
+    //     | InvocationExpression | ConstructorExpression
+    //     | BodyExpression                                       (KerML 8.2.5.8.3)
+    //
+    // NONE OF THE THREE IS MARKED FOR COVERAGE. Each is an alternation and each has
+    // alternatives that are absent, so marking any of them would claim a production
+    // this parser does not read. What is implemented is SequenceExpression from the
+    // middle one, and NullExpression, LiteralExpression and FeatureReferenceExpression
+    // from the last. What is not, each with a rejection case naming the clause:
+    //
+    //   FeatureChainExpression     `a.b`            the postfix `.`
+    //   BracketExpression          `1200 [kg]`      the quantity form of `[`
+    //   IndexExpression            `tanks#(1)`
+    //   SelectExpression           `x.?{ ... }`     needs BodyExpression
+    //   CollectExpression          `x.{ ... }`      needs BodyExpression
+    //   FunctionOperationExpression `x->size()`
+    //   MetadataAccessExpression   `E.metadata`
+    //   InvocationExpression       `f(1, 2)`        needs ArgumentList
+    //   ConstructorExpression      `new T(1)`       needs ArgumentList
+    //   BodyExpression             `{ in x; x }`    reaches ExpressionBody, and in
+    //                                              SysML that reads CalculationBody,
+    //                                              which is most of the language
+    //
+    // No node of its own for any of the three, as DefinitionElement and
+    // FeatureSpecialization have none: an alternation's node would add a level
+    // carrying nothing, because the alternative that matched already says which was
+    // taken.
+    fn primary_expression(&mut self) {
+        // NullExpression = 'null' | '(' ')' — the empty pair is decided before
+        // SequenceExpression, which would otherwise read the '(' and find no
+        // expression.
+        if self.at_keyword("null") || self.at_empty_parentheses() {
+            self.null_expression();
+        } else if self.at(SyntaxKind::LParen) {
+            self.sequence_expression();
+        } else if self.at_literal_expression() {
+            self.literal_expression();
+        } else if self.at_feature_reference() {
+            self.feature_reference_expression();
+        } else {
+            self.error_expected("an expression");
+        }
+    }
+
+    /// Whether a `'('` here is immediately closed, making it a `NullExpression`.
+    fn at_empty_parentheses(&self) -> bool {
+        self.at(SyntaxKind::LParen) && self.nth_is(1, SyntaxKind::RParen)
+    }
+
+    // production: NullExpression
+    //
+    // NullExpression : NullExpression = 'null' | '(' ')'         (KerML 8.2.5.8.3)
+    fn null_expression(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::NullExpression);
+        if self.at_keyword("null") {
+            self.bump_as(SyntaxKind::KwNull);
+        } else {
+            self.expect(SyntaxKind::LParen, "`(`");
+            self.expect(SyntaxKind::RParen, "`)`");
+        }
+        self.finish_node();
+    }
+
+    // production: SequenceExpression
+    //
+    // SequenceExpression = '(' SequenceExpressionList ')'        (KerML 8.2.5.8.2)
+    fn sequence_expression(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SequenceExpression);
+        self.expect(SyntaxKind::LParen, "`(`");
+        self.sequence_expression_list();
+        self.expect(SyntaxKind::RParen, "`)`");
+        self.finish_node();
+    }
+
+    // production: SequenceExpressionList
+    //
+    // SequenceExpressionList = OwnedExpression ','?
+    //                        | SequenceOperatorExpression        (KerML 8.2.5.8.2)
+    //
+    // production: SequenceOperatorExpression
+    //
+    // SequenceOperatorExpression : OperatorExpression =
+    //     ownedRelationship += OwnedExpressionMember
+    //     operator = ','
+    //     ownedRelationship += SequenceExpressionListMember      (KerML 8.2.5.8.2)
+    //
+    // Both alternatives are an expression followed by a `','`, so which one it is
+    // depends on what comes after the comma: another expression makes it a
+    // SequenceOperatorExpression, and a `')'` makes it the first alternative's
+    // trailing comma. The node is opened retroactively once that is known.
+    fn sequence_expression_list(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SequenceExpressionList);
+        let start = self.builder.checkpoint();
+        self.owned_expression();
+        if self.at(SyntaxKind::Comma) {
+            if self.nth_is(1, SyntaxKind::RParen) {
+                // `( a , )` — the trailing `','?` of the first alternative.
+                self.bump();
+            } else {
+                self.start_node_at(start, SyntaxKind::SequenceOperatorExpression);
+                self.wrap_at(start, &[SyntaxKind::OwnedExpressionMember]);
+                self.bump();
+                self.sequence_expression_list_member();
+                self.finish_node();
+            }
+        }
+        self.finish_node();
+    }
+
+    // production: SequenceExpressionListMember
+    //
+    // SequenceExpressionListMember : OwningMembership =
+    //     ownedRelatedElement += SequenceExpressionList          (KerML 8.2.5.8.2)
+    fn sequence_expression_list_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SequenceExpressionListMember);
+        self.sequence_expression_list();
+        self.finish_node();
+    }
+
+    /// Whether a `FeatureReferenceExpression` starts here.
+    ///
+    /// `FeatureReference = [QualifiedName]`, and a `QualifiedName` opens with a NAME
+    /// or with the `'$'` of its global-scope prefix (`KerML` 8.2.3.4.1).
+    fn at_feature_reference(&self) -> bool {
+        self.at_name() || self.at(SyntaxKind::Dollar)
+    }
+
+    // production: FeatureReferenceExpression
+    //
+    // FeatureReferenceExpression : FeatureReferenceExpression =
+    //     FeatureReferenceMember
+    //     ownedRelationship += EmptyResultMember                 (KerML 8.2.5.8.3)
+    //
+    // production: FeatureReferenceMember
+    //
+    // FeatureReferenceMember : Membership =
+    //     memberElement = FeatureReference                       (KerML 8.2.5.8.3)
+    //
+    // production: FeatureReference
+    //
+    // FeatureReference : Feature = [QualifiedName]               (KerML 8.2.5.8.3)
+    fn feature_reference_expression(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FeatureReferenceExpression);
+        self.start_node(SyntaxKind::FeatureReferenceMember);
+        self.start_node(SyntaxKind::FeatureReference);
+        self.qualified_name();
+        self.finish_node();
+        self.finish_node();
+        self.empty_result_member();
+        self.finish_node();
+    }
+
+    /// Whether a `LiteralExpression` starts here (`KerML` 8.2.5.8.4).
+    ///
+    /// The five literals, by their opening token: `'true'`/`'false'`, a
+    /// `STRING_VALUE`, a `DECIMAL_VALUE`, the `'.'` or `EXPONENTIAL_VALUE` a
+    /// `RealValue` may open with, and the `'*'` of `LiteralInfinity`.
+    fn at_literal_expression(&self) -> bool {
+        self.at(SyntaxKind::StringValue)
+            || self.at(SyntaxKind::DecimalValue)
+            || self.at(SyntaxKind::ExponentialValue)
+            || self.at(SyntaxKind::Dot)
+            || self.at(SyntaxKind::Star)
+            || self.at_keyword("true")
+            || self.at_keyword("false")
+    }
+
+    // LiteralExpression = LiteralBoolean | LiteralString | LiteralInteger
+    //                   | LiteralReal | LiteralInfinity          (KerML 8.2.5.8.4)
+    //
+    // NOT marked for coverage: it is an alternation with no method that is it, as
+    // FeatureSpecialization is. All five alternatives below are marked.
+    fn literal_expression(&mut self) {
+        if self.at_keyword("true") || self.at_keyword("false") {
+            self.literal_boolean();
+        } else if self.at(SyntaxKind::StringValue) {
+            self.literal_string();
+        } else if self.at(SyntaxKind::Star) {
+            self.literal_infinity();
+        } else if self.at_literal_real() {
+            self.literal_real();
+        } else {
+            self.literal_integer();
+        }
+    }
+
+    /// Whether the literal here is a `RealValue` rather than a `DECIMAL_VALUE`.
+    ///
+    /// `RealValue = DECIMAL_VALUE? '.' ( DECIMAL_VALUE | EXPONENTIAL_VALUE )
+    /// | EXPONENTIAL_VALUE` (`KerML` 8.2.5.8.4). The lexer does not take a `'.'`
+    /// into a number, so `1.5` arrives as three tokens and the `'.'` is what
+    /// separates a real from an integer. `1..5` is not one of them: `'..'` is a
+    /// single token by maximal munch, so the range operator never looks like a
+    /// decimal point.
+    fn at_literal_real(&self) -> bool {
+        if self.at(SyntaxKind::ExponentialValue) || self.at(SyntaxKind::Dot) {
+            return true;
+        }
+        self.at(SyntaxKind::DecimalValue)
+            && self.nth_is(1, SyntaxKind::Dot)
+            && (self.nth_is(2, SyntaxKind::DecimalValue)
+                || self.nth_is(2, SyntaxKind::ExponentialValue))
+    }
+
+    // production: LiteralBoolean
+    //
+    // LiteralBoolean : LiteralBoolean = value = BooleanValue     (KerML 8.2.5.8.4)
+    // BooleanValue = 'true' | 'false'                            (KerML 8.2.5.8.4)
+    fn literal_boolean(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::LiteralBoolean);
+        if self.at_keyword("true") {
+            self.bump_as(SyntaxKind::KwTrue);
+        } else {
+            self.bump_as(SyntaxKind::KwFalse);
+        }
+        self.finish_node();
+    }
+
+    // production: LiteralString
+    //
+    // LiteralString : LiteralString = value = STRING_VALUE       (KerML 8.2.5.8.4)
+    fn literal_string(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::LiteralString);
+        self.expect(SyntaxKind::StringValue, "a string");
+        self.finish_node();
+    }
+
+    // production: LiteralInteger
+    //
+    // LiteralInteger : LiteralInteger = value = DECIMAL_VALUE    (KerML 8.2.5.8.4)
+    fn literal_integer(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::LiteralInteger);
+        self.expect(SyntaxKind::DecimalValue, "an integer");
+        self.finish_node();
+    }
+
+    // production: LiteralReal
+    //
+    // LiteralReal : LiteralReal = value = RealValue              (KerML 8.2.5.8.4)
+    //
+    // RealValue = DECIMAL_VALUE? '.' ( DECIMAL_VALUE | EXPONENTIAL_VALUE )
+    //           | EXPONENTIAL_VALUE                              (KerML 8.2.5.8.4)
+    //
+    // RealValue is a production and not a terminal, so a real is up to three tokens
+    // and the node is what holds them together. The leading DECIMAL_VALUE is
+    // optional, which makes `.5` a real; the trailing part is not, which makes `1.`
+    // a reported error rather than a real.
+    fn literal_real(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::LiteralReal);
+        if self.at(SyntaxKind::ExponentialValue) {
+            self.bump();
+            self.finish_node();
+            return;
+        }
+        if self.at(SyntaxKind::DecimalValue) {
+            self.bump();
+        }
+        self.expect(SyntaxKind::Dot, "`.`");
+        if self.at(SyntaxKind::DecimalValue) || self.at(SyntaxKind::ExponentialValue) {
+            self.bump();
+        } else {
+            self.error_expected("a digit after `.`");
+        }
+        self.finish_node();
+    }
+
+    // production: LiteralInfinity
+    //
+    // LiteralInfinity : LiteralInfinity = '*'                    (KerML 8.2.5.8.4)
+    //
+    // The same `'*'` that is multiplication at tier 4. Position separates them and
+    // no lookahead is needed: an operand position reaches here, and an operator
+    // position reaches `infix_operator_here`, so `[0..*]` and `a * b` both read the
+    // one token correctly.
+    fn literal_infinity(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::LiteralInfinity);
+        self.expect(SyntaxKind::Star, "`*`");
+        self.finish_node();
+    }
+
+    // production: ArgumentMember
+    //
+    // ArgumentMember : ParameterMembership =
+    //     ownedMemberParameter = Argument                        (KerML 8.2.5.8.1)
+    //
+    // production: Argument
+    //
+    // Argument : Feature = ownedRelationship += ArgumentValue    (KerML 8.2.5.8.1)
+    //
+    // production: ArgumentValue
+    //
+    // ArgumentValue : FeatureValue = value = OwnedExpression     (KerML 8.2.5.8.1)
+    fn argument_member(&mut self, tier: u8) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ArgumentMember);
+        self.start_node(SyntaxKind::Argument);
+        self.start_node(SyntaxKind::ArgumentValue);
+        self.expression(tier);
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
+    }
+
+    // production: ArgumentExpressionMember
+    //
+    // ArgumentExpressionMember : ParameterMembership =
+    //     ownedRelatedElement += ArgumentExpression              (KerML 8.2.5.8.1)
+    //
+    // production: ArgumentExpression
+    //
+    // ArgumentExpression : Feature =
+    //     ownedRelationship += ArgumentExpressionValue           (KerML 8.2.5.8.1)
+    //
+    // production: ArgumentExpressionValue
+    //
+    // ArgumentExpressionValue : FeatureValue =
+    //     value = OwnedExpressionReference                       (KerML 8.2.5.8.1)
+    //
+    // production: OwnedExpressionReference
+    //
+    // OwnedExpressionReference : FeatureReferenceExpression =
+    //     ownedRelationship += OwnedExpressionMember             (KerML 8.2.5.8.1)
+    //
+    // production: OwnedExpressionMember
+    //
+    // OwnedExpressionMember : FeatureMembership =
+    //     ownedFeatureMember = OwnedExpression                   (KerML 8.2.5.8.1)
+    //
+    // The operand of a ConditionalBinaryOperator and of a conditional's branches.
+    // Five memberships rather than the three an ArgumentMember has, and the extra two
+    // are the point: the expression is REFERENCED here, not evaluated as an argument,
+    // which is how the abstract syntax records that `??`, `or`, `and` and `implies`
+    // short-circuit and `|`, `&` and `xor` do not.
+    fn argument_expression_member(&mut self, tier: u8) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ArgumentExpressionMember);
+        self.start_node(SyntaxKind::ArgumentExpression);
+        self.start_node(SyntaxKind::ArgumentExpressionValue);
+        self.start_node(SyntaxKind::OwnedExpressionReference);
+        self.start_node(SyntaxKind::OwnedExpressionMember);
+        self.expression(tier);
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
+    }
+
+    // production: TypeReference
+    //
+    // TypeReference : Feature =
+    //     ownedRelationship += ReferenceTyping                   (KerML 8.2.5.8.1)
+    //
+    // production: ReferenceTyping
+    //
+    // ReferenceTyping : FeatureTyping = type = [QualifiedName]   (KerML 8.2.5.8.1)
+    //
+    // production: TypeReferenceMember
+    //
+    // TypeReferenceMember : FeatureMembership =
+    //     ownedMemberFeature = TypeReference                     (KerML 8.2.5.8.1)
+    //
+    // production: TypeResultMember
+    //
+    // TypeResultMember : ReturnParameterMembership =
+    //     ownedMemberFeature = TypeReference                     (KerML 8.2.5.8.1)
+    //
+    // The two memberships differ in the abstract syntax and not in the text: a test
+    // names its type through a FeatureMembership and a cast through a
+    // ReturnParameterMembership, because a cast's type IS its result. `member` is
+    // which one the operator named.
+    fn type_reference_member(&mut self, member: SyntaxKind) {
+        self.eat_trivia();
+        self.start_node(member);
+        self.start_node(SyntaxKind::TypeReference);
+        self.start_node(SyntaxKind::ReferenceTyping);
+        self.qualified_name();
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
+    }
+
+    // production: EmptyResultMember
+    //
+    // EmptyResultMember : ReturnParameterMembership =
+    //     ownedRelatedElement += EmptyFeature                    (KerML 8.2.5.8.1)
+    //
+    // production: EmptyFeature
+    //
+    // EmptyFeature : Feature = { }                               (KerML 8.2.5.8.1)
+    //
+    // No tokens, as EmptyMultiplicity has none (SysML 8.2.2.9.1): every
+    // OperatorExpression owns a result parameter that is written nowhere in the text.
+    // Deliberately without `eat_trivia`, because a node that consumes nothing must
+    // not pull the trivia after the operand inside itself.
+    fn empty_result_member(&mut self) {
+        self.start_node(SyntaxKind::EmptyResultMember);
+        self.start_node(SyntaxKind::EmptyFeature);
+        self.finish_node();
+        self.finish_node();
+    }
+
+    // -- reading the precedence table --------------------------------------------
+
+    /// The infix operator written here, or `None` if the next token is not one.
+    ///
+    /// Symbols are checked before words, as `at_feature_specialization` does: the
+    /// lexer gives each symbol its own kind while every word arrives as a
+    /// `BasicName`, so a symbol is one comparison and a word is a text match.
+    fn infix_operator_here(&self) -> Option<&'static InfixOperator> {
+        INFIX.iter().find(|op| match op.spelling {
+            Spelling::Symbol(kind) => self.at(kind),
+            Spelling::Word(word) => self.at_keyword(word),
+        })
+    }
+
+    /// Whether a `UnaryOperator` is written here (`KerML` 8.2.5.8.1).
+    fn at_unary_operator(&self) -> bool {
+        UNARY_OPERATORS.iter().any(|spelling| match spelling {
+            Spelling::Symbol(kind) => self.at(*kind),
+            Spelling::Word(word) => self.at_keyword(word),
+        })
+    }
+
+    /// Whether a `ClassificationExpression` opens here with no left operand.
+    ///
+    /// Its `ArgumentMember` is the one optional operand in the clause, so a
+    /// classification or cast operator may be the first token of an expression.
+    fn at_leading_classification(&self) -> bool {
+        self.at(SyntaxKind::At)
+            || ["istype", "hastype", "as"]
+                .iter()
+                .any(|word| self.at_keyword(word))
+    }
+
+    /// Whether a `MetaclassificationExpression` starts here.
+    ///
+    /// Decided by looking past the `QualifiedName` that is its left operand: `x meta
+    /// T` is one and `x` alone is a `FeatureReferenceExpression`, and the two differ
+    /// only after the name. `at_metaclassification` is asked before the name is
+    /// parsed, because a `MetadataArgumentMember` cannot be wrapped around a
+    /// `FeatureReferenceExpression` that is already in the tree.
+    fn at_metaclassification(&self) -> bool {
+        if !self.at_feature_reference() {
+            return false;
+        }
+        let n = self.after_qualified_name(0);
+        self.nth_is(n, SyntaxKind::AtAt) || self.nth_is_keyword(n, "meta")
+    }
+
+    /// The index just past the `QualifiedName` written from the `n`th token.
+    ///
+    /// `QualifiedName = ( '$' '::' )? ( NAME '::' )* NAME` (`KerML` 8.2.3.4.1). A
+    /// `'::'` is only part of the name when a NAME follows it, which is the rule
+    /// `qualified_name` itself applies.
+    fn after_qualified_name(&self, n: usize) -> usize {
+        let mut n = n;
+        if self.nth_is(n, SyntaxKind::Dollar) && self.nth_is(n + 1, SyntaxKind::ColonColon) {
+            n += 2;
+        }
+        if !self.peek_nth(n).is_some_and(|token| self.is_name(token)) {
+            return n;
+        }
+        n += 1;
+        while self.nth_is(n, SyntaxKind::ColonColon)
+            && self
+                .peek_nth(n + 1)
+                .is_some_and(|token| self.is_name(token))
+        {
+            n += 2;
+        }
+        n
+    }
+
+    /// Consume the operator token of a `ClassificationExpression`.
+    fn bump_classification_operator(&mut self) {
+        if self.at(SyntaxKind::At) {
+            self.bump();
+        } else if let Some(word) = ["istype", "hastype", "as"]
+            .into_iter()
+            .find(|word| self.at_keyword(word))
+        {
+            self.bump_as(keyword(word).unwrap_or(SyntaxKind::BasicName));
+        } else {
+            self.error_expected("`istype`, `hastype`, `@` or `as`");
+        }
+    }
+
+    /// Consume the operator token of a `UnaryOperatorExpression`.
+    fn bump_unary_operator(&mut self) {
+        match UNARY_OPERATORS.iter().find(|spelling| match spelling {
+            Spelling::Symbol(kind) => self.at(*kind),
+            Spelling::Word(word) => self.at_keyword(word),
+        }) {
+            Some(spelling) => self.bump_spelling(*spelling),
+            None => self.error_expected("`+`, `-`, `~` or `not`"),
+        }
+    }
+
+    /// Consume the token an operator is spelled with, tagged as the token set names it.
+    fn bump_spelling(&mut self, spelling: Spelling) {
+        match spelling {
+            Spelling::Symbol(_) => self.bump(),
+            Spelling::Word(word) => self.bump_as(keyword(word).unwrap_or(SyntaxKind::BasicName)),
+        }
+    }
+
+    // -- retroactive nodes -------------------------------------------------------
+
+    /// Open `kind` retroactively at `start`, over what is already in the tree.
+    fn start_node_at(&mut self, start: rowan::Checkpoint, kind: SyntaxKind) {
+        self.builder
+            .start_node_at(start, Sv2Language::kind_to_raw(kind));
+    }
+
+    /// Wrap what is already in the tree at `start` in `kinds`, outermost first.
+    ///
+    /// rowan's parent stack finishes in reverse, so the first kind opened is the
+    /// outermost one and `&[ArgumentMember, Argument, ArgumentValue]` nests in the
+    /// order the clause writes them.
+    fn wrap_at(&mut self, start: rowan::Checkpoint, kinds: &[SyntaxKind]) {
+        for kind in kinds {
+            self.start_node_at(start, *kind);
+        }
+        for _ in kinds {
+            self.finish_node();
+        }
+    }
+
+    /// Whether the `n`th meaningful token from here is of `kind`.
+    fn nth_is(&self, n: usize, kind: SyntaxKind) -> bool {
+        self.peek_nth(n).is_some_and(|token| token.kind == kind)
     }
 
     // production: UsageBody
@@ -1301,7 +2829,9 @@ impl<'a> Parser<'a> {
             self.bump();
         } else if self.at(SyntaxKind::LBrace) {
             self.bump();
+            self.depth += 1;
             self.body_elements(Some(SyntaxKind::RBrace), SyntaxKind::DefinitionMember);
+            self.depth -= 1;
             self.expect(SyntaxKind::RBrace, "`}`");
         } else {
             self.errors
@@ -1650,7 +3180,9 @@ impl<'a> Parser<'a> {
             self.bump();
         } else if self.at(SyntaxKind::LBrace) {
             self.bump();
+            self.depth += 1;
             self.body_elements(Some(SyntaxKind::RBrace), SyntaxKind::PackageMember);
+            self.depth -= 1;
             self.expect(SyntaxKind::RBrace, "`}`");
         } else {
             self.errors

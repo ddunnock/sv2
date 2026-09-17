@@ -138,3 +138,48 @@ fn round_trips_the_corpus() {
         "corpus is present but no model files were read"
     );
 }
+
+#[test]
+fn deeply_nested_input_is_reported_and_not_a_stack_overflow() {
+    // INVARIANT 3: the parser does not die on any input. A recursive-descent parser
+    // dies on deeply nested input by overflowing the stack, and a stack overflow
+    // ABORTS the process — it is not a panic, so `catch_unwind` would not save it
+    // and no test that only checks for panics would catch it either.
+    //
+    // Measured before the depth guard existed: parenthesised expressions overflowed
+    // between 5000 and 10000 levels, unary operators between 2000 and 5000, and
+    // nested bodies between 5000 and 10000. Each construct below is an order of
+    // magnitude past its own former limit.
+    //
+    // Losslessness is asserted with them, because the guard recovers rather than
+    // truncating: the tokens past the limit still enter the tree as error nodes.
+    for (what, source) in [
+        (
+            "parenthesised expressions",
+            format!(
+                "attribute x = {}1{};",
+                "(".repeat(50_000),
+                ")".repeat(50_000)
+            ),
+        ),
+        (
+            "unary operators",
+            format!("attribute x = {}1;", "-".repeat(50_000)),
+        ),
+        (
+            "nested bodies",
+            format!(
+                "{}package P;{}",
+                "package P { ".repeat(50_000),
+                "}".repeat(50_000)
+            ),
+        ),
+    ] {
+        let parsed = parse(&source);
+        assert_eq!(parsed.text(), source, "{what} lost bytes");
+        assert!(
+            !parsed.errors().is_empty(),
+            "{what} past the depth limit must be reported"
+        );
+    }
+}

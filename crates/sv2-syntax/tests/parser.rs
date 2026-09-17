@@ -1078,21 +1078,11 @@ fn a_part_usage_holds_members_in_its_body() {
     assert_eq!(rendered.matches("PartUsage").count(), 2, "{rendered}");
 }
 
-#[test]
-fn a_multiplicity_on_a_usage_is_reported_not_accepted() {
-    // `part frontSeat[2];` is valid SysML and appears in the corpus, but
-    // MultiplicityPart (KerML 8.2.4.3.1) needs an expression parser and is not
-    // implemented: a rejection by absence. Replace this when MultiplicityPart lands.
-    parse_rejected("part frontSeat[2];");
-}
-
-#[test]
-fn a_value_on_a_usage_is_reported_not_accepted() {
-    // ValuePart = FeatureValue = ( '=' | ':=' | 'default' ... ) OwnedExpression
-    // (SysML 8.2.2.6.2). FeatureValue needs an expression parser and is not
-    // implemented: a rejection by absence. Replace this when ValuePart lands.
-    parse_rejected("part engine : Engine = x;");
-}
+// The two rejections that stood here — `part frontSeat[2];` for MultiplicityPart and
+// `part engine : Engine = x;` for ValuePart — were rejections BY ABSENCE, each asking
+// to be replaced when its production landed. Both have. The same two inputs are now
+// asserted positively, by `a_multiplicity_bounds_a_usage_as_the_corpus_writes_it` and
+// `a_usage_may_carry_a_value` in the expression section below.
 
 #[test]
 fn an_end_usage_prefix_is_reported_not_accepted() {
@@ -1376,4 +1366,912 @@ fn usages_nest_in_one_another() {
     for node in ["PartUsage", "PortUsage", "ItemUsage", "AttributeUsage"] {
         assert!(rendered.contains(node), "no {node} node:\n{rendered}");
     }
+}
+
+// -- the expression layer, KerML 8.2.5.8 -------------------------------------------
+//
+// PRECEDENCE IS NOT IN THE GRAMMAR. KerML 8.2.5.8.1 note 2 states that the grouping
+// of nested OperatorExpressions is not expressed in the productions and is given by
+// that clause's table 6, so these cases are the parser's only check that it reads the
+// table rather than the rule order. Each names the tiers it separates.
+
+/// The `ArgumentValue` bodies directly under the first `kind` node, in source order.
+///
+/// An operand of an operator expression is always an `ArgumentValue` (or, for a
+/// short-circuiting operator, an `ArgumentExpressionValue`), so this is what says
+/// which operand a subexpression landed in — which is the whole of a precedence
+/// claim. Depth is measured from the node, so only its own operands are returned and
+/// not a nested expression's.
+fn operands(rendered: &str, kind: &str) -> Vec<String> {
+    let subtree = subtree(rendered, kind);
+    let mut out = Vec::new();
+    let mut lines = subtree.lines().peekable();
+    while let Some(line) = lines.next() {
+        // An operand is an `ArgumentValue`, or an `ArgumentExpressionValue` where the
+        // operator short-circuits. Every other line is a membership on the way to one.
+        if !matches!(line.trim(), "ArgumentValue" | "ArgumentExpressionValue") {
+            continue;
+        }
+        let depth = line.len() - line.trim_start().len();
+        // Take the whole operand and name it by its first line. CONSUMING its
+        // descendants is what keeps a nested operand — the `b * c` of `a + b * c` —
+        // from being counted as one of this operator's own.
+        let mut body: Option<String> = None;
+        while lines
+            .peek()
+            .is_some_and(|next| next.len() - next.trim_start().len() > depth)
+        {
+            let next = lines.next().unwrap_or_default();
+            body.get_or_insert_with(|| next.trim().to_owned());
+        }
+        out.push(body.unwrap_or_default());
+    }
+    out
+}
+
+/// One tier as `docs/operator-precedence.toml` records it.
+struct RecordedTier {
+    n: u8,
+    arity: String,
+    assoc: String,
+    operators: Vec<String>,
+}
+
+/// The `[[tier]]` blocks of `docs/operator-precedence.toml`.
+///
+/// The file is read at compile time rather than parsed with a TOML crate: the shape
+/// wanted here is four keys, and hand-reading them needs no dependency.
+fn recorded_tiers() -> Vec<RecordedTier> {
+    let toml = include_str!("../../../docs/operator-precedence.toml");
+    let mut tiers = Vec::new();
+    for block in toml.split("[[tier]]").skip(1) {
+        let mut tier = RecordedTier {
+            n: 0,
+            arity: String::new(),
+            assoc: String::new(),
+            operators: Vec::new(),
+        };
+        for line in block.lines() {
+            let line = line.trim();
+            if let Some(rest) = line.strip_prefix("n = ") {
+                tier.n = rest.trim().parse().unwrap_or(0);
+            } else if let Some(rest) = line.strip_prefix("arity = ") {
+                rest.trim().trim_matches('"').clone_into(&mut tier.arity);
+            } else if let Some(rest) = line.strip_prefix("assoc = ") {
+                rest.trim().trim_matches('"').clone_into(&mut tier.assoc);
+            } else if let Some(rest) = line.strip_prefix("operators = ") {
+                tier.operators = rest
+                    .trim()
+                    .trim_start_matches('[')
+                    .trim_end_matches(']')
+                    .split(',')
+                    .map(|o| o.trim().trim_matches('"').to_owned())
+                    .filter(|o| !o.is_empty())
+                    .collect();
+            }
+        }
+        assert!(tier.n > 0, "a [[tier]] block with no `n`:\n{block}");
+        tiers.push(tier);
+    }
+    tiers
+}
+
+/// The binary tiers of the recorded table, flattened to `(tier, operator, assoc)`.
+fn recorded_infix() -> Vec<(u8, String, String)> {
+    recorded_tiers()
+        .iter()
+        .filter(|tier| tier.arity == "binary")
+        .flat_map(|tier| {
+            tier.operators
+                .iter()
+                .map(|o| (tier.n, o.clone(), tier.assoc.clone()))
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}
+
+/// The two tier-8 operators the parser decides BEFORE the name rather than folding
+/// around an expression.
+///
+/// `@@` and `meta` are tier 8 in the recorded table, with the four classification
+/// operators, and they are deliberately not in the parser's infix table: their left
+/// operand is a `MetadataArgumentMember`, which reaches a `QualifiedName` and not an
+/// `OwnedExpression` (`KerML` 8.2.5.8.1), so they cannot be folded around an
+/// expression the way an infix operator is.
+///
+/// Named here rather than filtered silently, so that an operator going missing for
+/// any OTHER reason still fails.
+const DECIDED_BEFORE_THE_NAME: [&str; 2] = ["@@", "meta"];
+
+#[test]
+fn a_multiplicative_operator_binds_tighter_than_an_additive_one() {
+    // Table 6: `*` `/` `%` are tier 4 and `+` `-` are tier 5, and a lower tier groups
+    // more tightly. So `a + b * c` is `a + (b * c)`: the outermost operator is the
+    // `+`, and the `*` is inside its RIGHT operand.
+    let rendered = render(&parse_accepted("attribute x = a + b * c;").syntax());
+    assert_eq!(
+        operands(&rendered, "BinaryOperatorExpression"),
+        vec![
+            "FeatureReferenceExpression".to_owned(),
+            "BinaryOperatorExpression".to_owned()
+        ],
+        "`a + b * c` did not group as `a + (b * c)`:\n{rendered}"
+    );
+    // And the other way round, `a * b + c` is `(a * b) + c` — the nesting moves to
+    // the left operand without the operators changing tier.
+    let rendered = render(&parse_accepted("attribute x = a * b + c;").syntax());
+    assert_eq!(
+        operands(&rendered, "BinaryOperatorExpression"),
+        vec![
+            "BinaryOperatorExpression".to_owned(),
+            "FeatureReferenceExpression".to_owned()
+        ],
+        "`a * b + c` did not group as `(a * b) + c`:\n{rendered}"
+    );
+}
+
+#[test]
+fn every_binary_operator_but_exponentiation_groups_to_the_left() {
+    // Note 2: "all BinaryOperators other than exponentiation are left-associative".
+    // `a - b - c` is `(a - b) - c`, so the nested expression is in the LEFT operand.
+    // Subtraction is the case that shows it: `(a - b) - c` and `a - (b - c)` differ
+    // in value, so a parser that gets this wrong is wrong and not merely differently
+    // shaped.
+    for source in [
+        "attribute x = a - b - c;",
+        "attribute x = a / b / c;",
+        "attribute x = a + b + c;",
+        "attribute x = a == b == c;",
+        "attribute x = a & b & c;",
+        "attribute x = a | b | c;",
+        "attribute x = a xor b xor c;",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            operands(&rendered, "BinaryOperatorExpression")
+                .first()
+                .map(String::as_str),
+            Some("BinaryOperatorExpression"),
+            "{source} did not group to the left:\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn exponentiation_groups_to_the_right() {
+    // Note 2: "the exponentiation operators (^ and **) are right-associative". This
+    // is the one tier in table 6 that does, so `a ** b ** c` is `a ** (b ** c)` and
+    // the nested expression is in the RIGHT operand — the mirror of the case above.
+    for source in ["attribute x = a ** b ** c;", "attribute x = a ^ b ^ c;"] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            operands(&rendered, "BinaryOperatorExpression"),
+            vec![
+                "FeatureReferenceExpression".to_owned(),
+                "BinaryOperatorExpression".to_owned()
+            ],
+            "{source} did not group to the right:\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn the_range_operator_chains_because_the_specification_says_it_groups_left() {
+    // Tier 6 is `..`, and note 2 exempts only exponentiation from left-associativity,
+    // so `a..b..c` is `(a..b)..c` and the operator repeats like any other.
+    //
+    // THE PILOT REJECTS THIS. Its RangeExpression rule takes `( ... )?` and so at most
+    // one `..` (KerMLExpressions.xtext). That is a property of its parser generator,
+    // not of the language, and deviations.json records the decision under
+    // RangeExpression as xtext_only/follow_spec — this parser is deliberately the more
+    // permissive of the two. The claim is here rather than only in a comment, because
+    // a deviation nobody tests is a deviation nobody can tell has been reverted.
+    let rendered = render(&parse_accepted("attribute x = a..b..c;").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "BinaryOperatorExpression"),
+        2,
+        "`a..b..c` did not chain:\n{rendered}"
+    );
+    assert_eq!(
+        operands(&rendered, "BinaryOperatorExpression")
+            .first()
+            .map(String::as_str),
+        Some("BinaryOperatorExpression"),
+        "`a..b..c` did not group as `(a..b)..c`:\n{rendered}"
+    );
+}
+
+#[test]
+fn a_unary_operator_binds_tighter_than_exponentiation() {
+    // Table 6 puts the unary operators at tier 2 and exponentiation at tier 3, so
+    // `-2 ** 2` is `(-2) ** 2` — the UnaryOperatorExpression is the LEFT operand of
+    // the `**`, not the whole expression wrapping it.
+    //
+    // This is the opposite of the C and Python convention, where unary minus binds
+    // LOOSER than exponentiation and `-2 ** 2` is `-(2 ** 2)`. The two readings
+    // differ in sign, so the reflex is the failure mode: the citation, not the habit,
+    // is what decides.
+    let rendered = render(&parse_accepted("attribute x = -2 ** 2;").syntax());
+    assert_eq!(
+        operands(&rendered, "BinaryOperatorExpression"),
+        vec![
+            "UnaryOperatorExpression".to_owned(),
+            "LiteralInteger".to_owned()
+        ],
+        "`-2 ** 2` did not group as `(-2) ** 2`:\n{rendered}"
+    );
+    // `- -a` nests, because ArgumentMember reaches OwnedExpression (KerML 8.2.5.8.1).
+    // The Pilot's UnaryExpression rule does not recurse and rejects this; that is a
+    // property of its parser generator, not of the language.
+    let rendered = render(&parse_accepted("attribute x = - -a;").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "UnaryOperatorExpression"),
+        2,
+        "`- -a` did not nest:\n{rendered}"
+    );
+}
+
+#[test]
+fn the_boolean_tiers_nest_in_the_order_the_table_gives() {
+    // Table 6, tightest first: `&`/`and` is tier 10, `xor` 11, `|`/`or` 12,
+    // `implies` 13, `??` 14. So in `a & b xor c | d implies e` the outermost
+    // operator is `implies` and each tier below it sits in the left operand of the
+    // one above. Five tiers in one expression, which is what makes this the case
+    // that a rule-ordering mistake cannot survive.
+    let rendered = render(&parse_accepted("attribute x = a & b xor c | d implies e;").syntax());
+    // `implies` is a ConditionalBinaryOperator, so the outermost node is the
+    // conditional kind and there is exactly one of it.
+    assert_eq!(
+        nodes_named(&rendered, "ConditionalBinaryOperatorExpression"),
+        1,
+        "`implies` is not the one outermost operator:\n{rendered}"
+    );
+    // The three BinaryOperators below it — `&`, `xor` and `|` — each build their own.
+    assert_eq!(
+        nodes_named(&rendered, "BinaryOperatorExpression"),
+        3,
+        "the three binary tiers did not each build a node:\n{rendered}"
+    );
+    // And the nesting runs through the LEFT operand at every tier, all four being
+    // left-associative.
+    assert_eq!(
+        operands(&rendered, "ConditionalBinaryOperatorExpression")
+            .first()
+            .map(String::as_str),
+        Some("BinaryOperatorExpression"),
+        "the tighter tiers are not in `implies`'s left operand:\n{rendered}"
+    );
+}
+
+#[test]
+fn a_short_circuiting_operator_references_its_right_operand() {
+    // ConditionalBinaryOperator = '??' | 'or' | 'and' | 'implies', and
+    // ConditionalBinaryOperatorExpression's right operand is an
+    // ArgumentExpressionMember where BinaryOperatorExpression's is an ArgumentMember
+    // (KerML 8.2.5.8.1). That is not cosmetic: the expression is REFERENCED rather
+    // than evaluated, which is how the abstract syntax records the short circuit.
+    //
+    // `&` and `and` are the same tier 10 and mean the same thing, and differ only in
+    // this, so the pair is the case that proves the parser reads the distinction
+    // rather than the tier.
+    let rendered = render(&parse_accepted("attribute x = a and b;").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "ConditionalBinaryOperatorExpression"),
+        1,
+        "`and` built no ConditionalBinaryOperatorExpression:\n{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "ArgumentExpressionMember"),
+        1,
+        "`and`'s right operand is not referenced:\n{rendered}"
+    );
+    // The five memberships the clause names over a referenced operand.
+    for node in [
+        "ArgumentExpression",
+        "ArgumentExpressionValue",
+        "OwnedExpressionReference",
+        "OwnedExpressionMember",
+    ] {
+        assert!(rendered.contains(node), "no {node} node:\n{rendered}");
+    }
+
+    let rendered = render(&parse_accepted("attribute x = a & b;").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "BinaryOperatorExpression"),
+        1,
+        "`&` built no BinaryOperatorExpression:\n{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "ArgumentExpressionMember"),
+        0,
+        "`&` does not short-circuit and must not reference its operand:\n{rendered}"
+    );
+}
+
+#[test]
+fn a_classification_expression_takes_a_type_and_not_an_expression() {
+    // ClassificationExpression = ArgumentMember? ( ClassificationTestOperator
+    // TypeReferenceMember | CastOperator TypeResultMember ) EmptyResultMember
+    // (KerML 8.2.5.8.1). The right operand is a TypeReference over a QualifiedName,
+    // so `x istype T` has an expression on the left and a type on the right.
+    for (source, member) in [
+        ("attribute x = y istype T;", "TypeReferenceMember"),
+        ("attribute x = y hastype T;", "TypeReferenceMember"),
+        ("attribute x = y @ T;", "TypeReferenceMember"),
+        // A cast names its type through a TypeResultMember, because a cast's type IS
+        // its result — a distinction in the abstract syntax and not in the text.
+        ("attribute x = y as T;", "TypeResultMember"),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            nodes_named(&rendered, "ClassificationExpression"),
+            1,
+            "{source} built no ClassificationExpression:\n{rendered}"
+        );
+        assert!(
+            rendered.contains(member),
+            "{source} did not own a {member}:\n{rendered}"
+        );
+        for node in ["TypeReference", "ReferenceTyping"] {
+            assert!(
+                rendered.contains(node),
+                "no {node} in {source}:\n{rendered}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_classification_expression_may_have_no_left_operand() {
+    // Its ArgumentMember is the one optional operand in the clause, which is what
+    // makes a bare classification operator an expression. `filter @Safety;` is the
+    // corpus idiom, and it is why ElementFilterMember needed this layer and nothing
+    // more.
+    let rendered = render(&parse_accepted("package P { filter @Safety; }").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "ElementFilterMember"),
+        1,
+        "no ElementFilterMember:\n{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "ClassificationExpression"),
+        1,
+        "`@Safety` built no ClassificationExpression:\n{rendered}"
+    );
+    // No left operand means no ArgumentMember at all.
+    assert_eq!(
+        nodes_named(&rendered, "ArgumentMember"),
+        0,
+        "a bare `@` must own no ArgumentMember:\n{rendered}"
+    );
+}
+
+#[test]
+fn an_extent_expression_owns_no_result_parameter() {
+    // ExtentExpression = 'all' TypeReferenceMember (KerML 8.2.5.8.1) — tier 1, the
+    // tightest, and the one OperatorExpression in the clause that owns no
+    // EmptyResultMember. Its result comes from the type, so none is written.
+    let rendered = render(&parse_accepted("attribute x = all T;").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "ExtentExpression"),
+        1,
+        "no ExtentExpression:\n{rendered}"
+    );
+    let extent = subtree(&rendered, "ExtentExpression");
+    assert!(
+        !extent.contains("EmptyResultMember"),
+        "ExtentExpression owns a result parameter the clause does not give it:\n{extent}"
+    );
+}
+
+#[test]
+fn a_metaclassification_takes_a_reference_and_not_an_expression() {
+    // MetaclassificationExpression's left operand is a MetadataArgumentMember, and
+    // that reaches a QualifiedName — MetadataArgument -> MetadataValue ->
+    // MetadataReference -> ElementReferenceMember = [QualifiedName] (KerML
+    // 8.2.5.8.1, 8.2.5.8.3) — and NOT an OwnedExpression. So the left of `meta` is a
+    // reference, where the left of `istype` at the same tier 8 is an expression.
+    //
+    // From the pinned corpus: "Simple Tests/Classifications.kerml" line 7 writes
+    // `b = x meta KerML::Feature;`, and SimpleVehicleModel.sysml line 460 the same
+    // shape.
+    let rendered = render(&parse_accepted("attribute b = x meta KerML::Feature;").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "MetaclassificationExpression"),
+        1,
+        "no MetaclassificationExpression:\n{rendered}"
+    );
+    for node in [
+        "MetadataArgumentMember",
+        "MetadataArgument",
+        "MetadataValue",
+        "MetadataReference",
+        "ElementReferenceMember",
+    ] {
+        assert!(rendered.contains(node), "no {node} node:\n{rendered}");
+    }
+    // The left operand is a reference, so no ArgumentMember and no
+    // FeatureReferenceExpression wraps it.
+    assert_eq!(
+        nodes_named(&rendered, "ArgumentMember"),
+        0,
+        "`meta`'s left operand must not be an argument:\n{rendered}"
+    );
+    // `meta` casts, so its type is a TypeResultMember; `@@` tests, so its type is a
+    // TypeReferenceMember.
+    assert!(rendered.contains("TypeResultMember"), "{rendered}");
+    let rendered = render(&parse_accepted("attribute b = x @@ KerML::Feature;").syntax());
+    assert!(rendered.contains("TypeReferenceMember"), "{rendered}");
+}
+
+#[test]
+fn a_conditional_expression_references_both_of_its_branches() {
+    // ConditionalExpression = 'if' ArgumentMember '?' ArgumentExpressionMember
+    // 'else' ArgumentExpressionMember EmptyResultMember (KerML 8.2.5.8.1). Tier 15,
+    // the loosest. The condition is an argument and both branches are references,
+    // which is the short circuit again: only one branch is evaluated.
+    let rendered = render(&parse_accepted("attribute x = if a? b else c;").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "ConditionalExpression"),
+        1,
+        "no ConditionalExpression:\n{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "ArgumentMember"),
+        1,
+        "the condition is the one eager operand:\n{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "ArgumentExpressionMember"),
+        2,
+        "both branches must be referenced:\n{rendered}"
+    );
+}
+
+#[test]
+fn a_conditional_expression_nests_in_its_else_branch() {
+    // The `else` branch is read at tier 15 and the condition one tier tighter, so
+    // `if a? b else if c? d else e` nests to the right with no parentheses while a
+    // bare `if` in the condition does not parse. That asymmetry is the clause's:
+    // ArgumentExpressionMember for the branches, ArgumentMember for the condition.
+    let rendered = render(&parse_accepted("attribute x = if a? b else if c? d else e;").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "ConditionalExpression"),
+        2,
+        "the trailing `if` did not nest in the `else`:\n{rendered}"
+    );
+}
+
+#[test]
+fn the_five_literals_each_build_their_own_node() {
+    // LiteralExpression = LiteralBoolean | LiteralString | LiteralInteger
+    // | LiteralReal | LiteralInfinity (KerML 8.2.5.8.4).
+    for (source, node) in [
+        ("attribute x = true;", "LiteralBoolean"),
+        ("attribute x = false;", "LiteralBoolean"),
+        ("attribute x = \"a string\";", "LiteralString"),
+        ("attribute x = 42;", "LiteralInteger"),
+        ("attribute x = 1.5;", "LiteralReal"),
+        ("attribute x = *;", "LiteralInfinity"),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert!(
+            rendered.contains(node),
+            "{source} built no {node}:\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn a_real_is_told_from_an_integer_by_its_decimal_point() {
+    // RealValue = DECIMAL_VALUE? '.' ( DECIMAL_VALUE | EXPONENTIAL_VALUE )
+    // | EXPONENTIAL_VALUE (KerML 8.2.5.8.4). RealValue is a production, not a
+    // terminal, and the lexer does not take a '.' into a number — so `1.5` arrives
+    // as three tokens and the node is what holds them together.
+    for source in [
+        "attribute x = 1.5;",   // DECIMAL_VALUE '.' DECIMAL_VALUE
+        "attribute x = .5;",    // the leading part is optional
+        "attribute x = 1e5;",   // EXPONENTIAL_VALUE alone
+        "attribute x = 1.5e3;", // DECIMAL_VALUE '.' EXPONENTIAL_VALUE
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert!(
+            rendered.contains("LiteralReal"),
+            "{source} is a real:\n{rendered}"
+        );
+        assert_eq!(
+            nodes_named(&rendered, "LiteralInteger"),
+            0,
+            "{source} is not an integer:\n{rendered}"
+        );
+    }
+    // And the range operator is never a decimal point: '..' is one token by maximal
+    // munch, so `1..5` is two integers around a tier-6 operator and not two reals.
+    let rendered = render(&parse_accepted("attribute x = 1..5;").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "LiteralInteger"),
+        2,
+        "`1..5` is two integers:\n{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "LiteralReal"),
+        0,
+        "`1..5` holds no real:\n{rendered}"
+    );
+}
+
+#[test]
+fn infinity_and_multiplication_are_the_same_token_in_two_positions() {
+    // LiteralInfinity = '*' (KerML 8.2.5.8.4) and `*` is also the tier-4
+    // multiplication operator. Position separates them with no lookahead: an operand
+    // position reads the literal and an operator position reads the operator.
+    let rendered = render(&parse_accepted("part p[0..*];").syntax());
+    assert!(
+        rendered.contains("LiteralInfinity"),
+        "the `*` of an unbounded multiplicity is the literal:\n{rendered}"
+    );
+    let rendered = render(&parse_accepted("attribute x = a * b;").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "LiteralInfinity"),
+        0,
+        "the `*` between two operands is the operator:\n{rendered}"
+    );
+}
+
+#[test]
+fn a_parenthesised_expression_is_a_sequence_expression() {
+    // SequenceExpression = '(' SequenceExpressionList ')' and
+    // SequenceExpressionList = OwnedExpression ','? | SequenceOperatorExpression
+    // (KerML 8.2.5.8.2). One expression in parentheses is the first alternative.
+    let rendered = render(&parse_accepted("attribute x = (a);").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "SequenceExpression"),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "SequenceOperatorExpression"),
+        0,
+        "one expression is not a sequence operator expression:\n{rendered}"
+    );
+    // A comma makes it the second alternative, which is the recursive one.
+    let rendered = render(&parse_accepted("attribute x = (a, b, c);").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "SequenceOperatorExpression"),
+        2,
+        "`(a, b, c)` is two comma operators:\n{rendered}"
+    );
+    // And a TRAILING comma is the first alternative's `','?`, not an operator with a
+    // missing operand — the two are told apart by what follows the comma.
+    let rendered = render(&parse_accepted("attribute x = (a,);").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "SequenceOperatorExpression"),
+        0,
+        "a trailing comma is not a sequence operator:\n{rendered}"
+    );
+    // Parentheses regroup, which is the only way to reach a looser tier from a
+    // tighter position: `(a + b) * c` puts the `+` inside the `*`'s left operand.
+    let rendered = render(&parse_accepted("attribute x = (a + b) * c;").syntax());
+    assert_eq!(
+        operands(&rendered, "BinaryOperatorExpression")
+            .first()
+            .map(String::as_str),
+        Some("SequenceExpression"),
+        "parentheses did not regroup:\n{rendered}"
+    );
+}
+
+#[test]
+fn null_is_written_two_ways() {
+    // NullExpression = 'null' | '(' ')' (KerML 8.2.5.8.3). The empty pair must be
+    // decided before SequenceExpression, which would otherwise take the '(' and find
+    // no expression after it.
+    for source in ["attribute x = null;", "attribute x = ();"] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            nodes_named(&rendered, "NullExpression"),
+            1,
+            "{source} built no NullExpression:\n{rendered}"
+        );
+        assert_eq!(
+            nodes_named(&rendered, "SequenceExpression"),
+            0,
+            "{source} is not a sequence expression:\n{rendered}"
+        );
+    }
+}
+
+// -- multiplicity, SysML 8.2.2.6.6 -------------------------------------------------
+
+#[test]
+fn a_multiplicity_bounds_a_usage_as_the_corpus_writes_it() {
+    // `part frontSeat[2];` is well-formed SysML and the pinned corpus writes it nine
+    // times, among them SimpleVehicleModel.sysml line 691 and
+    // "40. Filtering/Filtering Example-1.sysml" line 12. It is the case this whole
+    // layer was blocking.
+    let rendered = render(&parse_accepted("part frontSeat[2];").syntax());
+    for node in [
+        "MultiplicityPart",
+        "OwnedMultiplicity",
+        "MultiplicityRange",
+        "MultiplicityExpressionMember",
+    ] {
+        assert!(rendered.contains(node), "no {node} node:\n{rendered}");
+    }
+    // A single bound is the UPPER one: the clause makes the lower bound optional.
+    assert_eq!(
+        nodes_named(&rendered, "MultiplicityExpressionMember"),
+        1,
+        "`[2]` is one bound:\n{rendered}"
+    );
+}
+
+#[test]
+fn a_multiplicity_range_takes_two_bounds_around_a_range_operator() {
+    // MultiplicityRange = '[' ( MultiplicityExpressionMember '..' )?
+    // MultiplicityExpressionMember ']' (SysML 8.2.2.6.6).
+    for source in ["part p[0..*];", "part p[1..5];", "part p[0..n];"] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            nodes_named(&rendered, "MultiplicityExpressionMember"),
+            2,
+            "{source} has two bounds:\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn a_multiplicity_bound_is_a_literal_or_a_name_and_nothing_else() {
+    // MultiplicityExpressionMember = LiteralExpression | FeatureReferenceExpression
+    // (SysML 8.2.2.6.6). It does NOT reach OwnedExpression, so a bound is not an
+    // operator expression — which is what kept this production cheap.
+    let rendered = render(&parse_accepted("part p[n];").syntax());
+    assert!(
+        rendered.contains("FeatureReferenceExpression"),
+        "a name is a bound:\n{rendered}"
+    );
+    // `[1+1]` is therefore not a multiplicity. The `[` is read, the `1` is a bound,
+    // and the `+` has nowhere to go — a rejection by rule, not by absence.
+    parse_rejected("part p[1+1];");
+}
+
+#[test]
+fn a_multiplicity_part_may_carry_the_two_keywords_in_either_order() {
+    // MultiplicityPart = OwnedMultiplicity | OwnedMultiplicity?
+    // ( 'ordered' 'nonunique'? | 'nonunique' 'ordered'? ) (SysML 8.2.2.6.6). The
+    // second alternative's OwnedMultiplicity is optional, so the keywords stand
+    // alone; both orderings set the same two flags, which is why the clause writes
+    // each keyword twice.
+    for source in [
+        "part p[1] ordered;",
+        "part p[1] nonunique;",
+        "part p[1] ordered nonunique;",
+        "part p[1] nonunique ordered;",
+        "part p ordered;",
+        "part p nonunique ordered;",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert!(
+            rendered.contains("MultiplicityPart"),
+            "{source} built no MultiplicityPart:\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn a_multiplicity_part_sits_among_the_feature_specializations() {
+    // FeatureSpecializationPart = FeatureSpecialization+ MultiplicityPart?
+    // FeatureSpecialization* | MultiplicityPart FeatureSpecialization*
+    // (KerML 8.2.4.3.1). The two alternatives together admit the multiplicity before
+    // or after a specialization, and at most one of it.
+    for source in [
+        "part p[2] : Seat;",
+        "part p : Seat[2];",
+        "part p : Seat[2] :> base;",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            nodes_named(&rendered, "MultiplicityPart"),
+            1,
+            "{source} built no MultiplicityPart:\n{rendered}"
+        );
+        assert!(rendered.contains("FeatureSpecializationPart"), "{rendered}");
+    }
+    // At most one, because neither alternative can produce a second.
+    parse_rejected("part p[1][2];");
+}
+
+// -- the value a usage carries, SysML 8.2.2.6.2 ------------------------------------
+
+#[test]
+fn a_usage_may_carry_a_value() {
+    // UsageCompletion = ValuePart? UsageBody, ValuePart = FeatureValue, and
+    // FeatureValue = ( '=' | ':=' | 'default' ( '=' | ':=' )? ) OwnedExpression
+    // (SysML 8.2.2.6.2). The three prefixes are flags on one relationship: `=` binds,
+    // `:=` initialises, and `default` marks either as a default.
+    for source in [
+        "attribute m = 5;",
+        "attribute m := 5;",
+        "attribute m default = 5;",
+        "attribute m default := 5;",
+        // After `default` the `=` is optional, so this is the same FeatureValue with
+        // isDefault set and nothing else.
+        "attribute m default 5;",
+        "part engine : Engine = x;",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        for node in ["ValuePart", "FeatureValue"] {
+            assert!(
+                rendered.contains(node),
+                "{source} built no {node}:\n{rendered}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_value_part_comes_before_the_body_and_not_after() {
+    // UsageCompletion = ValuePart? UsageBody (SysML 8.2.2.6.2) — in that order, so
+    // the value precedes the `;` or the braces that end the usage.
+    let rendered = render(&parse_accepted("attribute m = 5;").syntax());
+    let completion = subtree(&rendered, "UsageCompletion");
+    let value = completion.find("ValuePart");
+    let body = completion.find("UsageBody");
+    assert!(
+        value < body,
+        "the ValuePart must precede the UsageBody:\n{completion}"
+    );
+    // A value after the body is not a UsageCompletion.
+    parse_rejected("attribute m; = 5");
+}
+
+#[test]
+fn a_value_expression_reaches_the_whole_expression_layer() {
+    // FeatureValue's operand is an OwnedExpression, so everything the layer reads is
+    // reachable from a value. These are the corpus shapes, each from a pinned file.
+    //
+    // "Analysis Examples/Vehicle Analysis Demo.sysml" line 106.
+    parse_accepted("attribute v : SpeedValue = v0 + a * dt;");
+    // "Analysis Examples/Dynamics.sysml" line 9.
+    parse_accepted("attribute tp : PowerValue = whlpwr - Cd * v - Cf * tm * v;");
+    // "v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package.sysml" line 9 — the
+    // case that needs `^` to bind tighter than `/`.
+    let rendered = render(&parse_accepted("attribute pressure = force / length^2;").syntax());
+    assert_eq!(
+        operands(&rendered, "BinaryOperatorExpression")
+            .get(1)
+            .map(String::as_str),
+        Some("BinaryOperatorExpression"),
+        "`force / length^2` must group as `force / (length^2)`:\n{rendered}"
+    );
+}
+
+// -- the fourth PackageBodyElement, SysML 8.2.2.5.1 --------------------------------
+
+#[test]
+fn an_element_filter_member_is_a_package_body_element() {
+    // ElementFilterMember = MemberPrefix 'filter' OwnedExpression ';'
+    // (SysML 8.2.2.5.1). The corpus writes a bare classification operator:
+    // "40. Filtering/Filtering Example-1.sysml" line 12 and
+    // "Simple Tests/Filtering.kerml" line 44.
+    for source in [
+        "package P { filter @Safety; }",
+        "package P { private filter @Safety; }",
+        "package P { filter @Safety and @Security; }",
+        "package P { filter not @Safety; }",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            nodes_named(&rendered, "ElementFilterMember"),
+            1,
+            "{source} built no ElementFilterMember:\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn an_element_filter_member_is_not_a_definition_body_item() {
+    // PackageBodyElement lists ElementFilterMember (SysML 8.2.2.5.1);
+    // DefinitionBodyItem does not (8.2.2.6.1). So a `filter` in a definition body is
+    // reported, and this is a rejection BY RULE — the production is implemented, and
+    // the same text in a package body parses.
+    parse_rejected("part def V { filter @Safety; }");
+    parse_accepted("package P { filter @Safety; }");
+}
+
+// -- the table the parser reads ----------------------------------------------------
+
+#[test]
+fn the_recorded_table_is_the_fifteen_tiers_of_table_6() {
+    // docs/operator-precedence.toml records table 6 of KerML 8.2.5.8.1 as data, cited
+    // to the clause, because no production can carry it — note 2 says so. This holds
+    // the FILE to the shape the clause describes; the test below holds the parser to
+    // the file.
+    let tiers = recorded_tiers();
+    assert_eq!(tiers.len(), 15, "table 6 has fifteen tiers");
+    for (i, tier) in tiers.iter().enumerate() {
+        assert_eq!(
+            usize::from(tier.n),
+            i + 1,
+            "the tiers must be numbered 1 to 15 in order"
+        );
+    }
+
+    // Note 2: "all BinaryOperators other than exponentiation are left-associative
+    // ... while the exponentiation operators (^ and **) are right-associative".
+    for tier in tiers.iter().filter(|t| t.arity == "binary") {
+        let expected = if tier.operators.contains(&"**".to_owned()) {
+            "right"
+        } else {
+            "left"
+        };
+        assert_eq!(tier.assoc, expected, "tier {} groups the wrong way", tier.n);
+    }
+
+    // The three prefix tiers, and the one ordering a reader is most likely to get
+    // wrong: tier 2 binds TIGHTER than tier 3, so `-2 ** 2` is `(-2) ** 2`.
+    assert_eq!(tiers[0].operators, ["all"], "tier 1 is `all`");
+    assert_eq!(
+        tiers[1].operators,
+        ["+", "-", "~", "not"],
+        "tier 2 is the four unary operators"
+    );
+    assert_eq!(
+        tiers[2].operators,
+        ["^", "**"],
+        "tier 3 is exponentiation, LOOSER than the unary tier above it"
+    );
+    assert_eq!(tiers[14].operators, ["if"], "tier 15 is `if`");
+}
+
+#[test]
+fn the_infix_table_is_the_recorded_precedence_table() {
+    // The parser's INFIX table is docs/operator-precedence.toml in the form it reads.
+    // Neither is derived from the other, so this is what stops one being edited alone
+    // — which would leave the parser grouping by a table that no longer cites
+    // anything, and the citation is the only reason to believe the grouping.
+    let (deferred, recorded): (Vec<_>, Vec<_>) = recorded_infix()
+        .into_iter()
+        .partition(|(_, o, _)| DECIDED_BEFORE_THE_NAME.contains(&o.as_str()));
+    assert_eq!(
+        deferred.len(),
+        DECIDED_BEFORE_THE_NAME.len(),
+        "the file no longer records both metaclassification operators at a binary tier"
+    );
+    for (n, ..) in &deferred {
+        assert_eq!(*n, 8, "a metaclassification operator left tier 8");
+    }
+
+    // Every operator the file records, the parser reads at that tier and that
+    // associativity — and every operator the parser reads, the file records. Both
+    // directions, so neither table may hold one the other does not.
+    let read = sv2_syntax::infix_table_for_test();
+    for entry in &recorded {
+        assert!(
+            read.contains(entry),
+            "the file records {entry:?} and the parser does not read it:\n{read:?}"
+        );
+    }
+    for entry in &read {
+        assert!(
+            recorded.contains(entry),
+            "the parser reads {entry:?} and the file does not record it:\n{recorded:?}"
+        );
+    }
+    assert_eq!(
+        recorded.len(),
+        read.len(),
+        "the two tables differ in length"
+    );
+}
+
+#[test]
+fn the_metaclassification_operators_are_read_at_their_tier() {
+    // The two operators left out of the infix table are still read — at tier 8, as
+    // the file records them, and through the metaclassification path because their
+    // left operand is a reference. `a_metaclassification_takes_a_reference_and_not_
+    // _an_expression` holds their shape; this holds that they parse at all, so
+    // leaving them out of INFIX cannot quietly become leaving them out.
+    parse_accepted("attribute x = y meta T;");
+    parse_accepted("attribute x = y @@ T;");
 }

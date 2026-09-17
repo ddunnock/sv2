@@ -599,6 +599,98 @@ pub enum SyntaxKind {
     FeatureTyping,
     /// `QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5.
     OwnedFeatureTyping,
+    /// `OwnedMultiplicity | OwnedMultiplicity? ( 'ordered' 'nonunique'? | 'nonunique' 'ordered'? )`. `SysML` 8.2.2.6.6.
+    MultiplicityPart,
+    /// `ownedRelatedElement += MultiplicityRange`. `SysML` 8.2.2.6.6.
+    OwnedMultiplicity,
+    /// `'[' ( MultiplicityExpressionMember '..' )? MultiplicityExpressionMember ']'`. `SysML` 8.2.2.6.6.
+    MultiplicityRange,
+    /// `LiteralExpression | FeatureReferenceExpression`. `SysML` 8.2.2.6.6.
+    MultiplicityExpressionMember,
+    /// `ownedRelationship += FeatureValue`. `SysML` 8.2.2.6.2.
+    ValuePart,
+    /// `( '=' | ':=' | 'default' ( '=' | ':=' )? ) OwnedExpression`. `SysML` 8.2.2.6.2.
+    FeatureValue,
+    /// `MemberPrefix 'filter' OwnedExpression ';'`. `SysML` 8.2.2.5.1.
+    ElementFilterMember,
+    /// `'if' ArgumentMember '?' ArgumentExpressionMember 'else' ArgumentExpressionMember EmptyResultMember`. `KerML` 8.2.5.8.1.
+    ConditionalExpression,
+    /// `ArgumentMember ConditionalBinaryOperator ArgumentExpressionMember EmptyResultMember`. `KerML` 8.2.5.8.1.
+    ConditionalBinaryOperatorExpression,
+    /// `ArgumentMember BinaryOperator ArgumentMember EmptyResultMember`. `KerML` 8.2.5.8.1.
+    BinaryOperatorExpression,
+    /// `UnaryOperator ArgumentMember EmptyResultMember`. `KerML` 8.2.5.8.1.
+    UnaryOperatorExpression,
+    /// `ArgumentMember? ( ClassificationTestOperator TypeReferenceMember | CastOperator TypeResultMember ) EmptyResultMember`. `KerML` 8.2.5.8.1.
+    ClassificationExpression,
+    /// `MetadataArgumentMember ( MetaclassificationTestOperator TypeReferenceMember | MetaCastOperator TypeResultMember ) EmptyResultMember`. `KerML` 8.2.5.8.1.
+    MetaclassificationExpression,
+    /// `'all' TypeReferenceMember`. `KerML` 8.2.5.8.1.
+    ExtentExpression,
+    /// `ownedMemberParameter = Argument`. `KerML` 8.2.5.8.1.
+    ArgumentMember,
+    /// `ownedRelationship += ArgumentValue`. `KerML` 8.2.5.8.1.
+    Argument,
+    /// `value = OwnedExpression`. `KerML` 8.2.5.8.1.
+    ArgumentValue,
+    /// `ownedRelatedElement += ArgumentExpression`. `KerML` 8.2.5.8.1.
+    ArgumentExpressionMember,
+    /// `ownedRelationship += ArgumentExpressionValue`. `KerML` 8.2.5.8.1.
+    ArgumentExpression,
+    /// `value = OwnedExpressionReference`. `KerML` 8.2.5.8.1.
+    ArgumentExpressionValue,
+    /// `ownedRelationship += OwnedExpressionMember`. `KerML` 8.2.5.8.1.
+    OwnedExpressionReference,
+    /// `ownedFeatureMember = OwnedExpression`. `KerML` 8.2.5.8.1.
+    OwnedExpressionMember,
+    /// `ownedRelatedElement += MetadataArgument`. `KerML` 8.2.5.8.1.
+    MetadataArgumentMember,
+    /// `ownedRelationship += MetadataValue`. `KerML` 8.2.5.8.1.
+    MetadataArgument,
+    /// `value = MetadataReference`. `KerML` 8.2.5.8.1.
+    MetadataValue,
+    /// `ownedRelationship += ElementReferenceMember`. `KerML` 8.2.5.8.1.
+    MetadataReference,
+    /// `memberElement = [QualifiedName]`. `KerML` 8.2.5.8.3.
+    ElementReferenceMember,
+    /// `ownedRelatedElement += EmptyFeature`. `KerML` 8.2.5.8.1.
+    EmptyResultMember,
+    /// `{ }`, a Feature that consumes no tokens. `KerML` 8.2.5.8.1.
+    EmptyFeature,
+    /// `ownedMemberFeature = TypeReference`. `KerML` 8.2.5.8.1.
+    TypeReferenceMember,
+    /// `ownedMemberFeature = TypeReference`. `KerML` 8.2.5.8.1.
+    TypeResultMember,
+    /// `ownedRelationship += ReferenceTyping`. `KerML` 8.2.5.8.1.
+    TypeReference,
+    /// `type = [QualifiedName]`. `KerML` 8.2.5.8.1.
+    ReferenceTyping,
+    /// `'(' SequenceExpressionList ')'`. `KerML` 8.2.5.8.2.
+    SequenceExpression,
+    /// `OwnedExpression ','? | SequenceOperatorExpression`. `KerML` 8.2.5.8.2.
+    SequenceExpressionList,
+    /// `OwnedExpressionMember ',' SequenceExpressionListMember`. `KerML` 8.2.5.8.2.
+    SequenceOperatorExpression,
+    /// `ownedRelatedElement += SequenceExpressionList`. `KerML` 8.2.5.8.2.
+    SequenceExpressionListMember,
+    /// `'null' | '(' ')'`. `KerML` 8.2.5.8.3.
+    NullExpression,
+    /// `FeatureReferenceMember EmptyResultMember`. `KerML` 8.2.5.8.3.
+    FeatureReferenceExpression,
+    /// `memberElement = FeatureReference`. `KerML` 8.2.5.8.3.
+    FeatureReferenceMember,
+    /// `[QualifiedName]`. `KerML` 8.2.5.8.3.
+    FeatureReference,
+    /// `'true' | 'false'`. `KerML` 8.2.5.8.4.
+    LiteralBoolean,
+    /// `STRING_VALUE`. `KerML` 8.2.5.8.4.
+    LiteralString,
+    /// `DECIMAL_VALUE`. `KerML` 8.2.5.8.4.
+    LiteralInteger,
+    /// `DECIMAL_VALUE? '.' ( DECIMAL_VALUE | EXPONENTIAL_VALUE ) | EXPONENTIAL_VALUE`. `KerML` 8.2.5.8.4.
+    LiteralReal,
+    /// `'*'`. `KerML` 8.2.5.8.4.
+    LiteralInfinity,
     /// recovered-over text; carries its bytes so the tree stays lossless
     Error,
 
@@ -904,6 +996,52 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::TypedBy,
     SyntaxKind::FeatureTyping,
     SyntaxKind::OwnedFeatureTyping,
+    SyntaxKind::MultiplicityPart,
+    SyntaxKind::OwnedMultiplicity,
+    SyntaxKind::MultiplicityRange,
+    SyntaxKind::MultiplicityExpressionMember,
+    SyntaxKind::ValuePart,
+    SyntaxKind::FeatureValue,
+    SyntaxKind::ElementFilterMember,
+    SyntaxKind::ConditionalExpression,
+    SyntaxKind::ConditionalBinaryOperatorExpression,
+    SyntaxKind::BinaryOperatorExpression,
+    SyntaxKind::UnaryOperatorExpression,
+    SyntaxKind::ClassificationExpression,
+    SyntaxKind::MetaclassificationExpression,
+    SyntaxKind::ExtentExpression,
+    SyntaxKind::ArgumentMember,
+    SyntaxKind::Argument,
+    SyntaxKind::ArgumentValue,
+    SyntaxKind::ArgumentExpressionMember,
+    SyntaxKind::ArgumentExpression,
+    SyntaxKind::ArgumentExpressionValue,
+    SyntaxKind::OwnedExpressionReference,
+    SyntaxKind::OwnedExpressionMember,
+    SyntaxKind::MetadataArgumentMember,
+    SyntaxKind::MetadataArgument,
+    SyntaxKind::MetadataValue,
+    SyntaxKind::MetadataReference,
+    SyntaxKind::ElementReferenceMember,
+    SyntaxKind::EmptyResultMember,
+    SyntaxKind::EmptyFeature,
+    SyntaxKind::TypeReferenceMember,
+    SyntaxKind::TypeResultMember,
+    SyntaxKind::TypeReference,
+    SyntaxKind::ReferenceTyping,
+    SyntaxKind::SequenceExpression,
+    SyntaxKind::SequenceExpressionList,
+    SyntaxKind::SequenceOperatorExpression,
+    SyntaxKind::SequenceExpressionListMember,
+    SyntaxKind::NullExpression,
+    SyntaxKind::FeatureReferenceExpression,
+    SyntaxKind::FeatureReferenceMember,
+    SyntaxKind::FeatureReference,
+    SyntaxKind::LiteralBoolean,
+    SyntaxKind::LiteralString,
+    SyntaxKind::LiteralInteger,
+    SyntaxKind::LiteralReal,
+    SyntaxKind::LiteralInfinity,
     SyntaxKind::Error,
     SyntaxKind::Tombstone,
 ];

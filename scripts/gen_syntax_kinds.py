@@ -229,6 +229,144 @@ NODES = [
     ("TypedBy", "`( ':' | 'defined' 'by' ) FeatureTyping`. `SysML` 8.2.2.6.5."),
     ("FeatureTyping", "`OwnedFeatureTyping | ConjugatedPortTyping`. `SysML` 8.2.2.6.5."),
     ("OwnedFeatureTyping", "`QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5."),
+    # The multiplicity a FeatureSpecializationPart may carry. `SysML` 8.2.2.6.6.
+    # MultiplicityExpressionMember reaches only LiteralExpression and
+    # FeatureReferenceExpression, not OwnedExpression, so a bound is a literal or a
+    # name and never an operator expression.
+    (
+        "MultiplicityPart",
+        (
+            "`OwnedMultiplicity | OwnedMultiplicity? ( 'ordered' 'nonunique'? "
+            "| 'nonunique' 'ordered'? )`. `SysML` 8.2.2.6.6."
+        ),
+    ),
+    ("OwnedMultiplicity", "`ownedRelatedElement += MultiplicityRange`. `SysML` 8.2.2.6.6."),
+    (
+        "MultiplicityRange",
+        (
+            "`'[' ( MultiplicityExpressionMember '..' )? MultiplicityExpressionMember ']'`. "
+            "`SysML` 8.2.2.6.6."
+        ),
+    ),
+    (
+        "MultiplicityExpressionMember",
+        "`LiteralExpression | FeatureReferenceExpression`. `SysML` 8.2.2.6.6.",
+    ),
+    # The value a usage may carry. `SysML` 8.2.2.6.2.
+    ("ValuePart", "`ownedRelationship += FeatureValue`. `SysML` 8.2.2.6.2."),
+    (
+        "FeatureValue",
+        ("`( '=' | ':=' | 'default' ( '=' | ':=' )? ) OwnedExpression`. `SysML` 8.2.2.6.2."),
+    ),
+    # The fourth PackageBodyElement. `SysML` 8.2.2.5.1.
+    ("ElementFilterMember", "`MemberPrefix 'filter' OwnedExpression ';'`. `SysML` 8.2.2.5.1."),
+    # -- the expression layer, KerML 8.2.5.8 --
+    #
+    # OwnedExpression's eight alternatives carry no precedence and cannot: KerML
+    # 8.2.5.8.1 note 2 states the grouping of nested OperatorExpressions is not
+    # expressed in the productions. The tiers are data in docs/operator-precedence.toml.
+    (
+        "ConditionalExpression",
+        (
+            "`'if' ArgumentMember '?' ArgumentExpressionMember 'else' "
+            "ArgumentExpressionMember EmptyResultMember`. `KerML` 8.2.5.8.1."
+        ),
+    ),
+    (
+        "ConditionalBinaryOperatorExpression",
+        (
+            "`ArgumentMember ConditionalBinaryOperator ArgumentExpressionMember "
+            "EmptyResultMember`. `KerML` 8.2.5.8.1."
+        ),
+    ),
+    (
+        "BinaryOperatorExpression",
+        "`ArgumentMember BinaryOperator ArgumentMember EmptyResultMember`. `KerML` 8.2.5.8.1.",
+    ),
+    (
+        "UnaryOperatorExpression",
+        "`UnaryOperator ArgumentMember EmptyResultMember`. `KerML` 8.2.5.8.1.",
+    ),
+    (
+        "ClassificationExpression",
+        (
+            "`ArgumentMember? ( ClassificationTestOperator TypeReferenceMember "
+            "| CastOperator TypeResultMember ) EmptyResultMember`. `KerML` 8.2.5.8.1."
+        ),
+    ),
+    (
+        "MetaclassificationExpression",
+        (
+            "`MetadataArgumentMember ( MetaclassificationTestOperator TypeReferenceMember "
+            "| MetaCastOperator TypeResultMember ) EmptyResultMember`. `KerML` 8.2.5.8.1."
+        ),
+    ),
+    ("ExtentExpression", "`'all' TypeReferenceMember`. `KerML` 8.2.5.8.1."),
+    # The operand memberships. A membership per operand, as the clause reifies them.
+    ("ArgumentMember", "`ownedMemberParameter = Argument`. `KerML` 8.2.5.8.1."),
+    ("Argument", "`ownedRelationship += ArgumentValue`. `KerML` 8.2.5.8.1."),
+    ("ArgumentValue", "`value = OwnedExpression`. `KerML` 8.2.5.8.1."),
+    (
+        "ArgumentExpressionMember",
+        "`ownedRelatedElement += ArgumentExpression`. `KerML` 8.2.5.8.1.",
+    ),
+    ("ArgumentExpression", "`ownedRelationship += ArgumentExpressionValue`. `KerML` 8.2.5.8.1."),
+    (
+        "ArgumentExpressionValue",
+        "`value = OwnedExpressionReference`. `KerML` 8.2.5.8.1.",
+    ),
+    (
+        "OwnedExpressionReference",
+        "`ownedRelationship += OwnedExpressionMember`. `KerML` 8.2.5.8.1.",
+    ),
+    ("OwnedExpressionMember", "`ownedFeatureMember = OwnedExpression`. `KerML` 8.2.5.8.1."),
+    ("MetadataArgumentMember", "`ownedRelatedElement += MetadataArgument`. `KerML` 8.2.5.8.1."),
+    ("MetadataArgument", "`ownedRelationship += MetadataValue`. `KerML` 8.2.5.8.1."),
+    ("MetadataValue", "`value = MetadataReference`. `KerML` 8.2.5.8.1."),
+    ("MetadataReference", "`ownedRelationship += ElementReferenceMember`. `KerML` 8.2.5.8.1."),
+    ("ElementReferenceMember", "`memberElement = [QualifiedName]`. `KerML` 8.2.5.8.3."),
+    # The result parameter every OperatorExpression owns, and which consumes no tokens.
+    ("EmptyResultMember", "`ownedRelatedElement += EmptyFeature`. `KerML` 8.2.5.8.1."),
+    ("EmptyFeature", "`{ }`, a Feature that consumes no tokens. `KerML` 8.2.5.8.1."),
+    # The type operand of a classification, a cast or an extent.
+    ("TypeReferenceMember", "`ownedMemberFeature = TypeReference`. `KerML` 8.2.5.8.1."),
+    ("TypeResultMember", "`ownedMemberFeature = TypeReference`. `KerML` 8.2.5.8.1."),
+    ("TypeReference", "`ownedRelationship += ReferenceTyping`. `KerML` 8.2.5.8.1."),
+    ("ReferenceTyping", "`type = [QualifiedName]`. `KerML` 8.2.5.8.1."),
+    # Primary expressions, KerML 8.2.5.8.2.
+    ("SequenceExpression", "`'(' SequenceExpressionList ')'`. `KerML` 8.2.5.8.2."),
+    (
+        "SequenceExpressionList",
+        "`OwnedExpression ','? | SequenceOperatorExpression`. `KerML` 8.2.5.8.2.",
+    ),
+    (
+        "SequenceOperatorExpression",
+        ("`OwnedExpressionMember ',' SequenceExpressionListMember`. `KerML` 8.2.5.8.2."),
+    ),
+    (
+        "SequenceExpressionListMember",
+        "`ownedRelatedElement += SequenceExpressionList`. `KerML` 8.2.5.8.2.",
+    ),
+    # Base expressions, KerML 8.2.5.8.3.
+    ("NullExpression", "`'null' | '(' ')'`. `KerML` 8.2.5.8.3."),
+    (
+        "FeatureReferenceExpression",
+        "`FeatureReferenceMember EmptyResultMember`. `KerML` 8.2.5.8.3.",
+    ),
+    ("FeatureReferenceMember", "`memberElement = FeatureReference`. `KerML` 8.2.5.8.3."),
+    ("FeatureReference", "`[QualifiedName]`. `KerML` 8.2.5.8.3."),
+    # Literal expressions, KerML 8.2.5.8.4.
+    ("LiteralBoolean", "`'true' | 'false'`. `KerML` 8.2.5.8.4."),
+    ("LiteralString", "`STRING_VALUE`. `KerML` 8.2.5.8.4."),
+    ("LiteralInteger", "`DECIMAL_VALUE`. `KerML` 8.2.5.8.4."),
+    (
+        "LiteralReal",
+        (
+            "`DECIMAL_VALUE? '.' ( DECIMAL_VALUE | EXPONENTIAL_VALUE ) "
+            "| EXPONENTIAL_VALUE`. `KerML` 8.2.5.8.4."
+        ),
+    ),
+    ("LiteralInfinity", "`'*'`. `KerML` 8.2.5.8.4."),
     ("Error", "recovered-over text; carries its bytes so the tree stays lossless"),
 ]
 
