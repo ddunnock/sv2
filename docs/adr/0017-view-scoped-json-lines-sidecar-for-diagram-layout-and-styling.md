@@ -98,15 +98,15 @@ The first line is a header record. Remaining lines are element records, sorted b
 
 ### Normative rules
 
-| ID | Rule |
-|----|------|
-| R-1 | All coordinates and dimensions are integers in grid units. The grid size is declared in the header. No floating-point values are written. |
-| R-2 | Records are sorted by `(kind, element)`. Keys within a record are emitted in a fixed declared order. |
-| R-3 | LF line endings, one trailing newline, no trailing whitespace. A `.gitattributes` entry sets `*.jsonl text eol=lf`. |
-| R-4 | Every element record carries `src`, valued `auto` or `pinned`. A re-layout command discards `auto` records and preserves `pinned` ones. |
+| ID  | Rule                                                                                                                                                  |
+|-----|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| R-1 | All coordinates and dimensions are integers in grid units. The grid size is declared in the header. No floating-point values are written.             |
+| R-2 | Records are sorted by `(kind, element)`. Keys within a record are emitted in a fixed declared order.                                                  |
+| R-3 | LF line endings, one trailing newline, no trailing whitespace. A `.gitattributes` entry sets `*.jsonl text eol=lf`.                                   |
+| R-4 | Every element record carries `src`, valued `auto` or `pinned`. A re-layout command discards `auto` records and preserves `pinned` ones.               |
 | R-5 | The header stamps the layout engine and its version, so a stored snapshot that predates an engine change is detectable rather than silently reflowed. |
-| R-6 | Unknown record kinds and unknown fields are preserved on round-trip, so a newer schema written by another instance is not destroyed by an older one. |
-| R-7 | `schema` is an integer and is incremented on any breaking change to record shape. |
+| R-6 | Unknown record kinds and unknown fields are preserved on round-trip, so a newer schema written by another instance is not destroyed by an older one.  |
+| R-7 | `schema` is an integer and is incremented on any breaking change to record shape.                                                                     |
 
 R-4 resolves the tension between storing every position and storing only overrides.
 A full snapshot is written so that rendering is reproducible without re-running layout,
@@ -135,15 +135,15 @@ machine output and can be selectively discarded.
 
 ### Confirmation
 
-| ID | Fitness function | Method |
-|----|------------------|--------|
-| FIT-1 | Serialization is idempotent | Parse then re-serialize every sidecar in the test corpus; assert byte identity |
-| FIT-2 | Re-layout is stable | Run auto-layout twice on an unchanged model; assert the emitted file is byte-identical |
-| FIT-3 | Concurrent edits merge cleanly | CI test creating two branches that each move a different node, then asserting `git merge` succeeds with no conflict |
-| FIT-4 | No orphaned records | Validation pass asserting every `element` in a sidecar resolves to an ID present in the model; reported as a warning with a `gc` remedy |
-| FIT-5 | External tool neutrality preserved | Parse the model files with the OMG pilot implementation with sidecars absent; assert clean parse |
-| FIT-6 | Regenerability | Delete all layout files, open every view, assert each renders without error |
-| FIT-7 | Forward compatibility | Round-trip a file containing an unknown record kind and unknown fields; assert preservation per R-6 |
+| ID    | Fitness function                   | Method                                                                                                                                  |
+|-------|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| FIT-1 | Serialization is idempotent        | Parse then re-serialize every sidecar in the test corpus; assert byte identity                                                          |
+| FIT-2 | Re-layout is stable                | Run auto-layout twice on an unchanged model; assert the emitted file is byte-identical                                                  |
+| FIT-3 | Concurrent edits merge cleanly     | CI test creating two branches that each move a different node, then asserting `git merge` succeeds with no conflict                     |
+| FIT-4 | No orphaned records                | Validation pass asserting every `element` in a sidecar resolves to an ID present in the model; reported as a warning with a `gc` remedy |
+| FIT-5 | External tool neutrality preserved | Parse the model files with the OMG pilot implementation with sidecars absent; assert clean parse                                        |
+| FIT-6 | Regenerability                     | Delete all layout files, open every view, assert each renders without error                                                             |
+| FIT-7 | Forward compatibility              | Round-trip a file containing an unknown record kind and unknown fields; assert preservation per R-6                                     |
 
 ## Pros and Cons of the Options
 
@@ -200,24 +200,24 @@ machine output and can be selectively discarded.
 
 ### Risks
 
-| ID | Risk | Handling |
-|----|------|----------|
-| RISK-0017-1 | Records orphaned by element deletion accumulate | `gc` command plus FIT-4 warning in CI |
-| RISK-0017-2 | Layout engine change silently reflows stored positions | Engine version stamped in header (R-5); mismatch surfaces a prompt rather than a silent rewrite |
-| RISK-0017-3 | Pinned records accumulate and fight the rule set over time | Provenance field makes them enumerable; provide a "release all pins in this view" action |
-| RISK-0017-4 | Sidecar not committed, so layout is lost between machines | Regenerable by design (DD-4); document that sidecars belong in version control and are not to be ignored |
-| RISK-0017-5 | Windows CRLF normalization rewrites whole files | `.gitattributes` per R-3; FIT-1 catches regressions |
-| RISK-0017-6 | Two files per view doubles file count at scale | Accepted; revisit if a project exceeds roughly 500 views |
+| ID          | Risk                                                       | Handling                                                                                                 |
+|-------------|------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| RISK-0017-1 | Records orphaned by element deletion accumulate            | `gc` command plus FIT-4 warning in CI                                                                    |
+| RISK-0017-2 | Layout engine change silently reflows stored positions     | Engine version stamped in header (R-5); mismatch surfaces a prompt rather than a silent rewrite          |
+| RISK-0017-3 | Pinned records accumulate and fight the rule set over time | Provenance field makes them enumerable; provide a "release all pins in this view" action                 |
+| RISK-0017-4 | Sidecar not committed, so layout is lost between machines  | Regenerable by design (DD-4); document that sidecars belong in version control and are not to be ignored |
+| RISK-0017-5 | Windows CRLF normalization rewrites whole files            | `.gitattributes` per R-3; FIT-1 catches regressions                                                      |
+| RISK-0017-6 | Two files per view doubles file count at scale             | Accepted; revisit if a project exceeds roughly 500 views                                                 |
 
 ### Assumptions
 
-| ID | Assumption | Basis | Impact if wrong |
-|----|------------|-------|-----------------|
-| A-001 | Views are first-class and carry stable identifiers under ADR-0016 | Follows from ADR-0016 and the view-tab UI model | Without stable view IDs the file naming scheme needs a different key |
-| A-002 | A view may reference elements declared in multiple files | SysML v2 view and expose semantics | If views were always file-scoped, Option 5 becomes viable |
-| A-003 | Auto layout is deterministic for a fixed engine version | Required by FIT-2 | Non-determinism would force storing all positions permanently and disable re-layout as a routine operation |
-| A-004 | Git is the version control system | Program context | A different VCS with semantic merge could change the DD-1 weighting |
-| A-005 | Sidecars are committed, not generated at open time | Implied by wanting placement to persist across machines | If treated as local cache, most of DD-1 falls away and the format choice loosens considerably |
+| ID    | Assumption                                                                  | Basis                                                   | Impact if wrong                                                                                            |
+|-------|-----------------------------------------------------------------------------|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| A-001 | Views are first-class and carry stable identifiers under ADR-0016           | Follows from ADR-0016 and the view-tab UI model         | Without stable view IDs the file naming scheme needs a different key                                       |
+| A-002 | A view may reference elements declared in multiple files                    | SysML v2 view and expose semantics                      | If views were always file-scoped, Option 5 becomes viable                                                  |
+| A-003 | Auto layout is deterministic for a fixed engine version                     | Required by FIT-2                                       | Non-determinism would force storing all positions permanently and disable re-layout as a routine operation |
+| A-004 | Git is the version control system                                           | Program context                                         | A different VCS with semantic merge could change the DD-1 weighting                                        |
+| A-005 | Sidecars are committed, not generated at open time                          | Implied by wanting placement to persist across machines | If treated as local cache, most of DD-1 falls away and the format choice loosens considerably              |
 
 A-005 is the load-bearing assumption. If sidecars are local cache rather than committed
 artifacts, this ADR is substantially over-engineered and should be reconsidered.
