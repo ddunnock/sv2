@@ -28,8 +28,12 @@ language. See `docs/DERIVATION.md`.
 ## Phase 2 — plan
 
 ```bash
+export SV2_WIKI_CLAUSES=~/.sv2-derivation/bnf-clauses.json   # from export_wiki_clauses.py
 python3.11 .claude/scripts/grammar_plan.py
 ```
+
+It refuses to run without the clause export: every fingerprint hashes the clause text,
+so a plan without it would send every verified unit back to pending.
 
 Creates one unit per production with an input fingerprint, and reclassifies existing units
 whose inputs have moved. Never edit a unit file to change the plan; change the inputs and
@@ -123,7 +127,8 @@ This is the reason the whole workflow is fingerprinted.
 # re-pin Tier A / Tier B in docs/conformance-target.toml, then:
 python3.11 scripts/vendor_sync.py --accept-new
 python3.11 scripts/extract_productions.py
-python3.11 .claude/scripts/grammar_plan.py
+python3.11 .claude/scripts/export_wiki_clauses.py
+SV2_WIKI_CLAUSES=~/.sv2-derivation/bnf-clauses.json python3.11 .claude/scripts/grammar_plan.py
 python3.11 .claude/scripts/grammar_rebase.py
 ```
 

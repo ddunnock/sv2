@@ -6,7 +6,8 @@ Creates pending units; never modifies a derived rule.
 
     python3.11 .claude/scripts/grammar_plan.py
 
-Environment: SV2_WIKI_CLAUSES overrides the specification clause export.
+Environment: SV2_WIKI_CLAUSES overrides the specification clause export. Without an
+export the plan refuses to run; see `_clause_export`.
 """
 
 from __future__ import annotations
@@ -36,6 +37,7 @@ if TYPE_CHECKING:
     from _state import Json
 
 MODEL_SUFFIXES = (".sysml", ".kerml")
+DEFAULT_CLAUSES = "vendor/wiki/bnf-clauses.json"
 STALEABLE = ("derived", "verified")
 
 
@@ -49,8 +51,18 @@ class Sources:
     corpus_fingerprint: str
 
 
-def _load_sources() -> Sources:
-    clauses = load_json(os.environ.get("SV2_WIKI_CLAUSES", "vendor/wiki/bnf-clauses.json"), {})
+def _clause_export() -> Json:
+    """The clause export, or None when it is missing or empty.
+
+    Every unit's `spec_clause` fingerprint hashes its clause text, so planning without
+    the export hashes empty text for all of them: every derived and verified unit reads
+    as having moved inputs and goes back to pending. That is not a plan, it is the
+    whole derivation thrown away, so there is no partial mode to fall back to.
+    """
+    return load_json(os.environ.get("SV2_WIKI_CLAUSES", DEFAULT_CLAUSES), {}) or None
+
+
+def _load_sources(clauses: Json) -> Sources:
     mmap = load_json(GRAMMAR / "metaclass-map.json", {"map": {}})
     metaclass_of: dict[str, str] = {}
     for meta, rules in mmap.get("map", {}).items():
@@ -210,7 +222,7 @@ def _retire_undeclared(expected: set[str], divergent: set[str]) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Build the unit work list from the inventory; 1 if there is no inventory to plan from."""
+    """Build the unit work list from the inventory; 1 if there is no inventory or clause export."""
     argparse.ArgumentParser(description=__doc__).parse_args(argv)
     os.chdir(REPO_ROOT)
 
@@ -225,7 +237,14 @@ def main(argv: list[str] | None = None) -> int:
     if not inventory:
         print("no inventory — run python3.11 scripts/extract_bnf.py")
         return 1
-    src = _load_sources()
+    clauses = _clause_export()
+    if clauses is None:
+        path = os.environ.get("SV2_WIKI_CLAUSES", DEFAULT_CLAUSES)
+        print(f"no clause export at {path} — refusing to plan, because every unit would go stale")
+        print("  run python3.11 .claude/scripts/export_wiki_clauses.py, then")
+        print("  export SV2_WIKI_CLAUSES=~/.sv2-derivation/bnf-clauses.json")
+        return 1
+    src = _load_sources(clauses)
     units = load_units()
 
     stripped = _strip_retired_inputs(units)
