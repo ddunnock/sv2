@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Crosses",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cf5a654bd41cc438687d0011c60ee58eb00af1bfd3e27bc6c9e2ea339a78d9b6",
     "xtext_rule": "f6301142a996beb39e2b74516a0f63553c9cd3b6a0e1fecbd087d1eabed1ec97",
@@ -14,5 +14,67 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment Crosses returns SysML::Feature :\n    CrossesKeyword ownedRelationship += OwnedCrossSubsetting\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "kw",
+            "text": "=>"
+          },
+          {
+            "k": "kw",
+            "text": "crosses"
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "OwnedCrossSubsetting"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.3.1 and SysML 8.2.2.6.5 both state it, so one shared unit: the CROSSES terminal, then exactly one OwnedCrossSubsetting. KerML 8.2.2.7 and SysML 8.2.2.1.2 define CROSSES identically, as `'=>' | 'crosses'`, and the rule writes it out as that choice. The Xtext calls a CrossesKeyword rule where the clauses name the terminal. The terminal is written out here.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "Crosses : Feature = CROSSES ownedRelationship += OwnedCrossSubsetting"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.2.7",
+      "note": "CROSSES = '=>' | 'crosses'"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.1.2",
+      "note": "CROSSES = '=>' | 'crosses', the same definition"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml",
+      "note": "line 40: `end cart: ShoppingCart[1] redefines source crosses selectedProduct.inCart {`, the keyword form. No corpus model uses `=>` in this position; that form rests on the clauses."
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "fragment Crosses: CrossesKeyword ownedRelationship += OwnedCrossSubsetting. The same structure, with the terminal behind a rule."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:10:28Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:10:28Z"
 }

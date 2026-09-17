@@ -3,7 +3,7 @@
   "production": "OwnedMultiplicity",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "a861d047e6f60642b98bd0d699e692e9773d61859e5057d7d5c8428cd25003fe",
     "xtext_rule": "f9b4a244fd16572aa1a157dce9e5b864db98b6b1d72f8b32c019789e29670ac6",
@@ -15,5 +15,39 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "OwnedMultiplicity returns SysML::OwningMembership :\n\townedRelatedElement += MultiplicityRange \n;",
     "metaclass": "SysML::OwningMembership"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "MultiplicityRange"
+  },
+  "decision": "As SysML 8.2.2.6.6 states it: a membership wrapping one MultiplicityRange, which the same clause defines as `'[' ( MultiplicityExpressionMember '..' )? MultiplicityExpressionMember ']'`. This is the SysML variant (ADR-0014). KerML wraps an OwnedMultiplicityRange instead, which is why the production is split. The Xtext rule is identical.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.6",
+      "note": "OwnedMultiplicity : OwningMembership = ownedRelatedElement += MultiplicityRange"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "`part cylinders:Cylinder[4..8] ordered;`, where `[4..8]` is the owned multiplicity"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "OwnedMultiplicity: ownedRelatedElement += MultiplicityRange. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:11:59Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:11:59Z"
 }

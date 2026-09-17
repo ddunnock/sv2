@@ -6052,6 +6052,36 @@
           "note": "Xtext side read from the pinned grammar: body `'xor'`, which references no non-literal production."
         }
       ]
+    },
+    {
+      "production": "PrefixMetadataTyping-chain",
+      "bucket": "conflict",
+      "upstream": "KerML.xtext:1094 and SysML.xtext:153 route PrefixMetadataFeature and PrefixMetadataUsage, and the non-prefix MetadataFeatureDeclaration and MetadataUsageDeclaration too, to a dedicated `MetadataTyping : type = [SysML::Metaclass | QualifiedName]`, which has no OwnedFeatureChain alternative. The Xtext's ordinary OwnedFeatureTyping (SysML.xtext:441) keeps that alternative.",
+      "problem": "KerML 8.2.5.12 and SysML 8.2.2.27 state all four metadata typings as `ownedRelationship += OwnedFeatureTyping`, which admits a QualifiedName or an OwnedFeatureChain. So `#a.b part x;` parses by the specification and is a syntax error by the pilot.",
+      "decision": "follow_spec",
+      "rationale": "The narrowing is not an LL workaround: it has no predicate and no inlining, and the Xtext accepts the chain alternative in ordinary feature typing. It moves a semantic requirement into syntax, namely that metadata be typed by a metaclass. KerML 8.3.4.12.3 states that requirement as the validation constraint validateMetadataFeatureMetaclass, not as grammar. The specification is also uniform across the prefix and non-prefix forms. Following it keeps the grammar free of name resolution, which the grammar cannot perform, and lets such text parse and fail at validation. That matches this project's rule that validity gates writes, not reads (ADR-0002). The corpus has no `#` followed by a dotted chain, so it is silent either way. No OMG issue on the point was found after searching both trackers. Decided by the grammar-adjudicator on 2026-09-17.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.12 MetadataConcreteSyntax (region_sha256 30fa0599ab27c325)",
+          "note": "PrefixMetadataFeature and MetadataFeatureDeclaration both type by `ownedRelationship += OwnedFeatureTyping`."
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.27 MetadataTextualNotation (region_sha256 69251565feee7639)",
+          "note": "PrefixMetadataUsage and MetadataUsageDeclaration both type by `ownedRelationship += OwnedFeatureTyping`."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "The KerML Tier A pin the governing clause belongs to."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
     }
   ],
   "unpatched": []

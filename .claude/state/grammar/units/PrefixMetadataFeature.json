@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "PrefixMetadataFeature",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "814e74fbb17b63e9a835d6dc9a5ceb64c5393cec1e7ff119730c9fd1601fe160",
     "xtext_rule": "856a67afe673e882882ce27ebc3da1a9bf7f8f7150fe30e5a898e5f44fcc6ab1",
@@ -14,5 +14,45 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "PrefixMetadataFeature returns SysML::MetadataFeature :\n\townedRelationship += MetadataTyping\n;",
     "metaclass": "SysML::MetadataFeature"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "OwnedFeatureTyping"
+  },
+  "decision": "As KerML 8.2.5.12 states it: one OwnedFeatureTyping, the metadata's type. The clause prints `PrefixMetadataFeature : MetadataFeature :` with a colon where every other production has `=`. KERML11-108 names this exact production as ending in a colon instead of an equals sign, so the defect is filed and the body after it reads unambiguously. The Xtext calls a MetadataTyping rule where the clause writes OwnedFeatureTyping. Where the Xtext narrows this to MetadataTyping, a QualifiedName naming a metaclass, the sources disagreed. The grammar-adjudicator decided follow_spec, because the metaclass requirement is a validation constraint, not syntax; see notes and the deviation PrefixMetadataTyping-chain.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.12",
+      "note": "PrefixMetadataFeature : MetadataFeature : ownedRelationship += OwnedFeatureTyping, with `:` for `=`"
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "KERML11-108",
+      "note": "EXACT MATCH. 'Grammar rules missing \"=\" or incorrectly using \":\"', open, filed 30 Oct 2025 against KerML 1.0. It lists `PrefixMetadataFeature : MetadataFeature :` on page 105, the printed page of clause 8.2.5.12. Fetched and read on 2026-09-17."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-4-OneToUnrestrictedConnectors.kerml",
+      "note": "line 33: `#atom`, where `atom` is the typing"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "PrefixMetadataFeature: ownedRelationship += MetadataTyping. MetadataTyping is `type = [SysML::Metaclass | QualifiedName]`, which rejects a feature chain. Adjudicated follow_spec."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:11:58Z",
+  "notes": "ADJUDICATED follow_spec on 2026-09-17, recorded in deviations.json as PrefixMetadataTyping-chain. The Xtext's MetadataTyping (KerML.xtext:1094) admits only [Metaclass | QualifiedName], so it rejects `#a.b`. The clause's OwnedFeatureTyping also admits an OwnedFeatureChain. The narrowing puts a semantic requirement into syntax: validateMetadataFeatureMetaclass, KerML 8.3.4.12.3, is a validation constraint, not a grammar rule. The specification uses OwnedFeatureTyping uniformly for the prefix and non-prefix metadata forms. The corpus has no `#` followed by a chain.",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:18:30Z"
 }

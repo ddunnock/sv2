@@ -3,7 +3,7 @@
   "production": "Typings",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cfded74d2cf0cfb153d8baa7f9d319b0c205cfafeefe3c75503be435428404a1",
     "xtext_rule": "49074c5e3c1f8274ac9aeb5c438f03aa1f77e3ac98a8ebcc8a98c8b2b37dcccd",
@@ -15,5 +15,60 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment Typings returns SysML::Feature :\n\tTypedBy ( ',' ownedRelationship += FeatureTyping )*\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "TypedBy"
+      },
+      {
+        "k": "star",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": ","
+            },
+            {
+              "k": "ref",
+              "name": "FeatureTyping"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "decision": "As SysML 8.2.2.6.5 states it: one TypedBy, then any number of further FeatureTypings, separated by commas. This is the SysML variant (ADR-0014). The repeated element is FeatureTyping, which the same clause defines as OwnedFeatureTyping | ConjugatedPortTyping, where KerML repeats OwnedFeatureTyping alone. The Xtext fragment is identical.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.5",
+      "note": "Typings : Feature = TypedBy ( ',' ownedRelationship += FeatureTyping )*"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Geometry Examples/VehicleGeometryAndCoordinateFrames.sysml",
+      "note": "line 74: `part vehicle : Vehicle, SpatialItem {`, a TypedBy and one further typing after a comma"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "fragment Typings: TypedBy ( ',' ownedRelationship += FeatureTyping )*. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:10:27Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:10:27Z"
 }

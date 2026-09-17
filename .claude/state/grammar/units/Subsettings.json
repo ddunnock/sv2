@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Subsettings",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cf5a654bd41cc438687d0011c60ee58eb00af1bfd3e27bc6c9e2ea339a78d9b6",
     "xtext_rule": "fc1c9f53a8c63d267cb331b6cce768ba8842485bb74339be942caf45f3add20d",
@@ -14,5 +14,65 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment Subsettings returns SysML::Feature :\n\tSubsets ( ',' ownedRelationship += OwnedSubsetting )*\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "Subsets"
+      },
+      {
+        "k": "star",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": ","
+            },
+            {
+              "k": "ref",
+              "name": "OwnedSubsetting"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.3.1 and SysML 8.2.2.6.5 both state it, so one shared unit: one Subsets, then any number of further OwnedSubsettings, separated by commas. The Xtext fragment is identical.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "Subsettings : Feature = Subsets ( ',' ownedRelationship += OwnedSubsetting )*"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.5",
+      "note": "the same production"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Behavior Examples/Camera.kerml",
+      "note": "`portion focusedState: Camera subsets timeSlices;`, a single subsetting. No corpus model uses the comma-separated form; that part rests on the clauses."
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment Subsettings: Subsets ( ',' ownedRelationship += OwnedSubsetting )*. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:10:27Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:10:28Z"
 }

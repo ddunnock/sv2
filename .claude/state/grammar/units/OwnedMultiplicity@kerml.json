@@ -3,7 +3,7 @@
   "production": "OwnedMultiplicity",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "8495e77a2c661ef306d5c397c34b70d3e5b299f9d00d7c0b98bdc36f47423af3",
     "xtext_rule": "0fca120ae8205d3a90b00c2ce9c8aba6d6ec120a30259db5fedd4d92e9f1ed91",
@@ -15,5 +15,39 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "OwnedMultiplicity returns SysML::OwningMembership :\n\townedRelatedElement += OwnedMultiplicityRange \n;",
     "metaclass": "SysML::OwningMembership"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "OwnedMultiplicityRange"
+  },
+  "decision": "As KerML 8.2.5.11 states it: a membership wrapping one OwnedMultiplicityRange, which the same clause defines as MultiplicityBounds, the bracketed `[lower..upper]` form. This is the KerML variant (ADR-0014); SysML wraps a MultiplicityRange, which it defines directly as the bracketed form. The Xtext rule is identical.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.11",
+      "note": "OwnedMultiplicity : OwningMembership = ownedRelatedElement += OwnedMultiplicityRange"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Behavior Examples/TakePicture.kerml",
+      "note": "line 4: `feature camera: Camera[1] subsets involvedObjects;`, where `[1]` is the owned multiplicity"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "OwnedMultiplicity: ownedRelatedElement += OwnedMultiplicityRange. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:11:59Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:11:59Z"
 }

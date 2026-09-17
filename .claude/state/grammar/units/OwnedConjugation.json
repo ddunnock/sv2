@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedConjugation",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "19a37282e94b6fce4326461870aa9124231777e22d5dace74e78eac47cc6ba4e",
     "xtext_rule": "25fb821ed19ceee21ef3490c6f654f7552e0d01160bed483656ad02244f050c7",
@@ -14,5 +14,58 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "OwnedConjugation returns SysML::Conjugation :\n\t  originalType = [SysML::Type | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain\n;",
     "metaclass": "SysML::Conjugation"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "QualifiedName"
+      },
+      {
+        "k": "ref",
+        "name": "FeatureChain"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.1.3 states it: the original type, either as a cross-reference `[QualifiedName]` or as a FeatureChain. The clause writes FeatureChain where the Xtext writes OwnedFeatureChain. KerML 8.2.4.3.5 defines `OwnedFeatureChain : Feature = FeatureChain`, so the two accept exactly the same tokens, and the rule follows the clause. This is a difference in which element owns the chain, not a disagreement about syntax. The same clause's Conjugation production writes FeatureChain in both of its positions, so the usage is consistent within the clause.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.3",
+      "note": "OwnedConjugation : Conjugation = originalType = [QualifiedName] | originalType = FeatureChain { ownedRelatedElement += originalType }"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.5",
+      "note": "OwnedFeatureChain : Feature = FeatureChain, which makes the Xtext's alternative token-identical to the clause's"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Types.kerml",
+      "note": "`type Conjugate3 conjugates Original;`, the QualifiedName alternative"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml",
+      "note": "`feature x conjugates f.a;`, the FeatureChain alternative"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "OwnedConjugation: originalType = [SysML::Type | QualifiedName] | ownedRelatedElement += OwnedFeatureChain. The same tokens."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:11:58Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:11:58Z"
 }

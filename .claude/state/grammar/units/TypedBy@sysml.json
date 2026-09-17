@@ -3,7 +3,7 @@
   "production": "TypedBy",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cfded74d2cf0cfb153d8baa7f9d319b0c205cfafeefe3c75503be435428404a1",
     "xtext_rule": "553a208aa5a271b85b6924131d1f2f796b38ab2591e3f9c016e589d011c20504",
@@ -15,5 +15,71 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment TypedBy returns SysML::Feature :\n\tDefinedByKeyword ownedRelationship += FeatureTyping\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "kw",
+            "text": ":"
+          },
+          {
+            "k": "seq",
+            "items": [
+              {
+                "k": "kw",
+                "text": "defined"
+              },
+              {
+                "k": "kw",
+                "text": "by"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "FeatureTyping"
+      }
+    ]
+  },
+  "decision": "As SysML 8.2.2.6.5 states it: the DEFINED_BY terminal, then one FeatureTyping. DEFINED_BY is one of SysML's special lexical terminals, stated in 8.2.2.1.2 as `':' | 'defined' 'by'`, and the rule writes it out as that choice. This is the SysML variant (ADR-0014); KerML writes TYPED_BY, whose keyword form is `typed by`. The Xtext calls a DefinedByKeyword rule where the clause names the terminal. The specification's terminal is written out here and the Xtext rule is not referenced, so the rule's tokens come from the clause alone.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.5",
+      "note": "TypedBy : Feature = DEFINED_BY ownedRelationship += FeatureTyping"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.1.2",
+      "note": "DEFINED_BY = ':' | 'defined' 'by', among the special lexical terminals"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Geometry Examples/VehicleGeometryAndCoordinateFrames.sysml",
+      "note": "line 74: `part vehicle : Vehicle, SpatialItem {`, the symbol form. No corpus model uses `defined by`; that form rests on the clause."
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "fragment TypedBy: DefinedByKeyword ownedRelationship += FeatureTyping. The same structure, with the terminal behind a rule."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:10:27Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:10:27Z"
 }

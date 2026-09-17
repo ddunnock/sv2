@@ -3,7 +3,7 @@
   "production": "TypedBy",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "9e2b3655417d8748bd8cfe4e1f390d0cff6fd052368ea0581d687ef7c9b0d081",
     "xtext_rule": "a38af8dc52e459921aad37629bb28ad487468e1978abb189576a43a0628dc86c",
@@ -15,5 +15,76 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment TypedBy returns SysML::Feature :\n\t( ':' | 'typed' 'by' ) ownedRelationship += OwnedFeatureTyping\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "kw",
+            "text": ":"
+          },
+          {
+            "k": "seq",
+            "items": [
+              {
+                "k": "kw",
+                "text": "typed"
+              },
+              {
+                "k": "kw",
+                "text": "by"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "OwnedFeatureTyping"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.3.1 states it: the TYPED_BY terminal, then one OwnedFeatureTyping. TYPED_BY is one of the special lexical terminals of KerML 8.2.2.7, `':' | 'typed' 'by'`, and the rule writes it out as that choice. This is the KerML variant (ADR-0014). SysML uses its DEFINED_BY terminal, `':' | 'defined' 'by'`, and a FeatureTyping. The Xtext fragment writes the same expansion.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "TypedBy : Feature = TYPED_BY ownedRelationship += OwnedFeatureTyping"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.2.7",
+      "note": "TYPED_BY = ':' | 'typed' 'by'"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Features.kerml",
+      "note": "line 8: `feature x typed by A, B ...`, the keyword form"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml",
+      "note": "line 8: `feature capacity: Real;`, the symbol form"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment TypedBy: ( ':' | 'typed' 'by' ) ownedRelationship += OwnedFeatureTyping. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:10:27Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:10:27Z"
 }

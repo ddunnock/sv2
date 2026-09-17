@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedFeatureInverting",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "7d4f74931218a74baf123f0e5410e142d8f6475ea12d68f4cb756ef02f45fdfd",
     "xtext_rule": "9abddc75364cfa2f245451ac648a69655d509d8946991826609dad364f672f79",
@@ -14,5 +14,48 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "OwnedFeatureInverting returns SysML::FeatureInverting :\n\t  invertingFeature = [SysML::Feature | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain\n;",
     "metaclass": "SysML::FeatureInverting"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "QualifiedName"
+      },
+      {
+        "k": "ref",
+        "name": "OwnedFeatureChain"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.3.6 states it: the inverting feature, either as a cross-reference `[QualifiedName]`, which parses a QualifiedName, or as an owned feature chain. The `{ ownedRelatedElement += ... }` action consumes no tokens. The Xtext states the same two alternatives. Both alternatives can begin with a name, so a parser decides between them after it. Neither QualifiedName nor OwnedFeatureChain is defined in this clause, so exactly where they diverge is for their own units to establish.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.6",
+      "note": "OwnedFeatureInverting : FeatureInverting = invertingFeature = [QualifiedName] | invertingFeature = OwnedFeatureChain { ownedRelatedElement += invertingFeature }"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Inverses.kerml",
+      "note": "line 14: `feature gg : A featured by B inverse of A::f;`, the QualifiedName alternative. No corpus model inverts a feature chain (`inverse of a.b`); that alternative rests on the clause and the Xtext."
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "OwnedFeatureInverting: invertingFeature = [SysML::Feature | QualifiedName] | ownedRelatedElement += OwnedFeatureChain. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:11:58Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:11:58Z"
 }

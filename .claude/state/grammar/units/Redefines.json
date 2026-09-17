@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Redefines",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cf5a654bd41cc438687d0011c60ee58eb00af1bfd3e27bc6c9e2ea339a78d9b6",
     "xtext_rule": "8365af13cd0be349aa415e521888983b864064df16fd0cdeacd555fc3fd5bdfe",
@@ -14,5 +14,72 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment Redefines returns SysML::Feature :\n\t( ':>>' | 'redefines' ) ownedRelationship += OwnedRedefinition\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "kw",
+            "text": ":>>"
+          },
+          {
+            "k": "kw",
+            "text": "redefines"
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "OwnedRedefinition"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.3.1 and SysML 8.2.2.6.5 both state it, so one shared unit: the REDEFINES terminal, then one OwnedRedefinition. KerML 8.2.2.7 and SysML 8.2.2.1.2 define REDEFINES identically, as `':>>' | 'redefines'`, and the rule writes it out as that choice. The Xtext fragment writes the same expansion.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "Redefines : Feature = REDEFINES ownedRelationship += OwnedRedefinition"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.2.7",
+      "note": "REDEFINES = ':>>' | 'redefines'"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.1.2",
+      "note": "REDEFINES = ':>>' | 'redefines', the same definition"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_UnownedEnds.kerml",
+      "note": "`end feature cart: ShoppingCart[1] redefines cart {`, the keyword form"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/ExtendedOccurrences.kerml",
+      "note": "line 51: `... :>> Objects::Object::self, ...`, the symbol form"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment Redefines: ( ':>>' | 'redefines' ) ownedRelationship += OwnedRedefinition. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:10:28Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:10:28Z"
 }

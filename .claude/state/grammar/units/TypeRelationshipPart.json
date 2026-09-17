@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "TypeRelationshipPart",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
     "xtext_rule": "df6bd21922ebdbdf6ab55628a347c8b0ca1faef185bcddcf57b0c0c5fd180625",
@@ -14,5 +14,56 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment TypeRelationshipPart returns SysML::Type :\n\tDisjoiningPart | UnioningPart | IntersectingPart | DifferencingPart\n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "DisjoiningPart"
+      },
+      {
+        "k": "ref",
+        "name": "UnioningPart"
+      },
+      {
+        "k": "ref",
+        "name": "IntersectingPart"
+      },
+      {
+        "k": "ref",
+        "name": "DifferencingPart"
+      }
+    ]
+  },
+  "decision": "Four alternatives, as KerML 8.2.4.1.1 states them. The Xtext fragment lists the same four in the same order. The same clause shows DisjoiningPart beginning with `disjoint from`. The other three are not fully shown in this pack, so whether they overlap is for their own units to establish.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.1",
+      "note": "TypeRelationshipPart : Type = DisjoiningPart | UnioningPart | IntersectingPart | DifferencingPart"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Inverses.kerml",
+      "note": "line 3: `feature f : B inverse of B::g disjoint from h;`, a DisjoiningPart used as a FeatureRelationshipPart"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment TypeRelationshipPart: DisjoiningPart | UnioningPart | IntersectingPart | DifferencingPart. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:11:58Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:11:58Z"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Subsets",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cf5a654bd41cc438687d0011c60ee58eb00af1bfd3e27bc6c9e2ea339a78d9b6",
     "xtext_rule": "aa6bdbccc503e0ca117dbfa1a3c020d262f90053a80defd85ff72bacac6d59dd",
@@ -14,5 +14,72 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment Subsets returns SysML::Feature :\n\t( ':>' | 'subsets' ) ownedRelationship += OwnedSubsetting \n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "kw",
+            "text": ":>"
+          },
+          {
+            "k": "kw",
+            "text": "subsets"
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "OwnedSubsetting"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.3.1 and SysML 8.2.2.6.5 both state it, so one shared unit: the SUBSETS terminal, then one OwnedSubsetting. KerML 8.2.2.7 and SysML 8.2.2.1.2 define SUBSETS identically, as `':>' | 'subsets'`, and the rule writes it out as that choice. The Xtext fragment writes the same expansion.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "Subsets : Feature = SUBSETS ownedRelationship += OwnedSubsetting"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.2.7",
+      "note": "SUBSETS = ':>' | 'subsets'"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.1.2",
+      "note": "SUBSETS = ':>' | 'subsets', the same definition"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Behavior Examples/Camera.kerml",
+      "note": "`portion focusedState: Camera subsets timeSlices;`, the keyword form"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Variable Feature Examples/TimeVaryingCarDriver.kerml",
+      "note": "line 26: `feature engine [1] :> carParts;`, the symbol form"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment Subsets: ( ':>' | 'subsets' ) ownedRelationship += OwnedSubsetting. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:10:28Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:10:28Z"
 }

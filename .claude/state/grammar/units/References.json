@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "References",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cf5a654bd41cc438687d0011c60ee58eb00af1bfd3e27bc6c9e2ea339a78d9b6",
     "xtext_rule": "86c84117e592c039b2dc08607ed9888b3f06e2b8de1430c450f71e888394f53d",
@@ -14,5 +14,72 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment References returns SysML::Feature :\n\tReferencesKeyword ownedRelationship += OwnedReferenceSubsetting\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "kw",
+            "text": "::>"
+          },
+          {
+            "k": "kw",
+            "text": "references"
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "OwnedReferenceSubsetting"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.3.1 and SysML 8.2.2.6.5 both state it, so one shared unit: the REFERENCES terminal, then exactly one OwnedReferenceSubsetting, with no comma-separated repetition. KerML 8.2.2.7 and SysML 8.2.2.1.2 define REFERENCES identically, as `'::>' | 'references'`, and the rule writes it out as that choice. The Xtext calls a ReferencesKeyword rule where the clauses name the terminal. The terminal is written out here.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.1",
+      "note": "References : Feature = REFERENCES ownedRelationship += OwnedReferenceSubsetting"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.2.7",
+      "note": "REFERENCES = '::>' | 'references'"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.1.2",
+      "note": "REFERENCES = '::>' | 'references', the same definition"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Features.kerml",
+      "note": "line 8: `feature x typed by A, B references f subsets g;`, the keyword form"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/ArgumentResolution.kerml",
+      "note": "line 15: `connector a ::> a.x to b;`, the symbol form"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment References: ReferencesKeyword ownedRelationship += OwnedReferenceSubsetting. The same structure, with the terminal behind a rule."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:10:28Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:10:28Z"
 }
