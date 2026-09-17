@@ -3,7 +3,7 @@
   "production": "UsageDeclaration",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "75719cca5586b38df687a0107da0631912855d8761fb90c9ddda65858c3f8a4b",
     "xtext_rule": "9bbf76b19e65aa891441db055eb23db174ef1e8a21ebc854a81a8e7d80353877",
@@ -16,5 +16,46 @@
     "xtext_rule_text": "fragment UsageDeclaration returns SysML::Usage :\n\t  FeatureDeclaration\n;",
     "metaclass": "SysML::Usage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "Checked outside the pack, as author context only: SysML.xtext line 359 defines FeatureDeclaration as `Identification FeatureSpecializationPart? | FeatureSpecializationPart`. Its second alternative exists because the Xtext's Identification is not nullable; the specification's is, so the clause's single sequence already covers `: T`.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "Identification"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "FeatureSpecializationPart"
+        }
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.6.2 states UsageDeclaration : Usage = Identification FeatureSpecializationPart?. The SysML Xtext delegates to a FeatureDeclaration fragment whose body is not in this pack, so it is not read as a disagreement about the language; the rule is the clause as written. It is not KerML's FeatureDeclaration: the SysML clause admits no 'all' and no ConjugationPart here.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.2 (Usages.md, region_sha256 a6f6e20afeed05e4)",
+      "note": "UsageDeclaration : Usage = Identification FeatureSpecializationPart?"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext UsageDeclaration",
+      "note": "fragment UsageDeclaration : FeatureDeclaration, a delegation, second opinion only"
+    }
+  ],
+  "derived_utc": "2026-09-17T14:38:53Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:38:53Z"
 }

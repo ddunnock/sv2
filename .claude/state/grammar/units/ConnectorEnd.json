@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "ConnectorEnd",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "283306e41880099310568956b02c9361c91ac23d872216be8ba93f733d4e38e6",
     "xtext_rule": "a15a0adf3a38437f0ac8e0af0a9b64027c52f2e2a728da5d6a1d5a8881f1175e",
@@ -14,5 +14,82 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "ConnectorEnd returns SysML::Feature :\n\t( ownedRelationship += OwnedCrossingMultiplicityMember )?\n\t( declaredName = Name ReferencesKeyword )? \n\townedRelationship += OwnedReferenceSubsetting\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "OwnedCrossMultiplicityMember"
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "tok",
+              "name": "NAME"
+            },
+            {
+              "k": "alt",
+              "items": [
+                {
+                  "k": "kw",
+                  "text": "::>"
+                },
+                {
+                  "k": "kw",
+                  "text": "references"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "k": "ref",
+        "name": "OwnedReferenceSubsetting"
+      }
+    ]
+  },
+  "decision": "KerML 8.2.5.5.1 and SysML 8.2.2.13.1 state the same body: an optional OwnedCrossMultiplicityMember, an optional declaredName = NAME followed by REFERENCES, then OwnedReferenceSubsetting. They differ only in the result metaclass (Feature in KerML, ReferenceUsage in SysML), which is not syntax, so one shared rule serves both. REFERENCES is the special lexical terminal of KerML 8.2.2.7, written out as '::>' | 'references'. The Xtext's OwnedCrossingMultiplicityMember and ReferencesKeyword are renamings of the same pieces, not a different language.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.5.1 (Connectors.md, region_sha256 ff47294b20bdba3f)",
+      "note": "ConnectorEnd : Feature"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.13.1 (ConnectionDefinitionandUsage.md, region_sha256 614b54fa6eb5405a)",
+      "note": "ConnectorEnd : ReferenceUsage, same body"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.2.7 (Symbols.md, region_sha256 c59561da3efdda5a)",
+      "note": "REFERENCES = '::>' | 'references'"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext ConnectorEnd",
+      "note": "same structure under Xtext names"
+    }
+  ],
+  "notes": "SysML 8.2.2.13.1 writes ConnectorEndMember's header with ':' where '=' is meant; that is ConnectorEndMember's clause text, not this production's.",
+  "derived_utc": "2026-09-17T14:37:23Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:37:23Z"
 }

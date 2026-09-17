@@ -3,7 +3,7 @@
   "production": "ExpressionBody",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
     "xtext_rule": "fe8ab5439de154d74c2f0b4bf3dad8b0aaae435ebe5679ea05bc035ca886ab35",
@@ -15,5 +15,35 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "ExpressionBody returns SysML::Expression :\n\tCalculationBody\n;",
     "metaclass": "SysML::Expression"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "CalculationBody"
+  },
+  "decision": "SysML states no ExpressionBody clause; the pack reports none. The SysML reading is fixed by deviation ExpressionBody (follow_xtext): SysML expression bodies read SysML's CalculationBody rather than KerML's '{' FunctionBodyPart '}', decided on corpus lines that put the SysML prefix `ref` inside forAll bodies. The SysML Xtext states exactly that override. The rule is the deviation's reading and nothing more.",
+  "evidence": [
+    {
+      "kind": "deviation",
+      "ref": "ExpressionBody",
+      "note": "follow_xtext: ExpressionBody in SysML is CalculationBody"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext ExpressionBody",
+      "note": "ExpressionBody returns SysML::Expression : CalculationBody"
+    }
+  ],
+  "notes": "One of the two SysML boundary deviations (ADR-0015). Without it SysML expression bodies would reach the KerML kernel.",
+  "derived_utc": "2026-09-17T14:38:53Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:38:53Z"
 }

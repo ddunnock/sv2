@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "LibraryPackage",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "697a7e03853fce89460b1412fec4110c8846efecf82569834fa738df6baf8593",
     "xtext_rule": "ebdbfb18499f5ca116c2073de5eaa782d92afe6d943bd3614ec64012c4a87d9a",
@@ -14,5 +14,77 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "LibraryPackage returns SysML::LibraryPackage :\n\t( isStandard ?= 'standard' )? 'library'\n\t( ownedRelationship += PrefixMetadataMember )*\n\tPackageDeclaration PackageBody\n;",
     "metaclass": "SysML::LibraryPackage"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "kw",
+          "text": "standard"
+        }
+      },
+      {
+        "k": "kw",
+        "text": "library"
+      },
+      {
+        "k": "star",
+        "item": {
+          "k": "ref",
+          "name": "PrefixMetadataMember"
+        }
+      },
+      {
+        "k": "ref",
+        "name": "PackageDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "PackageBody"
+      }
+    ]
+  },
+  "decision": "KerML 8.2.5.13 and SysML 8.2.2.5.1 print `( isStandard ?= 'standard' ) 'library'` with no '?' on the group; the KerML Xtext makes the group optional. That disagreement is adjudicated and recorded as deviation LibraryPackage (follow_xtext): the missing '?' is a defect printed in both documents, contradicted by KerML's own example and the isStandard attribute, and the corpus writes `library package` without 'standard'. The rest of the rule is the clauses as written, which agree with the Xtext.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.13 (PackagesConcreteSyntax.md, region_sha256 2f4d82cdd704641c)",
+      "note": "LibraryPackage, 'standard' printed as mandatory"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.5.1 (Packages.md, region_sha256 3ee603b1b89d4345)",
+      "note": "the same text"
+    },
+    {
+      "kind": "deviation",
+      "ref": "LibraryPackage",
+      "note": "follow_xtext: 'standard' is optional"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/MetadataTest.kerml",
+      "note": "`library package 'User Defined Extensions' {`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext LibraryPackage",
+      "note": "( isStandard ?= 'standard' )? 'library'"
+    }
+  ],
+  "notes": "Adjudicated from conflict.",
+  "derived_utc": "2026-09-17T14:50:51Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:50:51Z"
 }

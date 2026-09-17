@@ -6232,6 +6232,96 @@
           "note": "The SysML Tier A pin the governing clause belongs to."
         }
       ]
+    },
+    {
+      "production": "DefinitionElement",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext writes DefinitionElement with the specification's 29 alternatives plus AllocationDefinition, between InterfaceDefinition and PortDefinition. The Xtext also places MetadataDefinition after ItemDefinition, which does not change the language.",
+      "problem": "SysML 8.2.2.5.2 lists 29 DefinitionElement alternatives and omits AllocationDefinition, which SysML 8.2.2.15 defines as OccurrenceDefinitionPrefix 'allocation' 'def' Definition, the same shape as the listed ConnectionDefinition. In the clause export, AllocationDefinition appears only in its own clause (the keys AllocationDefinition, AllocationUsage and AllocationUsageDeclaration, which share one text). Taken literally, the specification defines AllocationDefinition and reaches it from nowhere, so `allocation def` cannot be written as a package member. The Usage side has no matching gap: SysML 8.2.2.6.4 lists AllocationUsage in StructureUsageElement.",
+      "decision": "follow_xtext",
+      "rationale": "An editorial omission in the enumeration, not a pilot workaround: the Xtext's extra alternative is a plain alternative in an unordered list, with no inlining, narrowing or predicate. The corpus decides it with the specification's own worked example: the Annex A SimpleVehicleModel has `allocation def LogicalToPhysical{` as a direct member of `package AllocationDefinitions{` at line 338, and Simple Tests/AllocationTest.sysml has `allocation def A;` and `allocation def Logical_to_Physical :> A {` as package members at lines 22 and 24. A grammar that follows the clause rejects its own Annex A. The adjudicator searched the SysML tracker's open and closed issue lists for AllocationDefinition and DefinitionElement on 2026-09-17 and found no issue naming this omission; no issue is cited because none was read. Adjudicated by the grammar-adjudicator on 2026-09-17; the clause texts and corpus lines were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.5.2 PackageElements (region_sha256 15ebea5bc9c7f610)",
+          "note": "DefinitionElement = Package | ... | ExtendedDefinition, with no AllocationDefinition"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.15 AllocationsTextualNotation (region_sha256 c49ff28fffcd621a)",
+          "note": "AllocationDefinition = OccurrenceDefinitionPrefix 'allocation' 'def' Definition"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.4 BodyElements (region_sha256 ae188991c8997bec)",
+          "note": "StructureUsageElement includes AllocationUsage, so the Usage side has no parallel gap"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Vehicle Example/SysML v2 Spec Annex A SimpleVehicleModel.sysml",
+          "note": "line 338: `allocation def LogicalToPhysical{` inside `package AllocationDefinitions{`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/AllocationTest.sysml",
+          "note": "lines 22 and 24: `allocation def A;` and `allocation def Logical_to_Physical :> A {` as package members"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "LibraryPackage",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/KerML.xtext writes LibraryPackage as `( isStandard ?= 'standard' )? 'library' ( ownedRelationship += PrefixMetadataMember )* PackageDeclaration PackageBody`, with 'standard' optional.",
+      "problem": "KerML 8.2.5.13 and SysML 8.2.2.5.1 both print `( isStandard ?= 'standard' ) 'library' ...` with no '?' on the group, which makes 'standard' mandatory and isStandard always true. As printed, the grammar rejects KerML 7.4.14's own example `library package AddressBooks {` and every library package in the corpus, none of which is standard.",
+      "decision": "follow_xtext",
+      "rationale": "The printed rule contradicts the specification around it. KerML 7.4.14 gives `library package AddressBooks {` without 'standard' and says only library packages from the Kernel Model Libraries or other recognized standard libraries should be identified as standard. The LibraryPackage metaclass (8.3.4.13.3) says isStandard 'should only be set to true' for those libraries, so false must be writable. The adjudicator found that the BNF's other standalone flag groups (isAbstract, isDerived, isReference, isImportAll and the rest) carry the trailing '?', and a bare `x ?= 'kw'` appears only where the keyword is the fixed opener of an alternative, which 'standard' is not. The corpus writes `library package` without 'standard' 9 times and never with it; the adjudicator reports that the pinned Tier A standard-library KPARs open with `standard library package` throughout. SysML restates KerML's text word for word, so it is one defect printed twice. The adjudicator read the KerML and SysML issue pages on 2026-09-17 and found no issue naming it; KERML11-10 (the keyword table) and SYSML21-267 (graphical notation) were read and are not about this. The pages may list open issues only, so the search is not conclusive, and no issue is cited. Adjudicated by the grammar-adjudicator on 2026-09-17; the 7.4.14 and 8.3.4.13.3 wording and the corpus lines were rechecked directly.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.13 PackagesConcreteSyntax (region_sha256 2f4d82cdd704641c)",
+          "note": "LibraryPackage = ( isStandard ?= 'standard' ) 'library' ..., no '?' on the group"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.5.1 Packages (region_sha256 3ee603b1b89d4345)",
+          "note": "the same text"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 7.4.14 Packages (region_sha256 e880cedb0b8e7d88)",
+          "note": "`library package AddressBooks {`, and only recognized standard libraries should be identified as standard"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.3.4.13.3 LibraryPackage (region_sha256 f7889cd6519491ac)",
+          "note": "isStandard 'should only be set to true' for standard libraries"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/kerml/src/examples/Simple Tests/MetadataTest.kerml",
+          "note": "line 4: `library package 'User Defined Extensions' {`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFCoreLib.sysml",
+          "note": "line 2: `library package AHFCoreLib {`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "The KerML Tier A pin the governing clause belongs to."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the restated clause belongs to."
+        }
+      ]
     }
   ],
   "unpatched": []

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Package",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "697a7e03853fce89460b1412fec4110c8846efecf82569834fa738df6baf8593",
     "xtext_rule": "8c45b567befb01cd5e80fd0ffda3f4f1a88fa7b17f5f89466b3b156abe3bb07a",
@@ -14,5 +14,56 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "Package returns SysML::Package :\n\t( ownedRelationship += PrefixMetadataMember )*\n\tPackageDeclaration PackageBody \n;",
     "metaclass": "SysML::Package"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "star",
+        "item": {
+          "k": "ref",
+          "name": "PrefixMetadataMember"
+        }
+      },
+      {
+        "k": "ref",
+        "name": "PackageDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "PackageBody"
+      }
+    ]
+  },
+  "decision": "KerML 8.2.5.13 and SysML 8.2.2.5.1 state Package identically: ( ownedRelationship += PrefixMetadataMember )* PackageDeclaration PackageBody, and the KerML Xtext agrees. The productions it names are stated differently per language (SysML's PackageBody reads PackageBodyElement, KerML's reads NamespaceBodyElement), but Package's own body is the same text, so the unit is shared and each language resolves the references to its own variants.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.13 (PackagesConcreteSyntax.md, region_sha256 2f4d82cdd704641c)",
+      "note": "Package = ( ownedRelationship += PrefixMetadataMember )* PackageDeclaration PackageBody"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.5.1 (Packages.md, region_sha256 3ee603b1b89d4345)",
+      "note": "identical body"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext Package",
+      "note": "identical"
+    }
+  ],
+  "notes": "",
+  "derived_utc": "2026-09-17T14:44:49Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:44:49Z"
 }

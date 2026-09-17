@@ -3,7 +3,7 @@
   "production": "DefinitionElement",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "634b5a02530d590c18a51d97968e31ad5861f11902fa24300799ebc80387ee20",
     "xtext_rule": "1ef23b90f60be47351e584eab4c50b516d715dca768ee610a2662f89f5e41b07",
@@ -16,5 +16,160 @@
     "xtext_rule_text": "DefinitionElement returns SysML::Element :\n\t  Package\n\t| LibraryPackage\n\t| AnnotatingElement\n\t| Dependency\n\t| AttributeDefinition\n\t| EnumerationDefinition\n\t| OccurrenceDefinition\n\t| IndividualDefinition\n\t| ItemDefinition\n\t| MetadataDefinition\n\t| PartDefinition\n\t| ConnectionDefinition\n\t| FlowDefinition\n\t| InterfaceDefinition\n\t| AllocationDefinition\n\t| PortDefinition\n\t| ActionDefinition\n\t| CalculationDefinition\n\t| StateDefinition\n\t| ConstraintDefinition\n\t| RequirementDefinition\n\t| ConcernDefinition\n\t| CaseDefinition\n\t| AnalysisCaseDefinition\n\t| VerificationCaseDefinition\n\t| UseCaseDefinition\n\t| ViewDefinition\n\t| ViewpointDefinition\n\t| RenderingDefinition\n\t| ExtendedDefinition\n;",
     "metaclass": "SysML::Element"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "Adjudicated from conflict. The Usage side is not affected: AllocationUsage is reached through StructureUsageElement (SysML 8.2.2.6.4), per the deviation.",
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "Package"
+      },
+      {
+        "k": "ref",
+        "name": "LibraryPackage"
+      },
+      {
+        "k": "ref",
+        "name": "AnnotatingElement"
+      },
+      {
+        "k": "ref",
+        "name": "Dependency"
+      },
+      {
+        "k": "ref",
+        "name": "AttributeDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "EnumerationDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "OccurrenceDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "IndividualDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "ItemDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "PartDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "ConnectionDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "FlowDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "InterfaceDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "AllocationDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "PortDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "ActionDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "CalculationDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "StateDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "ConstraintDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "RequirementDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "ConcernDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "CaseDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "AnalysisCaseDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "VerificationCaseDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "UseCaseDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "ViewDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "ViewpointDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "RenderingDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "MetadataDefinition"
+      },
+      {
+        "k": "ref",
+        "name": "ExtendedDefinition"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.5.2 lists 29 alternatives; the SysML Xtext lists the same 29 plus AllocationDefinition. That disagreement is adjudicated and recorded as deviation DefinitionElement (follow_xtext): the clause omits AllocationDefinition editorially, leaving `allocation def` unreachable, and the corpus's Annex A model uses it as a package member. The rule is the clause's 29 alternatives plus AllocationDefinition and nothing else; the Xtext's different ordering is not ported because order does not change the language.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.5.2 (PackageElements.md, region_sha256 15ebea5bc9c7f610)",
+      "note": "the 29 printed alternatives"
+    },
+    {
+      "kind": "deviation",
+      "ref": "DefinitionElement",
+      "note": "follow_xtext: AllocationDefinition is an alternative"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext DefinitionElement",
+      "note": "includes AllocationDefinition"
+    }
+  ],
+  "derived_utc": "2026-09-17T14:43:02Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:43:02Z"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "Annotation",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cea5b326f1c9673eb114633ab5faef43829847f948f20214e31d2d04b1a5e5bc",
     "xtext_rule": "02509887a61b82f3e24be25ec197c6ffdcc6a9990055f420754787ba6b937ee4",
@@ -14,5 +14,40 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "Annotation returns SysML::Annotation :\n\tannotatedElement = [SysML::Element|QualifiedName]\n;",
     "metaclass": "SysML::Annotation"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "QualifiedName"
+  },
+  "decision": "Both clauses state Annotation = annotatedElement = [QualifiedName], a cross-reference and nothing else, and the KerML Xtext agrees ([SysML::Element|QualifiedName]). A cross-reference [QualifiedName] is a ref to QualifiedName by the derivation's convention. The KerML and SysML texts are identical, so the unit is shared.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.3.1 (Annotations.md, region_sha256 62a5a543dd622776)",
+      "note": "Annotation = annotatedElement = [QualifiedName]"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.4.1 (Annotations.md, region_sha256 3c3db88367d002e9)",
+      "note": "Annotation = annotatedElement = [QualifiedName]"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext Annotation",
+      "note": "annotatedElement = [SysML::Element|QualifiedName]"
+    }
+  ],
+  "notes": "",
+  "derived_utc": "2026-09-17T14:37:23Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:37:23Z"
 }
