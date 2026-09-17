@@ -20,7 +20,6 @@ from typing import TYPE_CHECKING
 
 from _grammar import (
     GRAMMAR,
-    SCOPE_OF_SUFFIX,
     SCOPES,
     UNITS,
     clause_for_scope,
@@ -117,7 +116,6 @@ def _plan_one(name: str, scope: str | None, units: dict[str, Json], src: Sources
     # caught by grammar_validate.py re-running, which is the correct mechanism.
     fp["combined"] = hash_parts(fp["spec_clause"], fp["xtext_rule"])
 
-    corpus = [c for c in src.corpus if scope is None or SCOPE_OF_SUFFIX.get(c.suffix) == scope]
     fresh: Json = {
         "schema_version": 1,
         "production": name,
@@ -127,7 +125,6 @@ def _plan_one(name: str, scope: str | None, units: dict[str, Json], src: Sources
         "fingerprint": fp,
         "inputs": {
             **_clause_inputs(ref, xtext_file, xtext),
-            "corpus_refs": [str(c) for c in corpus[:40]],
             "metaclass": src.metaclass_of.get(name, ""),
         },
     }
@@ -174,11 +171,20 @@ def _terminals(names: list[str]) -> set[str]:
     return lexical
 
 
-def _strip_clause_text(units: dict[str, Json]) -> int:
-    """Drop clause text left in units by an earlier schema. Idempotent."""
+#: Input fields an earlier schema wrote and nothing reads. `spec_clause_text` was
+#: verbatim OMG prose (see `_clause_inputs`). `corpus_refs` was the first 40 corpus
+#: paths in the unit's language — the same list for every unit of that language, about
+#: 2 MB across the grammar, and no rule's evidence: `grammar_next.py` finds a unit's
+#: real instances itself when it emits the pack.
+RETIRED_INPUTS = ("spec_clause_text", "corpus_refs")
+
+
+def _strip_retired_inputs(units: dict[str, Json]) -> int:
+    """Drop input fields left in units by an earlier schema. Idempotent."""
     stripped = 0
     for unit in units.values():
-        if unit.get("inputs", {}).pop("spec_clause_text", None) is not None:
+        inputs = unit.get("inputs", {})
+        if [inputs.pop(field) for field in RETIRED_INPUTS if field in inputs]:
             save_unit(unit)
             stripped += 1
     return stripped
@@ -222,9 +228,9 @@ def main(argv: list[str] | None = None) -> int:
     src = _load_sources()
     units = load_units()
 
-    stripped = _strip_clause_text(units)
+    stripped = _strip_retired_inputs(units)
     if stripped:
-        print(f"      removed embedded clause text from {stripped} unit(s)")
+        print(f"      removed retired input fields from {stripped} unit(s)")
 
     names: list[str] = inventory["productions"]
     derivable = [n for n in names if n not in _terminals(names)]
