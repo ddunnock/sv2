@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "production": "OwnedFeatureChain",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "cfded74d2cf0cfb153d8baa7f9d319b0c205cfafeefe3c75503be435428404a1",
+    "xtext_rule": "2d8b48e7d5b058465b7b6fbfffc3213b74633787cfaceb4b945a0ba8d036007f",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "4c87eaf76837fde60ae6425845c1b54810c316884dfbc0b7bdc8aef527b3ae42"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.6.5 (Specialization.md, region_sha256 d0d5a04805076a67)",
+    "xtext_file": "KerMLExpressions.xtext",
+    "xtext_rule_text": "OwnedFeatureChain returns SysML::Feature :\n\tFeatureChain\n;",
+    "corpus_refs": [
+      "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "vendor/corpus/sysml/src/examples/Analysis Examples/AnalysisAnnotation.sysml",
+      "vendor/corpus/sysml/src/examples/Analysis Examples/Dynamics.sysml",
+      "vendor/corpus/sysml/src/examples/Analysis Examples/Turbojet Stage Analysis.sysml",
+      "vendor/corpus/sysml/src/examples/Analysis Examples/Vehicle Analysis Demo.sysml",
+      "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFCoreLib.sysml",
+      "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml",
+      "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFProfileLib.sysml",
+      "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml",
+      "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_N_ary.sysml",
+      "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_OwnedEnds.sysml",
+      "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_UnownedEnds.sysml",
+      "vendor/corpus/sysml/src/examples/Camera Example/Camera.sysml",
+      "vendor/corpus/sysml/src/examples/Camera Example/PictureTaking.sysml",
+      "vendor/corpus/sysml/src/examples/Cause and Effect Examples/CauseAndEffectExample.sysml",
+      "vendor/corpus/sysml/src/examples/Cause and Effect Examples/MedicalDeviceFailure.sysml",
+      "vendor/corpus/sysml/src/examples/Comment Examples/Comments.sysml",
+      "vendor/corpus/sysml/src/examples/Flashlight Example/Flashlight Example.sysml",
+      "vendor/corpus/sysml/src/examples/Geometry Examples/CarWithEnvelopingShape.sysml",
+      "vendor/corpus/sysml/src/examples/Geometry Examples/CarWithShapeAndCSG.sysml",
+      "vendor/corpus/sysml/src/examples/Geometry Examples/ExternalShapeRefExample.sysml",
+      "vendor/corpus/sysml/src/examples/Geometry Examples/SimpleQuadcopter.sysml",
+      "vendor/corpus/sysml/src/examples/Geometry Examples/VehicleGeometryAndCoordinateFrames.sysml",
+      "vendor/corpus/sysml/src/examples/Import Tests/AliasImport.sysml",
+      "vendor/corpus/sysml/src/examples/Import Tests/CircularImport.sysml",
+      "vendor/corpus/sysml/src/examples/Import Tests/PrivateImportTest.sysml",
+      "vendor/corpus/sysml/src/examples/Import Tests/QualifiedNameImportTest.sysml",
+      "vendor/corpus/sysml/src/examples/Individuals Examples/AnalysisIndividualExample.sysml",
+      "vendor/corpus/sysml/src/examples/Individuals Examples/JohnIndividualExample.sysml",
+      "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModel.sysml",
+      "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModelOutside.sysml",
+      "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-2.sysml",
+      "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-3.sysml",
+      "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-2.sysml",
+      "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-3.sysml",
+      "vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassConstraintExample.sysml",
+      "vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassRollup.sysml",
+      "vendor/corpus/sysml/src/examples/Mass Roll-up Example/Vehicles.sysml",
+      "vendor/corpus/sysml/src/examples/Metadata Examples/IssueMetadataExample.sysml",
+      "vendor/corpus/sysml/src/examples/Metadata Examples/RationaleMetadataExample.sysml"
+    ],
+    "metaclass": "SysML::Feature"
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "OwnedFeatureChaining"
+      },
+      {
+        "k": "plus",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "."
+            },
+            {
+              "k": "ref",
+              "name": "OwnedFeatureChaining"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "decision": "One feature chaining followed by one or more further ones, each after a `.`, as SysML 8.2.2.6.5 states it. A chain therefore has at least two segments by construction.",
+  "notes": "THIS IS THE SYSML VARIANT (ADR-0014). The other language states this production differently and is a separate unit, derived from its own clause and not consulted here. SysML spells the chain out where KerML refers to a FeatureChain production. The Xtext, shared from KerMLExpressions, uses KerML's factoring; it is a second opinion and the SysML clause is followed.\n\nThe two languages' bodies differ in factoring and, as far as their expansions go, accept the same text. That is recorded, not relied on: equivalence across languages is not something this unit asserts, which is why the production was split at all.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.5",
+      "note": "states OwnedFeatureChain as OwnedFeatureChaining ( '.' OwnedFeatureChaining )+"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerMLExpressions.xtext",
+      "note": "writes it as FeatureChain, KerML's factoring of the same shape"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T11:51:48Z"
+}

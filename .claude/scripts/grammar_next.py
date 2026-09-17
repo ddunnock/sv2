@@ -8,8 +8,13 @@ output does not depend on what was derived before it — same inputs, same
 result, regardless of session boundaries or order. Any workflow that shows the
 model the whole grammar at once forfeits that.
 
-    python3.11 .claude/scripts/grammar_next.py              next pending unit
-    python3.11 .claude/scripts/grammar_next.py PartUsage    a specific unit
+    python3.11 .claude/scripts/grammar_next.py                      next pending unit
+    python3.11 .claude/scripts/grammar_next.py PartUsage            a specific unit
+    python3.11 .claude/scripts/grammar_next.py RootNamespace@sysml  one language's variant
+
+A production KerML and SysML state differently is two units, one per language
+(ADR-0014). Each variant's pack carries only its own language's clause, Xtext and
+corpus, because the other language's body is not the one it is deriving.
 """
 
 from __future__ import annotations
@@ -22,7 +27,15 @@ from itertools import islice
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from _grammar import GRAMMAR, clause_defects, load_units, pinned_tokens
+from _grammar import (
+    GRAMMAR,
+    SCOPE_OF_SUFFIX,
+    clause_defects,
+    clause_for_scope,
+    load_units,
+    pinned_tokens,
+    unit_key,
+)
 from _state import REPO_ROOT, load_json
 
 if TYPE_CHECKING:
@@ -46,7 +59,17 @@ def _select(units: dict[str, Json], wanted: str | None) -> tuple[Json | None, Js
     """(unit, message): exactly one of the two is set."""
     if wanted:
         unit = units.get(wanted)
-        return (unit, None) if unit else (None, {"error": f"no unit {wanted!r}"})
+        if unit:
+            return unit, None
+        variants = sorted(
+            k for k, u in units.items() if u["production"] == wanted and u.get("scope")
+        )
+        if variants:
+            return None, {
+                "error": f"{wanted!r} is stated differently in each language; name a variant",
+                "variants": variants,
+            }
+        return None, {"error": f"no unit {wanted!r}"}
     pending = [u for u in units.values() if u["status"] == "pending"]
     if not pending:
         return None, {
@@ -57,12 +80,15 @@ def _select(units: dict[str, Json], wanted: str | None) -> tuple[Json | None, Js
     # Deterministic order: fewest dependencies first, then alphabetical, so the
     # same repository always yields the same sequence.
     return min(
-        pending, key=lambda u: (len(u["inputs"].get("xtext_rule_text", "")), u["production"])
+        pending, key=lambda u: (len(u["inputs"].get("xtext_rule_text", "")), unit_key(u))
     ), None
 
 
-def corpus_instances(xtext_rule_text: str) -> list[dict[str, str]]:
-    """Corpus lines mentioning this construct's keywords — evidence, not truth."""
+def corpus_instances(xtext_rule_text: str, scope: str | None = None) -> list[dict[str, str]]:
+    """Corpus lines mentioning this construct's keywords — evidence, not truth.
+
+    A variant reads only its own language's files; a shared unit reads both.
+    """
     literals = re.findall(r"'((?:[^'\\]|\\.)*)'", xtext_rule_text)
     words = [k for k in literals if re.fullmatch(r"[a-z][a-z0-9_]*", k)][:3]
     if not words:
@@ -71,7 +97,13 @@ def corpus_instances(xtext_rule_text: str) -> list[dict[str, str]]:
         r"^.*\b(" + "|".join(re.escape(w) for w in words) + r")\b.*$", re.MULTILINE
     )
     snippets: list[dict[str, str]] = []
-    files = [*Path("vendor/corpus").rglob("*.sysml"), *Path("tests/corpus").rglob("*.sysml")]
+    suffixes = [s for s, lang in SCOPE_OF_SUFFIX.items() if scope in (None, lang)]
+    files = [
+        f
+        for root in ("vendor/corpus", "tests/corpus")
+        for suffix in suffixes
+        for f in sorted(Path(root).rglob(f"*{suffix}"))
+    ]
     for f in files:
         snippets.extend(
             {"file": str(f), "line": m.group().strip()[:160]}
@@ -82,8 +114,8 @@ def corpus_instances(xtext_rule_text: str) -> list[dict[str, str]]:
     return snippets
 
 
-def clause_text(name: str) -> tuple[str, str]:
-    """The clause text for one production, and a complaint if the export is absent."""
+def clause_text(name: str, scope: str | None = None) -> tuple[str, str]:
+    """The clause text for one unit, and a complaint if it is absent or malformed."""
     clauses = load_json(CLAUSES, {})
     if not clauses:
         return "", (
@@ -93,7 +125,9 @@ def clause_text(name: str) -> tuple[str, str]:
     entry = clauses.get(name)
     if not entry:
         return "", f"{name} has no clause in {CLAUSES}"
-    text = entry.get("text", "")
+    _, text = clause_for_scope(entry, scope)
+    if not text:
+        return "", f"{name} has no {scope} clause in {CLAUSES}"
     defects = clause_defects(text)
     if defects:
         # The clause is the source. Saying this up front is the difference between
@@ -113,13 +147,15 @@ def clause_text(name: str) -> tuple[str, str]:
 
 def context_pack(unit: Json) -> Json:
     """The complete, isolated input for deriving one unit."""
-    name = unit["production"]
+    name, scope, key = unit["production"], unit.get("scope"), unit_key(unit)
     inputs = unit["inputs"]
-    text, complaint = clause_text(name)
+    text, complaint = clause_text(name, scope)
     keywords, operators = pinned_tokens()
     inventory = load_json(GRAMMAR / "productions.json", {"productions": []})
     return {
-        "unit": name,
+        "unit": key,
+        "production": name,
+        "scope": scope or "shared",
         "status": unit["status"],
         "fingerprint": unit["fingerprint"]["combined"][:16],
         "metaclass": inputs.get("metaclass", ""),
@@ -129,18 +165,18 @@ def context_pack(unit: Json) -> Json:
             "spec_clause_problem": complaint,
             "xtext_file": inputs.get("xtext_file", ""),
             "xtext_rule_text": inputs.get("xtext_rule_text", ""),
-            "corpus_instances": corpus_instances(inputs.get("xtext_rule_text", "")),
+            "corpus_instances": corpus_instances(inputs.get("xtext_rule_text", ""), scope),
         },
         "allowed_keywords": keywords + operators,
         "allowed_refs": sorted({p["name"] for p in inventory["productions"]}),
         "contract": {
-            "write_to": f".claude/state/grammar/units/{name}.json",
+            "write_to": f".claude/state/grammar/units/{key}.json",
             "set_fields": ["rule", "decision", "evidence", "status", "derived_utc", "notes"],
             "status_must_be": "derived",
             "rule_is": "a JSON AST per .claude/state/schema/grammar-unit.schema.json",
             "hard_rules": HARD_RULES,
         },
-        "then_run": f"python3.11 .claude/scripts/grammar_check_unit.py {name}",
+        "then_run": f"python3.11 .claude/scripts/grammar_check_unit.py {key}",
     }
 
 

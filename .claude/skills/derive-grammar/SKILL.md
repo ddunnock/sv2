@@ -35,6 +35,10 @@ Creates one unit per production with an input fingerprint, and reclassifies exis
 whose inputs have moved. Never edit a unit file to change the plan; change the inputs and
 re-run.
 
+A production KerML and SysML state differently becomes two units, `Name@kerml` and
+`Name@sysml` (ADR-0014). Name the variant when asking for a pack or checking one:
+`grammar_next.py RootNamespace@sysml`. Phases 4 and 5 run once per language.
+
 ## Phase 3 — derive, one unit at a time
 
 This is the only phase where you make decisions. Loop:

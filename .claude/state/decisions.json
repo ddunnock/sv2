@@ -89,6 +89,13 @@
       "status": "proposed",
       "date": "2026-09-16",
       "file": "docs/adr/0013-rust-cst-via-webassembly-as-code-mirror-syntax-tree-source.md"
+    },
+    {
+      "id": "0014",
+      "title": "KerML and SysML are two grammars sharing a vocabulary",
+      "status": "accepted",
+      "date": "2026-09-17",
+      "file": "docs/adr/0014-kerml-and-sysml-are-two-grammars.md"
     }
   ]
 }

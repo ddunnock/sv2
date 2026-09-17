@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "PrefixMetadataAnnotation",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "a8968e9edcfd0088e52df71a0a82780ff36ef4daf710c41e8e8785feb10cab4a",
     "xtext_rule": "fa4f801563f3c817e0b6ca5f0f49db0ee87e53804a2759105fb7abdb88312847",
@@ -56,5 +56,6 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Annotation"
-  }
+  },
+  "notes": "split per language (ADR-0014): KerML and SysML state this production differently, so it is derived as one variant per language instead"
 }

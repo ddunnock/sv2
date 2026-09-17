@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "RelationshipBody",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "585c82e63390013dbf92a7de18fe16debc88ae3bf10fde4cf45e858dcc5d5aab",
     "xtext_rule": "9d7336c48abc5cb6e81a7dea2b4ce71e77ce23ccb0236400b933ca7b32c821f1",
@@ -56,5 +56,6 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Relationship"
-  }
+  },
+  "notes": "split per language (ADR-0014): KerML and SysML state this production differently, so it is derived as one variant per language instead"
 }

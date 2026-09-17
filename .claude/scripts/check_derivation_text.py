@@ -67,8 +67,12 @@ def overlaps(units: dict[str, object], clauses: dict[str, object]) -> list[tuple
     """(production, the shared run) for every unit whose prose reproduces its clause."""
     found: list[tuple[str, str]] = []
     for name, unit in sorted(units.items()):
-        entry = clauses.get(name)
-        if not isinstance(entry, dict) or not isinstance(unit, dict):
+        if not isinstance(unit, dict):
+            continue
+        # Keyed by unit key, but the export is keyed by production. A variant is
+        # checked against both languages' clauses, which is stricter, not looser.
+        entry = clauses.get(str(unit.get("production", name)))
+        if not isinstance(entry, dict):
             continue
         prose = prose_of(unit)
         if not prose.strip():

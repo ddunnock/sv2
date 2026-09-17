@@ -9,6 +9,10 @@
   "properties": {
     "schema_version": { "type": "integer", "const": 1 },
     "production": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+    "scope": {
+      "enum": ["kerml", "sysml"],
+      "description": "Present only on a VARIANT: the one language whose grammar this unit belongs to. Absent on a shared unit, which belongs to both. KerML and SysML are sibling grammars that share most productions but state some differently — RootNamespace is NamespaceBodyElement* in KerML and PackageBodyElement* in SysML — and such a production is derived once per language (ADR-0014). The unit's file is named Production@scope.json, and load_units refuses a file whose name disagrees. Not to be confused with `language`, which records which pilot grammar file the Xtext second opinion came from."
+    },
     "language": { "enum": ["sysml", "kerml", "shared"] },
     "status": {
       "enum": ["pending", "derived", "verified", "conflict", "retired"],

@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "production": "OwnedFeatureChainMember",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "a0ac8d0c418826e95262789248a224e62ec9367279a83a5b8c4df179218244a2",
+    "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "edb0f28727605b0382fbc53e1e49ed74825df2e2c87cf1e3c51604fa2213ece5"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.8.2 (PrimaryExpressions.md, region_sha256 9ec248984ce84ebf)",
+    "xtext_file": "",
+    "xtext_rule_text": "",
+    "corpus_refs": [
+      "vendor/corpus/kerml/src/examples/Address Book Example/AddressBookModel.kerml",
+      "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_N_ary.kerml",
+      "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml",
+      "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_UnownedEnds.kerml",
+      "vendor/corpus/kerml/src/examples/Behavior Examples/Camera.kerml",
+      "vendor/corpus/kerml/src/examples/Behavior Examples/TakePicture.kerml",
+      "vendor/corpus/kerml/src/examples/Individuals Examples/JohnIndividualExample.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-Atoms.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-ModelingInstances.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-2-WithoutConnectors.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-3-OneToOneConnectors.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-4-OneToUnrestrictedConnectors.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-5-TimingForStructures.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-6-Sequences.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-7-DecisionsAndMerges.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_1.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_2.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_1.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_2.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_3.kerml",
+      "vendor/corpus/kerml/src/examples/Massed Thing Example/MassedThings.kerml",
+      "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml",
+      "vendor/corpus/kerml/src/examples/Packet Example/PacketUsage.kerml",
+      "vendor/corpus/kerml/src/examples/Packet Example/Packets.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/ArgumentResolution.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Associations.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Behaviors.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Circular.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Classifications.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Classifiers.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Conjugation.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Connectors.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Dependencies.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Expansion.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Expressions.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
+    ],
+    "metaclass": ""
+  },
+  "rule": {
+    "k": "ref",
+    "name": "FeatureChain"
+  },
+  "decision": "A feature chain, as KerML 8.2.5.8.2 states it.",
+  "notes": "THIS IS THE KERML VARIANT (ADR-0014). The other language states this production differently and is a separate unit, derived from its own clause and not consulted here. No Xtext rule of this name exists; the pilot inlines it into FeatureChainMember.\n\nThe two languages' bodies differ in factoring and, as far as their expansions go, accept the same text. That is recorded, not relied on: equivalence across languages is not something this unit asserts, which is why the production was split at all.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.2",
+      "note": "states OwnedFeatureChainMember as ownedMemberElement = FeatureChain"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T11:51:48Z"
+}

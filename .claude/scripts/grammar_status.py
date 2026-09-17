@@ -36,6 +36,9 @@ def main(argv: list[str] | None = None) -> int:
     for status in STATUSES:
         if counts[status]:
             print(f"  {status:9s} {counts[status]}")
+    split = {u["production"] for u in units.values() if u.get("scope") and u["status"] != "retired"}
+    if split:
+        print(f"  {len(split)} production(s) split into a KerML and a SysML variant (ADR-0014)")
 
     oracle = load_json(GRAMMAR / "validation.json")
     if oracle:

@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "production": "RootNamespace",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "05d6d5f37d8b9f1e7ac7d05e166f70177a93aa02d6a11aa9711bf654061a4fca",
+    "xtext_rule": "e48ff9cd7a8def7d99eec6c89fe10529dcc7223421731811c7f030b50afd2673",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "1106409f49588ae6651030f00273467515c26cb8c45525ffb7517fe0ee9a1ea4"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.3.4.1 (Namespaces.md, region_sha256 893fa9cef98e60fc)",
+    "xtext_file": "KerML.xtext",
+    "xtext_rule_text": "RootNamespace returns SysML::Namespace :\n\t{SysML::Namespace}NamespaceBodyElement*\n;",
+    "corpus_refs": [
+      "vendor/corpus/kerml/src/examples/Address Book Example/AddressBookModel.kerml",
+      "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_N_ary.kerml",
+      "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml",
+      "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_UnownedEnds.kerml",
+      "vendor/corpus/kerml/src/examples/Behavior Examples/Camera.kerml",
+      "vendor/corpus/kerml/src/examples/Behavior Examples/TakePicture.kerml",
+      "vendor/corpus/kerml/src/examples/Individuals Examples/JohnIndividualExample.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-Atoms.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-ModelingInstances.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-2-WithoutConnectors.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-3-OneToOneConnectors.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-4-OneToUnrestrictedConnectors.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-5-TimingForStructures.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-6-Sequences.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-7-DecisionsAndMerges.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_1.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_2.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_1.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_2.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_3.kerml",
+      "vendor/corpus/kerml/src/examples/Massed Thing Example/MassedThings.kerml",
+      "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml",
+      "vendor/corpus/kerml/src/examples/Packet Example/PacketUsage.kerml",
+      "vendor/corpus/kerml/src/examples/Packet Example/Packets.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/ArgumentResolution.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Associations.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Behaviors.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Circular.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Classifications.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Classifiers.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Conjugation.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Connectors.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Dependencies.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Expansion.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Expressions.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
+    ],
+    "metaclass": "SysML::Namespace"
+  },
+  "rule": {
+    "k": "star",
+    "item": {
+      "k": "ref",
+      "name": "NamespaceBodyElement"
+    }
+  },
+  "decision": "Zero or more namespace body elements, exactly as KerML 8.2.3.4.1 states it. This is the start symbol of the KerML grammar: a .kerml file is a sequence of namespace members, aliases and imports with no enclosing declaration, and an empty file is a valid root namespace.",
+  "notes": "THIS IS THE KERML VARIANT (ADR-0014). SysML states RootNamespace with a different body, PackageBodyElement*, which is not a defect on either side: the two languages admit different members at the root. That variant is a separate unit and is not consulted here.\n\nThe clause and KerML.xtext agree. The Xtext writes `{SysML::Namespace}NamespaceBodyElement*`; the braces are an Xtext action that creates the Namespace object before any member is parsed, so that an empty file still yields one. That is abstract-syntax construction and is not carried into the rule.\n\nThe clause's note 1 is why this production is the start symbol: every element other than a root namespace is contained in one, so every valid KerML text parses from here.\n\nNO KEYWORD AND NULLABLE, so nothing about a file's first token identifies it as a root namespace. It is identified by being the whole file.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.4.1",
+      "note": "states RootNamespace as NamespaceBodyElement*, with note 1 making it the start of every KerML text"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "the same body behind a {SysML::Namespace} object-creation action"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml",
+      "note": "the file is one root namespace whose single member is `package Classes { ... }`"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T11:51:01Z"
+}

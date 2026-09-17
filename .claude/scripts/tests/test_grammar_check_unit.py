@@ -25,8 +25,14 @@ def unit(production="Good", **over):
     return base
 
 
+def grammar(*names):
+    """A one-language view in which each named production is declared."""
+    return {name: {"production": name} for name in names}
+
+
 def check(u, units=None):
-    return evaluate(u, units or {}, ALLOWED_KW, DECLARED)
+    view = {**grammar(*DECLARED), **(units or {})}
+    return evaluate(u, {"kerml": view}, ALLOWED_KW)
 
 
 def test_a_complete_unit_is_promoted_to_verified():
@@ -126,3 +132,21 @@ def test_prose_mentioning_left_recursion_does_not_satisfy_the_check():
     )
     assert check(u) is False
     assert u["acceptance"]["no_unmarked_left_recursion"] == "fail"
+
+
+def test_a_shared_unit_must_resolve_its_refs_in_both_languages():
+    # ADR-0014: a shared unit is part of the KerML and the SysML grammar, so a ref
+    # declared in only one of them is a hole in the other.
+    u = unit(rule={"k": "ref", "name": "PackageBodyElement"})
+    views = {
+        "kerml": grammar("NamespaceBodyElement"),
+        "sysml": grammar("PackageBodyElement"),
+    }
+    assert evaluate(u, views, ALLOWED_KW) is False
+    assert u["acceptance"]["refs_declared"] == "fail"
+    assert any("absent from kerml" in d for d in u["diagnostics"])
+
+
+def test_a_variant_is_checked_only_against_its_own_language():
+    u = unit(rule={"k": "ref", "name": "PackageBodyElement"}, scope="sysml")
+    assert evaluate(u, {"sysml": grammar("PackageBodyElement")}, ALLOWED_KW) is True

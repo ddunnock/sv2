@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "production": "RootNamespace",
+  "scope": "sysml",
+  "language": "sysml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "7adb5037a495d9b1fa9625a133c60b86062a3335060e19b2235c7aef00e993be",
+    "xtext_rule": "5bf22c1c5d27b03996d3b13d68c0ac98c45c7a28cc3e64a59c4097a1e5eb5f7f",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "4661900a7ee3d7fc854643682e364c24226cc7efe083f1b0004c5e8b3d19dc43"
+  },
+  "inputs": {
+    "spec_clause_ref": "sysml clause 8.2.2.5.1 (Packages.md, region_sha256 3ee603b1b89d4345)",
+    "xtext_file": "SysML.xtext",
+    "xtext_rule_text": "RootNamespace returns SysML::Namespace :\n\t{SysML::Namespace} PackageBodyElement*\n;",
+    "corpus_refs": [
+      "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "vendor/corpus/sysml/src/examples/Analysis Examples/AnalysisAnnotation.sysml",
+      "vendor/corpus/sysml/src/examples/Analysis Examples/Dynamics.sysml",
+      "vendor/corpus/sysml/src/examples/Analysis Examples/Turbojet Stage Analysis.sysml",
+      "vendor/corpus/sysml/src/examples/Analysis Examples/Vehicle Analysis Demo.sysml",
+      "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFCoreLib.sysml",
+      "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml",
+      "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFProfileLib.sysml",
+      "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml",
+      "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_N_ary.sysml",
+      "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_OwnedEnds.sysml",
+      "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_UnownedEnds.sysml",
+      "vendor/corpus/sysml/src/examples/Camera Example/Camera.sysml",
+      "vendor/corpus/sysml/src/examples/Camera Example/PictureTaking.sysml",
+      "vendor/corpus/sysml/src/examples/Cause and Effect Examples/CauseAndEffectExample.sysml",
+      "vendor/corpus/sysml/src/examples/Cause and Effect Examples/MedicalDeviceFailure.sysml",
+      "vendor/corpus/sysml/src/examples/Comment Examples/Comments.sysml",
+      "vendor/corpus/sysml/src/examples/Flashlight Example/Flashlight Example.sysml",
+      "vendor/corpus/sysml/src/examples/Geometry Examples/CarWithEnvelopingShape.sysml",
+      "vendor/corpus/sysml/src/examples/Geometry Examples/CarWithShapeAndCSG.sysml",
+      "vendor/corpus/sysml/src/examples/Geometry Examples/ExternalShapeRefExample.sysml",
+      "vendor/corpus/sysml/src/examples/Geometry Examples/SimpleQuadcopter.sysml",
+      "vendor/corpus/sysml/src/examples/Geometry Examples/VehicleGeometryAndCoordinateFrames.sysml",
+      "vendor/corpus/sysml/src/examples/Import Tests/AliasImport.sysml",
+      "vendor/corpus/sysml/src/examples/Import Tests/CircularImport.sysml",
+      "vendor/corpus/sysml/src/examples/Import Tests/PrivateImportTest.sysml",
+      "vendor/corpus/sysml/src/examples/Import Tests/QualifiedNameImportTest.sysml",
+      "vendor/corpus/sysml/src/examples/Individuals Examples/AnalysisIndividualExample.sysml",
+      "vendor/corpus/sysml/src/examples/Individuals Examples/JohnIndividualExample.sysml",
+      "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModel.sysml",
+      "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModelOutside.sysml",
+      "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-2.sysml",
+      "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-3.sysml",
+      "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-2.sysml",
+      "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-3.sysml",
+      "vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassConstraintExample.sysml",
+      "vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassRollup.sysml",
+      "vendor/corpus/sysml/src/examples/Mass Roll-up Example/Vehicles.sysml",
+      "vendor/corpus/sysml/src/examples/Metadata Examples/IssueMetadataExample.sysml",
+      "vendor/corpus/sysml/src/examples/Metadata Examples/RationaleMetadataExample.sysml"
+    ],
+    "metaclass": "SysML::Namespace"
+  },
+  "rule": {
+    "k": "star",
+    "item": {
+      "k": "ref",
+      "name": "PackageBodyElement"
+    }
+  },
+  "decision": "Zero or more package body elements, exactly as SysML 8.2.2.5.1 states it. This is the start symbol of the SysML grammar: a .sysml file is a sequence of package members, element filters, aliases and imports with no enclosing declaration, and an empty file is a valid root namespace.",
+  "notes": "THIS IS THE SYSML VARIANT (ADR-0014). KerML states RootNamespace with a different body, NamespaceBodyElement*, which is not a defect on either side: SysML's root admits package members and element filters where KerML's admits namespace members. That variant is a separate unit and is not consulted here.\n\nThe clause and SysML.xtext agree. The Xtext's `{SysML::Namespace}` is an object-creation action, so an empty file still yields a Namespace; it is abstract-syntax construction and is not carried into the rule.\n\nFOR A PARSER AUTHOR: the existing sv2-syntax parser already implements this body as its root, and applies it to .kerml files too. Under ADR-0014 that is correct for .sysml and not for .kerml, whose root is the KerML variant.\n\nNO KEYWORD AND NULLABLE, so nothing about a file's first token identifies it as a root namespace. It is identified by being the whole file.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.5.1",
+      "note": "states RootNamespace as PackageBodyElement*"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "the same body behind a {SysML::Namespace} object-creation action"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "the file is one root namespace whose single member is `package SimpleVehicleModel{ ... }`"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T11:51:01Z"
+}

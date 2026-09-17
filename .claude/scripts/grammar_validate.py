@@ -8,6 +8,11 @@ This validates the grammar without involving the Rust parser at all. When both
 later agree on the same corpus, that is two implementations agreeing rather
 than one checking itself.
 
+Each file is recognized by its own language's grammar, chosen by suffix: a .kerml
+file against the KerML grammar, a .sysml file against the SysML one (ADR-0014).
+Checking both against one merged grammar would let a SysML construct in a KerML
+file pass, and a positive-only corpus would never notice.
+
     python3.11 .claude/scripts/grammar_validate.py
 """
 
@@ -20,13 +25,23 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from _earley import make_lexer, recognize
-from _grammar import GRAMMAR, START, load_units, normalize, pinned_tokens
+from _grammar import (
+    GRAMMAR,
+    SCOPE_OF_SUFFIX,
+    SCOPES,
+    START,
+    grammar_view,
+    load_units,
+    normalize,
+    pinned_tokens,
+)
 from _state import REPO_ROOT
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from _earley import Productions, Token
+    from _state import Json
 
 NOTE = (
     "Independent Earley oracle over the derived grammar. Positive-only acceptance is a weak "
@@ -51,47 +66,65 @@ def _accepts(prods: Productions, lex: Callable[[str], list[Token]], f: Path) -> 
         return False, f"lex error: {exc}"
 
 
+def grammars_by_scope(units: dict[str, Json]) -> dict[str, Productions]:
+    """Each language's normalized grammar, for the languages whose start symbol exists."""
+    grammars: dict[str, Productions] = {}
+    for scope in SCOPES:
+        view = {n: u for n, u in grammar_view(units, scope).items() if u.get("rule")}
+        if START in view:
+            grammars[scope] = normalize(view)
+    return grammars
+
+
+def sweep(
+    files: list[Path], grammars: dict[str, Productions], lex: Callable[[str], list[Token]]
+) -> tuple[list[str], list[dict[str, str]], int]:
+    """(accepted, rejected with the reason, skipped) — each file by its own language."""
+    accepted: list[str] = []
+    rejected: list[dict[str, str]] = []
+    skipped = 0
+    for f in files:
+        prods = grammars.get(SCOPE_OF_SUFFIX.get(f.suffix, ""))
+        if prods is None:
+            skipped += 1
+            continue
+        ok, why = _accepts(prods, lex, f)
+        if ok:
+            accepted.append(str(f))
+        else:
+            rejected.append({"file": str(f), "why": why})
+    return accepted, rejected, skipped
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the derived grammar over the corpus with the independent recognizer."""
     argparse.ArgumentParser(description=__doc__).parse_args(argv)
     os.chdir(REPO_ROOT)
 
-    units = {n: u for n, u in load_units().items() if u.get("rule") and u["status"] != "retired"}
-    if not units:
-        print("no derived rules yet — validation inert")
+    grammars = grammars_by_scope(load_units())
+    if not grammars:
+        print(f"start symbol {START} not derived in either language yet — validation inert")
         return 0
-    if START not in units:
-        print(f"start symbol {START} not derived yet — validation inert")
-        return 0
+    if inert := [s for s in SCOPES if s not in grammars]:
+        # One language checked is not a clean oracle: its files are simply not looked at.
+        print(f"    note: {START} not derived for {', '.join(inert)} — those files are skipped")
 
     lex = make_lexer(*pinned_tokens())
-    prods = normalize(units)
-
     positive = model_files("vendor/corpus", "tests/corpus")
     negative = [f for f in model_files("tests/rejection") if "known-permissive" not in f.parts]
-
-    accepted: list[str] = []
-    missed: list[dict[str, str]] = []
-    for f in positive:
-        ok, why = _accepts(prods, lex, f)
-        if ok:
-            accepted.append(str(f))
-        else:
-            missed.append({"file": str(f), "why": why})
-    caught: list[str] = []
-    leaked: list[str] = []
-    for f in negative:
-        leaks, _ = _accepts(prods, lex, f)
-        if leaks:
-            leaked.append(str(f))
-        else:
-            caught.append(str(f))
+    accepted, missed, skipped_positive = sweep(positive, grammars, lex)
+    # For the negative set the directions invert: accepting a file is the failure.
+    leaked, rejected, skipped_negative = sweep(negative, grammars, lex)
+    caught = [r["file"] for r in rejected]
+    skipped = skipped_positive + skipped_negative
 
     report = {
         "_generated_by": ".claude/scripts/grammar_validate.py",
         "_note": NOTE,
         "start_symbol": START,
-        "productions_normalized": len(prods),
+        "languages_checked": sorted(grammars),
+        "skipped": skipped,
+        "productions_normalized": {s: len(p) for s, p in sorted(grammars.items())},
         "accepted": len(accepted),
         "missed": len(missed),
         "caught": len(caught),
@@ -110,7 +143,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"    LEAKED {leak}")
     if not negative:
         print("    no negative corpus — the acceptance claim is positive-only and therefore weak")
-    return 0 if (not missed and not leaked and negative) else 1
+    if skipped:
+        print(f"    {skipped} file(s) skipped: their language's grammar has no start symbol yet")
+    return 0 if (not missed and not leaked and not skipped and negative) else 1
 
 
 if __name__ == "__main__":

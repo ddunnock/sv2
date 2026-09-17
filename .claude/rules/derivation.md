@@ -23,6 +23,17 @@ derivation order, and order-independence is the only reason an AI-assisted deriv
 repeatable across sessions and across releases. A unit derived with broader context has a
 fingerprint that no longer describes what produced it.
 
+## Two languages: shared units and variants
+
+KerML and SysML are two grammars sharing a vocabulary (ADR-0014). A production both state
+the same way is one shared unit, `Name.json`, and belongs to both. A production they state
+differently is two variants, `Name@kerml.json` and `Name@sysml.json`, each carrying
+`"scope"`. The plan decides which, deterministically; derivation never splits or merges a
+unit, and never argues that one language's body stands in for the other's.
+
+A variant is derived from its own language's clause only, which is all its pack contains.
+A shared unit's references must resolve in both grammars, and the checker enforces it.
+
 ## The specification is the source; the Xtext is a second opinion
 
 Write the rule from `spec_clause_text`. Consult `xtext_rule_text` to check yourself.

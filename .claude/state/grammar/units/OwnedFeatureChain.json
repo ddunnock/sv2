@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "OwnedFeatureChain",
   "language": "kerml",
-  "status": "verified",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "c7667d153b5701eb1b01c5b5d0ebe2a5ff76a2f7fa56e68f749a6b10e9b5f771",
     "xtext_rule": "2d8b48e7d5b058465b7b6fbfffc3213b74633787cfaceb4b945a0ba8d036007f",
@@ -78,5 +78,6 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-16T21:08:34Z"
+  "verified_utc": "2026-09-16T21:08:34Z",
+  "notes": "split per language (ADR-0014): KerML and SysML state this production differently, so it is derived as one variant per language instead"
 }

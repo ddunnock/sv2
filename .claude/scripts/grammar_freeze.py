@@ -16,7 +16,7 @@ import json
 import os
 from typing import TYPE_CHECKING
 
-from _grammar import GRAMMAR, load_units, render_ebnf
+from _grammar import GRAMMAR, load_units, render_ebnf, shadowed
 from _state import REPO_ROOT, load_json, pin_value, utc_now
 
 if TYPE_CHECKING:
@@ -38,7 +38,11 @@ LEDGER_NOTE = (
 
 
 def grammar_body(units: dict[str, Json]) -> dict[str, Json]:
-    """The frozen form of every unit that has a rule, in name order."""
+    """The frozen form of every unit that has a rule, in key order.
+
+    Keyed by unit key, so a production the two languages state differently is frozen
+    as `Name@kerml` and `Name@sysml` and a rebase compares each against its own past.
+    """
     return {
         name: {
             "rule": unit["rule"],
@@ -57,12 +61,17 @@ def blockers(units: dict[str, Json], oracle: Json) -> list[str]:
     unverified = [n for n, u in units.items() if u["status"] != "verified"]
     if unverified:
         found.append(f"{len(unverified)} unit(s) not verified: {', '.join(sorted(unverified)[:8])}")
+    if both := shadowed(units):
+        found.append(f"{len(both)} production(s) have a shared unit and a variant: {both[:8]}")
     if not oracle:
         found.append("oracle has not been run — python3.11 .claude/scripts/grammar_validate.py")
     elif oracle.get("missed") or oracle.get("leaked"):
         found.append(
             f"oracle not clean: {oracle.get('missed')} missed, {oracle.get('leaked')} leaked"
         )
+    elif oracle.get("skipped"):
+        # A language whose files were never looked at has not passed; it was not tested.
+        found.append(f"oracle skipped {oracle.get('skipped')} file(s) in an unchecked language")
     return found
 
 

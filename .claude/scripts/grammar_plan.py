@@ -18,7 +18,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from _grammar import GRAMMAR, UNITS, hash_parts, load_units, save_unit, xtext_rule_text
+from _grammar import (
+    GRAMMAR,
+    SCOPE_OF_SUFFIX,
+    SCOPES,
+    UNITS,
+    clause_for_scope,
+    divergent_productions,
+    hash_parts,
+    load_units,
+    save_unit,
+    unit_key,
+    xtext_rule_text,
+)
 from _state import REPO_ROOT, load_json
 
 if TYPE_CHECKING:
@@ -53,7 +65,7 @@ def _load_sources() -> Sources:
     return Sources(clauses, metaclass_of, corpus, fingerprint)
 
 
-def _clause_inputs(clause: Json, xtext_file: str | None, xtext: str | None) -> dict[str, str]:
+def _clause_inputs(ref: str, xtext_file: str | None, xtext: str | None) -> dict[str, str]:
     """The inputs a unit records. The clause TEXT is deliberately not among them.
 
     A unit is committed; the clause is verbatim OMG specification prose and this
@@ -64,24 +76,37 @@ def _clause_inputs(clause: Json, xtext_file: str | None, xtext: str | None) -> d
     production in it: 1.2 MB for 170 KB of distinct text.
     """
     return {
-        "spec_clause_ref": clause.get("ref", ""),
+        "spec_clause_ref": ref,
         "xtext_file": xtext_file or "",
         "xtext_rule_text": xtext or "",
     }
 
 
-def _language(xtext_file: str | None) -> str:
+def _language(xtext_file: str | None, scope: str | None) -> str:
+    if scope:
+        return scope
     if not xtext_file:
         return "shared"
     return "sysml" if "SysML" in xtext_file else "kerml"
 
 
-def _plan_one(name: str, units: dict[str, Json], src: Sources) -> str:
-    """Create, re-stale, or carry forward one unit. Returns which of the three happened."""
-    xtext_file, xtext = xtext_rule_text(name)
-    clause = src.clauses.get(name, {})
+def expected_keys(derivable: list[str], divergent: set[str]) -> list[tuple[str, str | None]]:
+    """(production, scope) for every unit the inventory calls for, in a stable order.
+
+    A production the two languages state differently gets one variant per language;
+    every other production gets one shared unit.
+    """
+    return [
+        (name, scope) for name in derivable for scope in (SCOPES if name in divergent else (None,))
+    ]
+
+
+def _plan_one(name: str, scope: str | None, units: dict[str, Json], src: Sources) -> str:
+    """Create, re-stale, revive or carry forward one unit. Returns which happened."""
+    xtext_file, xtext = xtext_rule_text(name, scope)
+    ref, text = clause_for_scope(src.clauses.get(name, {}), scope)
     fp = {
-        "spec_clause": hash_parts(clause.get("text", "")),
+        "spec_clause": hash_parts(text),
         "xtext_rule": hash_parts(xtext or ""),
         "corpus_instances": src.corpus_fingerprint,
     }
@@ -92,28 +117,35 @@ def _plan_one(name: str, units: dict[str, Json], src: Sources) -> str:
     # caught by grammar_validate.py re-running, which is the correct mechanism.
     fp["combined"] = hash_parts(fp["spec_clause"], fp["xtext_rule"])
 
-    unit = units.get(name)
+    corpus = [c for c in src.corpus if scope is None or SCOPE_OF_SUFFIX.get(c.suffix) == scope]
+    fresh: Json = {
+        "schema_version": 1,
+        "production": name,
+        **({"scope": scope} if scope else {}),
+        "language": _language(xtext_file, scope),
+        "status": "pending",
+        "fingerprint": fp,
+        "inputs": {
+            **_clause_inputs(ref, xtext_file, xtext),
+            "corpus_refs": [str(c) for c in corpus[:40]],
+            "metaclass": src.metaclass_of.get(name, ""),
+        },
+    }
+    unit = units.get(unit_key(fresh))
     if unit is None:
-        save_unit(
-            {
-                "schema_version": 1,
-                "production": name,
-                "language": _language(xtext_file),
-                "status": "pending",
-                "fingerprint": fp,
-                "inputs": {
-                    **_clause_inputs(clause, xtext_file, xtext),
-                    "corpus_refs": [str(c) for c in src.corpus[:40]],
-                    "metaclass": src.metaclass_of.get(name, ""),
-                },
-            }
-        )
+        save_unit(fresh)
         return "created"
+    if unit["status"] == "retired":
+        # Declared again — typically a production whose two languages stopped
+        # diverging, or started. Its old rule was for inputs that no longer apply.
+        fresh["notes"] = ("declared again after retirement\n" + unit.get("notes", "")).strip()
+        save_unit(fresh)
+        return "revived"
     if unit["fingerprint"]["combined"] == fp["combined"] or unit["status"] not in STALEABLE:
         return "carried"
     unit["status"] = "pending"  # inputs moved: the rule must be re-derived
     unit["fingerprint"] = fp
-    unit["inputs"].update(_clause_inputs(clause, xtext_file, xtext))
+    unit["inputs"].update(_clause_inputs(ref, xtext_file, xtext))
     unit["notes"] = (
         "inputs changed since derivation; rule below is the previous one and "
         "must be re-derived\n" + unit.get("notes", "")
@@ -152,16 +184,22 @@ def _strip_clause_text(units: dict[str, Json]) -> int:
     return stripped
 
 
-def _retire_undeclared(declared: set[str]) -> int:
+def _retire_undeclared(expected: set[str], divergent: set[str]) -> int:
     retired = 0
-    for name, unit in load_units().items():
-        if name not in declared and unit["status"] != "retired":
-            unit["status"] = "retired"
-            unit["notes"] = (
-                "no longer declared in the pinned grammar\n" + unit.get("notes", "")
-            ).strip()
-            save_unit(unit)
-            retired += 1
+    for key, unit in load_units().items():
+        if key in expected or unit["status"] == "retired":
+            continue
+        if not unit.get("scope") and unit["production"] in divergent:
+            reason = (
+                "split per language (ADR-0014): KerML and SysML state this production "
+                "differently, so it is derived as one variant per language instead"
+            )
+        else:
+            reason = "no longer declared in the pinned grammar"
+        unit["status"] = "retired"
+        unit["notes"] = (reason + "\n" + unit.get("notes", "")).strip()
+        save_unit(unit)
+        retired += 1
     return retired
 
 
@@ -190,16 +228,21 @@ def main(argv: list[str] | None = None) -> int:
 
     names: list[str] = inventory["productions"]
     derivable = [n for n in names if n not in _terminals(names)]
+    divergent = divergent_productions(inventory["rules"]) & set(derivable)
+    keys = expected_keys(derivable, divergent)
 
-    outcomes = {"created": 0, "restale": 0, "carried": 0}
-    for name in derivable:
-        outcomes[_plan_one(name, units, src)] += 1
+    outcomes = {"created": 0, "restale": 0, "revived": 0, "carried": 0}
+    for name, scope in keys:
+        outcomes[_plan_one(name, scope, units, src)] += 1
 
-    retired = _retire_undeclared(set(derivable))
+    expected = {f"{name}@{scope}" if scope else name for name, scope in keys}
+    retired = _retire_undeclared(expected, divergent)
     print(
         f"plan: {outcomes['created']} new, {outcomes['restale']} stale (inputs moved), "
-        f"{outcomes['carried']} carried forward, {retired} retired"
+        f"{outcomes['revived']} revived, {outcomes['carried']} carried forward, "
+        f"{retired} retired"
     )
+    print(f"      {len(divergent)} production(s) split into a KerML and a SysML variant")
     print(f"      units at {UNITS}")
     return 0
 

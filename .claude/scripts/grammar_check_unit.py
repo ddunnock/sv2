@@ -29,11 +29,26 @@ import os
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from _grammar import kws_of, load_units, normalize, pinned_tokens, refs_of, render_ebnf, save_unit
+from _grammar import (
+    SCOPES,
+    grammar_view,
+    kws_of,
+    load_units,
+    normalize,
+    pinned_tokens,
+    refs_of,
+    render_ebnf,
+    save_unit,
+    unit_key,
+)
 from _state import REPO_ROOT, utc_now
 
 if TYPE_CHECKING:
     from _state import Json
+
+    #: The grammars a unit is checked against, by scope, each keyed by production.
+    #: A variant belongs to one; a shared unit to both, and must hold in each.
+    Views = dict[str, dict[str, Json]]
 
 
 @dataclass(frozen=True)
@@ -65,10 +80,15 @@ def _presence_checks(unit: Json) -> list[Check]:
     ]
 
 
-def _vocabulary_checks(rule: Json, allowed_kw: set[str], declared: set[str]) -> list[Check]:
-    """Every keyword is in the pinned token set; every ref names a live unit."""
+def _vocabulary_checks(rule: Json, allowed_kw: set[str], views: Views) -> list[Check]:
+    """Every keyword is pinned; every ref names a live unit in EVERY grammar the unit is in."""
     bad_kw = sorted(k for k in kws_of(rule) if k not in allowed_kw)
-    bad_ref = sorted(r for r in refs_of(rule) if r not in declared)
+    missing = {
+        ref: sorted(scope for scope, view in views.items() if ref not in view)
+        for ref in refs_of(rule)
+    }
+    bad_ref = sorted(ref for ref, scopes in missing.items() if scopes)
+    where = "; ".join(f"{ref} (absent from {', '.join(missing[ref])})" for ref in bad_ref)
     return [
         Check(
             "keywords_pinned",
@@ -78,7 +98,7 @@ def _vocabulary_checks(rule: Json, allowed_kw: set[str], declared: set[str]) -> 
         Check(
             "refs_declared",
             not bad_ref,
-            f"references to undeclared productions: {bad_ref}. A lexical terminal "
+            f"references to undeclared productions: {where}. A lexical terminal "
             f"such as NAME is written {{k: tok}}, not {{k: ref}}",
         ),
     ]
@@ -95,29 +115,28 @@ def _left_recursion_check(unit: Json, rule: Json) -> Check:
     )
 
 
-def _normalization_check(unit: Json, units: dict[str, Json], refs: set[str]) -> Check:
-    """The AST, and those of its dependencies, must survive normalization."""
+def _normalization_check(unit: Json, views: Views, refs: set[str]) -> Check:
+    """The AST, and those of its dependencies in every grammar it belongs to, normalize."""
     name = unit["production"]
     try:
         normalize({name: unit})
-        for dep in refs:
-            dependency = units.get(dep)
-            if dependency and dependency.get("rule"):
-                normalize({dep: dependency})
+        for view in views.values():
+            for dep in refs:
+                dependency = view.get(dep)
+                if dependency and dependency.get("rule"):
+                    normalize({dep: dependency})
     except (ValueError, KeyError, TypeError, AttributeError) as exc:
         # A malformed AST is a failed acceptance check, reported on the unit.
         return Check("normalizes", passed=False, detail=f"AST will not normalize: {exc}")
     return Check("normalizes", passed=True)
 
 
-def _rule_checks(
-    unit: Json, units: dict[str, Json], allowed_kw: set[str], declared: set[str]
-) -> list[Check]:
+def _rule_checks(unit: Json, views: Views, allowed_kw: set[str]) -> list[Check]:
     rule = unit["rule"]
     return [
-        *_vocabulary_checks(rule, allowed_kw, declared),
+        *_vocabulary_checks(rule, allowed_kw, views),
         _left_recursion_check(unit, rule),
-        _normalization_check(unit, units, refs_of(rule)),
+        _normalization_check(unit, views, refs_of(rule)),
     ]
 
 
@@ -150,25 +169,29 @@ def _record(unit: Json, checks: list[Check]) -> bool:
     return ok
 
 
-def evaluate(unit: Json, units: dict[str, Json], allowed_kw: set[str], declared: set[str]) -> bool:
+def views_for(unit: Json, units: dict[str, Json]) -> Views:
+    """The grammars a unit belongs to: its own scope for a variant, both for a shared unit."""
+    scopes = (unit["scope"],) if unit.get("scope") else SCOPES
+    return {scope: grammar_view(units, scope) for scope in scopes}
+
+
+def evaluate(unit: Json, views: Views, allowed_kw: set[str]) -> bool:
     """Run every acceptance check and record the outcome on the unit. No I/O."""
     checks = _presence_checks(unit)
     if unit.get("rule"):
-        checks += _rule_checks(unit, units, allowed_kw, declared)
+        checks += _rule_checks(unit, views, allowed_kw)
     return _record(unit, checks)
 
 
-def check_unit(
-    unit: Json, units: dict[str, Json], allowed_kw: set[str], declared: set[str]
-) -> bool:
-    """Evaluate one unit, save it, and report the outcome."""
-    ok = evaluate(unit, units, allowed_kw, declared)
+def check_unit(unit: Json, units: dict[str, Json], allowed_kw: set[str]) -> bool:
+    """Evaluate one unit against the grammars it belongs to, save it, and report."""
+    ok = evaluate(unit, views_for(unit, units), allowed_kw)
     save_unit(unit)
 
-    name = unit["production"]
-    print(f"  {'verified' if ok else 'FAIL':9s} {name}")
+    key = unit_key(unit)
+    print(f"  {'verified' if ok else 'FAIL':9s} {key}")
     if unit.get("rule"):
-        print(f"            {render_ebnf(name, unit['rule'])}")
+        print(f"            {render_ebnf(key, unit['rule'])}")
     for detail in unit.get("diagnostics", []):
         print(f"            {detail}")
     return ok
@@ -189,16 +212,17 @@ def main(argv: list[str] | None = None) -> int:
 
     keywords, operators = pinned_tokens()
     allowed_kw = set(keywords) | set(operators)
-    declared = {u["production"] for u in units.values() if u["status"] != "retired"}
 
     failed = False
-    for name in targets:
-        unit = units.get(name)
+    for key in targets:
+        unit = units.get(key)
         if not unit:
-            print(f"  {name}: no such unit")
+            variants = sorted(k for k, u in units.items() if u["production"] == key)
+            hint = f" — it is split per language: {', '.join(variants)}" if variants else ""
+            print(f"  {key}: no such unit{hint}")
             failed = True
             continue
-        failed = not check_unit(unit, units, allowed_kw, declared) or failed
+        failed = not check_unit(unit, units, allowed_kw) or failed
     return 1 if failed else 0
 
 

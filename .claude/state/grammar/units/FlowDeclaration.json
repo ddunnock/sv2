@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FlowDeclaration",
   "language": "kerml",
-  "status": "pending",
+  "status": "retired",
   "fingerprint": {
     "spec_clause": "788e2aab79e87c4126bf98a172a9361fd32e166618f66da80819c35762966c5c",
     "xtext_rule": "81e7c030e8d3a6482649c2d887e52ffc7673121c49ab76a93e016807d54c7299",
@@ -56,5 +56,6 @@
       "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
     ],
     "metaclass": "SysML::Flow"
-  }
+  },
+  "notes": "split per language (ADR-0014): KerML and SysML state this production differently, so it is derived as one variant per language instead"
 }

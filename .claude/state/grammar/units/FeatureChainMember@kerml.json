@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "production": "FeatureChainMember",
+  "scope": "kerml",
+  "language": "kerml",
+  "status": "verified",
+  "fingerprint": {
+    "spec_clause": "a0ac8d0c418826e95262789248a224e62ec9367279a83a5b8c4df179218244a2",
+    "xtext_rule": "b667d61f7b029479f4364e85aab529e9849f6d0b0e63983aff0996f1e9f52d5f",
+    "corpus_instances": "1eb55586ba6da2475bedd8e39e87c0b2bb15a113483f2e2e74b6ae00f8845fee",
+    "combined": "637a6f8b4e91b1e92a258c927fee2efdefcf75e1169c0c2dfeb4d3598014ea87"
+  },
+  "inputs": {
+    "spec_clause_ref": "kerml clause 8.2.5.8.2 (PrimaryExpressions.md, region_sha256 9ec248984ce84ebf)",
+    "xtext_file": "KerMLExpressions.xtext",
+    "xtext_rule_text": "FeatureChainMember returns SysML::Membership :\n\t  memberElement = [SysML::Feature | QualifiedName]\n\t| {SysML::OwningMembership} ownedRelatedElement += OwnedFeatureChain \n;",
+    "corpus_refs": [
+      "vendor/corpus/kerml/src/examples/Address Book Example/AddressBookModel.kerml",
+      "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_N_ary.kerml",
+      "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml",
+      "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_UnownedEnds.kerml",
+      "vendor/corpus/kerml/src/examples/Behavior Examples/Camera.kerml",
+      "vendor/corpus/kerml/src/examples/Behavior Examples/TakePicture.kerml",
+      "vendor/corpus/kerml/src/examples/Individuals Examples/JohnIndividualExample.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-Atoms.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-ModelingInstances.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-2-WithoutConnectors.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-3-OneToOneConnectors.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-4-OneToUnrestrictedConnectors.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-5-TimingForStructures.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-6-Sequences.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-7-DecisionsAndMerges.kerml",
+      "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_1.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_2.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_1.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_2.kerml",
+      "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_3.kerml",
+      "vendor/corpus/kerml/src/examples/Massed Thing Example/MassedThings.kerml",
+      "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml",
+      "vendor/corpus/kerml/src/examples/Packet Example/PacketUsage.kerml",
+      "vendor/corpus/kerml/src/examples/Packet Example/Packets.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/ArgumentResolution.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Associations.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Behaviors.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Circular.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Classifications.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Classifiers.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Conjugation.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Connectors.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Dependencies.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Expansion.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/Expressions.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml",
+      "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml"
+    ],
+    "metaclass": "SysML::Membership"
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "FeatureReferenceMember"
+      },
+      {
+        "k": "ref",
+        "name": "OwnedFeatureChainMember"
+      }
+    ]
+  },
+  "decision": "A feature reference member or an owned feature chain member, as KerML 8.2.5.8.2 states it.",
+  "notes": "THIS IS THE KERML VARIANT (ADR-0014). The other language states this production differently and is a separate unit, derived from its own clause and not consulted here. KerML reaches the single-name alternative through a named FeatureReferenceMember production.\n\nThe two languages' bodies differ in factoring and, as far as their expansions go, accept the same text. That is recorded, not relied on: equivalence across languages is not something this unit asserts, which is why the production was split at all.\n\nThe Xtext (KerMLExpressions.xtext, shared by both languages) inlines the first alternative as a qualified-name cross-reference. That inlining is not ported; KerML's clause names the production.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.8.2",
+      "note": "states FeatureChainMember as FeatureReferenceMember | OwnedFeatureChainMember"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerMLExpressions.xtext",
+      "note": "same two alternatives, the first inlined as a QualifiedName cross-reference"
+    }
+  ],
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T11:51:48Z"
+}

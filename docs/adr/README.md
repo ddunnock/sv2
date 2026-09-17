@@ -17,3 +17,7 @@ silently is not.
 | [0007](0007-local-resolver.md)              | The resolver is local and owned                 | accepted     |
 | [0008](0008-first-view-structure.md)        | First view is structure, interconnection second | accepted     |
 | [0009](0009-element-identity.md)            | Element identity strategy                       | **proposed** |
+| [0010](0010-grammar-and-metamodel-sourcing.md) | Grammar and metamodel sourcing | accepted |
+| [0011](0011-specification-bnf-as-a-pinned-input.md) | Specification BNF as a pinned input | accepted |
+| [0013](0013-rust-cst-via-webassembly-as-code-mirror-syntax-tree-source.md) | Rust CST via WebAssembly as CodeMirror's syntax tree | **proposed** |
+| [0014](0014-kerml-and-sysml-are-two-grammars.md) | KerML and SysML are two grammars sharing a vocabulary | accepted |
