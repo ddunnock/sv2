@@ -25,3 +25,6 @@ CLAUDE.local.md
 # The clause export they are derived from is not, and lives outside the tree:
 #   python3.11 .claude/scripts/export_wiki_clauses.py
 #   export SV2_WIKI_CLAUSES=~/.sv2-derivation/bnf-clauses.json
+
+# JetBrains IDE workspace, per-machine.
+.idea/
