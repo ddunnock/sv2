@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-17T12:09:31Z",
+    "regenerated_utc": "2026-09-17T18:04:10Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -23,10 +23,10 @@
       "percent": 2.3
     },
     "tests": {
-      "unit": 89,
+      "unit": 91,
       "snapshots": 4,
       "corpus_files": 311,
-      "negative_cases": 29,
+      "negative_cases": 28,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
-      "f52b282 Connect both roots to the kernel, and refuse evidence that names no file",
-      "6b60bf9 Derive KerML and SysML as two grammars that share a vocabulary",
-      "4b35b61 Resolve the declaration-optionality conflict, on a verified issue for three of four",
-      "cbc960a Say when a clause is malformed, instead of leaving it to be noticed",
-      "8ca988a Derive the ten FeatureElement alternatives, six verified and four in conflict",
-      "4787e4e Make the unit schema describe units, and validate them against it",
-      "affa0af Stop the unit checker writing into the prose it checks",
-      "b720844 Open the type layer: derive the membership productions of KerML 8.2.3.4 and 8.2.4.1"
+      "c0b8321 Require a keyword-less reference usage to declare something, so a lone ';' is not a member",
+      "e38c94a Cite the corpus instances two SysML usage units already had in their packs",
+      "ef1fc59 Adjudicate the state and requirement member conflicts left open in SysML's usage layer",
+      "f08f54f Derive the rest of SysML's usage members, and let the oracle parse SysML files for the first time",
+      "add35b8 Derive most of SysML's usage layer, and restore three more alternatives the specification's grammar omits",
+      "da9b413 Lex each language with its own reserved words in the grammar oracle",
+      "7ac472c Derive SysML's usage elements and body items, and restore four things the specification's grammar omits",
+      "b3aa875 Close KerML's grammar: every production its root reaches is verified"
     ]
   },
   "authored": {

@@ -208,9 +208,13 @@ fn an_unterminated_regular_comment_is_reported() {
 }
 
 #[test]
-fn an_unterminated_multiline_note_is_reported() {
-    // MULTILINE_NOTE = '//*' COMMENT_TEXT '*/' carries the same terminator.
-    parse_rejected("package Vehicle; //* never closed");
+fn an_unclosed_multiline_note_opener_is_a_single_line_note() {
+    // MULTILINE_NOTE = '//*' COMMENT_TEXT '*/' requires the terminator, so an unclosed
+    // `//*` is not one. It is still '//' LINE_TEXT, a SINGLE_LINE_NOTE, and the line
+    // after it is ordinary text (KerML 8.2.2.2).
+    parse_accepted("package Vehicle; //* never closed");
+    parse_accepted("package Vehicle;\n//* never closed\npackage Engine;");
+    parse_accepted("package Vehicle; //*/");
 }
 
 #[test]
@@ -218,7 +222,13 @@ fn a_comment_opener_whose_last_two_characters_are_the_terminator_is_still_unterm
     // `/*/` ends in `*/` while being unterminated: those are the opener's own
     // characters. The check has to exclude the opener before looking.
     parse_rejected("package Vehicle; /*/");
-    parse_rejected("package Vehicle; //*/");
+}
+
+#[test]
+fn text_after_an_unclosed_note_opener_is_still_parsed() {
+    // The negative side of the fallback: the note ends at its line, so an invalid
+    // line after it is reported rather than swallowed as note text.
+    parse_rejected("package Vehicle;\n//* never closed\n}");
 }
 
 #[test]

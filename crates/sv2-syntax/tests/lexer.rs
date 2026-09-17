@@ -96,6 +96,22 @@ fn regular_comment_is_distinct_from_a_note() {
 }
 
 #[test]
+fn an_unclosed_multiline_note_opener_lexes_as_a_single_line_note() {
+    // KerML 8.2.2.2: without its '*/', `//*` is not a MULTILINE_NOTE but is still
+    // '//' LINE_TEXT. The note stops at the line terminator.
+    let source = "//* open\nx";
+    assert_eq!(
+        kinds(source),
+        [
+            SyntaxKind::SingleLineNote,
+            SyntaxKind::Whitespace,
+            SyntaxKind::BasicName
+        ]
+    );
+    assert_eq!(texts(source), ["//* open", "\n", "x"]);
+}
+
+#[test]
 fn an_unterminated_comment_keeps_its_bytes() {
     // Not an error at this layer: dropping the text would break the round-trip.
     let source = "/* never closed";

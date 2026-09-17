@@ -170,9 +170,15 @@ fn next_kind(cursor: &mut Cursor<'_>, first: char) -> SyntaxKind {
 /// `MULTILINE_NOTE = '//*' COMMENT_TEXT '*/'` must be tried before
 /// `SINGLE_LINE_NOTE = '//' LINE_TEXT`, or every multiline note is lexed as a single
 /// line note and its body leaks into the tree as code.
+///
+/// A `//*` with no `*/` after it is not a `MULTILINE_NOTE`, because that production
+/// requires the terminator. It is still `'//'` followed by `LINE_TEXT`, so it is a
+/// `SINGLE_LINE_NOTE` running to the end of its line, and the lines after it are
+/// ordinary text. It is tried on a copy of the cursor so the fallback starts over.
 fn lex_comment(cursor: &mut Cursor<'_>) -> Option<SyntaxKind> {
-    if cursor.eat("//*") {
-        eat_until_close(cursor);
+    let mut note = *cursor;
+    if note.eat("//*") && eat_until_close(&mut note) {
+        *cursor = note;
         return Some(SyntaxKind::MultilineNote);
     }
     if cursor.eat("//") {
@@ -182,45 +188,45 @@ fn lex_comment(cursor: &mut Cursor<'_>) -> Option<SyntaxKind> {
         return Some(SyntaxKind::SingleLineNote);
     }
     if cursor.eat("/*") {
-        eat_until_close(cursor);
+        let _closed = eat_until_close(cursor);
         return Some(SyntaxKind::RegularComment);
     }
     None
 }
 
-/// Whether `text` is a comment that never reached its `*/` (`KerML` 8.2.2.2).
+/// Whether `text` is a regular comment that never reached its `*/` (`KerML` 8.2.2.2).
 ///
-/// `REGULAR_COMMENT = '/*' COMMENT_TEXT '*/'` and
-/// `MULTILINE_NOTE = '//*' COMMENT_TEXT '*/'` both require the terminator, so text
-/// that runs to end of input matches neither. The lexer still emits the token with
-/// every byte it covers — dropping it would break the round-trip — which is what
-/// leaves the parser able to report it.
+/// `REGULAR_COMMENT = '/*' COMMENT_TEXT '*/'` requires the terminator, so text that
+/// runs to end of input does not match it, and no other token starts with `/*`. The
+/// lexer still emits the token with every byte it covers — dropping it would break
+/// the round-trip — which is what leaves the parser able to report it. An unclosed
+/// `//*` never reaches here: it lexes as a `SINGLE_LINE_NOTE` (see `lex_comment`).
 ///
 /// The opener is excluded before looking for the terminator, because `/*/` ends in
 /// `*/` while being unterminated: those are the opener's own characters.
 #[must_use]
 pub(crate) fn is_unterminated_comment(kind: SyntaxKind, text: &str) -> bool {
-    let opener = match kind {
-        SyntaxKind::RegularComment => "/*",
-        SyntaxKind::MultilineNote => "//*",
-        _ => return false,
-    };
-    text.get(opener.len()..)
+    if kind != SyntaxKind::RegularComment {
+        return false;
+    }
+    text.get("/*".len()..)
         .is_none_or(|rest| !rest.ends_with("*/"))
 }
 
-/// Consume through the next `*/`, or to end of input if there is none.
+/// Consume through the next `*/`, or to end of input if there is none. Returns
+/// whether the `*/` was found.
 ///
 /// An unterminated comment is not an error here: the text still belongs to the
 /// token, and dropping it would break the round-trip. [`is_unterminated_comment`]
 /// is what turns it into a diagnostic, at the layer that has somewhere to put one.
-fn eat_until_close(cursor: &mut Cursor<'_>) {
+fn eat_until_close(cursor: &mut Cursor<'_>) -> bool {
     while cursor.peek().is_some() {
         if cursor.eat("*/") {
-            return;
+            return true;
         }
         cursor.bump();
     }
+    false
 }
 
 /// `DECIMAL_VALUE` and `EXPONENTIAL_VALUE`, `KerML` 8.2.2.4.
