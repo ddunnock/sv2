@@ -3,7 +3,7 @@
   "production": "AnalysisCaseDefinition",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "3f547f59cdfdc6bf686f4983601e95114cf5a7533054bace604c5c143988abb2",
     "xtext_rule": "b7336298980c20a4b7ec38be5cb3f987acc3cabfa62b02bd4a3c0f7a39a4c48b",
@@ -16,5 +16,55 @@
     "xtext_rule_text": "AnalysisCaseDefinition returns SysML::AnalysisCaseDefinition :\n\tOccurrenceDefinitionPrefix AnalysisCaseDefKeyword DefinitionDeclaration CaseBody\n;",
     "metaclass": "SysML::AnalysisCaseDefinition"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "OccurrenceDefinitionPrefix"
+      },
+      {
+        "k": "kw",
+        "text": "analysis"
+      },
+      {
+        "k": "kw",
+        "text": "def"
+      },
+      {
+        "k": "ref",
+        "name": "DefinitionDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "CaseBody"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.23 states OccurrenceDefinitionPrefix 'analysis' 'def' DefinitionDeclaration CaseBody, and the SysML Xtext agrees (the same structure; the keyword pair is factored into a keyword rule, a renaming). The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.23 (AnalysisCasesTextualNotation.md, region_sha256 4cc422ae06b4314e)",
+      "note": "OccurrenceDefinitionPrefix 'analysis' 'def' DefinitionDeclaration CaseBody"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext AnalysisCaseDefinition",
+      "note": "the same structure; the keyword pair is factored into a keyword rule, a renaming"
+    }
+  ],
+  "derived_utc": "2026-09-17T14:56:50Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:56:54Z"
 }

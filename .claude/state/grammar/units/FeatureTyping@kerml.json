@@ -3,7 +3,7 @@
   "production": "FeatureTyping",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "34ad110626021ffd34bf1c7b0837f2f933749bf64276e20167fc5fc955388d42",
     "xtext_rule": "e873cea1380a2b81939bda02426a9331b5bc306098915a101a88342de621b22f",
@@ -15,5 +15,95 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "FeatureTyping returns SysML::FeatureTyping :\n\t( 'specialization' Identification? )?\n    'typing' typedFeature = [SysML::Feature | QualifiedName]\n    (':' | 'typed' 'by') FeatureType\n    RelationshipBody\n;",
     "metaclass": "SysML::FeatureTyping"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "specialization"
+            },
+            {
+              "k": "ref",
+              "name": "Identification"
+            }
+          ]
+        }
+      },
+      {
+        "k": "kw",
+        "text": "typing"
+      },
+      {
+        "k": "ref",
+        "name": "QualifiedName"
+      },
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "kw",
+            "text": ":"
+          },
+          {
+            "k": "seq",
+            "items": [
+              {
+                "k": "kw",
+                "text": "typed"
+              },
+              {
+                "k": "kw",
+                "text": "by"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "GeneralType"
+      },
+      {
+        "k": "ref",
+        "name": "RelationshipBody"
+      }
+    ]
+  },
+  "decision": "KerML 8.2.4.3.2 states FeatureTyping = ( 'specialization' Identification )? 'typing' typedFeature = [QualifiedName] TYPED_BY GeneralType RelationshipBody. The KerML Xtext writes the optional name part as `( 'specialization' Identification? )?`; the specification's Identification can already be empty, so the inner '?' adds nothing, and references FeatureType where the clause references GeneralType; FeatureType's body is not in this pack, so the clause's reference is kept. TYPED_BY is the special lexical terminal of KerML 8.2.2.7, written out as keyword alternatives. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.2 (FeatureTyping.md, region_sha256 90ac71773b3e8c33)",
+      "note": "FeatureTyping = ( 'specialization' Identification )? 'typing' typedFeature = [QualifiedName] TYPED_BY GeneralType RelationshipBody"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.2.7 (Symbols.md, region_sha256 c59561da3efdda5a)",
+      "note": "TYPED_BY definition"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext FeatureTyping",
+      "note": "writes the optional name part as `( 'specialization' Identification? )?`; the specification's Identification can already be empty, so the inner '?' adds nothing, and references FeatureType where the clause references GeneralType; FeatureType's body is not in this pack, so the clause's reference is kept"
+    }
+  ],
+  "notes": "",
+  "derived_utc": "2026-09-17T14:58:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:58:25Z"
 }

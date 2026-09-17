@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FlowFeatureRedefinition",
   "language": "shared",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "788e2aab79e87c4126bf98a172a9361fd32e166618f66da80819c35762966c5c",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -14,5 +14,35 @@
     "xtext_file": "",
     "xtext_rule_text": "",
     "metaclass": ""
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "QualifiedName"
+  },
+  "decision": "KerML 8.2.5.9.2 states FlowFeatureRedefinition : Redefinition = redefinedFeature = [QualifiedName]. SysML 8.2.2.16 states the same body under the misspelled header FlowFeatureRefefinition while referencing FlowFeatureRedefinition; deviation FlowFeatureRedefinition (follow_spec) reads the header as the referenced spelling, so both languages state the same body and the unit is shared. The pilot Xtext has no such rule. A cross-reference [QualifiedName] is a ref to QualifiedName by the derivation's convention.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.9.2 (Flows.md, region_sha256 150b0ccc1e0d5422) | sysml clause 8.2.2.16 (FlowsTextualNotation.md, region_sha256 e03f363eef9b4cf1)",
+      "note": "FlowFeatureRedefinition : Redefinition = redefinedFeature = [QualifiedName]"
+    },
+    {
+      "kind": "deviation",
+      "ref": "FlowFeatureRedefinition",
+      "note": "SysML's FlowFeatureRefefinition header read as FlowFeatureRedefinition"
+    }
+  ],
+  "notes": "",
+  "derived_utc": "2026-09-17T14:58:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:58:26Z"
 }

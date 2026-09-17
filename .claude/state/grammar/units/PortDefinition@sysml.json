@@ -3,7 +3,7 @@
   "production": "PortDefinition",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "5471b257abf8680830d0b23a122517730b75daa86ca89a3638f89da2550a5fd8",
     "xtext_rule": "b6c3c845ed59abe960f69bec11a359d66d7346b01e925b56c37555efc0efeca4",
@@ -16,5 +16,55 @@
     "xtext_rule_text": "PortDefinition returns SysML::PortDefinition :\n\tDefinitionPrefix PortDefKeyword Definition\n\townedRelationship += ConjugatedPortDefinitionMember\n;",
     "metaclass": "SysML::PortDefinition"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "The same clause defines PortConjugation as `{}`, so ConjugatedPortDefinitionMember consumes no tokens; that belongs to those productions' units.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "DefinitionPrefix"
+      },
+      {
+        "k": "kw",
+        "text": "port"
+      },
+      {
+        "k": "kw",
+        "text": "def"
+      },
+      {
+        "k": "ref",
+        "name": "Definition"
+      },
+      {
+        "k": "ref",
+        "name": "ConjugatedPortDefinitionMember"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.12 states PortDefinition = DefinitionPrefix 'port' 'def' Definition ownedRelationship += ConjugatedPortDefinitionMember, and the SysML Xtext agrees (the same structure; the keyword pair is factored into a keyword rule, a renaming). The rule is the clause as written. The clause's `{ conjugatedPortDefinition.ownedPortConjugator.originalPortDefinition = this }` and Note 1 are assignments on the abstract syntax, not syntax, and have no place in the rule.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.12 (PortsTextualNotation.md, region_sha256 6e34790c29521657)",
+      "note": "PortDefinition = DefinitionPrefix 'port' 'def' Definition ownedRelationship += ConjugatedPortDefinitionMember"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext PortDefinition",
+      "note": "the same structure; the keyword pair is factored into a keyword rule, a renaming"
+    }
+  ],
+  "derived_utc": "2026-09-17T14:56:50Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:56:55Z"
 }

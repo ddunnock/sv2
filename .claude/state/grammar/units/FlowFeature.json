@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "FlowFeature",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "788e2aab79e87c4126bf98a172a9361fd32e166618f66da80819c35762966c5c",
     "xtext_rule": "953d5aec9eb39e9ea5612d93c834e55b4dfaba8d413fd6e76c3102a74881ed72",
@@ -14,5 +14,40 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "FlowFeature returns SysML::Feature :\n\townedRelationship += FlowRedefinition\n;",
     "metaclass": "SysML::Feature"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "FlowFeatureRedefinition"
+  },
+  "decision": "KerML 8.2.5.9.2 states FlowFeature : Feature = ownedRelationship += FlowFeatureRedefinition, and SysML 8.2.2.16 states the same body with result ReferenceUsage; the result metaclass is not syntax, so the unit is shared. The KerML Xtext names the referenced rule FlowRedefinition, a renaming. The pack notes the clause's malformation is in PayloadFeature, not here. Note 1 constrains the feature's direction, which is semantics and not grammar.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.9.2 (Flows.md, region_sha256 150b0ccc1e0d5422)",
+      "note": "FlowFeature : Feature = ownedRelationship += FlowFeatureRedefinition"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.16 (FlowsTextualNotation.md, region_sha256 e03f363eef9b4cf1)",
+      "note": "FlowFeature : ReferenceUsage, same body"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext FlowFeature",
+      "note": "ownedRelationship += FlowRedefinition, a renaming"
+    }
+  ],
+  "notes": "SysML 8.2.2.16 misspells the defining header as FlowFeatureRefefinition while FlowFeature references FlowFeatureRedefinition correctly; that belongs to FlowFeatureRedefinition's unit.",
+  "derived_utc": "2026-09-17T14:54:29Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:54:29Z"
 }

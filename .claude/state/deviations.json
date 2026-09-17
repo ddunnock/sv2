@@ -6322,6 +6322,31 @@
           "note": "The SysML Tier A pin the restated clause belongs to."
         }
       ]
+    },
+    {
+      "production": "DefinitionExtensionKeyWord-casing",
+      "bucket": "spec_only",
+      "upstream": "Not an Xtext matter: SysML.xtext's MetadataDefinition references DefinitionExtensionKeyword with the defined casing. This is a defect internal to the specification clause.",
+      "problem": "SysML 8.2.2.27 writes MetadataDefinition's body as `( isAbstract ?= 'abstract')? DefinitionExtensionKeyWord* 'metadata' 'def' Definition`, with a capital W. The production is defined as DefinitionExtensionKeyword in SysML 8.2.2.6.1 and referenced with that casing everywhere else, including ExtendedDefinition in the same clause. Read literally, MetadataDefinition contains a dangling reference.",
+      "decision": "follow_spec",
+      "rationale": "Follow the defined spelling, DefinitionExtensionKeyword. The definition is the load-bearing occurrence and the capitalised reference resolves to nothing; ExtendedDefinition, in the same clause, already uses the defined casing, so the clause disagrees with itself in one place. Tier B' writes DefinitionExtensionKeyword at SysML-textual-bnf.kebnf line 1669, repairing it without comment, the pattern recorded for InstatiatedTypeMember-misspelling and MetaClassificationTestOperator-casing. Whether an OMG issue names it was not searched, so none is cited.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.27 MetadataTextualNotation (region_sha256 69251565feee7639)",
+          "note": "MetadataDefinition reads DefinitionExtensionKeyWord*; ExtendedDefinition in the same clause reads DefinitionExtensionKeyword+"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.1 Definitions",
+          "note": "defines DefinitionExtensionKeyword : Definition"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
     }
   ],
   "unpatched": []

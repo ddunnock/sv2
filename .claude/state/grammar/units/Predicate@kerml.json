@@ -3,7 +3,7 @@
   "production": "Predicate",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "39b0b96006758eccd61f91bd6c759148930865aace56b0551ecbacd397f430d4",
     "xtext_rule": "f2612817a598046be3443cc49897e964069e36d381f075a52f2255a4ff937d40",
@@ -16,5 +16,51 @@
     "xtext_rule_text": "Predicate returns SysML::Predicate :\n\tTypePrefix 'predicate' \n\tClassifierDeclaration FunctionBody  \n;",
     "metaclass": "SysML::Predicate"
   },
-  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "TypePrefix"
+      },
+      {
+        "k": "kw",
+        "text": "predicate"
+      },
+      {
+        "k": "ref",
+        "name": "ClassifierDeclaration"
+      },
+      {
+        "k": "ref",
+        "name": "FunctionBody"
+      }
+    ]
+  },
+  "decision": "KerML 8.2.5.7.3 states Predicate = TypePrefix 'predicate' ClassifierDeclaration FunctionBody. The KerML Xtext is identical. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.7.3 (Predicates.md, region_sha256 96cec150fb44b018)",
+      "note": "Predicate = TypePrefix 'predicate' ClassifierDeclaration FunctionBody"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext Predicate",
+      "note": "is identical"
+    }
+  ],
+  "derived_utc": "2026-09-17T14:58:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:58:24Z"
 }

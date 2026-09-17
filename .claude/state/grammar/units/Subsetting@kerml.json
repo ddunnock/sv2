@@ -3,7 +3,7 @@
   "production": "Subsetting",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "9fec6a75a3420ce84afe2ccf6a31caa7bbeda485d136cfc79e4912c587348976",
     "xtext_rule": "ec11dce084363adcc83b252afbd5cb68e77846e5c317337bfb51c931f3a79182",
@@ -16,5 +16,85 @@
     "xtext_rule_text": "Subsetting returns SysML::Subsetting :\n\t( 'specialization' Identification? )?\n    'subset' \n    ( subsettingFeature = [SysML::Feature | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain )\n    ( ':>' | 'subsets' ) \n    ( subsettedFeature = [SysML::Feature | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain )\n\tRelationshipBody\n;",
     "metaclass": "SysML::Subsetting"
   },
-  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "specialization"
+            },
+            {
+              "k": "ref",
+              "name": "Identification"
+            }
+          ]
+        }
+      },
+      {
+        "k": "kw",
+        "text": "subset"
+      },
+      {
+        "k": "ref",
+        "name": "SpecificType"
+      },
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "kw",
+            "text": ":>"
+          },
+          {
+            "k": "kw",
+            "text": "subsets"
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "GeneralType"
+      },
+      {
+        "k": "ref",
+        "name": "RelationshipBody"
+      }
+    ]
+  },
+  "decision": "KerML 8.2.4.3.3 states Subsetting = ( 'specialization' Identification )? 'subset' SpecificType SUBSETS GeneralType RelationshipBody. The KerML Xtext writes the optional name part as `( 'specialization' Identification? )?`; the specification's Identification can already be empty, so the inner '?' adds nothing, and inlines SpecificType and GeneralType as `[QualifiedName] | OwnedFeatureChain`; the inlining is not ported. SUBSETS is the special lexical terminal of KerML 8.2.2.7, written out as keyword alternatives. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.3 (Subsetting.md, region_sha256 fb6b6752e0894474)",
+      "note": "Subsetting = ( 'specialization' Identification )? 'subset' SpecificType SUBSETS GeneralType RelationshipBody"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.2.7 (Symbols.md, region_sha256 c59561da3efdda5a)",
+      "note": "SUBSETS definition"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext Subsetting",
+      "note": "writes the optional name part as `( 'specialization' Identification? )?`; the specification's Identification can already be empty, so the inner '?' adds nothing, and inlines SpecificType and GeneralType as `[QualifiedName] | OwnedFeatureChain`; the inlining is not ported"
+    }
+  ],
+  "derived_utc": "2026-09-17T14:58:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:58:25Z"
 }

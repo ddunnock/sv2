@@ -3,7 +3,7 @@
   "production": "Conjugation",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "19a37282e94b6fce4326461870aa9124231777e22d5dace74e78eac47cc6ba4e",
     "xtext_rule": "d0734391274363888ca1eaa3136b614480547d40ff1e1adca651ca8a875d47a2",
@@ -16,5 +16,103 @@
     "xtext_rule_text": "Conjugation returns SysML::Conjugation :\n\t( 'conjugation' Identification? )?\n    'conjugate' \n    ( conjugatedType = [SysML::Type | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain )\n    ( '~' | 'conjugates') \n    ( originalType = [SysML::Type | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain )\n\tRelationshipBody\n;",
     "metaclass": "SysML::Conjugation"
   },
-  "notes": "re-scoped from the shared unit to kerml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "conjugation"
+            },
+            {
+              "k": "ref",
+              "name": "Identification"
+            }
+          ]
+        }
+      },
+      {
+        "k": "kw",
+        "text": "conjugate"
+      },
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "ref",
+            "name": "QualifiedName"
+          },
+          {
+            "k": "ref",
+            "name": "FeatureChain"
+          }
+        ]
+      },
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "kw",
+            "text": "~"
+          },
+          {
+            "k": "kw",
+            "text": "conjugates"
+          }
+        ]
+      },
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "ref",
+            "name": "QualifiedName"
+          },
+          {
+            "k": "ref",
+            "name": "FeatureChain"
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "RelationshipBody"
+      }
+    ]
+  },
+  "decision": "KerML 8.2.4.1.3 states Conjugation = ( 'conjugation' Identification )? 'conjugate' ( conjugatedType = [QualifiedName] | conjugatedType = FeatureChain ) CONJUGATES ( originalType = [QualifiedName] | originalType = FeatureChain ) RelationshipBody. The KerML Xtext writes `Identification?` inside the optional group and OwnedFeatureChain where the clause writes FeatureChain; neither is taken over, since the clause's own reference is FeatureChain. CONJUGATES is the special lexical terminal of KerML 8.2.2.7, '~' | 'conjugates'. The `{ ownedRelatedElement += ... }` actions are abstract syntax, not syntax. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.3 (Conjugation.md, region_sha256 45b19bd161ba41dc)",
+      "note": "Conjugation = ( 'conjugation' Identification )? 'conjugate' ( conjugatedType = [QualifiedName] | conjugatedType = FeatureChain ) CONJUGATES ( originalType = [QualifiedName] | originalType = FeatureChain ) RelationshipBody"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.2.7 (Symbols.md, region_sha256 c59561da3efdda5a)",
+      "note": "CONJUGATES = '~' | 'conjugates'"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext Conjugation",
+      "note": "writes `Identification?` inside the optional group and OwnedFeatureChain where the clause writes FeatureChain; neither is taken over, since the clause's own reference is FeatureChain"
+    }
+  ],
+  "derived_utc": "2026-09-17T14:58:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:58:25Z"
 }

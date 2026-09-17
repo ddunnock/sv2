@@ -3,7 +3,7 @@
   "production": "RenderingDefinition",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "c2bea09b840a27b2b628e6bd8e597e5d3fa0d6b0f694471563597b7770dddc41",
     "xtext_rule": "8a2067ff0dd7115911957468de2a682f0f83af1fe233d695f65b84234d800a52",
@@ -16,5 +16,51 @@
     "xtext_rule_text": "RenderingDefinition returns SysML::RenderingDefinition :\n\tOccurrenceDefinitionPrefix RenderingDefKeyword Definition\n;",
     "metaclass": "SysML::RenderingDefinition"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "OccurrenceDefinitionPrefix"
+      },
+      {
+        "k": "kw",
+        "text": "rendering"
+      },
+      {
+        "k": "kw",
+        "text": "def"
+      },
+      {
+        "k": "ref",
+        "name": "Definition"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.26.4 states OccurrenceDefinitionPrefix 'rendering' 'def' Definition, and the SysML Xtext agrees (the same structure; the keyword pair is factored into a keyword rule, a renaming). The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.26.4 (Renderings.md, region_sha256 1ebef0541d4710ed)",
+      "note": "OccurrenceDefinitionPrefix 'rendering' 'def' Definition"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext RenderingDefinition",
+      "note": "the same structure; the keyword pair is factored into a keyword rule, a renaming"
+    }
+  ],
+  "derived_utc": "2026-09-17T14:56:50Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:56:53Z"
 }

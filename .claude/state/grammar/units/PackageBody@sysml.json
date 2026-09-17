@@ -3,7 +3,7 @@
   "production": "PackageBody",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "7adb5037a495d9b1fa9625a133c60b86062a3335060e19b2235c7aef00e993be",
     "xtext_rule": "e5c775187358d58920371db6906a5531ae8c053655d57ea519e8628322ba68d1",
@@ -15,5 +15,60 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment PackageBody returns SysML::Package :\n\t ';' \n\t| '{' ( // Note: PackageBodyElement is expanded here to avoid\n\t\t\t// infinite loops in the incremental parser.\n\t\t    ownedRelationship += PackageMember\n\t\t  | ownedRelationship += ElementFilterMember\n\t\t  | ownedRelationship += AliasMember\n\t\t  | ownedRelationship += Import )* \n\t  '}'\n;",
     "metaclass": "SysML::Namespace"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "kw",
+        "text": ";"
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "kw",
+            "text": "{"
+          },
+          {
+            "k": "star",
+            "item": {
+              "k": "ref",
+              "name": "PackageBodyElement"
+            }
+          },
+          {
+            "k": "kw",
+            "text": "}"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.5.1 states PackageBody : Package = ';' | '{' PackageBodyElement* '}'. The SysML Xtext expands PackageBodyElement into PackageMember | ElementFilterMember | AliasMember | Import, and its own comment says this is 'to avoid infinite loops in the incremental parser' \u2014 an LL workaround, not ported. The rule is the clause as written.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.5.1 (Packages.md, region_sha256 3ee603b1b89d4345)",
+      "note": "PackageBody : Package = ';' | '{' PackageBodyElement* '}'"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext PackageBody",
+      "note": "inlined PackageBodyElement, commented as an incremental-parser workaround; declined"
+    }
+  ],
+  "notes": "The Xtext also returns SysML::Package here and SysML::Namespace in KerML; the pack's metaclass says Namespace. The result metaclass is not syntax.",
+  "derived_utc": "2026-09-17T14:54:29Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:54:30Z"
 }

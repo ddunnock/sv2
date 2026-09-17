@@ -3,7 +3,7 @@
   "production": "IndividualDefinition",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "729e11bfb00a5a13f3ba4b6f6db4994e5bd6df5d4d6eb952ac3b8f19436b9f97",
     "xtext_rule": "66b4c8a0214cc0e6a535dced6a5d5bd1c3998a6d2316ac6e61dd78f7dbed936c",
@@ -16,5 +16,65 @@
     "xtext_rule_text": "IndividualDefinition returns SysML::OccurrenceDefinition :\n\tBasicDefinitionPrefix? isIndividual ?= 'individual' \n\townedRelationship += EmptyMultiplicityMember\n\tDefinitionExtensionKeyword* 'def' Definition\n;",
     "metaclass": "SysML::OccurrenceDefinition"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "BasicDefinitionPrefix"
+        }
+      },
+      {
+        "k": "kw",
+        "text": "individual"
+      },
+      {
+        "k": "star",
+        "item": {
+          "k": "ref",
+          "name": "DefinitionExtensionKeyword"
+        }
+      },
+      {
+        "k": "kw",
+        "text": "def"
+      },
+      {
+        "k": "ref",
+        "name": "Definition"
+      },
+      {
+        "k": "ref",
+        "name": "EmptyMultiplicityMember"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.9.1 states IndividualDefinition : OccurrenceDefinition = BasicDefinitionPrefix? isIndividual ?= 'individual' DefinitionExtensionKeyword* 'def' Definition ownedRelationship += EmptyMultiplicityMember, and the SysML Xtext agrees (the same elements, with EmptyMultiplicityMember placed after 'individual' instead of after Definition). The rule is the clause as written. The Xtext's position for EmptyMultiplicityMember differs; the same clause defines EmptyMultiplicity as `{ }`, which consumes no tokens, so its position does not change what is accepted and the clause's order is kept.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.9.1 (OccurrenceDefinitions.md, region_sha256 2a70ef572e61dedf)",
+      "note": "IndividualDefinition : OccurrenceDefinition = BasicDefinitionPrefix? isIndividual ?= 'individual' DefinitionExtensionKeyword* 'def' Definition ownedRelationship += EmptyMultiplicityMember"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext IndividualDefinition",
+      "note": "the same elements, with EmptyMultiplicityMember placed after 'individual' instead of after Definition"
+    }
+  ],
+  "derived_utc": "2026-09-17T14:56:50Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T14:56:55Z"
 }
