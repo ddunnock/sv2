@@ -3,7 +3,7 @@
   "production": "FlowDeclaration",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "41e1ec157d2dbb7927c23174c05181a1f4fbf25643ae9771de472916bc3c4275",
     "xtext_rule": "81e7c030e8d3a6482649c2d887e52ffc7673121c49ab76a93e016807d54c7299",
@@ -15,5 +15,134 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment FlowDeclaration returns SysML::Flow :\n\t  FeatureDeclaration? ValuePart?\n      ( 'of'  ownedRelationship += PayloadFeatureMember )?\n\t  ( 'from' ownedRelationship += FlowEndMember \n\t    'to' ownedRelationship += FlowEndMember )?\n    | ( isSufficient ?= 'all' )?\n      ownedRelationship += FlowEndMember 'to'\n\t  ownedRelationship += FlowEndMember\n;",
     "metaclass": "SysML::Flow"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "opt",
+            "item": {
+              "k": "ref",
+              "name": "FeatureDeclaration"
+            }
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "ref",
+              "name": "ValuePart"
+            }
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "seq",
+              "items": [
+                {
+                  "k": "kw",
+                  "text": "of"
+                },
+                {
+                  "k": "ref",
+                  "name": "PayloadFeatureMember"
+                }
+              ]
+            }
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "seq",
+              "items": [
+                {
+                  "k": "kw",
+                  "text": "from"
+                },
+                {
+                  "k": "ref",
+                  "name": "FlowEndMember"
+                },
+                {
+                  "k": "kw",
+                  "text": "to"
+                },
+                {
+                  "k": "ref",
+                  "name": "FlowEndMember"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "opt",
+            "item": {
+              "k": "kw",
+              "text": "all"
+            }
+          },
+          {
+            "k": "ref",
+            "name": "FlowEndMember"
+          },
+          {
+            "k": "kw",
+            "text": "to"
+          },
+          {
+            "k": "ref",
+            "name": "FlowEndMember"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "KerML 8.2.5.9.2 gives two alternatives. The first is a FeatureDeclaration, an optional ValuePart, an optional `of` payload, and optionally `from` end `to` end. The second is an optional `all`, then end `to` end. The rule makes the FeatureDeclaration in the first alternative optional, which the clause does not. That was a conflict with the Xtext, adjudicated follow_xtext and recorded as deviation FlowDeclaration, explicitly as an extrapolation. KERML11-181 makes declarations optional in Expression productions but does not name Flow. The decision rests on the same shape as those productions, Connector's explicit `FeatureDeclaration?`, and this production's own anonymous second alternative. Note that the same clause's Flow and SuccessionFlow name `ItemFlowDeclaration`, a stale name filed as KERML11-114.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.9.2",
+      "note": "FlowDeclaration : Flow = FeatureDeclaration ValuePart? ( 'of' PayloadFeatureMember )? ( 'from' FlowEndMember 'to' FlowEndMember )? | ( isSufficient ?= 'all' )? FlowEndMember 'to' FlowEndMember"
+    },
+    {
+      "kind": "deviation",
+      "ref": "FlowDeclaration",
+      "note": "follow_xtext, extrapolated from KERML11-181; see the rationale for why it is weaker than Step"
+    },
+    {
+      "kind": "omg_issue",
+      "ref": "KERML11-181",
+      "note": "Pattern only. It names 8.2.5.7.2 and 8.2.5.7.4, not Flow. Fetched and read on 2026-09-17."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Behaviors.kerml",
+      "note": "line 18: `flow a.y to b.x1;`, the second alternative"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment FlowDeclaration: FeatureDeclaration? ValuePart? ... The declaration is optional."
+    }
+  ],
+  "notes": "ADJUDICATED follow_xtext on 2026-09-17, deviation FlowDeclaration. Weaker than the Step precedent: no issue names 8.2.5.9.2, the pilot fragment is not shared with ExpressionDeclaration, and no KerML corpus file uses the first alternative without a declaration. Revisit if an issue naming 8.2.5.9.2 is filed, or a KerML corpus instance appears either way.",
+  "derived_utc": "2026-09-17T13:41:12Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:45:01Z"
 }

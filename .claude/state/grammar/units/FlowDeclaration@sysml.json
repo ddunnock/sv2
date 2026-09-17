@@ -3,7 +3,7 @@
   "production": "FlowDeclaration",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "f503f360d20207704de75664ced4bbe1f57e024983fed96db8f3731cd57ee6a9",
     "xtext_rule": "405f3773e8fbc75c1b394f6042a1d94c6682c9c0916f81a949ceedd187a15fdc",
@@ -15,5 +15,123 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "fragment FlowDeclaration returns SysML::FlowUsage :\n\t  UsageDeclaration? ValuePart?\n      ( 'of'  ownedRelationship += PayloadFeatureMember )?\n      ( 'from' ownedRelationship += FlowEndMember \n        'to' ownedRelationship += FlowEndMember )?\n    | ownedRelationship += FlowEndMember 'to' \n\t  ownedRelationship += FlowEndMember\n;",
     "metaclass": "SysML::Flow"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "UsageDeclaration"
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "ref",
+              "name": "ValuePart"
+            }
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "seq",
+              "items": [
+                {
+                  "k": "kw",
+                  "text": "of"
+                },
+                {
+                  "k": "ref",
+                  "name": "FlowPayloadFeatureMember"
+                }
+              ]
+            }
+          },
+          {
+            "k": "opt",
+            "item": {
+              "k": "seq",
+              "items": [
+                {
+                  "k": "kw",
+                  "text": "from"
+                },
+                {
+                  "k": "ref",
+                  "name": "FlowEndMember"
+                },
+                {
+                  "k": "kw",
+                  "text": "to"
+                },
+                {
+                  "k": "ref",
+                  "name": "FlowEndMember"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "k": "seq",
+        "items": [
+          {
+            "k": "ref",
+            "name": "FlowEndMember"
+          },
+          {
+            "k": "kw",
+            "text": "to"
+          },
+          {
+            "k": "ref",
+            "name": "FlowEndMember"
+          }
+        ]
+      }
+    ]
+  },
+  "decision": "As SysML 8.2.2.16 states it, with two alternatives. The first is a UsageDeclaration, an optional ValuePart, an optional `of` payload, and optionally `from` end `to` end. The second is end `to` end, with no `all`, unlike KerML. This is the SysML variant (ADR-0014). The Xtext differs in two places, neither changing the language. First, it writes `UsageDeclaration?` where the clause writes `UsageDeclaration`. SysML 8.2.2.6.2 defines UsageDeclaration as `Identification FeatureSpecializationPart?`, and Identification is nullable (SysML 8.2.2.2), so the clause's bare UsageDeclaration already admits the empty case. Second, it writes PayloadFeatureMember where the clause writes FlowPayloadFeatureMember. This clause defines FlowPayloadFeatureMember as a membership over FlowPayloadFeature, and FlowPayloadFeature as PayloadFeature, so the payload is the same PayloadFeature either way.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.16",
+      "note": "FlowDeclaration : FlowUsage = UsageDeclaration ValuePart? ( 'of' FlowPayloadFeatureMember )? ( 'from' FlowEndMember 'to' FlowEndMember )? | FlowEndMember 'to' FlowEndMember"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.2",
+      "note": "UsageDeclaration : Usage = Identification FeatureSpecializationPart?, nullable because Identification is"
+    },
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.2",
+      "note": "Identification : Element = ( '<' NAME '>' )? ( NAME )?"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/17. Control/Fork Join Example.sysml",
+      "note": "line 29: `flow from monitorBrakePedal.brakePressure to braking.brakePressure;`, the first alternative with an empty UsageDeclaration"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "fragment FlowDeclaration: UsageDeclaration? ValuePart? ( 'of' PayloadFeatureMember )? ( 'from' FlowEndMember 'to' FlowEndMember )? | FlowEndMember 'to' FlowEndMember. The same language."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:41:12Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:41:12Z"
 }
