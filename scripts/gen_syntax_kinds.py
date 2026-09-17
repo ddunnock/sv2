@@ -127,6 +127,46 @@ NODES = [
             "RelationshipBody`. `SysML` 8.2.2.5.1."
         ),
     ),
+    ("OwnedAnnotation", "`ownedRelatedElement += AnnotatingElement`. `SysML` 8.2.2.4.1."),
+    ("Annotation", "`annotatedElement = [QualifiedName]`. `SysML` 8.2.2.4.1."),
+    (
+        "Comment",
+        (
+            "`( 'comment' Identification ( 'about' Annotation ( ',' Annotation )* )? )? "
+            "( 'locale' STRING_VALUE )? REGULAR_COMMENT`. `SysML` 8.2.2.4.2."
+        ),
+    ),
+    (
+        "Documentation",
+        "`'doc' Identification ( 'locale' STRING_VALUE )? REGULAR_COMMENT`. `SysML` 8.2.2.4.2.",
+    ),
+    (
+        "TextualRepresentation",
+        ("`( 'rep' Identification )? 'language' STRING_VALUE REGULAR_COMMENT`. `SysML` 8.2.2.4.3."),
+    ),
+    (
+        "PartDefinition",
+        "`OccurrenceDefinitionPrefix 'part' 'def' Definition`. `SysML` 8.2.2.11.",
+    ),
+    (
+        "OccurrenceDefinitionPrefix",
+        (
+            "`BasicDefinitionPrefix? ( 'individual' EmptyMultiplicityMember )? "
+            "DefinitionExtensionKeyword*`. `SysML` 8.2.2.9.1."
+        ),
+    ),
+    ("BasicDefinitionPrefix", "`'abstract' | 'variation'`. `SysML` 8.2.2.6.1."),
+    ("EmptyMultiplicityMember", "`ownedRelatedElement += EmptyMultiplicity`. `SysML` 8.2.2.9.1."),
+    ("EmptyMultiplicity", "`{ }`, a Multiplicity that consumes no tokens. `SysML` 8.2.2.9.1."),
+    ("Definition", "`DefinitionDeclaration DefinitionBody`. `SysML` 8.2.2.6.1."),
+    ("DefinitionDeclaration", "`Identification SubclassificationPart?`. `SysML` 8.2.2.6.1."),
+    (
+        "SubclassificationPart",
+        "`SPECIALIZES OwnedSubclassification ( ',' OwnedSubclassification )*`. `SysML` 8.2.2.6.5.",
+    ),
+    ("OwnedSubclassification", "`superClassifier = [QualifiedName]`. `SysML` 8.2.2.6.5."),
+    ("DefinitionBody", "`';' | '{' DefinitionBodyItem* '}'`. `SysML` 8.2.2.6.1."),
+    ("DefinitionMember", "`MemberPrefix DefinitionElement`. `SysML` 8.2.2.6.1."),
     ("Error", "recovered-over text; carries its bytes so the tree stays lossless"),
 ]
 

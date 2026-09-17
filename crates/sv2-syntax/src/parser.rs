@@ -18,13 +18,17 @@
 //!                      ImportDeclaration RelationshipBody
 //! AliasMember        = MemberPrefix 'alias' ( '<' NAME '>' )? NAME?
 //!                      'for' [QualifiedName] RelationshipBody
+//! RelationshipBody   = ';' | '{' OwnedAnnotation* '}'
+//! PartDefinition     = OccurrenceDefinitionPrefix 'part' 'def' Definition
 //! ```
 //!
 //! Three of the four `PackageBodyElement` alternatives are handled: `PackageMember`,
-//! `Import` and `AliasMember`. `ElementFilterMember` waits on `OwnedExpression`, and
-//! `Package` is the one `DefinitionElement` of twenty-eight. Everything else is
-//! unimplemented and reports as such in the coverage report, which is the honest
-//! state of a parser this young.
+//! `Import` and `AliasMember`. `ElementFilterMember` waits on `OwnedExpression`.
+//! `Package` and `PartDefinition` are the two `DefinitionElement`s of thirty, and
+//! `Comment`, `Documentation` and `TextualRepresentation` the three `AnnotatingElement`s
+//! of four that a `RelationshipBody` may own. Everything else is unimplemented and
+//! reports as such in the coverage report, which is the honest state of a parser this
+//! young.
 //!
 //! Every token the lexer produced ends up in the tree, in source order. Text that no
 //! production accepts becomes an `Error` node that still carries its bytes, so the
@@ -93,6 +97,15 @@ struct Parser<'a> {
     pos: usize,
     builder: GreenNodeBuilder<'static>,
     errors: Vec<String>,
+    /// Whether a `REGULAR_COMMENT` is a token here rather than trivia.
+    ///
+    /// `KerML` 8.2.2.2 makes `/* ... */` a token, and `Comment`, `Documentation` and
+    /// `TextualRepresentation` take it as their body (`SysML` 8.2.2.4.2, 8.2.2.4.3).
+    /// Inside a braced `RelationshipBody` every regular comment is therefore either an
+    /// annotation's body or an error, never text to skip past. Elsewhere this parser
+    /// still attaches it as trivia, because the `AnnotatingMember` that would own it
+    /// as an element in a package or definition body is not implemented.
+    comments_significant: bool,
 }
 
 impl<'a> Parser<'a> {
@@ -103,6 +116,7 @@ impl<'a> Parser<'a> {
             pos: 0,
             builder: GreenNodeBuilder::new(),
             errors: Vec::new(),
+            comments_significant: false,
         }
     }
 
@@ -126,9 +140,22 @@ impl<'a> Parser<'a> {
         self.tokens
             .get(self.pos..)?
             .iter()
-            .filter(|token| !is_trivia(token.kind))
+            .filter(|token| !self.skippable(token.kind))
             .nth(n)
             .copied()
+    }
+
+    /// Whether `kind` is trivia in the current context, and so skipped by lookahead.
+    fn skippable(&self, kind: SyntaxKind) -> bool {
+        is_trivia(kind) && !(self.comments_significant && kind == SyntaxKind::RegularComment)
+    }
+
+    /// Run `production` with `REGULAR_COMMENT` treated as a token, then restore.
+    fn with_significant_comments(&mut self, production: impl FnOnce(&mut Self)) {
+        let outer = self.comments_significant;
+        self.comments_significant = true;
+        production(self);
+        self.comments_significant = outer;
     }
 
     fn at(&self, kind: SyntaxKind) -> bool {
@@ -194,6 +221,44 @@ impl<'a> Parser<'a> {
         self.at_visibility() && self.nth_is_keyword(1, "import")
     }
 
+    /// Whether a `PartDefinition` starts at the `n`th meaningful token.
+    ///
+    /// `PartDefinition = OccurrenceDefinitionPrefix 'part' 'def' Definition`
+    /// (`SysML` 8.2.2.11), with `OccurrenceDefinitionPrefix = BasicDefinitionPrefix?
+    /// ( 'individual' EmptyMultiplicityMember )? DefinitionExtensionKeyword*`
+    /// (8.2.2.9.1). The prefix keywords are optional and also open usages
+    /// (`abstract part x;` is a `PartUsage`), so only `part` followed by `def` decides.
+    /// A `DefinitionExtensionKeyword` (`#` prefix metadata) is not looked past: it is
+    /// unimplemented, and leaving it to the enclosing body's recovery reports it.
+    fn at_part_definition(&self, n: usize) -> bool {
+        let mut n = n;
+        if self.nth_is_keyword(n, "abstract") || self.nth_is_keyword(n, "variation") {
+            n += 1;
+        }
+        if self.nth_is_keyword(n, "individual") {
+            n += 1;
+        }
+        self.nth_is_keyword(n, "part") && self.nth_is_keyword(n + 1, "def")
+    }
+
+    /// Whether an implemented `DefinitionElement` starts at the `n`th meaningful token.
+    fn at_definition_element(&self, n: usize) -> bool {
+        self.nth_is_keyword(n, "package") || self.at_part_definition(n)
+    }
+
+    /// Whether an implemented `AnnotatingElement` starts here (`SysML` 8.2.2.4.1).
+    ///
+    /// `Comment` may open with `comment`, `locale` or its bare `REGULAR_COMMENT` body;
+    /// `Documentation` with `doc`; `TextualRepresentation` with `rep` or `language`.
+    /// `MetadataUsage` (`@`, `metadata`, or a `#` extension keyword) is not
+    /// implemented, so it is not recognised and its tokens are reported.
+    fn at_annotating_element(&self) -> bool {
+        self.at(SyntaxKind::RegularComment)
+            || ["comment", "locale", "doc", "rep", "language"]
+                .iter()
+                .any(|word| self.at_keyword(word))
+    }
+
     fn at_end(&self) -> bool {
         self.peek().is_none()
     }
@@ -209,23 +274,23 @@ impl<'a> Parser<'a> {
     }
 
     /// Attach pending trivia to the tree. Never skipped — losslessness depends on it.
-    ///
-    /// Every trivia token passes through here exactly once, which is why the
-    /// unterminated-comment diagnostic is raised here rather than at each call site.
     fn eat_trivia(&mut self) {
         while let Some(token) = self.tokens.get(self.pos).copied() {
-            if !is_trivia(token.kind) {
+            if !self.skippable(token.kind) {
                 break;
-            }
-            if is_unterminated_comment(token.kind, self.text_of(token)) {
-                self.errors
-                    .push("comment is never closed: expected `*/`".to_owned());
             }
             self.push(token, token.kind);
         }
     }
 
+    /// Every token enters the tree here exactly once, which is why the
+    /// unterminated-comment diagnostic is raised here: a regular comment may arrive
+    /// as trivia or as an annotation's body, and both must report it.
     fn push(&mut self, token: Token, kind: SyntaxKind) {
+        if is_unterminated_comment(token.kind, self.text_of(token)) {
+            self.errors
+                .push("comment is never closed: expected `*/`".to_owned());
+        }
         self.builder
             .token(Sv2Language::kind_to_raw(kind), self.text_of(token));
         self.pos += 1;
@@ -304,30 +369,37 @@ impl<'a> Parser<'a> {
     // production: RootNamespace
     fn root_namespace(mut self) -> (GreenNode, Vec<String>) {
         self.start_node(SyntaxKind::RootNamespace);
-        self.body_elements(None);
+        self.body_elements(None, SyntaxKind::PackageMember);
         // Trailing trivia belongs to the tree as much as anything else.
         self.eat_trivia();
         self.finish_node();
         (self.builder.finish(), self.errors)
     }
 
-    /// `PackageBodyElement*`, up to `until` or end of input.
+    /// `PackageBodyElement*` or `DefinitionBodyItem*`, up to `until` or end of input.
     ///
     /// `PackageBodyElement = PackageMember | ElementFilterMember | AliasMember |
     /// Import` (`SysML` 8.2.2.5.1). All but `ElementFilterMember` are implemented,
-    /// and that one waits on `OwnedExpression`. Anything else is recovered
-    /// over one token at a time rather than
-    /// abandoning the enclosing body: an editor reparses invalid text constantly,
-    /// and a body that vanishes on one bad token blanks the diagram on every
-    /// keystroke.
-    fn body_elements(&mut self, until: Option<SyntaxKind>) {
+    /// and that one waits on `OwnedExpression`.
+    ///
+    /// `DefinitionBodyItem = DefinitionMember | VariantUsageMember |
+    /// NonOccurrenceUsageMember | SourceSuccessionMember? OccurrenceUsageMember |
+    /// AliasMember | Import` (`SysML` 8.2.2.6.1). `DefinitionMember`, `AliasMember`
+    /// and `Import` are implemented; the usage members are not. `member` is the
+    /// membership node a nested `DefinitionElement` is owned through, which is the
+    /// one thing that differs between the two bodies.
+    ///
+    /// Anything else is recovered over one token at a time rather than abandoning
+    /// the enclosing body: an editor reparses invalid text constantly, and a body
+    /// that vanishes on one bad token blanks the diagram on every keystroke.
+    fn body_elements(&mut self, until: Option<SyntaxKind>, member: SyntaxKind) {
         while !self.at_end() && !until.is_some_and(|kind| self.at(kind)) {
             if self.at_import() {
                 self.import();
             } else if self.at_element_keyword("alias") {
                 self.alias_member();
-            } else if self.at_element_keyword("package") {
-                self.package_member();
+            } else if self.at_definition_element(usize::from(self.at_visibility())) {
+                self.membership(member);
             } else {
                 self.error_token();
             }
@@ -379,19 +451,190 @@ impl<'a> Parser<'a> {
     //     MemberPrefix ( ownedRelatedElement += DefinitionElement
     //                  | ownedRelatedElement = UsageElement )
     //
+    // production: DefinitionMember
+    //
+    // DefinitionMember : OwningMembership =
+    //     MemberPrefix ownedRelatedElement += DefinitionElement      (SysML 8.2.2.6.1)
+    //
+    // The two differ only in PackageMember's UsageElement alternative, which is not
+    // implemented, so one method builds both under the node the caller names.
+    //
     // `DefinitionElement` and `UsageElement` get no node of their own. They are
     // alternations over element productions, and the element that matched already
     // says which alternative was taken, so a node here would add a level carrying
-    // nothing. Neither is marked for coverage: `Package` is the only one of
-    // `DefinitionElement`'s 28 alternatives implemented, and `UsageElement` none.
-    fn package_member(&mut self) {
+    // nothing. Neither is marked for coverage: `Package` and `PartDefinition` are
+    // the only two of `DefinitionElement`'s 30 alternatives implemented, and
+    // `UsageElement` none.
+    fn membership(&mut self, member: SyntaxKind) {
         self.eat_trivia();
-        self.start_node(SyntaxKind::PackageMember);
+        self.start_node(member);
         self.member_prefix();
         if self.at_keyword("package") {
             self.package();
+        } else if self.at_part_definition(0) {
+            self.part_definition();
         } else {
-            self.error_expected("a package");
+            self.error_expected("a package or a part definition");
+        }
+        self.finish_node();
+    }
+
+    // production: PartDefinition
+    //
+    // PartDefinition = OccurrenceDefinitionPrefix 'part' 'def' Definition
+    //                                                            (SysML 8.2.2.11)
+    //
+    // The Pilot factors 'part' 'def' into PartDefKeyword; deviations.json records
+    // that as xtext_only/follow_spec, so the literals are matched here directly.
+    fn part_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PartDefinition);
+        self.occurrence_definition_prefix();
+        self.expect_keyword("part");
+        self.expect_keyword("def");
+        self.definition();
+        self.finish_node();
+    }
+
+    // production: OccurrenceDefinitionPrefix
+    //
+    // OccurrenceDefinitionPrefix : OccurrenceDefinition =
+    //     BasicDefinitionPrefix?
+    //     ( isIndividual ?= 'individual' ownedRelationship += EmptyMultiplicityMember )?
+    //     DefinitionExtensionKeyword*                            (SysML 8.2.2.9.1)
+    //
+    // DefinitionExtensionKeyword (`#` prefix metadata, a PrefixMetadataMember) is not
+    // implemented. at_part_definition does not look past a `#`, so a definition that
+    // carries one never reaches here: the enclosing body reports the `#` and its
+    // name token by token, then parses the definition after them.
+    //
+    // The node is built even when every slot is empty, as MemberPrefix's is.
+    fn occurrence_definition_prefix(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OccurrenceDefinitionPrefix);
+        if self.at_keyword("abstract") || self.at_keyword("variation") {
+            self.basic_definition_prefix();
+        }
+        if self.at_keyword("individual") {
+            self.bump_as(keyword("individual").unwrap_or(SyntaxKind::BasicName));
+            self.empty_multiplicity_member();
+        }
+        self.finish_node();
+    }
+
+    // production: BasicDefinitionPrefix
+    //
+    // BasicDefinitionPrefix = isAbstract ?= 'abstract' | isVariation ?= 'variation'
+    //                                                            (SysML 8.2.2.6.1)
+    fn basic_definition_prefix(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::BasicDefinitionPrefix);
+        match ["abstract", "variation"]
+            .iter()
+            .find(|word| self.at_keyword(word))
+        {
+            Some(word) => self.bump_as(keyword(word).unwrap_or(SyntaxKind::BasicName)),
+            None => self.error_expected("`abstract` or `variation`"),
+        }
+        self.finish_node();
+    }
+
+    // production: EmptyMultiplicityMember
+    //
+    // EmptyMultiplicityMember : OwningMembership =
+    //     ownedRelatedElement += EmptyMultiplicity               (SysML 8.2.2.9.1)
+    //
+    // production: EmptyMultiplicity
+    //
+    // EmptyMultiplicity : Multiplicity = { }
+    //
+    // No tokens, but a real element: `individual` gives the definition an owned
+    // Multiplicity. The nodes are empty rather than omitted, so the tree carries the
+    // element the abstract syntax says is there.
+    fn empty_multiplicity_member(&mut self) {
+        self.start_node(SyntaxKind::EmptyMultiplicityMember);
+        self.start_node(SyntaxKind::EmptyMultiplicity);
+        self.finish_node();
+        self.finish_node();
+    }
+
+    // production: Definition
+    //
+    // Definition = DefinitionDeclaration DefinitionBody          (SysML 8.2.2.6.1)
+    fn definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Definition);
+        self.definition_declaration();
+        self.definition_body();
+        self.finish_node();
+    }
+
+    // production: DefinitionDeclaration
+    //
+    // DefinitionDeclaration : Definition = Identification SubclassificationPart?
+    //                                                            (SysML 8.2.2.6.1)
+    fn definition_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::DefinitionDeclaration);
+        self.identification();
+        if self.at(SyntaxKind::ColonGt) || self.at_keyword("specializes") {
+            self.subclassification_part();
+        }
+        self.finish_node();
+    }
+
+    // production: SubclassificationPart
+    //
+    // SubclassificationPart : Classifier =
+    //     SPECIALIZES ownedRelationship += OwnedSubclassification
+    //     ( ',' ownedRelationship += OwnedSubclassification )*   (SysML 8.2.2.6.5)
+    //
+    // SPECIALIZES = ':>' | 'specializes'                         (KerML 8.2.2.7)
+    fn subclassification_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SubclassificationPart);
+        if self.at(SyntaxKind::ColonGt) {
+            self.bump();
+        } else {
+            self.expect_keyword("specializes");
+        }
+        self.owned_subclassification();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.owned_subclassification();
+        }
+        self.finish_node();
+    }
+
+    // production: OwnedSubclassification
+    //
+    // OwnedSubclassification : Subclassification = superClassifier = [QualifiedName]
+    //                                                            (SysML 8.2.2.6.5)
+    fn owned_subclassification(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OwnedSubclassification);
+        self.qualified_name();
+        self.finish_node();
+    }
+
+    // production: DefinitionBody
+    //
+    // DefinitionBody : Type = ';' | '{' DefinitionBodyItem* '}'  (SysML 8.2.2.6.1)
+    //
+    // DefinitionBodyItem is not marked: three of its six alternatives are
+    // implemented (see body_elements).
+    fn definition_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::DefinitionBody);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.body_elements(Some(SyntaxKind::RBrace), SyntaxKind::DefinitionMember);
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.errors
+                .push("expected `;` or `{` after a definition declaration".to_owned());
         }
         self.finish_node();
     }
@@ -564,11 +807,14 @@ impl<'a> Parser<'a> {
     // production: RelationshipBody
     //
     // RelationshipBody = ';' | '{' ( ownedRelationship += OwnedAnnotation )* '}'
+    //                                                            (SysML 8.2.2.2)
     //
-    // OwnedAnnotation is not implemented, so a braced body accepts nothing but its
-    // closing brace. Recovering over the contents keeps the tree lossless and the
-    // diagnostic honest; accepting them silently would report an annotation this
-    // parser cannot read as one it understood.
+    // Inside the braces a regular comment is a token (see comments_significant), so
+    // `{ /* text */ }` owns a Comment rather than skipping one — the corpus's
+    // `private import Definitions::* { /* ... */ }` is exactly that. Anything that is
+    // not an implemented AnnotatingElement, MetadataUsage included, is recovered over
+    // one token at a time and reported: accepting it silently would report an
+    // annotation this parser cannot read as one it understood.
     fn relationship_body(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::RelationshipBody);
@@ -576,14 +822,152 @@ impl<'a> Parser<'a> {
             self.bump();
         } else if self.at(SyntaxKind::LBrace) {
             self.bump();
-            while !self.at_end() && !self.at(SyntaxKind::RBrace) {
-                self.error_token();
-            }
-            self.expect(SyntaxKind::RBrace, "`}`");
+            self.with_significant_comments(Self::owned_annotations);
         } else {
             self.errors
                 .push("expected `;` or `{` after an import declaration".to_owned());
         }
+        self.finish_node();
+    }
+
+    /// `OwnedAnnotation* '}'`, the rest of a braced `RelationshipBody`.
+    fn owned_annotations(&mut self) {
+        while !self.at_end() && !self.at(SyntaxKind::RBrace) {
+            if self.at_annotating_element() {
+                self.owned_annotation();
+            } else {
+                self.error_token();
+            }
+        }
+        self.expect(SyntaxKind::RBrace, "`}`");
+    }
+
+    // production: OwnedAnnotation
+    //
+    // OwnedAnnotation : Annotation = ownedRelatedElement += AnnotatingElement
+    //                                                            (SysML 8.2.2.4.1)
+    //
+    // AnnotatingElement = Comment | Documentation | TextualRepresentation
+    //                   | MetadataUsage
+    //
+    // The fourth alternative is MetadataUsage by deviation AnnotatingElement
+    // (follow_xtext); the clause prints MetadataFeature. It is not implemented, so
+    // AnnotatingElement gets no marker and no node — like DefinitionElement it is an
+    // alternation whose matched element already says which alternative was taken.
+    // The caller only enters on at_annotating_element, so the dispatch below never
+    // sees a MetadataUsage.
+    fn owned_annotation(&mut self) {
+        self.with_significant_comments(|p| {
+            p.eat_trivia();
+            p.start_node(SyntaxKind::OwnedAnnotation);
+            if p.at_keyword("doc") {
+                p.documentation();
+            } else if p.at_keyword("rep") || p.at_keyword("language") {
+                p.textual_representation();
+            } else {
+                p.comment();
+            }
+            p.finish_node();
+        });
+    }
+
+    // production: Comment
+    //
+    // Comment =
+    //     ( 'comment' Identification
+    //       ( 'about' ownedRelationship += Annotation
+    //         ( ',' ownedRelationship += Annotation )* )? )?
+    //     ( 'locale' locale = STRING_VALUE )?
+    //     body = REGULAR_COMMENT                                 (SysML 8.2.2.4.2)
+    //
+    // `locale` belongs after the whole optional header, not inside it.
+    fn comment(&mut self) {
+        self.with_significant_comments(|p| {
+            p.eat_trivia();
+            p.start_node(SyntaxKind::Comment);
+            if p.at_keyword("comment") {
+                p.comment_header();
+            }
+            p.locale();
+            p.expect(SyntaxKind::RegularComment, "a comment body `/* ... */`");
+            p.finish_node();
+        });
+    }
+
+    /// `'comment' Identification ( 'about' Annotation ( ',' Annotation )* )?`.
+    fn comment_header(&mut self) {
+        self.bump_as(keyword("comment").unwrap_or(SyntaxKind::BasicName));
+        self.identification();
+        if !self.at_keyword("about") {
+            return;
+        }
+        self.bump_as(keyword("about").unwrap_or(SyntaxKind::BasicName));
+        self.annotation();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.annotation();
+        }
+    }
+
+    // production: Documentation
+    //
+    // Documentation =
+    //     'doc' Identification ( 'locale' locale = STRING_VALUE )?
+    //     body = REGULAR_COMMENT                                 (SysML 8.2.2.4.2)
+    fn documentation(&mut self) {
+        self.with_significant_comments(|p| {
+            p.eat_trivia();
+            p.start_node(SyntaxKind::Documentation);
+            p.bump_as(keyword("doc").unwrap_or(SyntaxKind::BasicName));
+            p.identification();
+            p.locale();
+            p.expect(
+                SyntaxKind::RegularComment,
+                "a documentation body `/* ... */`",
+            );
+            p.finish_node();
+        });
+    }
+
+    // production: TextualRepresentation
+    //
+    // TextualRepresentation =
+    //     ( 'rep' Identification )?
+    //     'language' language = STRING_VALUE
+    //     body = REGULAR_COMMENT                                 (SysML 8.2.2.4.3)
+    fn textual_representation(&mut self) {
+        self.with_significant_comments(|p| {
+            p.eat_trivia();
+            p.start_node(SyntaxKind::TextualRepresentation);
+            if p.at_keyword("rep") {
+                p.bump_as(keyword("rep").unwrap_or(SyntaxKind::BasicName));
+                p.identification();
+            }
+            p.expect_keyword("language");
+            p.expect(SyntaxKind::StringValue, "a language name string");
+            p.expect(
+                SyntaxKind::RegularComment,
+                "a representation body `/* ... */`",
+            );
+            p.finish_node();
+        });
+    }
+
+    /// `( 'locale' locale = STRING_VALUE )?`, shared by `Comment` and `Documentation`.
+    fn locale(&mut self) {
+        if self.at_keyword("locale") {
+            self.bump_as(keyword("locale").unwrap_or(SyntaxKind::BasicName));
+            self.expect(SyntaxKind::StringValue, "a locale string");
+        }
+    }
+
+    // production: Annotation
+    //
+    // Annotation = annotatedElement = [QualifiedName]            (SysML 8.2.2.4.1)
+    fn annotation(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Annotation);
+        self.qualified_name();
         self.finish_node();
     }
 
@@ -595,7 +979,7 @@ impl<'a> Parser<'a> {
             self.bump();
         } else if self.at(SyntaxKind::LBrace) {
             self.bump();
-            self.body_elements(Some(SyntaxKind::RBrace));
+            self.body_elements(Some(SyntaxKind::RBrace), SyntaxKind::PackageMember);
             self.expect(SyntaxKind::RBrace, "`}`");
         } else {
             self.errors
@@ -627,7 +1011,25 @@ mod tests {
     /// the list as productions are added.
     /// Every keyword a production looks up by text, beyond the `VISIBILITY` table
     /// the test below chains on. Extend as productions are added.
-    const NAMED: &[&str] = &["package", "import", "all", "alias", "for"];
+    const NAMED: &[&str] = &[
+        "package",
+        "import",
+        "all",
+        "alias",
+        "for",
+        "part",
+        "def",
+        "abstract",
+        "variation",
+        "individual",
+        "specializes",
+        "comment",
+        "about",
+        "locale",
+        "doc",
+        "rep",
+        "language",
+    ];
 
     #[test]
     fn every_keyword_this_parser_names_is_in_the_pinned_token_set() {

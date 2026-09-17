@@ -1,0 +1,23 @@
+---
+source: crates/sv2-syntax/tests/parser.rs
+assertion_line: 745
+expression: render(&parsed.syntax())
+---
+RootNamespace
+  PackageMember
+    MemberPrefix
+      VisibilityIndicator
+        KwPublic "public"
+    Whitespace " "
+    PartDefinition
+      OccurrenceDefinitionPrefix
+      KwPart "part"
+      Whitespace " "
+      KwDef "def"
+      Whitespace " "
+      Definition
+        DefinitionDeclaration
+          Identification
+            BasicName "Vehicle"
+        DefinitionBody
+          Semicolon ";"

@@ -134,9 +134,18 @@ fn an_unclosed_brace_is_reported_and_the_contents_are_kept() {
 }
 
 #[test]
-fn text_that_is_not_a_package_becomes_an_error_node() {
-    // part def is not implemented yet and must not parse silently.
-    parse_rejected("part def Engine;");
+fn text_no_implemented_production_accepts_becomes_an_error_node() {
+    // This case was `part def Engine;`, a rejection by absence that stopped being
+    // true when PartDefinition landed: SysML 8.2.2.11 makes it a well-formed
+    // PartDefinition (`OccurrenceDefinitionPrefix 'part' 'def' Definition`), and
+    // the positive cases below now hold it. The property the test protects is
+    // unchanged — text this parser cannot read is reported, not silently accepted —
+    // so it moves to a construct that is still unimplemented. `part engine : Engine;`
+    // is a PartUsage (SysML 8.2.2.11), valid SysML that no production here reads.
+    // It is a rejection by absence too, and says so; replace it again when
+    // PartUsage lands.
+    let parsed = parse_rejected("part engine : Engine;");
+    assert!(render(&parsed.syntax()).contains("Error"));
 }
 
 #[test]
@@ -308,7 +317,8 @@ fn a_qualified_name_may_start_at_global_scope() {
 #[test]
 fn a_relationship_body_may_be_braces_instead_of_a_semicolon() {
     // RelationshipBody = ';' | '{' ( ownedRelationship += OwnedAnnotation )* '}'.
-    // OwnedAnnotation is not implemented, so only the empty body is accepted here.
+    // The `*` admits zero annotations, so the empty braced body is well formed. The
+    // bodies that hold annotations are covered under OwnedAnnotation below.
     parse_accepted("public import A::* { }");
 }
 
@@ -482,9 +492,9 @@ fn both_alias_name_slots_are_optional() {
 
 #[test]
 fn an_alias_body_may_be_braces() {
-    // RelationshipBody = ';' | '{' OwnedAnnotation* '}'. The corpus has three braced
-    // aliases and every one holds a `doc`, which is an OwnedAnnotation and therefore
-    // unimplemented — so only the empty body is accepted here, as for Import.
+    // RelationshipBody = ';' | '{' OwnedAnnotation* '}'. The empty braced body is
+    // the zero-annotation case; the corpus's braced aliases, which hold a `doc` or a
+    // bare comment, are covered under OwnedAnnotation below.
     parse_accepted("alias Car for Automobile { }");
 }
 
@@ -522,4 +532,377 @@ fn an_alias_is_told_apart_from_the_other_prefixed_elements() {
 #[test]
 fn an_alias_nests_inside_a_package_body() {
     parse_accepted("package P { alias Car for Vehicle; }");
+}
+
+// -- OwnedAnnotation in a RelationshipBody, SysML 8.2.2.2 and 8.2.2.4 --------------
+//
+//   RelationshipBody      = ';' | '{' ( ownedRelationship += OwnedAnnotation )* '}'
+//   OwnedAnnotation       = ownedRelatedElement += AnnotatingElement
+//   AnnotatingElement     = Comment | Documentation | TextualRepresentation
+//                         | MetadataUsage      (MetadataUsage by deviation; unimplemented)
+//   Comment               = ( 'comment' Identification
+//                             ( 'about' Annotation ( ',' Annotation )* )? )?
+//                           ( 'locale' STRING_VALUE )? REGULAR_COMMENT
+//   Documentation         = 'doc' Identification ( 'locale' STRING_VALUE )? REGULAR_COMMENT
+//   TextualRepresentation = ( 'rep' Identification )? 'language' STRING_VALUE
+//                           REGULAR_COMMENT
+//   Annotation            = annotatedElement = [QualifiedName]
+//
+// REGULAR_COMMENT is a token (KerML 8.2.2.2), the body these productions own.
+
+#[test]
+fn a_documented_import_owns_its_annotation() {
+    // The rejection-by-absence case this replaces, now accepted: a braced
+    // RelationshipBody owning one Documentation through an OwnedAnnotation.
+    let parsed = parse_accepted("public import A::* { doc /* an annotation */ }");
+    insta::assert_snapshot!(render(&parsed.syntax()));
+}
+
+#[test]
+fn a_documentation_body_belongs_to_the_documentation_node() {
+    // body = REGULAR_COMMENT is part of Documentation, so the comment token must sit
+    // inside that node — not before it as trivia, which would round-trip identically
+    // and so only the tree shape can catch.
+    let parsed = parse_accepted("public import A::* { doc /* body */ }");
+    let rendered = render(&parsed.syntax());
+    let documentation = subtree(&rendered, "Documentation");
+    assert!(
+        documentation.contains("RegularComment \"/* body */\""),
+        "{rendered}"
+    );
+    let relationship = subtree(&rendered, "RelationshipBody");
+    assert!(relationship.contains("OwnedAnnotation"), "{rendered}");
+}
+
+#[test]
+fn an_alias_body_may_hold_documentation_as_the_corpus_writes_it() {
+    // Training "01. Packages/Documentation Example.sysml", lines 10-12.
+    parse_accepted(
+        "alias Car for Automobile {\n\t\tdoc /* This is documentation of the alias. */\n\t}",
+    );
+}
+
+#[test]
+fn a_doc_keyword_and_its_body_may_be_on_separate_lines() {
+    // Validation "15_10-Primitive Data Types.sysml", lines 8-12: `doc`, a newline,
+    // then the body. White space between tokens is not significant (KerML 8.2.2.1).
+    parse_accepted(
+        "private import ScalarValues::Integer {\n\tdoc\n\t/*\n\t * The unqualified Integer is signed.\n\t */\n\t}",
+    );
+}
+
+#[test]
+fn a_bare_regular_comment_in_a_relationship_body_is_a_comment_element() {
+    // Validation "1a-Parts Tree.sysml", lines 27-32:
+    // `private import Definitions::* { /* ... */ }`. Everything before Comment's body
+    // is optional, so the body alone is a Comment.
+    let parsed = parse_accepted(
+        "private import Definitions::* {\n\t/*\n\t * A \"private\" private import.\n\t */\n}",
+    );
+    let rendered = render(&parsed.syntax());
+    assert!(
+        subtree(&rendered, "Comment").contains("RegularComment"),
+        "{rendered}"
+    );
+    assert!(rendered.contains("OwnedAnnotation"), "{rendered}");
+}
+
+#[test]
+fn a_comment_may_carry_a_header_and_an_about_list() {
+    // `comment Comment1 /* This is a named comment. */` and
+    // `comment cmt_cmt about cmt /* Comment about Comment */` are corpus lines; both
+    // are placed in an import's body here, where RelationshipBody admits them.
+    parse_accepted("public import A::* { comment Comment1 /* This is a named comment. */ }");
+    parse_accepted("public import A::* { comment cmt_cmt about cmt /* about */ }");
+    // ( ',' Annotation )*, and an Annotation's target is a QualifiedName.
+    let parsed = parse_accepted("public import A::* { comment about B, C::D /* both */ }");
+    let rendered = render(&parsed.syntax());
+    let annotations = rendered
+        .lines()
+        .filter(|line| line.trim_start() == "Annotation")
+        .count();
+    assert_eq!(annotations, 2, "{rendered}");
+}
+
+#[test]
+fn a_comment_or_documentation_may_state_a_locale() {
+    // ( 'locale' locale = STRING_VALUE )?, after the header and before the body.
+    parse_accepted("public import A::* { locale \"en_US\" /* bare, with a locale */ }");
+    parse_accepted("public import A::* { comment c locale \"en_US\" /* named */ }");
+    parse_accepted("public import A::* { doc locale \"fr\" /* documentation */ }");
+    parse_accepted("public import A::* { doc <d> Intro locale \"fr\" /* identified */ }");
+}
+
+#[test]
+fn a_textual_representation_names_its_language() {
+    // `rep inOCL language "ocl"` (KerML "Simple Tests/TextualRepresentation.kerml"
+    // line 7) and `language "Alf" /* ... */` ("Opaque Action Example.sysml" line 9).
+    parse_accepted("public import A::* { rep inOCL language \"ocl\" /* self.x > 0 */ }");
+    let parsed = parse_accepted("public import A::* { language \"Alf\" /* x = 1; */ }");
+    assert!(render(&parsed.syntax()).contains("TextualRepresentation"));
+}
+
+#[test]
+fn a_relationship_body_may_own_several_annotations() {
+    // ( ownedRelationship += OwnedAnnotation )*.
+    let parsed = parse_accepted(
+        "alias Car for Automobile { doc /* one */ /* two */ language \"x\" /* three */ }",
+    );
+    let rendered = render(&parsed.syntax());
+    assert_eq!(rendered.matches("OwnedAnnotation").count(), 3, "{rendered}");
+}
+
+#[test]
+fn documentation_without_a_body_is_reported() {
+    // Documentation = 'doc' Identification ( 'locale' STRING_VALUE )? REGULAR_COMMENT.
+    // The body is not optional; `Intro` is only the Identification.
+    parse_rejected("public import A::* { doc Intro }");
+    parse_rejected("public import A::* { doc }");
+}
+
+#[test]
+fn a_comment_header_without_a_body_is_reported() {
+    // Comment ends in REGULAR_COMMENT whatever header precedes it.
+    parse_rejected("public import A::* { comment c }");
+    parse_rejected("public import A::* { comment about X }");
+}
+
+#[test]
+fn an_about_list_requires_an_annotated_element() {
+    // 'about' Annotation, and Annotation = [QualifiedName], which is not empty.
+    parse_rejected("public import A::* { comment about /* nothing */ }");
+    parse_rejected("public import A::* { comment about X, /* trailing comma */ }");
+}
+
+#[test]
+fn a_locale_requires_a_string() {
+    // 'locale' locale = STRING_VALUE. A regular comment is a token, not skipped
+    // trivia, so it cannot stand between `locale` and the string.
+    parse_rejected("public import A::* { doc locale /* body */ }");
+    parse_rejected("public import A::* { doc locale /* x */ \"en\" /* body */ }");
+}
+
+#[test]
+fn a_textual_representation_requires_its_language() {
+    // 'language' language = STRING_VALUE is required even after 'rep' Identification.
+    parse_rejected("public import A::* { rep R /* text */ }");
+    parse_rejected("public import A::* { language /* text */ }");
+    parse_rejected("public import A::* { language \"ocl\" }");
+}
+
+#[test]
+fn a_relationship_body_holds_only_annotations() {
+    // SysML narrows RelationshipBody to OwnedAnnotation (8.2.2.2); a package member
+    // is not one.
+    parse_rejected("public import A::* { package P; }");
+    parse_rejected("alias Car for Automobile { alias X for Y; }");
+}
+
+#[test]
+fn metadata_in_a_relationship_body_is_reported_not_accepted() {
+    // MetadataUsage is AnnotatingElement's fourth alternative (deviation
+    // AnnotatingElement) and valid SysML here, but it is not implemented. It must be
+    // reported rather than silently accepted: a rejection by absence, not by rule.
+    parse_rejected("public import A::* { @Rationale; }");
+    parse_rejected("public import A::* { metadata Rationale; }");
+    // Recovery is at the body: an implemented annotation after it still parses.
+    let parsed = parse_rejected("public import A::* { @Rationale; doc /* kept */ }");
+    assert!(render(&parsed.syntax()).contains("Documentation"));
+}
+
+#[test]
+fn an_unterminated_annotation_body_is_reported_and_kept() {
+    // REGULAR_COMMENT = '/*' COMMENT_TEXT '*/' (KerML 8.2.2.2) requires the
+    // terminator, whether the comment is trivia or a body.
+    let parsed = parse_rejected("public import A::* { doc /* never closed");
+    assert!(
+        parsed.errors().iter().any(|e| e.contains("never closed")),
+        "{:?}",
+        parsed.errors()
+    );
+}
+
+// -- PartDefinition, SysML 8.2.2.11 -----------------------------------------------
+//
+//   PartDefinition             = OccurrenceDefinitionPrefix 'part' 'def' Definition
+//   OccurrenceDefinitionPrefix = BasicDefinitionPrefix?
+//                                ( 'individual' EmptyMultiplicityMember )?
+//                                DefinitionExtensionKeyword*         (8.2.2.9.1)
+//   BasicDefinitionPrefix      = 'abstract' | 'variation'            (8.2.2.6.1)
+//   Definition                 = DefinitionDeclaration DefinitionBody
+//   DefinitionDeclaration      = Identification SubclassificationPart?
+//   DefinitionBody             = ';' | '{' DefinitionBodyItem* '}'
+//   DefinitionMember           = MemberPrefix DefinitionElement
+//   SubclassificationPart      = SPECIALIZES OwnedSubclassification
+//                                ( ',' OwnedSubclassification )*     (8.2.2.6.5)
+//   OwnedSubclassification     = [QualifiedName]
+//   SPECIALIZES                = ':>' | 'specializes'                (KerML 8.2.2.7)
+
+#[test]
+fn a_part_definition_is_a_package_member() {
+    // The rejection-by-absence case this replaces, now accepted.
+    let parsed = parse_accepted("public part def Vehicle;");
+    insta::assert_snapshot!(render(&parsed.syntax()));
+}
+
+#[test]
+fn part_definitions_as_the_corpus_writes_them() {
+    // Each line is from the pinned corpus.
+    parse_accepted("part def Vehicle;");
+    parse_accepted("part def 'Fuel Station';");
+    parse_accepted("abstract part def VehiclePart;");
+    parse_accepted("part def Engine :> VehiclePart;");
+    parse_accepted("private part def Automobile;");
+    // SimpleVehicleModel.sysml line 1484, with no space around ':>'.
+    parse_accepted("variation part def TransmissionChoices:>Transmission { }");
+    // Training "28. Individuals/Individuals and Roles-1.sysml" line 11.
+    parse_accepted("individual part def Wheel_1 :> Wheel;");
+}
+
+#[test]
+fn a_part_definition_builds_the_nodes_the_grammar_names() {
+    let parsed = parse_accepted("part def Car :> Vehicle, Base::Thing { }");
+    let rendered = render(&parsed.syntax());
+    for node in [
+        "PackageMember",
+        "PartDefinition",
+        "OccurrenceDefinitionPrefix",
+        "KwPart",
+        "KwDef",
+        "Definition",
+        "DefinitionDeclaration",
+        "Identification",
+        "SubclassificationPart",
+        "OwnedSubclassification",
+        "QualifiedName",
+        "DefinitionBody",
+    ] {
+        assert!(rendered.contains(node), "no {node} node:\n{rendered}");
+    }
+    assert_eq!(
+        rendered.matches("OwnedSubclassification").count(),
+        2,
+        "{rendered}"
+    );
+    // No prefix keyword was written, so none of the prefix's optional parts is built.
+    assert!(!rendered.contains("BasicDefinitionPrefix"), "{rendered}");
+    assert!(!rendered.contains("EmptyMultiplicityMember"), "{rendered}");
+}
+
+#[test]
+fn specializes_may_be_spelled_out() {
+    // SPECIALIZES = ':>' | 'specializes' (KerML 8.2.2.7).
+    parse_accepted("part def Car specializes Vehicle;");
+}
+
+#[test]
+fn a_part_definition_need_not_declare_a_name() {
+    // DefinitionDeclaration = Identification SubclassificationPart?, and
+    // Identification is nullable (SysML 8.2.2.2).
+    parse_accepted("part def;");
+    parse_accepted("part def :> Vehicle;");
+}
+
+#[test]
+fn an_individual_definition_owns_an_empty_multiplicity() {
+    // ( isIndividual ?= 'individual' ownedRelationship += EmptyMultiplicityMember )?,
+    // EmptyMultiplicity = { } — an element with no tokens.
+    let parsed = parse_accepted("abstract individual part def Vehicle_1 :> Vehicle;");
+    let rendered = render(&parsed.syntax());
+    for node in [
+        "BasicDefinitionPrefix",
+        "KwIndividual",
+        "EmptyMultiplicityMember",
+        "EmptyMultiplicity",
+    ] {
+        assert!(rendered.contains(node), "no {node} node:\n{rendered}");
+    }
+}
+
+#[test]
+fn a_definition_body_holds_the_items_implemented_so_far() {
+    // DefinitionBodyItem = DefinitionMember | ... | AliasMember | Import, and
+    // DefinitionElement includes both Package and PartDefinition.
+    let parsed = parse_accepted(
+        "part def Vehicle {\n  private import ISQ::*;\n  alias Car for Vehicle;\n  public part def Engine;\n  package Notes;\n}",
+    );
+    let rendered = render(&parsed.syntax());
+    assert_eq!(
+        rendered.matches("DefinitionMember").count(),
+        2,
+        "{rendered}"
+    );
+    assert!(
+        rendered.contains("Import") && rendered.contains("AliasMember"),
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_part_definition_nests_inside_a_package() {
+    let parsed = parse_accepted("package Vehicles { part def Vehicle { part def Engine; } }");
+    let rendered = render(&parsed.syntax());
+    assert_eq!(rendered.matches("PartDefinition").count(), 2, "{rendered}");
+}
+
+#[test]
+fn a_part_definition_without_a_body_is_reported() {
+    // DefinitionBody = ';' | '{' DefinitionBodyItem* '}' is not optional.
+    parse_rejected("part def Vehicle");
+    parse_rejected("part def Vehicle {");
+}
+
+#[test]
+fn a_specialization_needs_a_superclass() {
+    // SPECIALIZES OwnedSubclassification, and OwnedSubclassification = [QualifiedName].
+    parse_rejected("part def Vehicle :> ;");
+    parse_rejected("part def Car :> Vehicle, ;");
+    parse_rejected("part def Car specializes;");
+}
+
+#[test]
+fn a_basic_definition_prefix_is_one_keyword_at_most() {
+    // BasicDefinitionPrefix? — `abstract` or `variation`, not both.
+    parse_rejected("abstract variation part def Vehicle;");
+}
+
+#[test]
+fn individual_follows_the_basic_definition_prefix() {
+    // BasicDefinitionPrefix? then ( 'individual' ... )?, in that order.
+    parse_rejected("individual abstract part def Vehicle;");
+}
+
+#[test]
+fn a_reserved_word_cannot_name_a_part_definition() {
+    // KerML 8.2.2.6: `part` is reserved, so Identification has no name and the body
+    // is missing.
+    parse_rejected("part def part;");
+}
+
+#[test]
+fn unimplemented_definition_body_items_are_reported_at_the_body() {
+    // `part engine : Engine;` is a PartUsage, an OccurrenceUsageMember — valid SysML
+    // this parser does not implement. It must be reported, and the definition after
+    // it must still parse: recovery happens at the enclosing body.
+    let parsed = parse_rejected("part def Vehicle { part engine : Engine; part def Wheel; }");
+    let rendered = render(&parsed.syntax());
+    assert_eq!(rendered.matches("PartDefinition").count(), 2, "{rendered}");
+}
+
+#[test]
+fn prefix_metadata_on_a_definition_is_reported_not_accepted() {
+    // DefinitionExtensionKeyword (`#` PrefixMetadataMember) is valid SysML and not
+    // implemented: a rejection by absence. The definition after it still parses.
+    let parsed = parse_rejected("#Safety part def Brake;");
+    assert!(render(&parsed.syntax()).contains("PartDefinition"));
+}
+
+#[test]
+fn parsing_annotations_and_definitions_never_panics_on_truncated_input() {
+    let source = "public abstract individual part def <V> Vehicle :> A::B, C {\n  alias X for Y { comment c about Z locale \"en\" /* b */ rep r language \"l\" /* t */ }\n}";
+    for end in 0..=source.len() {
+        if let Some(prefix) = source.get(..end) {
+            assert_eq!(parse(prefix).text(), prefix);
+        }
+    }
 }

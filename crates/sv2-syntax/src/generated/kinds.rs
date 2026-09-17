@@ -503,6 +503,38 @@ pub enum SyntaxKind {
     MemberPrefix,
     /// `MemberPrefix 'alias' ( '<' NAME '>' )? NAME? 'for' [QualifiedName] RelationshipBody`. `SysML` 8.2.2.5.1.
     AliasMember,
+    /// `ownedRelatedElement += AnnotatingElement`. `SysML` 8.2.2.4.1.
+    OwnedAnnotation,
+    /// `annotatedElement = [QualifiedName]`. `SysML` 8.2.2.4.1.
+    Annotation,
+    /// `( 'comment' Identification ( 'about' Annotation ( ',' Annotation )* )? )? ( 'locale' STRING_VALUE )? REGULAR_COMMENT`. `SysML` 8.2.2.4.2.
+    Comment,
+    /// `'doc' Identification ( 'locale' STRING_VALUE )? REGULAR_COMMENT`. `SysML` 8.2.2.4.2.
+    Documentation,
+    /// `( 'rep' Identification )? 'language' STRING_VALUE REGULAR_COMMENT`. `SysML` 8.2.2.4.3.
+    TextualRepresentation,
+    /// `OccurrenceDefinitionPrefix 'part' 'def' Definition`. `SysML` 8.2.2.11.
+    PartDefinition,
+    /// `BasicDefinitionPrefix? ( 'individual' EmptyMultiplicityMember )? DefinitionExtensionKeyword*`. `SysML` 8.2.2.9.1.
+    OccurrenceDefinitionPrefix,
+    /// `'abstract' | 'variation'`. `SysML` 8.2.2.6.1.
+    BasicDefinitionPrefix,
+    /// `ownedRelatedElement += EmptyMultiplicity`. `SysML` 8.2.2.9.1.
+    EmptyMultiplicityMember,
+    /// `{ }`, a Multiplicity that consumes no tokens. `SysML` 8.2.2.9.1.
+    EmptyMultiplicity,
+    /// `DefinitionDeclaration DefinitionBody`. `SysML` 8.2.2.6.1.
+    Definition,
+    /// `Identification SubclassificationPart?`. `SysML` 8.2.2.6.1.
+    DefinitionDeclaration,
+    /// `SPECIALIZES OwnedSubclassification ( ',' OwnedSubclassification )*`. `SysML` 8.2.2.6.5.
+    SubclassificationPart,
+    /// `superClassifier = [QualifiedName]`. `SysML` 8.2.2.6.5.
+    OwnedSubclassification,
+    /// `';' | '{' DefinitionBodyItem* '}'`. `SysML` 8.2.2.6.1.
+    DefinitionBody,
+    /// `MemberPrefix DefinitionElement`. `SysML` 8.2.2.6.1.
+    DefinitionMember,
     /// recovered-over text; carries its bytes so the tree stays lossless
     Error,
 
@@ -760,6 +792,22 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::PackageMember,
     SyntaxKind::MemberPrefix,
     SyntaxKind::AliasMember,
+    SyntaxKind::OwnedAnnotation,
+    SyntaxKind::Annotation,
+    SyntaxKind::Comment,
+    SyntaxKind::Documentation,
+    SyntaxKind::TextualRepresentation,
+    SyntaxKind::PartDefinition,
+    SyntaxKind::OccurrenceDefinitionPrefix,
+    SyntaxKind::BasicDefinitionPrefix,
+    SyntaxKind::EmptyMultiplicityMember,
+    SyntaxKind::EmptyMultiplicity,
+    SyntaxKind::Definition,
+    SyntaxKind::DefinitionDeclaration,
+    SyntaxKind::SubclassificationPart,
+    SyntaxKind::OwnedSubclassification,
+    SyntaxKind::DefinitionBody,
+    SyntaxKind::DefinitionMember,
     SyntaxKind::Error,
     SyntaxKind::Tombstone,
 ];

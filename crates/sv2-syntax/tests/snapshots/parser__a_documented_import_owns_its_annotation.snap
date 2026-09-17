@@ -1,0 +1,30 @@
+---
+source: crates/sv2-syntax/tests/parser.rs
+assertion_line: 558
+expression: render(&parsed.syntax())
+---
+RootNamespace
+  Import
+    VisibilityIndicator
+      KwPublic "public"
+    Whitespace " "
+    KwImport "import"
+    Whitespace " "
+    ImportDeclaration
+      NamespaceImport
+        QualifiedName
+          BasicName "A"
+        ColonColon "::"
+        Star "*"
+    Whitespace " "
+    RelationshipBody
+      LBrace "{"
+      Whitespace " "
+      OwnedAnnotation
+        Documentation
+          KwDoc "doc"
+          Whitespace " "
+          Identification
+          RegularComment "/* an annotation */"
+      Whitespace " "
+      RBrace "}"
