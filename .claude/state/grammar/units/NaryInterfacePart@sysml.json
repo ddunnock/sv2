@@ -3,7 +3,7 @@
   "production": "NaryInterfacePart",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "bffd8b9322d613cb8c3a15449371ae9a03700ef3ca5dde0052db50b7149ba822",
     "xtext_rule": "234b0fecd24ba76b3e7ecda220f84c61f49c395efa4e78221faefa63e11abc36",
@@ -16,5 +16,76 @@
     "xtext_rule_text": "fragment NaryInterfacePart returns SysML::Connector :\n\t'(' ownedRelationship += InterfaceEndMember ',' \n\t    ownedRelationship += InterfaceEndMember\n\t    ( ',' ownedRelationship += InterfaceEndMember )* ')'\n;",
     "metaclass": "SysML::Connector"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "("
+      },
+      {
+        "k": "ref",
+        "name": "InterfaceEndMember"
+      },
+      {
+        "k": "kw",
+        "text": ","
+      },
+      {
+        "k": "ref",
+        "name": "InterfaceEndMember"
+      },
+      {
+        "k": "star",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": ","
+            },
+            {
+              "k": "ref",
+              "name": "InterfaceEndMember"
+            }
+          ]
+        }
+      },
+      {
+        "k": "kw",
+        "text": ")"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.14.2. The clause and the Xtext state this production identically; the Xtext writes it as a `fragment`, an inlining mechanism of that parser generator rather than a claim about the language, and the specification names it as a production that InterfacePart selects. The two mandatory ends before the repetition are the clause's own shape and are kept: they make two the minimum, so `( a )` is not an n-ary interface part, and the binary form without brackets remains the only way to write exactly two. The repetition is a star rather than a separator list because the clause spells it that way, and writing it out keeps the minimum of two visible in the rule itself.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.14.2 (InterfaceUsages.md, region_sha256 e490b9536f83631d)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml",
+      "note": "Lines 77-81 `interface APIS_transfer_interface : Interfaces::Interface connect ( tlu ::> ..., apsph ::> ..., apspm ::> ..., apsc ::> ..., mqget ::> ..., mqgive ::> ... ) {` is an n-ary interface part with six ends: the first two satisfy the mandatory pair and the remaining four the repetition. Each end takes InterfaceEnd's `( declaredName = NAME REFERENCES )?` form, naming the end before `::>`."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext NaryInterfacePart",
+      "note": "Second opinion. Identical tokens, declared a fragment."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:32:52Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:32:52Z"
 }

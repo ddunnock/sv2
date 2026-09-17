@@ -3,7 +3,7 @@
   "production": "BinaryInterfacePart",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "bffd8b9322d613cb8c3a15449371ae9a03700ef3ca5dde0052db50b7149ba822",
     "xtext_rule": "8a2dedf48663716c1e10785ae065f37d09f2241445d24bb0ea12cdf9f944d62b",
@@ -16,5 +16,57 @@
     "xtext_rule_text": "fragment BinaryInterfacePart returns SysML::Connector :\n\townedRelationship += InterfaceEndMember 'to' \n\townedRelationship += InterfaceEndMember\n;",
     "metaclass": "SysML::Connector"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "InterfaceEndMember"
+      },
+      {
+        "k": "kw",
+        "text": "to"
+      },
+      {
+        "k": "ref",
+        "name": "InterfaceEndMember"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.14.2. The clause and the Xtext state this production identically. The Xtext writes it as a `fragment`, which is an Xtext inlining mechanism \u2014 a fragment is spliced into every rule that calls it rather than producing a parse node \u2014 and says nothing about the language; the specification names it as a production in its own right and InterfacePart selects between it and NaryInterfacePart, so it is kept as a production. Exactly two ends, joined by 'to': the n-ary form with three or more ends is NaryInterfacePart, which is bracketed and comma-separated and so cannot be confused with this one.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.14.2 (InterfaceUsages.md, region_sha256 e490b9536f83631d)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/validation/02-Parts Interconnection/2a-Parts Interconnection.sysml",
+      "note": "Line 162 `interface differential.rightDiffPort to rearAxle.rightHalfAxle.axleToDiffPort;` reaches this production through InterfaceUsageDeclaration's bare `InterfacePart` alternative: the two feature chains are the InterfaceEndMembers and 'to' separates them. Line 157 is the same shape with a body in braces."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/27. Occurrences/Interaction Realization-2.sysml",
+      "note": "Line 10 `interface driverToVehicleInterface connect driver_b.setSpeedPort to vehicle_b.setSpeedPort {` reaches the same production through the other alternative, `UsageDeclaration ValuePart? ( 'connect' InterfacePart )?`, so the binary part is what follows 'connect'."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext BinaryInterfacePart",
+      "note": "Second opinion. Identical tokens; declared a fragment, which is an Xtext mechanism rather than a statement about the language."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:32:16Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:32:16Z"
 }

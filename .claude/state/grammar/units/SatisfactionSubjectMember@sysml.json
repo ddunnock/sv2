@@ -3,7 +3,7 @@
   "production": "SatisfactionSubjectMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "fc398636b89ed7f38aee585cc6eb3e6281af4853d57aab1490de3e1306db12d3",
     "xtext_rule": "e8930ca51a13c7e8cd0bd41ee848d5b3c4e36661d92314f0c3a6f75bcf9b37c8",
@@ -16,5 +16,39 @@
     "xtext_rule_text": "SatisfactionSubjectMember returns SysML::SubjectMembership :\n\townedRelatedElement += SatisfactionParameter \n;",
     "metaclass": "SysML::SubjectMembership"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "ref",
+    "name": "SatisfactionParameter"
+  },
+  "decision": "A transcription of SysML 8.2.2.21.2. The clause and the Xtext state this production identically \u2014 `ownedRelatedElement += SatisfactionParameter` in both \u2014 so there is nothing to weigh. The production contributes no tokens of its own: it is the membership that carries the subject of a satisfaction, and everything visible is below it. The 'by' that introduces the subject belongs to SatisfyRequirementUsage, which is where the clause puts it (`( 'by' ownedRelationship += SatisfactionSubjectMember )?`), and the text of the subject itself is reached through SatisfactionParameter, a chain of four one-line productions ending at a FeatureChainMember.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.21.2 (RequirementUsages.md, region_sha256 6c4f3553daaa3162)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/32. Requirements/Requirement Satisfaction.sysml",
+      "note": "Line 22 `satisfy vehicleSpecification by vehicle_design;` has the subject member after 'by': `vehicle_design`, reached through SatisfactionParameter's feature value and reference expression. Line 23 `satisfy engineSpecification by vehicle_design.engine_v1;` shows the same position taking a feature chain."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext SatisfactionSubjectMember",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:34:28Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:34:28Z"
 }

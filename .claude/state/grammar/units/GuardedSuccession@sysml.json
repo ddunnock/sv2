@@ -3,7 +3,7 @@
   "production": "GuardedSuccession",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "bf230844585015a55800fd98050d6e2879682c9a5988b5261223ac6eb481d35b",
     "xtext_rule": "16482a3b831271ee072dfe8016b78c0d7bd7e44c4cb2d8bd058b5381c7655e0a",
@@ -16,5 +16,80 @@
     "xtext_rule_text": "GuardedSuccession returns SysML::TransitionUsage :\n\t( SuccessionKeyword UsageDeclaration )? 'first'\n\townedRelationship += TransitionSourceMember \n\townedRelationship += EmptyParameterMember\n\townedRelationship += GuardExpressionMember\n\t'then' ownedRelationship += TransitionSuccessionMember\n\tUsageBody\n;",
     "metaclass": "SysML::TransitionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "The corpus lines cited carry a visibility prefix ('public', 'private') which belongs to the member that owns the succession, not to this production.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": "succession"
+            },
+            {
+              "k": "ref",
+              "name": "UsageDeclaration"
+            }
+          ]
+        }
+      },
+      {
+        "k": "kw",
+        "text": "first"
+      },
+      {
+        "k": "ref",
+        "name": "FeatureChainMember"
+      },
+      {
+        "k": "ref",
+        "name": "GuardExpressionMember"
+      },
+      {
+        "k": "kw",
+        "text": "then"
+      },
+      {
+        "k": "ref",
+        "name": "TransitionSuccessionMember"
+      },
+      {
+        "k": "ref",
+        "name": "UsageBody"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.8. The Xtext agrees on every token and differs only in two names and one abstract-syntax member, none of which changes the language. SuccessionKeyword is an alias for the single literal 'succession' (SysML.xtext:1027). TransitionSourceMember is the Xtext's local name for the clause's FeatureChainMember: SysML.xtext:1884 gives it `memberElement = [Feature|QualifiedName] | ownedRelatedElement += OwnedFeatureChain`, which is FeatureChainMember's own text in 8.2.2.17.5, and only FeatureChainMember has a unit. The Xtext also inserts `ownedRelationship += EmptyParameterMember` between the source and the guard, which the clause omits; it contributes no tokens, so it is a difference in the abstract syntax the pilot builds rather than in the syntax it accepts, and the clause is followed. The guard is not optional here \u2014 that is what separates a guarded succession from a plain one, whose declaration carries no 'if'.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.8 (ActionSuccessions.md, region_sha256 e5f3ae624be80231)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml",
+      "note": "Lines 17-18 `public succession S first A1 if x == 0 then A2;` take every part: the ( 'succession' UsageDeclaration ) group with the name `S`, 'first' with `A1` as the FeatureChainMember, `if x == 0` as the GuardExpressionMember, `then A2` as the TransitionSuccessionMember, and `;` as the UsageBody."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext GuardedSuccession",
+      "note": "Second opinion. Agrees once SuccessionKeyword (1027) and TransitionSourceMember (1884) are unwound and its token-free EmptyParameterMember is set aside."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:28:49Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:28:49Z"
 }

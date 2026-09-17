@@ -3,7 +3,7 @@
   "production": "Expose",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "549f4dd10d3f615fe5551a4a966bcf84c7f0bc1fec8a26c65080c95b9edafcce",
     "xtext_rule": "1fd88ceef48bae2fcf4d8212b9701221f13ac6ff7d268c82b24b6f3b447a7423",
@@ -16,5 +16,66 @@
     "xtext_rule_text": "Expose returns SysML::Expose :\n\t( MembershipExpose | NamespaceExpose )\n\tRelationshipBody\n;",
     "metaclass": "SysML::Expose"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "The Xtext's reading of 'expose' as a VisibilityKind is worth remembering when the abstract syntax is built: an Expose is an Import whose visibility the pilot sets to protected. That is a statement about the model produced, not about what parses, so it does not belong in this rule.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "expose"
+      },
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "ref",
+            "name": "MembershipExpose"
+          },
+          {
+            "k": "ref",
+            "name": "NamespaceExpose"
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "RelationshipBody"
+      }
+    ]
+  },
+  "decision": "SysML 8.2.2.26.2 puts the 'expose' keyword in this production: `'expose' ( MembershipExpose | NamespaceExpose ) RelationshipBody`, with MembershipExpose = MembershipImport and NamespaceExpose = NamespaceImport. The Xtext omits it here and attaches it inside each branch instead, through the ExposePrefix fragment (SysML.xtext:2366), which spells it as a visibility assignment: `visibility = ExposeVisibilityKind`, an enum whose only literal is `protected = 'expose'` (2370). The same token sequence results either way \u2014 'expose', then an import declaration, then a relationship body \u2014 so this is a difference in where the keyword is attached in the abstract syntax, not in the language. The clause's placement is taken. It also keeps the keyword from being stated twice: the branch productions are the import declarations, and nothing in this rule requires them to carry the keyword themselves.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.26.2 (ViewUsages.md, region_sha256 f49a7d5fda3165a3)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/42. Views/Views Example.sysml",
+      "note": "Line 12 `expose vehicle::**;` takes the NamespaceExpose branch with a recursive namespace import and `;` as the RelationshipBody. Line 25 `expose vehicle::**[@Safety];` is the same branch with a filter."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ViewTest.sysml",
+      "note": "Line 35 `expose P::*;` is the plain namespace form."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext Expose (line 2374)",
+      "note": "Second opinion. Same tokens; the keyword is moved into ExposePrefix (2366) and encoded as a visibility enum."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:33:57Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:33:57Z"
 }

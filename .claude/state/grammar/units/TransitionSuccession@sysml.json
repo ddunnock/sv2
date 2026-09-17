@@ -3,7 +3,7 @@
   "production": "TransitionSuccession",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "ed27e58db83b630f5104309963153b21d43ad821a76cdf513196cdbf06381fef",
@@ -16,5 +16,48 @@
     "xtext_rule_text": "TransitionSuccession returns SysML::SuccessionAsUsage :\n\townedRelationship += EmptySourceEndMember \n\townedRelationship += ConnectorEndMember\n;",
     "metaclass": "SysML::SuccessionAsUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No corpus instance was offered in the pack, because the production contributes no keyword of its own to match on. The cited line is an instance nonetheless: it is the target of a 'then', which is where the clause puts a TransitionSuccession.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "EmptyEndMember"
+      },
+      {
+        "k": "ref",
+        "name": "ConnectorEndMember"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.18.3. The only difference from the Xtext is the name of the first member: the clause writes EmptyEndMember (`ownedRelatedElement += EmptyFeature`, and EmptyFeature is `{}`), the Xtext writes EmptySourceEndMember. Both derive empty, so the two accept the same language and this is a naming difference rather than a disagreement. The clause's name is taken, because EmptyEndMember is a production of the specification with its own unit and EmptySourceEndMember appears in no clause. A transition succession therefore contributes exactly the tokens of its ConnectorEndMember: the source end is implicit, supplied by the transition that owns it.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml",
+      "note": "Line 61 `then Wait;` \u2014 the TransitionSuccession is the `Wait` after 'then', which is its ConnectorEndMember. The empty end contributes no tokens, which is why the succession reads as a bare target name."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext TransitionSuccession (line 1925)",
+      "note": "Second opinion. Same rule under a different name for the empty end."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:26:03Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:26:03Z"
 }

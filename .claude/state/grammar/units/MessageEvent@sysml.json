@@ -3,7 +3,7 @@
   "production": "MessageEvent",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "f503f360d20207704de75664ced4bbe1f57e024983fed96db8f3731cd57ee6a9",
     "xtext_rule": "14943d01d2a607973c48b871ba377b50359de13aa16a329ad7ba8c353ef2e4cf",
@@ -16,5 +16,39 @@
     "xtext_rule_text": "MessageEvent returns SysML::EventOccurrenceUsage :\n\townedRelationship += OwnedReferenceSubsetting\n;",
     "metaclass": "SysML::EventOccurrenceUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "ref",
+    "name": "OwnedReferenceSubsetting"
+  },
+  "decision": "A transcription of SysML 8.2.2.16. The clause and the Xtext state this production identically \u2014 `ownedRelationship += OwnedReferenceSubsetting` in both \u2014 so there is nothing to weigh. A message event is nothing but a reference to the occurrence it names: it carries no keyword, no declaration and no body of its own, and everything that makes it an end of a message ('from', 'to', and the MessageEventMember wrapper) belongs to the productions around it. That is what lets the same subsetting reference serve as either end.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.16 (FlowsTextualNotation.md, region_sha256 e03f363eef9b4cf1)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "Line 781 `message of ignitionCmd:IgnitionCmd from driver.turnVehicleOn to vehicle.trigger1;` has a MessageEvent at each end: `driver.turnVehicleOn` and `vehicle.trigger1`, each an OwnedReferenceSubsetting over a feature chain."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext MessageEvent",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:31:43Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:31:43Z"
 }

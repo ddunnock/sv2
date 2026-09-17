@@ -3,7 +3,7 @@
   "production": "ActionNodeMember",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "123fdd535dd69454a171e663a98bdb2619ca5518f3656d521f100f63eb3d01b2",
     "xtext_rule": "8ac8460f190ed774f5809fa323f53ea18da1533df78bd93943cd0c51c23e0df1",
@@ -16,5 +16,48 @@
     "xtext_rule_text": "ActionNodeMember returns SysML::FeatureMembership :\n\tMemberPrefix ownedRelatedElement += ActionNode \n;",
     "metaclass": "SysML::FeatureMembership"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "ref",
+        "name": "MemberPrefix"
+      },
+      {
+        "k": "ref",
+        "name": "ActionNode"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.1. The clause and the Xtext state this production identically \u2014 `MemberPrefix ownedRelatedElement += ActionNode` in both \u2014 so there is nothing to weigh. It is the membership wrapper that lets an action node appear as a member of an action body: the node's own syntax is entirely in ActionNode, and this rule adds only the MemberPrefix that every member may carry. It sits alongside ActionTargetSuccessionMember and GuardedSuccessionMember in the same clause, which have the same shape over their own element, so following the clause here also keeps the three consistent.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.1 (ActionDefinitions.md, region_sha256 4e3ffb79f011ef83)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml",
+      "note": "Line 12 `join J;` and line 34 `merge M;` are action nodes appearing as members of an action body, each with an empty MemberPrefix."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext ActionNodeMember",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:30:09Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:30:09Z"
 }

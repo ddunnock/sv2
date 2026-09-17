@@ -3,7 +3,7 @@
   "production": "ActionTargetSuccession",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "bf230844585015a55800fd98050d6e2879682c9a5988b5261223ac6eb481d35b",
     "xtext_rule": "d5866508370e846a06c8fd6dbc9bb03ae0e5b28fbe45a2c92ca9974bfc97dd66",
@@ -16,5 +16,61 @@
     "xtext_rule_text": "ActionTargetSuccession returns SysML::Usage :\n\t( TargetSuccession | GuardedTargetSuccession | DefaultTargetSuccession )\n\tUsageBody\n;",
     "metaclass": "SysML::Usage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "alt",
+        "items": [
+          {
+            "k": "ref",
+            "name": "TargetSuccession"
+          },
+          {
+            "k": "ref",
+            "name": "GuardedTargetSuccession"
+          },
+          {
+            "k": "ref",
+            "name": "DefaultTargetSuccession"
+          }
+        ]
+      },
+      {
+        "k": "ref",
+        "name": "UsageBody"
+      }
+    ]
+  },
+  "decision": "A transcription of SysML 8.2.2.17.8. The clause and the Xtext state this production identically, token for token, so there is nothing to weigh: it is the choice of the three target-succession forms followed by a UsageBody. The three alternatives are distinguished by their leading token \u2014 'then' for TargetSuccession, 'if' for the guarded form, 'else' for the default form \u2014 so the choice is decidable on one token and no ordering between them is implied. Factoring the shared UsageBody out of the three, as the clause does, is kept rather than distributed into each alternative.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.17.8 (ActionSuccessions.md, region_sha256 e5f3ae624be80231)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml",
+      "note": "Lines 5-7 of the same action body take two of the three alternatives in turn: `if x == 1 then A1;` and `if x > 1 then A2;` are the guarded form, and `else A3;` is the default form. Each ends at the `;` that is its UsageBody."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext ActionTargetSuccession",
+      "note": "Second opinion. Identical to the clause."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:29:39Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:29:40Z"
 }

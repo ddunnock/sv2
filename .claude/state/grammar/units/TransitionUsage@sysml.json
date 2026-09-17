@@ -3,7 +3,7 @@
   "production": "TransitionUsage",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "57c45fb82338ac68b2afbe55bb7d93fe3bb65b5846483dd96e212c083b45bbb4",
     "xtext_rule": "881c75bf07c1c6ea5c67608f905d1f80907cb685f87ea4ad2d66a041d02c238f",
@@ -16,5 +16,110 @@
     "xtext_rule_text": "TransitionUsage returns SysML::TransitionUsage :\n\tTransitionUsageKeyword ( UsageDeclaration? 'first' )? \n\townedRelationship += TransitionSourceMember\n\townedRelationship += EmptyParameterMember\n\t( ownedRelationship += EmptyParameterMember \n\t  ownedRelationship += TriggerActionMember )?\n\t( ownedRelationship += GuardExpressionMember )?\n\t( ownedRelationship += EffectBehaviorMember )?\n\t'then' ownedRelationship += TransitionSuccessionMember\n\tActionBody\n;",
     "metaclass": "SysML::TransitionUsage"
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "EmptyParameterMember, and the second EmptyParameterMember before the trigger, contribute no tokens; they are abstract-syntax structure the clause states, and are kept as written so the rule transcribes the clause rather than a reading of it.",
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "transition"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "ref",
+              "name": "UsageDeclaration"
+            },
+            {
+              "k": "kw",
+              "text": "first"
+            }
+          ]
+        }
+      },
+      {
+        "k": "ref",
+        "name": "FeatureChainMember"
+      },
+      {
+        "k": "ref",
+        "name": "EmptyParameterMember"
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "ref",
+              "name": "EmptyParameterMember"
+            },
+            {
+              "k": "ref",
+              "name": "TriggerActionMember"
+            }
+          ]
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "GuardExpressionMember"
+        }
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "ref",
+          "name": "EffectBehaviorMember"
+        }
+      },
+      {
+        "k": "kw",
+        "text": "then"
+      },
+      {
+        "k": "ref",
+        "name": "TransitionSuccessionMember"
+      },
+      {
+        "k": "ref",
+        "name": "ActionBody"
+      }
+    ]
+  },
+  "decision": "Straight from SysML 8.2.2.18.3. The Xtext differs in three places and none of them is a disagreement about the language. TransitionUsageKeyword is an alias for the single literal 'transition' (SysML.xtext:1850), so the rule writes the literal as the clause does. TransitionSourceMember is an Xtext-local name for a rule the specification already has: SysML.xtext:1884 gives it `memberElement = [Feature|QualifiedName] | ownedRelatedElement += OwnedFeatureChain`, which is FeatureChainMember's own clause text (`memberElement = [QualifiedName] | OwnedFeatureChainMember`, 8.2.2.17.5). The clause's reference is taken, since FeatureChainMember has a unit and TransitionSourceMember appears in no specification clause. The Xtext's `( UsageDeclaration? 'first' )?` against the clause's `( UsageDeclaration 'first' )?` is redundant rather than wider: UsageDeclaration is `Identification FeatureSpecializationPart?` (8.2.2.6.2) and Identification is `( '<' NAME '>' )? ( declaredName = NAME )?` (8.2.2.2), so it already derives empty and the two accept the same language. Same shape as the MultiplicityRange@kerml non-conflict, and not recorded as a deviation for the same reason.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.18.3 (TransitionUsages.md, region_sha256 2da333dc19880d39)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "Line 54 `transition initial then off;` takes the branch with the ( UsageDeclaration 'first' ) group absent, so `initial` is the FeatureChainMember. Lines 56-61 take every optional part: the name `off_To_starting`, a 'first' source `off`, an `accept` trigger, an `if` guard, a `do` effect, and `then starting;`."
+    },
+    {
+      "kind": "xtext",
+      "ref": "vendor/pilot/SysML.xtext TransitionUsage (line 1854)",
+      "note": "Second opinion. Agrees once TransitionUsageKeyword (1850) and TransitionSourceMember (1884) are unwound."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:23:38Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:23:42Z"
 }

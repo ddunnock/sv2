@@ -3,7 +3,7 @@
   "production": "SourceSuccession",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "b890f4492c1572fe8e51c37c4f3a3bc4c205a6aa1d8619eca3af292f9380673c",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -16,5 +16,34 @@
     "xtext_rule_text": "",
     "metaclass": ""
   },
-  "notes": "re-scoped from the shared unit to sysml alone (ADR-0015)"
+  "notes": "No xtext evidence is recorded because the pinned SysML.xtext defines no SourceSuccession; the pack's xtext_rule_text is empty for the same reason. That is an absence in the pilot grammar, not a disagreement with the clause, so it is not a deviation.",
+  "rule": {
+    "k": "ref",
+    "name": "SourceEndMember"
+  },
+  "decision": "A transcription of SysML 8.2.2.9.3, which states the production in one line: `SourceSuccession : SuccessionAsUsage = ownedRelationship += SourceEndMember`. There is no second opinion to weigh \u2014 the pinned pilot grammar has no SourceSuccession rule at all, so the clause is the only source and the rule is taken from it directly. The production contributes at most a multiplicity of its own: its SourceEndMember holds a SourceEnd, which is `( ownedRelationship += OwnedMultiplicity )?`. The 'then' that makes a source succession visible belongs to SourceSuccessionMember, not here, and the target is the body item that follows, supplied by the enclosing body rather than by this rule.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.9.3 (OccurrenceSuccessions.md, region_sha256 1f4477d014699468)",
+      "note": "States the production; the rule is its transcription."
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml",
+      "note": "Line 14 `then event occurrence return_getItems1;` follows line 13's `event occurrence call_getItems1;`. The leading 'then' is the SourceSuccessionMember that 8.2.2.17.1 admits before a body item (`( ownedRelationship += SourceSuccessionMember )? ownedRelationship += StructureUsageMember`), and the SourceSuccession inside it takes the form with no multiplicity, so it contributes no tokens of its own."
+    }
+  ],
+  "derived_utc": "2026-09-17T18:27:43Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T18:27:44Z"
 }
