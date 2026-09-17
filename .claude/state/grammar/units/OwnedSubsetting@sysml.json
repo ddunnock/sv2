@@ -3,7 +3,7 @@
   "production": "OwnedSubsetting",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cfded74d2cf0cfb153d8baa7f9d319b0c205cfafeefe3c75503be435428404a1",
     "xtext_rule": "2842c1fa3d6f2c80cf3ce98916a427827b466ac669cd691554ed81501d59aac6",
@@ -15,5 +15,48 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "OwnedSubsetting returns SysML::Subsetting :\n\t  subsettedFeature = [SysML::Feature|QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain\n;",
     "metaclass": "SysML::Subsetting"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "QualifiedName"
+      },
+      {
+        "k": "ref",
+        "name": "OwnedFeatureChain"
+      }
+    ]
+  },
+  "decision": "As SysML 8.2.2.6.5 states it: `subsettedFeature = [QualifiedName]`, or `subsettedFeature = OwnedFeatureChain` with the chain owned by the relationship. The cross-reference parses a QualifiedName. The `{ ownedRelatedElement += ... }` action consumes no tokens. This is the SysML variant (ADR-0014). The Xtext states the same two alternatives.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.5",
+      "note": "OwnedSubsetting : Subsetting = subsettedFeature = [QualifiedName] | subsettedFeature = OwnedFeatureChain { ownedRelatedElement += ... }"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package - Updated.sysml",
+      "note": "line 84: `ref mountingHole: LugBoltMountingHole[1] subsets wheel.w.mountingHoles;`, a chain"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "OwnedSubsetting: subsettedFeature = [SysML::... | QualifiedName] | ownedRelatedElement += OwnedFeatureChain. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:27:21Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:27:21Z"
 }

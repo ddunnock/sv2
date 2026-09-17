@@ -3,7 +3,7 @@
   "production": "MultiplicityRange",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "8495e77a2c661ef306d5c397c34b70d3e5b299f9d00d7c0b98bdc36f47423af3",
     "xtext_rule": "85790b3a25fd2ebbac813febd6dfa83f3fc90561b5aee198ad760839e54c2645",
@@ -15,5 +15,57 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "MultiplicityRange returns SysML::MultiplicityRange :\n\t'multiplicity' Identification? MultiplicityBounds TypeBody\n;",
     "metaclass": "SysML::MultiplicityRange"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "multiplicity"
+      },
+      {
+        "k": "ref",
+        "name": "Identification"
+      },
+      {
+        "k": "ref",
+        "name": "MultiplicityBounds"
+      },
+      {
+        "k": "ref",
+        "name": "TypeBody"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.5.11 states it: `multiplicity`, an Identification, MultiplicityBounds and a TypeBody. This is the KerML variant (ADR-0014); in SysML, MultiplicityRange is the bracketed form alone. The Xtext writes `Identification?` where the clause writes `Identification`. The two accept the same language. The specification's Identification (KerML 8.2.3.1) is `( '<' NAME '>' )? ( NAME )?` and can derive the empty string, so an anonymous `multiplicity [0..1];` already parses by the clause. The pilot's Identification fragment requires at least one name, so its `?` here restores what the specification allows. The rule follows the clause and needs no deviation.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.5.11",
+      "note": "MultiplicityRange = 'multiplicity' Identification MultiplicityBounds TypeBody"
+    },
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.3.1",
+      "note": "Identification : Element = ( '<' declaredShortName = NAME '>' )? ( declaredName = NAME )?, which is nullable, so the clause's required Identification admits the anonymous form"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "MultiplicityRange: 'multiplicity' Identification? MultiplicityBounds TypeBody. The pilot's Identification fragment (line 44) requires a name, so the `?` compensates. The same language as the clause."
+    }
+  ],
+  "notes": "RESOLVED 2026-09-17, no deviation. This was marked conflict because the Xtext writes `Identification?` and the clause `Identification`. The grammar-adjudicator recommended follow_spec, but on the premise that Identification cannot be empty, which it read from the pilot's fragment (KerML.xtext:44). The specification's Identification, KerML 8.2.3.1 in the clause export, is `( '<' declaredShortName = NAME '>' )? ( declaredName = NAME )?` and is nullable, so the premise is false. The conclusion still holds, for a different reason: there is no disagreement in the language. The adjudicator's other findings stand. MultiplicitySubset has the same `?` in the Xtext and the same required Identification in the clause, and resolves the same way. No corpus model declares a standalone multiplicity. No OMG issue on it was found.",
+  "derived_utc": "2026-09-17T13:28:34Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:31:40Z"
 }

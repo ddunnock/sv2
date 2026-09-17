@@ -3,7 +3,7 @@
   "production": "OwnedRedefinition",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "e0e556d4b6b7f497bb732ae05a8c23b64f718268bfc58aba63a36107bf5ee8c7",
     "xtext_rule": "fdde3e91b0e0a08e50787d68dd51104717917495060513c1e99092eaa60f8bda",
@@ -15,5 +15,39 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "OwnedRedefinition returns SysML::Redefinition:\n\t  redefinedFeature = [SysML::Feature | QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain \n;",
     "metaclass": "SysML::Redefinition"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "GeneralType"
+  },
+  "decision": "As KerML 8.2.4.3.4 states it: `OwnedRedefinition : Redefinition = GeneralType`. This is the KerML variant (ADR-0014). The Xtext writes a body of its own where the clause names GeneralType. The rule keeps the clause's reference and does not port that. GeneralType is its own unit, and the two variants of this production are split because the SysML clause states it differently.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.4",
+      "note": "OwnedRedefinition : Redefinition = GeneralType"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/ExtendedOccurrences.kerml",
+      "note": "line 51: `... :>> Objects::Object::self, ExtendedOccurrence::self;`, two qualified names"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "OwnedRedefinition: redefinedFeature = [SysML::Feature | QualifiedName] | ownedRelatedElement += OwnedFeatureChain. Where the clause names GeneralType; the clause is followed."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:27:21Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:27:21Z"
 }

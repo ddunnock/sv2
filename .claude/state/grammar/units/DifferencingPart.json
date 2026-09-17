@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "DifferencingPart",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
     "xtext_rule": "25d361e9530b775841734814439ea6f2ad23e09dad172a89991c5f93ba8a2bdf",
@@ -14,5 +14,69 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment DifferencingPart returns SysML::Type :\n\t'differences' ownedRelationship += Differencing\n\t( ',' ownedRelationship += Differencing )* \n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "differences"
+      },
+      {
+        "k": "ref",
+        "name": "Differencing"
+      },
+      {
+        "k": "star",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": ","
+            },
+            {
+              "k": "ref",
+              "name": "Differencing"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.1.1 states it: 'differences', then one or more Differencing separated by commas. The Xtext fragment is identical. The leading keyword is unique among TypeRelationshipPart's four alternatives in the same clause (`disjoint from`, `unions`, `intersects`, `differences`), so the alternatives do not overlap. TypeDeclaration, in the same clause, repeats relationship parts with `TypeRelationshipPart*`, so the same part may occur more than once. Repeating the keyword and continuing the comma list both accept a further target.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.1",
+      "note": "DifferencingPart : Type = 'differences' ownedRelationship += Differencing ( ',' ownedRelationship += Differencing )*"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Classifiers.kerml",
+      "note": "line 13: `classifier D disjoint from C differences A, B;`"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Features.kerml",
+      "note": "`feature adult differences person, child;`"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment DifferencingPart: 'differences' ownedRelationship += Differencing ( ',' ownedRelationship += Differencing )*. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:29:21Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:29:21Z"
 }

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "GeneralType",
   "language": "shared",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "ad96227dff1b1e1fe965c513743ba092b1ac32efd3d7c1c466cdfba35b0dc720",
     "xtext_rule": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
@@ -14,5 +14,48 @@
     "xtext_file": "",
     "xtext_rule_text": "",
     "metaclass": ""
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "QualifiedName"
+      },
+      {
+        "k": "ref",
+        "name": "OwnedFeatureChain"
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.1.2 states it: `general = [QualifiedName]`, or `general += OwnedFeatureChain` with the chain owned by the relationship. The cross-reference parses a QualifiedName, and the `{ ownedRelatedElement += general }` action consumes no tokens. The pilot Xtext has no rule of this name, so there is no second opinion. It inlines this body into each rule that uses it.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.2",
+      "note": "GeneralType : Specialization = general = [QualifiedName] | general += OwnedFeatureChain { ownedRelatedElement += general }"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml",
+      "note": "line 22: `feature g subsets f.a;`, the OwnedFeatureChain alternative, reached through Subsets and OwnedSubsetting"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Behavior Examples/Camera.kerml",
+      "note": "`portion focusedState: Camera subsets timeSlices;`, the QualifiedName alternative"
+    }
+  ],
+  "derived_utc": "2026-09-17T13:27:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:27:20Z"
 }

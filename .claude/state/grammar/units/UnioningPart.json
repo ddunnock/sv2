@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "UnioningPart",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
     "xtext_rule": "19c661711bde41399e1b259446f25a552e22545b13164c76217f93b9ba935bfa",
@@ -14,5 +14,69 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment UnioningPart returns SysML::Type :\n\t'unions' ownedRelationship += Unioning\n\t( ',' ownedRelationship += Unioning )* \n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "unions"
+      },
+      {
+        "k": "ref",
+        "name": "Unioning"
+      },
+      {
+        "k": "star",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": ","
+            },
+            {
+              "k": "ref",
+              "name": "Unioning"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.1.1 states it: 'unions', then one or more Unioning separated by commas. The Xtext fragment is identical. The leading keyword is unique among TypeRelationshipPart's four alternatives in the same clause (`disjoint from`, `unions`, `intersects`, `differences`), so the alternatives do not overlap. TypeDeclaration, in the same clause, repeats relationship parts with `TypeRelationshipPart*`, so the same part may occur more than once. Repeating the keyword and continuing the comma list both accept a further target.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.1",
+      "note": "UnioningPart : Type = 'unions' ownedRelationship += Unioning ( ',' ownedRelationship += Unioning )*"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-ModelingInstances.kerml",
+      "note": "`classifier OurBicycle unions MyBike, YourBike;`, a comma list"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Classifiers.kerml",
+      "note": "line 15: `classifier F unions A unions B;`, the part repeated"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment UnioningPart: 'unions' ownedRelationship += Unioning ( ',' ownedRelationship += Unioning )*. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:29:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:29:20Z"
 }

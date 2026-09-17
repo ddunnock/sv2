@@ -3,7 +3,7 @@
   "production": "FeatureTyping",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cfded74d2cf0cfb153d8baa7f9d319b0c205cfafeefe3c75503be435428404a1",
     "xtext_rule": "6b96d2cd790b97ee3418fd840daa7253e2d9701b88b4615a830179eb3a4e49e0",
@@ -15,5 +15,53 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "FeatureTyping returns SysML::FeatureTyping :\n\tOwnedFeatureTyping | ConjugatedPortTyping\n;",
     "metaclass": "SysML::FeatureTyping"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "OwnedFeatureTyping"
+      },
+      {
+        "k": "ref",
+        "name": "ConjugatedPortTyping"
+      }
+    ]
+  },
+  "decision": "As SysML 8.2.2.6.5 states it: an OwnedFeatureTyping or a ConjugatedPortTyping. This is the SysML variant (ADR-0014). ConjugatedPortTyping is not defined in this clause, so whether it overlaps OwnedFeatureTyping is for its own unit to establish. The Xtext rule is identical.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.5",
+      "note": "FeatureTyping = OwnedFeatureTyping | ConjugatedPortTyping"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "line 116: `port engineControlPort: ~ControlPort;`, the ConjugatedPortTyping alternative"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/examples/Geometry Examples/VehicleGeometryAndCoordinateFrames.sysml",
+      "note": "line 74: `part vehicle : Vehicle, SpatialItem {`, the OwnedFeatureTyping alternative"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "FeatureTyping: OwnedFeatureTyping | ConjugatedPortTyping. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:27:22Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:27:22Z"
 }

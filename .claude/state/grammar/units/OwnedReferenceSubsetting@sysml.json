@@ -3,7 +3,7 @@
   "production": "OwnedReferenceSubsetting",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cfded74d2cf0cfb153d8baa7f9d319b0c205cfafeefe3c75503be435428404a1",
     "xtext_rule": "ed207222e351362378196339e163a0d2064f8bbbe022f7fe0a77e374f8c7ad65",
@@ -15,5 +15,48 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "OwnedReferenceSubsetting returns SysML::ReferenceSubsetting :\n\t  referencedFeature = [SysML::Feature|QualifiedName]\n\t| ownedRelatedElement += OwnedFeatureChain\n;",
     "metaclass": "SysML::ReferenceSubsetting"
-  }
+  },
+  "rule": {
+    "k": "alt",
+    "items": [
+      {
+        "k": "ref",
+        "name": "QualifiedName"
+      },
+      {
+        "k": "ref",
+        "name": "OwnedFeatureChain"
+      }
+    ]
+  },
+  "decision": "As SysML 8.2.2.6.5 states it: `referencedFeature = [QualifiedName]`, or `referencedFeature = OwnedFeatureChain` with the chain owned by the relationship. The cross-reference parses a QualifiedName. The `{ ownedRelatedElement += ... }` action consumes no tokens. This is the SysML variant (ADR-0014). The Xtext states the same two alternatives. The clause writes the action as `{ ownedRelatedElement += referenceFeature }`, naming `referenceFeature` where the property is `referencedFeature`. The action consumes no tokens, so the rule is unaffected. Whether OMG has filed this was not searched.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.5",
+      "note": "OwnedReferenceSubsetting : ReferenceSubsetting = referencedFeature = [QualifiedName] | referencedFeature = OwnedFeatureChain { ownedRelatedElement += ... }"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/sysml/src/training/11. Interfaces/Interface Example.sysml",
+      "note": "line 16: `supplierPort ::> tankAssy.fuelTankPort to`, a chain"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "OwnedReferenceSubsetting: referencedFeature = [SysML::... | QualifiedName] | ownedRelatedElement += OwnedFeatureChain. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:27:21Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:27:21Z"
 }

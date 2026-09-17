@@ -2,7 +2,7 @@
   "schema_version": 1,
   "production": "DisjoiningPart",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "cd3da968b5ddc4ebf62aa891aff23881b6eb822370ef4e0a524216e41fcbfa7a",
     "xtext_rule": "bca29376d8bd9dfb2723e2988df3504d4c881e425a191aface93ab60d2edefd3",
@@ -14,5 +14,73 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "fragment DisjoiningPart returns SysML::Type :\n\t'disjoint' 'from' ownedRelationship += OwnedDisjoining\n\t( ',' ownedRelationship += OwnedDisjoining )* \n;",
     "metaclass": "SysML::Type"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "disjoint"
+      },
+      {
+        "k": "kw",
+        "text": "from"
+      },
+      {
+        "k": "ref",
+        "name": "OwnedDisjoining"
+      },
+      {
+        "k": "star",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "kw",
+              "text": ","
+            },
+            {
+              "k": "ref",
+              "name": "OwnedDisjoining"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "decision": "As KerML 8.2.4.1.1 states it: 'disjoint' 'from', then one or more OwnedDisjoining separated by commas. The Xtext fragment is identical. The leading keyword is unique among TypeRelationshipPart's four alternatives in the same clause (`disjoint from`, `unions`, `intersects`, `differences`), so the alternatives do not overlap. TypeDeclaration, in the same clause, repeats relationship parts with `TypeRelationshipPart*`, so the same part may occur more than once. Repeating the keyword and continuing the comma list both accept a further target.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.1.1",
+      "note": "DisjoiningPart : Type = 'disjoint' 'from' ownedRelationship += OwnedDisjoining ( ',' ownedRelationship += OwnedDisjoining )*"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-ModelingInstances.kerml",
+      "note": "line 9: `classifier YourBike [1] specializes Bicycle disjoint from MyBike;`"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml",
+      "note": "line 31: `feature h2 differences b.f, b.a intersects f.a, g disjoint from h1;`, after two other relationship parts"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "fragment DisjoiningPart: 'disjoint' 'from' ownedRelationship += OwnedDisjoining ( ',' ownedRelationship += OwnedDisjoining )*. Agrees."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:29:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:29:20Z"
 }

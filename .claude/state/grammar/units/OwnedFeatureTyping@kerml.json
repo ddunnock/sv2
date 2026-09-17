@@ -3,7 +3,7 @@
   "production": "OwnedFeatureTyping",
   "scope": "kerml",
   "language": "kerml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "34ad110626021ffd34bf1c7b0837f2f933749bf64276e20167fc5fc955388d42",
     "xtext_rule": "5b3da63f70cc57aaa2a26c3dd3ea22736a0bc00df589770e4c8729e91e3a593e",
@@ -15,5 +15,39 @@
     "xtext_file": "KerML.xtext",
     "xtext_rule_text": "OwnedFeatureTyping returns SysML::FeatureTyping :\n\tFeatureType\n;",
     "metaclass": "SysML::FeatureTyping"
-  }
+  },
+  "rule": {
+    "k": "ref",
+    "name": "GeneralType"
+  },
+  "decision": "As KerML 8.2.4.3.2 states it: `OwnedFeatureTyping : FeatureTyping = GeneralType`. This is the KerML variant (ADR-0014). The Xtext writes a body of its own where the clause names GeneralType. The rule keeps the clause's reference and does not port that. GeneralType is its own unit, and the two variants of this production are split because the SysML clause states it differently.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "kerml clause 8.2.4.3.2",
+      "note": "OwnedFeatureTyping : FeatureTyping = GeneralType"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml",
+      "note": "line 8: `feature capacity: Real;`, where `Real` is the typing"
+    },
+    {
+      "kind": "xtext",
+      "ref": "KerML.xtext",
+      "note": "OwnedFeatureTyping: FeatureType. Where the clause names GeneralType; the clause is followed."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:27:20Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:27:20Z"
 }

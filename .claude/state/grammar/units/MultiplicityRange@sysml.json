@@ -3,7 +3,7 @@
   "production": "MultiplicityRange",
   "scope": "sysml",
   "language": "sysml",
-  "status": "pending",
+  "status": "verified",
   "fingerprint": {
     "spec_clause": "a861d047e6f60642b98bd0d699e692e9773d61859e5057d7d5c8428cd25003fe",
     "xtext_rule": "545e7aa4af01e1ad0adbd3332bac37deeedd4f93be4a843ec44e31fabcb7026b",
@@ -15,5 +15,68 @@
     "xtext_file": "SysML.xtext",
     "xtext_rule_text": "MultiplicityRange returns SysML::MultiplicityRange :\n\t// TODO: Allow general expressions for bounds. (Causes LL parsing issues.)\n\t'[' ownedRelationship += MultiplicityExpressionMember\n\t      ( '..' ownedRelationship += MultiplicityExpressionMember )? ']'\n;",
     "metaclass": "SysML::MultiplicityRange"
-  }
+  },
+  "rule": {
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "["
+      },
+      {
+        "k": "opt",
+        "item": {
+          "k": "seq",
+          "items": [
+            {
+              "k": "ref",
+              "name": "MultiplicityExpressionMember"
+            },
+            {
+              "k": "kw",
+              "text": ".."
+            }
+          ]
+        }
+      },
+      {
+        "k": "ref",
+        "name": "MultiplicityExpressionMember"
+      },
+      {
+        "k": "kw",
+        "text": "]"
+      }
+    ]
+  },
+  "decision": "As SysML 8.2.2.6.6 states it: `[`, an optional lower bound followed by `..`, the upper bound, and `]`. This is the SysML variant (ADR-0014): in SysML, MultiplicityRange is the bracketed form itself. The Xtext groups it as `'[' member ( '..' member )? ']'`, which accepts the same token sequences. It carries a TODO that general expressions for bounds cause LL parsing issues, but the clause's MultiplicityExpressionMember is already limited to a LiteralExpression or a FeatureReferenceExpression. So nothing is narrowed relative to the specification.",
+  "evidence": [
+    {
+      "kind": "clause",
+      "ref": "sysml clause 8.2.2.6.6",
+      "note": "MultiplicityRange = '[' ( ownedRelationship += MultiplicityExpressionMember '..' )? ownedRelationship += MultiplicityExpressionMember ']'"
+    },
+    {
+      "kind": "corpus",
+      "ref": "vendor/corpus/omg/SimpleVehicleModel.sysml",
+      "note": "`part cylinders:Cylinder[4..8] ordered;`, both bounds"
+    },
+    {
+      "kind": "xtext",
+      "ref": "SysML.xtext",
+      "note": "MultiplicityRange: '[' member ( '..' member )? ']'. The same tokens."
+    }
+  ],
+  "derived_utc": "2026-09-17T13:28:34Z",
+  "acceptance": {
+    "has_rule": "pass",
+    "has_evidence": "pass",
+    "has_decision": "pass",
+    "corpus_evidence_resolves": "pass",
+    "keywords_pinned": "pass",
+    "refs_declared": "pass",
+    "no_unmarked_left_recursion": "pass",
+    "normalizes": "pass"
+  },
+  "verified_utc": "2026-09-17T13:28:34Z"
 }
