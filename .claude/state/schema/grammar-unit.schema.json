@@ -38,10 +38,8 @@
       "additionalProperties": false,
       "properties": {
         "spec_clause_ref": { "type": "string" },
-        "spec_clause_text": { "type": "string" },
         "xtext_file": { "type": "string" },
         "xtext_rule_text": { "type": "string" },
-        "corpus_refs": { "type": "array", "items": { "type": "string" } },
         "metaclass": { "type": "string" }
       }
     },

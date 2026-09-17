@@ -2,7 +2,7 @@
 # Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 """Export the specification clause text the derivation reads, from the built wikis.
 
-`grammar_plan.py` puts `spec_clause_text` on every unit, and phase 3 of the
+`grammar_next.py` puts `spec_clause_text` in every context pack, and phase 3 of the
 `derive-grammar` skill treats it as **the source**. It therefore has to be the
 specification clause, not the Tier B' transcription: DERIVATION.md says a
 transcribed body is "a starting draft and a citation to check, not an answer", and

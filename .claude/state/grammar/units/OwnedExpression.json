@@ -72,7 +72,7 @@
     {
       "kind": "corpus",
       "ref": "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_1.kerml",
-      "note": "expression instances listed in this unit's corpus_refs"
+      "note": "line 9: `mass + sum(subcomponents.totalMass)`, the value of totalMass: a BinaryOperatorExpression whose right operand is an invocation over a feature chain"
     },
     {
       "kind": "xtext",

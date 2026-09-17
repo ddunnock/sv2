@@ -13,7 +13,9 @@ what a script cannot.
 ## What you check, per unit
 
 1. **Does the rule say what the clause says?** Render it with the EBNF shown by
-   `grammar-check-unit.sh` and compare against `inputs.spec_clause_text` element by element.
+   `grammar-check-unit.sh` and compare against the pack's `spec_clause_text` element by
+   element. A unit does not carry the clause text; `python3.11
+   .claude/scripts/grammar_next.py <Production>` joins it in from the local export.
    Optionality, repetition, and ordering are the usual places a rule drifts from its clause.
 
 2. **Was an Xtext workaround ported?** Compare the rule against `inputs.xtext_rule_text`.

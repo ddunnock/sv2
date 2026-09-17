@@ -25,7 +25,7 @@ never acceptable is resolving it silently.
 ## Method
 
 1. Retrieve the clause yourself through `kerml-wiki-navigator` or
-   `sysml-v2-wiki-navigator`. Do not rely on `spec_clause_text` in the unit file being
+   `sysml-v2-wiki-navigator`. Do not rely on the pack's `spec_clause_text` being
    complete — check the surrounding clause and any constraints on the metaclass.
 2. Read the Xtext rule. Classify the difference:
    - **LL workaround** — inlined body, narrowed range, syntactic predicate, a comment
