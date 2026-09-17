@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -22,6 +21,7 @@ from typing import TYPE_CHECKING
 from _grammar import (
     GRAMMAR,
     SCOPES,
+    TERMINAL_NAME,
     UNITS,
     clause_for_scope,
     divergent_productions,
@@ -161,12 +161,6 @@ def _plan_one(name: str, scope: str | None, units: dict[str, Json], src: Sources
     ).strip()
     save_unit(unit)
     return "restale"
-
-
-#: A terminal in the specification BNF is written in SCREAMING_SNAKE. Terminals come
-#: from the lexer, not from derivation. Checked against the Xtext's own `kind` in
-#: `_terminals`, which reports a divergence rather than absorbing it.
-TERMINAL_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
 
 
 def _terminals(names: list[str]) -> set[str]:

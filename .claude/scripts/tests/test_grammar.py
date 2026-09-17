@@ -2,7 +2,7 @@
 # Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 import pytest
 
-from _grammar import kws_of, normalize, refs_of, render_ebnf, xtext_rule_text
+from _grammar import kws_of, normalize, referable_productions, refs_of, render_ebnf, xtext_rule_text
 
 
 def kw(t):
@@ -97,3 +97,12 @@ def test_xtext_rule_text_handles_header_and_inline_rules(tmp_path, monkeypatch, 
     (tmp_path / "vendor/pilot/G.xtext").write_text(XTEXT)
     monkeypatch.chdir(tmp_path)
     assert xtext_rule_text(name)[1] == expected
+
+
+def test_referable_productions_are_the_specification_non_terminals():
+    # A pack built from the pilot's inventory forbade GeneralType, which only the
+    # specification states, and offered FilterPackageMembershipImport, which only the
+    # pilot does. Terminals are written {k: tok} and are never referable.
+    inventory = {"productions": ["GeneralType", "NAME", "REGULAR_COMMENT", "Feature"]}
+    assert referable_productions(inventory) == ["Feature", "GeneralType"]
+    assert referable_productions({}) == []

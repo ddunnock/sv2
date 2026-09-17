@@ -35,6 +35,7 @@ from _grammar import (
     defective_productions,
     load_units,
     pinned_tokens,
+    referable_productions,
     unit_key,
 )
 from _state import REPO_ROOT, load_json
@@ -161,7 +162,7 @@ def context_pack(unit: Json) -> Json:
     inputs = unit["inputs"]
     text, complaint = clause_text(name, scope)
     keywords, operators = pinned_tokens()
-    inventory = load_json(GRAMMAR / "productions.json", {"productions": []})
+    inventory = load_json(GRAMMAR / "bnf-productions.json", {"productions": []})
     return {
         "unit": key,
         "production": name,
@@ -178,7 +179,7 @@ def context_pack(unit: Json) -> Json:
             "corpus_instances": corpus_instances(inputs.get("xtext_rule_text", ""), scope),
         },
         "allowed_keywords": keywords + operators,
-        "allowed_refs": sorted({p["name"] for p in inventory["productions"]}),
+        "allowed_refs": referable_productions(inventory),
         "contract": {
             "write_to": f".claude/state/grammar/units/{key}.json",
             "set_fields": ["rule", "decision", "evidence", "status", "derived_utc", "notes"],

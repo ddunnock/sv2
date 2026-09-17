@@ -129,6 +129,20 @@ def hash_parts(*parts: str | None) -> str:
 # A unit is therefore either SHARED, visible to both grammars, or a VARIANT scoped
 # to one of them. ADR-0014.
 
+#: A terminal in the specification BNF is written in SCREAMING_SNAKE. Terminals come
+#: from the lexer, not from derivation, and a rule names one as {k: tok}, never as a ref.
+TERMINAL_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
+
+
+def referable_productions(inventory: Json) -> list[str]:
+    """The productions a rule may name as {k: ref}: the specification inventory's non-terminals.
+
+    The specification's inventory, not the pilot's, for the reason grammar_plan.py plans
+    from it: the Xtext omits productions the language has and adds ones it does not.
+    """
+    return sorted(n for n in inventory.get("productions", []) if not TERMINAL_NAME.match(n))
+
+
 SCOPES = ("kerml", "sysml")
 #: Which grammar reads a model file.
 SCOPE_OF_SUFFIX = {".kerml": "kerml", ".sysml": "sysml"}
