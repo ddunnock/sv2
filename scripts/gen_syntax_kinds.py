@@ -240,7 +240,8 @@ NODES = [
     # SysML's definitions. Eight productions of one shape, `<prefix> KEYWORD 'def'
     # Definition, differing in the keyword and in which prefix they take. The other
     # fourteen productions with a `def` keyword end in a specialised body — ActionBody,
-    # CaseBody, CalculationBody, RequirementBody — and none of those is implemented.
+    # CaseBody, CalculationBody, RequirementBody — and of those bodies only
+    # RequirementBody is implemented, so the thirteen that take the others are absent.
     (
         "PartDefinition",
         "`OccurrenceDefinitionPrefix 'part' 'def' Definition`. `SysML` 8.2.2.11.",
@@ -319,6 +320,19 @@ NODES = [
     ("OwnedSubclassification", "`superClassifier = [QualifiedName]`. `SysML` 8.2.2.6.5."),
     ("DefinitionBody", "`';' | '{' DefinitionBodyItem* '}'`. `SysML` 8.2.2.6.1."),
     ("DefinitionMember", "`MemberPrefix DefinitionElement`. `SysML` 8.2.2.6.1."),
+    # The first definition off the `Definition` spine at its BODY end rather than its
+    # prefix end. It takes a DefinitionDeclaration directly — there is no `Definition`
+    # node in the tree — and then a RequirementBody, whose item set is a SUPERSET of
+    # DefinitionBodyItem. That superset is what makes it reachable at all: the six extra
+    # members are unimplemented, so the body loop that already exists reads it.
+    (
+        "RequirementDefinition",
+        (
+            "`OccurrenceDefinitionPrefix 'requirement' 'def' DefinitionDeclaration "
+            "RequirementBody`. `SysML` 8.2.2.21.1."
+        ),
+    ),
+    ("RequirementBody", "`';' | '{' RequirementBodyItem* '}'`. `SysML` 8.2.2.21.1."),
     ("PartUsage", "`OccurrenceUsagePrefix 'part' Usage`. `SysML` 8.2.2.11."),
     # The two usages written without one of the seven keywords. SysML's analogue of
     # KerML's keywordless Feature, and between them the top two remaining SysML blockers

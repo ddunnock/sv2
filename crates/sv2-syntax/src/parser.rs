@@ -616,10 +616,12 @@ impl Body {
 /// differing in the keyword and in which prefix they take. Matching rule shapes across
 /// the verified units finds twenty-two productions with a `def` keyword; the other
 /// fourteen end in a specialised body — `ActionBody`, `CaseBody`, `CalculationBody`,
-/// `RequirementBody`, `StateDefBody`, `InterfaceBody`, `ViewDefinitionBody` — and not
-/// one of those bodies is implemented, so not one of them is here. `PortDefinition`
-/// shares the spine but carries a trailing `ConjugatedPortDefinitionMember`, which is
-/// also unimplemented, so it is out too.
+/// `RequirementBody`, `StateDefBody`, `InterfaceBody`, `ViewDefinitionBody` — and they
+/// name the declaration and the body separately rather than taking a `Definition`, so
+/// none of them is here whether or not its body is implemented. `RequirementBody` is
+/// implemented and `RequirementDefinition` still has a method of its own for exactly
+/// that reason. `PortDefinition` does take a `Definition`, and is out for the opposite
+/// reason: it carries a trailing `ConjugatedPortDefinitionMember` the eight do not.
 #[derive(Clone, Copy)]
 struct SimpleDefinition {
     /// The one keyword that says which production this is, before the `def`.
@@ -926,7 +928,21 @@ impl<'a> Parser<'a> {
     fn at_definition_element(&self, n: usize) -> bool {
         self.nth_is_keyword(n, "package")
             || self.at_port_definition(n)
+            || self.at_requirement_definition(n)
             || self.at_simple_definition(n).is_some()
+    }
+
+    /// Whether a `RequirementDefinition` starts at the `n`th meaningful token.
+    ///
+    /// Its own question rather than a row in `SIMPLE_DEFINITIONS`, because it is not on
+    /// that spine: it takes a `DefinitionDeclaration` and a `RequirementBody` directly,
+    /// where the eight take a `Definition` — which is a declaration and a
+    /// `DefinitionBody`. The prefix is the same one a part takes, so only `requirement`
+    /// followed by `def` decides; `requirement r;` is a `RequirementUsage` and
+    /// unimplemented.
+    fn at_requirement_definition(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_definition_prefix(n);
+        self.nth_is_keyword(after, "requirement") && self.nth_is_keyword(after + 1, "def")
     }
 
     /// Whether a `PortDefinition` starts at the `n`th meaningful token.
@@ -1638,6 +1654,8 @@ impl<'a> Parser<'a> {
             self.classifier(classifier);
         } else if self.language == Language::SysMl && self.at_port_definition(0) {
             self.port_definition();
+        } else if self.language == Language::SysMl && self.at_requirement_definition(0) {
+            self.requirement_definition();
         } else if let Some(definition) = self
             .at_simple_definition(0)
             .filter(|_| self.language == Language::SysMl)
@@ -3486,6 +3504,85 @@ impl<'a> Parser<'a> {
         self.start_node(SyntaxKind::PortConjugation);
         self.finish_node();
         self.finish_node();
+        self.finish_node();
+    }
+
+    // production: RequirementDefinition
+    //
+    // RequirementDefinition = OccurrenceDefinitionPrefix 'requirement' 'def'
+    //                         DefinitionDeclaration RequirementBody
+    //                                                            (SysML 8.2.2.21.1)
+    //
+    // Not in SIMPLE_DEFINITIONS, and what keeps it out is the END rather than the
+    // prefix: the eight take `Definition`, which is `DefinitionDeclaration
+    // DefinitionBody`, and this one names the declaration and the body separately. So
+    // there is no `Definition` node in a requirement's tree, and reading it with the
+    // shared spine would both invent that node and read the body against the wrong rule.
+    //
+    // An OccurrenceDefinitionPrefix, the same one a part takes, so `individual
+    // requirement def R;` is a requirement rather than an error.
+    //
+    // The metaclass is SysML::RequirementDefinition (8.3.21.8), a ConstraintDefinition.
+    // checkRequirementDefinitionSpecialization says every one of them directly or
+    // indirectly specializes `Requirements::RequirementCheck` from the Systems Model
+    // Library. That is an IMPLIED SPECIALIZATION and does not belong here: it injects no
+    // tokens and sv2-hir is where it goes (ADR-0002). The concrete syntax reifies
+    // nothing beyond the declaration and the body — every derived attribute on the
+    // metaclass is computed from memberships the body supplies — which is what makes
+    // this unlike PortDefinition, whose trailing member consumes no tokens and is
+    // still part of the production.
+    //
+    // The Pilot factors 'requirement' 'def' into RequirementDefKeyword; deviations.json
+    // records that as xtext_only/follow_spec, so the literals are matched here directly.
+    fn requirement_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::RequirementDefinition);
+        self.occurrence_definition_prefix();
+        self.expect_keyword("requirement");
+        self.expect_keyword("def");
+        self.definition_declaration();
+        self.requirement_body();
+        self.finish_node();
+    }
+
+    // production: RequirementBody
+    //
+    // RequirementBody : Type = ';' | '{' RequirementBodyItem* '}'
+    //                                                            (SysML 8.2.2.21.1)
+    //
+    // RequirementBodyItem is NOT marked. It is
+    //
+    //     DefinitionBodyItem | SubjectMember | RequirementConstraintMember
+    //     | FramedConcernMember | RequirementVerificationMember | ActorMember
+    //     | StakeholderMember
+    //
+    // — a SUPERSET of DefinitionBodyItem, and that is the whole reason this body is
+    // reachable at the cost of one method. The six extra members are unimplemented, so
+    // `subject`, `require`, `assume`, `frame`, `verify`, `actor` and `stakeholder` at
+    // member position are reported by the body's recovery like any other text the
+    // parser does not yet read. Held as files by
+    // tests/rejection/requirement-body-subject-member-is-not-implemented.sysml and
+    // tests/rejection/requirement-body-constraint-member-is-not-implemented.sysml.
+    //
+    // `Body::Definition` rather than a variant of its own: the two questions a `Body`
+    // answers are which membership node a nested element is owned through and whether a
+    // filter is admitted, and RequirementBodyItem reaches DefinitionBodyItem for both.
+    // A `Body::Requirement` would differ from `Body::Definition` in nothing, and a
+    // variant that decides nothing is a variant that will be read as though it did.
+    fn requirement_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::RequirementBody);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.body_elements(Some(SyntaxKind::RBrace), Body::Definition);
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.error_expected("`;` or `{` after a requirement definition declaration");
+        }
         self.finish_node();
     }
 

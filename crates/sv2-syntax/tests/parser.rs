@@ -273,18 +273,124 @@ fn a_definition_is_told_from_the_usage_spelled_the_same_way() {
 
 #[test]
 fn a_definition_whose_body_is_not_a_definition_body_is_not_in_the_table() {
-    // Fourteen of the twenty-two `def` productions end in a specialised body, and
-    // none of those bodies is implemented. PortDefinition shares the spine but adds
-    // a ConjugatedPortDefinitionMember. Each has a file in tests/rejection/.
+    // Fourteen of the twenty-two `def` productions end in a specialised body, and of
+    // those bodies only RequirementBody is implemented. PortDefinition shares the spine
+    // but adds a ConjugatedPortDefinitionMember. Each has a file in tests/rejection/.
+    //
+    // `requirement def R;` was in this list and is not any more: RequirementBody is
+    // implemented, and it left the list because the production is now read, not because
+    // the claim was relaxed. The four that remain are still absent.
     for source in [
         "action def Brake;",
         "calc def C;",
         "constraint def C;",
-        "requirement def R;",
         "state def S;",
     ] {
         parse_rejected(source);
     }
+    parse_accepted("requirement def R;");
+}
+
+// -- RequirementDefinition, SysML 8.2.2.21.1 --------------------------------------
+//
+// RequirementDefinition = OccurrenceDefinitionPrefix 'requirement' 'def'
+//                         DefinitionDeclaration RequirementBody
+//
+// Off the shared spine at the BODY end: it names the declaration and the body
+// separately where the eight take a Definition.
+
+#[test]
+fn a_requirement_definition_reads_the_declaration_and_its_own_body() {
+    parse_accepted("requirement def R;");
+    parse_accepted("requirement def R { }");
+    // Both forms taken from vendor/corpus/sysml/src/training/32. Requirements/
+    // Requirement Definitions.sysml, which writes the reqId as a short name.
+    parse_accepted("requirement def MassLimitationRequirement { }");
+    parse_accepted(
+        "requirement def <'1'> VehicleMassLimitationRequirement :> MassLimitationRequirement { }",
+    );
+}
+
+#[test]
+fn a_requirement_definition_owns_no_definition_node() {
+    // The eight on the spine take `Definition = DefinitionDeclaration DefinitionBody`,
+    // so their trees carry a Definition node. This production names the two parts
+    // itself (SysML 8.2.2.21.1), so there is no such node and the body is a
+    // RequirementBody rather than a DefinitionBody. Reading it with the shared spine
+    // would invent one node and mislabel the other.
+    // Counted by whole line rather than by substring: `Definition` is a prefix of
+    // `DefinitionDeclaration` and of `RequirementDefinition`, both of which ARE in this
+    // tree, so a substring test for the absent node would find them and pass for the
+    // wrong reason.
+    let rendered = render(&parse_accepted("requirement def R;").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "RequirementDefinition"),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "RequirementBody"), 1, "{rendered}");
+    assert_eq!(
+        nodes_named(&rendered, "DefinitionDeclaration"),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "DefinitionBody"), 0, "{rendered}");
+    assert_eq!(nodes_named(&rendered, "Definition"), 0, "{rendered}");
+}
+
+#[test]
+fn a_requirement_definition_is_an_occurrence() {
+    // OccurrenceDefinitionPrefix, not DefinitionPrefix (SysML 8.2.2.21.1 against
+    // 8.2.2.9.1), so `individual` is part of the prefix here as it is for a part.
+    parse_accepted("individual requirement def R;");
+    parse_accepted("abstract requirement def R;");
+    parse_accepted("variation requirement def R;");
+}
+
+#[test]
+fn a_requirement_body_admits_what_a_definition_body_admits() {
+    // RequirementBodyItem = DefinitionBodyItem | six more (SysML 8.2.2.21.1). It is a
+    // SUPERSET, so everything a definition body reads today a requirement body reads
+    // too — which is the whole reason this production costs one method.
+    parse_accepted("requirement def R { attribute massActual; }");
+    parse_accepted("requirement def R { doc /* the mass shall be bounded */ }");
+    parse_accepted("requirement def R { private import ISQ::*; }");
+    parse_accepted("requirement def R { alias m for massActual; }");
+    parse_accepted("requirement def R { part def Inner; }");
+}
+
+#[test]
+fn a_requirement_body_does_not_admit_the_six_members_it_has_not_got() {
+    // The part of RequirementBodyItem that is NOT DefinitionBodyItem. Rejected by
+    // absence, not by rule — each is well-formed SysML. Held as files by
+    // tests/rejection/requirement-body-subject-member-is-not-implemented.sysml and
+    // tests/rejection/requirement-body-constraint-member-is-not-implemented.sysml.
+    parse_rejected("requirement def R { subject vehicle : Vehicle; }");
+    parse_rejected("requirement def R { require constraint { a <= b } }");
+    parse_rejected("requirement def R { assume constraint { a > 0 } }");
+    parse_rejected("requirement def R { frame concern c; }");
+    parse_rejected("requirement def R { actor operator; }");
+    parse_rejected("requirement def R { stakeholder owner; }");
+}
+
+#[test]
+fn a_requirement_definition_needs_a_body_and_a_def() {
+    // RequirementBody is not optional. Held as a file by
+    // tests/rejection/requirement-definition-missing-requirement-body.sysml.
+    parse_rejected("requirement def R");
+    // Without `def` it is a RequirementUsage, which is a different production and
+    // unimplemented. Held as a file by
+    // tests/rejection/requirement-usage-is-not-a-requirement-definition.sysml.
+    parse_rejected("requirement r;");
+}
+
+#[test]
+fn a_requirement_definition_nests_where_a_definition_element_may_go() {
+    // DefinitionBodyItem reaches DefinitionMember reaches DefinitionElement, and a
+    // RequirementDefinition is one of its thirty alternatives (SysML 8.2.2.6.1).
+    parse_accepted("part def V { requirement def R; }");
+    parse_accepted("package P { requirement def R { part def Inner; } }");
+    parse_accepted("requirement def Outer { requirement def Inner; }");
 }
 
 // -- PortDefinition, SysML 8.2.2.12 -----------------------------------------------
