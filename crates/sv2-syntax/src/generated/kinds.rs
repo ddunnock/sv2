@@ -499,6 +499,30 @@ pub enum SyntaxKind {
     RelationshipBody,
     /// `MemberPrefix ( DefinitionElement | UsageElement )`. `SysML` 8.2.2.5.1.
     PackageMember,
+    /// `TypePrefix 'classifier' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2.
+    Classifier,
+    /// `TypePrefix 'class' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2.
+    Class,
+    /// `TypePrefix 'struct' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2.
+    Structure,
+    /// `TypePrefix 'datatype' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2.
+    DataType,
+    /// `TypePrefix 'metaclass' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2.
+    Metaclass,
+    /// `TypePrefix 'assoc' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2.
+    Association,
+    /// `TypePrefix 'behavior' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2.
+    Behavior,
+    /// `TypePrefix 'interaction' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2.
+    Interaction,
+    /// `'abstract'? PrefixMetadataMember*`. `KerML` 8.2.4.1.
+    TypePrefix,
+    /// `'all'? Identification OwnedMultiplicity? ( SuperclassingPart | ConjugationPart )? TypeRelationshipPart*`. `KerML` 8.2.4.2.
+    ClassifierDeclaration,
+    /// `';' | '{' TypeBodyElement* '}'`. `KerML` 8.2.4.1.
+    TypeBody,
+    /// `SPECIALIZES OwnedSubclassification ( ',' OwnedSubclassification )*`. `KerML` 8.2.4.2.
+    SuperclassingPart,
     /// `MemberPrefix MemberElement`. `KerML` 8.2.3.4.1 — what a `PackageMember` is in a `KerML` file, where the members are `MemberElement` and `FeatureElement` rather than `DefinitionElement` and `UsageElement`.
     NonFeatureMember,
     /// `( visibility = VisibilityIndicator )?`. `SysML` 8.2.2.5.1.
@@ -948,6 +972,18 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::NamespaceImport,
     SyntaxKind::RelationshipBody,
     SyntaxKind::PackageMember,
+    SyntaxKind::Classifier,
+    SyntaxKind::Class,
+    SyntaxKind::Structure,
+    SyntaxKind::DataType,
+    SyntaxKind::Metaclass,
+    SyntaxKind::Association,
+    SyntaxKind::Behavior,
+    SyntaxKind::Interaction,
+    SyntaxKind::TypePrefix,
+    SyntaxKind::ClassifierDeclaration,
+    SyntaxKind::TypeBody,
+    SyntaxKind::SuperclassingPart,
     SyntaxKind::NonFeatureMember,
     SyntaxKind::MemberPrefix,
     SyntaxKind::AliasMember,

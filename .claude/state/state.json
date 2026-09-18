@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-18T11:28:10Z",
+    "regenerated_utc": "2026-09-18T11:35:42Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 107,
-      "unimplemented": 451,
+      "implemented": 117,
+      "unimplemented": 441,
       "absent": 0,
-      "percent": 19.2
+      "percent": 21.0
     },
     "tests": {
-      "unit": 194,
+      "unit": 201,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 67,
+      "negative_cases": 70,
       "known_permissive": 0
     },
     "pins": {
@@ -37,19 +37,19 @@
       "vendor_total": 332
     },
     "commits": [
+      "8817b4a Fail the coverage check when the report it writes is out of date",
+      "9409545 Read KerML against KerML's grammar, and SysML against SysML's",
+      "f0cca37 Sweep the corpus that is actually pinned, and ratchet what parses",
       "122abd8 Record the session's own commits in the state block",
       "938c2f4 Read the expression operator core, with precedence from the table rather than the rule order",
       "14ecfc3 Assign every capability the accepted ADRs require to exactly one crate",
       "4c482b4 Spell the prose in American English, and fix the punctuation around two clauses",
-      "39dc95e Read five more usages, and make the shape they share a table rather than five copies",
-      "37ce54e Parse the other four feature specializations, and attribute usages over the same spine",
-      "ee6ff8e Rebuild sv2 before every sweep, so a rejection case cannot pass against the previous parser",
-      "8ddc351 Parse part usages, with their prefix keywords and their typings"
+      "39dc95e Read five more usages, and make the shape they share a table rather than five copies"
     ]
   },
   "authored": {
-    "objective": "sv2-syntax parses a lossless CST against TWO grammars, chosen by file suffix: KerML and SysML have two start symbols, and sv2_syntax::parse requires a Language with no default (ADR-0014, implemented 2026-09-18). It reads packages, imports, aliases, owned annotations (comment, doc, rep) in relationship bodies, part definitions, seven usages with all five feature specializations, AND the expression operator core: 107 of 558 productions. The reference grammar is DERIVED IN FULL through the six-phase pipeline and FROZEN at sha256 0b9abe64f1f3ce2b: 554 of 554 live units verified, none pending and none in conflict, in both languages. The derived grammar's oracle parses every one of the 311 corpus files and catches all 37 negatives, leaking none. The RUST parser is far behind that oracle and the gap is now measured rather than assumed: it accepts 18 of 253 .sysml and 0 of 58 .kerml corpus files, recorded per file in tests/corpus-accepted.txt and ratcheted by scripts/corpus_sweep.py. That set may grow and must never shrink.",
-    "next_step": "KERML'S ELEMENTS, in crates/sv2-syntax/src/parser.rs. The KerML start symbol is implemented (RootNamespace = NamespaceBodyElement*, KerML 8.2.3.4.1) and reads package, import and alias, so .kerml files now fail on their ELEMENTS rather than on their root -- the corpus rejects at `class`, `struct`, `feature` and `assoc`. That is why .kerml acceptance is 0 of 58, and it is now the honest number rather than an artifact of applying SysML's root to both file kinds. Do MemberElement's NonFeatureElement alternatives FIRST: Package is currently the only one implemented, so Parser::at_member_element tests a single keyword under Language::KerMl and has to become a set -- start there, because the shape of that test is what every later element plugs into. THEN NamespaceFeatureMember -> FeatureElement -> Feature (KerML 8.2.4.3.1), which is the larger half: FeatureDeclaration carries the specialization parts, and tests/rejection/end-feature-requires-a-declaration.kerml already states one rule about it. Every element needs its coverage marker, a positive case in crates/sv2-syntax/tests/kerml.rs, and a rejection case in the same change. `scripts/corpus-sweep.sh --record` is how the ledger moves, and it moves only up.\n\nALSO OUTSTANDING, both larger than the above and both cheapest right now:\n(1) Parse::errors() is Vec<String>. It carries no range, no code and no severity, so nothing can underline a token in an editor or decorate a diagram row the way ADR-0002 requires. About 40 emission sites today, and one more with every production added. sv2-cli's ErrorCode is a separate vocabulary -- it is about the PROCESS, not the model -- and the two must not be merged.\n(2) Element identity is undecided: ADR-0009 and ADR-0016 both decide it, both are `proposed`, and neither carries supersedes/superseded-by frontmatter naming the other. It blocks the sidecar schema, stable handles in sv2-resolve, and any bidirectional graphical edit.",
+    "objective": "sv2-syntax parses a lossless CST against TWO grammars, chosen by file suffix: KerML and SysML have two start symbols, and sv2_syntax::parse requires a Language with no default (ADR-0014, implemented 2026-09-18). It reads packages, imports, aliases, owned annotations (comment, doc, rep) in relationship bodies, part definitions, seven usages with all five feature specializations, the expression operator core, AND KerML's eight classifiers: 117 of 558 productions. The reference grammar is DERIVED IN FULL through the six-phase pipeline and FROZEN at sha256 0b9abe64f1f3ce2b: 554 of 554 live units verified, none pending and none in conflict, in both languages. The derived grammar's oracle parses every one of the 311 corpus files and catches all 37 negatives, leaking none. The RUST parser is far behind that oracle and the gap is now measured rather than assumed: it accepts 18 of 253 .sysml and 1 of 58 .kerml corpus files, recorded per file in tests/corpus-accepted.txt and ratcheted by scripts/corpus_sweep.py. That set may grow and must never shrink.",
+    "next_step": "ANNOTATING MEMBERS, then the SysML definitions, then KerML's Feature. This order is measured, not guessed: parse every failing corpus file and count the token its FIRST diagnostic names (run sv2 parse over vendor/corpus and take the first `unexpected` per file).\n\nKerML, 57 failing: feature 26, doc 12, end 2, in 2, var 2, then a tail of ones.\nSysML, 235 failing: attribute 42, item 23, action 22, doc 15, requirement 13, perform 9, metadata 9, port 9, constraint 8.\n\n(1) ANNOTATING MEMBERS unlock `doc` in BOTH languages -- 12 KerML files and 15 SysML -- and are the cheapest thing on this list, because Comment, Documentation and TextualRepresentation are ALREADY implemented. They are only reachable inside a RelationshipBody today; Parser::at_annotating_element and the three methods exist and are wired to nothing else. KerML reaches them through MemberElement = AnnotatingElement | NonFeatureElement (8.2.3.4.1), which `membership` already builds as NonFeatureMember; SysML reaches them through AnnotatingMember, which is a separate production and needs its own node. Check both units before writing either.\n\n(2) THE SYSML DEFINITIONS are the single largest win: attribute/item/action/port def are 96 files between them. `attribute` is the top SysML blocker NOT because AttributeUsage is missing -- it is implemented -- but because `attribute def` is AttributeDefinition, and at_simple_usage deliberately declines when `def` follows. Expect these to share a spine the way the eight classifiers do; derive the table the same way, by matching rule shapes across the verified units rather than by reading the clause prose and typing a list.\n\n(3) KERML'S Feature (8.2.4.3.1) is the biggest single KerML blocker at 26 files and the largest of the three. NamespaceFeatureMember -> FeatureElement -> Feature, and FeatureDeclaration carries the specialization parts. tests/rejection/end-feature-requires-a-declaration.kerml already states one rule about it.\n\nEvery element needs its coverage marker, a positive case in crates/sv2-syntax/tests/kerml.rs (or tests/parser.rs for SysML), and a rejection case in the same change. `scripts/corpus-sweep.sh --record` moves the ledger, and it moves only up -- the sweep failed on the classifier commit until the one newly-parsing KerML file was recorded, which is the mechanism working.\n\nALSO OUTSTANDING, both larger than the above and both cheapest right now:\n(a) Parse::errors() is Vec<String>. It carries no range, no code and no severity, so nothing can underline a token in an editor or decorate a diagram row the way ADR-0002 requires. About 50 emission sites today, and one more with every production added. sv2-cli's ErrorCode is a separate vocabulary -- it is about the PROCESS, not the model -- and the two must not be merged.\n(b) Element identity is undecided: ADR-0009 and ADR-0016 both decide it, both are `proposed`, and neither carries supersedes/superseded-by frontmatter naming the other. It blocks the sidecar schema, stable handles in sv2-resolve, and any bidirectional graphical edit.",
     "pending_decisions": [
       {
         "id": "ADR-0009",

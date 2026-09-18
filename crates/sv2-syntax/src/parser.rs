@@ -574,6 +574,8 @@ enum Body {
     Package,
     /// The braced form of `DefinitionBody`. `SysML` only — `KerML` has no definitions.
     Definition,
+    /// The braced form of `TypeBody`. `KerML` only — what a classifier holds.
+    Type,
 }
 
 impl Body {
@@ -582,6 +584,11 @@ impl Body {
         match (self, language) {
             (Self::Definition, _) => SyntaxKind::DefinitionMember,
             (_, Language::SysMl) => SyntaxKind::PackageMember,
+            // Both KerML bodies own the same membership. `TypeBodyElement` is
+            // `NonFeatureMember | FeatureMember | AliasMember | Import` (8.2.4.1) and
+            // `NamespaceBodyElement` reaches `NonFeatureMember` too (8.2.3.4.1), so
+            // `Body::Type` needs no arm of its own. `FeatureMember` is unimplemented in
+            // both, which is what leaves them identical for now rather than by rule.
             (_, Language::KerMl) => SyntaxKind::NonFeatureMember,
         }
     }
@@ -591,10 +598,68 @@ impl Body {
         match self {
             Self::Package => true,
             Self::Root => language == Language::SysMl,
-            Self::Definition => false,
+            // TypeBodyElement has no ElementFilterMember alternative.
+            Self::Definition | Self::Type => false,
         }
     }
 }
+
+/// A `KerML` classifier production: one keyword over a shared spine.
+///
+/// Eight productions of `KerML` 8.2.4.2 are stated as `TypePrefix KEYWORD
+/// ClassifierDeclaration TypeBody`, differing in the keyword and nothing else. The
+/// derived units say so mechanically, so this table is a transcription rather than a
+/// judgment, and writing eight near-identical methods would hide that they agree.
+///
+/// `Function` and `Predicate` share the shape but take a `FunctionBody`, and `Type`
+/// takes a `TypeDeclaration` rather than a `ClassifierDeclaration`. None of those three
+/// is implemented, and none is in this table, because the table is exactly the set whose
+/// spine is shared.
+#[derive(Clone, Copy)]
+struct Classifier {
+    /// The one keyword that says which production this is.
+    keyword: &'static str,
+    /// The node the production builds.
+    node: SyntaxKind,
+}
+
+/// Every classifier production sharing the `ClassifierDeclaration TypeBody` spine.
+///
+/// The keywords are disjoint, so the order decides nothing.
+const CLASSIFIERS: [Classifier; 8] = [
+    Classifier {
+        keyword: "classifier",
+        node: SyntaxKind::Classifier,
+    },
+    Classifier {
+        keyword: "class",
+        node: SyntaxKind::Class,
+    },
+    Classifier {
+        keyword: "struct",
+        node: SyntaxKind::Structure,
+    },
+    Classifier {
+        keyword: "datatype",
+        node: SyntaxKind::DataType,
+    },
+    Classifier {
+        keyword: "metaclass",
+        node: SyntaxKind::Metaclass,
+    },
+    Classifier {
+        keyword: "assoc",
+        node: SyntaxKind::Association,
+    },
+    Classifier {
+        keyword: "behavior",
+        node: SyntaxKind::Behavior,
+    },
+    Classifier {
+        keyword: "interaction",
+        node: SyntaxKind::Interaction,
+    },
+];
 
 struct Parser<'a> {
     source: &'a str,
@@ -794,7 +859,7 @@ impl<'a> Parser<'a> {
     /// implemented here, because one root was applied to both file kinds.
     fn at_member_element(&self, n: usize) -> bool {
         match self.language {
-            Language::KerMl => self.nth_is_keyword(n, "package"),
+            Language::KerMl => self.nth_is_keyword(n, "package") || self.at_classifier(n).is_some(),
             Language::SysMl => self.at_definition_element(n) || self.at_simple_usage(n).is_some(),
         }
     }
@@ -1124,6 +1189,14 @@ impl<'a> Parser<'a> {
         self.member_prefix();
         if self.at_keyword("package") {
             self.package();
+        } else if let Some(classifier) = self.at_classifier(0).filter(|_| {
+            // Every classifier unit is scoped `kerml`. SysML reaches DefinitionElement
+            // instead, so `class Foo;` in a .sysml file is text SysML does not state.
+            // The guard is here rather than left to `at_member_element`'s caller,
+            // because a dispatch that is only correct when reached one way is a trap.
+            self.language == Language::KerMl
+        }) {
+            self.classifier(classifier);
         } else if self.language == Language::SysMl && self.at_part_definition(0) {
             self.part_definition();
         } else if let Some(usage) = self.at_simple_usage(0).filter(|_| {
@@ -1133,7 +1206,7 @@ impl<'a> Parser<'a> {
         }) {
             self.simple_usage(usage);
         } else if self.language == Language::KerMl {
-            self.error_expected("a package");
+            self.error_expected("a package or a classifier");
         } else {
             self.error_expected("a package, a part definition or a usage");
         }
@@ -3283,6 +3356,155 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::Annotation);
         self.qualified_name();
+        self.finish_node();
+    }
+
+    // production: Classifier
+    // production: Class
+    // production: Structure
+    // production: DataType
+    // production: Metaclass
+    // production: Association
+    // production: Behavior
+    // production: Interaction
+    //
+    // Classifier  = TypePrefix 'classifier'  ClassifierDeclaration TypeBody
+    // Class       = TypePrefix 'class'       ClassifierDeclaration TypeBody
+    // Structure   = TypePrefix 'struct'      ClassifierDeclaration TypeBody
+    // DataType    = TypePrefix 'datatype'    ClassifierDeclaration TypeBody
+    // Metaclass   = TypePrefix 'metaclass'   ClassifierDeclaration TypeBody
+    // Association = TypePrefix 'assoc'       ClassifierDeclaration TypeBody
+    // Behavior    = TypePrefix 'behavior'    ClassifierDeclaration TypeBody
+    // Interaction = TypePrefix 'interaction' ClassifierDeclaration TypeBody
+    //                                                            (KerML 8.2.4.2)
+    //
+    // Eight productions, one method, as the seven usages share `simple_usage`. Each is
+    // marked separately because each IS fully implemented: what none of them implements
+    // lives below, in ClassifierDeclaration's optional parts and in TypePrefix, and is
+    // recorded there.
+    fn classifier(&mut self, classifier: Classifier) {
+        self.eat_trivia();
+        self.start_node(classifier.node);
+        self.type_prefix();
+        self.expect_keyword(classifier.keyword);
+        self.classifier_declaration();
+        self.type_body();
+        self.finish_node();
+    }
+
+    /// Which of `CLASSIFIERS` starts at the `n`th meaningful token, if any.
+    fn at_classifier(&self, n: usize) -> Option<Classifier> {
+        let after = self.skip_type_prefix(n);
+        CLASSIFIERS
+            .iter()
+            .copied()
+            .find(|c| self.nth_is_keyword(after, c.keyword))
+    }
+
+    /// The index just past a `TypePrefix` written from the `n`th token.
+    fn skip_type_prefix(&self, n: usize) -> usize {
+        n + usize::from(self.nth_is_keyword(n, "abstract"))
+    }
+
+    // TypePrefix : Type = ( isAbstract ?= 'abstract' )?
+    //     ( ownedRelationship += PrefixMetadataMember )*          (KerML 8.2.4.1)
+    //
+    // NOT marked for coverage. PrefixMetadataMember — `#` prefix metadata — is
+    // unimplemented, exactly as it is on OccurrenceDefinitionPrefix, and
+    // `at_classifier` does not look past a `#`, so a classifier carrying one never
+    // reaches here and is reported by the enclosing body instead.
+    //
+    // The node is built even when empty, as MemberPrefix's is.
+    fn type_prefix(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TypePrefix);
+        self.eat_optional_keyword("abstract");
+        self.finish_node();
+    }
+
+    // ClassifierDeclaration : Classifier =
+    //     ( isSufficient ?= 'all' )? Identification
+    //     ( ownedRelationship += OwnedMultiplicity )?
+    //     ( SuperclassingPart | ConjugationPart )?
+    //     TypeRelationshipPart*                                   (KerML 8.2.4.2)
+    //
+    // NOT marked for coverage. Three of its five parts are unimplemented, and each is a
+    // construct the language has rather than an optional slot left empty:
+    //
+    //   - OwnedMultiplicity, the `[1..*]` on a classifier rather than on a feature.
+    //   - ConjugationPart (`~` or `conjugates`), the second alternative of the one
+    //     alternation here, held by tests/rejection/conjugation-part-is-not-implemented.kerml.
+    //   - TypeRelationshipPart, the disjoining, unioning, intersecting and differencing
+    //     parts, held by tests/rejection/type-relationship-part-is-not-implemented.kerml.
+    //
+    // `all` and Identification are read, and SuperclassingPart is fully implemented and
+    // marked on its own below.
+    fn classifier_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ClassifierDeclaration);
+        self.eat_optional_keyword("all");
+        self.identification();
+        if self.at_superclassing() {
+            self.superclassing_part();
+        }
+        self.finish_node();
+    }
+
+    /// Whether a `SuperclassingPart` is written here.
+    ///
+    /// `SPECIALIZES = ':>' | 'specializes'` (`KerML` 8.2.4.2). The symbol is checked
+    /// before the word because the lexer gives the symbol its own kind while the word
+    /// arrives as a `BasicName`.
+    fn at_superclassing(&self) -> bool {
+        self.at(SyntaxKind::ColonGt) || self.at_keyword("specializes")
+    }
+
+    // production: SuperclassingPart
+    //
+    // SuperclassingPart : Classifier =
+    //     SPECIALIZES ownedRelationship += OwnedSubclassification
+    //     ( ',' ownedRelationship += OwnedSubclassification )*    (KerML 8.2.4.2)
+    //
+    // OwnedSubclassification is a shared unit — the same production SysML's
+    // SubclassificationPart owns — so the target is read by the method that already
+    // exists for it rather than by a second one written here.
+    fn superclassing_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SuperclassingPart);
+        if self.at(SyntaxKind::ColonGt) {
+            self.bump();
+        } else {
+            self.expect_keyword("specializes");
+        }
+        self.owned_subclassification();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.owned_subclassification();
+        }
+        self.finish_node();
+    }
+
+    // production: TypeBody
+    //
+    // TypeBody : Type = ';' | '{' TypeBodyElement* '}'            (KerML 8.2.4.1)
+    //
+    // TypeBodyElement is not marked: it is an alternation, read by `body_elements`, and
+    // one of its four alternatives — FeatureMember — is unimplemented.
+    fn type_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TypeBody);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.body_elements(Some(SyntaxKind::RBrace), Body::Type);
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.errors
+                .push("expected `;` or `{` after a classifier declaration".to_owned());
+        }
         self.finish_node();
     }
 

@@ -16,10 +16,11 @@
 //! text is read against a different grammar, and constructs one language has are not
 //! silently borrowed by the other.
 //!
-//! `Package` is the one `NonFeatureElement` implemented, and it is a shared unit — the
-//! same production in both grammars. `FeatureElement`'s ten alternatives and the other
-//! `NonFeatureElement`s are unimplemented, and the cases below say so rather than
-//! pretending they parse.
+//! Of `NonFeatureElement`'s alternatives, `Package` and the eight classifiers of
+//! `KerML` 8.2.4.2 are implemented. `Package` is a shared unit — the same production in
+//! both grammars — and the classifiers are `KerML`'s alone. `FeatureElement`'s ten
+//! alternatives are unimplemented, as are `Type`, `Function` and `Predicate`, and the
+//! cases below say so rather than pretending they parse.
 
 use sv2_syntax::{Language, Parse, parse};
 
@@ -123,6 +124,106 @@ fn a_feature_element_is_unimplemented_rather_than_accepted() {
     ] {
         kerml_rejected(source);
     }
+}
+
+// -- classifiers, KerML 8.2.4.2 ---------------------------------------------------
+//
+// Classifier  = TypePrefix 'classifier'  ClassifierDeclaration TypeBody
+// Class       = TypePrefix 'class'       ClassifierDeclaration TypeBody
+// Structure   = TypePrefix 'struct'      ClassifierDeclaration TypeBody
+// DataType    = TypePrefix 'datatype'    ClassifierDeclaration TypeBody
+// Metaclass   = TypePrefix 'metaclass'   ClassifierDeclaration TypeBody
+// Association = TypePrefix 'assoc'       ClassifierDeclaration TypeBody
+// Behavior    = TypePrefix 'behavior'    ClassifierDeclaration TypeBody
+// Interaction = TypePrefix 'interaction' ClassifierDeclaration TypeBody
+
+/// Every keyword of the shared spine, taken from the derived units rather than from
+/// the clause prose, because the units are what the parser's table transcribes.
+const CLASSIFIER_KEYWORDS: [&str; 8] = [
+    "classifier",
+    "class",
+    "struct",
+    "datatype",
+    "metaclass",
+    "assoc",
+    "behavior",
+    "interaction",
+];
+
+#[test]
+fn every_classifier_keyword_reads_the_same_spine() {
+    for keyword in CLASSIFIER_KEYWORDS {
+        kerml_accepted(&format!("{keyword} A;"));
+        kerml_accepted(&format!("{keyword} A {{ }}"));
+        kerml_accepted(&format!("abstract {keyword} <a> A;"));
+        kerml_accepted(&format!("{keyword} all A;"));
+    }
+}
+
+#[test]
+fn a_classifier_may_specialize_in_either_spelling() {
+    // SuperclassingPart = SPECIALIZES OwnedSubclassification
+    //                     ( ',' OwnedSubclassification )*
+    // SPECIALIZES = ':>' | 'specializes'
+    kerml_accepted("class B :> A;");
+    kerml_accepted("class B specializes A;");
+    kerml_accepted("class B :> A::C, D;");
+}
+
+#[test]
+fn a_type_body_holds_the_members_a_namespace_body_holds() {
+    // TypeBodyElement = NonFeatureMember | FeatureMember | AliasMember | Import.
+    // FeatureMember is unimplemented; the other three are the same productions a
+    // NamespaceBodyElement owns, so they are read here too.
+    kerml_accepted("class A { class B; }");
+    kerml_accepted("class A { public import X::*; }");
+    kerml_accepted("class A { alias Y for Z; }");
+    kerml_accepted("package P { class A { struct S; } }");
+}
+
+#[test]
+fn a_type_body_does_not_admit_a_filter() {
+    // TypeBodyElement has no ElementFilterMember alternative, and unlike PackageBody
+    // nothing adds one.
+    kerml_rejected("class A { filter @Safety; }");
+}
+
+#[test]
+fn a_classifier_is_not_reachable_from_the_sysml_start_symbol() {
+    // The mirror of the part-def case: every classifier unit is scoped `kerml`.
+    // Held as a file by tests/rejection/a-classifier-is-not-a-sysml-element.sysml.
+    for keyword in CLASSIFIER_KEYWORDS {
+        let source = format!("{keyword} A;");
+        let sysml = parse(&source, Language::SysMl);
+        assert!(
+            !sysml.errors().is_empty(),
+            "{source:?} is not SysML and must be reported"
+        );
+        assert_eq!(sysml.text(), source, "the tree is still lossless");
+    }
+}
+
+#[test]
+fn the_unimplemented_halves_of_a_classifier_declaration_are_reported() {
+    // ConjugationPart is the other alternative of ClassifierDeclaration's one
+    // alternation, and TypeRelationshipPart is its trailing star. Neither is
+    // implemented, and each has a file in tests/rejection/ naming its clause.
+    kerml_rejected("class B conjugates A;");
+    kerml_rejected("class B ~ A;");
+    kerml_rejected("classifier C unions A, B;");
+    // OwnedMultiplicity on a classifier, the remaining unimplemented slot.
+    kerml_rejected("classifier C [1..*];");
+}
+
+#[test]
+fn a_function_is_not_in_the_classifier_table() {
+    // Function and Predicate share the keyword-and-declaration shape but take a
+    // FunctionBody, so they are not the same spine and are not implemented. Reading
+    // them with this table would accept a body the language does not put there.
+    kerml_rejected("function f;");
+    kerml_rejected("predicate p;");
+    // Type takes a TypeDeclaration rather than a ClassifierDeclaration.
+    kerml_rejected("type T;");
 }
 
 // -- the invariants, under this grammar too ---------------------------------------

@@ -133,6 +133,32 @@ NODES = [
         "PackageMember",
         "`MemberPrefix ( DefinitionElement | UsageElement )`. `SysML` 8.2.2.5.1.",
     ),
+    # KerML's classifiers. Eight productions of one shape, `TypePrefix KEYWORD
+    # ClassifierDeclaration TypeBody`, which is how the derived units state them
+    # (KerML 8.2.4.2). Function and Predicate share the shape but take a FunctionBody,
+    # and Type takes a TypeDeclaration; none of those three is implemented.
+    ("Classifier", "`TypePrefix 'classifier' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2."),
+    ("Class", "`TypePrefix 'class' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2."),
+    ("Structure", "`TypePrefix 'struct' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2."),
+    ("DataType", "`TypePrefix 'datatype' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2."),
+    ("Metaclass", "`TypePrefix 'metaclass' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2."),
+    ("Association", "`TypePrefix 'assoc' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2."),
+    ("Behavior", "`TypePrefix 'behavior' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2."),
+    ("Interaction", "`TypePrefix 'interaction' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2."),
+    ("TypePrefix", "`'abstract'? PrefixMetadataMember*`. `KerML` 8.2.4.1."),
+    (
+        "ClassifierDeclaration",
+        (
+            "`'all'? Identification OwnedMultiplicity? "
+            "( SuperclassingPart | ConjugationPart )? TypeRelationshipPart*`. "
+            "`KerML` 8.2.4.2."
+        ),
+    ),
+    ("TypeBody", "`';' | '{' TypeBodyElement* '}'`. `KerML` 8.2.4.1."),
+    (
+        "SuperclassingPart",
+        "`SPECIALIZES OwnedSubclassification ( ',' OwnedSubclassification )*`. `KerML` 8.2.4.2.",
+    ),
     (
         "NonFeatureMember",
         (

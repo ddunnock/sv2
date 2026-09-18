@@ -3,6 +3,7 @@
 #
 # This set may grow and must never shrink. See the module docstring of
 # scripts/corpus_sweep.py for why both directions fail the gate.
+vendor/corpus/kerml/src/examples/Simple Tests/Imports.kerml
 vendor/corpus/sysml/src/examples/Import Tests/AliasImport.sysml
 vendor/corpus/sysml/src/examples/Import Tests/CircularImport.sysml
 vendor/corpus/sysml/src/examples/Import Tests/PrivateImportTest.sysml
