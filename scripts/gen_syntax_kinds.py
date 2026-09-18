@@ -333,6 +333,14 @@ NODES = [
         ),
     ),
     ("RequirementBody", "`';' | '{' RequirementBodyItem* '}'`. `SysML` 8.2.2.21.1."),
+    # The first of RequirementBodyItem's six extra members. It owns its element through
+    # a membership of its own rather than through DefinitionMember, which is why it is
+    # dispatched beside NamespaceFeatureMember rather than inside `membership`.
+    (
+        "SubjectMember",
+        "`MemberPrefix ownedRelatedElement += SubjectUsage`. `SysML` 8.2.2.21.1.",
+    ),
+    ("SubjectUsage", "`'subject' UsageExtensionKeyword* Usage`. `SysML` 8.2.2.21.1."),
     ("PartUsage", "`OccurrenceUsagePrefix 'part' Usage`. `SysML` 8.2.2.11."),
     # The two usages written without one of the seven keywords. SysML's analogue of
     # KerML's keywordless Feature, and between them the top two remaining SysML blockers

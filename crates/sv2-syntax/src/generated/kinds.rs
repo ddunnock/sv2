@@ -603,6 +603,10 @@ pub enum SyntaxKind {
     RequirementDefinition,
     /// `';' | '{' RequirementBodyItem* '}'`. `SysML` 8.2.2.21.1.
     RequirementBody,
+    /// `MemberPrefix ownedRelatedElement += SubjectUsage`. `SysML` 8.2.2.21.1.
+    SubjectMember,
+    /// `'subject' UsageExtensionKeyword* Usage`. `SysML` 8.2.2.21.1.
+    SubjectUsage,
     /// `OccurrenceUsagePrefix 'part' Usage`. `SysML` 8.2.2.11.
     PartUsage,
     /// `( EndUsagePrefix | RefPrefix ) 'ref' Usage`. `SysML` 8.2.2.6.2.
@@ -1070,6 +1074,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::DefinitionMember,
     SyntaxKind::RequirementDefinition,
     SyntaxKind::RequirementBody,
+    SyntaxKind::SubjectMember,
+    SyntaxKind::SubjectUsage,
     SyntaxKind::PartUsage,
     SyntaxKind::ReferenceUsage,
     SyntaxKind::DefaultReferenceUsage,

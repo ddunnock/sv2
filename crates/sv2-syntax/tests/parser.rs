@@ -360,12 +360,11 @@ fn a_requirement_body_admits_what_a_definition_body_admits() {
 }
 
 #[test]
-fn a_requirement_body_does_not_admit_the_six_members_it_has_not_got() {
-    // The part of RequirementBodyItem that is NOT DefinitionBodyItem. Rejected by
-    // absence, not by rule — each is well-formed SysML. Held as files by
-    // tests/rejection/requirement-body-subject-member-is-not-implemented.sysml and
+fn a_requirement_body_does_not_admit_the_five_members_it_has_not_got() {
+    // The part of RequirementBodyItem that is NOT DefinitionBodyItem, less SubjectMember
+    // which is now implemented. Rejected by absence, not by rule — each is well-formed
+    // SysML. Held as a file by
     // tests/rejection/requirement-body-constraint-member-is-not-implemented.sysml.
-    parse_rejected("requirement def R { subject vehicle : Vehicle; }");
     parse_rejected("requirement def R { require constraint { a <= b } }");
     parse_rejected("requirement def R { assume constraint { a > 0 } }");
     parse_rejected("requirement def R { frame concern c; }");
@@ -391,6 +390,93 @@ fn a_requirement_definition_nests_where_a_definition_element_may_go() {
     parse_accepted("part def V { requirement def R; }");
     parse_accepted("package P { requirement def R { part def Inner; } }");
     parse_accepted("requirement def Outer { requirement def Inner; }");
+}
+
+// -- SubjectMember, SysML 8.2.2.21.1 ----------------------------------------------
+//
+// SubjectMember = MemberPrefix SubjectUsage
+// SubjectUsage  = 'subject' UsageExtensionKeyword* Usage
+//
+// The first of RequirementBodyItem's six extra members, and the only one of them whose
+// parts are all implemented: SubjectUsage ends in a Usage, which already exists.
+
+#[test]
+fn a_subject_member_is_a_usage_behind_a_keyword() {
+    // The corpus form, from vendor/corpus/omg/SimpleVehicleModel.sysml:
+    // `subject generateTorque:ActionDefinitions::GenerateTorque;`
+    parse_accepted("requirement def R { subject vehicle : Vehicle; }");
+    parse_accepted("requirement def R { subject s; }");
+    parse_accepted("requirement def R { subject generateTorque : Actions::GenerateTorque; }");
+    // MemberPrefix is a VisibilityIndicator?, so a visibility is admitted before it.
+    parse_accepted("requirement def R { private subject vehicle : Vehicle; }");
+}
+
+#[test]
+fn a_subject_member_owns_its_usage_through_its_own_membership() {
+    // SubjectMember : SubjectMembership, not the DefinitionMember the body's ordinary
+    // items are owned through (SysML 8.2.2.21.1, metaclass 8.3.21.11). Dispatched beside
+    // NamespaceFeatureMember for that reason, and the tree has to show it.
+    let rendered = render(&parse_accepted("requirement def R { subject v : Vehicle; }").syntax());
+    // Read from the SubjectMember down, not from the root: the enclosing PackageMember
+    // has a MemberPrefix of its own, and counting over the whole tree would read the
+    // neighbour's node as this one's.
+    let member = subtree(&rendered, "SubjectMember");
+    assert_eq!(nodes_named(&member, "MemberPrefix"), 1, "{member}");
+    assert_eq!(nodes_named(&member, "SubjectUsage"), 1, "{member}");
+    // It ends in a Usage, which is what makes the typing work with no new code.
+    assert_eq!(nodes_named(&member, "Usage"), 1, "{member}");
+    // The subject is NOT owned through the body's ordinary member node.
+    assert_eq!(nodes_named(&rendered, "DefinitionMember"), 0, "{rendered}");
+    assert_eq!(nodes_named(&rendered, "SubjectMember"), 1, "{rendered}");
+}
+
+#[test]
+fn a_subject_is_only_a_subject_member_where_the_grammar_reaches_one() {
+    // RequirementBodyItem has a SubjectMember alternative and DefinitionBodyItem has
+    // none (SysML 8.2.2.21.1 against 8.2.2.6.1), so the same eight characters are a
+    // member in one body and not a construct at all in the other. This is the whole
+    // reason Body::Requirement exists. Held as a file by
+    // tests/rejection/subject-member-is-not-a-definition-body-item.sysml.
+    parse_rejected("part def V { subject vehicle : Vehicle; }");
+    parse_rejected("package P { subject vehicle : Vehicle; }");
+    parse_rejected("attribute def A { subject s; }");
+    // And it is not a root element either.
+    parse_rejected("subject vehicle : Vehicle;");
+    // The requirement body does reach it.
+    parse_accepted("requirement def R { subject vehicle : Vehicle; }");
+}
+
+#[test]
+fn a_subject_member_carries_no_prefix_metadata() {
+    // SubjectUsage = 'subject' UsageExtensionKeyword* Usage, and UsageExtensionKeyword
+    // is a PrefixMetadataMember (SysML 8.2.2.6.2), unimplemented everywhere in this
+    // parser. Zero of them is the common case, which is why SubjectUsage is useful
+    // without it — and why SubjectUsage is NOT marked for coverage while SubjectMember
+    // is. Held as a file by
+    // tests/rejection/subject-usage-carries-no-prefix-metadata.sysml.
+    parse_rejected("requirement def R { subject #approved v : Vehicle; }");
+}
+
+#[test]
+fn a_subject_may_name_nothing_at_all() {
+    // `subject;` PARSES, and the first draft of this test asserted it did not. Every
+    // part of a Usage below the body is optional:
+    //   SysML 8.2.2.21.1 — SubjectUsage     = 'subject' UsageExtensionKeyword* Usage
+    //   SysML 8.2.2.6.2  — Usage            = UsageDeclaration UsageCompletion
+    //                      UsageDeclaration = Identification FeatureSpecializationPart?
+    //   SysML 8.2.3.1    — Identification   = ( '<' NAME '>' )? ( NAME )?
+    // so an anonymous subject is grammatical, exactly as `feature;` is in KerML. The
+    // multiplicity 1 on SubjectMembership::ownedSubjectParameter (SysML 8.3.21.11) says
+    // the parameter must EXIST, not that it must be named, and an anonymous usage is
+    // still a usage. Whether it is useful is a constraint question and not this layer's
+    // (ADR-0002).
+    parse_accepted("requirement def R { subject; }");
+    let member = subtree(
+        &render(&parse_accepted("requirement def R { subject; }").syntax()),
+        "SubjectMember",
+    );
+    assert_eq!(nodes_named(&member, "Usage"), 1, "{member}");
+    assert_eq!(nodes_named(&member, "Identification"), 1, "{member}");
 }
 
 // -- PortDefinition, SysML 8.2.2.12 -----------------------------------------------

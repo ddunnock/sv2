@@ -580,6 +580,15 @@ enum Body {
     Package,
     /// The braced form of `DefinitionBody`. `SysML` only — `KerML` has no definitions.
     Definition,
+    /// The braced form of `RequirementBody`. `SysML` only.
+    ///
+    /// `RequirementBodyItem = DefinitionBodyItem | SubjectMember | …` (8.2.2.21.1), so
+    /// every question `Body::Definition` answers this answers the same way. It is a
+    /// variant of its own for the ONE thing it answers differently: the six extra
+    /// members, of which `SubjectMember` is implemented. A `subject` reached from a
+    /// definition body is not a `SubjectMember` — `DefinitionBodyItem` has no such
+    /// alternative — and without this variant it would be read as one.
+    Requirement,
     /// The braced form of `TypeBody`. `KerML` only — what a classifier holds.
     Type,
 }
@@ -588,7 +597,10 @@ impl Body {
     /// The membership node a nested element is owned through.
     fn member(self, language: Language) -> SyntaxKind {
         match (self, language) {
-            (Self::Definition, _) => SyntaxKind::DefinitionMember,
+            // A requirement body owns its DefinitionBodyItem alternative exactly as a
+            // definition body does; what it owns differently owns itself, through
+            // SubjectMember.
+            (Self::Definition | Self::Requirement, _) => SyntaxKind::DefinitionMember,
             (_, Language::SysMl) => SyntaxKind::PackageMember,
             // Both KerML bodies own the same membership. `TypeBodyElement` is
             // `NonFeatureMember | FeatureMember | AliasMember | Import` (8.2.4.1) and
@@ -604,9 +616,23 @@ impl Body {
         match self {
             Self::Package => true,
             Self::Root => language == Language::SysMl,
-            // TypeBodyElement has no ElementFilterMember alternative.
-            Self::Definition | Self::Type => false,
+            // TypeBodyElement has no ElementFilterMember alternative, and neither
+            // DefinitionBodyItem nor RequirementBodyItem reaches one.
+            Self::Definition | Self::Requirement | Self::Type => false,
         }
+    }
+
+    /// Whether `SubjectMember` is one of this body's alternatives.
+    ///
+    /// Only `RequirementBodyItem` reaches it (`SysML` 8.2.2.21.1). `CaseBodyItem` does
+    /// too, and `CaseBody` is unimplemented, so this is the whole of it today.
+    ///
+    /// Asked separately from `member`, for the reason `admits_filter` is: what a body
+    /// owns its ordinary members through and which extra alternatives it has are two
+    /// questions, and deriving one from the other admits a `subject` in a definition
+    /// body — which `DefinitionBodyItem` does not have.
+    fn admits_subject(self) -> bool {
+        matches!(self, Self::Requirement)
     }
 }
 
@@ -1290,6 +1316,12 @@ impl<'a> Parser<'a> {
                 // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
                 // its own membership node rather than the one `membership` builds.
                 self.namespace_feature_member();
+            } else if body.admits_subject() && self.at_element_keyword("subject") {
+                // RequirementBodyItem's second alternative (SysML 8.2.2.21.1). Like
+                // NamespaceFeatureMember above, it owns its element through a membership
+                // of its own — SubjectMembership — so it cannot go through `membership`,
+                // which builds the body's ordinary member node.
+                self.subject_member();
             } else if self.at_member_element(usize::from(self.at_visibility())) {
                 self.membership(body);
             } else {
@@ -3564,11 +3596,11 @@ impl<'a> Parser<'a> {
     // tests/rejection/requirement-body-subject-member-is-not-implemented.sysml and
     // tests/rejection/requirement-body-constraint-member-is-not-implemented.sysml.
     //
-    // `Body::Definition` rather than a variant of its own: the two questions a `Body`
-    // answers are which membership node a nested element is owned through and whether a
-    // filter is admitted, and RequirementBodyItem reaches DefinitionBodyItem for both.
-    // A `Body::Requirement` would differ from `Body::Definition` in nothing, and a
-    // variant that decides nothing is a variant that will be read as though it did.
+    // `Body::Requirement`, which when this production landed was `Body::Definition` on
+    // the argument that the two would differ in nothing. They differ in one thing, and
+    // it is exactly the thing the superset is: `SubjectMember` is a RequirementBodyItem
+    // and not a DefinitionBodyItem, so a body that cannot tell which of the two it is
+    // reads `subject s;` as a member of both. See `Body::admits_subject`.
     fn requirement_body(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::RequirementBody);
@@ -3577,12 +3609,52 @@ impl<'a> Parser<'a> {
         } else if self.at(SyntaxKind::LBrace) {
             self.bump();
             self.depth += 1;
-            self.body_elements(Some(SyntaxKind::RBrace), Body::Definition);
+            self.body_elements(Some(SyntaxKind::RBrace), Body::Requirement);
             self.depth -= 1;
             self.expect(SyntaxKind::RBrace, "`}`");
         } else {
             self.error_expected("`;` or `{` after a requirement definition declaration");
         }
+        self.finish_node();
+    }
+
+    // production: SubjectMember
+    //
+    // SubjectMember : SubjectMembership =
+    //     MemberPrefix ownedRelatedElement += SubjectUsage      (SysML 8.2.2.21.1)
+    //
+    // The metaclass is SysML::SubjectMembership (8.3.21.11), a ParameterMembership.
+    // validateSubjectMembershipOwningType says its owningType must be a
+    // RequirementDefinition, RequirementUsage, CaseDefinition or CaseUsage. That is a
+    // constraint and not this layer's to enforce (ADR-0002: validity gates writes, never
+    // reads) — but the grammar already says the same thing structurally, because
+    // SubjectMember is reachable only from RequirementBodyItem and CaseBodyItem. A
+    // `subject` in a part definition body is not a rejected SubjectMember; it is not a
+    // SubjectMember at all, which is what `Body::admits_subject` decides.
+    fn subject_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SubjectMember);
+        self.member_prefix();
+        self.subject_usage();
+        self.finish_node();
+    }
+
+    // SubjectUsage : ReferenceUsage =
+    //     'subject' UsageExtensionKeyword* Usage                (SysML 8.2.2.21.1)
+    //
+    // NOT marked for coverage. UsageExtensionKeyword is a PrefixMetadataMember
+    // (8.2.2.6.2) and prefix metadata is unimplemented everywhere in this parser, so a
+    // `subject #approved s;` is reported rather than read — the same gap UsagePrefix and
+    // DefinitionPrefix carry, and recorded here for the same reason. The `*` makes zero
+    // of them the common case, which is why the production is useful unmarked.
+    //
+    // The metaclass is ReferenceUsage, not a SubjectUsage of its own: what makes the
+    // usage a subject is the membership that owns it, not the usage.
+    fn subject_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SubjectUsage);
+        self.expect_keyword("subject");
+        self.usage();
         self.finish_node();
     }
 
