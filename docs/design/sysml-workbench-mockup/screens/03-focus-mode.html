@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1480">
+<title>Model Workbench — 3 · Focus mode</title>
+<meta name="description" content="Navigator hidden and sidebar collapsed to a 32 px strip so the Action Flow View of RegulateTemperature gets maximum area. Shows overview map and keyboard hints.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/workbench.css">
+</head>
+<body class="page">
+<!--
+  MOCKUP SCREEN: 3 · Focus mode
+  Navigator hidden and sidebar collapsed to a 32 px strip so the Action Flow View of RegulateTemperature gets maximum area. Shows overview map and keyboard hints.
+  Frame: 1440 x 900 CSS px (the element with class "wb-root").
+  Layout regions are tagged with data-region="…"; see ../README.md for the full map.
+  This is a static design reference, not production code. Sample model content only.
+-->
+<header class="page-bar">
+  <a href="../index.html">All screens</a>
+  <h1>3 · Focus mode</h1>
+  <p>Navigator hidden and sidebar collapsed to a 32 px strip so the Action Flow View of RegulateTemperature gets maximum area. Shows overview map and keyboard hints.</p>
+  <a href="02-element-hierarchy.html">Previous</a>
+  <a href="04-grid-view.html">Next</a>
+  <button id="theme-toggle" type="button">Dark theme</button>
+</header>
+<main class="frame" aria-label="3 · Focus mode">
+<div class="t-light wb-root" style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: var(--bg); color: var(--text); overflow: hidden;">
+
+  <!-- Top bar -->
+  <div data-region="top-bar" style="height: 40px; display: flex; align-items: center; gap: 12px; padding: 0 8px 0 12px; background: var(--panel); border-bottom: 1px solid var(--line); flex-shrink: 0;">
+    <div style="display: flex; align-items: center; gap: 8px; font-weight: 600;">
+      <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.5" y="1.5" width="5" height="5"></rect><rect x="9.5" y="9.5" width="5" height="5" rx="1.5"></rect><path d="M4 6.5v5.5h5.5"></path></svg>
+      <span>Model Workbench</span>
+    </div>
+    <nav aria-label="Main menu" style="display: flex; gap: 2px; color: var(--muted);">
+      <button class="mb">File</button><button class="mb">Edit</button><button class="mb">View</button><button class="mb">Model</button><button class="mb">Diagram</button><button class="mb">Tools</button><button class="mb">Help</button>
+    </nav>
+    <div style="flex-grow: 1; display: flex; justify-content: center;">
+      <label style="width: 420px; position: relative; display: block;">
+        <span class="sr">Search elements and files</span>
+        <input class="inp" placeholder="Search elements, files, views…   Ctrl+P" style="padding-left: 28px;">
+        <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="position: absolute; left: 7px; top: 5px; color: var(--faint);"><circle cx="7" cy="7" r="4"></circle><path d="M10 10l3.5 3.5"></path></svg>
+      </label>
+    </div>
+    <div style="display: flex; align-items: center; gap: 2px;">
+      <button class="iconbtn" aria-label="Toggle navigator" data-action="toggleNav"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="12" height="10" rx="1"></rect><path d="M6 3v10"></path></svg></button>
+      <button class="iconbtn" aria-label="Toggle specification sidebar" data-action="toggleSpec"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="12" height="10" rx="1"></rect><path d="M10 3v10"></path></svg></button>
+      <button class="iconbtn on" aria-label="Text editor window (open)"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 2.5h4.5V7M13.5 2.5L8 8M11 9.5v4H2.5V5h4"></path></svg></button>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; min-height: 0;">
+    <!-- Activity rail -->
+    <div data-region="activity-rail" style="width: 44px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--panel2); border-right: 1px solid var(--line);">
+      <button class="railbtn" aria-label="Explorer" data-action="toggleNav"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><path d="M3 2.5h6l3 3v8H3zM9 2.5v3h3"></path></svg></button>
+      <button class="railbtn" aria-label="Search"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><circle cx="7" cy="7" r="4"></circle><path d="M10 10l3.5 3.5"></path></svg></button>
+      <button class="railbtn" aria-label="Validation"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><path d="M8 2l6 11H2zM8 6.5v3M8 11v.6"></path></svg></button>
+      <button class="railbtn" aria-label="Version control"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><circle cx="5" cy="3.5" r="1.5"></circle><circle cx="5" cy="12.5" r="1.5"></circle><circle cx="11" cy="6" r="1.5"></circle><path d="M5 5v6M11 7.5c0 2-6 1.5-6 3.5"></path></svg></button>
+      <div style="flex-grow: 1;"></div>
+      <button class="railbtn" aria-label="Settings"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><circle cx="8" cy="8" r="2"></circle><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"></path></svg></button>
+    </div>
+
+    <!-- Navigator -->
+    <div class="contents" data-when="navOpen" hidden="">
+      <div data-region="navigator" style="width: 280px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--panel); border-right: 1px solid var(--line);">
+        <div style="height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 6px 0 12px; flex-shrink: 0;">
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: .05em; color: var(--muted);">EXPLORER</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div role="group" aria-label="Explorer mode" style="display: flex; gap: 2px; padding: 2px; background: var(--bg); border-radius: 4px;">
+              <button class="seg" aria-pressed="false" data-action="showFiles">Files</button>
+              <button class="seg on" aria-pressed="true" data-action="showModel">Elements</button>
+            </div>
+            <button class="iconbtn" aria-label="Hide navigator" data-action="toggleNav"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M10 4L6 8l4 4"></path></svg></button>
+          </div>
+        </div>
+        <div style="padding: 0 8px 8px; flex-shrink: 0;">
+          <label style="display: block;"><span class="sr">Filter</span><input class="inp" placeholder="Filter elements (name, kind, type)"></label>
+        </div>
+        <div data-slot="tree" style="flex-grow: 1; overflow: auto; padding-bottom: 8px;">
+          
+        </div>
+        <div style="border-top: 1px solid var(--line); flex-shrink: 0;">
+          <div class="sec"><span>Views</span><button class="iconbtn" aria-label="New view" style="width: 22px; height: 22px;"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8 3v10M3 8h10"></path></svg></button></div>
+          <div style="padding-bottom: 8px;">
+            
+              <button class="trow d0">
+                <span class="badge" style="min-width: 22px;">GV</span>
+                <span>ThermalControl</span>
+                <span style="color: var(--faint); font-size: 11px;">General</span>
+              </button>
+            
+              <button class="trow d0">
+                <span class="badge" style="min-width: 22px;">IV</span>
+                <span>thermalSubsystem</span>
+                <span style="color: var(--faint); font-size: 11px;">Interconnection</span>
+              </button>
+            
+              <button class="trow d0 on">
+                <span class="badge" style="min-width: 22px;">AF</span>
+                <span>regulate</span>
+                <span style="color: var(--faint); font-size: 11px;">Action Flow</span>
+              </button>
+            
+              <button class="trow d0">
+                <span class="badge" style="min-width: 22px;">ST</span>
+                <span>HeaterModes</span>
+                <span style="color: var(--faint); font-size: 11px;">State Transition</span>
+              </button>
+            
+              <button class="trow d0">
+                <span class="badge" style="min-width: 22px;">GR</span>
+                <span>Requirements</span>
+                <span style="color: var(--faint); font-size: 11px;">Grid</span>
+              </button>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center: Action Flow View (focus mode) -->
+    <div data-region="view-area" style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column;">
+      <div data-region="view-tabs" style="height: 34px; display: flex; align-items: stretch; background: var(--panel2); border-bottom: 1px solid var(--line); flex-shrink: 0;">
+        <button class="tab"><span class="badge" style="min-width: 22px;">GV</span>ThermalControl</button>
+        <button class="tab"><span class="badge" style="min-width: 22px;">IV</span>thermalSubsystem</button>
+        <button class="tab on"><span class="badge" style="min-width: 22px;">AF</span>regulate</button>
+        <button class="tab"><span class="badge" style="min-width: 22px;">GR</span>Requirements</button>
+        <div style="flex-grow: 1;"></div>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 0 8px; font-size: 12px; color: var(--muted);">
+          <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="color: var(--accent);"><path d="M9 2.5h4.5V7M13.5 2.5L8 8M11 9.5v4H2.5V5h4"></path></svg>
+          <span style="white-space: nowrap;">Editor: Window 2</span>
+          <button class="btn">Focus</button>
+          <button class="btn">Dock</button>
+        </div>
+      </div>
+      <div style="height: 36px; display: flex; align-items: center; gap: 4px; padding: 0 8px; background: var(--panel); border-bottom: 1px solid var(--line); flex-shrink: 0;">
+        <span style="font-weight: 600; padding: 0 4px; white-space: nowrap;">Action Flow View</span>
+        <span style="color: var(--faint);">·</span>
+        <span class="mono" style="color: var(--muted); font-size: 12px; padding-right: 8px;">RegulateTemperature</span>
+        <div style="width: 1px; height: 18px; background: var(--line);"></div>
+        <button class="iconbtn on" aria-label="Select"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 2.5l8 5-3.5 1L7 12z"></path></svg></button>
+        <button class="iconbtn" aria-label="Pan"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8 2v12M2 8h12M6 4l2-2 2 2M6 12l2 2 2-2M4 6L2 8l2 2M12 6l2 2-2 2"></path></svg></button>
+        <button class="iconbtn" aria-label="Add element"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2.5" y="2.5" width="11" height="11"></rect><path d="M8 5.5v5M5.5 8h5"></path></svg></button>
+        <button class="iconbtn" aria-label="Add relationship"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="3.5" cy="12.5" r="1.5"></circle><circle cx="12.5" cy="3.5" r="1.5"></circle><path d="M4.6 11.4l6.8-6.8"></path></svg></button>
+        <button class="iconbtn" aria-label="Auto layout"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="2" width="5" height="4"></rect><rect x="9" y="10" width="5" height="4"></rect><path d="M4.5 6v6H9"></path></svg></button>
+        <div style="width: 1px; height: 18px; background: var(--line);"></div>
+        <button class="btn" style="border: 0;">Compartments ▾</button>
+        <button class="btn" style="border: 0;">Filter ▾</button>
+        <div style="flex-grow: 1;"></div>
+<span style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); padding-right: 8px;">Focus mode<button class="btn">Exit  F11</button></span><button class="iconbtn" aria-label="Zoom out"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 8h10"></path></svg></button>
+        <span class="mono" style="font-size: 12px; width: 44px; text-align: center;">85%</span>
+        <button class="iconbtn" aria-label="Zoom in"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8 3v10M3 8h10"></path></svg></button>
+        <button class="iconbtn" aria-label="Fit to window"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"></path></svg></button>
+</div>
+
+      <div data-region="diagram-canvas" class="canvasgrid" style="flex-grow: 1; position: relative; overflow: hidden;">
+        <div style="position: absolute; left: 50%; top: 36px; width: 1200px; height: 640px; margin-left: -600px;">
+          <div style="position: absolute; left: 0; top: 0; width: 1200px; height: 640px; box-sizing: border-box; border: 1.5px solid var(--edge);">
+            <div style="text-align: center; padding: 6px 0; border-bottom: 1px solid var(--edge);"><span class="kw">«action def»</span><span class="nm">RegulateTemperature</span></div>
+            <div class="mono" style="position: absolute; left: 12px; top: 58px; font-size: 11px; line-height: 17px; color: var(--muted);">in setpoint : TemperatureValue<br>out power : PowerValue</div>
+          </div>
+          <svg width="1200" height="640" viewBox="0 0 1200 640" style="position: absolute; left: 0; top: 0;"><circle cx="60" cy="260" r="10" class="ef"></circle><path class="e" d="M70 260H110"></path><polyline class="e" points="102,256 110,260 102,264"></polyline><path class="e" d="M290 260H350"></path><polygon class="ef" points="318,256 326,260 318,264"></polygon><text class="el" x="320" y="248" text-anchor="middle">temp</text><path class="e" d="M540 260H602"></path><polyline class="e" points="594,256 602,260 594,264"></polyline><text class="el" x="570" y="248" text-anchor="middle">error</text><polygon points="620,242 638,260 620,278 602,260" style="fill: var(--node); stroke: var(--edge); stroke-width: 1.2;"></polygon><polygon points="960,242 978,260 960,278 942,260" style="fill: var(--node); stroke: var(--edge); stroke-width: 1.2;"></polygon><path class="e" d="M620 242V175H700"></path><polyline class="e" points="692,171 700,175 692,179"></polyline><text class="el" x="612" y="214" text-anchor="end">[error &lt; -tol]</text><path class="e" d="M620 278V345H700"></path><polyline class="e" points="692,341 700,345 692,349"></polyline><text class="el" x="612" y="318" text-anchor="end">[error &gt; tol]</text><path class="e" d="M638 260H942"></path><polyline class="e" points="934,256 942,260 934,264"></polyline><text class="el" x="890" y="252" text-anchor="middle">[else]</text><path class="e" d="M880 175H960V242"></path><polyline class="e" points="956,234 960,242 964,234"></polyline><path class="e" d="M880 345H960V278"></path><polyline class="e" points="956,286 960,278 964,286"></polyline><path class="e" d="M978 260H1010"></path><polyline class="e" points="1002,256 1010,260 1002,264"></polyline><path class="e" d="M1090 295V470H195V295"></path><polyline class="e" points="191,303 195,295 199,303"></polyline><text class="elk" x="640" y="462" text-anchor="middle">then (loop, after 1 [s])</text><polygon points="110,540 300,540 300,596 110,596 128,568" style="fill: var(--node); stroke: var(--edge); stroke-width: 1.2;"></polygon><text class="elk" x="212" y="563" text-anchor="middle">«accept»</text><text x="212" y="580" text-anchor="middle" style="fill: var(--text); font: 600 12px 'IBM Plex Sans', sans-serif;">ShutdownCmd via cmdIn</text><path class="e" d="M300 568H388"></path><polyline class="e" points="380,564 388,568 380,572"></polyline><circle cx="400" cy="568" r="11" style="fill: none; stroke: var(--edge); stroke-width: 1.4;"></circle><circle cx="400" cy="568" r="6" class="ef"></circle></svg>
+          <button class="node" style="left: 110px; top: 225px; width: 170px; height: 70px; border-radius: 10px; justify-content: center;"><span style="text-align: center; padding: 0 8px;"><span class="kw">«action»</span><span class="nm">readTemperature</span></span></button><button class="node" style="left: 360px; top: 225px; width: 170px; height: 70px; border-radius: 10px; justify-content: center;"><span style="text-align: center; padding: 0 8px;"><span class="kw">«action»</span><span class="nm">computeError</span></span></button><button class="node" style="left: 700px; top: 140px; width: 180px; height: 70px; border-radius: 10px; justify-content: center;"><span style="text-align: center; padding: 0 8px;"><span class="kw">«action»</span><span class="nm">increasePower</span></span></button><button class="node" style="left: 700px; top: 310px; width: 180px; height: 70px; border-radius: 10px; justify-content: center;"><span style="text-align: center; padding: 0 8px;"><span class="kw">«action»</span><span class="nm">reducePower</span></span></button><button class="node" style="left: 1010px; top: 225px; width: 160px; height: 70px; border-radius: 10px; justify-content: center;"><span style="text-align: center; padding: 0 8px;"><span class="kw">«action»</span><span class="nm">applyPower</span><span class="mono" style="display: block; font-size: 11px; color: var(--muted);">send via heaterOut</span></span></button><span aria-hidden="true" style="position: absolute; left: 280px; top: 255px; width: 10px; height: 10px; box-sizing: border-box; background: var(--node); border: 1px solid var(--edge);"></span><span aria-hidden="true" style="position: absolute; left: 350px; top: 255px; width: 10px; height: 10px; box-sizing: border-box; background: var(--node); border: 1px solid var(--edge);"></span><span aria-hidden="true" style="position: absolute; left: 530px; top: 255px; width: 10px; height: 10px; box-sizing: border-box; background: var(--node); border: 1px solid var(--edge);"></span>
+        </div>
+        <div aria-label="Overview map" style="position: absolute; right: 16px; bottom: 16px; width: 180px; height: 110px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; overflow: hidden;">
+          <span style="position: absolute; left: 16px; top: 42px; width: 24px; height: 9px; background: var(--line);"></span><span style="position: absolute; left: 46px; top: 42px; width: 24px; height: 9px; background: var(--line);"></span><span style="position: absolute; left: 86px; top: 30px; width: 24px; height: 9px; background: var(--line);"></span><span style="position: absolute; left: 86px; top: 54px; width: 24px; height: 9px; background: var(--line);"></span><span style="position: absolute; left: 132px; top: 42px; width: 22px; height: 9px; background: var(--line);"></span><span style="position: absolute; left: 16px; top: 82px; width: 26px; height: 8px; background: var(--line);"></span>
+          <span style="position: absolute; left: 8px; top: 18px; width: 152px; height: 80px; border: 1.5px solid var(--accent); box-sizing: border-box;"></span>
+        </div>
+        <div style="position: absolute; left: 12px; bottom: 12px; padding: 6px 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; font-size: 11px; color: var(--muted);">
+          Ctrl+B navigator · Ctrl+Alt+B specification · F11 focus mode
+        </div>
+      </div>
+    </div>
+
+    <!-- Right sidebar -->
+    <div class="contents" data-when="specOpen" hidden="">
+      <aside data-region="spec-sidebar" data-slot="spec" aria-label="Specification" style="width: 340px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--panel); border-left: 1px solid var(--line);">
+        <div style="padding: 10px 8px 8px 12px; display: flex; align-items: flex-start; gap: 8px; flex-shrink: 0;">
+          <div style="flex-grow: 1; min-width: 0;">
+            <div style="font-size: 11px; color: var(--muted);">«action def»</div>
+            <div style="font-size: 15px; font-weight: 600;">RegulateTemperature</div>
+            <div class="mono" style="font-size: 11px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Behavior::RegulateTemperature</div>
+          </div>
+          <button class="iconbtn" aria-label="Reveal in explorer"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="3"></circle><path d="M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3"></path></svg></button>
+          <button class="iconbtn" aria-label="Show in text editor window"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 2.5h4.5V7M13.5 2.5L8 8M11 9.5v4H2.5V5h4"></path></svg></button>
+          <button class="iconbtn" aria-label="Collapse sidebar" data-action="toggleSpec"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M6 4l4 4-4 4"></path></svg></button>
+        </div>
+        <div role="tablist" style="display: flex; border-bottom: 1px solid var(--line); padding: 0 4px; flex-shrink: 0;">
+          <button role="tab" class="ptab on" aria-selected="true" data-action="showSpec">Specification</button>
+          <button role="tab" class="ptab" aria-selected="false" data-action="showSrc">Element Source</button>
+        </div>
+
+        
+
+        <div class="contents" data-when="isSpec">
+          <div style="flex-grow: 1; overflow: auto;">
+            <div class="sec"><span>General</span></div>
+            <div class="pg">
+              
+                <span class="pk">Name</span><span class="pv">RegulateTemperature</span>
+              
+            </div>
+            <div class="sec"><span>Owned features</span><button class="iconbtn" aria-label="Add feature" style="width: 22px; height: 22px;"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8 3v10M3 8h10"></path></svg></button></div>
+            <div class="fg">
+              <span class="fh">Kind</span><span class="fh">Name</span><span class="fh">Type</span><span class="fh">[ ]</span>
+              
+            </div>
+            <div class="sec"><span>Relationships</span></div>
+            <div class="pg">
+              
+            </div>
+            <div class="sec"><span>Documentation</span></div>
+            <div style="padding: 0 12px 16px;">
+              <label style="display: block;"><span class="sr">Documentation</span>
+                <textarea class="inp" style="height: 64px; padding: 6px 8px; resize: vertical;"></textarea>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="contents" data-when="isSrc" hidden="">
+          <div style="flex-grow: 1; display: flex; flex-direction: column; min-height: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; font-size: 11px; color: var(--muted); flex-shrink: 0;">
+              <span class="mono"> · lines </span>
+              <span style="color: var(--ok);">In sync</span>
+            </div>
+            <div style="flex-grow: 1; overflow: auto; border-top: 1px solid var(--line2); border-bottom: 1px solid var(--line2); background: var(--panel2); padding: 6px 0;">
+              
+            </div>
+            <div style="padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+              <div style="font-size: 12px; color: var(--muted);">Edits here change this element only. The full file stays open in the text editor window.</div>
+              <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                <button class="btn">Revert</button>
+                <button class="btn pri">Apply  Ctrl+Enter</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="contents" data-when="specClosed">
+      <div data-region="spec-sidebar-collapsed" style="width: 32px; flex-shrink: 0; background: var(--panel2); border-left: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; padding-top: 6px; gap: 4px;">
+        <button class="iconbtn" aria-label="Expand sidebar" data-action="toggleSpec"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M10 4L6 8l4 4"></path></svg></button>
+        <button style="writing-mode: vertical-rl; font-size: 12px; color: var(--muted); padding: 8px 0;" data-action="toggleSpec">Specification</button>
+        <button style="writing-mode: vertical-rl; font-size: 12px; color: var(--muted); padding: 8px 0;" data-action="toggleSpec">Element Source</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div data-region="status-bar" style="height: 24px; flex-shrink: 0; display: flex; align-items: center; gap: 16px; padding: 0 12px; font-size: 11px; color: var(--muted); background: var(--panel2); border-top: 1px solid var(--line);">
+    <span style="color: var(--err);">1 error</span>
+    <span style="color: var(--warn);">1 warning</span>
+    <span>Navigator and sidebar hidden</span>
+    <span style="flex-grow: 1;"></span>
+    <span>Action Flow View · 5 actions · 2 control nodes</span>
+    <span>Zoom 85%</span>
+    <span>SysML v2 · KerML</span>
+  </div>
+</div>
+</main>
+<script src="../assets/workbench.js"></script>
+</body>
+</html>

@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1480">
+<title>Model Workbench — 4 · Grid View (requirements table)</title>
+<meta name="description" content="Tabular view of requirement definitions with filter, column chooser and export. Navigator hidden for width; sidebar shows the selected requirement TC-003.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/workbench.css">
+</head>
+<body class="page">
+<!--
+  MOCKUP SCREEN: 4 · Grid View (requirements table)
+  Tabular view of requirement definitions with filter, column chooser and export. Navigator hidden for width; sidebar shows the selected requirement TC-003.
+  Frame: 1440 x 900 CSS px (the element with class "wb-root").
+  Layout regions are tagged with data-region="…"; see ../README.md for the full map.
+  This is a static design reference, not production code. Sample model content only.
+-->
+<header class="page-bar">
+  <a href="../index.html">All screens</a>
+  <h1>4 · Grid View (requirements table)</h1>
+  <p>Tabular view of requirement definitions with filter, column chooser and export. Navigator hidden for width; sidebar shows the selected requirement TC-003.</p>
+  <a href="03-focus-mode.html">Previous</a>
+  <a href="05-popout-editor.html">Next</a>
+  <button id="theme-toggle" type="button">Dark theme</button>
+</header>
+<main class="frame" aria-label="4 · Grid View (requirements table)">
+<div class="t-light wb-root" style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: var(--bg); color: var(--text); overflow: hidden;">
+
+  <!-- Top bar -->
+  <div data-region="top-bar" style="height: 40px; display: flex; align-items: center; gap: 12px; padding: 0 8px 0 12px; background: var(--panel); border-bottom: 1px solid var(--line); flex-shrink: 0;">
+    <div style="display: flex; align-items: center; gap: 8px; font-weight: 600;">
+      <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.5" y="1.5" width="5" height="5"></rect><rect x="9.5" y="9.5" width="5" height="5" rx="1.5"></rect><path d="M4 6.5v5.5h5.5"></path></svg>
+      <span>Model Workbench</span>
+    </div>
+    <nav aria-label="Main menu" style="display: flex; gap: 2px; color: var(--muted);">
+      <button class="mb">File</button><button class="mb">Edit</button><button class="mb">View</button><button class="mb">Model</button><button class="mb">Diagram</button><button class="mb">Tools</button><button class="mb">Help</button>
+    </nav>
+    <div style="flex-grow: 1; display: flex; justify-content: center;">
+      <label style="width: 420px; position: relative; display: block;">
+        <span class="sr">Search elements and files</span>
+        <input class="inp" placeholder="Search elements, files, views…   Ctrl+P" style="padding-left: 28px;">
+        <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="position: absolute; left: 7px; top: 5px; color: var(--faint);"><circle cx="7" cy="7" r="4"></circle><path d="M10 10l3.5 3.5"></path></svg>
+      </label>
+    </div>
+    <div style="display: flex; align-items: center; gap: 2px;">
+      <button class="iconbtn" aria-label="Toggle navigator" data-action="toggleNav"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="12" height="10" rx="1"></rect><path d="M6 3v10"></path></svg></button>
+      <button class="iconbtn on" aria-label="Toggle specification sidebar" data-action="toggleSpec"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="12" height="10" rx="1"></rect><path d="M10 3v10"></path></svg></button>
+      <button class="iconbtn on" aria-label="Text editor window (open)"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 2.5h4.5V7M13.5 2.5L8 8M11 9.5v4H2.5V5h4"></path></svg></button>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; min-height: 0;">
+    <!-- Activity rail -->
+    <div data-region="activity-rail" style="width: 44px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--panel2); border-right: 1px solid var(--line);">
+      <button class="railbtn" aria-label="Explorer" data-action="toggleNav"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><path d="M3 2.5h6l3 3v8H3zM9 2.5v3h3"></path></svg></button>
+      <button class="railbtn" aria-label="Search"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><circle cx="7" cy="7" r="4"></circle><path d="M10 10l3.5 3.5"></path></svg></button>
+      <button class="railbtn" aria-label="Validation"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><path d="M8 2l6 11H2zM8 6.5v3M8 11v.6"></path></svg></button>
+      <button class="railbtn" aria-label="Version control"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><circle cx="5" cy="3.5" r="1.5"></circle><circle cx="5" cy="12.5" r="1.5"></circle><circle cx="11" cy="6" r="1.5"></circle><path d="M5 5v6M11 7.5c0 2-6 1.5-6 3.5"></path></svg></button>
+      <div style="flex-grow: 1;"></div>
+      <button class="railbtn" aria-label="Settings"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><circle cx="8" cy="8" r="2"></circle><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"></path></svg></button>
+    </div>
+
+    <!-- Navigator -->
+    <div class="contents" data-when="navOpen" hidden="">
+      <div data-region="navigator" style="width: 280px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--panel); border-right: 1px solid var(--line);">
+        <div style="height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 6px 0 12px; flex-shrink: 0;">
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: .05em; color: var(--muted);">EXPLORER</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div role="group" aria-label="Explorer mode" style="display: flex; gap: 2px; padding: 2px; background: var(--bg); border-radius: 4px;">
+              <button class="seg on" aria-pressed="true" data-action="showFiles">Files</button>
+              <button class="seg" aria-pressed="false" data-action="showModel">Elements</button>
+            </div>
+            <button class="iconbtn" aria-label="Hide navigator" data-action="toggleNav"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M10 4L6 8l4 4"></path></svg></button>
+          </div>
+        </div>
+        <div style="padding: 0 8px 8px; flex-shrink: 0;">
+          <label style="display: block;"><span class="sr">Filter</span><input class="inp" placeholder="Filter files"></label>
+        </div>
+        <div data-slot="tree" style="flex-grow: 1; overflow: auto; padding-bottom: 8px;">
+          
+            <button class="trow d0">
+              
+                
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6l4 4 4-4"></path></svg>
+                
+                
+              
+              
+              
+                <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" style="color: var(--muted);"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"></path></svg>
+              
+              
+              <span style="overflow: hidden; text-overflow: ellipsis;">ThermalControl</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d1">
+              
+                
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6l4 4 4-4"></path></svg>
+                
+                
+              
+              
+              
+                <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" style="color: var(--muted);"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"></path></svg>
+              
+              
+              <span style="overflow: hidden; text-overflow: ellipsis;">model</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d2">
+              
+              <span style="width: 12px; flex-shrink: 0;"></span>
+              
+              <span class="badge fs">S</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">ThermalControl.sysml</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;">1</span>
+            </button>
+          
+            <button class="trow d2">
+              
+              <span style="width: 12px; flex-shrink: 0;"></span>
+              
+              <span class="badge fs">S</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">Interfaces.sysml</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d2 on">
+              
+              <span style="width: 12px; flex-shrink: 0;"></span>
+              
+              <span class="badge fs">S</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">Requirements.sysml</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d2">
+              
+              <span style="width: 12px; flex-shrink: 0;"></span>
+              
+              <span class="badge fs">S</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">Behavior.sysml</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d1">
+              
+                
+                
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4l4 4-4 4"></path></svg>
+                
+              
+              
+              
+                <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" style="color: var(--muted);"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"></path></svg>
+              
+              
+              <span style="overflow: hidden; text-overflow: ellipsis;">library</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d1">
+              
+                
+                
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4l4 4-4 4"></path></svg>
+                
+              
+              
+              
+                <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" style="color: var(--muted);"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z"></path></svg>
+              
+              
+              <span style="overflow: hidden; text-overflow: ellipsis;">views</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+        </div>
+        <div style="border-top: 1px solid var(--line); flex-shrink: 0;">
+          <div class="sec"><span>Views</span><button class="iconbtn" aria-label="New view" style="width: 22px; height: 22px;"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8 3v10M3 8h10"></path></svg></button></div>
+          <div style="padding-bottom: 8px;">
+            
+              <button class="trow d0">
+                <span class="badge" style="min-width: 22px;">GV</span>
+                <span>ThermalControl</span>
+                <span style="color: var(--faint); font-size: 11px;">General</span>
+              </button>
+            
+              <button class="trow d0">
+                <span class="badge" style="min-width: 22px;">IV</span>
+                <span>thermalSubsystem</span>
+                <span style="color: var(--faint); font-size: 11px;">Interconnection</span>
+              </button>
+            
+              <button class="trow d0">
+                <span class="badge" style="min-width: 22px;">AF</span>
+                <span>regulate</span>
+                <span style="color: var(--faint); font-size: 11px;">Action Flow</span>
+              </button>
+            
+              <button class="trow d0">
+                <span class="badge" style="min-width: 22px;">ST</span>
+                <span>HeaterModes</span>
+                <span style="color: var(--faint); font-size: 11px;">State Transition</span>
+              </button>
+            
+              <button class="trow d0 on">
+                <span class="badge" style="min-width: 22px;">GR</span>
+                <span>Requirements</span>
+                <span style="color: var(--faint); font-size: 11px;">Grid</span>
+              </button>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center: Grid View -->
+    <div data-region="view-area" style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column;">
+      <div data-region="view-tabs" style="height: 34px; display: flex; align-items: stretch; background: var(--panel2); border-bottom: 1px solid var(--line); flex-shrink: 0;">
+        <button class="tab"><span class="badge" style="min-width: 22px;">GV</span>ThermalControl</button>
+        <button class="tab"><span class="badge" style="min-width: 22px;">IV</span>thermalSubsystem</button>
+        <button class="tab"><span class="badge" style="min-width: 22px;">AF</span>regulate</button>
+        <button class="tab on"><span class="badge" style="min-width: 22px;">GR</span>Requirements</button>
+        <div style="flex-grow: 1;"></div>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 0 8px; font-size: 12px; color: var(--muted);">
+          <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="color: var(--accent);"><path d="M9 2.5h4.5V7M13.5 2.5L8 8M11 9.5v4H2.5V5h4"></path></svg>
+          <span style="white-space: nowrap;">Editor: Window 2</span>
+          <button class="btn">Focus</button>
+          <button class="btn">Dock</button>
+        </div>
+      </div>
+      <div style="height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--panel); border-bottom: 1px solid var(--line); flex-shrink: 0;">
+        <span style="font-weight: 600;">Grid View</span>
+        <span style="color: var(--faint);">·</span>
+        <span class="mono" style="color: var(--muted); font-size: 12px;">Requirements</span>
+        <div style="width: 1px; height: 18px; background: var(--line); margin: 0 4px;"></div>
+        <label style="width: 240px; display: block;"><span class="sr">Filter rows</span><input class="inp" placeholder="Filter rows   e.g. status:unverified"></label>
+        <button class="btn">Columns</button>
+        <button class="btn">Group: none</button>
+        <button class="btn">+ Requirement</button>
+        <div style="flex-grow: 1;"></div>
+        <span style="font-size: 12px; color: var(--muted);">10 rows · 1 selected</span>
+        <button class="btn">Export CSV</button>
+      </div>
+      <div style="flex-grow: 1; overflow: auto; background: var(--panel);">
+        <table data-region="grid-table" style="width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px;">
+          
+          <colgroup><col style="width: 78px;"><col style="width: 170px;"><col><col style="width: 170px;"><col style="width: 140px;"><col style="width: 112px;"></colgroup>
+          <thead>
+            <tr style="background: var(--panel2); text-align: left; color: var(--muted); font-size: 11px;">
+              <th style="padding: 8px 12px; border-bottom: 1px solid var(--line); font-weight: 600;"><button style="display: flex; gap: 4px;">ID <span aria-hidden="true">↑</span></button></th>
+              <th style="padding: 8px 12px; border-bottom: 1px solid var(--line); border-left: 1px solid var(--line2); font-weight: 600;">Name</th>
+              <th style="padding: 8px 12px; border-bottom: 1px solid var(--line); border-left: 1px solid var(--line2); font-weight: 600;">Text (doc)</th>
+              <th style="padding: 8px 12px; border-bottom: 1px solid var(--line); border-left: 1px solid var(--line2); font-weight: 600;">Satisfied by</th>
+              <th style="padding: 8px 12px; border-bottom: 1px solid var(--line); border-left: 1px solid var(--line2); font-weight: 600;">Verified by</th>
+              <th style="padding: 8px 12px; border-bottom: 1px solid var(--line); border-left: 1px solid var(--line2); font-weight: 600;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); color: var(--muted);">TC-001</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">TemperatureStability</td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);">Hold panel temperature within ±0.5 K of setpoint.</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">ThermalController</a></td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">StabilityTest</a></td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);"><span class="st ok">Satisfied</span></td>
+              </tr>
+            
+              <tr>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); color: var(--muted);">TC-002</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">WarmUpTime</td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);">Reach setpoint within 600 s from a cold start.</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">heater</a></td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">WarmUpTest</a></td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);"><span class="st ok">Satisfied</span></td>
+              </tr>
+            
+              <tr class="rsel">
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); color: var(--muted);">TC-003</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">HeaterPowerLimit</td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);">Heater draw shall not exceed 40 W per element.</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">Heater</a></td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">PowerAnalysis</a></td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);"><span class="st warn">Unverified</span></td>
+              </tr>
+            
+              <tr>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); color: var(--muted);">TC-004</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">SensorRedundancy</td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);">Provide at least three independent temperature measurements.</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">thermalSubsystem.sensor</a></td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">Inspection</a></td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);"><span class="st ok">Satisfied</span></td>
+              </tr>
+            
+              <tr>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); color: var(--muted);">TC-005</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">SensorAccuracy</td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);">Measure temperature with an accuracy of ±0.1 K.</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">TempSensor</a></td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">CalibrationTest</a></td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);"><span class="st ok">Satisfied</span></td>
+              </tr>
+            
+              <tr>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); color: var(--muted);">TC-006</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">SampleRate</td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);">Sample each sensor at 10 Hz or faster.</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">—</a></td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">—</a></td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);"><span class="st err">Not satisfied</span></td>
+              </tr>
+            
+              <tr>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); color: var(--muted);">TC-007</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">FaultIsolation</td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);">Isolate a failed heater within 2 s.</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">ThermalController</a></td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">FaultInjection</a></td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);"><span class="st warn">Unverified</span></td>
+              </tr>
+            
+              <tr>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); color: var(--muted);">TC-008</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">CommandInterface</td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);">Accept setpoint commands through the command port.</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">controller.cmdIn</a></td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">InterfaceTest</a></td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);"><span class="st ok">Satisfied</span></td>
+              </tr>
+            
+              <tr>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); color: var(--muted);">TC-009</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">SafeOnLinkLoss</td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);">Enter a safe state on loss of the command link.</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">—</a></td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">—</a></td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);"><span class="st err">Not satisfied</span></td>
+              </tr>
+            
+              <tr>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); color: var(--muted);">TC-010</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">ThermalMargin</td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);">Maintain a 5 K margin to component limits.</td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">thermalSubsystem</a></td>
+                <td class="mono" style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><a href="#">ThermalAnalysis</a></td>
+                <td style="padding: 7px 12px; border-bottom: 1px solid var(--line2); border-left: 1px solid var(--line2);"><span class="st none">Draft</span></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right sidebar -->
+    <div class="contents" data-when="specOpen">
+      <aside data-region="spec-sidebar" data-slot="spec" aria-label="Specification" style="width: 340px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--panel); border-left: 1px solid var(--line);">
+        <div style="padding: 10px 8px 8px 12px; display: flex; align-items: flex-start; gap: 8px; flex-shrink: 0;">
+          <div style="flex-grow: 1; min-width: 0;">
+            <div style="font-size: 11px; color: var(--muted);">«requirement def»</div>
+            <div style="font-size: 15px; font-weight: 600;">HeaterPowerLimit</div>
+            <div class="mono" style="font-size: 11px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Requirements::HeaterPowerLimit</div>
+          </div>
+          <button class="iconbtn" aria-label="Reveal in explorer"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="3"></circle><path d="M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3"></path></svg></button>
+          <button class="iconbtn" aria-label="Show in text editor window"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 2.5h4.5V7M13.5 2.5L8 8M11 9.5v4H2.5V5h4"></path></svg></button>
+          <button class="iconbtn" aria-label="Collapse sidebar" data-action="toggleSpec"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M6 4l4 4-4 4"></path></svg></button>
+        </div>
+        <div role="tablist" style="display: flex; border-bottom: 1px solid var(--line); padding: 0 4px; flex-shrink: 0;">
+          <button role="tab" class="ptab on" aria-selected="true" data-action="showSpec">Specification</button>
+          <button role="tab" class="ptab" aria-selected="false" data-action="showSrc">Element Source</button>
+        </div>
+
+        
+
+        <div class="contents" data-when="isSpec">
+          <div style="flex-grow: 1; overflow: auto;">
+            <div class="sec"><span>General</span></div>
+            <div class="pg">
+              
+                <span class="pk">Name</span><span class="pv">HeaterPowerLimit</span>
+              
+                <span class="pk">Req ID</span><span class="pv">TC-003</span>
+              
+                <span class="pk">Kind</span><span class="pv">RequirementDefinition</span>
+              
+                <span class="pk">Owner</span><span class="pv">Requirements</span>
+              
+                <span class="pk">Status</span><span class="pv">Unverified</span>
+              
+                <span class="pk">Specializes</span><span class="pv">(implicit) RequirementCheck</span>
+              
+                <span class="pk">Visibility</span><span class="pv">public</span>
+              
+            </div>
+            <div class="sec"><span>Owned features</span><button class="iconbtn" aria-label="Add feature" style="width: 22px; height: 22px;"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8 3v10M3 8h10"></path></svg></button></div>
+            <div class="fg">
+              <span class="fh">Kind</span><span class="fh">Name</span><span class="fh">Type</span><span class="fh">[ ]</span>
+              
+                <span style="color: var(--muted);">subject</span><span class="mono">heater</span><span class="mono" style="color: var(--ty);">Heater</span><span class="mono">1</span>
+              
+                <span style="color: var(--muted);">attr</span><span class="mono">maxDraw</span><span class="mono" style="color: var(--ty);">PowerValue</span><span class="mono">1</span>
+              
+                <span style="color: var(--muted);">constr</span><span class="mono">(require)</span><span class="mono" style="color: var(--ty);">Boolean</span><span class="mono">1</span>
+              
+            </div>
+            <div class="sec"><span>Relationships</span></div>
+            <div class="pg">
+              
+                <span class="pk">Owned by</span><span class="pv mono" style="font-size: 12px;"><a href="#">Requirements</a></span>
+              
+                <span class="pk">Satisfied by</span><span class="pv mono" style="font-size: 12px;"><a href="#">Heater</a></span>
+              
+                <span class="pk">Verified by</span><span class="pv mono" style="font-size: 12px;"><a href="#">PowerAnalysis</a></span>
+              
+                <span class="pk">Derived from</span><span class="pv mono" style="font-size: 12px;"><a href="#">ThermalMargin</a></span>
+              
+            </div>
+            <div class="sec"><span>Documentation</span></div>
+            <div style="padding: 0 12px 16px;">
+              <label style="display: block;"><span class="sr">Documentation</span>
+                <textarea class="inp" style="height: 64px; padding: 6px 8px; resize: vertical;">Heater draw shall not exceed 40 W per element.</textarea>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="contents" data-when="isSrc" hidden="">
+          <div style="flex-grow: 1; display: flex; flex-direction: column; min-height: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; font-size: 11px; color: var(--muted); flex-shrink: 0;">
+              <span class="mono">model/Requirements.sysml · lines </span>
+              <span style="color: var(--ok);">In sync</span>
+            </div>
+            <div style="flex-grow: 1; overflow: auto; border-top: 1px solid var(--line2); border-bottom: 1px solid var(--line2); background: var(--panel2); padding: 6px 0;">
+              
+            </div>
+            <div style="padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+              <div style="font-size: 12px; color: var(--muted);">Edits here change this element only. The full file stays open in the text editor window.</div>
+              <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                <button class="btn">Revert</button>
+                <button class="btn pri">Apply  Ctrl+Enter</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="contents" data-when="specClosed" hidden="">
+      <div data-region="spec-sidebar-collapsed" style="width: 32px; flex-shrink: 0; background: var(--panel2); border-left: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; padding-top: 6px; gap: 4px;">
+        <button class="iconbtn" aria-label="Expand sidebar" data-action="toggleSpec"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M10 4L6 8l4 4"></path></svg></button>
+        <button style="writing-mode: vertical-rl; font-size: 12px; color: var(--muted); padding: 8px 0;" data-action="toggleSpec">Specification</button>
+        <button style="writing-mode: vertical-rl; font-size: 12px; color: var(--muted); padding: 8px 0;" data-action="toggleSpec">Element Source</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div data-region="status-bar" style="height: 24px; flex-shrink: 0; display: flex; align-items: center; gap: 16px; padding: 0 12px; font-size: 11px; color: var(--muted); background: var(--panel2); border-top: 1px solid var(--line);">
+    <span style="color: var(--err);">1 error</span>
+    <span style="color: var(--warn);">1 warning</span>
+    <span>Requirements.sysml</span>
+    <span style="flex-grow: 1;"></span>
+    <span>Grid View · 10 requirements · 5 satisfied</span>
+    <span data-slot="selname">Selected: HeaterPowerLimit</span>
+    <span>SysML v2 · KerML</span>
+  </div>
+</div>
+</main>
+<script src="../assets/workbench.js"></script>
+</body>
+</html>

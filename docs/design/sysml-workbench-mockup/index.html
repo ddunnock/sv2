@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model Workbench Mockup</title>
+<meta name="description" content="UI mockup of a SysML v2 / KerML modeling workbench: diagram-first main window, dual-mode explorer, specification sidebar, grid views and a pop-out text editor.">
+<style>
+  :root { --bg: #f3f3f1; --panel: #ffffff; --line: #d6d6d1; --text: #1d1f21; --muted: #555a61; --accent: #1f5fbf; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #17181a; --panel: #1f2124; --line: #383b40; --text: #e4e5e7; --muted: #a6abb1; --accent: #77a7f2; }
+  }
+  :root[data-theme="dark"] { --bg: #17181a; --panel: #1f2124; --line: #383b40; --text: #e4e5e7; --muted: #a6abb1; --accent: #77a7f2; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 26px; margin: 0 0 6px; }
+  h2 { font-size: 17px; margin: 40px 0 12px; }
+  p { margin: 0 0 12px; max-width: 72ch; }
+  a { color: var(--accent); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; }
+  .card img { width: 100%; height: auto; display: block; border-bottom: 1px solid var(--line); }
+  .card div { padding: 12px 14px 14px; }
+  .card h3 { margin: 0 0 4px; font-size: 15px; }
+  .card p { margin: 0; font-size: 13px; color: var(--muted); }
+  .shots { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; }
+  code { font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace; font-size: 13px; }
+  ul { padding-left: 20px; max-width: 80ch; }
+  li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Model Workbench: UI mockup</h1>
+    <p>A reference mockup for an engineering application that edits <code>.sysml</code> and <code>.kerml</code> files and renders SysML v2 graphical views and tables. The diagram gets the main display. The text editor lives in a separate window. The navigator and sidebar can be moved out of the way.</p>
+    <p>Each screen is a fixed 1440 × 900 frame. The HTML is static, and <code>assets/workbench.js</code> adds the clickable behavior. See <a href="README.md">README.md</a> for the layout map, interaction model and design tokens.</p>
+  </header>
+
+  <section aria-labelledby="screens">
+    <h2 id="screens">Screens</h2>
+    <div class="grid">
+      <a class="card" href="screens/01-main-workspace.html">
+        <img src="screenshots/01-main-workspace.png" alt="Main workspace with file explorer, General View diagram and specification sidebar" loading="lazy">
+        <div><h3>1 · Main workspace (clickable)</h3><p>Files / Elements explorer switch, hide and show panels, select diagram elements, Specification and Element Source tabs.</p></div>
+      </a>
+      <a class="card" href="screens/02-element-hierarchy.html">
+        <img src="screenshots/02-element-hierarchy.png" alt="Element hierarchy explorer beside an Interconnection View" loading="lazy">
+        <div><h3>2 · Element hierarchy + Interconnection View</h3><p>Explorer tree built from model content; parts, ports, connectors and item flows.</p></div>
+      </a>
+      <a class="card" href="screens/03-focus-mode.html">
+        <img src="screenshots/03-focus-mode.png" alt="Focus mode with an Action Flow View filling the window" loading="lazy">
+        <div><h3>3 · Focus mode</h3><p>Navigator hidden, sidebar collapsed to a strip; Action Flow View at full width.</p></div>
+      </a>
+      <a class="card" href="screens/04-grid-view.html">
+        <img src="screenshots/04-grid-view.png" alt="Requirements grid view with specification sidebar" loading="lazy">
+        <div><h3>4 · Grid View</h3><p>Requirements table with filter, columns, status and trace links.</p></div>
+      </a>
+      <a class="card" href="screens/05-popout-editor.html">
+        <img src="screenshots/05-popout-editor.png" alt="Pop-out text editor window with outline and problems panel" loading="lazy">
+        <div><h3>5 · Pop-out text editor</h3><p>Second window: full-file editing, selection sync, diagnostics, dock back.</p></div>
+      </a>
+    </div>
+  </section>
+
+  <section aria-labelledby="states">
+    <h2 id="states">Other states of screen 1</h2>
+    <div class="shots">
+      <a href="screens/01-main-workspace.html?explorer=elements&amp;select=Heater&amp;tab=source">Elements explorer, Heater selected, Element Source tab</a>
+      <a href="screens/01-main-workspace.html?nav=0&amp;spec=0">Navigator and sidebar hidden</a>
+      <a href="screens/01-main-workspace.html?theme=dark">Dark theme</a>
+    </div>
+    <p style="margin-top: 12px; font-size: 13px; color: var(--muted);">Screenshots of these states are in <code>screenshots/01b…01d</code>.</p>
+  </section>
+</main>
+</body>
+</html>

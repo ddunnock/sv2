@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1480">
+<title>Model Workbench — 2 · Element hierarchy + Interconnection View</title>
+<meta name="description" content="Navigator in Elements mode (tree built from file content: package > definitions > usages > features). Interconnection View of thermalSubsystem with ports, connectors and item flows. Sidebar shows the part usage &quot;controller&quot;.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/workbench.css">
+</head>
+<body class="page">
+<!--
+  MOCKUP SCREEN: 2 · Element hierarchy + Interconnection View
+  Navigator in Elements mode (tree built from file content: package > definitions > usages > features). Interconnection View of thermalSubsystem with ports, connectors and item flows. Sidebar shows the part usage "controller".
+  Frame: 1440 x 900 CSS px (the element with class "wb-root").
+  Layout regions are tagged with data-region="…"; see ../README.md for the full map.
+  This is a static design reference, not production code. Sample model content only.
+-->
+<header class="page-bar">
+  <a href="../index.html">All screens</a>
+  <h1>2 · Element hierarchy + Interconnection View</h1>
+  <p>Navigator in Elements mode (tree built from file content: package > definitions > usages > features). Interconnection View of thermalSubsystem with ports, connectors and item flows. Sidebar shows the part usage "controller".</p>
+  <a href="01-main-workspace.html">Previous</a>
+  <a href="03-focus-mode.html">Next</a>
+  <button id="theme-toggle" type="button">Dark theme</button>
+</header>
+<main class="frame" aria-label="2 · Element hierarchy + Interconnection View">
+<div class="t-light wb-root" style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: var(--bg); color: var(--text); overflow: hidden;">
+
+  <!-- Top bar -->
+  <div data-region="top-bar" style="height: 40px; display: flex; align-items: center; gap: 12px; padding: 0 8px 0 12px; background: var(--panel); border-bottom: 1px solid var(--line); flex-shrink: 0;">
+    <div style="display: flex; align-items: center; gap: 8px; font-weight: 600;">
+      <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.5" y="1.5" width="5" height="5"></rect><rect x="9.5" y="9.5" width="5" height="5" rx="1.5"></rect><path d="M4 6.5v5.5h5.5"></path></svg>
+      <span>Model Workbench</span>
+    </div>
+    <nav aria-label="Main menu" style="display: flex; gap: 2px; color: var(--muted);">
+      <button class="mb">File</button><button class="mb">Edit</button><button class="mb">View</button><button class="mb">Model</button><button class="mb">Diagram</button><button class="mb">Tools</button><button class="mb">Help</button>
+    </nav>
+    <div style="flex-grow: 1; display: flex; justify-content: center;">
+      <label style="width: 420px; position: relative; display: block;">
+        <span class="sr">Search elements and files</span>
+        <input class="inp" placeholder="Search elements, files, views…   Ctrl+P" style="padding-left: 28px;">
+        <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="position: absolute; left: 7px; top: 5px; color: var(--faint);"><circle cx="7" cy="7" r="4"></circle><path d="M10 10l3.5 3.5"></path></svg>
+      </label>
+    </div>
+    <div style="display: flex; align-items: center; gap: 2px;">
+      <button class="iconbtn on" aria-label="Toggle navigator" data-action="toggleNav"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="12" height="10" rx="1"></rect><path d="M6 3v10"></path></svg></button>
+      <button class="iconbtn on" aria-label="Toggle specification sidebar" data-action="toggleSpec"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="12" height="10" rx="1"></rect><path d="M10 3v10"></path></svg></button>
+      <button class="iconbtn on" aria-label="Text editor window (open)"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 2.5h4.5V7M13.5 2.5L8 8M11 9.5v4H2.5V5h4"></path></svg></button>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; min-height: 0;">
+    <!-- Activity rail -->
+    <div data-region="activity-rail" style="width: 44px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--panel2); border-right: 1px solid var(--line);">
+      <button class="railbtn on" aria-label="Explorer" data-action="toggleNav"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><path d="M3 2.5h6l3 3v8H3zM9 2.5v3h3"></path></svg></button>
+      <button class="railbtn" aria-label="Search"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><circle cx="7" cy="7" r="4"></circle><path d="M10 10l3.5 3.5"></path></svg></button>
+      <button class="railbtn" aria-label="Validation"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><path d="M8 2l6 11H2zM8 6.5v3M8 11v.6"></path></svg></button>
+      <button class="railbtn" aria-label="Version control"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><circle cx="5" cy="3.5" r="1.5"></circle><circle cx="5" cy="12.5" r="1.5"></circle><circle cx="11" cy="6" r="1.5"></circle><path d="M5 5v6M11 7.5c0 2-6 1.5-6 3.5"></path></svg></button>
+      <div style="flex-grow: 1;"></div>
+      <button class="railbtn" aria-label="Settings"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="width: 20px; height: 20px;"><circle cx="8" cy="8" r="2"></circle><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"></path></svg></button>
+    </div>
+
+    <!-- Navigator -->
+    <div class="contents" data-when="navOpen">
+      <div data-region="navigator" style="width: 280px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--panel); border-right: 1px solid var(--line);">
+        <div style="height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 6px 0 12px; flex-shrink: 0;">
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: .05em; color: var(--muted);">EXPLORER</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div role="group" aria-label="Explorer mode" style="display: flex; gap: 2px; padding: 2px; background: var(--bg); border-radius: 4px;">
+              <button class="seg" aria-pressed="false" data-action="showFiles">Files</button>
+              <button class="seg on" aria-pressed="true" data-action="showModel">Elements</button>
+            </div>
+            <button class="iconbtn" aria-label="Hide navigator" data-action="toggleNav"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M10 4L6 8l4 4"></path></svg></button>
+          </div>
+        </div>
+        <div style="padding: 0 8px 8px; flex-shrink: 0;">
+          <label style="display: block;"><span class="sr">Filter</span><input class="inp" placeholder="Filter elements (name, kind, type)"></label>
+        </div>
+        <div data-slot="tree" style="flex-grow: 1; overflow: auto; padding-bottom: 8px;">
+          
+            <button class="trow d0">
+              
+                
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6l4 4 4-4"></path></svg>
+                
+                
+              
+              
+              
+              <span class="badge ">pkg</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">ThermalControl</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d1">
+              
+              <span style="width: 12px; flex-shrink: 0;"></span>
+              
+              <span class="badge ">PD</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">ThermalController</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d1">
+              
+              <span style="width: 12px; flex-shrink: 0;"></span>
+              
+              <span class="badge ">PD</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">Heater</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;">1</span>
+            </button>
+          
+            <button class="trow d1">
+              
+              <span style="width: 12px; flex-shrink: 0;"></span>
+              
+              <span class="badge ">PD</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">TempSensor</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d1">
+              
+                
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6l4 4 4-4"></path></svg>
+                
+                
+              
+              
+              
+              <span class="badge u">P</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">thermalSubsystem</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d2 on">
+              
+                
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6l4 4 4-4"></path></svg>
+                
+                
+              
+              
+              
+              <span class="badge u">P</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">controller</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;">: ThermalController</span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d3">
+              
+              <span style="width: 12px; flex-shrink: 0;"></span>
+              
+              <span class="badge u">Pt</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">cmdIn</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;">: CommandPort</span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d3">
+              
+              <span style="width: 12px; flex-shrink: 0;"></span>
+              
+              <span class="badge u">Pt</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">heaterOut</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;">: PowerPort</span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d3">
+              
+              <span style="width: 12px; flex-shrink: 0;"></span>
+              
+              <span class="badge u">Pt</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">sensorIn</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;">: ~TempPort</span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d3">
+              
+              <span style="width: 12px; flex-shrink: 0;"></span>
+              
+              <span class="badge u">A</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">regulate</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;">: RegulateTemperature</span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d2">
+              
+                
+                
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4l4 4-4 4"></path></svg>
+                
+              
+              
+              
+              <span class="badge u">P</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">heater</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;">: Heater [2]</span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d2">
+              
+                
+                
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4l4 4-4 4"></path></svg>
+                
+              
+              
+              
+              <span class="badge u">P</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">sensor</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;">: TempSensor [3]</span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d2">
+              
+              <span style="width: 12px; flex-shrink: 0;"></span>
+              
+              <span class="badge u">C</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">connect</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;">heaterOut → pwrIn</span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d2">
+              
+              <span style="width: 12px; flex-shrink: 0;"></span>
+              
+              <span class="badge u">C</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">connect</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;">tempOut → sensorIn</span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d0">
+              
+                
+                
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4l4 4-4 4"></path></svg>
+                
+              
+              
+              
+              <span class="badge ">pkg</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">Interfaces</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d0">
+              
+                
+                
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4l4 4-4 4"></path></svg>
+                
+              
+              
+              
+              <span class="badge ">pkg</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">Requirements</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d0">
+              
+                
+                
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4l4 4-4 4"></path></svg>
+                
+              
+              
+              
+              <span class="badge ">pkg</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">Behavior</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;"></span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+            <button class="trow d0">
+              
+                
+                
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4l4 4-4 4"></path></svg>
+                
+              
+              
+              
+              <span class="badge ">lib</span>
+              <span style="overflow: hidden; text-overflow: ellipsis;">Units</span>
+              <span class="mono" style="color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis;">library</span>
+              <span style="flex-grow: 1;"></span>
+              <span style="color: var(--err); font-size: 11px;"></span>
+            </button>
+          
+        </div>
+        <div style="border-top: 1px solid var(--line); flex-shrink: 0;">
+          <div class="sec"><span>Views</span><button class="iconbtn" aria-label="New view" style="width: 22px; height: 22px;"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8 3v10M3 8h10"></path></svg></button></div>
+          <div style="padding-bottom: 8px;">
+            
+              <button class="trow d0">
+                <span class="badge" style="min-width: 22px;">GV</span>
+                <span>ThermalControl</span>
+                <span style="color: var(--faint); font-size: 11px;">General</span>
+              </button>
+            
+              <button class="trow d0 on">
+                <span class="badge" style="min-width: 22px;">IV</span>
+                <span>thermalSubsystem</span>
+                <span style="color: var(--faint); font-size: 11px;">Interconnection</span>
+              </button>
+            
+              <button class="trow d0">
+                <span class="badge" style="min-width: 22px;">AF</span>
+                <span>regulate</span>
+                <span style="color: var(--faint); font-size: 11px;">Action Flow</span>
+              </button>
+            
+              <button class="trow d0">
+                <span class="badge" style="min-width: 22px;">ST</span>
+                <span>HeaterModes</span>
+                <span style="color: var(--faint); font-size: 11px;">State Transition</span>
+              </button>
+            
+              <button class="trow d0">
+                <span class="badge" style="min-width: 22px;">GR</span>
+                <span>Requirements</span>
+                <span style="color: var(--faint); font-size: 11px;">Grid</span>
+              </button>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center: Interconnection View -->
+    <div data-region="view-area" style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column;">
+      <div data-region="view-tabs" style="height: 34px; display: flex; align-items: stretch; background: var(--panel2); border-bottom: 1px solid var(--line); flex-shrink: 0;">
+        <button class="tab"><span class="badge" style="min-width: 22px;">GV</span>ThermalControl</button>
+        <button class="tab on"><span class="badge" style="min-width: 22px;">IV</span>thermalSubsystem</button>
+        <button class="tab"><span class="badge" style="min-width: 22px;">AF</span>regulate</button>
+        <button class="tab"><span class="badge" style="min-width: 22px;">GR</span>Requirements</button>
+        <div style="flex-grow: 1;"></div>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 0 8px; font-size: 12px; color: var(--muted);">
+          <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" style="color: var(--accent);"><path d="M9 2.5h4.5V7M13.5 2.5L8 8M11 9.5v4H2.5V5h4"></path></svg>
+          <span style="white-space: nowrap;">Editor: Window 2</span>
+          <button class="btn">Focus</button>
+          <button class="btn">Dock</button>
+        </div>
+      </div>
+      <div style="height: 36px; display: flex; align-items: center; gap: 4px; padding: 0 8px; background: var(--panel); border-bottom: 1px solid var(--line); flex-shrink: 0;">
+        <span style="font-weight: 600; padding: 0 4px; white-space: nowrap;">Interconnection View</span>
+        <span style="color: var(--faint);">·</span>
+        <span class="mono" style="color: var(--muted); font-size: 12px; padding-right: 8px;">thermalSubsystem</span>
+        <div style="width: 1px; height: 18px; background: var(--line);"></div>
+        <button class="iconbtn on" aria-label="Select"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 2.5l8 5-3.5 1L7 12z"></path></svg></button>
+        <button class="iconbtn" aria-label="Pan"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8 2v12M2 8h12M6 4l2-2 2 2M6 12l2 2 2-2M4 6L2 8l2 2M12 6l2 2-2 2"></path></svg></button>
+        <button class="iconbtn" aria-label="Add element"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2.5" y="2.5" width="11" height="11"></rect><path d="M8 5.5v5M5.5 8h5"></path></svg></button>
+        <button class="iconbtn" aria-label="Add relationship"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="3.5" cy="12.5" r="1.5"></circle><circle cx="12.5" cy="3.5" r="1.5"></circle><path d="M4.6 11.4l6.8-6.8"></path></svg></button>
+        <button class="iconbtn" aria-label="Auto layout"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="2" width="5" height="4"></rect><rect x="9" y="10" width="5" height="4"></rect><path d="M4.5 6v6H9"></path></svg></button>
+        <div style="width: 1px; height: 18px; background: var(--line);"></div>
+        <button class="btn" style="border: 0;">Compartments ▾</button>
+        <button class="btn" style="border: 0;">Filter ▾</button>
+        <div style="flex-grow: 1;"></div>
+<button class="iconbtn" aria-label="Zoom out"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 8h10"></path></svg></button>
+        <span class="mono" style="font-size: 12px; width: 44px; text-align: center;">100%</span>
+        <button class="iconbtn" aria-label="Zoom in"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8 3v10M3 8h10"></path></svg></button>
+        <button class="iconbtn" aria-label="Fit to window"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"></path></svg></button>
+</div>
+
+      <div data-region="diagram-canvas" class="canvasgrid" style="flex-grow: 1; position: relative; overflow: hidden;">
+        <div style="position: absolute; left: 50%; top: 40px; width: 740px; height: 600px; margin-left: -370px;">
+          <div style="position: absolute; left: 0; top: 0; width: 740px; height: 600px; box-sizing: border-box; border: 1.5px solid var(--edge); border-radius: 14px;">
+            <div style="text-align: center; padding: 6px 0; border-bottom: 1px solid var(--edge);"><span class="kw">«part»</span><span class="nm">thermalSubsystem</span></div>
+          </div>
+          <svg width="760" height="600" viewBox="0 0 760 600" style="position: absolute; left: 0; top: 0; overflow: visible;"><path class="e" d="M6 156H54"></path><polygon class="ef" points="26,152 34,156 26,160"></polygon><path class="e" d="M276 126H370V116H474"></path><polygon class="ef" points="416,112 424,116 416,120"></polygon><path class="e" d="M474 440H370V206H276"></path><polygon class="ef" points="326,202 318,206 326,210"></polygon><path class="e" d="M686 116H734"></path><polygon class="ef" points="714,112 706,116 714,120"></polygon><text class="el" x="30" y="174" text-anchor="middle">cmdIn</text><text class="el" x="8" y="142">cmd</text><text class="el" x="282" y="118">heaterOut</text><text class="el" x="282" y="224">sensorIn</text><text class="el" x="468" y="106" text-anchor="end">pwrIn</text><text class="el" x="468" y="458" text-anchor="end">tempOut</text><text class="el" x="732" y="104" text-anchor="end">pwr</text><text class="elk" x="378" y="330">temp : TemperatureValue</text><text class="elk" x="282" y="146">power : ElectricalPower</text></svg>
+          <button class="node sel" style="left: 60px; top: 110px; width: 210px; height: 130px; border-radius: 10px;">
+            <span class="nh"><span class="kw">«part»</span><span class="nm">controller : ThermalController</span></span>
+            <span class="cp"><span class="ct">perform actions</span>regulate</span>
+            <span class="cp"><span class="ct">attributes</span>tolerance = 0.5</span>
+          </button>
+          <span aria-hidden="true" style="position: absolute; left: 486px; top: 86px; width: 200px; height: 90px; box-sizing: border-box; border: 1px solid var(--edge); border-radius: 10px; background: var(--node);"></span>
+          <button class="node" style="left: 480px; top: 80px; width: 200px; height: 90px; border-radius: 10px;">
+            <span class="nh" style="border-bottom: 0;"><span class="kw">«part»</span><span class="nm">heater : Heater [2]</span></span>
+          </button>
+          <span aria-hidden="true" style="position: absolute; left: 492px; top: 412px; width: 200px; height: 90px; box-sizing: border-box; border: 1px solid var(--edge); border-radius: 10px; background: var(--node);"></span>
+          <span aria-hidden="true" style="position: absolute; left: 486px; top: 406px; width: 200px; height: 90px; box-sizing: border-box; border: 1px solid var(--edge); border-radius: 10px; background: var(--node);"></span>
+          <button class="node" style="left: 480px; top: 400px; width: 200px; height: 90px; border-radius: 10px;">
+            <span class="nh" style="border-bottom: 0;"><span class="kw">«part»</span><span class="nm">sensor : TempSensor [3]</span></span>
+          </button>
+          <span aria-hidden="true" style="position: absolute; left: -6px; top: 150px; width: 12px; height: 12px; box-sizing: border-box; background: var(--node); border: 1px solid var(--edge);"></span><span aria-hidden="true" style="position: absolute; left: 54px; top: 150px; width: 12px; height: 12px; box-sizing: border-box; background: var(--node); border: 1px solid var(--edge);"></span><span aria-hidden="true" style="position: absolute; left: 264px; top: 120px; width: 12px; height: 12px; box-sizing: border-box; background: var(--node); border: 1px solid var(--edge);"></span><span aria-hidden="true" style="position: absolute; left: 264px; top: 200px; width: 12px; height: 12px; box-sizing: border-box; background: var(--node); border: 1px solid var(--edge);"></span><span aria-hidden="true" style="position: absolute; left: 474px; top: 110px; width: 12px; height: 12px; box-sizing: border-box; background: var(--node); border: 1px solid var(--edge);"></span><span aria-hidden="true" style="position: absolute; left: 674px; top: 110px; width: 12px; height: 12px; box-sizing: border-box; background: var(--node); border: 1px solid var(--edge);"></span><span aria-hidden="true" style="position: absolute; left: 734px; top: 110px; width: 12px; height: 12px; box-sizing: border-box; background: var(--node); border: 1px solid var(--edge);"></span><span aria-hidden="true" style="position: absolute; left: 474px; top: 434px; width: 12px; height: 12px; box-sizing: border-box; background: var(--node); border: 1px solid var(--edge);"></span>
+        </div>
+        <div style="position: absolute; left: 12px; bottom: 12px; padding: 6px 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; font-size: 11px; color: var(--muted); display: flex; gap: 12px;">
+          <span>Depth: 1</span><span>Show: ports, connectors, item flows</span><span>Hidden: 2 bindings</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right sidebar -->
+    <div class="contents" data-when="specOpen">
+      <aside data-region="spec-sidebar" data-slot="spec" aria-label="Specification" style="width: 340px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--panel); border-left: 1px solid var(--line);">
+        <div style="padding: 10px 8px 8px 12px; display: flex; align-items: flex-start; gap: 8px; flex-shrink: 0;">
+          <div style="flex-grow: 1; min-width: 0;">
+            <div style="font-size: 11px; color: var(--muted);">«part»</div>
+            <div style="font-size: 15px; font-weight: 600;">controller</div>
+            <div class="mono" style="font-size: 11px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">ThermalControl::thermalSubsystem::controller</div>
+          </div>
+          <button class="iconbtn" aria-label="Reveal in explorer"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="3"></circle><path d="M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3"></path></svg></button>
+          <button class="iconbtn" aria-label="Show in text editor window"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 2.5h4.5V7M13.5 2.5L8 8M11 9.5v4H2.5V5h4"></path></svg></button>
+          <button class="iconbtn" aria-label="Collapse sidebar" data-action="toggleSpec"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M6 4l4 4-4 4"></path></svg></button>
+        </div>
+        <div role="tablist" style="display: flex; border-bottom: 1px solid var(--line); padding: 0 4px; flex-shrink: 0;">
+          <button role="tab" class="ptab on" aria-selected="true" data-action="showSpec">Specification</button>
+          <button role="tab" class="ptab" aria-selected="false" data-action="showSrc">Element Source</button>
+        </div>
+
+        
+
+        <div class="contents" data-when="isSpec">
+          <div style="flex-grow: 1; overflow: auto;">
+            <div class="sec"><span>General</span></div>
+            <div class="pg">
+              
+                <span class="pk">Name</span><span class="pv">controller</span>
+              
+                <span class="pk">Kind</span><span class="pv">PartUsage</span>
+              
+                <span class="pk">Owner</span><span class="pv">thermalSubsystem</span>
+              
+                <span class="pk">Defined by</span><span class="pv">ThermalController</span>
+              
+                <span class="pk">Multiplicity</span><span class="pv">1</span>
+              
+                <span class="pk">Is composite</span><span class="pv">true</span>
+              
+                <span class="pk">Is reference</span><span class="pv">false</span>
+              
+                <span class="pk">Redefines</span><span class="pv">—</span>
+              
+            </div>
+            <div class="sec"><span>Owned features</span><button class="iconbtn" aria-label="Add feature" style="width: 22px; height: 22px;"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8 3v10M3 8h10"></path></svg></button></div>
+            <div class="fg">
+              <span class="fh">Kind</span><span class="fh">Name</span><span class="fh">Type</span><span class="fh">[ ]</span>
+              
+                <span style="color: var(--muted);">port</span><span class="mono">cmdIn</span><span class="mono" style="color: var(--ty);">CommandPort</span><span class="mono">1</span>
+              
+                <span style="color: var(--muted);">port</span><span class="mono">heaterOut</span><span class="mono" style="color: var(--ty);">PowerPort</span><span class="mono">1</span>
+              
+                <span style="color: var(--muted);">port</span><span class="mono">sensorIn</span><span class="mono" style="color: var(--ty);">~TempPort</span><span class="mono">1</span>
+              
+                <span style="color: var(--muted);">action</span><span class="mono">regulate</span><span class="mono" style="color: var(--ty);">RegulateTemperature</span><span class="mono">1</span>
+              
+                <span style="color: var(--muted);">attr</span><span class="mono">tolerance</span><span class="mono" style="color: var(--ty);">Real = 0.5</span><span class="mono">1</span>
+              
+            </div>
+            <div class="sec"><span>Relationships</span></div>
+            <div class="pg">
+              
+                <span class="pk">Owned by</span><span class="pv mono" style="font-size: 12px;"><a href="#">thermalSubsystem</a></span>
+              
+                <span class="pk">Defined by</span><span class="pv mono" style="font-size: 12px;"><a href="#">ThermalController</a></span>
+              
+                <span class="pk">Connected</span><span class="pv mono" style="font-size: 12px;"><a href="#">heaterOut → heater.pwrIn</a></span>
+              
+                <span class="pk">Connected</span><span class="pv mono" style="font-size: 12px;"><a href="#">sensorIn ← sensor.tempOut</a></span>
+              
+                <span class="pk">Bound</span><span class="pv mono" style="font-size: 12px;"><a href="#">cmdIn = cmd</a></span>
+              
+            </div>
+            <div class="sec"><span>Documentation</span></div>
+            <div style="padding: 0 12px 16px;">
+              <label style="display: block;"><span class="sr">Documentation</span>
+                <textarea class="inp" style="height: 64px; padding: 6px 8px; resize: vertical;"></textarea>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="contents" data-when="isSrc" hidden="">
+          <div style="flex-grow: 1; display: flex; flex-direction: column; min-height: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; font-size: 11px; color: var(--muted); flex-shrink: 0;">
+              <span class="mono">model/ThermalControl.sysml · lines </span>
+              <span style="color: var(--ok);">In sync</span>
+            </div>
+            <div style="flex-grow: 1; overflow: auto; border-top: 1px solid var(--line2); border-bottom: 1px solid var(--line2); background: var(--panel2); padding: 6px 0;">
+              
+            </div>
+            <div style="padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+              <div style="font-size: 12px; color: var(--muted);">Edits here change this element only. The full file stays open in the text editor window.</div>
+              <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                <button class="btn">Revert</button>
+                <button class="btn pri">Apply  Ctrl+Enter</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="contents" data-when="specClosed" hidden="">
+      <div data-region="spec-sidebar-collapsed" style="width: 32px; flex-shrink: 0; background: var(--panel2); border-left: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; padding-top: 6px; gap: 4px;">
+        <button class="iconbtn" aria-label="Expand sidebar" data-action="toggleSpec"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M10 4L6 8l4 4"></path></svg></button>
+        <button style="writing-mode: vertical-rl; font-size: 12px; color: var(--muted); padding: 8px 0;" data-action="toggleSpec">Specification</button>
+        <button style="writing-mode: vertical-rl; font-size: 12px; color: var(--muted); padding: 8px 0;" data-action="toggleSpec">Element Source</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div data-region="status-bar" style="height: 24px; flex-shrink: 0; display: flex; align-items: center; gap: 16px; padding: 0 12px; font-size: 11px; color: var(--muted); background: var(--panel2); border-top: 1px solid var(--line);">
+    <span style="color: var(--err);">1 error</span>
+    <span style="color: var(--warn);">1 warning</span>
+    <span>Explorer: element hierarchy (from 4 files)</span>
+    <span style="flex-grow: 1;"></span>
+    <span>Interconnection View · 3 parts · 8 ports · 4 connectors</span>
+    <span data-slot="selname">Selected: controller</span>
+    <span>SysML v2 · KerML</span>
+  </div>
+</div>
+</main>
+<script src="../assets/workbench.js"></script>
+</body>
+</html>

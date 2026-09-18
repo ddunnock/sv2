@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1480">
+<title>Model Workbench — 5 · Pop-out text editor (Window 2)</title>
+<meta name="description" content="Separate OS window for full-file text editing of .sysml/.kerml. Outline, syntax highlighting, lines of the element selected in the main window highlighted, inline diagnostic with quick fixes, problems panel, &quot;Follow diagram selection&quot; switch and &quot;Dock to main window&quot;.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/workbench.css">
+</head>
+<body class="page">
+<!--
+  MOCKUP SCREEN: 5 · Pop-out text editor (Window 2)
+  Separate OS window for full-file text editing of .sysml/.kerml. Outline, syntax highlighting, lines of the element selected in the main window highlighted, inline diagnostic with quick fixes, problems panel, "Follow diagram selection" switch and "Dock to main window".
+  Frame: 1440 x 900 CSS px (the element with class "wb-root").
+  Layout regions are tagged with data-region="…"; see ../README.md for the full map.
+  This is a static design reference, not production code. Sample model content only.
+-->
+<header class="page-bar">
+  <a href="../index.html">All screens</a>
+  <h1>5 · Pop-out text editor (Window 2)</h1>
+  <p>Separate OS window for full-file text editing of .sysml/.kerml. Outline, syntax highlighting, lines of the element selected in the main window highlighted, inline diagnostic with quick fixes, problems panel, "Follow diagram selection" switch and "Dock to main window".</p>
+  <a href="04-grid-view.html">Previous</a>
+  
+  <button id="theme-toggle" type="button">Dark theme</button>
+</header>
+<main class="frame" aria-label="5 · Pop-out text editor (Window 2)">
+<div class="t-light wb-root" style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: var(--bg); color: var(--text); overflow: hidden; border: 1px solid var(--line); box-sizing: border-box;">
+  <!-- Window title bar -->
+  <div data-region="window-title-bar" style="height: 32px; display: flex; align-items: center; gap: 10px; padding-left: 12px; background: var(--panel2); border-bottom: 1px solid var(--line); flex-shrink: 0;">
+    <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.5" y="1.5" width="5" height="5"></rect><rect x="9.5" y="9.5" width="5" height="5" rx="1.5"></rect><path d="M4 6.5v5.5h5.5"></path></svg>
+    <span style="font-size: 12px;">Text Editor — Window 2</span>
+    <span style="font-size: 12px; color: var(--muted);">linked to Model Workbench · ThermalControl</span>
+    <div style="flex-grow: 1;"></div>
+    <div style="display: flex;">
+      <button class="iconbtn" aria-label="Minimize" style="width: 44px; height: 32px; border-radius: 0;"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M4 8h8"></path></svg></button>
+      <button class="iconbtn" aria-label="Maximize" style="width: 44px; height: 32px; border-radius: 0;"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="4" y="4" width="8" height="8"></rect></svg></button>
+      <button class="iconbtn" aria-label="Close" style="width: 44px; height: 32px; border-radius: 0;"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button>
+    </div>
+  </div>
+
+  <!-- File tabs + window actions -->
+  <div style="height: 36px; display: flex; align-items: stretch; background: var(--panel2); border-bottom: 1px solid var(--line); flex-shrink: 0;">
+    <button class="tab on"><span class="badge fs">S</span>ThermalControl.sysml<span style="width: 7px; height: 7px; border-radius: 50%; background: var(--text);" aria-label="Unsaved changes"></span></button>
+    <button class="tab"><span class="badge fs">S</span>Requirements.sysml</button>
+    <button class="tab"><span class="badge fs">S</span>Interfaces.sysml</button>
+    <button class="tab"><span class="badge fk">K</span>Units.kerml</button>
+    <div style="flex-grow: 1;"></div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 0 10px;">
+      <button style="display: flex; align-items: center; gap: 8px; font-size: 12px;" aria-pressed="true"><span class="switch"></span>Follow diagram selection</button>
+      <div style="width: 1px; height: 18px; background: var(--line);"></div>
+      <button class="btn">Validate</button>
+      <button class="btn">Format</button>
+      <button class="btn"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="12" height="10" rx="1"></rect><path d="M2 10h12"></path></svg>Dock to main window</button>
+    </div>
+  </div>
+
+  <!-- Breadcrumb -->
+  <div style="height: 28px; display: flex; align-items: center; gap: 6px; padding: 0 12px; font-size: 12px; color: var(--muted); background: var(--panel); border-bottom: 1px solid var(--line2); flex-shrink: 0;">
+    <span>model</span><span>›</span><span>ThermalControl.sysml</span><span>›</span><span class="mono">ThermalControl</span><span>›</span><span class="mono" style="color: var(--text);">ThermalController</span>
+    <div style="flex-grow: 1;"></div>
+    <span style="color: var(--accent);">Selected in Main Window: ThermalController (lines 14–22)</span>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; min-height: 0;">
+    <!-- Outline -->
+    <div data-region="outline" style="width: 240px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column;">
+      <div class="sec"><span>Outline</span><span style="font-weight: 400; text-transform: none; letter-spacing: 0;">sorted by position</span></div>
+      <div style="flex-grow: 1; overflow: auto;">
+        
+          <button class="orow d0">
+            <span class="badge">pkg</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">ThermalControl</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+          <button class="orow d1">
+            <span class="badge">AD</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">TemperatureValue</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+          <button class="orow d1">
+            <span class="badge">ED</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">HeaterMode</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+          <button class="orow d1 on">
+            <span class="badge">PD</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">ThermalController</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+          <button class="orow d2">
+            <span class="badge u">a</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">setpoint</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+          <button class="orow d2">
+            <span class="badge u">a</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">tolerance</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+          <button class="orow d2">
+            <span class="badge u">Pt</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">cmdIn</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+          <button class="orow d2">
+            <span class="badge u">Pt</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">heaterOut</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+          <button class="orow d2">
+            <span class="badge u">Pt</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">sensorIn</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+          <button class="orow d2">
+            <span class="badge u">A</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">regulate</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+          <button class="orow d1">
+            <span class="badge">PD</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">Heater</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);">1</span>
+          </button>
+        
+          <button class="orow d1">
+            <span class="badge">PD</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">TempSensor</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+          <button class="orow d1">
+            <span class="badge u">P</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">thermalSubsystem</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+          <button class="orow d2">
+            <span class="badge u">P</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">controller</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+          <button class="orow d2">
+            <span class="badge u">P</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">heater</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+          <button class="orow d2">
+            <span class="badge u">P</span>
+            <span class="mono" style="overflow: hidden; text-overflow: ellipsis;">sensor</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="color: var(--err);"></span>
+          </button>
+        
+      </div>
+    </div>
+
+    <!-- Code + problems -->
+    <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column;">
+      <div data-region="code-editor" style="flex-grow: 1; overflow: hidden; background: var(--panel); padding-top: 6px; position: relative;">
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">1</span>
+            <span class="code"><span><span class="tk-k">package</span><span class="tk-p"> </span><span class="tk-t">ThermalControl</span><span class="tk-p"> </span><span class="tk-p">{</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">2</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-k">doc</span><span class="tk-p"> </span><span class="tk-c">/* Thermal control subsystem model (sample) */</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">3</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-k">private</span><span class="tk-p"> </span><span class="tk-k">import</span><span class="tk-p"> </span><span class="tk-t">ScalarValues</span><span class="tk-p">::</span><span class="tk-p">*</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">4</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-k">private</span><span class="tk-p"> </span><span class="tk-k">import</span><span class="tk-p"> </span><span class="tk-t">ISQ</span><span class="tk-p">::</span><span class="tk-p">*</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">5</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-k">private</span><span class="tk-p"> </span><span class="tk-k">import</span><span class="tk-p"> </span><span class="tk-t">SI</span><span class="tk-p">::</span><span class="tk-p">*</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">6</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-k">public</span><span class="tk-p"> </span><span class="tk-k">import</span><span class="tk-p"> </span><span class="tk-t">Interfaces</span><span class="tk-p">::</span><span class="tk-p">*</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">7</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-k">public</span><span class="tk-p"> </span><span class="tk-k">import</span><span class="tk-p"> </span><span class="tk-t">Requirements</span><span class="tk-p">::</span><span class="tk-p">*</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">8</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-k">attribute</span><span class="tk-p"> </span><span class="tk-k">def</span><span class="tk-p"> </span><span class="tk-t">TemperatureValue</span><span class="tk-p"> </span><span class="tk-p">:</span><span class="tk-p">&gt;</span><span class="tk-p"> </span><span class="tk-t">ThermodynamicTemperatureValue</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">9</span>
+            <span class="code"><span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">10</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-k">enum</span><span class="tk-p"> </span><span class="tk-k">def</span><span class="tk-p"> </span><span class="tk-t">HeaterMode</span><span class="tk-p"> </span><span class="tk-p">{</span><span class="tk-p"> </span><span class="tk-k">enum</span><span class="tk-p"> </span><span class="tk-p">off</span><span class="tk-p">;</span><span class="tk-p"> </span><span class="tk-k">enum</span><span class="tk-p"> </span><span class="tk-p">low</span><span class="tk-p">;</span><span class="tk-p"> </span><span class="tk-k">enum</span><span class="tk-p"> </span><span class="tk-p">high</span><span class="tk-p">;</span><span class="tk-p"> </span><span class="tk-p">}</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">11</span>
+            <span class="code"><span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">12</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-c">// Structure</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">13</span>
+            <span class="code"><span></span></span>
+          </div>
+        
+          <div class="ln cur">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">14</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-k">part</span><span class="tk-p"> </span><span class="tk-k">def</span><span class="tk-p"> </span><span class="tk-t">ThermalController</span><span class="tk-p"> </span><span class="tk-p">{</span></span></span>
+          </div>
+        
+          <div class="ln hi">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">15</span>
+            <span class="code"><span><span class="tk-p">        </span><span class="tk-k">doc</span><span class="tk-p"> </span><span class="tk-c">/* Closed-loop regulator for panel temperature */</span></span></span>
+          </div>
+        
+          <div class="ln hi">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">16</span>
+            <span class="code"><span><span class="tk-p">        </span><span class="tk-k">attribute</span><span class="tk-p"> </span><span class="tk-p">setpoint</span><span class="tk-p"> </span><span class="tk-p">:</span><span class="tk-p"> </span><span class="tk-t">TemperatureValue</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln hi">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">17</span>
+            <span class="code"><span><span class="tk-p">        </span><span class="tk-k">attribute</span><span class="tk-p"> </span><span class="tk-p">tolerance</span><span class="tk-p"> </span><span class="tk-p">:</span><span class="tk-p"> </span><span class="tk-t">Real</span><span class="tk-p"> </span><span class="tk-p">=</span><span class="tk-p"> </span><span class="tk-n">0.5</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln hi">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">18</span>
+            <span class="code"><span><span class="tk-p">        </span><span class="tk-k">port</span><span class="tk-p"> </span><span class="tk-p">cmdIn</span><span class="tk-p"> </span><span class="tk-p">:</span><span class="tk-p"> </span><span class="tk-t">CommandPort</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln hi">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">19</span>
+            <span class="code"><span><span class="tk-p">        </span><span class="tk-k">port</span><span class="tk-p"> </span><span class="tk-p">heaterOut</span><span class="tk-p"> </span><span class="tk-p">:</span><span class="tk-p"> </span><span class="tk-t">PowerPort</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln hi">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">20</span>
+            <span class="code"><span><span class="tk-p">        </span><span class="tk-k">port</span><span class="tk-p"> </span><span class="tk-p">sensorIn</span><span class="tk-p"> </span><span class="tk-p">:</span><span class="tk-p"> </span><span class="tk-p">~</span><span class="tk-t">TempPort</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln hi">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">21</span>
+            <span class="code"><span><span class="tk-p">        </span><span class="tk-k">perform</span><span class="tk-p"> </span><span class="tk-k">action</span><span class="tk-p"> </span><span class="tk-p">regulate</span><span class="tk-p"> </span><span class="tk-p">:</span><span class="tk-p"> </span><span class="tk-t">RegulateTemperature</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln hi">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">22</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-p">}</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">23</span>
+            <span class="code"><span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">24</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-k">part</span><span class="tk-p"> </span><span class="tk-k">def</span><span class="tk-p"> </span><span class="tk-t">Heater</span><span class="tk-p"> </span><span class="tk-p">{</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">25</span>
+            <span class="code"><span><span class="tk-p">        </span><span class="tk-k">doc</span><span class="tk-p"> </span><span class="tk-c">/* Resistive film heater */</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">26</span>
+            <span class="code"><span><span class="tk-p">        </span><span class="tk-k">attribute</span><span class="tk-p"> </span><span class="tk-p">maxPower</span><span class="tk-p"> </span><span class="tk-p">:</span><span class="tk-p"> </span><span class="tk-t">PowerValue</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut e" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">27</span>
+            <span class="code"><span class="wv"><span class="tk-p">        </span><span class="tk-k">attribute</span><span class="tk-p"> </span><span class="tk-k">state</span><span class="tk-p"> </span><span class="tk-p">:</span><span class="tk-p"> </span><span class="tk-t">HeaterState</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">28</span>
+            <span class="code"><span><span class="tk-p">        </span><span class="tk-k">port</span><span class="tk-p"> </span><span class="tk-p">pwrIn</span><span class="tk-p"> </span><span class="tk-p">:</span><span class="tk-p"> </span><span class="tk-p">~</span><span class="tk-t">PowerPort</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">29</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-p">}</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">30</span>
+            <span class="code"><span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">31</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-k">part</span><span class="tk-p"> </span><span class="tk-k">def</span><span class="tk-p"> </span><span class="tk-t">TempSensor</span><span class="tk-p"> </span><span class="tk-p">{</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">32</span>
+            <span class="code"><span><span class="tk-p">        </span><span class="tk-k">doc</span><span class="tk-p"> </span><span class="tk-c">/* Platinum RTD temperature sensor */</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">33</span>
+            <span class="code"><span><span class="tk-p">        </span><span class="tk-k">attribute</span><span class="tk-p"> </span><span class="tk-p">accuracy</span><span class="tk-p"> </span><span class="tk-p">:</span><span class="tk-p"> </span><span class="tk-t">Real</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">34</span>
+            <span class="code"><span><span class="tk-p">        </span><span class="tk-k">attribute</span><span class="tk-p"> </span><span class="tk-p">sampleRate</span><span class="tk-p"> </span><span class="tk-p">:</span><span class="tk-p"> </span><span class="tk-t">FrequencyValue</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">35</span>
+            <span class="code"><span><span class="tk-p">        </span><span class="tk-k">port</span><span class="tk-p"> </span><span class="tk-p">tempOut</span><span class="tk-p"> </span><span class="tk-p">:</span><span class="tk-p"> </span><span class="tk-t">TempPort</span><span class="tk-p">;</span></span></span>
+          </div>
+        
+          <div class="ln">
+            <span class="gut" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 20px;">36</span>
+            <span class="code"><span><span class="tk-p">    </span><span class="tk-p">}</span></span></span>
+          </div>
+        
+        <div style="position: absolute; left: 240px; top: 424px; width: 360px; padding: 8px 10px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(0,0,0,.12); font-size: 12px; display: flex; flex-direction: column; gap: 6px;">
+          <span style="color: var(--err); font-weight: 600;">Cannot resolve type 'HeaterState'</span>
+          <span style="color: var(--muted);">No element named HeaterState is visible in ThermalControl or its imports.</span>
+          <div style="display: flex; gap: 6px;"><button class="btn">Change to HeaterMode</button><button class="btn">Create enum def</button></div>
+        </div>
+        <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 14px; border-left: 1px solid var(--line2); background: var(--panel2);">
+          <span style="position: absolute; left: 3px; top: 240px; width: 8px; height: 155px; background: var(--line);"></span>
+          <span style="position: absolute; left: 3px; top: 463px; width: 8px; height: 3px; background: var(--err);"></span>
+        </div>
+      </div>
+      <div data-region="problems-panel" style="height: 160px; flex-shrink: 0; display: flex; flex-direction: column; border-top: 1px solid var(--line); background: var(--panel);">
+        <div role="tablist" style="display: flex; align-items: center; border-bottom: 1px solid var(--line2); padding: 0 4px;">
+          <button role="tab" class="ptab on" aria-selected="true">Problems  3</button>
+          <button role="tab" class="ptab" aria-selected="false">Output</button>
+          <button role="tab" class="ptab" aria-selected="false">References</button>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-size: 12px; color: var(--muted); padding-right: 8px;">Scope: workspace</span>
+        </div>
+        <div style="overflow: auto;">
+          
+            <div class="prow">
+              <span class="st err">Error</span>
+              <span class="mono" style="color: var(--muted);">ThermalControl.sysml:27:27</span>
+              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Cannot resolve type 'HeaterState'. Did you mean 'HeaterMode'?</span>
+              <span style="text-align: right;"><a href="#">Quick fix</a></span>
+            </div>
+          
+            <div class="prow">
+              <span class="st warn">Warning</span>
+              <span class="mono" style="color: var(--muted);">Requirements.sysml:31:5</span>
+              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Requirement 'SampleRate' has no satisfy relationship.</span>
+              <span style="text-align: right;"><a href="#">Open in grid</a></span>
+            </div>
+          
+            <div class="prow">
+              <span class="st none">Info</span>
+              <span class="mono" style="color: var(--muted);">Views.sysml:9:3</span>
+              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">View 'PowerTree' exposes no elements.</span>
+              <span style="text-align: right;"><a href="#">Go to view</a></span>
+            </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-region="status-bar" style="height: 24px; flex-shrink: 0; display: flex; align-items: center; gap: 16px; padding: 0 12px; font-size: 11px; color: var(--muted); background: var(--panel2); border-top: 1px solid var(--line);">
+    <span style="color: var(--ok);">Synced with Main Window</span>
+    <span>Diagram updates on save or after 1 s idle</span>
+    <span style="flex-grow: 1;"></span>
+    <span>Ln 14, Col 5</span><span>Spaces: 4</span><span>UTF-8</span><span>LF</span><span>SysML v2</span>
+  </div>
+</div>
+</main>
+<script src="../assets/workbench.js"></script>
+</body>
+</html>
