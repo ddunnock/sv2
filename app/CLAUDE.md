@@ -66,18 +66,38 @@ directory.
 - **Two `//` lines of SPDX header open every file,** never a `/** */` block —
   TSDoc would read the licence as documentation (§2.3).
 
+## The plan, and where the work is
+
+**`.claude/plans/ui-shell.md` is the working plan and the handoff.** Phases, what
+each one decided and why, what is deferred and what it shows instead, and the
+open questions. It is not loaded automatically — the SessionStart hook prints
+`state.json` and nothing else — so open it before starting.
+
+The UI work happens on the `ui/shell` branch, in a worktree, so it does not
+collide with grammar work in the main checkout.
+
 ## Current state
 
-Stubs. `main.tsx`, `shell/Shell.tsx`, `diagnostics/handlers.ts`,
-`model/result.ts` and its test exist; `contract/`, `ipc/`, `wasm/`, `editor/`
-and `diagram/` do not.
+`main.tsx`, `shell/Shell.tsx`, `diagnostics/handlers.ts` and `model/result.ts`
+exist, and so does `contract/`: `offset.ts`, `element-id.ts` and `diagnostic.ts`,
+each with its tests. `ipc/`, `wasm/`, `editor/` and `diagram/` do not.
 
-`zod`, `@tauri-apps/api`, `@codemirror/*` and `sv2-wasm` are all **allowed and
-not installed** — the allowlist is a decision about what may be depended on,
-`allowed-dependencies.toml`'s `[present]` table is what currently is, and the two
-are deliberately not the same list. Each arrives in the change that adds the
-first module importing it, because a package nothing imports is load cost and
-supply-chain surface for nothing.
+`src/index.css` carries the design tokens — the mockup's palette in two themes,
+with IBM Plex vendored under `src/assets/fonts/`. No component classes yet:
+§3.6 rule 2's test is repetition, and nothing repeats until there are panels.
 
-`main.tsx` names the missing Zod configuration step in place rather than omitting
-it silently.
+**A schema is declared, not inferred.** `isolatedDeclarations` cannot state the
+type of an exported Zod schema, so the type is written and the schema is
+annotated `z.ZodType<Name, Wire>`. §4.3 rule 1 carries the whole argument, and
+`contract/offset.ts` is the reference example. Brands mint through
+`.transform()`, never `.brand()`.
+
+`zod` is installed. `@tauri-apps/api`, `@codemirror/*` and `sv2-wasm` remain
+**allowed and not installed** — the allowlist is a decision about what may be
+depended on, `allowed-dependencies.toml`'s `[present]` table is what currently
+is, and the two are deliberately not the same list. Each arrives in the change
+that adds the first module importing it, because a package nothing imports is
+load cost and supply-chain surface for nothing.
+
+`main.tsx` still names the missing Zod configuration step in place rather than
+omitting it silently; it lands with the first module that parses at a boundary.
