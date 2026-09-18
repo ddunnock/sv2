@@ -141,13 +141,17 @@ at from the other side.
 
 ### What this record does not decide
 
-The crate decomposition beyond the binaries. `docs/CRATES.md` proposes `sv2-parser`,
-`sv2-view`, `sv2-sidecar` and `sv2-edit` and specifies interfaces for all four. None of
-them exists, none of their requirements has been exercised, and `state.json` still
-carries `crate-split` as an open question about the *one* boundary between crates that
-do exist. Fixing four more interfaces from a document written in isolation would decide
-more than has been learned. This record fixes the rule; the roster is decided a crate at
-a time, as each is written.
+The crate decomposition beyond the binaries. `sv2-view`, `sv2-sidecar`, `sv2-edit`,
+`sv2-layout` and `sv2-lsp` are all foreseeable and none exists; none of their
+requirements has been exercised, and `state.json` still carries `crate-split` as an open
+question about the *one* boundary between crates that do exist. Fixing five interfaces
+for requirements nothing has met would decide more than has been learned. This record
+fixes the rule; the roster is decided a crate at a time, as each is written.
+
+`docs/CRATES.md` names those candidates and what would force each into existence, and
+deliberately does not specify them. It was rewritten on the same day as this record for
+that reason: its first version had specified interfaces for four crates before they
+existed, and four of its claims were contradicted by the repository when checked.
 
 ### Review triggers
 

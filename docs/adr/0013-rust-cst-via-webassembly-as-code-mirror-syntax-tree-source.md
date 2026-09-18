@@ -1,4 +1,5 @@
 ---
+title: "Use a Rust CST compiled to WebAssembly as CodeMirror's syntax tree source"
 status: "proposed"
 date: 2026-09-16
 version: "1.0"

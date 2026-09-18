@@ -86,7 +86,7 @@
     },
     {
       "id": "0013",
-      "title": "0013-rust-cst-via-webassembly-as-code-mirror-syntax-tree-source",
+      "title": "Use a Rust CST compiled to WebAssembly as CodeMirror's syntax tree source",
       "status": "proposed",
       "date": "2026-09-16",
       "file": "docs/adr/0013-rust-cst-via-webassembly-as-code-mirror-syntax-tree-source.md"
