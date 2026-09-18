@@ -83,6 +83,24 @@ main() {
     printf '  skip  cargo checks (cargo not on PATH)\n'
   fi
 
+  # --- front end: STD-004-TS §13.6 ---
+  # The allowlist check reads package.json and the allowlist with the standard
+  # library alone, so it always runs: an absent Bun must not hide a manifest that
+  # declares a package nobody decided on.
+  run_check "web dependencies" "${PY}" scripts/check_web_dependencies.py
+  # `env -C app` rather than `cd app`: run_check captures a subprocess, and a cd
+  # here would leak into every check after it. One guard around the group matches
+  # the cargo block above, and keeps the skip notice to a single line.
+  if command -v bun >/dev/null 2>&1; then
+    run_check "bun install" env -C app bun install --frozen-lockfile --ignore-scripts
+    run_check "web typecheck" env -C app bun run typecheck
+    run_check "web lint" env -C app bun run lint
+    run_check "web test" env -C app bun test
+    run_check "web build" env -C app bun run build
+  else
+    printf '  skip  front-end checks (bun not on PATH)\n'
+  fi
+
   # --- scripts: STD-001-PY and STD-003-SH ---
   run_check "shell standard" "${PY}" scripts/check_shell_standard.py
   run_check "program headers" "${PY}" scripts/check_headers.py
