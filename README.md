@@ -142,7 +142,7 @@ under Memory files. If it does not, nothing in the top two layers is doing anyth
   to check, and become real the moment you pin. Every one of them was tested against a
   planted failure, because an inert check and a broken check look identical.
 
-## Licence
+## License
 
 MIT — see `LICENSE`. Every source file carries the two-line SPDX and copyright
 header, enforced by `scripts/check_headers.py`, so the license and the author travel
