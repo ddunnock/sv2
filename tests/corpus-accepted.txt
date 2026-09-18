@@ -51,6 +51,7 @@ vendor/corpus/sysml/src/training/18. Action Performance/Action Performance Examp
 vendor/corpus/sysml/src/training/22. Opaque Actions/Opaque Action Example.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 1.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 2.sysml
+vendor/corpus/sysml/src/training/30. Calculations/Calculation Definitions.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Definitions.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml
 vendor/corpus/sysml/src/validation/04-Functional Allocation/4a-Functional Allocation.sysml

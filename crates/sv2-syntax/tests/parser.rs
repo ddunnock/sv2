@@ -744,12 +744,13 @@ fn a_constraint_definition_owns_no_definition_node() {
 }
 
 #[test]
-fn a_calculation_body_does_not_admit_a_return_or_an_action() {
-    // CalculationBodyItem = ActionBodyItem | ReturnParameterMember, and
-    // ReturnParameterMember plus three of ActionBodyItem's four alternatives are the
-    // part that is absent. Held as a file by
-    // tests/rejection/calculation-body-return-parameter-member-is-not-implemented.sysml.
-    parse_rejected("constraint def C { return x; }");
+fn a_calculation_body_does_not_admit_the_control_flow_layer() {
+    // CalculationBodyItem = ActionBodyItem | ReturnParameterMember. The second is now
+    // implemented — `constraint def C { return x; }` is asserted accepted by
+    // a_return_parameter_member_is_admitted_by_the_body_and_not_the_definition, and it
+    // left this test because the production is read, not because the claim was relaxed.
+    // Three of ActionBodyItem's four alternatives are still absent: the initial nodes,
+    // successions and guards that are the control-flow layer.
     parse_rejected("constraint def C { first a then b; }");
 }
 
@@ -847,14 +848,112 @@ fn a_calculation_definition_needs_a_body_and_a_def() {
     parse_rejected("calc def C { a + b");
 }
 
+// -- ReturnParameterMember, SysML 8.2.2.19 ----------------------------------------
+//
+// CalculationBodyItem   = ActionBodyItem | ReturnParameterMember
+// ReturnParameterMember = MemberPrefix? 'return'
+//                         ownedRelatedElement += UsageElement
+//
+// The second alternative of CalculationBodyItem, and what every one of the thirteen
+// corpus files that writes `calc def` also writes. The metaclass is KerML's
+// ReturnParameterMembership (8.3.4.7.8), a ParameterMembership.
+
 #[test]
-fn a_calculation_definition_body_does_not_yet_admit_a_return() {
-    // CalculationBodyItem = ActionBodyItem | ReturnParameterMember (SysML 8.2.2.19),
-    // and ReturnParameterMember is unimplemented. This is the reason implementing
-    // `calc def` buys no corpus file on its own: all thirteen corpus files that write
-    // `calc def` also write `return`. Held as a file by
-    // tests/rejection/calculation-body-return-parameter-member-is-not-implemented.sysml.
-    parse_rejected("calc def C { return x; }");
+fn a_return_parameter_member_reads_the_keywordless_usage_forms() {
+    // The corpus writes these, from vendor/corpus/sysml/src/examples/Simple Tests/
+    // CalculationTest.sysml and the Analysis Examples: a bare name, a name with a
+    // typing, and a name with a typing and a value.
+    parse_accepted("calc def C { return x; }");
+    parse_accepted("calc def C { return v : SpeedValue; }");
+    parse_accepted("calc def C { return v : SpeedValue = v0 + a * dt; }");
+    // NOT here: `return totalMass : MassValue = sum(partMasses);`, the CalculationTest
+    // line. The member reads it; the VALUE does not, because `sum(...)` is an
+    // InvocationExpression (KerML 8.2.5.8.3) and that is unimplemented. It is the next
+    // blocker behind this member, not a defect in it — held by
+    // tests/rejection/invocation-expression-is-not-implemented.sysml.
+    parse_accepted("calc def C { return totalMass : MassValue = partMasses; }");
+    // A name with a subsetting, and one with a subsetting and a value —
+    // `return distance :> length;` and `return dpv :> distancePerVolume = 1/f;`.
+    parse_accepted("calc def C { return distance :> length; }");
+    parse_accepted("calc def C { return dpv :> distancePerVolume = 1/f; }");
+    // A value with no typing at all: `return p = rho * R_bar * T;`.
+    parse_accepted("calc def C { return p = rho * R_bar * T; }");
+}
+
+#[test]
+fn a_return_parameter_member_reads_the_anonymous_forms() {
+    // DefaultReferenceUsage's second form is a bare FeatureSpecializationPart with no
+    // Identification (SysML 8.2.2.6.2), and the corpus returns through it more often
+    // than not: `return : Real;`, `return : AccelerationValue = p / (m * v);` and
+    // `return :>> result : Real = a;` are all written.
+    parse_accepted("calc def C { return : Real; }");
+    parse_accepted("calc def C { return : AccelerationValue = p / (m * v); }");
+    parse_accepted("calc def C { return :>> result : Real = a; }");
+    parse_accepted("calc def C { return :>> verdict = evaluatePassFail.verdict; }");
+}
+
+#[test]
+fn a_return_parameter_member_reads_a_keyword_usage_too() {
+    // UsageElement is an alternation, not a synonym for the keywordless usage, so the
+    // corpus's `return attribute eval : Real = ...;` and `return part : Engine;` are
+    // the same member over a different alternative.
+    parse_accepted("calc def C { return attribute eval : Real; }");
+    parse_accepted("calc def C { return part : Engine; }");
+    parse_accepted("calc def C { return part :>> selectedAlternative : Engine; }");
+}
+
+#[test]
+fn a_return_parameter_member_takes_a_visibility() {
+    // MemberPrefix? = VisibilityIndicator? (SysML 8.2.2.5.1). The corpus does not
+    // write it here, but the production states it and the parser must not require the
+    // corpus's habits.
+    parse_accepted("calc def C { private return x; }");
+    parse_accepted("calc def C { public return : Real; }");
+}
+
+#[test]
+fn a_return_parameter_member_is_a_member_and_not_the_result_expression() {
+    // CalculationBodyPart = CalculationBodyItem* ResultExpressionMember?, so a `return`
+    // is in the item run and the trailing expression is still readable after it. The
+    // two are different nodes and the body may hold both.
+    let both = render(&parse_accepted("calc def C { return x : Real; x + 1 }").syntax());
+    assert_eq!(nodes_named(&both, "ReturnParameterMember"), 1, "{both}");
+    assert_eq!(nodes_named(&both, "ResultExpressionMember"), 1, "{both}");
+
+    // And a `return` alone is a member with no trailing expression at all.
+    let member = render(&parse_accepted("calc def C { return x; }").syntax());
+    assert_eq!(nodes_named(&member, "ReturnParameterMember"), 1, "{member}");
+    assert_eq!(
+        nodes_named(&member, "ResultExpressionMember"),
+        0,
+        "{member}"
+    );
+    // It owns its element through its OWN membership, so no DefinitionMember is built
+    // around it — the same reason SubjectMember does not go through `membership`.
+    assert_eq!(nodes_named(&member, "DefinitionMember"), 0, "{member}");
+}
+
+#[test]
+fn a_return_parameter_member_is_admitted_by_the_body_and_not_the_definition() {
+    // CalculationBody is shared by ConstraintDefinition (SysML 8.2.2.20), so a
+    // `constraint def` body admits a `return` for the same reason a `calc def` body
+    // does: the alternative belongs to CalculationBodyItem, not to either definition.
+    parse_accepted("constraint def C { return x; }");
+    // But a DefinitionBodyItem has no such alternative (SysML 8.2.2.6.1), and neither
+    // does an ActionBodyItem (8.2.2.17.1) or a PackageBodyElement (8.2.2.5.1). Held as
+    // files by tests/rejection/return-parameter-member-is-not-a-definition-body-item.sysml
+    // and return-parameter-member-is-not-an-action-body-item.sysml.
+    parse_rejected("part def V { return x; }");
+    parse_rejected("action def A { return x; }");
+    parse_rejected("package P { return x; }");
+    parse_rejected("return x;");
+}
+
+#[test]
+fn a_return_parameter_member_needs_a_usage_element() {
+    // UsageElement is not optional: `return` alone is the keyword with nothing to own.
+    // Held as a file by tests/rejection/return-parameter-member-needs-a-usage.sysml.
+    parse_rejected("calc def C { return; }");
 }
 
 // -- FeatureChainExpression, KerML 8.2.5.8.2 --------------------------------------

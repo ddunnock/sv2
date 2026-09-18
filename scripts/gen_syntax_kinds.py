@@ -375,6 +375,18 @@ NODES = [
             "CalculationBody`. `SysML` 8.2.2.20."
         ),
     ),
+    # CalculationBodyItem's OTHER alternative — the one that is not an ActionBodyItem —
+    # and the only member in this grammar whose element is a bare UsageElement with no
+    # keyword of its own beyond the `return`. The metaclass is KerML's
+    # ReturnParameterMembership (8.3.4.7.8), so like SubjectMember it owns its element
+    # through a membership of its own rather than through the body's ordinary member.
+    (
+        "ReturnParameterMember",
+        (
+            "`MemberPrefix? 'return' ownedRelatedElement += UsageElement`. "
+            "`SysML` 8.2.2.19 — the metaclass is `ReturnParameterMembership`."
+        ),
+    ),
     # ConstraintDefinition's shape differing in one keyword, over the body the two share.
     # The metaclass is different — an ActionDefinition that is also a Function
     # (8.3.19.2), where a ConstraintDefinition is an OccurrenceDefinition — so the node

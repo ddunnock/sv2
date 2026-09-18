@@ -718,6 +718,22 @@ impl Body {
     fn ends_in_result_expression(self) -> bool {
         matches!(self, Self::Calculation)
     }
+
+    /// Whether `ReturnParameterMember` is one of this body's alternatives.
+    ///
+    /// `CalculationBodyItem = ActionBodyItem | ReturnParameterMember`
+    /// (`SysML` 8.2.2.19), and it is the second alternative — so the containment runs
+    /// from calculation to action and NOT the other way. `Body::Action` and
+    /// `Body::Calculation` share the item loop, which is exactly how a `return` could
+    /// come to be admitted in an action body by accident;
+    /// tests/rejection/return-parameter-member-is-not-an-action-body-item.sysml is the
+    /// file that fails if it ever is.
+    ///
+    /// `ActionBodyItem` is also reached by `RequirementBodyItem` and by
+    /// `DefinitionBodyItem`, neither of which reaches this member either.
+    fn admits_return_parameter(self) -> bool {
+        matches!(self, Self::Calculation)
+    }
 }
 
 /// A `SysML` definition production: one keyword over a shared spine.
@@ -1100,6 +1116,13 @@ impl<'a> Parser<'a> {
             || self.at_simple_usage(n).is_some()
             || self.at_reference_usage(n)
         {
+            return false;
+        }
+        if self.at_return_parameter_member() {
+            // `return` continues the item run rather than ending it. The body loop asks
+            // this question first and so never reaches here with a `return` in front of
+            // it, but a recogniser that is only right because of where it is called is
+            // the trap `membership`'s classifier guard is written against.
             return false;
         }
         if self.at_default_reference_usage(n) {
@@ -1512,6 +1535,12 @@ impl<'a> Parser<'a> {
                 // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
                 // its own membership node rather than the one `membership` builds.
                 self.namespace_feature_member();
+            } else if body.admits_return_parameter() && self.at_return_parameter_member() {
+                // CalculationBodyItem's second alternative (SysML 8.2.2.19). Before the
+                // result-expression test below, because `return` is where the item run
+                // continues rather than where it ends; `at_result_expression` says so
+                // too, so neither position depends on the other being right.
+                self.return_parameter_member();
             } else if body.ends_in_result_expression() && self.at_result_expression() {
                 // The item run is over and what is left is the body's trailing
                 // expression, which is not a member. `calculation_body_part` reads it;
@@ -4296,6 +4325,59 @@ impl<'a> Parser<'a> {
         self.expect_keyword("def");
         self.definition_declaration();
         self.calculation_body();
+        self.finish_node();
+    }
+
+    /// Whether a `ReturnParameterMember` starts here.
+    ///
+    /// `MemberPrefix? 'return'` (`SysML` 8.2.2.19). `return` is a pinned keyword and a
+    /// keyword is not a name (`SysML` 8.2.2.1.2), so nothing else can open on it: it
+    /// cannot be the bare name a `DefaultReferenceUsage` opens on, and it cannot be the
+    /// first token of the trailing `ResultExpressionMember` either.
+    fn at_return_parameter_member(&self) -> bool {
+        self.nth_is_keyword(usize::from(self.at_visibility()), "return")
+    }
+
+    // production: ReturnParameterMember
+    //
+    // ReturnParameterMember : ReturnParameterMembership =
+    //     MemberPrefix? 'return'
+    //     ownedRelatedElement += UsageElement                     (SysML 8.2.2.19)
+    //
+    // The metaclass is KerML's ReturnParameterMembership (8.3.4.7.8), a
+    // ParameterMembership. It owns its element through that membership rather than
+    // through the body's ordinary member node, which is why — like SubjectMember and
+    // RequirementConstraintMember — it is dispatched in `body_elements` and not in
+    // `membership`.
+    //
+    // constraint: ReturnParameterMembership::validateReturnParameterMembershipOwningType
+    //     `owningType.oclIsKindOf(Function) or owningType.oclIsKindOf(Expression)`
+    //     (KerML 8.3.4.7.8). The grammar already reaches this production only from a
+    //     CalculationBody, so the tree cannot violate it; it is still sv2-hir's to
+    //     check rather than this layer's (ADR-0002).
+    //
+    // The clause also states that the ownedMemberParameter's DIRECTION MUST BE `out`
+    // (KerML 8.3.4.7.8), and validateParameterMembershipParameterDirection (8.3.4.6.4)
+    // is where that is enforced. It is a property the text does not write, so it is an
+    // INJECTION and belongs in sv2-hir. Nothing here supplies it, and nothing here may:
+    // writing `out` into the tree would break losslessness (invariant 1).
+    //
+    // `MemberPrefix?` — the `?` is redundant, as it is on ResultExpressionMember and
+    // RequirementConstraintMember: MemberPrefix is itself `VisibilityIndicator?` and
+    // already derives the empty string. Kept because the clause writes it.
+    //
+    // UsageElement is the FULL alternation (8.2.2.5.2) and only part of it is
+    // implemented, so UsageElement is NOT marked for coverage — `usage_element` returns
+    // whether it read one. This member IS marked, because its own shape is complete,
+    // which is the same line NonFeatureMember and PackageMember draw.
+    fn return_parameter_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ReturnParameterMember);
+        self.member_prefix();
+        self.expect_keyword("return");
+        if !self.usage_element() {
+            self.error_expected("a usage after `return`");
+        }
         self.finish_node();
     }
 
