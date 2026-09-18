@@ -2,6 +2,13 @@
 # may not have one: a library with a binary is a second, unrecorded path into it.
 #
 # One entry per crate: the package name, and why it is a binary.
+#
+# A binary per PROCESS SHAPE, and every binary a shim (ADR-0018). Two shapes exist:
+# a batch command that reads arguments and exits with a status, and a long-lived GUI
+# host. A third, a language server, is expected. What this list forbids is a LIBRARY
+# acquiring a binary, which is a second undisciplined path into it; it does not cap
+# how many entry points the workspace has.
 
 [crates]
-sv2-cli = "the sv2 command line"
+sv2-cli = "the sv2 command line: a batch command, STD-002-RS §3"
+sv2-studio = "the Tauri shell that hosts the webview, the renderer, and the editor"

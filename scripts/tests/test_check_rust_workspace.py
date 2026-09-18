@@ -2,7 +2,12 @@
 # Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 import pytest
 
-from check_rust_workspace import binary_findings, lib_findings, manifest_findings
+from check_rust_workspace import (
+    binary_findings,
+    leaf_findings,
+    lib_findings,
+    manifest_findings,
+)
 
 GOOD = {
     "package": {
@@ -112,3 +117,33 @@ def test_declarations_and_reexports_are_allowed():
 )
 def test_definitions_in_lib_rs_are_rejected(extra):
     assert lib_findings("sv2-x", LIB_OK + extra + "\n") != []
+
+
+# -- leaf crates: nothing may depend on an artifact (ADR-0018) ---------------------
+
+
+def depending_on(name, *deps):
+    """A cargo-metadata package that depends on each of `deps`."""
+    return {"name": name, "targets": [], "dependencies": [{"name": d} for d in deps]}
+
+
+def test_a_dependency_on_a_leaf_crate_is_reported():
+    # The edge someone will eventually add: sv2-wasm is an artifact the webview LOADS,
+    # built for another target triple. Linking it into the host would put a second
+    # parser in the same process as the first.
+    found = leaf_findings([depending_on("sv2-studio", "sv2-resolve", "sv2-wasm")])
+    assert [f.crate for f in found] == ["sv2-studio"]
+    assert "nothing may depend on" in found[0].message
+    assert "sv2-wasm" in found[0].message
+
+
+def test_an_ordinary_dependency_is_not_reported():
+    # The positive case: a checker that reported every edge would be as useless as one
+    # that reported none.
+    assert leaf_findings([depending_on("sv2-studio", "sv2-resolve", "sv2-syntax")]) == []
+
+
+def test_a_leaf_crate_may_still_have_dependencies_of_its_own():
+    # The rule is about what depends ON it, not what it depends on. sv2-wasm reaching
+    # sv2-syntax is the whole point of the crate; deny.toml checks the other direction.
+    assert leaf_findings([depending_on("sv2-wasm", "sv2-syntax")]) == []

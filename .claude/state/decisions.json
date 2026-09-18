@@ -119,6 +119,13 @@
       "status": "proposed",
       "date": "2026-09-17",
       "file": "docs/adr/0017-view-scoped-json-lines-sidecar-for-diagram-layout-and-styling.md"
+    },
+    {
+      "id": "0018",
+      "title": "A binary per process shape, and every binary a shim",
+      "status": "accepted",
+      "date": "2026-09-18",
+      "file": "docs/adr/0018-a-binary-per-process-shape.md"
     }
   ]
 }

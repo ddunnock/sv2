@@ -31,6 +31,14 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 ALLOWLIST = Path("scripts/rust_binaries.toml")
+
+# Crates nothing in the workspace may depend on (ADR-0018). An artifact, not a
+# library: sv2-wasm is loaded BY the webview, built for wasm32-unknown-unknown, and
+# linking it into the host binary would put a second parser in the same process as
+# the first. cargo-deny cannot express this — an empty `wrappers` list bans the
+# crate on its own existence — so deny.toml carries the direction it can check and
+# this carries the one it cannot.
+LEAF_CRATES = {"sv2-wasm": "an artifact the webview loads, not a library to link"}
 INHERITED_KEYS = ("edition", "rust-version", "license", "publish")
 DEPENDENCY_TABLES = ("dependencies", "dev-dependencies", "build-dependencies")
 # A dependency may add these to what it inherits; anything else declares its own source.
@@ -90,6 +98,20 @@ def _dependencies(manifest: Json) -> list[tuple[str, str, Json]]:
     for target, body in manifest.get("target", {}).items():
         tables.extend((f"target.{target}.{t}", body.get(t, {})) for t in DEPENDENCY_TABLES)
     return [(table, name, spec) for table, deps in tables for name, spec in deps.items()]
+
+
+def leaf_findings(packages: list[Json]) -> list[Finding]:
+    """A dependency on a crate that nothing may depend on (§2.5)."""
+    return [
+        Finding(
+            package["name"],
+            f"depends on `{dep['name']}`, which nothing may depend on: {LEAF_CRATES[dep['name']]}",
+            "§2.5",
+        )
+        for package in packages
+        for dep in package.get("dependencies", [])
+        if dep["name"] in LEAF_CRATES
+    ]
 
 
 def binary_findings(packages: list[Json], allowed: dict[str, str]) -> list[Finding]:
@@ -170,7 +192,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     allowed = tomllib.loads(ALLOWLIST.read_text()).get("crates", {})
-    findings = binary_findings(members, allowed)
+    findings = binary_findings(members, allowed) + leaf_findings(members)
     for package in members:
         findings += check_package(package)
 

@@ -422,6 +422,10 @@ name = "sv2-resolve"
 version = "0.1.0"
 
 [[package]]
+name = "sv2-studio"
+version = "0.1.0"
+
+[[package]]
 name = "sv2-syntax"
 version = "0.1.0"
 dependencies = [
@@ -430,6 +434,10 @@ dependencies = [
  "rowan",
  "text-size",
 ]
+
+[[package]]
+name = "sv2-wasm"
+version = "0.1.0"
 
 [[package]]
 name = "syn"

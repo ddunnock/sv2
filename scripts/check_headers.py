@@ -34,7 +34,13 @@ PYPROJECT = Path("pyproject.toml")
 # How far into a file the header may begin. A header pushed below imports is not a header.
 HEADER_WINDOW_LINES = 40
 SCRIPT_SOURCES = ("scripts", ".claude/scripts")
-RUST_SOURCES = "crates/*/src/**/*.rs"
+# Every source file, which is what STD-002-RS §2.3 says. An integration test is a
+# source file: it is compiled, it is committed, and it is exactly as likely to be
+# copied out of the repository as anything under src/ — which is the whole job the
+# two lines have. Excluding them left 40 files carrying the header by convention
+# with nothing checking it, and a misspelled `SPDX-License-Indentifier` sat in one
+# of them until this glob widened.
+RUST_SOURCES = ("crates/*/src/**/*.rs", "crates/*/tests/**/*.rs")
 # `#` in Python and shell, `//` in Rust. A shell script's shebang is part of its
 # opening comment block, which costs nothing here: the required strings are on the
 # two lines after it (STD-003-SH §3.4).
@@ -75,15 +81,16 @@ def leading_comment(text: str, marker: str) -> str:
 
 
 def sources() -> list[Path]:
-    """Every file the standards govern: script and crate sources, not tests."""
+    """Every file the standards govern: script and crate sources, tests included."""
     scripts = [
         p
         for root in SCRIPT_SOURCES
         for suffix in (".py", ".sh")
         for p in Path(root).rglob(f"*{suffix}")
-        if "tests" not in p.parts and "__pycache__" not in p.parts
+        if "__pycache__" not in p.parts
     ]
-    return sorted([*scripts, *Path().glob(RUST_SOURCES)])
+    rust = [p for pattern in RUST_SOURCES for p in Path().glob(pattern)]
+    return sorted([*scripts, *rust])
 
 
 def check(path: Path, config: Settings) -> list[str]:

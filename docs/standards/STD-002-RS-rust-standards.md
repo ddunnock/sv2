@@ -160,9 +160,16 @@ comments) and rejects anything else.
 ### 2.2 main.rs
 
 **Only crates listed in `scripts/rust_binaries.toml` may have a binary target.**
-Today that is `sv2-cli` and only `sv2-cli`, whose binary is named `sv2`
-([§3](#3-the-sv2-command-contract)). This is an architectural rule, not a
-convention.
+Today that is `sv2-cli`, whose binary is named `sv2`
+([§3](#3-the-sv2-command-contract)), and `sv2-studio`, which hosts the webview.
+This is an architectural rule, not a convention.
+
+**A binary per process shape, and every binary a shim** (ADR-0018). The list is
+not a cap on how many entry points the workspace has; it is what stops a
+*library* from acquiring one. A batch command and a long-lived GUI host are
+different shapes, and [§3](#3-the-sv2-command-contract) can only describe the
+first — so the second gets its own entry point rather than a mode flag on a
+command that would then have to have two contracts.
 
 A library crate with a binary is a library someone will eventually run
 directly. `sv2-syntax` with a `main` would be a second way to parse a file: one
@@ -174,7 +181,7 @@ what makes that path not exist.
 **Enforcement.** `scripts/check_rust_workspace.py` reads `cargo metadata` and
 fails if any target of kind `bin` belongs to a crate not on the list.
 
-Where a `main.rs` exists, it contains a call and nothing else:
+Where a `lib` exists, it contains a call and nothing else:
 
 ```rust
 //! Entry point for the `sv2` command.
@@ -294,16 +301,26 @@ depending on the resolver. That is what the layering rule is for.
 
 ```mermaid
 flowchart TD
-    cli["binary<br/>sv2-cli"]
+    cli["binary: batch command<br/>sv2-cli"]
+    studio["binary: Tauri shell<br/>sv2-studio"]
+    wasm["cdylib: CodeMirror adapter<br/>sv2-wasm"]
     resolve["libraries, names, derived properties<br/>sv2-resolve"]
     hir["desugaring, implied specialization<br/>sv2-hir"]
     ast["typed accessors over the CST<br/>sv2-ast"]
     syntax["core: lossless CST<br/>sv2-syntax"]
     cli --> resolve
+    studio --> resolve
     resolve --> hir
     hir --> ast
     ast --> syntax
+    wasm --> syntax
 ```
+
+`sv2-wasm` reaching only `sv2-syntax` is the load-bearing shape. ADR-0013 splits
+parsing in the webview from library-wide resolution in the studio's backend, and
+this graph is what enforces that split — a `sv2-resolve` dependency from the
+adapter fails `cargo deny check bans`, rather than relying on anyone remembering
+(ADR-0013 RISK-013-4).
 
 The arrows are the ordering, not the whole permission: **a layer may depend on
 any layer below it, and never on one above.** `sv2-cli` may reach `sv2-syntax`
@@ -316,6 +333,8 @@ directly; `sv2-ast` may not reach `sv2-hir` at all.
 | `sv2-hir`     | `sv2-ast`, `sv2-syntax`                                 | Name resolution or library loading; those are one layer up |
 | `sv2-resolve` | `sv2-hir`, `sv2-ast`, `sv2-syntax`                      | A binary target                                            |
 | `sv2-cli`     | Any lower layer, as a listed wrapper of each crate used | Logic beyond argument handling and wiring                  |
+| `sv2-studio`  | Any lower layer, as a listed wrapper of each crate used | Logic beyond wiring a window to the model; a dependency on `sv2-wasm` |
+| `sv2-wasm`    | `sv2-syntax`, and nothing else                          | Any dependent at all. It is an artifact the webview loads, not a library to link |
 
 That `sv2-syntax` contains no I/O, no clock, and no environment read is the
 load-bearing row. A parser that can open a file is a parser whose output depends
@@ -326,8 +345,16 @@ claim is a claim about exactly those bytes.
 below the top layer is listed with the only crates allowed to depend on it
 directly; any other direct dependent fails `cargo deny check bans`. Verified
 with cargo-deny 0.20.2 against workspace path dependencies. The table is in
-[§13.5](#135-denytoml), and it already carries all five crates, including the
-four that do not exist yet.
+[§13.5](#135-denytoml).
+
+One row of the table above is **not** enforced there, and the omission is
+deliberate rather than an oversight. cargo-deny has no way to say "nothing may
+depend on this": an empty `wrappers` list bans the crate on its own existence,
+so the workspace fails because `sv2-wasm` is a member. That rule is checked by
+`scripts/check_rust_workspace.py`, which reads the same `cargo metadata` and
+reports any member depending on a leaf crate. What cargo-deny *does* enforce is
+the direction that matters more — `sv2-wasm` appears in no wrapper list except
+`sv2-syntax`'s, so the adapter cannot reach the resolver.
 
 Add the layering entries on the first commit, while there is nothing to fix.
 Restoring a boundary after it has been crossed thirty times is a refactor;
@@ -337,7 +364,15 @@ preventing the first crossing is a config file.
 
 ## 3. The `sv2` command contract
 
-`sv2` is the workspace's only binary. Everything in this section describes what
+**This section governs `sv2`, the batch command, and nothing else.** It is not a
+contract for every binary in the workspace: `sv2-studio` is a long-lived GUI host
+and satisfies almost none of what follows — it has no single request to classify,
+no one-status-per-error-code taxonomy that a sweep could read, and no meaning for
+"do no work before the request is known". A binary with a different process shape
+needs its own contract; what it does **not** get is an exemption from
+[§2.2](#22-mainrs), which applies to every entry point (ADR-0018).
+
+Everything in this section describes what
 `crates/sv2-cli/src/{main,lib,cli,error}.rs` does today and what
 `scripts/corpus-sweep.sh` relies on. Two requests are implemented — `--version`
 and `parse` — which makes this still the cheapest moment to fix the contract:
@@ -1382,10 +1417,18 @@ deny = [
     #   sv2-syntax     core: lossless CST, no I/O
     #
     # Each layer may reach any layer below it, never one above.
-    { crate = "sv2-syntax", wrappers = ["sv2-ast", "sv2-hir", "sv2-resolve", "sv2-cli"] },
-    { crate = "sv2-ast", wrappers = ["sv2-hir", "sv2-resolve", "sv2-cli"] },
-    { crate = "sv2-hir", wrappers = ["sv2-resolve", "sv2-cli"] },
-    { crate = "sv2-resolve", wrappers = ["sv2-cli"] },
+    { crate = "sv2-syntax", wrappers = ["sv2-ast", "sv2-hir", "sv2-resolve", "sv2-cli", "sv2-studio", "sv2-wasm"] },
+    { crate = "sv2-ast", wrappers = ["sv2-hir", "sv2-resolve", "sv2-cli", "sv2-studio"] },
+    { crate = "sv2-hir", wrappers = ["sv2-resolve", "sv2-cli", "sv2-studio"] },
+    { crate = "sv2-resolve", wrappers = ["sv2-cli", "sv2-studio"] },
+
+    # sv2-wasm has no entry, and the omission is the point: nothing in the workspace
+    # may depend on it, which cargo-deny cannot express. An empty wrapper list bans the
+    # crate outright and fails on the crate's own existence. The rule is checked by
+    # scripts/check_rust_workspace.py instead. What IS enforced here is the direction
+    # that matters — sv2-wasm is absent from every list above except sv2-syntax's, so a
+    # dependency from the webview adapter on the resolver fails this check
+    # (ADR-0013 RISK-013-4).
 
     # §7.1 and §8.3: binary-only crates
     { crate = "anyhow", wrappers = ["sv2-cli"] },

@@ -30,3 +30,4 @@ silently is not.
 | [0015](0015-a-production-belongs-to-the-grammars-that-reach-it.md) | A production belongs to the grammars that reach it | accepted |
 | [0016](0016-element-identity-via-petname-notes.md) | Stable element identity via petname IDs in inline notes | accepted |
 | [0017](0017-view-scoped-json-lines-sidecar-for-diagram-layout-and-styling.md) | View-scoped JSON Lines sidecar for layout and styling | **proposed** |
+| [0018](0018-a-binary-per-process-shape.md) | A binary per process shape, and every binary a shim | accepted |

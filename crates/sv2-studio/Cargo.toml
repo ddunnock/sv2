@@ -1,0 +1,18 @@
+[package]
+name = "sv2-studio"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# The GUI host. A second binary, and deliberately so: it has a different process
+# shape from `sv2` and cannot be described by STD-002-RS §3 (ADR-0018).
+[[bin]]
+name = "sv2-studio"
+path = "src/main.rs"
+
+[dependencies]
+
+[lints]
+workspace = true
