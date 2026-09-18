@@ -192,9 +192,49 @@ NODES = [
         "TextualRepresentation",
         ("`( 'rep' Identification )? 'language' STRING_VALUE REGULAR_COMMENT`. `SysML` 8.2.2.4.3."),
     ),
+    # SysML's definitions. Eight productions of one shape, `<prefix> KEYWORD 'def'
+    # Definition, differing in the keyword and in which prefix they take. The other
+    # fourteen productions with a `def` keyword end in a specialised body — ActionBody,
+    # CaseBody, CalculationBody, RequirementBody — and none of those is implemented.
     (
         "PartDefinition",
         "`OccurrenceDefinitionPrefix 'part' 'def' Definition`. `SysML` 8.2.2.11.",
+    ),
+    (
+        "AttributeDefinition",
+        "`DefinitionPrefix 'attribute' 'def' Definition`. `SysML` 8.2.2.7.",
+    ),
+    (
+        "OccurrenceDefinition",
+        "`OccurrenceDefinitionPrefix 'occurrence' 'def' Definition`. `SysML` 8.2.2.9.1.",
+    ),
+    (
+        "ItemDefinition",
+        "`OccurrenceDefinitionPrefix 'item' 'def' Definition`. `SysML` 8.2.2.10.",
+    ),
+    (
+        "ConnectionDefinition",
+        "`OccurrenceDefinitionPrefix 'connection' 'def' Definition`. `SysML` 8.2.2.13.",
+    ),
+    (
+        "FlowDefinition",
+        "`OccurrenceDefinitionPrefix 'flow' 'def' Definition`. `SysML` 8.2.2.15.",
+    ),
+    (
+        "AllocationDefinition",
+        "`OccurrenceDefinitionPrefix 'allocation' 'def' Definition`. `SysML` 8.2.2.16.",
+    ),
+    (
+        "RenderingDefinition",
+        "`OccurrenceDefinitionPrefix 'rendering' 'def' Definition`. `SysML` 8.2.2.26.3.",
+    ),
+    (
+        "DefinitionPrefix",
+        (
+            "`BasicDefinitionPrefix? DefinitionExtensionKeyword*`. `SysML` 8.2.2.6.1 — "
+            "`OccurrenceDefinitionPrefix` without the `individual` part, for the "
+            "definitions that are not occurrences."
+        ),
     ),
     (
         "OccurrenceDefinitionPrefix",

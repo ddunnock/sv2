@@ -604,6 +604,77 @@ impl Body {
     }
 }
 
+/// A `SysML` definition production: one keyword over a shared spine.
+///
+/// Eight productions of `SysML` 8.2.2 are stated as `<prefix> KEYWORD 'def' Definition`,
+/// differing in the keyword and in which prefix they take. Matching rule shapes across
+/// the verified units finds twenty-two productions with a `def` keyword; the other
+/// fourteen end in a specialised body — `ActionBody`, `CaseBody`, `CalculationBody`,
+/// `RequirementBody`, `StateDefBody`, `InterfaceBody`, `ViewDefinitionBody` — and not
+/// one of those bodies is implemented, so not one of them is here. `PortDefinition`
+/// shares the spine but carries a trailing `ConjugatedPortDefinitionMember`, which is
+/// also unimplemented, so it is out too.
+#[derive(Clone, Copy)]
+struct SimpleDefinition {
+    /// The one keyword that says which production this is, before the `def`.
+    keyword: &'static str,
+    /// The node the production builds.
+    node: SyntaxKind,
+    /// Whether the prefix is an `OccurrenceDefinitionPrefix` rather than a
+    /// `DefinitionPrefix`.
+    ///
+    /// The same distinction `SimpleUsage::is_occurrence` draws, one level up: only an
+    /// occurrence may be `individual` (`SysML` 8.2.2.9.1). An attribute is not an
+    /// occurrence, so `individual attribute def A;` is two errors rather than a prefix.
+    is_occurrence: bool,
+}
+
+/// Every definition production sharing the `'def' Definition` spine.
+///
+/// The keywords are disjoint, so the order decides nothing.
+const SIMPLE_DEFINITIONS: [SimpleDefinition; 8] = [
+    SimpleDefinition {
+        keyword: "attribute",
+        node: SyntaxKind::AttributeDefinition,
+        is_occurrence: false,
+    },
+    SimpleDefinition {
+        keyword: "occurrence",
+        node: SyntaxKind::OccurrenceDefinition,
+        is_occurrence: true,
+    },
+    SimpleDefinition {
+        keyword: "item",
+        node: SyntaxKind::ItemDefinition,
+        is_occurrence: true,
+    },
+    SimpleDefinition {
+        keyword: "part",
+        node: SyntaxKind::PartDefinition,
+        is_occurrence: true,
+    },
+    SimpleDefinition {
+        keyword: "connection",
+        node: SyntaxKind::ConnectionDefinition,
+        is_occurrence: true,
+    },
+    SimpleDefinition {
+        keyword: "flow",
+        node: SyntaxKind::FlowDefinition,
+        is_occurrence: true,
+    },
+    SimpleDefinition {
+        keyword: "allocation",
+        node: SyntaxKind::AllocationDefinition,
+        is_occurrence: true,
+    },
+    SimpleDefinition {
+        keyword: "rendering",
+        node: SyntaxKind::RenderingDefinition,
+        is_occurrence: true,
+    },
+];
+
 /// A `KerML` classifier production: one keyword over a shared spine.
 ///
 /// Eight productions of `KerML` 8.2.4.2 are stated as `TypePrefix KEYWORD
@@ -815,20 +886,39 @@ impl<'a> Parser<'a> {
     /// (`abstract part x;` is a `PartUsage`), so only `part` followed by `def` decides.
     /// A `DefinitionExtensionKeyword` (`#` prefix metadata) is not looked past: it is
     /// unimplemented, and leaving it to the enclosing body's recovery reports it.
-    fn at_part_definition(&self, n: usize) -> bool {
-        let mut n = n;
-        if self.nth_is_keyword(n, "abstract") || self.nth_is_keyword(n, "variation") {
-            n += 1;
-        }
-        if self.nth_is_keyword(n, "individual") {
-            n += 1;
-        }
-        self.nth_is_keyword(n, "part") && self.nth_is_keyword(n + 1, "def")
+    fn at_simple_definition(&self, n: usize) -> Option<SimpleDefinition> {
+        SIMPLE_DEFINITIONS.iter().copied().find(|definition| {
+            let after = if definition.is_occurrence {
+                self.skip_occurrence_definition_prefix(n)
+            } else {
+                self.skip_definition_prefix(n)
+            };
+            self.nth_is_keyword(after, definition.keyword) && self.nth_is_keyword(after + 1, "def")
+        })
+    }
+
+    /// The index just past a `DefinitionPrefix` written from the `n`th token.
+    ///
+    /// `DefinitionPrefix = BasicDefinitionPrefix? DefinitionExtensionKeyword*`
+    /// (`SysML` 8.2.2.6.1). A `DefinitionExtensionKeyword` is not looked past: it is
+    /// unimplemented, and leaving it to the enclosing body's recovery reports it.
+    fn skip_definition_prefix(&self, n: usize) -> usize {
+        n + usize::from(self.nth_is_keyword(n, "abstract") || self.nth_is_keyword(n, "variation"))
+    }
+
+    /// The index just past an `OccurrenceDefinitionPrefix` written from the `n`th token.
+    ///
+    /// A `DefinitionPrefix` and the one keyword only an occurrence may carry:
+    /// `( 'individual' EmptyMultiplicityMember )?` (`SysML` 8.2.2.9.1). The same pair
+    /// `skip_basic_usage_prefix` and `skip_usage_prefix` make one level down.
+    fn skip_occurrence_definition_prefix(&self, n: usize) -> usize {
+        let n = self.skip_definition_prefix(n);
+        n + usize::from(self.nth_is_keyword(n, "individual"))
     }
 
     /// Whether an implemented `DefinitionElement` starts at the `n`th meaningful token.
     fn at_definition_element(&self, n: usize) -> bool {
-        self.nth_is_keyword(n, "package") || self.at_part_definition(n)
+        self.nth_is_keyword(n, "package") || self.at_simple_definition(n).is_some()
     }
 
     /// Whether an implemented element of this grammar's member starts at the `n`th token.
@@ -1208,8 +1298,11 @@ impl<'a> Parser<'a> {
             self.language == Language::KerMl
         }) {
             self.classifier(classifier);
-        } else if self.language == Language::SysMl && self.at_part_definition(0) {
-            self.part_definition();
+        } else if let Some(definition) = self
+            .at_simple_definition(0)
+            .filter(|_| self.language == Language::SysMl)
+        {
+            self.simple_definition(definition);
         } else if let Some(usage) = self.at_simple_usage(0).filter(|_| {
             // A usage is a UsageElement, reachable from PackageMember and not from
             // NamespaceMember. KerML has no usages at all (SysML 8.2.2.6.1).
@@ -2877,19 +2970,63 @@ impl<'a> Parser<'a> {
     }
 
     // production: PartDefinition
+    // production: AttributeDefinition
+    // production: OccurrenceDefinition
+    // production: ItemDefinition
+    // production: ConnectionDefinition
+    // production: FlowDefinition
+    // production: AllocationDefinition
+    // production: RenderingDefinition
     //
-    // PartDefinition = OccurrenceDefinitionPrefix 'part' 'def' Definition
-    //                                                            (SysML 8.2.2.11)
+    // AttributeDefinition  = DefinitionPrefix           'attribute'  'def' Definition
+    // OccurrenceDefinition = OccurrenceDefinitionPrefix 'occurrence' 'def' Definition
+    // ItemDefinition       = OccurrenceDefinitionPrefix 'item'       'def' Definition
+    // PartDefinition       = OccurrenceDefinitionPrefix 'part'       'def' Definition
+    // ConnectionDefinition = OccurrenceDefinitionPrefix 'connection' 'def' Definition
+    // FlowDefinition       = OccurrenceDefinitionPrefix 'flow'       'def' Definition
+    // AllocationDefinition = OccurrenceDefinitionPrefix 'allocation' 'def' Definition
+    // RenderingDefinition  = OccurrenceDefinitionPrefix 'rendering'  'def' Definition
+    //                                          (SysML 8.2.2.7, .9.1, .10, .11, .13,
+    //                                                 .15, .16, .26.3)
+    //
+    // Eight productions, one method, as the seven usages share `simple_usage` and the
+    // eight classifiers share `classifier`. Each is marked because each IS fully
+    // implemented; what none of them implements lives in the prefixes and in
+    // DefinitionDeclaration, and is recorded there.
     //
     // The Pilot factors 'part' 'def' into PartDefKeyword; deviations.json records
     // that as xtext_only/follow_spec, so the literals are matched here directly.
-    fn part_definition(&mut self) {
+    fn simple_definition(&mut self, definition: SimpleDefinition) {
         self.eat_trivia();
-        self.start_node(SyntaxKind::PartDefinition);
-        self.occurrence_definition_prefix();
-        self.expect_keyword("part");
+        self.start_node(definition.node);
+        if definition.is_occurrence {
+            self.occurrence_definition_prefix();
+        } else {
+            self.definition_prefix();
+        }
+        self.expect_keyword(definition.keyword);
         self.expect_keyword("def");
         self.definition();
+        self.finish_node();
+    }
+
+    // DefinitionPrefix : Definition =
+    //     BasicDefinitionPrefix? DefinitionExtensionKeyword*      (SysML 8.2.2.6.1)
+    //
+    // NOT marked for coverage, for the reason OccurrenceDefinitionPrefix is not:
+    // DefinitionExtensionKeyword (`#` prefix metadata) is unimplemented, and
+    // `at_simple_definition` does not look past a `#`, so a definition carrying one
+    // never reaches here and is reported by the enclosing body instead.
+    //
+    // This is OccurrenceDefinitionPrefix without the `individual` part. The two are
+    // separate productions because only an occurrence may be individual, and keeping
+    // them separate is what makes `individual attribute def A;` an error.
+    fn definition_prefix(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::DefinitionPrefix);
+        if self.at_keyword("abstract") || self.at_keyword("variation") {
+            self.basic_definition_prefix();
+        }
         self.finish_node();
     }
 

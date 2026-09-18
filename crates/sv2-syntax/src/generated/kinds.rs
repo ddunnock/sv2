@@ -541,6 +541,22 @@ pub enum SyntaxKind {
     TextualRepresentation,
     /// `OccurrenceDefinitionPrefix 'part' 'def' Definition`. `SysML` 8.2.2.11.
     PartDefinition,
+    /// `DefinitionPrefix 'attribute' 'def' Definition`. `SysML` 8.2.2.7.
+    AttributeDefinition,
+    /// `OccurrenceDefinitionPrefix 'occurrence' 'def' Definition`. `SysML` 8.2.2.9.1.
+    OccurrenceDefinition,
+    /// `OccurrenceDefinitionPrefix 'item' 'def' Definition`. `SysML` 8.2.2.10.
+    ItemDefinition,
+    /// `OccurrenceDefinitionPrefix 'connection' 'def' Definition`. `SysML` 8.2.2.13.
+    ConnectionDefinition,
+    /// `OccurrenceDefinitionPrefix 'flow' 'def' Definition`. `SysML` 8.2.2.15.
+    FlowDefinition,
+    /// `OccurrenceDefinitionPrefix 'allocation' 'def' Definition`. `SysML` 8.2.2.16.
+    AllocationDefinition,
+    /// `OccurrenceDefinitionPrefix 'rendering' 'def' Definition`. `SysML` 8.2.2.26.3.
+    RenderingDefinition,
+    /// `BasicDefinitionPrefix? DefinitionExtensionKeyword*`. `SysML` 8.2.2.6.1 — `OccurrenceDefinitionPrefix` without the `individual` part, for the definitions that are not occurrences.
+    DefinitionPrefix,
     /// `BasicDefinitionPrefix? ( 'individual' EmptyMultiplicityMember )? DefinitionExtensionKeyword*`. `SysML` 8.2.2.9.1.
     OccurrenceDefinitionPrefix,
     /// `'abstract' | 'variation'`. `SysML` 8.2.2.6.1.
@@ -993,6 +1009,14 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::Documentation,
     SyntaxKind::TextualRepresentation,
     SyntaxKind::PartDefinition,
+    SyntaxKind::AttributeDefinition,
+    SyntaxKind::OccurrenceDefinition,
+    SyntaxKind::ItemDefinition,
+    SyntaxKind::ConnectionDefinition,
+    SyntaxKind::FlowDefinition,
+    SyntaxKind::AllocationDefinition,
+    SyntaxKind::RenderingDefinition,
+    SyntaxKind::DefinitionPrefix,
     SyntaxKind::OccurrenceDefinitionPrefix,
     SyntaxKind::BasicDefinitionPrefix,
     SyntaxKind::EmptyMultiplicityMember,

@@ -219,6 +219,75 @@ fn a_metadata_annotating_element_is_not_implemented() {
     parse_rejected("package P { metadata Safety about Q; }");
 }
 
+// -- the definitions, SysML 8.2.2 -------------------------------------------------
+//
+// Eight productions of one shape, `<prefix> KEYWORD 'def' Definition`, differing in
+// the keyword and in which prefix they take.
+
+/// Every definition keyword of the shared spine, and whether it is an occurrence.
+const DEFINITION_KEYWORDS: [(&str, bool); 8] = [
+    ("attribute", false),
+    ("occurrence", true),
+    ("item", true),
+    ("part", true),
+    ("connection", true),
+    ("flow", true),
+    ("allocation", true),
+    ("rendering", true),
+];
+
+#[test]
+fn every_definition_keyword_reads_the_same_spine() {
+    for (keyword, _) in DEFINITION_KEYWORDS {
+        parse_accepted(&format!("{keyword} def A;"));
+        parse_accepted(&format!("{keyword} def A {{ }}"));
+        parse_accepted(&format!("abstract {keyword} def <a> A :> B;"));
+    }
+}
+
+#[test]
+fn only_an_occurrence_definition_may_be_individual() {
+    // OccurrenceDefinitionPrefix carries `individual`; DefinitionPrefix does not
+    // (SysML 8.2.2.9.1 against 8.2.2.6.1). Held as a file by
+    // tests/rejection/attribute-definition-is-not-an-occurrence.sysml.
+    for (keyword, is_occurrence) in DEFINITION_KEYWORDS {
+        let source = format!("individual {keyword} def A;");
+        if is_occurrence {
+            parse_accepted(&source);
+        } else {
+            parse_rejected(&source);
+        }
+    }
+}
+
+#[test]
+fn a_definition_is_told_from_the_usage_spelled_the_same_way() {
+    // Every definition keyword but three also opens a usage, and only the `def`
+    // separates them (SysML 8.2.2.6.1). Both must parse, as different nodes.
+    parse_accepted("part def V;");
+    parse_accepted("part v;");
+    parse_accepted("attribute def A;");
+    parse_accepted("attribute a;");
+    parse_accepted("part def V { part inner; attribute def A; }");
+}
+
+#[test]
+fn a_definition_whose_body_is_not_a_definition_body_is_not_in_the_table() {
+    // Fourteen of the twenty-two `def` productions end in a specialised body, and
+    // none of those bodies is implemented. PortDefinition shares the spine but adds
+    // a ConjugatedPortDefinitionMember. Each has a file in tests/rejection/.
+    for source in [
+        "action def Brake;",
+        "calc def C;",
+        "constraint def C;",
+        "requirement def R;",
+        "state def S;",
+        "port def P;",
+    ] {
+        parse_rejected(source);
+    }
+}
+
 // -- reserved words are not names (KerML 8.2.2.6) ---------------------------------
 
 #[test]
@@ -1298,11 +1367,16 @@ fn an_attribute_is_not_an_occurrence_and_takes_no_portion_kind() {
 
 #[test]
 fn an_attribute_usage_is_not_an_attribute_definition() {
-    // The two differ by 'def', as part usage and part definition do. AttributeDefinition
-    // is not implemented, so it is still reported: a rejection by absence.
+    // The two differ by 'def', as part usage and part definition do. Both are
+    // implemented now, so the claim is no longer "the definition is reported" but the
+    // stronger one: the same word reads as a different node on either side of `def`.
     let usage = render(&parse_accepted("attribute Mass;").syntax());
     assert!(usage.contains("AttributeUsage"), "{usage}");
-    parse_rejected("attribute def Mass;");
+    assert!(!usage.contains("AttributeDefinition"), "{usage}");
+
+    let definition = render(&parse_accepted("attribute def Mass;").syntax());
+    assert!(definition.contains("AttributeDefinition"), "{definition}");
+    assert!(!definition.contains("AttributeUsage"), "{definition}");
 }
 
 #[test]
@@ -1377,18 +1451,24 @@ fn an_enumeration_is_not_an_occurrence() {
 
 #[test]
 fn each_remaining_usage_is_not_its_definition() {
-    // The `def` separates usage from definition throughout (SysML 8.2.2.6.1). None of
-    // these definitions is implemented, so each is still reported: rejection by
-    // absence, which the usage landing here does not change.
-    for source in [
-        "item def Wheel;",
-        "occurrence def Thing;",
-        "port def FuelPort;",
-        "rendering def AsTable;",
-        "enum def Color;",
+    // The `def` separates usage from definition throughout (SysML 8.2.2.6.1). Three of
+    // these definitions are implemented now and read as their own node; the usage
+    // spelled the same way still reads as the usage.
+    for (source, node) in [
+        ("item def Wheel;", "ItemDefinition"),
+        ("occurrence def Thing;", "OccurrenceDefinition"),
+        ("rendering def AsTable;", "RenderingDefinition"),
     ] {
-        parse_rejected(source);
+        let rendered = render(&parse_accepted(source).syntax());
+        assert!(rendered.contains(node), "{rendered}");
+        assert!(!rendered.contains("Usage"), "{rendered}");
     }
+    // Still rejection by absence, and for two different reasons. PortDefinition carries
+    // a ConjugatedPortDefinitionMember the shared spine has no place for, and
+    // EnumerationDefinition takes an EnumerationBody rather than a DefinitionBody.
+    // Each has a file in tests/rejection/ naming its clause.
+    parse_rejected("port def FuelPort;");
+    parse_rejected("enum def Color;");
 }
 
 #[test]

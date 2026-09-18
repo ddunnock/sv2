@@ -14,16 +14,20 @@ vendor/corpus/sysml/src/examples/Packet Example/PacketUsage.sysml
 vendor/corpus/sysml/src/examples/Packet Example/Packets.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ImportTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/MultiplicityTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/RootPackageTest.sysml
 vendor/corpus/sysml/src/training/01. Packages/Comment Example.sysml
 vendor/corpus/sysml/src/training/01. Packages/Documentation Example.sysml
 vendor/corpus/sysml/src/training/01. Packages/Package Example.sysml
+vendor/corpus/sysml/src/training/02. Part Definitions/Part Definition Example.sysml
 vendor/corpus/sysml/src/training/03. Generalization/Generalization Example.sysml
 vendor/corpus/sysml/src/training/04. Subsetting/Subsetting Example.sysml
 vendor/corpus/sysml/src/training/05. Redefinition/Redefinition Example.sysml
 vendor/corpus/sysml/src/training/07. Parts/Parts Example-1.sysml
 vendor/corpus/sysml/src/training/07. Parts/Parts Example-2.sysml
+vendor/corpus/sysml/src/training/08. Items/Items Example.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml
+vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_02-Basic Value Properties.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_06-System of Quantities.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_07-System of Units and Scales.sysml
