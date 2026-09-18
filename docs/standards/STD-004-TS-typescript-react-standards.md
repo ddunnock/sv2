@@ -386,7 +386,7 @@ Generating Zod from Rust was considered and rejected. The generators available a
 | Field names   | `camelCase` on the wire, through `#[serde(rename_all = "camelCase")]`. No renaming on the TypeScript side.                                                                                                                       |
 | Unions        | Rust enums serialize internally tagged (`#[serde(tag = "kind")]`), and the Zod side is `z.discriminatedUnion("kind", ...)`.                                                                                                      |
 
-### 4.3 Schemas and inferred types
+### 4.3 Schemas and declared types
 
 ```ts
 // SPDX-License-Identifier: MIT
@@ -398,9 +398,13 @@ Generating Zod from Rust was considered and rejected. The generators available a
 import { z } from "zod";
 
 import { DiagnosticCodeSchema } from "@/contract/diagnostic";
-import { ElementIdSchema } from "@/contract/element-id";
+import { ElementIdSchema, type ElementId } from "@/contract/element-id";
 
-export const ElementRefSchema = z.discriminatedUnion("kind", [
+export type ElementRef =
+  | Readonly<{ kind: "resolved"; target: ElementId }>
+  | Readonly<{ kind: "unresolved"; written: string; code: DiagnosticCode }>;
+
+export const ElementRefSchema: z.ZodType<ElementRef, unknown> = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("resolved"), target: ElementIdSchema }),
   z.strictObject({
     kind: z.literal("unresolved"),
@@ -408,13 +412,20 @@ export const ElementRefSchema = z.discriminatedUnion("kind", [
     code: DiagnosticCodeSchema,
   }),
 ]);
-
-export type ElementRef = z.infer<typeof ElementRefSchema>;
 ```
 
 **Rules.**
 
-1. **One schema per shape, and the type is inferred from it.** A hand-written `type ElementRef = ...` beside `ElementRefSchema` is a second statement that drifts. The schema is named `<Name>Schema`, and the type is `<Name>`.
+1. **One shape, stated twice, and the compiler holds the two together.** The type is declared and the schema is annotated `z.ZodType<Name, Wire>`; `tsc` then rejects a schema that does not produce the declared type, so the pair cannot drift. The schema is named `<Name>Schema` and the type is `<Name>`.
+
+   This is not what an earlier revision of this section said, and the reason is [§13.3](#133-tsconfigjson-and-tsconfigtestjson), which sets `isolatedDeclarations: true`. Under that flag every **exported** declaration must carry a type a `.d.ts` can state, and `export const S = z.discriminatedUnion(...)` cannot: `tsc` reports TS9010 and TS9013. Zod's own types are no escape — the real inferred types are `ZodObject<{…}, $strict>` and `$ZodBranded<ZodString, "Name", "out">`, which are unwritable by hand and would put Zod internals in the signature of every contract module. Moving the schema out of the export does not help either, because an exported `z.infer<typeof S>` drags the requirement back onto it.
+
+   Where the prose and §13 disagree, §13 is right ([§1](#1-what-this-covers-and-how-to-use-it)). So inference loses and the annotation wins. What rule 1 was protecting — one authority per shape, no silent divergence — still holds, because the compiler enforces agreement rather than a reviewer noticing.
+
+   Two consequences worth stating, because both are load-bearing:
+
+   - **Member schemas of a union stay module-local.** They need no annotation as long as no exported declaration names their type, which is what keeps `z.discriminatedUnion` usable at all.
+   - **A brand is minted with `.transform()`, not `.brand()`** ([§4.4](#44-branded-types-and-where-they-are-minted)). `.brand()` returns `$ZodBranded`, which is not assignable to `z.ZodType` under `exactOptionalPropertyTypes`. Rule 4 below already allows this: branding is a transform that loses nothing.
 2. **`z.strictObject` for every object read at a boundary.** An unknown key is rejected, for the same reason STD-001-PY §4.4 requires `"additionalProperties": false`: a key with a typo in it validates, loads, and behaves as if the field were absent. The one exception is a record whose contract requires preserving unknown fields, such as a layout record under ADR-0017 R-6. That uses `z.looseObject`, and the unknown fields are carried through, never dropped.
 3. **No `z.any()`, no `z.coerce`, and no `.catch()` default** on a boundary schema. Coercion turns wrong data into plausible data, and a catch default turns a failed read into a silent one.
 4. **`.transform()` is allowed only when it loses nothing.** Branding is a transform that loses nothing. Dropping an element, clamping a value, or filling a default changes what the sender said, and the receiver can no longer tell.
