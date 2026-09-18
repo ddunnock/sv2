@@ -226,6 +226,27 @@ fn a_function_is_not_in_the_classifier_table() {
     kerml_rejected("type T;");
 }
 
+// -- annotating elements as members, KerML 8.2.3.4.1 ------------------------------
+
+#[test]
+fn an_annotating_element_is_a_member_element() {
+    // MemberElement = AnnotatingElement | NonFeatureElement. The three implemented
+    // annotating elements are reachable at every KerML member position, which is the
+    // root, a package body and a type body alike.
+    kerml_accepted("doc /* what this file is */");
+    kerml_accepted("comment C about X /* on X */");
+    kerml_accepted("rep r language \"alf\" /* f(); */");
+    kerml_accepted("package P { doc /* on P */ }");
+    kerml_accepted("class A { doc /* on A */ }");
+}
+
+#[test]
+fn a_metadata_annotating_element_is_not_implemented() {
+    // AnnotatingElement's fourth alternative, the one the two grammars spell
+    // differently. KerML says MetadataFeature; neither spelling is read.
+    kerml_rejected("metadata M about X;");
+}
+
 // -- the invariants, under this grammar too ---------------------------------------
 
 #[test]

@@ -190,6 +190,35 @@ fn parsing_never_panics_on_truncated_input() {
     }
 }
 
+// -- annotating elements as members, SysML 8.2.2.6.1 ------------------------------
+//
+// DefinitionElement's third alternative is AnnotatingElement, so an annotating
+// element is a PackageMember and a DefinitionMember without any production of its
+// own. AnnotatingMember exists in the grammar but is referenced only by
+// EnumerationBody, which is not implemented, so it is not built here.
+
+#[test]
+fn an_annotating_element_is_a_definition_element() {
+    parse_accepted("doc /* what this file is */");
+    parse_accepted("comment C about X /* on X */");
+    parse_accepted("rep r language \"alf\" /* f(); */");
+    parse_accepted("package P { doc /* on P */ }");
+    parse_accepted("part def V { doc /* on V */ }");
+}
+
+#[test]
+fn an_annotating_member_may_carry_a_visibility() {
+    // MemberPrefix is part of the membership, not of the annotating element, so the
+    // same prefix that precedes a package precedes a doc.
+    parse_accepted("package P { private doc /* internal */ }");
+}
+
+#[test]
+fn a_metadata_annotating_element_is_not_implemented() {
+    // The fourth alternative, MetadataUsage in SysML by the recorded deviation.
+    parse_rejected("package P { metadata Safety about Q; }");
+}
+
 // -- reserved words are not names (KerML 8.2.2.6) ---------------------------------
 
 #[test]

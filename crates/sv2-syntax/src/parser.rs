@@ -858,6 +858,13 @@ impl<'a> Parser<'a> {
     /// containing one must not parse — which it silently did before ADR-0014 was
     /// implemented here, because one root was applied to both file kinds.
     fn at_member_element(&self, n: usize) -> bool {
+        // Both grammars reach AnnotatingElement from their member, by different routes:
+        // MemberElement = AnnotatingElement | NonFeatureElement in KerML 8.2.3.4.1, and
+        // DefinitionElement's third alternative in SysML 8.2.2.6.1. So it is admitted in
+        // every body either language has, and is asked before the languages part.
+        if self.at_annotating_member(n) {
+            return true;
+        }
         match self.language {
             Language::KerMl => self.nth_is_keyword(n, "package") || self.at_classifier(n).is_some(),
             Language::SysMl => self.at_definition_element(n) || self.at_simple_usage(n).is_some(),
@@ -1187,7 +1194,11 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(body.member(self.language));
         self.member_prefix();
-        if self.at_keyword("package") {
+        if self.at_annotating_member(0) {
+            // The body is a REGULAR_COMMENT, so it has to be a token here rather than
+            // trivia for the production to be able to read it.
+            self.with_significant_comments(Self::annotating_element);
+        } else if self.at_keyword("package") {
             self.package();
         } else if let Some(classifier) = self.at_classifier(0).filter(|_| {
             // Every classifier unit is scoped `kerml`. SysML reaches DefinitionElement
@@ -3248,15 +3259,56 @@ impl<'a> Parser<'a> {
         self.with_significant_comments(|p| {
             p.eat_trivia();
             p.start_node(SyntaxKind::OwnedAnnotation);
-            if p.at_keyword("doc") {
-                p.documentation();
-            } else if p.at_keyword("rep") || p.at_keyword("language") {
-                p.textual_representation();
-            } else {
-                p.comment();
-            }
+            p.annotating_element();
             p.finish_node();
         });
+    }
+
+    /// The `AnnotatingElement` alternation, shared by every place one may appear.
+    ///
+    /// `AnnotatingElement = Comment | Documentation | TextualRepresentation |
+    /// MetadataUsage` in `SysML` 8.2.2.4.1, and the same with `MetadataFeature` in
+    /// `KerML` 8.2.3.3.1 — the one difference is the fourth alternative, and neither
+    /// spelling of it is implemented.
+    ///
+    /// An annotating element is reached three ways, and this is the one dispatch for all
+    /// of them: `OwnedAnnotation` in a relationship body, `MemberElement` in `KerML`
+    /// (8.2.3.4.1), and `DefinitionElement` in `SysML` (8.2.2.6.1). Writing the
+    /// alternation twice is how the three would drift apart.
+    ///
+    /// The caller enters only on `at_annotating_element` or `at_annotating_member`, so
+    /// the `else` never sees a metadata element.
+    ///
+    /// The caller is also responsible for `with_significant_comments`: every one of
+    /// these productions ends in a `REGULAR_COMMENT` body, which is trivia unless the
+    /// enclosing context has made it a token.
+    fn annotating_element(&mut self) {
+        if self.at_keyword("doc") {
+            self.documentation();
+        } else if self.at_keyword("rep") || self.at_keyword("language") {
+            self.textual_representation();
+        } else {
+            self.comment();
+        }
+    }
+
+    /// Whether a keyword-introduced `AnnotatingElement` starts at the `n`th token.
+    ///
+    /// Not the same question as `at_annotating_element`, deliberately. That one also
+    /// answers yes to a bare `REGULAR_COMMENT`, which is `Comment`'s shortest form and
+    /// is correct inside a relationship body, where every regular comment is either an
+    /// annotation's body or an error.
+    ///
+    /// At member position it is not correct yet. A bare `/* ... */` in a package body IS
+    /// a `Comment` element by 8.2.2.4.2, and this parser still attaches it as trivia —
+    /// both readings keep every byte, so the round trip holds either way, but the tree
+    /// shape differs from the specification's. Making the switch changes every tree that
+    /// has a comment in it, so it is its own change with its own snapshot review rather
+    /// than a side effect of this one.
+    fn at_annotating_member(&self, n: usize) -> bool {
+        ["comment", "locale", "doc", "rep", "language"]
+            .iter()
+            .any(|word| self.nth_is_keyword(n, word))
     }
 
     // production: Comment

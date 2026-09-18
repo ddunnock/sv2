@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-18T11:35:42Z",
+    "regenerated_utc": "2026-09-18T11:43:21Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -23,10 +23,10 @@
       "percent": 21.0
     },
     "tests": {
-      "unit": 201,
+      "unit": 206,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 70,
+      "negative_cases": 71,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "7220350 Read KerML's eight classifiers, from the shape the units already agree on",
       "8817b4a Fail the coverage check when the report it writes is out of date",
       "9409545 Read KerML against KerML's grammar, and SysML against SysML's",
       "f0cca37 Sweep the corpus that is actually pinned, and ratchet what parses",
       "122abd8 Record the session's own commits in the state block",
       "938c2f4 Read the expression operator core, with precedence from the table rather than the rule order",
       "14ecfc3 Assign every capability the accepted ADRs require to exactly one crate",
-      "4c482b4 Spell the prose in American English, and fix the punctuation around two clauses",
-      "39dc95e Read five more usages, and make the shape they share a table rather than five copies"
+      "4c482b4 Spell the prose in American English, and fix the punctuation around two clauses"
     ]
   },
   "authored": {
