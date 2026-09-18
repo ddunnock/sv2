@@ -1,17 +1,13 @@
 {
   "compilerOptions": {
-    // Environment setup & latest features
-    "lib": ["ESNext", "DOM"],
-    "target": "ESNext",
-    "module": "Preserve",
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
     "moduleResolution": "bundler",
-    "moduleDetection": "force",
     "jsx": "react-jsx",
-    "allowJs": false,
-    "types": ["bun", "react"],
-    "paths": {
-      "@/*": ["./src/*"]
-    },
+    "types": [],
+    "paths": { "@/*": ["./src/*"] },
+
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
@@ -31,10 +27,9 @@
     "noUncheckedSideEffectImports": true,
     "forceConsistentCasingInFileNames": true,
 
-    "allowImportingTsExtensions": true,
     "noEmit": true,
-    "skipLibCheck": true,
+    "skipLibCheck": true
   },
   "include": ["src"],
-  "exclude": ["dist", "node_modules", "src/**.*.ts", "src/**/*.test.tsx", "src/test-setup.ts"]
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test-setup.ts"]
 }

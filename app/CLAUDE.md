@@ -1,106 +1,75 @@
+# sv2-studio front end — working agreement
 
-Default to using Bun instead of Node.js.
+The Tauri v2 webview: a React shell, a CodeMirror editor, and an SVG diagram
+island. `crates/sv2-studio` is the Rust host; this package is what it displays.
 
-- Use `bun <file>` instead of `node <file>` or `ts-node <file>`
-- Use `bun test` instead of `jest` or `vitest`
-- Use `bun build <file.html|file.ts|file.css>` instead of `webpack` or `esbuild`
-- Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
-- Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
-- Use `bunx <package> <command>` instead of `npx <package> <command>`
-- Bun automatically loads .env, so don't use dotenv.
+**`docs/standards/STD-004-TS-typescript-react-standards.md` governs every file
+here.** This page is orientation, not a second copy of it. Where the two
+disagree, the standard is right — and where the standard's prose and its §13
+configuration disagree, §13 is right and the prose is a defect.
 
-## APIs
+## Bun is the whole toolchain
 
-- `Bun.serve()` supports WebSockets, HTTPS, and routes. Don't use `express`.
-- `bun:sqlite` for SQLite. Don't use `better-sqlite3`.
-- `Bun.redis` for Redis. Don't use `ioredis`.
-- `Bun.sql` for Postgres. Don't use `pg` or `postgres.js`.
-- `WebSocket` is built-in. Don't use `ws`.
-- Prefer `Bun.file` over `node:fs`'s readFile/writeFile
-- Bun.$`ls` instead of execa.
+Package manager, script runner, bundler, dev server, test runner. **There is no
+Node and no Vite** (assumption A-003).
 
-## Testing
-
-Use `bun test` to run tests.
-
-```ts#index.test.ts
-import { test, expect } from "bun:test";
-
-test("hello world", () => {
-  expect(1).toBe(1);
-});
+```bash
+bun install            # never npm/yarn/pnpm
+bun run typecheck      # tsc --noEmit over both tsconfigs; the type authority
+bun run lint           # biome ci --error-on-warnings
+bun test               # bun:test, preloaded by src/test-setup.ts
+bun run dev            # tools/dev.ts  — 127.0.0.1:1420, the devUrl Tauri names
+bun run build          # tools/build.ts — dist/, the frontendDist Tauri names
 ```
 
-## Frontend
+Vite is not banned on taste; it is not needed yet. **§3.5 lists the six
+conditions (VF-1 to VF-6) that bring it back**, each with the reproduction that
+would establish it. If you hit one, that is a decision record citing the
+condition — not a dependency bump. Build speed is not a trigger in either
+direction.
 
-Use HTML imports with `Bun.serve()`. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
+## The layout is the architecture
 
-Server:
+Every module belongs to exactly one layer and its directory is its layer. A file
+directly under `src/` other than `main.tsx` and `test-setup.ts` is a defect
+(§2, rule 1).
 
-```ts#index.ts
-import index from "./index.html"
-
-Bun.serve({
-  routes: {
-    "/": index,
-    "/api/users/:id": {
-      GET: (req) => {
-        return new Response(JSON.stringify({ id: req.params.id }));
-      },
-    },
-  },
-  // optional websocket support
-  websocket: {
-    open: (ws) => {
-      ws.send("Hello, world!");
-    },
-    message: (ws, message) => {
-      ws.send(message);
-    },
-    close: (ws) => {
-      // handle close
-    }
-  },
-  development: {
-    hmr: true,
-    console: true,
-  }
-})
+```
+src/main.tsx       the composition root; the ONLY module that runs at load time
+src/contract/      Zod schemas          — imports nothing but zod
+src/model/         pure TypeScript      — imports contract
+src/ipc/           the ONLY caller of Tauri's invoke
+src/wasm/          the sv2-wasm loader and flat-buffer adapter
+src/diagnostics/   the ONLY module that reports to a log channel
+src/editor/        the ONLY module that touches CodeMirror
+src/diagram/       the SVG island
+src/shell/         panels, tabs, island boundaries
+tools/             build-time scripts; nothing in src/ imports from here
 ```
 
-HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will transpile & bundle automatically. `<link>` tags can point to stylesheets and Bun's CSS bundler will bundle.
+`editor/` and `diagram/` do not import each other. Anything they share goes
+through `model` or the shell. The import matrix in §2.1 is the rule.
 
-```html#index.html
-<html>
-  <body>
-    <h1>Hello, world!</h1>
-    <script type="module" src="./frontend.tsx"></script>
-  </body>
-</html>
-```
+Tests sit beside what they test: `result.ts` and `result.test.ts` in one
+directory.
 
-With the following `frontend.tsx`:
+## Four things that catch people first
 
-```tsx#frontend.tsx
-import React from "react";
-import { createRoot } from "react-dom/client";
+- **The webview is not Bun.** `tsconfig.json` loads `"types": []`, so a Bun API
+  in application code is a type error. Bun's APIs belong in tests,
+  `test-setup.ts`, and `tools/` — which `tsconfig.test.json` covers (§2, rule 5).
+- **Asset imports are declared in `src/ambient.d.ts`,** because no types package
+  declares them for us. That file is the whole statement of what the bundler may
+  import besides TypeScript.
+- **Every dependency is a recorded decision.** The §3.1 allowlist is closed;
+  nothing arrives transitively as a direct import.
+- **Two `//` lines of SPDX header open every file,** never a `/** */` block —
+  TSDoc would read the licence as documentation (§2.3).
 
-// import .css files directly and it works
-import './index.css';
+## Current state
 
-const root = createRoot(document.body);
-
-export default function Frontend() {
-  return <h1>Hello, world!</h1>;
-}
-
-root.render(<Frontend />);
-```
-
-Then, run index.ts
-
-```sh
-bun --hot ./index.ts
-```
-
-For more information, read the Bun API docs in `node_modules/bun-types/docs/**.mdx`.
+Stubs. `main.tsx`, `shell/Shell.tsx`, `diagnostics/handlers.ts`,
+`model/result.ts` and its test exist; `contract/`, `ipc/`, `wasm/`, `editor/`
+and `diagram/` do not, because `zod`, `@tauri-apps/api`, `@codemirror/*` and
+`sv2-wasm` are not yet dependencies. `main.tsx` names the missing Zod
+configuration step in place rather than omitting it silently.

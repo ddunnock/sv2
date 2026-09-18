@@ -9,7 +9,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { err, isOk, ok, type Result } from "./result.ts";
+import { err, isOk, ok, type Result } from "./result";
 
 describe("Result", () => {
   test("ok carries its value and narrows", () => {

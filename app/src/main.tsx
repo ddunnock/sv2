@@ -18,8 +18,8 @@
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { installGlobalHandlers, reportToConsole } from "@/diagnostics/handlers.ts";
-import { Shell } from "@/shell/Shell.tsx";
+import { installGlobalHandlers, reportToConsole } from "@/diagnostics/handlers";
+import { Shell } from "@/shell/Shell";
 
 // 1. Configure Zod for the Tauri CSP — not yet: `zod` is not on the allowlist
 //    (§3.1) and the `contract` layer does not exist. When it lands it goes here,

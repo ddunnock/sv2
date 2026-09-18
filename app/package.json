@@ -12,11 +12,10 @@
     "url": "https://github.com/ddunnock/sv2.git"
   },
   "scripts": {
-    "dev": "bun --hot src/index.html",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
     "lint": "biome ci --error-on-warnings .",
-    "test": "bun test",
-    "build": "bun run build.ts"
+    "dev": "bun tools/dev.ts",
+    "build": "bun tools/build.ts"
   },
   "trustedDependencies": [],
   "dependencies": {
