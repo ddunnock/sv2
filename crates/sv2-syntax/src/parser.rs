@@ -3501,6 +3501,10 @@ impl<'a> Parser<'a> {
             self.sequence_expression();
         } else if self.at_literal_expression() {
             self.literal_expression();
+        } else if self.at_invocation_expression() {
+            // BEFORE the feature reference, and the two are told apart by ONE token:
+            // both open on a QualifiedName and only an invocation has a `(` after it.
+            self.invocation_expression();
         } else if self.at_feature_reference() {
             self.feature_reference_expression();
         } else {
@@ -3593,6 +3597,202 @@ impl<'a> Parser<'a> {
     /// or with the `'$'` of its global-scope prefix (`KerML` 8.2.3.4.1).
     fn at_feature_reference(&self) -> bool {
         self.at_name() || self.at(SyntaxKind::Dollar)
+    }
+
+    /// The index just past a `QualifiedName` written at the `n`th meaningful token, or
+    /// `None` if one is not written there.
+    ///
+    /// `QualifiedName = ( '$' '::' )? ( NAME '::' )* NAME` (`KerML` 8.2.3.4.1), walked
+    /// exactly as `qualified_name` consumes it — including the two-token test that a
+    /// `::` belongs to the name only when a NAME follows it, so `A::*` ends at `A`.
+    /// A recogniser that walked it differently from the parser would accept a prefix the
+    /// parser then failed to read.
+    fn skip_qualified_name(&self, n: usize) -> Option<usize> {
+        let mut n = n;
+        if self
+            .peek_nth(n)
+            .is_some_and(|t| t.kind == SyntaxKind::Dollar)
+        {
+            n += 1;
+            if !self.nth_is(n, SyntaxKind::ColonColon) {
+                return None;
+            }
+            n += 1;
+        }
+        if !self.nth_is_name(n) {
+            return None;
+        }
+        n += 1;
+        while self.nth_is(n, SyntaxKind::ColonColon) && self.nth_is_name(n + 1) {
+            n += 2;
+        }
+        Some(n)
+    }
+
+    /// Whether an `InvocationExpression` starts here.
+    ///
+    /// A `QualifiedName` with a `'('` after it — the whole of what separates it from a
+    /// `FeatureReferenceExpression`, which is the same name with nothing after it
+    /// (`KerML` 8.2.5.8.3).
+    ///
+    /// It asks for a NAME rather than for any token before the `(`, which is what keeps
+    /// `x and (y)` an operator over a parenthesised operand: `and` is reserved
+    /// (`SysML` 8.2.2.1.2) and a keyword is not a name, so `nth_is_name` says no. A `(`
+    /// with nothing before it never reaches here at all — `null_expression` and
+    /// `sequence_expression` are asked first.
+    fn at_invocation_expression(&self) -> bool {
+        self.skip_qualified_name(0)
+            .is_some_and(|n| self.nth_is(n, SyntaxKind::LParen))
+    }
+
+    // production: InvocationExpression
+    //
+    // InvocationExpression : InvocationExpression =
+    //     ownedRelationship += InstantiatedTypeMember
+    //     ArgumentList
+    //     ownedRelationship += EmptyResultMember                 (KerML 8.2.5.8.3)
+    //
+    // production: InstantiatedTypeReference
+    //
+    // InstantiatedTypeReference : Feature = [QualifiedName]      (KerML 8.2.5.8.3)
+    //
+    // InstantiatedTypeMember is NOT marked. It is
+    //
+    //     InstantiatedTypeMember = memberElement = InstantiatedTypeReference
+    //                            | OwnedFeatureChainMember       (KerML 8.2.5.8.3)
+    //
+    // and only the first alternative is read here. The second is a FeatureChain — `a.b(x)`
+    // — and it is absent for the same reason FeatureChainMember's chain alternative is:
+    // the chain productions read a single link, and a multi-link chain in this position
+    // has no caller yet. The node is still built, because the membership is in the tree
+    // either way; what is not claimed is the alternation.
+    //
+    // The EmptyResultMember is the result parameter every invocation owns and nobody
+    // writes, exactly as FeatureReferenceExpression owns one (8.2.5.8.3 names it in both).
+    fn invocation_expression(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::InvocationExpression);
+        self.start_node(SyntaxKind::InstantiatedTypeMember);
+        self.start_node(SyntaxKind::InstantiatedTypeReference);
+        self.qualified_name();
+        self.finish_node();
+        self.finish_node();
+        self.argument_list();
+        self.empty_result_member();
+        self.finish_node();
+    }
+
+    // production: ArgumentList
+    //
+    // ArgumentList = '(' ( PositionalArgumentList | NamedArgumentList )? ')'
+    //                                                            (KerML 8.2.5.8.3)
+    //
+    // The two lists are ALTERNATIVES, so a list commits to one of them and a mixed list
+    // is not this grammar — tests/rejection/argument-list-does-not-mix-positional-and-
+    // named.sysml and its mirror hold both directions.
+    //
+    // `at_named_argument` decides which, and it is one token of lookahead past a
+    // QualifiedName: a NamedArgument is `ParameterRedefinition '=' ...` and a positional
+    // argument is an OwnedExpression, which cannot contain a bare `=` because `=` is not
+    // in the precedence table of 8.2.5.8.1 (docs/operator-precedence.toml, which a test
+    // diffs against the parser's INFIX table both ways).
+    fn argument_list(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ArgumentList);
+        self.expect(SyntaxKind::LParen, "`(`");
+        if !self.at(SyntaxKind::RParen) {
+            if self.at_named_argument() {
+                self.named_argument_list();
+            } else {
+                self.positional_argument_list();
+            }
+        }
+        self.expect(SyntaxKind::RParen, "`)`");
+        self.finish_node();
+    }
+
+    /// Whether a `NamedArgument` rather than a positional one is written here.
+    ///
+    /// `NamedArgument = ParameterRedefinition '=' ArgumentValue` (`KerML` 8.2.5.8.3),
+    /// and `ParameterRedefinition` is a `QualifiedName`, so the question is whether a
+    /// single `'='` follows one. The `=` is checked by its own token kind, so the `==`
+    /// of an equality expression is a different token and does not answer this.
+    fn at_named_argument(&self) -> bool {
+        self.skip_qualified_name(0)
+            .is_some_and(|n| self.nth_is(n, SyntaxKind::Eq))
+    }
+
+    // production: PositionalArgumentList
+    //
+    // PositionalArgumentList =
+    //     ownedRelationship += ArgumentMember
+    //     ( ',' ownedRelationship += ArgumentMember )*           (KerML 8.2.5.8.3)
+    //
+    // NO trailing comma, unlike the SequenceExpressionList three clauses away, which
+    // states `','?` and does admit `( a , )` —
+    // tests/rejection/argument-list-takes-no-trailing-comma.sysml is that difference.
+    //
+    // TIER_LOOSEST because an ArgumentMember's value is a whole OwnedExpression
+    // (ArgumentValue, 8.2.5.8.1): the `(` and `)` bound it, so no operator inside can
+    // reach past them and nothing needs to be held back from the climb.
+    fn positional_argument_list(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PositionalArgumentList);
+        self.argument_member(TIER_LOOSEST);
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.argument_member(TIER_LOOSEST);
+        }
+        self.finish_node();
+    }
+
+    // production: NamedArgumentList
+    //
+    // NamedArgumentList =
+    //     ownedRelationship += NamedArgumentMember
+    //     ( ',' ownedRelationship += NamedArgumentMember )*      (KerML 8.2.5.8.3)
+    fn named_argument_list(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::NamedArgumentList);
+        self.named_argument_member();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.named_argument_member();
+        }
+        self.finish_node();
+    }
+
+    // production: NamedArgumentMember
+    //
+    // NamedArgumentMember : ParameterMembership =
+    //     ownedMemberFeature = NamedArgument                     (KerML 8.2.5.8.3)
+    //
+    // production: NamedArgument
+    //
+    // NamedArgument : Feature =
+    //     ownedRelationship += ParameterRedefinition '='
+    //     ownedRelationship += ArgumentValue                     (KerML 8.2.5.8.3)
+    //
+    // production: ParameterRedefinition
+    //
+    // ParameterRedefinition : Redefinition =
+    //     redefinedFeature = [QualifiedName]                     (KerML 8.2.5.8.3)
+    //
+    // The ArgumentValue node is built here rather than by `argument_member`, because a
+    // NamedArgument owns its value directly and has no Argument between the two.
+    fn named_argument_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::NamedArgumentMember);
+        self.start_node(SyntaxKind::NamedArgument);
+        self.start_node(SyntaxKind::ParameterRedefinition);
+        self.qualified_name();
+        self.finish_node();
+        self.expect(SyntaxKind::Eq, "`=` after a named argument's parameter");
+        self.start_node(SyntaxKind::ArgumentValue);
+        self.owned_expression();
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
     }
 
     // production: FeatureReferenceExpression

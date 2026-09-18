@@ -684,6 +684,41 @@ NODES = [
     ),
     ("FeatureReferenceMember", "`memberElement = FeatureReference`. `KerML` 8.2.5.8.3."),
     ("FeatureReference", "`[QualifiedName]`. `KerML` 8.2.5.8.3."),
+    # The invocation, KerML 8.2.5.8.3. A name followed by `(` — the one thing that tells
+    # it from a FeatureReferenceExpression, which is the same name without the `(`.
+    (
+        "InvocationExpression",
+        ("`InstantiatedTypeMember ArgumentList EmptyResultMember`. `KerML` 8.2.5.8.3."),
+    ),
+    (
+        "InstantiatedTypeMember",
+        (
+            "`memberElement = InstantiatedTypeReference | OwnedFeatureChainMember`. "
+            "`KerML` 8.2.5.8.3 — only the first alternative is read."
+        ),
+    ),
+    ("InstantiatedTypeReference", "`[QualifiedName]`. `KerML` 8.2.5.8.3."),
+    (
+        "ArgumentList",
+        ("`'(' ( PositionalArgumentList | NamedArgumentList )? ')'`. `KerML` 8.2.5.8.3."),
+    ),
+    (
+        "PositionalArgumentList",
+        "`ArgumentMember ( ',' ArgumentMember )*`. `KerML` 8.2.5.8.3.",
+    ),
+    (
+        "NamedArgumentList",
+        "`NamedArgumentMember ( ',' NamedArgumentMember )*`. `KerML` 8.2.5.8.3.",
+    ),
+    ("NamedArgumentMember", "`ownedMemberFeature = NamedArgument`. `KerML` 8.2.5.8.3."),
+    (
+        "NamedArgument",
+        "`ParameterRedefinition '=' ArgumentValue`. `KerML` 8.2.5.8.3.",
+    ),
+    (
+        "ParameterRedefinition",
+        "`redefinedFeature = [QualifiedName]`. `KerML` 8.2.5.8.3.",
+    ),
     # Literal expressions, KerML 8.2.5.8.4.
     ("LiteralBoolean", "`'true' | 'false'`. `KerML` 8.2.5.8.4."),
     ("LiteralString", "`STRING_VALUE`. `KerML` 8.2.5.8.4."),
