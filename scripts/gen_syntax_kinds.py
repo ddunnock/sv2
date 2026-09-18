@@ -403,6 +403,20 @@ NODES = [
         ("`OccurrenceUsagePrefix 'action' ActionUsageDeclaration ActionBody`. `SysML` 8.2.2.17.2."),
     ),
     ("ActionUsageDeclaration", "`UsageDeclaration ValuePart?`. `SysML` 8.2.2.17.2."),
+    (
+        "PerformActionUsage",
+        (
+            "`OccurrenceUsagePrefix 'perform' PerformActionUsageDeclaration ActionBody`. "
+            "`SysML` 8.2.2.17.2."
+        ),
+    ),
+    (
+        "PerformActionUsageDeclaration",
+        (
+            "`( OwnedReferenceSubsetting FeatureSpecializationPart? "
+            "| 'action' UsageDeclaration ) ValuePart?`. `SysML` 8.2.2.17.2."
+        ),
+    ),
     ("CalculationBody", "`';' | '{' CalculationBodyPart '}'`. `SysML` 8.2.2.19."),
     (
         "CalculationBodyPart",

@@ -399,10 +399,80 @@ fn an_action_definition_needs_a_body_and_a_def() {
     // ActionBody is not optional. Held as a file by
     // tests/rejection/action-definition-missing-action-body.sysml.
     parse_rejected("action def Brake");
-    // `perform` is a PerformActionUsage (SysML 8.2.2.17.2), a different production and
-    // unimplemented. Held as a file by
-    // tests/rejection/perform-action-usage-is-not-implemented.sysml.
-    parse_rejected("package P { perform action stop; }");
+}
+
+// -- PerformActionUsage, SysML 8.2.2.17.2 -----------------------------------------
+//
+// PerformActionUsage            = OccurrenceUsagePrefix 'perform'
+//                                 PerformActionUsageDeclaration ActionBody
+// PerformActionUsageDeclaration = ( OwnedReferenceSubsetting FeatureSpecializationPart?
+//                                 | 'action' UsageDeclaration ) ValuePart?
+//
+// It performs an action rather than being one, and the two alternatives are the two ways
+// of saying which action.
+
+#[test]
+fn a_perform_reads_both_of_its_declarations() {
+    // Every one of these is a form the pinned corpus writes.
+    parse_accepted("action def B { perform action producerBehavior; }");
+    parse_accepted("action def B { perform providePower.generateTorque; }");
+    parse_accepted("action def B { perform action 'provide power' : 'Provide Power'; }");
+    parse_accepted("action def B { perform 'provide power' :>> VehicleA::'provide power'; }");
+    // It ends in an ActionBody, so it may hold one.
+    parse_accepted("action def B { perform providePower { part p; } }");
+    parse_accepted("package P { perform stop; }");
+}
+
+#[test]
+fn the_two_perform_declarations_are_told_apart_by_one_keyword() {
+    // The second alternative opens on `action` and the first on a QualifiedName, and a
+    // keyword is not a name (KerML 8.2.2.6) — the same shape RequirementConstraintUsage
+    // has one clause along.
+    let by_reference = render(&parse_accepted("action def B { perform providePower; }").syntax());
+    let declared = render(&parse_accepted("action def B { perform action p; }").syntax());
+    assert_eq!(
+        nodes_named(&by_reference, "OwnedReferenceSubsetting"),
+        1,
+        "{by_reference}"
+    );
+    assert_eq!(
+        nodes_named(&by_reference, "UsageDeclaration"),
+        0,
+        "{by_reference}"
+    );
+    assert_eq!(
+        nodes_named(&declared, "OwnedReferenceSubsetting"),
+        0,
+        "{declared}"
+    );
+    assert_eq!(nodes_named(&declared, "UsageDeclaration"), 1, "{declared}");
+}
+
+#[test]
+fn a_perform_by_reference_may_name_a_chain() {
+    // `perform providePower.generateTorque` is the commonest `perform` in the corpus,
+    // and its target is an OwnedFeatureChain (SysML 8.2.2.6.5) rather than a plain
+    // QualifiedName. This is the form that found the four reference productions
+    // claiming a chain alternative none of them read.
+    let rendered =
+        render(&parse_accepted("action def B { perform providePower.generateTorque; }").syntax());
+    assert_eq!(nodes_named(&rendered, "OwnedFeatureChain"), 1, "{rendered}");
+    assert_eq!(
+        nodes_named(&rendered, "OwnedFeatureChaining"),
+        2,
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_perform_must_name_what_it_performs_although_an_action_need_not() {
+    // ActionUsageDeclaration is a UsageDeclaration, every part of which is optional, so
+    // `action;` is an anonymous action. Neither alternative of
+    // PerformActionUsageDeclaration derives the empty string, so `perform;` is not a
+    // shorter form — it is not the production. Held as a file by
+    // tests/rejection/perform-by-reference-needs-a-target.sysml.
+    parse_accepted("package P { action; }");
+    parse_rejected("action def B { perform; }");
 }
 
 // -- OwnedFeatureChain, SysML 8.2.2.6.5 -------------------------------------------

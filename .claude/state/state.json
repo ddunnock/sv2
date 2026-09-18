@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-18T15:15:08Z",
+    "regenerated_utc": "2026-09-18T15:17:55Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,13 +17,13 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 154,
-      "unimplemented": 404,
+      "implemented": 156,
+      "unimplemented": 402,
       "absent": 0,
-      "percent": 27.6
+      "percent": 28.0
     },
     "tests": {
-      "unit": 299,
+      "unit": 303,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 97,
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "542a33f Read a chained reference, which four productions claimed already",
       "e8bd462 Read an action usage, and watch the blocker move rather than clear",
       "b8e183a Read an action definition, and measure what the action layer really costs",
       "d9924ec Read a required and an assumed constraint, both spellings",
       "f87d2ed Read a bracketed quantity, and settle which bracket is which",
       "63f9b07 Read a feature chain, and bound it like every other nesting",
       "ae7a303 Read a calculation body, whose last part is an expression",
-      "6dc5cb3 Read the subject of a requirement",
-      "47b8e0d Read a requirement definition, and the body only it has"
+      "6dc5cb3 Read the subject of a requirement"
     ]
   },
   "authored": {

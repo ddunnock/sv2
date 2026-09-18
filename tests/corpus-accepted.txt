@@ -18,6 +18,7 @@ vendor/corpus/kerml/src/examples/Simple Tests/Inheritance.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Redefinition.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Scoping.kerml
 vendor/corpus/kerml/src/examples/Vehicle Example/VehicleDefinitions.kerml
+vendor/corpus/sysml/src/examples/Camera Example/Camera.sysml
 vendor/corpus/sysml/src/examples/Comment Examples/Comments.sysml
 vendor/corpus/sysml/src/examples/Geometry Examples/CarWithEnvelopingShape.sysml
 vendor/corpus/sysml/src/examples/Import Tests/AliasImport.sysml
@@ -46,11 +47,13 @@ vendor/corpus/sysml/src/training/07. Parts/Parts Example-2.sysml
 vendor/corpus/sysml/src/training/08. Items/Items Example.sysml
 vendor/corpus/sysml/src/training/10. Ports/Port Example.sysml
 vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-2.sysml
+vendor/corpus/sysml/src/training/18. Action Performance/Action Performance Example.sysml
 vendor/corpus/sysml/src/training/22. Opaque Actions/Opaque Action Example.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 1.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 2.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Definitions.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml
+vendor/corpus/sysml/src/validation/04-Functional Allocation/4a-Functional Allocation.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_02-Basic Value Properties.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_06-System of Quantities.sysml

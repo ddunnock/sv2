@@ -1207,6 +1207,7 @@ impl<'a> Parser<'a> {
             Language::SysMl => {
                 self.at_definition_element(n)
                     || self.at_action_usage(n)
+                    || self.at_perform_action_usage(n)
                     || self.at_simple_usage(n).is_some()
                     // Only when no keyword usage starts here; see `membership`.
                     || self.at_reference_usage(n)
@@ -1893,6 +1894,8 @@ impl<'a> Parser<'a> {
             .filter(|_| self.language == Language::SysMl)
         {
             self.simple_definition(definition);
+        } else if self.language == Language::SysMl && self.at_perform_action_usage(0) {
+            self.perform_action_usage();
         } else if self.language == Language::SysMl && self.at_action_usage(0) {
             // A keyword usage, so it is asked with the other keyword usages and BEFORE
             // the two reference usages — `action` is a keyword and not a name, and
@@ -2086,6 +2089,14 @@ impl<'a> Parser<'a> {
     fn at_action_usage(&self, n: usize) -> bool {
         let after = self.skip_usage_prefix(n);
         self.nth_is_keyword(after, "action") && !self.nth_is_keyword(after + 1, "def")
+    }
+
+    /// Whether a `PerformActionUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'perform'` (`SysML` 8.2.2.17.2). No `def` test, because
+    /// there is no `perform def`: the keyword names a usage and nothing else.
+    fn at_perform_action_usage(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_usage_prefix(n), "perform")
     }
 
     fn at_simple_usage(&self, n: usize) -> Option<SimpleUsage> {
@@ -4166,6 +4177,59 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::ActionUsageDeclaration);
         self.usage_declaration();
+        if self.at_value_part() {
+            self.value_part();
+        }
+        self.finish_node();
+    }
+
+    // production: PerformActionUsage
+    //
+    // PerformActionUsage = OccurrenceUsagePrefix 'perform'
+    //                      PerformActionUsageDeclaration ActionBody
+    //                                                            (SysML 8.2.2.17.2)
+    //
+    // production: PerformActionUsageDeclaration
+    //
+    // PerformActionUsageDeclaration : PerformActionUsage =
+    //     ( ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?
+    //     | 'action' UsageDeclaration ) ValuePart?               (SysML 8.2.2.17.2)
+    //
+    // The metaclass is SysML::PerformActionUsage (8.3.17.14), both an ActionUsage and an
+    // EventOccurrenceUsage. It performs an action rather than being one, and the two
+    // alternatives are the two ways of saying which: by REFERENCE to an action declared
+    // elsewhere, or by declaring one inline behind the `action` keyword.
+    //
+    // The alternatives are told apart on one token, before either can consume anything:
+    // the second opens on the keyword `action` and the first on a QualifiedName, and a
+    // keyword is not a name (KerML 8.2.2.6). The same shape RequirementConstraintUsage
+    // has, one clause along.
+    //
+    // The by-reference alternative is why the four reference productions had to stop
+    // claiming a chain they did not read: `perform providePower.generateTorque` is the
+    // commonest `perform` in the corpus, and its target is an OwnedFeatureChain.
+    fn perform_action_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PerformActionUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("perform");
+        self.perform_action_usage_declaration();
+        self.action_body();
+        self.finish_node();
+    }
+
+    fn perform_action_usage_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PerformActionUsageDeclaration);
+        if self.at_keyword("action") {
+            self.bump_as(keyword("action").unwrap_or(SyntaxKind::BasicName));
+            self.usage_declaration();
+        } else {
+            self.owned_reference_subsetting();
+            if self.at_feature_specialization() {
+                self.feature_specialization_part();
+            }
+        }
         if self.at_value_part() {
             self.value_part();
         }
