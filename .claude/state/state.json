@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-18T15:55:03Z",
+    "regenerated_utc": "2026-09-18T17:37:27Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 156,
-      "unimplemented": 402,
+      "implemented": 157,
+      "unimplemented": 401,
       "absent": 0,
-      "percent": 28.0
+      "percent": 28.1
     },
     "tests": {
-      "unit": 303,
+      "unit": 309,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 97,
+      "negative_cases": 98,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "1da960b Install Biome, and make 13.4 the configuration that actually runs",
+      "0d52c71 Decide Tailwind, and call the front-end package app rather than web",
+      "5bbb9b8 Make the front end Bun-only, and say what would bring Vite back",
+      "4f53680 Replace the bun init template with sv2-studio stubs",
+      "cdeb101 Scaffold the sv2-studio front end, and record the TypeScript 7 division",
+      "b8dce60 Act on the conformance review: a fifth overclaim and three miscitations",
       "8a4dc03 Close the session: the declaration layers, and three corrected readings",
-      "299bec1 Read a performed action, by reference and by declaration",
-      "542a33f Read a chained reference, which four productions claimed already",
-      "e8bd462 Read an action usage, and watch the blocker move rather than clear",
-      "b8e183a Read an action definition, and measure what the action layer really costs",
-      "d9924ec Read a required and an assumed constraint, both spellings",
-      "f87d2ed Read a bracketed quantity, and settle which bracket is which",
-      "63f9b07 Read a feature chain, and bound it like every other nesting"
+      "299bec1 Read a performed action, by reference and by declaration"
     ]
   },
   "authored": {

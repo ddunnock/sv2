@@ -375,6 +375,17 @@ NODES = [
             "CalculationBody`. `SysML` 8.2.2.20."
         ),
     ),
+    # ConstraintDefinition's shape differing in one keyword, over the body the two share.
+    # The metaclass is different — an ActionDefinition that is also a Function
+    # (8.3.19.2), where a ConstraintDefinition is an OccurrenceDefinition — so the node
+    # is its own and not a flavour of the sibling's.
+    (
+        "CalculationDefinition",
+        (
+            "`OccurrenceDefinitionPrefix 'calc' 'def' DefinitionDeclaration "
+            "CalculationBody`. `SysML` 8.2.2.19."
+        ),
+    ),
     # The action layer's outer shell. The body is the same loop every other body uses;
     # what makes the action layer large is ActionBodyItem's three CONTROL-FLOW
     # alternatives, and none of those is here.

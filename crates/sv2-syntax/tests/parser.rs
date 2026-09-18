@@ -303,23 +303,21 @@ fn a_definition_is_told_from_the_usage_spelled_the_same_way() {
 
 #[test]
 fn a_definition_whose_body_is_not_a_definition_body_is_not_in_the_table() {
-    // Fourteen of the twenty-two `def` productions end in a specialised body, and of
-    // those bodies only RequirementBody is implemented. PortDefinition shares the spine
-    // but adds a ConjugatedPortDefinitionMember. Each has a file in tests/rejection/.
+    // Fourteen of the twenty-two `def` productions end in a specialised body, and three
+    // of those bodies are implemented: RequirementBody, CalculationBody and ActionBody.
+    // PortDefinition shares the spine but adds a ConjugatedPortDefinitionMember. Each
+    // body still absent has a file in tests/rejection/.
     //
-    // `requirement def R;` was in this list and is not any more: RequirementBody is
-    // implemented, and it left the list because the production is now read, not because
-    // the claim was relaxed. The four that remain are still absent.
-    for source in ["calc def C;", "state def S;"] {
-        parse_rejected(source);
-    }
-    // `requirement def` left this list when RequirementBody landed, and
-    // `constraint def` leaves it now that CalculationBody has. Both left because the
-    // production is read, not because the claim was relaxed. `calc def` shares
-    // ConstraintDefinition's body and is still absent, because nothing dispatches to
-    // it — held by tests/rejection/calculation-definition-is-not-implemented.sysml.
+    // The list empties as the specialised bodies land, and `state def S;` is what is
+    // left of it here: StateBody (8.2.2.18) is absent, so StateDefinition is.
+    parse_rejected("state def S;");
+    // `requirement def` left this list when RequirementBody landed, `constraint def`
+    // when CalculationBody did, and `calc def` leaves it now that something dispatches
+    // to the body those two already shared. Each left because the production is read,
+    // not because the claim was relaxed.
     parse_accepted("requirement def R;");
     parse_accepted("constraint def C;");
+    parse_accepted("calc def C;");
     parse_accepted("action def Brake;");
 }
 
@@ -766,6 +764,97 @@ fn a_constraint_definition_needs_a_body_and_a_def() {
     parse_rejected("constraint c { a <= b }");
     // An unclosed body is still an error, and the expression inside it is still read.
     parse_rejected("constraint def C { a <= b");
+}
+
+// -- CalculationDefinition, SysML 8.2.2.19 ----------------------------------------
+//
+// CalculationDefinition = OccurrenceDefinitionPrefix 'calc' 'def'
+//                         DefinitionDeclaration CalculationBody
+//
+// ConstraintDefinition's shape (8.2.2.20) differing in one keyword, over the body the
+// two share. The metaclass is SysML::CalculationDefinition (8.3.19.2), an
+// ActionDefinition that is also a Function.
+
+#[test]
+fn a_calculation_definition_reads_the_body_a_constraint_definition_reads() {
+    // One keyword apart from `constraint def`, over the same CalculationBody, so every
+    // form that body takes is a form this definition takes.
+    parse_accepted("calc def C;");
+    parse_accepted("calc def C { }");
+    parse_accepted("calc def C { a + b }");
+    parse_accepted("calc def C { attribute x; attribute y; x + y }");
+    // The declaration is a DefinitionDeclaration, so it specializes like any other.
+    parse_accepted("calc def C :> Base;");
+}
+
+#[test]
+fn a_calculation_definition_takes_the_occurrence_definition_prefix() {
+    // OccurrenceDefinitionPrefix = DefinitionPrefix ( 'individual' ... )?
+    // (SysML 8.2.2.9.1), the same prefix ConstraintDefinition and ActionDefinition take.
+    parse_accepted("abstract calc def C;");
+    parse_accepted("variation calc def C;");
+}
+
+#[test]
+fn a_calculation_definition_owns_no_definition_node() {
+    // Like ConstraintDefinition, it names the declaration and the body separately
+    // rather than taking a Definition (SysML 8.2.2.19), so no Definition node is built.
+    let rendered = render(&parse_accepted("calc def C { a + b }").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "CalculationDefinition"),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "CalculationBody"), 1, "{rendered}");
+    assert_eq!(
+        nodes_named(&rendered, "CalculationBodyPart"),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "ResultExpressionMember"),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "DefinitionBody"), 0, "{rendered}");
+    assert_eq!(nodes_named(&rendered, "Definition"), 0, "{rendered}");
+    // And it is NOT the sibling it shares a body with.
+    assert_eq!(
+        nodes_named(&rendered, "ConstraintDefinition"),
+        0,
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_calculation_definition_nests_where_a_definition_element_may_stand() {
+    // It is dispatched from `membership`, so it stands wherever a DefinitionElement may.
+    parse_accepted("package P { calc def C { a + b } }");
+    parse_accepted("part def V { calc def C; }");
+}
+
+#[test]
+fn a_calculation_definition_needs_a_body_and_a_def() {
+    // CalculationBody is not optional, and it is what the `calc` keyword alone does not
+    // supply. Held as a file by
+    // tests/rejection/calculation-definition-missing-calculation-body.sysml.
+    parse_rejected("calc def C");
+    // Without `def` it is a CalculationUsage, a different production (SysML 8.2.2.19),
+    // and it is unimplemented. Held as a file by
+    // tests/rejection/calculation-usage-is-not-a-calculation-definition.sysml.
+    parse_rejected("calc c { a + b }");
+    // An unclosed body is still an error, as it is for the sibling.
+    parse_rejected("calc def C { a + b");
+}
+
+#[test]
+fn a_calculation_definition_body_does_not_yet_admit_a_return() {
+    // CalculationBodyItem = ActionBodyItem | ReturnParameterMember (SysML 8.2.2.19),
+    // and ReturnParameterMember is unimplemented. This is the reason implementing
+    // `calc def` buys no corpus file on its own: all thirteen corpus files that write
+    // `calc def` also write `return`. Held as a file by
+    // tests/rejection/calculation-body-return-parameter-member-is-not-implemented.sysml.
+    parse_rejected("calc def C { return x; }");
 }
 
 // -- FeatureChainExpression, KerML 8.2.5.8.2 --------------------------------------

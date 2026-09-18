@@ -1040,6 +1040,7 @@ impl<'a> Parser<'a> {
             || self.at_port_definition(n)
             || self.at_requirement_definition(n)
             || self.at_constraint_definition(n)
+            || self.at_calculation_definition(n)
             || self.at_action_definition(n)
             || self.at_simple_definition(n).is_some()
     }
@@ -1060,6 +1061,16 @@ impl<'a> Parser<'a> {
     fn at_constraint_definition(&self, n: usize) -> bool {
         let after = self.skip_occurrence_definition_prefix(n);
         self.nth_is_keyword(after, "constraint") && self.nth_is_keyword(after + 1, "def")
+    }
+
+    /// Whether a `CalculationDefinition` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceDefinitionPrefix 'calc' 'def'` (`SysML` 8.2.2.19). Only the `def`
+    /// separates it from a `CalculationUsage`, which is unimplemented and which the
+    /// corpus writes.
+    fn at_calculation_definition(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_definition_prefix(n);
+        self.nth_is_keyword(after, "calc") && self.nth_is_keyword(after + 1, "def")
     }
 
     /// Whether the trailing `ResultExpressionMember` starts here rather than one more
@@ -1881,49 +1892,72 @@ impl<'a> Parser<'a> {
             self.language == Language::KerMl
         }) {
             self.classifier(classifier);
-        } else if self.language == Language::SysMl && self.at_port_definition(0) {
-            self.port_definition();
-        } else if self.language == Language::SysMl && self.at_requirement_definition(0) {
-            self.requirement_definition();
-        } else if self.language == Language::SysMl && self.at_constraint_definition(0) {
-            self.constraint_definition();
-        } else if self.language == Language::SysMl && self.at_action_definition(0) {
-            self.action_definition();
-        } else if let Some(definition) = self
-            .at_simple_definition(0)
-            .filter(|_| self.language == Language::SysMl)
-        {
-            self.simple_definition(definition);
-        } else if self.language == Language::SysMl && self.at_perform_action_usage(0) {
-            self.perform_action_usage();
-        } else if self.language == Language::SysMl && self.at_action_usage(0) {
-            // A keyword usage, so it is asked with the other keyword usages and BEFORE
-            // the two reference usages — `action` is a keyword and not a name, and
-            // `at_default_reference_usage` would otherwise never see it, but the order
-            // is written to be read rather than to be re-derived. See `membership`'s
-            // note on dispatch order below.
-            self.action_usage();
-        } else if let Some(usage) = self.at_simple_usage(0).filter(|_| {
-            // A usage is a UsageElement, reachable from PackageMember and not from
-            // NamespaceMember. KerML has no usages at all (SysML 8.2.2.6.1).
-            self.language == Language::SysMl
-        }) {
-            self.simple_usage(usage);
-        } else if self.language == Language::SysMl && self.at_reference_usage(0) {
-            // After the seven keyword usages, never before: `at_reference_usage` sees
-            // the `ref` in `ref attribute y;` too, and that one is an AttributeUsage
-            // whose BasicUsagePrefix carries it.
-            self.reference_usage();
-        } else if self.language == Language::SysMl && self.at_default_reference_usage(0) {
-            // Last of all, because it is the usage with no keyword: everything that
-            // opens with one has already been taken.
-            self.default_reference_usage();
         } else if self.language == Language::KerMl {
             self.error_expected("a package or a classifier");
-        } else {
+        } else if !(self.definition_element() || self.usage_element()) {
             self.error_expected("a package, a part definition or a usage");
         }
         self.finish_node();
+    }
+
+    /// `SysML`'s `DefinitionElement`, minus the `package` `membership` takes first.
+    /// Returns whether one was read.
+    ///
+    /// `DefinitionElement` gets no node, as `UsageElement` gets none: it is an
+    /// alternation, and the alternative that matched says which was taken
+    /// (`SysML` 8.2.2.6.1). Written in the same order as `at_definition_element`, its
+    /// recogniser, so that the two cannot silently disagree about what a member may be.
+    ///
+    /// Order is not load-bearing here — each alternative is introduced by its own
+    /// keyword pair, and a keyword is not a name (`SysML` 8.2.2.1.2). It is in
+    /// `usage_element`, which says why there.
+    fn definition_element(&mut self) -> bool {
+        if self.at_port_definition(0) {
+            self.port_definition();
+        } else if self.at_requirement_definition(0) {
+            self.requirement_definition();
+        } else if self.at_constraint_definition(0) {
+            self.constraint_definition();
+        } else if self.at_calculation_definition(0) {
+            self.calculation_definition();
+        } else if self.at_action_definition(0) {
+            self.action_definition();
+        } else if let Some(definition) = self.at_simple_definition(0) {
+            self.simple_definition(definition);
+        } else {
+            return false;
+        }
+        true
+    }
+
+    /// `SysML`'s `UsageElement`. Returns whether one was read.
+    ///
+    /// A usage is reachable from `PackageMember` and not from `NamespaceMember`; `KerML`
+    /// has no usages at all (`SysML` 8.2.2.6.1), which is why the caller asks this only
+    /// for `SysML`.
+    ///
+    /// ORDER IS LOAD-BEARING, and each step of it is a defect that was fixed once:
+    ///
+    /// - the keyword usages come before the two reference usages, because
+    ///   `at_reference_usage` sees the `ref` in `ref attribute y;` too, and that `ref`
+    ///   is an `AttributeUsage`'s `BasicUsagePrefix` rather than a `ReferenceUsage`;
+    /// - `DefaultReferenceUsage` is last of all, because it is the usage with no
+    ///   keyword, so everything that opens with one has already been taken.
+    fn usage_element(&mut self) -> bool {
+        if self.at_perform_action_usage(0) {
+            self.perform_action_usage();
+        } else if self.at_action_usage(0) {
+            self.action_usage();
+        } else if let Some(usage) = self.at_simple_usage(0) {
+            self.simple_usage(usage);
+        } else if self.at_reference_usage(0) {
+            self.reference_usage();
+        } else if self.at_default_reference_usage(0) {
+            self.default_reference_usage();
+        } else {
+            return false;
+        }
+        true
     }
 
     // ReferenceUsage : ReferenceUsage =
@@ -4250,13 +4284,53 @@ impl<'a> Parser<'a> {
     // the declaration and the body separately rather than taking a Definition, so there
     // is no Definition node in its tree.
     //
-    // Here as the caller that makes CalculationBody reachable. A body production with no
-    // caller cannot be tested, and an untested production is a claim.
+    // Was here as the ONLY caller that made CalculationBody reachable — a body
+    // production with no caller cannot be tested, and an untested production is a claim.
+    // CalculationDefinition (8.2.2.19) is now the second, which is the clause that names
+    // the body in the first place.
     fn constraint_definition(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ConstraintDefinition);
         self.occurrence_definition_prefix();
         self.expect_keyword("constraint");
+        self.expect_keyword("def");
+        self.definition_declaration();
+        self.calculation_body();
+        self.finish_node();
+    }
+
+    // production: CalculationDefinition
+    //
+    // CalculationDefinition = OccurrenceDefinitionPrefix 'calc' 'def'
+    //                         DefinitionDeclaration CalculationBody  (SysML 8.2.2.19)
+    //
+    // ConstraintDefinition (8.2.2.20) differing in ONE KEYWORD, over the body the two
+    // share, and off the SIMPLE_DEFINITIONS spine for the same reason: it names the
+    // declaration and the body separately rather than taking a Definition.
+    //
+    // The metaclass is SysML::CalculationDefinition (8.3.19.2), an ActionDefinition that
+    // is also a Function — NOT an OccurrenceDefinition like the sibling it shares a body
+    // with, which is why the node is its own.
+    //
+    // implied specialization: Calculations::Calculation
+    // constraint: CalculationDefinition::checkCalculationDefinitionSpecialization
+    //     `specializesFromLibrary('Calculations::Calculation')` (SysML 8.3.19.2). It
+    //     also inherits checkActionDefinitionSpecialization (8.3.17.3,
+    //     `Actions::Action`) and KerML's checkBehaviorSpecialization (8.3.4.6.2,
+    //     `Performances::Performance`). All three are injections, so they belong in
+    //     sv2-hir, which does not exist yet; this layer builds the tree only (ADR-0002).
+    //
+    // This production buys NO corpus file on its own, and that was measured before it
+    // was written: all thirteen .sysml files that write `calc def` also write `return`,
+    // and ReturnParameterMember (8.2.2.19) is unimplemented. It is here because the
+    // keyword is a prerequisite for that member having a caller, not because a
+    // first-error histogram put `calc` near the top — see the lesson recorded under the
+    // action layer in .claude/state/state.json.
+    fn calculation_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::CalculationDefinition);
+        self.occurrence_definition_prefix();
+        self.expect_keyword("calc");
         self.expect_keyword("def");
         self.definition_declaration();
         self.calculation_body();
@@ -4278,7 +4352,7 @@ impl<'a> Parser<'a> {
             self.depth -= 1;
             self.expect(SyntaxKind::RBrace, "`}`");
         } else {
-            self.error_expected("`;` or `{` after a constraint definition declaration");
+            self.error_expected("`;` or `{` after a calculation or constraint declaration");
         }
         self.finish_node();
     }
