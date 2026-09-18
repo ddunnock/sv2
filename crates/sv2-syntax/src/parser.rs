@@ -673,6 +673,17 @@ impl Body {
         matches!(self, Self::Requirement)
     }
 
+    /// Whether `RequirementConstraintMember` is one of this body's alternatives.
+    ///
+    /// Asked separately from `admits_subject` although both answer `Requirement` today,
+    /// because they stop agreeing the moment `CaseBody` lands: `CaseBodyItem` reaches
+    /// `SubjectMember` and does NOT reach `RequirementConstraintMember` (`SysML`
+    /// 8.2.2.21.1 against 8.2.2.23). Folding them into one question now would have to be
+    /// unfolded then, and the unfolding is the kind that gets missed.
+    fn admits_requirement_constraint(self) -> bool {
+        matches!(self, Self::Requirement)
+    }
+
     /// Whether this body's items may be followed by a `ResultExpressionMember`.
     ///
     /// `CalculationBodyPart = CalculationBodyItem* ResultExpressionMember?`
@@ -1458,6 +1469,13 @@ impl<'a> Parser<'a> {
                 // expression, which is not a member. `calculation_body_part` reads it;
                 // the loop must not recover over it one token at a time.
                 return;
+            } else if body.admits_requirement_constraint()
+                && (self.at_element_keyword("require") || self.at_element_keyword("assume"))
+            {
+                // RequirementBodyItem's third alternative (SysML 8.2.2.21.1). Owns its
+                // element through RequirementConstraintMembership, so like SubjectMember
+                // below it cannot go through `membership`.
+                self.requirement_constraint_member();
             } else if body.admits_subject() && self.at_element_keyword("subject") {
                 // RequirementBodyItem's second alternative (SysML 8.2.2.21.1). Like
                 // NamespaceFeatureMember above, it owns its element through a membership
@@ -4027,6 +4045,106 @@ impl<'a> Parser<'a> {
         self.start_node(SyntaxKind::ResultExpressionMember);
         self.member_prefix();
         self.owned_expression();
+        self.finish_node();
+    }
+
+    // production: RequirementConstraintMember
+    //
+    // RequirementConstraintMember : RequirementConstraintMembership =
+    //     MemberPrefix? RequirementKind
+    //     ownedRelatedElement += RequirementConstraintUsage      (SysML 8.2.2.21.1)
+    //
+    // production: RequirementKind
+    //
+    // RequirementKind = 'assume' { kind = 'assumption' }
+    //                 | 'require' { kind = 'requirement' }       (SysML 8.2.2.21.1)
+    //
+    // The metaclass is SysML::RequirementConstraintMembership (8.3.21.7), a
+    // FeatureMembership carrying a `kind` that says which of the two keywords was
+    // written. RequirementKind is the production that sets it, and it gets a node of its
+    // own for the reason PortionKind and VisibilityIndicator do: the keyword is the only
+    // record of an attribute that has no other spelling in the text.
+    //
+    // MemberPrefix? — the `?` is redundant, as it is on ResultExpressionMember:
+    // MemberPrefix is itself `VisibilityIndicator?` and already derives the empty string.
+    // The node is built either way.
+    fn requirement_constraint_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::RequirementConstraintMember);
+        self.member_prefix();
+        self.requirement_kind();
+        self.requirement_constraint_usage();
+        self.finish_node();
+    }
+
+    fn requirement_kind(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::RequirementKind);
+        match ["assume", "require"]
+            .iter()
+            .find(|word| self.at_keyword(word))
+        {
+            Some(word) => self.bump_as(keyword(word).unwrap_or(SyntaxKind::BasicName)),
+            None => self.error_expected("`assume` or `require`"),
+        }
+        self.finish_node();
+    }
+
+    // RequirementConstraintUsage : ConstraintUsage =
+    //     ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?
+    //     RequirementBody
+    //   | ( UsageExtensionKeyword* 'constraint' | UsageExtensionKeyword+ )
+    //     ConstraintUsageDeclaration CalculationBody              (SysML 8.2.2.21.1)
+    //
+    // NOT marked for coverage. The second alternative's `UsageExtensionKeyword+` — prefix
+    // metadata standing in for the `constraint` keyword entirely — is unimplemented, as
+    // prefix metadata is everywhere in this parser. The `*` form with zero of them is
+    // read, which is every instance the corpus writes.
+    //
+    // THE TWO ALTERNATIVES TAKE DIFFERENT BODIES, and that is the adjudicated conflict.
+    // The clause gives the by-reference alternative a RequirementBody and the Pilot gives
+    // it a CalculationBody; deviations.json records follow_spec, adjudicated 2026-09-17,
+    // so a referenced constraint takes a RequirementBody and only the `constraint` form
+    // ends in an expression. The difference is real rather than cosmetic: a
+    // RequirementBody admits a subject and a nested requirement, a CalculationBody admits
+    // a trailing ResultExpressionMember, and no body admits both.
+    //
+    // The alternatives are told apart BEFORE either body begins, which is what makes the
+    // conflict harmless to read: the second opens on the keyword `constraint` and the
+    // first on a QualifiedName, and a keyword is not a name (KerML 8.2.2.6).
+    fn requirement_constraint_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::RequirementConstraintUsage);
+        if self.at_keyword("constraint") {
+            self.bump_as(keyword("constraint").unwrap_or(SyntaxKind::BasicName));
+            self.constraint_usage_declaration();
+            self.calculation_body();
+        } else {
+            self.owned_reference_subsetting();
+            if self.at_feature_specialization() {
+                self.feature_specialization_part();
+            }
+            self.requirement_body();
+        }
+        self.finish_node();
+    }
+
+    // production: ConstraintUsageDeclaration
+    //
+    // ConstraintUsageDeclaration : ConstraintUsage =
+    //     UsageDeclaration ValuePart?                            (SysML 8.2.2.20)
+    //
+    // Shared with ConstraintUsage, which is NOT implemented: a bare `constraint c { }` at
+    // member position is a different production reached from DefinitionBodyItem, and
+    // tests/rejection/constraint-usage-is-not-a-constraint-definition.sysml still holds
+    // it. This declaration is reachable only behind a `require` or `assume`.
+    fn constraint_usage_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ConstraintUsageDeclaration);
+        self.usage_declaration();
+        if self.at_value_part() {
+            self.value_part();
+        }
         self.finish_node();
     }
 

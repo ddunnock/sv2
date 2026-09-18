@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-18T14:43:59Z",
+    "regenerated_utc": "2026-09-18T14:51:54Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 145,
-      "unimplemented": 413,
+      "implemented": 148,
+      "unimplemented": 410,
       "absent": 0,
-      "percent": 26.0
+      "percent": 26.5
     },
     "tests": {
-      "unit": 280,
+      "unit": 286,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 90,
+      "negative_cases": 92,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "f87d2ed Read a bracketed quantity, and settle which bracket is which",
       "63f9b07 Read a feature chain, and bound it like every other nesting",
       "ae7a303 Read a calculation body, whose last part is an expression",
       "6dc5cb3 Read the subject of a requirement",
       "47b8e0d Read a requirement definition, and the body only it has",
       "8ccfc0d Widen one allowed path in the bash hook fixture",
       "b985cfc Spell licence the way LICENSE does",
-      "37049c6 Configure the TypeScript side of sv2-studio",
-      "42aee67 Answer the body-shape question, and put requirement ahead of action"
+      "37049c6 Configure the TypeScript side of sv2-studio"
     ]
   },
   "authored": {

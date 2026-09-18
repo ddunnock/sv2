@@ -341,6 +341,30 @@ NODES = [
         "`MemberPrefix ownedRelatedElement += SubjectUsage`. `SysML` 8.2.2.21.1.",
     ),
     ("SubjectUsage", "`'subject' UsageExtensionKeyword* Usage`. `SysML` 8.2.2.21.1."),
+    # The second of RequirementBodyItem's six extra members, and the one that needed the
+    # calculation body. Its two alternatives take DIFFERENT bodies — a RequirementBody by
+    # reference and a CalculationBody by construction — which is the whole of the
+    # adjudicated conflict against the Pilot.
+    (
+        "RequirementConstraintMember",
+        (
+            "`MemberPrefix? RequirementKind "
+            "ownedRelatedElement += RequirementConstraintUsage`. `SysML` 8.2.2.21.1."
+        ),
+    ),
+    ("RequirementKind", "`'assume' | 'require'`. `SysML` 8.2.2.21.1."),
+    (
+        "RequirementConstraintUsage",
+        (
+            "`OwnedReferenceSubsetting FeatureSpecializationPart? RequirementBody` or "
+            "`'constraint' ConstraintUsageDeclaration CalculationBody`. "
+            "`SysML` 8.2.2.21.1 — the metaclass is `ConstraintUsage`."
+        ),
+    ),
+    (
+        "ConstraintUsageDeclaration",
+        "`UsageDeclaration ValuePart?`. `SysML` 8.2.2.20.",
+    ),
     # The calculation body, and the first body in this grammar whose last part is an
     # EXPRESSION rather than a member. That trailing ResultExpressionMember is what makes
     # `constraint { a <= b }` a body and not a malformed usage.

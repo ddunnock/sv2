@@ -772,16 +772,20 @@ fn a_requirement_body_admits_what_a_definition_body_admits() {
 }
 
 #[test]
-fn a_requirement_body_does_not_admit_the_five_members_it_has_not_got() {
-    // The part of RequirementBodyItem that is NOT DefinitionBodyItem, less SubjectMember
-    // which is now implemented. Rejected by absence, not by rule — each is well-formed
-    // SysML. Held as a file by
-    // tests/rejection/requirement-body-constraint-member-is-not-implemented.sysml.
-    parse_rejected("requirement def R { require constraint { a <= b } }");
-    parse_rejected("requirement def R { assume constraint { a > 0 } }");
+fn a_requirement_body_does_not_admit_the_four_members_it_has_not_got() {
+    // The part of RequirementBodyItem that is NOT DefinitionBodyItem, less the two now
+    // implemented: SubjectMember and RequirementConstraintMember. Rejected by absence,
+    // not by rule — each is well-formed SysML.
+    //
+    // The count in this test's name is the honest running total of what is left of
+    // 8.2.2.21.1, and it has gone six, five, four as the members landed.
     parse_rejected("requirement def R { frame concern c; }");
+    parse_rejected("requirement def R { verify requirement r; }");
     parse_rejected("requirement def R { actor operator; }");
     parse_rejected("requirement def R { stakeholder owner; }");
+    // The two that left the list, here so it cannot quietly grow back.
+    parse_accepted("requirement def R { subject vehicle : Vehicle; }");
+    parse_accepted("requirement def R { require constraint { a <= b } }");
 }
 
 #[test]
@@ -811,6 +815,151 @@ fn a_requirement_definition_nests_where_a_definition_element_may_go() {
 //
 // The first of RequirementBodyItem's six extra members, and the only one of them whose
 // parts are all implemented: SubjectUsage ends in a Usage, which already exists.
+
+// -- RequirementConstraintMember, SysML 8.2.2.21.1 --------------------------------
+//
+// RequirementConstraintMember = MemberPrefix? RequirementKind RequirementConstraintUsage
+// RequirementKind             = 'assume' | 'require'
+// RequirementConstraintUsage  = OwnedReferenceSubsetting FeatureSpecializationPart?
+//                               RequirementBody
+//                             | ( UsageExtensionKeyword* 'constraint'
+//                               | UsageExtensionKeyword+ )
+//                               ConstraintUsageDeclaration CalculationBody
+
+#[test]
+fn a_requirement_constraint_reads_both_keywords_and_both_alternatives() {
+    // The constructed alternative, which is what the corpus writes.
+    parse_accepted("requirement def R { require constraint { massActual <= massReqd } }");
+    parse_accepted("requirement def R { assume constraint { fuelMass > 0 } }");
+    // The by-reference alternative, with each of RequirementBody's two forms.
+    parse_accepted("requirement def R { require massLimit; }");
+    parse_accepted("requirement def R { assume massLimit; }");
+    parse_accepted("requirement def R { require rangeRequirement { :>> actualRange = sim; } }");
+    // A visibility may precede it, because MemberPrefix is a VisibilityIndicator?.
+    parse_accepted("requirement def R { private require constraint { a <= b } }");
+    // A named constructed constraint, since ConstraintUsageDeclaration is a
+    // UsageDeclaration (SysML 8.2.2.20).
+    parse_accepted("requirement def R { require constraint massCheck { a <= b } }");
+}
+
+#[test]
+fn the_two_keywords_are_one_production_that_records_which() {
+    // RequirementKind sets the membership's `kind` and has no other spelling in the
+    // text (metaclass 8.3.21.7), so the keyword is the only record of it — which is why
+    // it gets a node, as PortionKind and VisibilityIndicator do.
+    for (source, keyword) in [
+        (
+            "requirement def R { require constraint { a <= b } }",
+            "KwRequire",
+        ),
+        (
+            "requirement def R { assume constraint { a <= b } }",
+            "KwAssume",
+        ),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            child_kinds(&rendered, "RequirementKind"),
+            [keyword],
+            "{rendered}"
+        );
+    }
+}
+
+#[test]
+fn the_by_reference_alternative_takes_a_requirement_body_not_a_calculation_body() {
+    // THE ADJUDICATED CONFLICT. The clause gives the by-reference alternative a
+    // RequirementBody; SysML.xtext gives it a CalculationBody. deviations.json records
+    // follow_spec, adjudicated 2026-09-17, and this is what that costs and buys.
+    //
+    // Only a CalculationBody ends in a ResultExpressionMember (SysML 8.2.2.19), so a
+    // trailing expression is grammatical after `require constraint` and NOT after
+    // `require <name>`. Held as a file by
+    // tests/rejection/requirement-constraint-by-reference-takes-a-requirement-body.sysml.
+    parse_rejected("requirement def R { require someRef { a <= b } }");
+    parse_accepted("requirement def R { require constraint { a <= b } }");
+
+    // And the bodies really are different nodes, not one node under two names.
+    let by_reference =
+        render(&parse_accepted("requirement def R { require someRef { attribute a; } }").syntax());
+    assert_eq!(
+        nodes_named(&by_reference, "RequirementBody"),
+        2,
+        "{by_reference}"
+    );
+    assert_eq!(
+        nodes_named(&by_reference, "CalculationBody"),
+        0,
+        "{by_reference}"
+    );
+
+    let constructed =
+        render(&parse_accepted("requirement def R { require constraint { a <= b } }").syntax());
+    assert_eq!(
+        nodes_named(&constructed, "CalculationBody"),
+        1,
+        "{constructed}"
+    );
+    // One RequirementBody, the enclosing definition's — the member does not add another.
+    assert_eq!(
+        nodes_named(&constructed, "RequirementBody"),
+        1,
+        "{constructed}"
+    );
+}
+
+#[test]
+fn a_requirement_constraint_owns_its_usage_through_its_own_membership() {
+    // RequirementConstraintMember : RequirementConstraintMembership (SysML 8.3.21.7), not
+    // the DefinitionMember the body's ordinary items use — so it is dispatched beside
+    // SubjectMember rather than inside `membership`.
+    let rendered =
+        render(&parse_accepted("requirement def R { require constraint { a <= b } }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "RequirementConstraintMember"),
+        [
+            "MemberPrefix",
+            "RequirementKind",
+            "RequirementConstraintUsage"
+        ],
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "DefinitionMember"), 0, "{rendered}");
+}
+
+#[test]
+fn a_requirement_constraint_is_only_a_member_where_the_grammar_reaches_one() {
+    // RequirementBodyItem has the alternative and DefinitionBodyItem has none. A
+    // calculation body does not admit one either, although it is the body the
+    // constructed alternative ends in. Held as a file by
+    // tests/rejection/requirement-constraint-member-is-not-a-definition-body-item.sysml.
+    parse_rejected("part def V { require constraint { a <= b } }");
+    parse_rejected("constraint def C { require constraint { a <= b } }");
+    parse_rejected("package P { require constraint { a <= b } }");
+    parse_rejected("require constraint { a <= b }");
+    // A `require` with nothing after it is neither alternative.
+    parse_rejected("requirement def R { require; }");
+    // Prefix metadata standing in for the keyword is the unimplemented half. Held by
+    // tests/rejection/requirement-constraint-usage-prefix-metadata-is-not-implemented.sysml.
+    parse_rejected("requirement def R { require #approved { a <= b } }");
+}
+
+#[test]
+fn the_whole_requirement_shape_the_corpus_writes_now_parses() {
+    // Taken from vendor/corpus/sysml/src/training/32. Requirements/
+    // Requirement Definitions.sysml, which needed five productions this session added:
+    // RequirementDefinition, RequirementBody, SubjectMember, CalculationBody and
+    // RequirementConstraintMember, plus feature chains for the dotted names.
+    parse_accepted(
+        "requirement def <'1'> VehicleMassLimitationRequirement :> MassLimitationRequirement {\n\
+         \tdoc /* The total mass shall be less than or equal to the required mass. */\n\
+         \tsubject vehicle : Vehicle;\n\
+         \tattribute massActual;\n\
+         \trequire constraint { massActual <= vehicle.massReqd }\n\
+         \tassume constraint { vehicle.fuelMass > 0 }\n\
+         }",
+    );
+}
 
 #[test]
 fn a_subject_member_is_a_usage_behind_a_keyword() {
