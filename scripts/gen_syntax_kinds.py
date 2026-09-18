@@ -388,9 +388,10 @@ NODES = [
         ),
     ),
     # ConstraintDefinition's shape differing in one keyword, over the body the two share.
-    # The metaclass is different — an ActionDefinition that is also a Function
-    # (8.3.19.2), where a ConstraintDefinition is an OccurrenceDefinition — so the node
-    # is its own and not a flavour of the sibling's.
+    # The metaclass is different — an ActionDefinition that is also a Function (8.3.19.2),
+    # where a ConstraintDefinition is a Predicate — so the node is its own and not a
+    # flavour of the sibling's. BOTH reach OccurrenceDefinition, by different routes; see
+    # `calculation_definition` in parser.rs for the two chains written out.
     (
         "CalculationDefinition",
         (

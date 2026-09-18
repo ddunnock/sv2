@@ -1934,7 +1934,9 @@ impl<'a> Parser<'a> {
     ///
     /// `DefinitionElement` gets no node, as `UsageElement` gets none: it is an
     /// alternation, and the alternative that matched says which was taken
-    /// (`SysML` 8.2.2.6.1). Written in the same order as `at_definition_element`, its
+    /// (`SysML` 8.2.2.5.2, Package Elements — where BOTH alternations are stated, not
+    /// 8.2.2.6.1, which is Definitions and only USES `DefinitionElement` inside
+    /// `DefinitionMember`). Written in the same order as `at_definition_element`, its
     /// recogniser, so that the two cannot silently disagree about what a member may be.
     ///
     /// Order is not load-bearing here — each alternative is introduced by its own
@@ -1961,9 +1963,11 @@ impl<'a> Parser<'a> {
 
     /// `SysML`'s `UsageElement`. Returns whether one was read.
     ///
-    /// A usage is reachable from `PackageMember` and not from `NamespaceMember`; `KerML`
-    /// has no usages at all (`SysML` 8.2.2.6.1), which is why the caller asks this only
-    /// for `SysML`.
+    /// `UsageElement` is stated at `SysML` 8.2.2.5.2 beside `DefinitionElement`. It is
+    /// reachable from `PackageMember` (8.2.2.5.1) and not from `NamespaceMember`
+    /// (`KerML` 8.2.3.4.1), which is why the caller asks this only for `SysML` — `KerML`
+    /// has no usages at all. The three clauses are named separately because they are
+    /// three different facts; an earlier revision cited 8.2.2.6.1 for all of it.
     ///
     /// ORDER IS LOAD-BEARING, and each step of it is a defect that was fixed once:
     ///
@@ -4391,8 +4395,16 @@ impl<'a> Parser<'a> {
     // declaration and the body separately rather than taking a Definition.
     //
     // The metaclass is SysML::CalculationDefinition (8.3.19.2), an ActionDefinition that
-    // is also a Function — NOT an OccurrenceDefinition like the sibling it shares a body
-    // with, which is why the node is its own.
+    // is also a Function. BOTH it and the sibling it shares a body with are
+    // OccurrenceDefinitions, and the chains say how:
+    //
+    //     CalculationDefinition > ActionDefinition > Behavior > OccurrenceDefinition
+    //     ConstraintDefinition  > Predicate                   > OccurrenceDefinition
+    //
+    // so what separates them is the ROUTE and the Function, not the presence of
+    // OccurrenceDefinition. An earlier revision of this comment said CalculationDefinition
+    // was NOT an OccurrenceDefinition, which is false and was caught in review; it is why
+    // the chain is written out here rather than summarised.
     //
     // implied specialization: Calculations::Calculation
     // constraint: CalculationDefinition::checkCalculationDefinitionSpecialization
