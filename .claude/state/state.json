@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-18T12:58:55Z",
+    "regenerated_utc": "2026-09-18T13:01:20Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -23,10 +23,10 @@
       "percent": 23.7
     },
     "tests": {
-      "unit": 242,
+      "unit": 244,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 77,
+      "negative_cases": 76,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "91b7c82 Read KerML's Feature, in its keyword form",
       "a60aca9 Read PortDefinition, whose extra part consumes no tokens",
       "5fa2770 Rewrite CRATES.md as a map of this repository",
       "3b792f6 A binary per process shape, and every binary a shim (ADR-0018)",
       "3d0c583 Decide element identity: accept ADR-0016, supersede ADR-0009",
       "ce21f14 Point next_step back at the parser, with the diagnostic shape settled",
       "4a337a7 Give a diagnostic a range, a code and a severity",
-      "14c262d Record the measured blockers, and put the typed diagnostic ahead of them",
-      "747befa Read the eight SysML definitions that share one spine"
+      "14c262d Record the measured blockers, and put the typed diagnostic ahead of them"
     ]
   },
   "authored": {

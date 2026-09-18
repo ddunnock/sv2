@@ -3,15 +3,21 @@
 #
 # This set may grow and must never shrink. See the module docstring of
 # scripts/corpus_sweep.py for why both directions fail the gate.
+vendor/corpus/kerml/src/examples/Address Book Example/AddressBookModel.kerml
+vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-Atoms.kerml
+vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_1.kerml
+vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_2.kerml
 vendor/corpus/kerml/src/examples/Packet Example/PacketUsage.kerml
 vendor/corpus/kerml/src/examples/Packet Example/Packets.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Circular.kerml
+vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Imports.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Inheritance.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Redefinition.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Scoping.kerml
+vendor/corpus/kerml/src/examples/Vehicle Example/VehicleDefinitions.kerml
 vendor/corpus/sysml/src/examples/Comment Examples/Comments.sysml
 vendor/corpus/sysml/src/examples/Import Tests/AliasImport.sysml
 vendor/corpus/sysml/src/examples/Import Tests/CircularImport.sysml

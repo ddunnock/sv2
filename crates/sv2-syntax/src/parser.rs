@@ -1345,23 +1345,31 @@ impl<'a> Parser<'a> {
     //     | ( EndFeaturePrefix | BasicFeaturePrefix ) FeatureDeclaration
     //     ) ValuePart? TypeBody                                   (KerML 8.2.4.3.1)
     //
-    // NOT marked for coverage. Two of the three ways in are unimplemented, and each is
-    // a construct the language has rather than an optional slot left empty:
+    // NOT marked for coverage. Both alternatives are read; the PrefixMetadataMember
+    // alternative to the `feature` keyword is not. A feature may be introduced by a `#`
+    // prefix instead of the word, and prefix metadata is unimplemented everywhere in
+    // this parser.
     //
-    //   - The PrefixMetadataMember alternative to the `feature` keyword. A feature may
-    //     be introduced by a `#` prefix instead of the word, and prefix metadata is
-    //     unimplemented everywhere in this parser.
-    //   - The second alternative entirely, where a feature is written with NO keyword
-    //     and the declaration alone carries it: `vitesse : Speed;`. It is held by
-    //     tests/rejection/keywordless-feature-is-not-implemented.kerml.
-    //
-    // What IS read is the keyword form, which is what the corpus overwhelmingly writes.
+    // The two alternatives differ in exactly two things, and one method reads both:
+    // whether the keyword is written, and whether the declaration is optional. It is
+    // optional after the keyword and REQUIRED without one, because with no keyword the
+    // declaration is the only thing that says a feature is here at all. That is why
+    // `feature;` parses and `end;` does not.
     fn feature(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::Feature);
         self.feature_prefix();
-        self.expect_keyword("feature");
-        if self.at_feature_declaration() {
+        if self.at_keyword("feature") {
+            // The first alternative: the keyword carries it, so the declaration after
+            // it is optional and `feature;` is a feature that declares nothing.
+            self.bump_as(keyword("feature").unwrap_or(SyntaxKind::BasicName));
+            if self.at_feature_declaration() {
+                self.feature_declaration();
+            }
+        } else {
+            // The second: no keyword at all, so the DECLARATION carries it and is
+            // required. That asymmetry is the whole difference between the two, and it
+            // is what makes `end;` an error while `end f;` is a feature.
             self.feature_declaration();
         }
         if self.at_value_part() {
@@ -1371,9 +1379,30 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    /// Whether a `Feature`'s keyword form starts at the `n`th meaningful token.
+    /// Whether a `Feature` starts at the `n`th meaningful token, in either form.
+    ///
+    /// The keyword form is a prefix and then `feature`. The keywordless form is a prefix
+    /// and then a declaration, which opens with `all`, a name, or a short name — and a
+    /// keyword is not a name (`KerML` 8.2.2.6), so `package P;` and `class A;` are not
+    /// mistaken for features that happen to be called `package` and `class`.
+    ///
+    /// The declaration's two bare forms, a `FeatureSpecializationPart` or a
+    /// `ConjugationPart` with no name at all, are not recognised without a keyword:
+    /// `: A;` alone at member position is left to recovery rather than read as an
+    /// anonymous feature.
     fn at_feature(&self, n: usize) -> bool {
-        self.nth_is_keyword(self.skip_feature_prefix(n), "feature")
+        let after = self.skip_feature_prefix(n);
+        self.nth_is_keyword(after, "feature")
+            || self.nth_is_keyword(after, "all")
+            || self.nth_is_name(after)
+            || self
+                .peek_nth(after)
+                .is_some_and(|t| t.kind == SyntaxKind::Lt)
+    }
+
+    /// Whether the `n`th meaningful token is a NAME.
+    fn nth_is_name(&self, n: usize) -> bool {
+        self.peek_nth(n).is_some_and(|token| self.is_name(token))
     }
 
     /// The index just past a `FeaturePrefix` written from the `n`th token.

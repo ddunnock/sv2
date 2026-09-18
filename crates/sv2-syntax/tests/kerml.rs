@@ -334,20 +334,59 @@ fn a_feature_is_owned_through_a_namespace_feature_member() {
     // NamespaceMember = NonFeatureMember | NamespaceFeatureMember (KerML 8.2.3.4.1).
     // A feature takes the second; a package or a classifier takes the first.
     let feature = render(&kerml_accepted("feature f : A;").syntax());
-    assert!(feature.contains("NamespaceFeatureMember"), "{feature}");
-    assert!(!feature.contains("NonFeatureMember"), "{feature}");
+    assert!(has_node(&feature, "NamespaceFeatureMember"), "{feature}");
+    assert!(!has_node(&feature, "NonFeatureMember"), "{feature}");
 
     let class = render(&kerml_accepted("class A;").syntax());
-    assert!(class.contains("NonFeatureMember"), "{class}");
-    assert!(!class.contains("NamespaceFeatureMember"), "{class}");
+    assert!(has_node(&class, "NonFeatureMember"), "{class}");
+    assert!(!has_node(&class, "NamespaceFeatureMember"), "{class}");
 }
 
 #[test]
-fn a_keywordless_feature_is_not_implemented() {
-    // Feature's second alternative, where the declaration alone carries it. Held as a
-    // file by tests/rejection/keywordless-feature-is-not-implemented.kerml.
-    kerml_rejected("vitesse : Speed;");
-    kerml_rejected("f;");
+fn a_feature_may_be_written_with_no_keyword_at_all() {
+    // Feature's second alternative: the declaration alone carries it. This is what the
+    // corpus writes after a prefix — `composite vitesse : Speed;` — and it was the top
+    // KerML blocker once the keyword form landed.
+    kerml_accepted("vitesse : Speed;");
+    kerml_accepted("f;");
+    kerml_accepted("composite vitesse : Speed;");
+    kerml_accepted("portion p : Q;");
+    kerml_accepted("<v> vitesse : Speed;");
+}
+
+#[test]
+fn the_keywordless_form_requires_a_declaration() {
+    // The asymmetry between the two alternatives: FeatureDeclaration is optional after
+    // the keyword and required without it. `end;` is EndFeaturePrefix and nothing else,
+    // which is what tests/rejection/end-feature-requires-a-declaration.kerml holds.
+    kerml_rejected("end;");
+    kerml_accepted("end f;");
+    kerml_accepted("feature;");
+}
+
+#[test]
+fn a_keyword_is_not_mistaken_for_a_feature_name() {
+    // KerML 8.2.2.6: a reserved keyword has the shape of a basic name and cannot be
+    // used as one. Without that, every `package P;` would read as a keywordless feature
+    // called `package`.
+    let package = render(&kerml_accepted("package P;").syntax());
+    assert!(has_node(&package, "Package"), "{package}");
+    assert!(!has_node(&package, "Feature"), "{package}");
+
+    let class = render(&kerml_accepted("class A;").syntax());
+    assert!(has_node(&class, "Class"), "{class}");
+    assert!(!has_node(&class, "Feature"), "{class}");
+}
+
+/// Whether `rendered` contains a node of exactly this kind.
+///
+/// A substring test is not enough: `NonFeatureMember` contains `Feature`, and
+/// `Classifier` contains `Class`. Every rendered line is a kind and its depth, so the
+/// kind is the trimmed line up to the first space.
+fn has_node(rendered: &str, kind: &str) -> bool {
+    rendered
+        .lines()
+        .any(|line| line.trim().split(' ').next() == Some(kind))
 }
 
 #[test]
