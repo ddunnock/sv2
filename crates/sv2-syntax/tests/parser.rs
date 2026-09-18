@@ -426,7 +426,7 @@ fn a_perform_reads_both_of_its_declarations() {
 #[test]
 fn the_two_perform_declarations_are_told_apart_by_one_keyword() {
     // The second alternative opens on `action` and the first on a QualifiedName, and a
-    // keyword is not a name (KerML 8.2.2.6) — the same shape RequirementConstraintUsage
+    // keyword is not a name (SysML 8.2.2.1.2) — the same shape RequirementConstraintUsage
     // has one clause along.
     let by_reference = render(&parse_accepted("action def B { perform providePower; }").syntax());
     let declared = render(&parse_accepted("action def B { perform action p; }").syntax());
@@ -494,6 +494,11 @@ fn a_reference_may_be_a_feature_chain() {
     parse_accepted("package P { part p :> a.b; }");
     parse_accepted("package P { attribute x subsets a.b; }");
     parse_accepted("package P { attribute x redefines a.b; }");
+    // The FIFTH of the five, and the one a first sweep missed: OwnedFeatureTyping has
+    // the same `[QualifiedName] | OwnedFeatureChain` shape but is a typing rather than a
+    // reference, so a search for reference productions did not reach it.
+    parse_accepted("package P { attribute x : a.b; }");
+    parse_accepted("package P { part p : Vehicle::Engine.torque; }");
     // The plain QualifiedName alternative still works, and `::` is within one link.
     parse_accepted("package P { part p :>> a; }");
     parse_accepted("package P { part p :>> X::y.z; }");

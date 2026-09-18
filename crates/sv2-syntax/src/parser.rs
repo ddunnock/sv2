@@ -1076,7 +1076,7 @@ impl<'a> Parser<'a> {
     ///
     /// Every implemented item but one is introduced by a keyword — `import`, `alias`,
     /// an annotating keyword, a definition keyword, one of the seven usage keywords, or
-    /// `ref` — and a keyword is not a name (`KerML` 8.2.2.6), so none of them can open an
+    /// `ref` — and a keyword is not a name (`SysML` 8.2.2.1.2), so none of them can open an
     /// expression. `DefaultReferenceUsage` is the one that can: it opens on a bare name,
     /// and so does an expression. That single collision is what
     /// `usage_completion_follows` resolves.
@@ -2007,7 +2007,7 @@ impl<'a> Parser<'a> {
     ///
     /// Asked last of the usages, because it is the one with no keyword: anything that
     /// opens with `part`, `attribute`, `ref` or a definition keyword has already been
-    /// taken by then, and a reserved keyword is not a name (`KerML` 8.2.2.6), so
+    /// taken by then, and a reserved keyword is not a name (`SysML` 8.2.2.1.2), so
     /// `package P;` is not read as a usage called `package`.
     fn at_default_reference_usage(&self, n: usize) -> bool {
         let after = self.skip_ref_prefix(n + usize::from(self.nth_is_keyword(n, "end")));
@@ -2373,7 +2373,7 @@ impl<'a> Parser<'a> {
     //     | ownedRelatedElement += OwnedFeatureChain              (SysML 8.2.2.6.5)
     //
     fn owned_subsetting(&mut self) {
-        self.reference_target(SyntaxKind::OwnedSubsetting);
+        self.chainable_target(SyntaxKind::OwnedSubsetting);
     }
 
     // production: Redefinitions
@@ -2412,7 +2412,7 @@ impl<'a> Parser<'a> {
     //     redefinedFeature = [QualifiedName]
     //     | ownedRelatedElement += OwnedFeatureChain              (SysML 8.2.2.6.5)
     fn owned_redefinition(&mut self) {
-        self.reference_target(SyntaxKind::OwnedRedefinition);
+        self.chainable_target(SyntaxKind::OwnedRedefinition);
     }
 
     // production: References
@@ -2449,23 +2449,25 @@ impl<'a> Parser<'a> {
     // reference 60 times. A false `implemented` is the one kind of coverage error that
     // cannot be found by reading the report, which is why it survived.
     fn owned_reference_subsetting(&mut self) {
-        self.reference_target(SyntaxKind::OwnedReferenceSubsetting);
+        self.chainable_target(SyntaxKind::OwnedReferenceSubsetting);
     }
 
-    /// One of the four reference productions of `SysML` 8.2.2.6.5, under `node`.
+    /// One of the five chainable targets of `SysML` 8.2.2.6.5, under `node`.
     ///
-    /// `OwnedSubsetting`, `OwnedRedefinition`, `OwnedReferenceSubsetting` and
-    /// `OwnedCrossSubsetting` are stated with one shape and differ only in which feature
-    /// the target is assigned to:
+    /// `OwnedFeatureTyping`, `OwnedSubsetting`, `OwnedRedefinition`,
+    /// `OwnedReferenceSubsetting` and `OwnedCrossSubsetting` are stated with one shape and
+    /// differ only in which feature the target is assigned to:
     ///
     /// ```text
     /// <x>Feature = [QualifiedName] | <x>Feature = OwnedFeatureChain
     /// ```
     ///
-    /// All four were MARKED with the chain alternative absent, so `part p :>> a.b;` was
-    /// rejected while coverage counted four productions as done. One method now reads the
-    /// shape they share, which is also what keeps the four from drifting apart again.
-    fn reference_target(&mut self, node: SyntaxKind) {
+    /// All five were MARKED with the chain alternative absent, so `part p :>> a.b;` and
+    /// `attribute x : a.b;` were rejected while coverage counted five productions as done.
+    /// One method now reads the shape they share, which is also what keeps them from
+    /// drifting apart again — four were fixed together and the fifth was missed precisely
+    /// because it was a separate copy of the same three lines.
+    fn chainable_target(&mut self, node: SyntaxKind) {
         self.eat_trivia();
         self.start_node(node);
         let start = self.builder.checkpoint();
@@ -2541,7 +2543,7 @@ impl<'a> Parser<'a> {
     //     crossedFeature = [QualifiedName]
     //     | ownedRelatedElement += OwnedFeatureChain              (SysML 8.2.2.6.5)
     fn owned_cross_subsetting(&mut self) {
-        self.reference_target(SyntaxKind::OwnedCrossSubsetting);
+        self.chainable_target(SyntaxKind::OwnedCrossSubsetting);
     }
 
     /// Consume one of the special lexical terminals of `SysML` 8.2.2.1.2, in either
@@ -2664,14 +2666,17 @@ impl<'a> Parser<'a> {
     //     type = [QualifiedName] | ownedRelatedElement += OwnedFeatureChain
     //                                                            (SysML 8.2.2.6.5)
     //
-    // OwnedFeatureChain needs two or more segments joined by '.', and a FeatureChain
-    // has at least two by construction, so a bare QualifiedName is never ambiguous
-    // with one. The chain alternative is not implemented.
+    // OwnedFeatureChain needs two or more segments joined by '.', and a FeatureChain has
+    // at least two by construction, so a bare QualifiedName is never ambiguous with one.
+    //
+    // This was the FIFTH production marked with the chain alternative absent, and the one
+    // the earlier sweep missed: the other four are subsettings and redefinitions, and this
+    // is a TYPING, so a search for reference productions did not reach it. Its own comment
+    // said the alternative was not implemented and the marker claimed it anyway. Every
+    // production in the grammar that admits an OwnedFeatureChain has now been checked; see
+    // the [coverage-marker-audit] pending decision for the method.
     fn owned_feature_typing(&mut self) {
-        self.eat_trivia();
-        self.start_node(SyntaxKind::OwnedFeatureTyping);
-        self.qualified_name();
-        self.finish_node();
+        self.chainable_target(SyntaxKind::OwnedFeatureTyping);
     }
 
     // production: UsageCompletion
@@ -4202,7 +4207,7 @@ impl<'a> Parser<'a> {
     //
     // The alternatives are told apart on one token, before either can consume anything:
     // the second opens on the keyword `action` and the first on a QualifiedName, and a
-    // keyword is not a name (KerML 8.2.2.6). The same shape RequirementConstraintUsage
+    // keyword is not a name (SysML 8.2.2.1.2). The same shape RequirementConstraintUsage
     // has, one clause along.
     //
     // The by-reference alternative is why the four reference productions had to stop
@@ -4321,9 +4326,11 @@ impl<'a> Parser<'a> {
     // calculation body.
     //
     // The `?` on MemberPrefix is redundant — MemberPrefix is itself `VisibilityIndicator?`
-    // and already derives the empty string — and deviations.json records the decision to
-    // keep the clause as written rather than drop it as SysML.xtext does. The node is
-    // built either way, as MemberPrefix's always is, so the redundancy costs nothing here.
+    // and already derives the empty string. The decision to keep the clause as written
+    // rather than drop it as SysML.xtext does is recorded in the DERIVED UNIT's notes,
+    // .claude/state/grammar/units/ResultExpressionMember@sysml.json, and NOT in
+    // deviations.json, which has no entry for this production. The node is built either
+    // way, as MemberPrefix's always is, so the redundancy costs nothing here.
     //
     // No terminating semicolon. That is the whole reason this member is told from an
     // item by lookahead rather than by its first token.
@@ -4354,7 +4361,8 @@ impl<'a> Parser<'a> {
     //
     // MemberPrefix? — the `?` is redundant, as it is on ResultExpressionMember:
     // MemberPrefix is itself `VisibilityIndicator?` and already derives the empty string.
-    // The node is built either way.
+    // Kept because the clause writes it; see that production's derived unit for the
+    // reasoning. The node is built either way.
     fn requirement_constraint_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::RequirementConstraintMember);
@@ -4398,7 +4406,7 @@ impl<'a> Parser<'a> {
     //
     // The alternatives are told apart BEFORE either body begins, which is what makes the
     // conflict harmless to read: the second opens on the keyword `constraint` and the
-    // first on a QualifiedName, and a keyword is not a name (KerML 8.2.2.6).
+    // first on a QualifiedName, and a keyword is not a name (SysML 8.2.2.1.2).
     fn requirement_constraint_usage(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::RequirementConstraintUsage);
