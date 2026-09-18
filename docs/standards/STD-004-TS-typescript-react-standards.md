@@ -873,9 +873,14 @@ Rule groups are those of the Biome version pinned in `bun.lock`. A rule configur
 ```json
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true,
+    "root": ".."
+  },
   "files": {
-    "includes": ["src/**", "tools/**", "!contract/**", "!**/generated/**"]
+    "includes": ["src/**", "tools/**", "!contract", "!**/generated"]
   },
   "formatter": {
     "enabled": true,
@@ -885,19 +890,41 @@ Rule groups are those of the Biome version pinned in `bun.lock`. A rule configur
     "lineEnding": "lf"
   },
   "javascript": {
-    "formatter": { "quoteStyle": "double", "semicolons": "always", "trailingCommas": "all" }
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "all"
+    }
   },
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "complexity": {
         "noExcessiveCognitiveComplexity": {
           "level": "error",
-          "options": { "maxAllowedComplexity": 15 }
+          "options": {
+            "maxAllowedComplexity": 15
+          }
         },
-        "useMaxParams": { "level": "error", "options": { "max": 3 } },
+        "useMaxParams": {
+          "level": "error",
+          "options": {
+            "max": 3
+          }
+        },
         "noExcessiveLinesPerFunction": "off",
         "noVoid": "error"
       },
@@ -924,15 +951,28 @@ Rule groups are those of the Biome version pinned in `bun.lock`. A rule configur
         "useBlockStatements": "error",
         "useImportType": "error",
         "useExportType": "error",
-        "useConsistentTypeDefinitions": { "level": "error", "options": { "style": "type" } },
+        "useConsistentTypeDefinitions": {
+          "level": "error",
+          "options": {
+            "style": "type"
+          }
+        },
         "useFilenamingConvention": {
           "level": "error",
-          "options": { "filenameCases": ["kebab-case", "PascalCase"], "requireAscii": true }
+          "options": {
+            "filenameCases": ["kebab-case", "PascalCase"],
+            "requireAscii": true
+          }
         },
         "noRestrictedImports": {
           "level": "error",
           "options": {
-            "patterns": [{ "group": ["../**"], "message": "Cross-directory imports use the @/ alias (STD-004-TS §2.1)." }]
+            "patterns": [
+              {
+                "group": ["../**"],
+                "message": "Cross-directory imports use the @/ alias (STD-004-TS §2.1)."
+              }
+            ]
           }
         }
       },
@@ -956,68 +996,294 @@ Rule groups are those of the Biome version pinned in `bun.lock`. A rule configur
   "overrides": [
     {
       "includes": ["src/contract/**"],
-      "linter": { "rules": { "style": { "noRestrictedImports": { "level": "error", "options": { "patterns": [
-        { "group": ["../**", "@/**"], "message": "contract/ imports zod and its siblings only (STD-004-TS §2.1)." },
-        { "group": ["react", "react/**", "react-dom", "react-dom/**", "@tauri-apps/**", "@codemirror/**", "@lezer/**", "sv2-wasm"], "message": "contract/ imports zod only (STD-004-TS §2.1)." }
-      ] } } } } }
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../**", "@/**"],
+                    "message": "contract/ imports zod and its siblings only (STD-004-TS §2.1)."
+                  },
+                  {
+                    "group": [
+                      "react",
+                      "react/**",
+                      "react-dom",
+                      "react-dom/**",
+                      "@tauri-apps/**",
+                      "@codemirror/**",
+                      "@lezer/**",
+                      "sv2-wasm"
+                    ],
+                    "message": "contract/ imports zod only (STD-004-TS §2.1)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
     },
     {
       "includes": ["src/model/**"],
-      "linter": { "rules": { "style": { "noRestrictedImports": { "level": "error", "options": { "patterns": [
-        { "group": ["../**", "@/**", "!@/contract/**"], "message": "model/ imports contract/ only (STD-004-TS §2.1)." },
-        { "group": ["react", "react/**", "react-dom", "react-dom/**", "@tauri-apps/**", "@codemirror/**", "@lezer/**", "sv2-wasm", "zod"], "message": "model/ is pure TypeScript (STD-004-TS §2.1)." }
-      ] } } } } }
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../**", "@/**", "!@/contract/**"],
+                    "message": "model/ imports contract/ only (STD-004-TS §2.1)."
+                  },
+                  {
+                    "group": [
+                      "react",
+                      "react/**",
+                      "react-dom",
+                      "react-dom/**",
+                      "@tauri-apps/**",
+                      "@codemirror/**",
+                      "@lezer/**",
+                      "sv2-wasm",
+                      "zod"
+                    ],
+                    "message": "model/ is pure TypeScript (STD-004-TS §2.1)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
     },
     {
       "includes": ["src/ipc/**"],
-      "linter": { "rules": { "style": { "noRestrictedImports": { "level": "error", "options": { "patterns": [
-        { "group": ["../**", "@/**", "!@/contract/**", "!@/model/**"], "message": "ipc/ imports contract/ and model/ only (STD-004-TS §2.1)." },
-        { "group": ["react", "react/**", "react-dom", "react-dom/**", "@codemirror/**", "@lezer/**", "sv2-wasm"], "message": "ipc/ imports @tauri-apps/api only (STD-004-TS §2.1)." }
-      ] } } } } }
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../**", "@/**", "!@/contract/**", "!@/model/**"],
+                    "message": "ipc/ imports contract/ and model/ only (STD-004-TS §2.1)."
+                  },
+                  {
+                    "group": [
+                      "react",
+                      "react/**",
+                      "react-dom",
+                      "react-dom/**",
+                      "@codemirror/**",
+                      "@lezer/**",
+                      "sv2-wasm"
+                    ],
+                    "message": "ipc/ imports @tauri-apps/api only (STD-004-TS §2.1)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
     },
     {
       "includes": ["src/wasm/**"],
-      "linter": { "rules": { "style": { "noRestrictedImports": { "level": "error", "options": { "patterns": [
-        { "group": ["../**", "@/**", "!@/contract/**", "!@/model/**"], "message": "wasm/ imports contract/ and model/ only (STD-004-TS §2.1)." },
-        { "group": ["react", "react/**", "react-dom", "react-dom/**", "@tauri-apps/**", "@codemirror/**"], "message": "wasm/ imports @lezer/common and sv2-wasm only (STD-004-TS §2.1)." }
-      ] } } } } }
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../**", "@/**", "!@/contract/**", "!@/model/**"],
+                    "message": "wasm/ imports contract/ and model/ only (STD-004-TS §2.1)."
+                  },
+                  {
+                    "group": [
+                      "react",
+                      "react/**",
+                      "react-dom",
+                      "react-dom/**",
+                      "@tauri-apps/**",
+                      "@codemirror/**"
+                    ],
+                    "message": "wasm/ imports @lezer/common and sv2-wasm only (STD-004-TS §2.1)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
     },
     {
       "includes": ["src/diagnostics/**"],
-      "linter": { "rules": {
-        "suspicious": { "noConsole": "off" },
-        "style": { "noRestrictedImports": { "level": "error", "options": { "patterns": [
-          { "group": ["../**", "@/**", "!@/contract/**", "!@/model/**", "!@/ipc/**"], "message": "diagnostics/ imports contract/, model/, and ipc/ only (STD-004-TS §2.1)." },
-          { "group": ["react", "react/**", "react-dom", "react-dom/**", "@tauri-apps/**", "@codemirror/**", "@lezer/**", "sv2-wasm"], "message": "diagnostics/ reaches Tauri through ipc/ (STD-004-TS §2.1)." }
-        ] } } }
-      } }
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          },
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../**", "@/**", "!@/contract/**", "!@/model/**", "!@/ipc/**"],
+                    "message": "diagnostics/ imports contract/, model/, and ipc/ only (STD-004-TS §2.1)."
+                  },
+                  {
+                    "group": [
+                      "react",
+                      "react/**",
+                      "react-dom",
+                      "react-dom/**",
+                      "@tauri-apps/**",
+                      "@codemirror/**",
+                      "@lezer/**",
+                      "sv2-wasm"
+                    ],
+                    "message": "diagnostics/ reaches Tauri through ipc/ (STD-004-TS §2.1)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
     },
     {
       "includes": ["src/editor/**"],
-      "linter": { "rules": { "style": { "noRestrictedImports": { "level": "error", "options": { "patterns": [
-        { "group": ["../**", "@/diagram/**", "@/shell/**"], "message": "editor/ does not import diagram/ or shell/ (STD-004-TS §2.1)." },
-        { "group": ["@tauri-apps/**", "sv2-wasm", "react-dom", "react-dom/**"], "message": "editor/ reaches Tauri through ipc/ and the parser through wasm/ (STD-004-TS §2.1)." }
-      ] } } } } }
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../**", "@/diagram/**", "@/shell/**"],
+                    "message": "editor/ does not import diagram/ or shell/ (STD-004-TS §2.1)."
+                  },
+                  {
+                    "group": ["@tauri-apps/**", "sv2-wasm", "react-dom", "react-dom/**"],
+                    "message": "editor/ reaches Tauri through ipc/ and the parser through wasm/ (STD-004-TS §2.1)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
     },
     {
       "includes": ["src/diagram/**"],
-      "linter": { "rules": { "style": { "noRestrictedImports": { "level": "error", "options": { "patterns": [
-        { "group": ["../**", "@/editor/**", "@/wasm/**", "@/shell/**"], "message": "diagram/ does not import editor/, wasm/, or shell/ (STD-004-TS §2.1)." },
-        { "group": ["@tauri-apps/**", "@codemirror/**", "@lezer/**", "sv2-wasm", "react-dom", "react-dom/**"], "message": "diagram/ imports react only (STD-004-TS §2.1)." }
-      ] } } } } }
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../**", "@/editor/**", "@/wasm/**", "@/shell/**"],
+                    "message": "diagram/ does not import editor/, wasm/, or shell/ (STD-004-TS §2.1)."
+                  },
+                  {
+                    "group": [
+                      "@tauri-apps/**",
+                      "@codemirror/**",
+                      "@lezer/**",
+                      "sv2-wasm",
+                      "react-dom",
+                      "react-dom/**"
+                    ],
+                    "message": "diagram/ imports react only (STD-004-TS §2.1)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
     },
     {
       "includes": ["src/shell/**"],
-      "linter": { "rules": { "style": { "noRestrictedImports": { "level": "error", "options": { "patterns": [
-        { "group": ["../**", "@/wasm/**"], "message": "shell/ reaches the parser through editor/ (STD-004-TS §2.1)." },
-        { "group": ["@tauri-apps/**", "@codemirror/**", "@lezer/**", "sv2-wasm", "react-dom", "react-dom/**"], "message": "shell/ imports react only (STD-004-TS §2.1)." }
-      ] } } } } }
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../**", "@/wasm/**"],
+                    "message": "shell/ reaches the parser through editor/ (STD-004-TS §2.1)."
+                  },
+                  {
+                    "group": [
+                      "@tauri-apps/**",
+                      "@codemirror/**",
+                      "@lezer/**",
+                      "sv2-wasm",
+                      "react-dom",
+                      "react-dom/**"
+                    ],
+                    "message": "shell/ imports react only (STD-004-TS §2.1)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.d.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["tools/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
     }
   ]
 }
 ```
 
 An override replaces the base configuration of the same rule rather than merging with it, which is why every layer override repeats the `../**` pattern.
+
+Five things in this configuration are not obvious, and each was found by running `biome ci` rather than by reading the schema.
+
+1. **`vcs.root` is `".."`.** `useIgnoreFile` looks for the ignore file beside `biome.json`, and this package is a subdirectory of the repository, so without it Biome exits with `Biome couldn't find an ignore file`. Pointing at the repository root keeps one `.gitignore` rather than a second copy that drifts.
+2. **`linter.rules.preset`, not `recommended`.** The `recommended` field is deprecated and `biome ci` reports it. `biome migrate` makes this change.
+3. **Folder exclusions carry no trailing `/**`.** `!contract`, not `!contract/**`; the trailing form was a bug before Biome 2.2.0 and `useBiomeIgnoreFolder` now reports it.
+4. **`css.parser.tailwindDirectives` is on**, because `@import "tailwindcss"`, `@layer`, and `@apply` are otherwise parse errors and the whole stylesheet fails to format ([§3.6](#36-styling)).
+5. **Two overrides exist for rules that cannot hold where they are applied**, and both are exemptions of necessity rather than taste:
+   - `**/*.d.ts` turns off `noDefaultExport`. An asset module declaration has to be `export default`, because that is the shape a bundler exposes an asset import as; [§3.4](#34-bundling-and-the-development-server) rule 6 requires the file, so the rule and the requirement cannot both hold.
+   - `tools/**` turns off `noConsole`. Printing the build output and the development URL is what those two scripts are for, and they never ship.
+
+`tools/` is otherwise governed exactly as `src/` is, including the `../**` ban: `tools/dev.ts` imports the page as `@/index.html`, not `../src/index.html`. The alias resolves for both `tsc` and Bun's bundler.
+
 
 ### 13.5 Test preload
 

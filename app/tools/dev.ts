@@ -18,7 +18,7 @@
  * edit, that is VF-1 in §3.5 and the condition under which Vite comes back.
  */
 
-import index from "../src/index.html";
+import index from "@/index.html";
 
 /** The port `devUrl` in `tauri.conf.json` names. Fixed on purpose; see above. */
 export const DEV_PORT = 1420;

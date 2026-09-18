@@ -19,8 +19,8 @@ export function Shell(): React.JSX.Element {
     <main className="shell">
       <h1>sv2 Studio</h1>
       <p>
-        A SysML v2 and KerML editor. Text is authoritative; diagrams are
-        projections of it (ADR-0001).
+        A SysML v2 and KerML editor. Text is authoritative; diagrams are projections of it
+        (ADR-0001).
       </p>
       <section>
         <h2>Not built yet</h2>
@@ -32,12 +32,11 @@ export function Shell(): React.JSX.Element {
             <code>diagram/</code> — the SVG island, projected from the tree.
           </li>
           <li>
-            <code>ipc/</code> — the Tauri boundary. The only caller of{" "}
-            <code>invoke</code>.
+            <code>ipc/</code> — the Tauri boundary. The only caller of <code>invoke</code>.
           </li>
           <li>
-            <code>wasm/</code> — the <code>sv2-wasm</code> loader and the flat
-            node-buffer adapter (ADR-0013).
+            <code>wasm/</code> — the <code>sv2-wasm</code> loader and the flat node-buffer adapter
+            (ADR-0013).
           </li>
           <li>
             <code>contract/</code> — the Zod half of the IPC contract (§4.2).

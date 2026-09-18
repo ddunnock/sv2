@@ -24,9 +24,7 @@ export type Uninstall = () => void;
  * `report` is a parameter rather than an import so the composition root chooses
  * the channel; this module does not construct one.
  */
-export function installGlobalHandlers(
-  report: (what: string, detail: unknown) => void,
-): Uninstall {
+export function installGlobalHandlers(report: (what: string, detail: unknown) => void): Uninstall {
   const onRejection = (event: PromiseRejectionEvent): void => {
     report("unhandled rejection", event.reason);
   };
