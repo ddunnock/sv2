@@ -1,0 +1,23 @@
+{
+  "name": "sv2-studio",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.2",
+  "description": "The sv2 Studio front end.",
+  "author": "David Dunnock <dunnoda@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ddunnock/sv2.git"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
+    "lint": "biome ci --error-on-warnings .",
+    "build": "vite build",
+    "emit-contract": "bun tools/emit-contract.ts"
+  },
+  "trustedDependencies": [],
+  "dependencies": {
+    "sv2-wasm": "file:../crates/sv2-wasm/pkg"
+  }
+}
