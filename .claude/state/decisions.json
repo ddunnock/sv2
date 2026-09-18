@@ -134,6 +134,13 @@
       "status": "proposed",
       "date": "2026-09-18",
       "file": "docs/adr/0019-extensions-are-in-tree-consumers-of-the-resolved-model.md"
+    },
+    {
+      "id": "0020",
+      "title": "ADR-0020: Element identity is allocated when a workspace opens",
+      "status": "accepted",
+      "date": "2026-09-18",
+      "file": "docs/adr/0020-element-identity-is-allocated-when-a-workspace-opens.md"
     }
   ]
 }
