@@ -1,7 +1,9 @@
 ---
 title: "ADR-0016: Stable element identity via petname IDs carried in inline textual notes"
-status: "proposed"
+status: "accepted"
+supersedes: 0009
 date: 2026-09-17
+accepted: 2026-09-18
 version: 0.1.0
 decision-makers: David Dunnock
 consulted: ""
@@ -223,10 +225,32 @@ Compute identity from the qualified name, with no stored state.
 
 ## More Information
 
+### Confirmed before acceptance
+
+- **OI-1 — CONFIRMED, 2026-09-18.** Notes are discarded lexically in both grammars, and
+  a regular comment is not. Checked mechanically against the frozen derived grammar
+  (`.claude/state/grammar/units`, sha256 `0b9abe64f1f3ce2b`) rather than by reading
+  prose, because "no production can consume this terminal" is a property of the whole
+  grammar and not of any one clause:
+
+  | Terminal | Referenced by, of 554 live units | Consequence |
+  |---|---|---|
+  | `SINGLE_LINE_NOTE` | none | discarded lexically, both grammars |
+  | `MULTILINE_NOTE` | none | discarded lexically, both grammars |
+  | `REGULAR_COMMENT` | `Comment`, `Documentation`, `TextualRepresentation`, all shared | model content, both grammars |
+
+  This confirms both halves of the claim the carrier rests on: the chosen carrier adds
+  nothing a conforming tool can see, and the forbidden one would have added a `Comment`
+  element to every identified declaration. It also confirms the rule reaches `.kerml`
+  files as much as `.sysml`, since the three consuming units are shared between the
+  grammars rather than scoped to one.
+
 ### Open items
 
-- **OI-1.** Verify against the KerML and SysML v2 specifications (via the project spec wikis) that `//` line notes and `//*` block notes are discarded lexically in both KerML and SysML v2 textual notation (that is, SysML v2 reuses the KerML note lexical rules), and that `/* */` produces a `Comment` element in both.
-- **OI-2.** Verify the short-name name-resolution and distinguishability behavior cited against OPT-2.
+These are implementation tasks, not conditions on the decision. None of them can change
+the carrier, the format, or the allocation strategy.
+
+- **OI-2.** Verify the short-name name-resolution and distinguishability behavior cited against OPT-2. It concerns a rejected option, so it can only strengthen the argument against OPT-2, never reopen OPT-1.
 - **OI-3.** Set the fingerprint-match threshold and the fingerprint contents from test data.
 - **OI-4.** Include Apache-2.0 attribution (NOTICE) for the vendored `petname` word lists.
 
@@ -243,7 +267,14 @@ Compute identity from the qualified name, with no stored state.
 
 ### Related Decisions
 
-- Layout sidecar for diagram placement and styling (ADR number to be linked)
+- [ADR-0009](0009-element-identity.md) — the question this record answers, and which it
+  supersedes. It reached the same layered shape and assumed a different carrier.
+- [ADR-0017](0017-view-scoped-json-lines-sidecar-for-diagram-layout-and-styling.md) — the
+  layout sidecar, keyed by the ID defined here, and the store for the last-known name and
+  fingerprint that reconciliation reads.
+- [ADR-0004](0004-lossless-syntax-tree.md) — the lossless tree is what makes this carrier
+  possible at all. A parser that discarded trivia could not round-trip an `@id` note, which
+  is what OPT-1's "depends on a trivia-preserving lexer" means.
 
 ### Requirements Traceability
 

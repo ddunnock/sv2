@@ -2,6 +2,12 @@
 
 MADR 4.0.0. One record per decision, numbered, never renumbered.
 
+`status` is one of `proposed`, `accepted`, `superseded`, `rejected`. A superseded record
+names its successor in `superseded-by`, and the successor names it back in `supersedes`;
+`.claude/scripts/index_decisions.py` fails the gate when only one side of that says so,
+and when a `[ADR-NNNN](file.md)` link points at a missing file or at a different record
+than its text names. Only `proposed` counts as open.
+
 These are the decisions the front end is built on. If a change would contradict one,
 stop and say so — do not implement around it. Superseding a record is fine; doing it
 silently is not.
@@ -16,11 +22,11 @@ silently is not.
 | [0006](0006-view-membership-in-model.md)    | Diagram membership stays in the model           | accepted     |
 | [0007](0007-local-resolver.md)              | The resolver is local and owned                 | accepted     |
 | [0008](0008-first-view-structure.md)        | First view is structure, interconnection second | accepted     |
-| [0009](0009-element-identity.md)            | Element identity strategy                       | **proposed** |
+| [0009](0009-element-identity.md)            | Element identity strategy                       | superseded by [0016](0016-element-identity-via-petname-notes.md) |
 | [0010](0010-grammar-and-metamodel-sourcing.md) | Grammar and metamodel sourcing | accepted |
 | [0011](0011-specification-bnf-as-a-pinned-input.md) | Specification BNF as a pinned input | accepted |
 | [0013](0013-rust-cst-via-webassembly-as-code-mirror-syntax-tree-source.md) | Rust CST via WebAssembly as CodeMirror's syntax tree | **proposed** |
 | [0014](0014-kerml-and-sysml-are-two-grammars.md) | KerML and SysML are two grammars sharing a vocabulary | accepted |
 | [0015](0015-a-production-belongs-to-the-grammars-that-reach-it.md) | A production belongs to the grammars that reach it | accepted |
-| [0016](0016-element-identity-via-petname-notes.md) | Stable element identity via petname IDs in inline notes | **proposed** |
+| [0016](0016-element-identity-via-petname-notes.md) | Stable element identity via petname IDs in inline notes | accepted |
 | [0017](0017-view-scoped-json-lines-sidecar-for-diagram-layout-and-styling.md) | View-scoped JSON Lines sidecar for layout and styling | **proposed** |

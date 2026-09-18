@@ -17,7 +17,7 @@ notation has no representation for symbol geometry, and any encoding invented fo
 would either break external tool round-trip or be discarded on import. A sidecar
 alongside the model is therefore required.
 
-[ADR-0016](0016-element-ids-in-inline-notes.md) placed stable element identifiers in
+[ADR-0016](0016-element-identity-via-petname-notes.md) placed stable element identifiers in
 inline notes within the declaring `.sysml` or `.kerml` file. Those identifiers are the
 keys this sidecar uses, so the sidecar carries no naming scheme of its own and survives
 element renames for free.
@@ -224,10 +224,12 @@ artifacts, this ADR is substantially over-engineered and should be reconsidered.
 
 ### Related Decisions
 
-* [ADR-0016](0016-element-ids-in-inline-notes.md) — element identifiers in inline notes.
+* [ADR-0016](0016-element-identity-via-petname-notes.md) — element identifiers in inline notes.
   This ADR consumes those identifiers as its keys and adds no naming scheme of its own.
-* [ADR-0011](0011-rust-cst-via-webassembly-as-codemirror-syntax-tree-source.md) — the
+* [ADR-0013](0013-rust-cst-via-webassembly-as-code-mirror-syntax-tree-source.md) — the
   Rust core that parses the model and therefore resolves the identifiers referenced here.
+  Cited as ADR-0011 until 2026-09-18; ADR-0011 is *Specification BNF as a pinned input*,
+  and the filename quoted belonged to no record at all.
 
 ### Open Items
 

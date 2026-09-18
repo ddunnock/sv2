@@ -1,6 +1,7 @@
 ---
 title: "Element identity strategy"
-status: proposed
+status: superseded
+superseded-by: 0016
 date: 2026-09-15
 deciders: [David]
 ---
@@ -37,6 +38,22 @@ which point every entry beneath it orphans silently and the diagram reflows to n
 
 ## Decision outcome
 
+**Superseded by [ADR-0016](0016-element-identity-via-petname-notes.md), 2026-09-18.**
+
+This record framed the question and never answered it. ADR-0016 answers it, and answers
+it as Option 4 below: a durable anchor written into the file, an exact name match as the
+fast path, and fingerprint matching as recovery for files that arrive without one. What
+it changes is the carrier. This record assumed the anchor would be an injected UUID in a
+metadata annotation; ADR-0016 makes it a petname in a textual **note**, which no
+production in either grammar can consume, so it adds no model element and no diagnostic
+in another tool. The review-noise objection below is answered by that change rather than
+dismissed: what a reviewer sees is `//* @id maple-sunrise-314 */`, not a UUID.
+
+Nothing here is contradicted. Read ADR-0016 for the decision; this record is kept for
+the options it rules out and the reasoning that got there.
+
+### What this record said while it was open
+
 **Not yet decided.** Option 4 is the likely answer, since the three are complementary
 rather than competing. The real question is narrower: whether injected IDs are acceptable
 in source files that go through program review.
@@ -48,6 +65,8 @@ whether anyone objects. That is cheaper than any amount of further analysis and 
 settles the only genuinely open part.
 
 ### Consequences of deferring
+
+*Historical: this is what deferring cost while the question was open.*
 
 The sidecar schema currently carries a placeholder (`"identity": "injected-uuid"`). The
 parser and resolver are unaffected, so this does not block `sv2-syntax` or `sv2-hir`.

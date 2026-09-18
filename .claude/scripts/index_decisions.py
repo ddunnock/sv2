@@ -26,6 +26,15 @@ if TYPE_CHECKING:
 
 INDEX = Path(".claude/state/decisions.json")
 FRONTMATTER = re.compile(r"---\n(.*?)\n---", re.DOTALL)
+ADR_DIR = Path("docs/adr")
+# A markdown link to a sibling ADR file: `[ADR-0013](0013-....md)`.
+ADR_LINK = re.compile(r"\[ADR-(\d{4})\]\((\d{4}-[^)]*\.md)\)")
+
+# The status lifecycle. A decision is open only while it is still being made;
+# superseded and rejected are closed, because both are answers.
+OPEN_STATUSES = frozenset({"proposed"})
+CLOSED_STATUSES = frozenset({"accepted", "superseded", "rejected"})
+KNOWN_STATUSES = OPEN_STATUSES | CLOSED_STATUSES
 
 
 def frontmatter(text: str) -> dict[str, str]:
@@ -44,13 +53,19 @@ def frontmatter(text: str) -> dict[str, str]:
 def record(adr: Path) -> dict[str, str]:
     """The index entry for one ADR file."""
     fm = frontmatter(adr.read_text())
-    return {
+    entry = {
         "id": adr.stem.split("-")[0],
         "title": fm.get("title", adr.stem),
         "status": fm.get("status", "unknown"),
         "date": fm.get("date", ""),
         "file": str(adr),
     }
+    # Only when present, so the index does not grow a field for every ADR that has
+    # never superseded anything.
+    for key in ("supersedes", "superseded-by"):
+        if fm.get(key):
+            entry[key] = fm[key]
+    return entry
 
 
 def all_records() -> list[dict[str, str]]:
@@ -73,12 +88,61 @@ def duplicate_ids(records: list[dict[str, str]]) -> dict[str, list[str]]:
     return {adr_id: files for adr_id, files in by_id.items() if len(files) > 1}
 
 
+def lifecycle_problems(records: list[dict[str, str]]) -> list[str]:
+    """Every way the status fields across the ADRs fail to agree with each other.
+
+    Supersession is a claim two records make about each other, and a claim only one of
+    them makes is how ADR-0009 and ADR-0016 sat side by side deciding the same question
+    with nothing saying which of them held. Checking it keeps that from recurring.
+    """
+    found: list[str] = []
+    by_id = {r["id"]: r for r in records}
+    for entry in records:
+        adr_id, status = entry["id"], entry["status"]
+        if status not in KNOWN_STATUSES:
+            known = ", ".join(sorted(KNOWN_STATUSES))
+            found.append(f"ADR-{adr_id}: status {status!r} is not one of: {known}")
+        target_id = entry.get("superseded-by")
+        if status == "superseded" and not target_id:
+            found.append(f"ADR-{adr_id}: status is superseded but names no superseded-by")
+        if target_id and status != "superseded":
+            found.append(f"ADR-{adr_id}: names superseded-by but its status is {status!r}")
+        if target_id:
+            target = by_id.get(target_id)
+            if target is None:
+                found.append(f"ADR-{adr_id}: superseded-by {target_id}, which does not exist")
+            elif target.get("supersedes") != adr_id:
+                found.append(
+                    f"ADR-{adr_id}: superseded-by {target_id}, "
+                    f"which does not say it supersedes {adr_id}"
+                )
+    return found
+
+
+def link_problems() -> list[str]:
+    """Every `[ADR-NNNN](file.md)` link under docs/adr/ that points at the wrong place.
+
+    Two ways to be wrong, and both had happened here: the file does not exist, or it
+    exists and is a different decision than the link text names. The second is worse,
+    because it reads correctly.
+    """
+    found: list[str] = []
+    for adr in sorted(ADR_DIR.glob("*.md")):
+        for match in ADR_LINK.finditer(adr.read_text()):
+            named, target = match.group(1), match.group(2)
+            if not (ADR_DIR / target).is_file():
+                found.append(f"{adr}: links to {target}, which does not exist")
+            elif not target.startswith(f"{named}-"):
+                found.append(f"{adr}: link says ADR-{named} and points at {target}")
+    return found
+
+
 def build_index(records: list[dict[str, str]]) -> Json:
     """The decisions index document."""
     return {
         "_generated_by": ".claude/scripts/index_decisions.py",
         "_note": "Index only. docs/adr/ is the source of truth.",
-        "open": [r["id"] for r in records if r["status"] != "accepted"],
+        "open": [r["id"] for r in records if r["status"] in OPEN_STATUSES],
         "decisions": records,
     }
 
@@ -91,6 +155,14 @@ def main(argv: list[str] | None = None) -> int:
     os.chdir(REPO_ROOT)
 
     records = all_records()
+    # Refused in both modes, like a duplicate id: an index built over records that
+    # disagree about which of them holds is worse than no index at all.
+    problems = lifecycle_problems(records) + link_problems()
+    if problems:
+        for problem in problems:
+            print(problem)
+        return 1
+
     clashes = duplicate_ids(records)
     if clashes:
         # Refused in both modes. Writing an ambiguous index is worse than not
