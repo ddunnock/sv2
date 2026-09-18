@@ -41,10 +41,24 @@ SCRIPT_SOURCES = ("scripts", ".claude/scripts")
 # with nothing checking it, and a misspelled `SPDX-License-Indentifier` sat in one
 # of them until this glob widened.
 RUST_SOURCES = ("crates/*/src/**/*.rs", "crates/*/tests/**/*.rs")
-# `#` in Python and shell, `//` in Rust. A shell script's shebang is part of its
-# opening comment block, which costs nothing here: the required strings are on the
-# two lines after it (STD-003-SH §3.4).
-MARKERS = {".py": "#", ".sh": "#", ".rs": "//"}
+# The webview package, STD-004-TS §2.3 and its §13.7 gap table. Tests sit beside the
+# modules they test, so `*.ts` and `*.tsx` already cover them; `tools/` is build-time
+# code and is governed the same way, which is why it is named separately rather than
+# reached by widening the `app/src` glob.
+WEB_SOURCES = ("app/src/**/*.ts", "app/src/**/*.tsx", "app/tools/**/*.ts")
+# Machine-written trees, which §2 rule 4 excludes from lint and format for the same
+# reason they are excluded here: the generator owns the file, so a missing header is a
+# defect in the generator and is fixed there. `app/contract/` is outside every glob
+# above and needs no entry.
+WEB_EXCLUDED_PARTS = frozenset({"generated"})
+# `#` in Python and shell, `//` in Rust and TypeScript. A shell script's shebang is
+# part of its opening comment block, which costs nothing here: the required strings
+# are on the two lines after it (STD-003-SH §3.4). TypeScript shares Rust's marker
+# and Rust's doc-comment exclusion: STD-004-TS §2.3 rule 1 requires two `//` lines
+# and forbids the `/** */` form, because TSDoc and editor hovers would read the
+# licence as documentation — and a file opening with `/**` yields no leading comment
+# block at all, so it is reported as missing rather than passing silently.
+MARKERS = {".py": "#", ".sh": "#", ".rs": "//", ".ts": "//", ".tsx": "//"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,7 +95,7 @@ def leading_comment(text: str, marker: str) -> str:
 
 
 def sources() -> list[Path]:
-    """Every file the standards govern: script and crate sources, tests included."""
+    """Every file the standards govern: script, crate and webview sources, tests included."""
     scripts = [
         p
         for root in SCRIPT_SOURCES
@@ -90,7 +104,13 @@ def sources() -> list[Path]:
         if "__pycache__" not in p.parts
     ]
     rust = [p for pattern in RUST_SOURCES for p in Path().glob(pattern)]
-    return sorted([*scripts, *rust])
+    web = [
+        p
+        for pattern in WEB_SOURCES
+        for p in Path().glob(pattern)
+        if not WEB_EXCLUDED_PARTS.intersection(p.parts)
+    ]
+    return sorted([*scripts, *rust, *web])
 
 
 def check(path: Path, config: Settings) -> list[str]:
