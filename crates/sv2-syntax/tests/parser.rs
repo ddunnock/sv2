@@ -280,15 +280,152 @@ fn a_definition_whose_body_is_not_a_definition_body_is_not_in_the_table() {
     // `requirement def R;` was in this list and is not any more: RequirementBody is
     // implemented, and it left the list because the production is now read, not because
     // the claim was relaxed. The four that remain are still absent.
-    for source in [
-        "action def Brake;",
-        "calc def C;",
-        "constraint def C;",
-        "state def S;",
-    ] {
+    for source in ["action def Brake;", "calc def C;", "state def S;"] {
         parse_rejected(source);
     }
+    // `requirement def` left this list when RequirementBody landed, and
+    // `constraint def` leaves it now that CalculationBody has. Both left because the
+    // production is read, not because the claim was relaxed. `calc def` shares
+    // ConstraintDefinition's body and is still absent, because nothing dispatches to
+    // it — held by tests/rejection/calculation-definition-is-not-implemented.sysml.
     parse_accepted("requirement def R;");
+    parse_accepted("constraint def C;");
+}
+
+// -- CalculationBody, SysML 8.2.2.19 ----------------------------------------------
+//
+// CalculationBody        = ';' | '{' CalculationBodyPart '}'
+// CalculationBodyPart    = CalculationBodyItem* ResultExpressionMember?
+// ResultExpressionMember = MemberPrefix? OwnedExpression
+//
+// The first body whose last part is an expression rather than a member. Reached through
+// ConstraintDefinition (8.2.2.20), which is here as its caller.
+
+#[test]
+fn a_calculation_body_ends_in_an_expression_with_no_semicolon() {
+    // The corpus form. ResultExpressionMember has no terminator, which is what makes it
+    // tell-apart-able from an item only by lookahead.
+    parse_accepted("constraint def C { a <= b }");
+    parse_accepted("constraint def C { 1 + 2 * 3 }");
+    parse_accepted("constraint def C { (a + b) <= c }");
+    // A bare name alone is the hardest case: it is also how a DefaultReferenceUsage
+    // opens.
+    parse_accepted("constraint def C { x }");
+}
+
+#[test]
+fn a_calculation_body_takes_both_forms_and_may_hold_no_expression() {
+    // ';' is one of the two alternatives, and the ResultExpressionMember is optional, so
+    // a braced body with only items is a body with no expression at all.
+    parse_accepted("constraint def C;");
+    parse_accepted("constraint def C { }");
+    parse_accepted("constraint def C { attribute x; }");
+}
+
+#[test]
+fn a_calculation_body_reads_the_items_a_definition_body_reads() {
+    // CalculationBodyItem reaches ActionBodyItem reaches NonBehaviorBodyItem, whose
+    // Import, AliasMember and DefinitionMember are the three a definition body reads
+    // (SysML 8.2.2.17.1). The other alternatives are the action layer and are absent.
+    parse_accepted("constraint def C { doc /* why this holds */ a <= b }");
+    parse_accepted("constraint def C { private import ISQ::*; a <= b }");
+    parse_accepted("constraint def C { alias q for r; a <= b }");
+    parse_accepted("constraint def C { attribute x; attribute y; x + y > 0 }");
+}
+
+#[test]
+fn an_item_with_a_braced_body_is_not_mistaken_for_the_expression() {
+    // The case the lookahead exists for. `part def Inner { }` is an item that ends in a
+    // brace rather than a semicolon, and `a` after it is the result expression. A rule
+    // that only asked "is there a `;` before the `}`" would read the whole run as one
+    // expression.
+    let rendered = render(&parse_accepted("constraint def C { part def Inner { } a }").syntax());
+    assert_eq!(nodes_named(&rendered, "PartDefinition"), 1, "{rendered}");
+    assert_eq!(
+        nodes_named(&rendered, "ResultExpressionMember"),
+        1,
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_bare_name_is_an_item_when_a_usage_completion_follows_it() {
+    // Both a DefaultReferenceUsage and an expression open on a bare name, and only what
+    // comes after separates them: a usage reaches a `;` or a braced body
+    // (SysML 8.2.2.6.2), an expression reaches the enclosing `}`.
+    let item = render(&parse_accepted("constraint def C { x; }").syntax());
+    assert_eq!(nodes_named(&item, "DefaultReferenceUsage"), 1, "{item}");
+    assert_eq!(nodes_named(&item, "ResultExpressionMember"), 0, "{item}");
+
+    let expression = render(&parse_accepted("constraint def C { x }").syntax());
+    assert_eq!(
+        nodes_named(&expression, "ResultExpressionMember"),
+        1,
+        "{expression}"
+    );
+    assert_eq!(
+        nodes_named(&expression, "DefaultReferenceUsage"),
+        0,
+        "{expression}"
+    );
+
+    // And both in one body: the first has a completion, the second does not.
+    let both = render(&parse_accepted("constraint def C { x; y }").syntax());
+    assert_eq!(nodes_named(&both, "DefaultReferenceUsage"), 1, "{both}");
+    assert_eq!(nodes_named(&both, "ResultExpressionMember"), 1, "{both}");
+}
+
+#[test]
+fn a_constraint_definition_owns_no_definition_node() {
+    // Like RequirementDefinition, it names the declaration and the body separately
+    // rather than taking a Definition (SysML 8.2.2.20).
+    let rendered = render(&parse_accepted("constraint def C { a <= b }").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "ConstraintDefinition"),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "CalculationBody"), 1, "{rendered}");
+    assert_eq!(
+        nodes_named(&rendered, "CalculationBodyPart"),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "DefinitionBody"), 0, "{rendered}");
+    assert_eq!(nodes_named(&rendered, "Definition"), 0, "{rendered}");
+}
+
+#[test]
+fn a_calculation_body_does_not_admit_a_return_or_an_action() {
+    // CalculationBodyItem = ActionBodyItem | ReturnParameterMember, and
+    // ReturnParameterMember plus three of ActionBodyItem's four alternatives are the
+    // part that is absent. Held as a file by
+    // tests/rejection/calculation-body-return-parameter-member-is-not-implemented.sysml.
+    parse_rejected("constraint def C { return x; }");
+    parse_rejected("constraint def C { first a then b; }");
+}
+
+#[test]
+fn a_constraint_definition_needs_a_body_and_a_def() {
+    // CalculationBody is not optional. Held as a file by
+    // tests/rejection/constraint-definition-missing-calculation-body.sysml.
+    parse_rejected("constraint def C");
+    // Without `def` it is a ConstraintUsage, unimplemented, and it is what
+    // `require constraint { ... }` will need. Held as a file by
+    // tests/rejection/constraint-usage-is-not-a-constraint-definition.sysml.
+    parse_rejected("constraint c { a <= b }");
+    // An unclosed body is still an error, and the expression inside it is still read.
+    parse_rejected("constraint def C { a <= b");
+}
+
+#[test]
+fn the_result_expression_is_only_read_where_a_body_ends_in_one() {
+    // ends_in_result_expression is asked of the body, not of the token. A definition
+    // body has no ResultExpressionMember alternative (SysML 8.2.2.6.1), so a bare
+    // expression in one is recovered over rather than read.
+    parse_rejected("part def V { a <= b }");
+    parse_rejected("requirement def R { a <= b }");
+    parse_accepted("constraint def C { a <= b }");
 }
 
 // -- RequirementDefinition, SysML 8.2.2.21.1 --------------------------------------

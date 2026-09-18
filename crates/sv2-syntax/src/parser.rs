@@ -589,6 +589,17 @@ enum Body {
     /// definition body is not a `SubjectMember` — `DefinitionBodyItem` has no such
     /// alternative — and without this variant it would be read as one.
     Requirement,
+    /// The item run inside the braced form of `CalculationBody`. `SysML` only.
+    ///
+    /// `CalculationBodyItem = ActionBodyItem | ReturnParameterMember` (8.2.2.19), and
+    /// `ActionBodyItem`'s first alternative is `NonBehaviorBodyItem = Import |
+    /// AliasMember | DefinitionMember | VariantUsageMember | NonOccurrenceUsageMember |
+    /// SourceSuccessionMember? StructureUsageMember` (8.2.2.17.1). Of those, the same
+    /// three a definition body reads are implemented, which is why this shares the loop.
+    ///
+    /// It is a variant of its own because the loop must STOP before the trailing
+    /// `ResultExpressionMember`, and no other body has one. See `at_result_expression`.
+    Calculation,
     /// The braced form of `TypeBody`. `KerML` only — what a classifier holds.
     Type,
 }
@@ -599,8 +610,12 @@ impl Body {
         match (self, language) {
             // A requirement body owns its DefinitionBodyItem alternative exactly as a
             // definition body does; what it owns differently owns itself, through
-            // SubjectMember.
-            (Self::Definition | Self::Requirement, _) => SyntaxKind::DefinitionMember,
+            // SubjectMember. A calculation body reaches DefinitionMember too, by the
+            // other road: CalculationBodyItem to ActionBodyItem to NonBehaviorBodyItem,
+            // whose third alternative it is (8.2.2.17.1).
+            (Self::Definition | Self::Requirement | Self::Calculation, _) => {
+                SyntaxKind::DefinitionMember
+            }
             (_, Language::SysMl) => SyntaxKind::PackageMember,
             // Both KerML bodies own the same membership. `TypeBodyElement` is
             // `NonFeatureMember | FeatureMember | AliasMember | Import` (8.2.4.1) and
@@ -617,8 +632,8 @@ impl Body {
             Self::Package => true,
             Self::Root => language == Language::SysMl,
             // TypeBodyElement has no ElementFilterMember alternative, and neither
-            // DefinitionBodyItem nor RequirementBodyItem reaches one.
-            Self::Definition | Self::Requirement | Self::Type => false,
+            // DefinitionBodyItem, RequirementBodyItem nor NonBehaviorBodyItem reaches one.
+            Self::Definition | Self::Requirement | Self::Calculation | Self::Type => false,
         }
     }
 
@@ -633,6 +648,16 @@ impl Body {
     /// body — which `DefinitionBodyItem` does not have.
     fn admits_subject(self) -> bool {
         matches!(self, Self::Requirement)
+    }
+
+    /// Whether this body's items may be followed by a `ResultExpressionMember`.
+    ///
+    /// `CalculationBodyPart = CalculationBodyItem* ResultExpressionMember?`
+    /// (`SysML` 8.2.2.19), and no other implemented body ends in an expression. The item
+    /// loop has to stop before it, because an expression is not a member and the loop
+    /// would otherwise recover over it one token at a time.
+    fn ends_in_result_expression(self) -> bool {
+        matches!(self, Self::Calculation)
     }
 }
 
@@ -955,7 +980,96 @@ impl<'a> Parser<'a> {
         self.nth_is_keyword(n, "package")
             || self.at_port_definition(n)
             || self.at_requirement_definition(n)
+            || self.at_constraint_definition(n)
             || self.at_simple_definition(n).is_some()
+    }
+
+    /// Whether a `ConstraintDefinition` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceDefinitionPrefix 'constraint' 'def'` (`SysML` 8.2.2.20). Only the
+    /// `def` separates it from a `ConstraintUsage`, which is unimplemented.
+    fn at_constraint_definition(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_definition_prefix(n);
+        self.nth_is_keyword(after, "constraint") && self.nth_is_keyword(after + 1, "def")
+    }
+
+    /// Whether the trailing `ResultExpressionMember` starts here rather than one more
+    /// `CalculationBodyItem`.
+    ///
+    /// `CalculationBodyPart = CalculationBodyItem* ResultExpressionMember?`
+    /// (`SysML` 8.2.2.19). The star is greedy and the expression is last, so the
+    /// question is only ever "can an item start here", and everything else is the
+    /// expression.
+    ///
+    /// The Pilot answers it with a `=>` syntactic predicate on the star. That is an LL
+    /// steering device and is NOT ported (`.claude/rules/grammar.md`); what follows is
+    /// the same decision made by lookahead.
+    ///
+    /// Every implemented item but one is introduced by a keyword — `import`, `alias`,
+    /// an annotating keyword, a definition keyword, one of the seven usage keywords, or
+    /// `ref` — and a keyword is not a name (`KerML` 8.2.2.6), so none of them can open an
+    /// expression. `DefaultReferenceUsage` is the one that can: it opens on a bare name,
+    /// and so does an expression. That single collision is what
+    /// `usage_completion_follows` resolves.
+    fn at_result_expression(&self) -> bool {
+        let n = usize::from(self.at_visibility());
+        if self.at_import()
+            || self.at_element_keyword("alias")
+            || self.at_annotating_member(n)
+            || self.at_definition_element(n)
+            || self.at_simple_usage(n).is_some()
+            || self.at_reference_usage(n)
+        {
+            return false;
+        }
+        if self.at_default_reference_usage(n) {
+            return !self.usage_completion_follows(n);
+        }
+        // Not an item at all: a literal, a parenthesis, a prefix operator. Without this
+        // the body loop would recover over it, which is how `{ 1 + 1 }` became three
+        // errors instead of one expression.
+        true
+    }
+
+    /// Whether a `UsageCompletion` closes the construct that starts at the `n`th token.
+    ///
+    /// The bare-name collision, settled by looking for the thing a usage has and an
+    /// expression has not. `Usage = UsageDeclaration UsageCompletion` and
+    /// `UsageCompletion` ends in a body that is `';'` or a braced one (`SysML`
+    /// 8.2.2.6.2), so a usage always reaches a `;` or a `{` before the enclosing body
+    /// closes. An expression reaches the enclosing `}` instead.
+    ///
+    /// Brackets are counted so that a `;` or `{` inside a nested construct does not
+    /// answer for this one. A `{` at depth zero says "usage" rather than opening a
+    /// depth, because among what is implemented an expression never contains one —
+    /// `BodyExpression` is unimplemented, and
+    /// tests/rejection/body-expression-is-not-implemented.sysml holds that. When it
+    /// lands, this is one of the places that has to change.
+    fn usage_completion_follows(&self, n: usize) -> bool {
+        let mut depth = 0u32;
+        let mut i = n;
+        while let Some(token) = self.peek_nth(i) {
+            match token.kind {
+                // A completion, so what starts at `n` is a usage and not an expression.
+                SyntaxKind::Semicolon | SyntaxKind::LBrace if depth == 0 => return true,
+                // The enclosing body closed and no completion was reached, so what is
+                // here is the trailing expression.
+                SyntaxKind::RBrace if depth == 0 => return false,
+                // Guarded arms first, so these two only ever run nested.
+                SyntaxKind::LParen | SyntaxKind::LBracket | SyntaxKind::LBrace => depth += 1,
+                SyntaxKind::RParen | SyntaxKind::RBracket | SyntaxKind::RBrace => {
+                    // Saturating because a stray closer is ordinary in an editor, and
+                    // an underflow here would panic in debug (invariant 3).
+                    depth = depth.saturating_sub(1);
+                }
+                _ => {}
+            }
+            i += 1;
+        }
+        // End of input with nothing closed. Truncated text is the editor's normal
+        // state, and reading the remainder as an expression reports one error rather
+        // than one per token.
+        false
     }
 
     /// Whether a `RequirementDefinition` starts at the `n`th meaningful token.
@@ -1316,6 +1430,11 @@ impl<'a> Parser<'a> {
                 // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
                 // its own membership node rather than the one `membership` builds.
                 self.namespace_feature_member();
+            } else if body.ends_in_result_expression() && self.at_result_expression() {
+                // The item run is over and what is left is the body's trailing
+                // expression, which is not a member. `calculation_body_part` reads it;
+                // the loop must not recover over it one token at a time.
+                return;
             } else if body.admits_subject() && self.at_element_keyword("subject") {
                 // RequirementBodyItem's second alternative (SysML 8.2.2.21.1). Like
                 // NamespaceFeatureMember above, it owns its element through a membership
@@ -1688,6 +1807,8 @@ impl<'a> Parser<'a> {
             self.port_definition();
         } else if self.language == Language::SysMl && self.at_requirement_definition(0) {
             self.requirement_definition();
+        } else if self.language == Language::SysMl && self.at_constraint_definition(0) {
+            self.constraint_definition();
         } else if let Some(definition) = self
             .at_simple_definition(0)
             .filter(|_| self.language == Language::SysMl)
@@ -3615,6 +3736,105 @@ impl<'a> Parser<'a> {
         } else {
             self.error_expected("`;` or `{` after a requirement definition declaration");
         }
+        self.finish_node();
+    }
+
+    // production: ConstraintDefinition
+    //
+    // ConstraintDefinition = OccurrenceDefinitionPrefix 'constraint' 'def'
+    //                        DefinitionDeclaration CalculationBody   (SysML 8.2.2.20)
+    //
+    // Off the SIMPLE_DEFINITIONS spine for the reason RequirementDefinition is: it names
+    // the declaration and the body separately rather than taking a Definition, so there
+    // is no Definition node in its tree.
+    //
+    // Here as the caller that makes CalculationBody reachable. A body production with no
+    // caller cannot be tested, and an untested production is a claim.
+    fn constraint_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ConstraintDefinition);
+        self.occurrence_definition_prefix();
+        self.expect_keyword("constraint");
+        self.expect_keyword("def");
+        self.definition_declaration();
+        self.calculation_body();
+        self.finish_node();
+    }
+
+    // production: CalculationBody
+    //
+    // CalculationBody : Type = ';' | '{' CalculationBodyPart '}'    (SysML 8.2.2.19)
+    fn calculation_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::CalculationBody);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.calculation_body_part();
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.error_expected("`;` or `{` after a constraint definition declaration");
+        }
+        self.finish_node();
+    }
+
+    // CalculationBodyPart : Type =
+    //     CalculationBodyItem* ( ownedRelationship += ResultExpressionMember )?
+    //                                                            (SysML 8.2.2.19)
+    //
+    // NOT marked for coverage, and neither is CalculationBodyItem. The item is
+    //
+    //     CalculationBodyItem = ActionBodyItem | ReturnParameterMember
+    //
+    // and ReturnParameterMember is unimplemented, as are three of ActionBodyItem's four
+    // alternatives — the initial nodes, successions and guards that are the action layer.
+    // What IS reached is ActionBodyItem's first alternative, NonBehaviorBodyItem
+    // (8.2.2.17.1), whose Import, AliasMember and DefinitionMember are the same three a
+    // definition body reads. So `calc def C { return x; }` is reported and
+    // `constraint def C { doc /* why */ a <= b }` is read, which is the shape the corpus
+    // writes constraints in.
+    //
+    // The star is greedy and the expression is last; `at_result_expression` is where
+    // that boundary is decided, and it is the whole of the difficulty here.
+    fn calculation_body_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::CalculationBodyPart);
+        self.body_elements(Some(SyntaxKind::RBrace), Body::Calculation);
+        // `body_elements` returns either at the `}` or because the item run ended. The
+        // second is the only case with an expression to read, and the `?` in the
+        // production is exactly this test.
+        if !self.at_end() && !self.at(SyntaxKind::RBrace) {
+            self.result_expression_member();
+        }
+        self.finish_node();
+    }
+
+    // production: ResultExpressionMember
+    //
+    // ResultExpressionMember : ResultExpressionMembership =
+    //     MemberPrefix? ownedRelatedElement += OwnedExpression   (SysML 8.2.2.19)
+    //
+    // The metaclass is KerML's ResultExpressionMembership (8.3.4.7.7), a
+    // FeatureMembership. validateResultExpressionMembershipOwningType says its owningType
+    // must be a Function or an Expression; that is a constraint and not this layer's
+    // (ADR-0002), and the grammar already reaches this production only from a
+    // calculation body.
+    //
+    // The `?` on MemberPrefix is redundant — MemberPrefix is itself `VisibilityIndicator?`
+    // and already derives the empty string — and deviations.json records the decision to
+    // keep the clause as written rather than drop it as SysML.xtext does. The node is
+    // built either way, as MemberPrefix's always is, so the redundancy costs nothing here.
+    //
+    // No terminating semicolon. That is the whole reason this member is told from an
+    // item by lookahead rather than by its first token.
+    fn result_expression_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ResultExpressionMember);
+        self.member_prefix();
+        self.owned_expression();
         self.finish_node();
     }
 

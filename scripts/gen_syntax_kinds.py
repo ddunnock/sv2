@@ -341,6 +341,28 @@ NODES = [
         "`MemberPrefix ownedRelatedElement += SubjectUsage`. `SysML` 8.2.2.21.1.",
     ),
     ("SubjectUsage", "`'subject' UsageExtensionKeyword* Usage`. `SysML` 8.2.2.21.1."),
+    # The calculation body, and the first body in this grammar whose last part is an
+    # EXPRESSION rather than a member. That trailing ResultExpressionMember is what makes
+    # `constraint { a <= b }` a body and not a malformed usage.
+    (
+        "ConstraintDefinition",
+        (
+            "`OccurrenceDefinitionPrefix 'constraint' 'def' DefinitionDeclaration "
+            "CalculationBody`. `SysML` 8.2.2.20."
+        ),
+    ),
+    ("CalculationBody", "`';' | '{' CalculationBodyPart '}'`. `SysML` 8.2.2.19."),
+    (
+        "CalculationBodyPart",
+        "`CalculationBodyItem* ResultExpressionMember?`. `SysML` 8.2.2.19.",
+    ),
+    (
+        "ResultExpressionMember",
+        (
+            "`MemberPrefix? ownedRelatedElement += OwnedExpression`. `SysML` 8.2.2.19 — "
+            "the metaclass is `KerML`'s `ResultExpressionMembership`, 8.3.4.7.7."
+        ),
+    ),
     ("PartUsage", "`OccurrenceUsagePrefix 'part' Usage`. `SysML` 8.2.2.11."),
     # The two usages written without one of the seven keywords. SysML's analogue of
     # KerML's keywordless Feature, and between them the top two remaining SysML blockers

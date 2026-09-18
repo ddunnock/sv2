@@ -607,6 +607,14 @@ pub enum SyntaxKind {
     SubjectMember,
     /// `'subject' UsageExtensionKeyword* Usage`. `SysML` 8.2.2.21.1.
     SubjectUsage,
+    /// `OccurrenceDefinitionPrefix 'constraint' 'def' DefinitionDeclaration CalculationBody`. `SysML` 8.2.2.20.
+    ConstraintDefinition,
+    /// `';' | '{' CalculationBodyPart '}'`. `SysML` 8.2.2.19.
+    CalculationBody,
+    /// `CalculationBodyItem* ResultExpressionMember?`. `SysML` 8.2.2.19.
+    CalculationBodyPart,
+    /// `MemberPrefix? ownedRelatedElement += OwnedExpression`. `SysML` 8.2.2.19 — the metaclass is `KerML`'s `ResultExpressionMembership`, 8.3.4.7.7.
+    ResultExpressionMember,
     /// `OccurrenceUsagePrefix 'part' Usage`. `SysML` 8.2.2.11.
     PartUsage,
     /// `( EndUsagePrefix | RefPrefix ) 'ref' Usage`. `SysML` 8.2.2.6.2.
@@ -1076,6 +1084,10 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::RequirementBody,
     SyntaxKind::SubjectMember,
     SyntaxKind::SubjectUsage,
+    SyntaxKind::ConstraintDefinition,
+    SyntaxKind::CalculationBody,
+    SyntaxKind::CalculationBodyPart,
+    SyntaxKind::ResultExpressionMember,
     SyntaxKind::PartUsage,
     SyntaxKind::ReferenceUsage,
     SyntaxKind::DefaultReferenceUsage,
