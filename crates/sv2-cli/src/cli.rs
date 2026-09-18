@@ -153,12 +153,24 @@ fn usage(message: String) -> CommandError {
 /// always returns a tree, because the tree keeps every byte whether or not the text is
 /// well formed (ADR-0004). The diagnostics are what say whether it is a model.
 fn parse_file(path: &Path) -> Result<(), CommandError> {
+    // Which grammar, chosen from the name and before the file is opened (§3.3).
+    //
+    // There is no default and must not be: `KerML` and `SysML` are two grammars with
+    // two start symbols (ADR-0014), and reading a file against the one its author did
+    // not write it in accepts constructs that language does not have. A positive-only
+    // corpus sweep cannot see that happen, so the check has to be here.
+    let Some(language) = sv2_syntax::Language::from_path(path) else {
+        return Err(usage(format!(
+            "parse: {} names neither grammar; expected `.kerml` or `.sysml`",
+            path.display()
+        )));
+    };
     // §3.3: the file is opened after the argument naming it was understood, not before.
     let source = std::fs::read_to_string(path).map_err(|source| CommandError::Read {
         path: path.to_path_buf(),
         source,
     })?;
-    let parsed = sv2_syntax::parse(&source);
+    let parsed = sv2_syntax::parse(&source, language);
     if parsed.errors().is_empty() {
         return Ok(());
     }

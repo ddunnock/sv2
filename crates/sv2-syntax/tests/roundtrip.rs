@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
-//! The losslessness invariant: `parse(s).text() == s`, for every `s`.
+//! The losslessness invariant: `parse(s, l).text() == s`, for every `s` and every `l`.
 //!
 //! This is the most important test in the workspace (`.claude/rules/syntax.md`). A
 //! graphical edit downstream has to produce a minimal text delta, and it cannot if
@@ -11,7 +11,12 @@
 use std::path::{Path, PathBuf};
 
 use proptest::prelude::*;
-use sv2_syntax::parse;
+use sv2_syntax::{Language, parse};
+
+/// Both grammars. Losslessness is a property of the tree, not of understanding the
+/// text, so it holds for every input under every grammar — and asserting it under only
+/// one would leave the `KerML` start symbol (ADR-0014) untested for it.
+const LANGUAGES: [Language; 2] = [Language::KerMl, Language::SysMl];
 
 /// The alphabet a `SysML` file is actually made of, so the generator spends its
 /// budget on comment delimiters, quotes and punctuation rather than on arbitrary
@@ -63,22 +68,28 @@ proptest! {
     /// The invariant, over generated input.
     #[test]
     fn parse_round_trips_every_input(source in source_text()) {
-        prop_assert_eq!(parse(&source).text(), source);
+        for language in LANGUAGES {
+            prop_assert_eq!(parse(&source, language).text(), source.clone());
+        }
     }
 
     /// Arbitrary Unicode, including text no branch of the lexer was written for.
     #[test]
     fn parse_round_trips_arbitrary_text(source in ".{0,120}") {
-        prop_assert_eq!(parse(&source).text(), source);
+        for language in LANGUAGES {
+            prop_assert_eq!(parse(&source, language).text(), source.clone());
+        }
     }
 
     /// Truncation is the editor's normal state: a file is incomplete for most of
     /// the seconds it is open. Every prefix must round-trip too.
     #[test]
     fn every_prefix_round_trips(source in source_text()) {
-        for end in 0..=source.len() {
-            if let Some(prefix) = source.get(..end) {
-                prop_assert_eq!(parse(prefix).text(), prefix.to_owned());
+        for language in LANGUAGES {
+            for end in 0..=source.len() {
+                if let Some(prefix) = source.get(..end) {
+                    prop_assert_eq!(parse(prefix, language).text(), prefix.to_owned());
+                }
             }
         }
     }
@@ -125,8 +136,12 @@ fn round_trips_the_corpus() {
         let Ok(source) = std::fs::read_to_string(&path) else {
             continue;
         };
+        // Each file against its own grammar, exactly as the sweep reads it.
+        let Some(language) = Language::from_path(&path) else {
+            continue;
+        };
         assert_eq!(
-            parse(&source).text(),
+            parse(&source, language).text(),
             source,
             "round-trip failed for {}",
             path.display()
@@ -175,7 +190,8 @@ fn deeply_nested_input_is_reported_and_not_a_stack_overflow() {
             ),
         ),
     ] {
-        let parsed = parse(&source);
+        // SysML: `attribute` and `part` are usages, which KerML has none of.
+        let parsed = parse(&source, Language::SysMl);
         assert_eq!(parsed.text(), source, "{what} lost bytes");
         assert!(
             !parsed.errors().is_empty(),

@@ -55,6 +55,7 @@
 use rowan::{GreenNode, GreenNodeBuilder, Language as _};
 
 use crate::generated::kinds::{KEYWORDS, OPERATORS, SyntaxKind};
+use crate::grammar::Language;
 use crate::language::{Sv2Language, SyntaxNode};
 use crate::lexer::{Token, is_trivia, is_unterminated_comment, tokenize};
 
@@ -540,8 +541,65 @@ const SIMPLE_USAGES: [SimpleUsage; 7] = [
     },
 ];
 
+/// Which body production is being read, and so which elements it admits.
+///
+/// The two grammars disagree about the root and about what a package body holds, and
+/// the disagreement is not the same shape in both places (ADR-0014):
+///
+/// ```text
+/// RootNamespace@sysml  = PackageBodyElement*                          SysML 8.2.2.5.1
+/// PackageBody@sysml    = ';' | '{' PackageBodyElement* '}'             SysML 8.2.2.5.1
+/// RootNamespace@kerml  = NamespaceBodyElement*                        KerML 8.2.3.4.1
+/// PackageBody@kerml    = ';' | '{' ( NamespaceBodyElement
+///                                  | ElementFilterMember )* '}'       KerML 8.2.3.4.1
+/// DefinitionBody@sysml = ';' | '{' DefinitionBodyItem* '}'            SysML 8.2.2.6.1
+/// ```
+///
+/// Two questions come out of that, and they do NOT line up, which is why they are asked
+/// separately rather than one being derived from the other.
+///
+/// The membership node differs by language: `PackageBodyElement` reaches `PackageMember`
+/// and `NamespaceBodyElement` reaches `NonFeatureMember`.
+///
+/// Whether a filter is admitted differs by BOTH. An `ElementFilterMember` is a
+/// `PackageBodyElement`, so `SysML` admits one at the root and in a package body alike. In
+/// `KerML` it is not a `NamespaceBodyElement` at all — `PackageBody` adds it, and the root
+/// does not. So a filter is admitted in a `KerML` package body and refused at a `KerML` root,
+/// and deriving that from the membership node would accept `filter` where `KerML` has none.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Body {
+    /// `RootNamespace`: the whole file.
+    Root,
+    /// The braced form of `PackageBody`.
+    Package,
+    /// The braced form of `DefinitionBody`. `SysML` only — `KerML` has no definitions.
+    Definition,
+}
+
+impl Body {
+    /// The membership node a nested element is owned through.
+    fn member(self, language: Language) -> SyntaxKind {
+        match (self, language) {
+            (Self::Definition, _) => SyntaxKind::DefinitionMember,
+            (_, Language::SysMl) => SyntaxKind::PackageMember,
+            (_, Language::KerMl) => SyntaxKind::NonFeatureMember,
+        }
+    }
+
+    /// Whether `ElementFilterMember` is one of this body's alternatives.
+    fn admits_filter(self, language: Language) -> bool {
+        match self {
+            Self::Package => true,
+            Self::Root => language == Language::SysMl,
+            Self::Definition => false,
+        }
+    }
+}
+
 struct Parser<'a> {
     source: &'a str,
+    /// The grammar this text is read against, chosen once by the caller (ADR-0014).
+    language: Language,
     tokens: Vec<Token>,
     pos: usize,
     builder: GreenNodeBuilder<'static>,
@@ -568,9 +626,10 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    fn new(source: &'a str) -> Self {
+    fn new(source: &'a str, language: Language) -> Self {
         Self {
             source,
+            language,
             tokens: tokenize(source),
             pos: 0,
             builder: GreenNodeBuilder::new(),
@@ -707,14 +766,37 @@ impl<'a> Parser<'a> {
         self.nth_is_keyword(n, "package") || self.at_part_definition(n)
     }
 
-    /// Whether an implemented element of either kind starts at the `n`th token.
+    /// Whether an implemented element of this grammar's member starts at the `n`th token.
     ///
     /// `PackageMember = MemberPrefix ( DefinitionElement | UsageElement )`
     /// (`SysML` 8.2.2.6.1), and a definition body admits usages too, which is what
     /// makes `part def Vehicle { part engine : Engine; }` one definition holding one
     /// usage. The `UsageElement`s implemented are those in `SIMPLE_USAGES`.
+    ///
+    /// `KerML` reaches a different set entirely (8.2.3.4.1):
+    ///
+    /// ```text
+    /// NamespaceMember        = NonFeatureMember | NamespaceFeatureMember
+    /// NonFeatureMember       = MemberPrefix MemberElement
+    /// MemberElement          = AnnotatingElement | NonFeatureElement
+    /// NamespaceFeatureMember = MemberPrefix FeatureElement
+    /// ```
+    ///
+    /// `Package` is the one `NonFeatureElement` implemented, and it is a shared unit —
+    /// the same production in both grammars. Nothing else is: `FeatureElement`'s ten
+    /// alternatives (`feature`, `connector`, `succession`, `flow` and the rest) and the
+    /// remaining `NonFeatureElement`s (`class`, `struct`, `assoc`, `behavior`, …) are
+    /// unimplemented, so they are reported rather than read.
+    ///
+    /// This is the check that stops a `SysML` construct being read out of a `KerML`
+    /// file. `part def` is not reachable from `NamespaceBodyElement`, so a `.kerml` file
+    /// containing one must not parse — which it silently did before ADR-0014 was
+    /// implemented here, because one root was applied to both file kinds.
     fn at_member_element(&self, n: usize) -> bool {
-        self.at_definition_element(n) || self.at_simple_usage(n).is_some()
+        match self.language {
+            Language::KerMl => self.nth_is_keyword(n, "package"),
+            Language::SysMl => self.at_definition_element(n) || self.at_simple_usage(n).is_some(),
+        }
     }
 
     /// The index just past a `BasicUsagePrefix` written from the `n`th token.
@@ -896,31 +978,43 @@ impl<'a> Parser<'a> {
     // -- productions ------------------------------------------------------------
 
     // production: RootNamespace
+    //
+    // RootNamespace = PackageBodyElement*                          (SysML 8.2.2.5.1)
+    // RootNamespace = NamespaceBodyElement*                        (KerML 8.2.3.4.1)
+    //
+    // The one production the two grammars state differently at the start symbol, which
+    // is what ADR-0014 exists for. `Body::Root` carries the difference; the loop below
+    // is shared, because everything else about reading a body is.
     fn root_namespace(mut self) -> (GreenNode, Vec<String>) {
         self.start_node(SyntaxKind::RootNamespace);
-        self.body_elements(None, SyntaxKind::PackageMember);
+        self.body_elements(None, Body::Root);
         // Trailing trivia belongs to the tree as much as anything else.
         self.eat_trivia();
         self.finish_node();
         (self.builder.finish(), self.errors)
     }
 
-    /// `PackageBodyElement*` or `DefinitionBodyItem*`, up to `until` or end of input.
+    /// The elements of one `body`, up to `until` or end of input.
     ///
     /// `PackageBodyElement = PackageMember | ElementFilterMember | AliasMember |
     /// Import` (`SysML` 8.2.2.5.1). All four are implemented.
     ///
+    /// `NamespaceBodyElement = NamespaceMember | AliasMember | Import`
+    /// (`KerML` 8.2.3.4.1). All three are implemented, though `NamespaceMember`
+    /// reaches far less than its `SysML` counterpart — see `at_member_element`.
+    ///
     /// `DefinitionBodyItem = DefinitionMember | VariantUsageMember |
     /// NonOccurrenceUsageMember | SourceSuccessionMember? OccurrenceUsageMember |
     /// AliasMember | Import` (`SysML` 8.2.2.6.1). `DefinitionMember`, `AliasMember`
-    /// and `Import` are implemented; the usage members are not. `member` is the
-    /// membership node a nested `DefinitionElement` is owned through, which is the
-    /// one thing that differs between the two bodies.
+    /// and `Import` are implemented; the usage members are not.
+    ///
+    /// `AliasMember` and `Import` are alternatives of all three, and stated the same
+    /// way in both grammars, so they are read here without asking which body this is.
     ///
     /// Anything else is recovered over one token at a time rather than abandoning
     /// the enclosing body: an editor reparses invalid text constantly, and a body
     /// that vanishes on one bad token blanks the diagram on every keystroke.
-    fn body_elements(&mut self, until: Option<SyntaxKind>, member: SyntaxKind) {
+    fn body_elements(&mut self, until: Option<SyntaxKind>, body: Body) {
         while !self.at_end() && !until.is_some_and(|kind| self.at(kind)) {
             if self.depth >= MAX_DEPTH {
                 // Too deeply nested to recurse into another body. Recover one token
@@ -932,15 +1026,16 @@ impl<'a> Parser<'a> {
                 self.import();
             } else if self.at_element_keyword("alias") {
                 self.alias_member();
-            } else if member == SyntaxKind::PackageMember && self.at_element_keyword("filter") {
-                // ElementFilterMember is a PackageBodyElement and NOT a
-                // DefinitionBodyItem (`SysML` 8.2.2.5.1 against 8.2.2.6.1), so a
-                // `filter` in a definition body is reported rather than accepted;
+            } else if body.admits_filter(self.language) && self.at_element_keyword("filter") {
+                // Where a filter is admitted is not the same question as which member
+                // a body owns; see `Body`. A `filter` in a SysML definition body
+                // (8.2.2.5.1 against 8.2.2.6.1) or at a KerML root (8.2.3.4.1) is
+                // reported rather than accepted, and
                 // tests/rejection/element-filter-member-is-not-a-definition-body-item.sysml
-                // holds that.
+                // and element-filter-member-is-not-a-kerml-root-element.kerml hold those.
                 self.element_filter_member();
             } else if self.at_member_element(usize::from(self.at_visibility())) {
-                self.membership(member);
+                self.membership(body);
             } else {
                 self.error_token();
             }
@@ -1010,16 +1105,35 @@ impl<'a> Parser<'a> {
     // A definition is tried before a usage. The two share every prefix keyword and
     // the keyword after them, so `at_part_definition` — which requires the `def` —
     // must decide first; the usages are what is left.
-    fn membership(&mut self, member: SyntaxKind) {
+    // production: NonFeatureMember
+    //
+    // NonFeatureMember : OwningMembership =
+    //     MemberPrefix ownedRelatedElement += MemberElement          (KerML 8.2.3.4.1)
+    //
+    // The KerML member, and the third production this one method builds. It has the
+    // same shape as PackageMember and DefinitionMember — a MemberPrefix and one owned
+    // element — and differs only in which elements it may own, which `at_member_element`
+    // decides. NamespaceMember gets no node, as DefinitionElement and UsageElement get
+    // none: it is an alternation, and the alternative that matched says which was taken.
+    //
+    // NamespaceFeatureMember, its sibling, is NOT implemented: every one of
+    // FeatureElement's ten alternatives is unimplemented, so there is nothing to own.
+    fn membership(&mut self, body: Body) {
         self.eat_trivia();
-        self.start_node(member);
+        self.start_node(body.member(self.language));
         self.member_prefix();
         if self.at_keyword("package") {
             self.package();
-        } else if self.at_part_definition(0) {
+        } else if self.language == Language::SysMl && self.at_part_definition(0) {
             self.part_definition();
-        } else if let Some(usage) = self.at_simple_usage(0) {
+        } else if let Some(usage) = self.at_simple_usage(0).filter(|_| {
+            // A usage is a UsageElement, reachable from PackageMember and not from
+            // NamespaceMember. KerML has no usages at all (SysML 8.2.2.6.1).
+            self.language == Language::SysMl
+        }) {
             self.simple_usage(usage);
+        } else if self.language == Language::KerMl {
+            self.error_expected("a package");
         } else {
             self.error_expected("a package, a part definition or a usage");
         }
@@ -2830,7 +2944,7 @@ impl<'a> Parser<'a> {
         } else if self.at(SyntaxKind::LBrace) {
             self.bump();
             self.depth += 1;
-            self.body_elements(Some(SyntaxKind::RBrace), SyntaxKind::DefinitionMember);
+            self.body_elements(Some(SyntaxKind::RBrace), Body::Definition);
             self.depth -= 1;
             self.expect(SyntaxKind::RBrace, "`}`");
         } else {
@@ -3181,7 +3295,7 @@ impl<'a> Parser<'a> {
         } else if self.at(SyntaxKind::LBrace) {
             self.bump();
             self.depth += 1;
-            self.body_elements(Some(SyntaxKind::RBrace), SyntaxKind::PackageMember);
+            self.body_elements(Some(SyntaxKind::RBrace), Body::Package);
             self.depth -= 1;
             self.expect(SyntaxKind::RBrace, "`}`");
         } else {
@@ -3192,13 +3306,19 @@ impl<'a> Parser<'a> {
     }
 }
 
-/// Parse `SysML` v2 or `KerML` text into a lossless tree.
+/// Parse `source` against `language`'s grammar into a lossless tree.
+///
+/// `KerML` and `SysML` are two grammars with two start symbols, not one grammar that
+/// extends the other, so the caller says which is meant (ADR-0014). There is no default:
+/// reading a file against the grammar its author did not write it in accepts constructs
+/// the language does not have, and a positive-only corpus sweep cannot see that happen.
+/// [`Language::from_path`] is how a caller holding a path chooses.
 ///
 /// Never fails and never panics: text no production accepts becomes `Error` nodes
-/// that keep their bytes, so `parse(s).text() == s` for every `s`.
+/// that keep their bytes, so `parse(s, l).text() == s` for every `s` and every `l`.
 #[must_use]
-pub fn parse(source: &str) -> Parse {
-    let (green, errors) = Parser::new(source).root_namespace();
+pub fn parse(source: &str, language: Language) -> Parse {
+    let (green, errors) = Parser::new(source, language).root_namespace();
     Parse { green, errors }
 }
 

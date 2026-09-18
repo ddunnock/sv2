@@ -111,6 +111,27 @@ Not resolved here: the Rust parser in `sv2-syntax` implements SysML's `PackageBo
 as its root and applies it to both file kinds. It will need the same split. That is parser
 work, and this record only makes it visible.
 
+**Resolved, 2026-09-18.** The parser took the split. `sv2_syntax::Language` is the choice,
+`Language::from_path` is the single point that makes it, and `parse` requires it — there is
+no default, because a default is exactly how a file gets read against the grammar its author
+did not write it in. `RootNamespace` dispatches on it, and so does what a body admits.
+
+Two things the split surfaced that the pipeline had not had to state:
+
+- `PackageBody@kerml` admits an `ElementFilterMember` and `RootNamespace@kerml` does not,
+  while SysML admits one in both places. So "which membership does this body own" and "does
+  this body admit a filter" are two questions, not one derived from the other. Held by
+  `tests/rejection/element-filter-member-is-not-a-kerml-root-element.kerml`.
+- A `.kerml` file containing `part def` was **accepted** before this landed, which is the
+  silent failure decision driver 3 predicted. It is now rejected, and
+  `tests/rejection/part-definition-is-not-a-kerml-element.kerml` keeps it that way.
+
+KerML acceptance over the pinned corpus is still 0 of 58, and that is now the honest number
+rather than an artifact of the wrong root: `package`, `import` and `alias` are read, and the
+failures are `class`, `struct`, `feature` and the rest of `NonFeatureElement` and
+`FeatureElement`, none of which is implemented. `scripts/corpus_sweep.py` reports the count
+per language on every gate run, so the gap is visible rather than inferred.
+
 ## Pros and cons
 
 **Option 1**: faithful to both specifications, and the oracle stays meaningful. It costs a

@@ -473,13 +473,13 @@ pub enum SyntaxKind {
     Tilde,
 
     // -- nodes, authored --
-    /// `PackageBodyElement*` — the whole file. `SysML` 8.2.2.5.1.
+    /// The whole file, and one of the two places the grammars disagree: `PackageBodyElement*` in `SysML` 8.2.2.5.1, `NamespaceBodyElement*` in `KerML` 8.2.3.4.1 (ADR-0014).
     RootNamespace,
     /// `PrefixMetadataMember* PackageDeclaration PackageBody`. `SysML` 8.2.2.5.1.
     Package,
     /// `'package' Identification`. `SysML` 8.2.2.5.1.
     PackageDeclaration,
-    /// `';' | '{' PackageBodyElement* '}'`. `SysML` 8.2.2.5.1.
+    /// `';' | '{' PackageBodyElement* '}'` in `SysML` 8.2.2.5.1; `';' | '{' ( NamespaceBodyElement | ElementFilterMember )* '}'` in `KerML` 8.2.3.4.1.
     PackageBody,
     /// `( '<' NAME '>' )? ( NAME )?`. `SysML` 8.2.2.2.
     Identification,
@@ -499,6 +499,8 @@ pub enum SyntaxKind {
     RelationshipBody,
     /// `MemberPrefix ( DefinitionElement | UsageElement )`. `SysML` 8.2.2.5.1.
     PackageMember,
+    /// `MemberPrefix MemberElement`. `KerML` 8.2.3.4.1 — what a `PackageMember` is in a `KerML` file, where the members are `MemberElement` and `FeatureElement` rather than `DefinitionElement` and `UsageElement`.
+    NonFeatureMember,
     /// `( visibility = VisibilityIndicator )?`. `SysML` 8.2.2.5.1.
     MemberPrefix,
     /// `MemberPrefix 'alias' ( '<' NAME '>' )? NAME? 'for' [QualifiedName] RelationshipBody`. `SysML` 8.2.2.5.1.
@@ -946,6 +948,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::NamespaceImport,
     SyntaxKind::RelationshipBody,
     SyntaxKind::PackageMember,
+    SyntaxKind::NonFeatureMember,
     SyntaxKind::MemberPrefix,
     SyntaxKind::AliasMember,
     SyntaxKind::OwnedAnnotation,

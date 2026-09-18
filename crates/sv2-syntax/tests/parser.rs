@@ -11,11 +11,16 @@
 
 use std::fmt::Write as _;
 
-use sv2_syntax::{Parse, SyntaxElement, SyntaxNode, parse};
+use sv2_syntax::{Language, Parse, SyntaxElement, SyntaxNode, parse};
 
-/// Parse text the grammar accepts, asserting that nothing was reported.
+/// Parse text the `SysML` grammar accepts, asserting that nothing was reported.
+///
+/// Every case in this file is `SysML`: the productions it covers are stated in
+/// `SysML` 8.2.2, and several of them — `PartDefinition`, the usages,
+/// `ElementFilterMember` at a root — are not reachable from `KerML`'s start symbol at
+/// all (ADR-0014). The `KerML` cases live in tests/kerml.rs.
 fn parse_accepted(source: &str) -> Parse {
-    let parsed = parse(source);
+    let parsed = parse(source, Language::SysMl);
     assert!(parsed.errors().is_empty(), "{:?}", parsed.errors());
     parsed
 }
@@ -23,7 +28,7 @@ fn parse_accepted(source: &str) -> Parse {
 /// Parse text the grammar rejects, asserting that it is reported and that the tree
 /// still carries every byte.
 fn parse_rejected(source: &str) -> Parse {
-    let parsed = parse(source);
+    let parsed = parse(source, Language::SysMl);
     assert!(
         !parsed.errors().is_empty(),
         "{source:?} must be reported as an error"
@@ -179,7 +184,7 @@ fn parsing_never_panics_on_truncated_input() {
     let source = "package <V> Outer { package 'q\\' Inner; } /* c";
     for end in 0..=source.len() {
         if let Some(prefix) = source.get(..end) {
-            let parsed = parse(prefix);
+            let parsed = parse(prefix, Language::SysMl);
             assert_eq!(parsed.text(), prefix);
         }
     }
@@ -919,7 +924,7 @@ fn parsing_annotations_and_definitions_never_panics_on_truncated_input() {
     let source = "public abstract individual part def <V> Vehicle :> A::B, C {\n  alias X for Y { comment c about Z locale \"en\" /* b */ rep r language \"l\" /* t */ }\n}";
     for end in 0..=source.len() {
         if let Some(prefix) = source.get(..end) {
-            assert_eq!(parse(prefix).text(), prefix);
+            assert_eq!(parse(prefix, Language::SysMl).text(), prefix);
         }
     }
 }
@@ -1098,7 +1103,7 @@ fn parsing_a_part_usage_never_panics_on_truncated_input() {
     let source = "in derived abstract constant ref individual snapshot part <e> engine : Engine, Base::Motor { part inner; }";
     for end in 0..=source.len() {
         if let Some(prefix) = source.get(..end) {
-            assert_eq!(parse(prefix).text(), prefix);
+            assert_eq!(parse(prefix, Language::SysMl).text(), prefix);
         }
     }
 }

@@ -97,10 +97,24 @@ LEXICAL = [
 
 # Tree shape. Authored, because no pinned input implies a node.
 NODES = [
-    ("RootNamespace", "`PackageBodyElement*` — the whole file. `SysML` 8.2.2.5.1."),
+    (
+        "RootNamespace",
+        (
+            "The whole file, and one of the two places the grammars disagree: "
+            "`PackageBodyElement*` in `SysML` 8.2.2.5.1, `NamespaceBodyElement*` in "
+            "`KerML` 8.2.3.4.1 (ADR-0014)."
+        ),
+    ),
     ("Package", "`PrefixMetadataMember* PackageDeclaration PackageBody`. `SysML` 8.2.2.5.1."),
     ("PackageDeclaration", "`'package' Identification`. `SysML` 8.2.2.5.1."),
-    ("PackageBody", "`';' | '{' PackageBodyElement* '}'`. `SysML` 8.2.2.5.1."),
+    (
+        "PackageBody",
+        (
+            "`';' | '{' PackageBodyElement* '}'` in `SysML` 8.2.2.5.1; "
+            "`';' | '{' ( NamespaceBodyElement | ElementFilterMember )* '}'` in "
+            "`KerML` 8.2.3.4.1."
+        ),
+    ),
     ("Identification", "`( '<' NAME '>' )? ( NAME )?`. `SysML` 8.2.2.2."),
     ("QualifiedName", "`( '$' '::' )? ( NAME '::' )* NAME`. `KerML` 8.2.3.4.1."),
     (
@@ -118,6 +132,14 @@ NODES = [
     (
         "PackageMember",
         "`MemberPrefix ( DefinitionElement | UsageElement )`. `SysML` 8.2.2.5.1.",
+    ),
+    (
+        "NonFeatureMember",
+        (
+            "`MemberPrefix MemberElement`. `KerML` 8.2.3.4.1 — what a `PackageMember` is "
+            "in a `KerML` file, where the members are `MemberElement` and "
+            "`FeatureElement` rather than `DefinitionElement` and `UsageElement`."
+        ),
     ),
     ("MemberPrefix", "`( visibility = VisibilityIndicator )?`. `SysML` 8.2.2.5.1."),
     (
