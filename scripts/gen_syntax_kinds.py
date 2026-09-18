@@ -386,6 +386,14 @@ NODES = [
         ),
     ),
     ("ActionBody", "`';' | '{' ActionBodyItem* '}'`. `SysML` 8.2.2.17.1."),
+    # Off the SIMPLE_USAGES spine, because it ends in an ActionBody rather than in the
+    # UsageCompletion those seven take. Measured to lead 18 of the 46 corpus files that
+    # write an action and fail, against one led by the control-flow layer.
+    (
+        "ActionUsage",
+        ("`OccurrenceUsagePrefix 'action' ActionUsageDeclaration ActionBody`. `SysML` 8.2.2.17.2."),
+    ),
+    ("ActionUsageDeclaration", "`UsageDeclaration ValuePart?`. `SysML` 8.2.2.17.2."),
     ("CalculationBody", "`';' | '{' CalculationBodyPart '}'`. `SysML` 8.2.2.19."),
     (
         "CalculationBodyPart",

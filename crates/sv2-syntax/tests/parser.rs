@@ -399,12 +399,87 @@ fn an_action_definition_needs_a_body_and_a_def() {
     // ActionBody is not optional. Held as a file by
     // tests/rejection/action-definition-missing-action-body.sysml.
     parse_rejected("action def Brake");
-    // Without `def` it is an ActionUsage, and `perform` is a PerformActionUsage
-    // (SysML 8.2.2.17.2). Both are unimplemented, and both are what the corpus is
-    // actually blocked on rather than the control-flow layer. Held as a file by
-    // tests/rejection/action-usage-is-not-an-action-definition.sysml.
-    parse_rejected("package P { action brake; }");
+    // `perform` is a PerformActionUsage (SysML 8.2.2.17.2), a different production and
+    // unimplemented. Held as a file by
+    // tests/rejection/perform-action-usage-is-not-implemented.sysml.
     parse_rejected("package P { perform action stop; }");
+}
+
+// -- ActionUsage, SysML 8.2.2.17.2 ------------------------------------------------
+//
+// ActionUsage            = OccurrenceUsagePrefix 'action'
+//                          ActionUsageDeclaration ActionBody
+// ActionUsageDeclaration = UsageDeclaration ValuePart?
+//
+// Off the SIMPLE_USAGES spine at the body end, the way ActionDefinition is off the
+// definition spine.
+
+#[test]
+fn an_action_usage_is_a_declaration_over_an_action_body() {
+    parse_accepted("package P { action brake; }");
+    parse_accepted("package P { action brake : Braking; }");
+    parse_accepted("package P { action brake { part pedal; } }");
+    parse_accepted("package P { action a = b; }");
+    parse_accepted("package P { individual action brake; }");
+    // Inside the bodies that admit a usage, including an action body.
+    parse_accepted("part def V { action brake; }");
+    parse_accepted("action def B { action inner; }");
+}
+
+#[test]
+fn an_action_usage_may_name_nothing_at_all() {
+    // The same optionality SubjectUsage has: UsageDeclaration is
+    // `Identification FeatureSpecializationPart?` and Identification is two optional
+    // parts (SysML 8.2.2.6.2, 8.2.3.1), so an anonymous action is grammatical.
+    parse_accepted("package P { action; }");
+}
+
+#[test]
+fn the_def_is_what_separates_an_action_usage_from_an_action_definition() {
+    // `at_action_usage` requires that no `def` follow the keyword, exactly as every one
+    // of SIMPLE_USAGES does. Both productions are implemented, so this is a rule about
+    // which one is reached and not about which one exists.
+    let usage = render(&parse_accepted("package P { action brake; }").syntax());
+    assert_eq!(nodes_named(&usage, "ActionUsage"), 1, "{usage}");
+    assert_eq!(nodes_named(&usage, "ActionDefinition"), 0, "{usage}");
+
+    let definition = render(&parse_accepted("package P { action def Brake; }").syntax());
+    assert_eq!(
+        nodes_named(&definition, "ActionDefinition"),
+        1,
+        "{definition}"
+    );
+    assert_eq!(nodes_named(&definition, "ActionUsage"), 0, "{definition}");
+
+    // Both in one body, told apart by that one word.
+    let both = render(&parse_accepted("package P { action def B; action b : B; }").syntax());
+    assert_eq!(nodes_named(&both, "ActionDefinition"), 1, "{both}");
+    assert_eq!(nodes_named(&both, "ActionUsage"), 1, "{both}");
+
+    // Held as a file by tests/rejection/action-usage-is-not-an-action-definition.sysml.
+    parse_rejected("package P { action def def Brake; }");
+}
+
+#[test]
+fn an_action_usage_takes_an_action_body_not_a_usage_body() {
+    // The seven of SIMPLE_USAGES end in `Usage`, which reaches UsageBody and so
+    // DefinitionBody. This one ends in an ActionBody (SysML 8.2.2.17.2), which is the
+    // whole reason it is not a row in that table.
+    let rendered = render(&parse_accepted("package P { action brake { part p; } }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "ActionUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwAction",
+            "ActionUsageDeclaration",
+            "ActionBody"
+        ],
+        "{rendered}"
+    );
+    // A part usage beside it still takes the usage spine, so the two shapes coexist.
+    let part = render(&parse_accepted("package P { part p { } }").syntax());
+    assert_eq!(nodes_named(&part, "UsageBody"), 1, "{part}");
+    assert_eq!(nodes_named(&part, "ActionBody"), 0, "{part}");
 }
 
 #[test]

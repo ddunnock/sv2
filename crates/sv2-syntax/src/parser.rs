@@ -1206,6 +1206,7 @@ impl<'a> Parser<'a> {
             }
             Language::SysMl => {
                 self.at_definition_element(n)
+                    || self.at_action_usage(n)
                     || self.at_simple_usage(n).is_some()
                     // Only when no keyword usage starts here; see `membership`.
                     || self.at_reference_usage(n)
@@ -1892,6 +1893,13 @@ impl<'a> Parser<'a> {
             .filter(|_| self.language == Language::SysMl)
         {
             self.simple_definition(definition);
+        } else if self.language == Language::SysMl && self.at_action_usage(0) {
+            // A keyword usage, so it is asked with the other keyword usages and BEFORE
+            // the two reference usages — `action` is a keyword and not a name, and
+            // `at_default_reference_usage` would otherwise never see it, but the order
+            // is written to be read rather than to be re-derived. See `membership`'s
+            // note on dispatch order below.
+            self.action_usage();
         } else if let Some(usage) = self.at_simple_usage(0).filter(|_| {
             // A usage is a UsageElement, reachable from PackageMember and not from
             // NamespaceMember. KerML has no usages at all (SysML 8.2.2.6.1).
@@ -2070,6 +2078,16 @@ impl<'a> Parser<'a> {
     /// The keyword decides, and the `def` after it rules a usage out: every one of
     /// these has a definition counterpart spelled the same way but for that word
     /// (`SysML` 8.2.2.6.1), and none of those definitions is implemented.
+    /// Whether an `ActionUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'action'` with no `def` after it (`SysML` 8.2.2.17.2). The
+    /// `def` is what separates it from an `ActionDefinition`, exactly as it separates
+    /// each of `SIMPLE_USAGES` from the definition spelled the same way.
+    fn at_action_usage(&self, n: usize) -> bool {
+        let after = self.skip_usage_prefix(n);
+        self.nth_is_keyword(after, "action") && !self.nth_is_keyword(after + 1, "def")
+    }
+
     fn at_simple_usage(&self, n: usize) -> Option<SimpleUsage> {
         SIMPLE_USAGES.iter().copied().find(|usage| {
             let after = if usage.is_occurrence {
@@ -4046,6 +4064,50 @@ impl<'a> Parser<'a> {
             self.expect(SyntaxKind::RBrace, "`}`");
         } else {
             self.error_expected("`;` or `{` after an action definition declaration");
+        }
+        self.finish_node();
+    }
+
+    // production: ActionUsage
+    //
+    // ActionUsage = OccurrenceUsagePrefix 'action'
+    //               ActionUsageDeclaration ActionBody            (SysML 8.2.2.17.2)
+    //
+    // production: ActionUsageDeclaration
+    //
+    // ActionUsageDeclaration : ActionUsage =
+    //     UsageDeclaration ValuePart?                            (SysML 8.2.2.17.2)
+    //
+    // Off the SIMPLE_USAGES spine, and the difference is at the END rather than the
+    // prefix: the seven take `Usage`, which is `UsageDeclaration UsageCompletion`, and
+    // this takes a declaration of its own and then an ActionBody. The tokens are the
+    // same ones in the same order; what differs is which body rule reads the braces, and
+    // reading an action body against DefinitionBody would accept the declaration and
+    // then read its contents against the wrong item set.
+    //
+    // ActionUsageDeclaration has a body identical to ConstraintUsageDeclaration
+    // (8.2.2.20). They are two productions rather than one because they belong to two
+    // metaclasses, and each is built here under its own name so the tree says which was
+    // taken.
+    //
+    // The metaclass is SysML::ActionUsage (8.3.17.4), both a Step and an
+    // OccurrenceUsage.
+    fn action_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ActionUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("action");
+        self.action_usage_declaration();
+        self.action_body();
+        self.finish_node();
+    }
+
+    fn action_usage_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ActionUsageDeclaration);
+        self.usage_declaration();
+        if self.at_value_part() {
+            self.value_part();
         }
         self.finish_node();
     }
