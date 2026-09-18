@@ -3654,7 +3654,7 @@ impl<'a> Parser<'a> {
     //
     // production: InstantiatedTypeReference
     //
-    // InstantiatedTypeReference : Feature = [QualifiedName]      (KerML 8.2.5.8.3)
+    // InstantiatedTypeReference : Type = [QualifiedName]         (KerML 8.2.5.8.3)
     //
     // InstantiatedTypeMember is NOT marked. It is
     //
@@ -3764,8 +3764,15 @@ impl<'a> Parser<'a> {
 
     // production: NamedArgumentMember
     //
-    // NamedArgumentMember : ParameterMembership =
+    // NamedArgumentMember : FeatureMembership =
     //     ownedMemberFeature = NamedArgument                     (KerML 8.2.5.8.3)
+    //
+    // A FeatureMembership, and NOT the ParameterMembership its positional sibling
+    // ArgumentMember is (8.2.5.8.1). The two argument forms therefore differ in the
+    // abstract syntax and not only in the text. What the grammar states about the
+    // difference and this comment does not infer past: a NamedArgument names the
+    // parameter it supplies through a ParameterRedefinition, and an ArgumentMember has
+    // no such relationship.
     //
     // production: NamedArgument
     //
