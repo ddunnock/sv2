@@ -67,6 +67,25 @@ the upstream URL and commit for every file.
 Example and training models from the SysML v2 Release repository, EPL-2.0, used as a
 conformance corpus: files a conformant tool accepts. They are read, never modified.
 
+## SIL Open Font License 1.1 (`app/src/assets/fonts/`)
+
+**IBM Plex Sans** and **IBM Plex Mono**, copyright © 2017 IBM Corp., under the SIL
+Open Font License 1.1. Five woff2 files, latin subset only, are redistributed here:
+the three sans weights and two mono weights the interface uses. The OFL permits
+bundling with software and asks that the copyright and licence notice travel with the
+files, which is what this section and `app/src/assets/fonts/README.md` do. That README
+records each file's upstream URL, version and sha256.
+
+They are committed rather than fetched because the target environment is air-gapped. A
+stylesheet that reaches a font CDN works on the workstation where it was written and
+nowhere else.
+
+Unlike everything above, these are **not** in `vendor/sources.lock.toml`. That file is
+the ADR-0010 conformance tiers — material this project reads to decide what SysML v2
+is — and a typeface is not evidence about the language.
+
+IBM® and IBM Plex® are trademarks of International Business Machines Corp.
+
 ## Trademarks
 
 SysML® and OMG® are trademarks or registered trademarks of the Object Management

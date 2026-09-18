@@ -1,49 +1,260 @@
-@import "tailwindcss";
-
 /*
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
  *
- * The one stylesheet the shell loads. A STUB: enough that the window is legible
- * and nothing more, because the editor and the diagram are the two things that
- * will actually decide the visual language and neither exists yet.
+ * The one stylesheet the shell loads (STD-004-TS §3.6 rule 1), and the whole
+ * statement of the design tokens.
  *
- * The header is a block comment here rather than two `//` lines because CSS has
- * no line comment. STD-004-TS §2.3 bans the doc-block form for TypeScript
- * because TSDoc and editor hovers would read the licence as documentation;
- * a stylesheet has no such reader, so the block form is right here.
+ * The header is a block comment because CSS has no line comment. §2.3 bans the
+ * doc-block form for TypeScript because TSDoc and editor hovers would read the
+ * licence as documentation; a stylesheet has no such reader, so the block form
+ * is right here.
+ *
+ * The palette is the Model Workbench mockup's, carried over token for token
+ * from `docs/design/sysml-workbench-mockup/assets/workbench.css`, where it sits
+ * on two classes applied to the frame root. Two upstream values are normalised:
+ * `#ececE8` and `#dedeD8` were written in mixed case, which CSS does not care
+ * about and a reader does.
+ *
+ * WHAT IS NOT HERE, and must not be added:
+ *
+ * - Diagram presentation. `.node`, `.nh`, `.kw`, `.nm`, `.cp`, `.ct`, `.e`,
+ *   `.ed`, `.ef`, `.el`, `.elk` and `.canvasgrid` in the mockup style SVG
+ *   produced from the model. §3.6 rule 5 puts that outside Tailwind entirely:
+ *   it is part of the projection (ADR-0001), not of the shell's visual
+ *   language, and a utility class on a projected element is a styling decision
+ *   in the wrong layer. It belongs to `diagram/`.
+ * - Editor highlighting. `.tk-*`, `.wv`, `.ln` and `.gut` are CodeMirror's
+ *   highlight style, attached to the node set in `editor/` (ADR-0013, decision
+ *   step 4). The syntax COLOURS are tokens below, so the editor and the
+ *   sidebar's source view read one set of values; the classes that apply them
+ *   are not here.
+ * - Component classes. §3.6 rule 2 puts a repeated rule in `@layer components`
+ *   with a name, and a rule used once in the `className`. The test is
+ *   repetition, and nothing repeats yet: the shell has no components. They
+ *   arrive with the panels that share them, not before.
  */
 
-@layer base {
-  :root {
-    color-scheme: dark light;
+@import "tailwindcss";
 
-    @apply font-sans;
-  }
-
-  body {
-    @apply m-0 min-h-screen min-w-[320px] bg-[#1b1b1f] text-[rgba(255,255,255,0.87)];
-  }
-
-  code {
-    @apply rounded bg-[#2a2a31] px-1.5 py-0.5 font-mono text-[0.9em];
-  }
+/*
+ * IBM Plex, vendored. The mockup loads these from Google Fonts; the target is
+ * air-gapped (§3.2) and the test preload makes `fetch` throw, so a stylesheet
+ * that reaches the network works on one workstation and nowhere else.
+ * Provenance, hashes and licence: `src/assets/fonts/README.md`.
+ *
+ * `swap` rather than `block`: the shell must be legible while the face loads,
+ * which is the same argument ADR-0013 makes for the editor rendering
+ * unhighlighted text before the parser is available.
+ *
+ * MEASURED, so nobody re-derives it: Bun's CSS bundler INLINES these as
+ * `data:font/woff2;base64`. The built stylesheet is 145 KB rather than 11 KB,
+ * and no `.woff2` reaches `dist/`. `loader: { ".woff2": "file" }` on
+ * `Bun.build` does not change it — that map governs JS imports, not CSS
+ * `url()`, and setting it produced a byte-identical bundle. So `swap` never
+ * fires today: the face arrives with the rules that reference it.
+ *
+ * That is accepted rather than worked around. The bytes are the same either way
+ * plus base64's third, the webview reads them from local disk with no network,
+ * and one stylesheet is simpler than a copy step in both `tools/build.ts` and
+ * `tools/dev.ts`. Revisit if a measurement shows first paint waiting on the
+ * stylesheet once `sv2-wasm` is also loading — that is the contention §3.6
+ * cares about, and it does not exist yet.
+ */
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2");
 }
 
-@layer components {
-  .shell {
-    @apply mx-auto max-w-3xl p-8;
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/ibm-plex-sans-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2");
+}
+
+/*
+ * `dark:` follows the theme class, not the OS. The shell root carries `t-light`
+ * or `t-dark`, so a preview in one theme can nest inside a window in the other
+ * — which the Element Source view will need when it shows a diagram's styling.
+ */
+@custom-variant dark (&:where(.t-dark, .t-dark *));
+
+/*
+ * Plain `@theme`, never `@theme inline`. Both mint the utilities; only plain
+ * `@theme` compiles them to `var(--color-panel)` rather than substituting the
+ * literal, and the whole light/dark swap below depends on that indirection
+ * surviving. `@theme inline` would leave `.t-dark` with nothing to override.
+ *
+ * The light palette is the default. `.t-light` restates it verbatim so the two
+ * classes are symmetrical and either can nest inside the other.
+ */
+@theme {
+  /* Surfaces */
+  --color-bg: #f3f3f1;
+  --color-panel: #ffffff;
+  --color-panel-2: #f8f8f6;
+  --color-node: #ffffff;
+  --color-canvas: #fbfbfa;
+  --color-hover: #ecece8;
+  --color-highlight: #eef3fb;
+
+  /* Lines */
+  --color-line: #d6d6d1;
+  --color-line-2: #e7e7e3;
+  --color-grid: #deded8;
+  --color-edge: #474c53;
+
+  /* Text. `fg` rather than `text`, so the utility reads `text-fg` and not
+     `text-text`, and so it cannot be confused with the `--text-*` sizes. */
+  --color-fg: #1d1f21;
+  --color-muted: #555a61;
+  --color-faint: #7c8189;
+
+  /* Accent */
+  --color-accent: #1f5fbf;
+  --color-on-accent: #ffffff;
+  --color-accent-bg: #e4edfa;
+
+  /* Syntax, shared by the editor and the sidebar's source view */
+  --color-syntax-keyword: #1f4fa8;
+  --color-syntax-type: #0b6e62;
+  --color-syntax-string: #9a4a12;
+  --color-syntax-comment: #666b72;
+  --color-syntax-number: #7a3fa0;
+
+  /* Status and diagnostics */
+  --color-ok: #1d7a3a;
+  --color-warn: #8a5a00;
+  --color-err: #b3261e;
+
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+  /*
+   * Six sizes, and the interface uses no others. Named for their job rather
+   * than their scale position, because `text-meta` survives a density change
+   * and `text-xs` does not say what it is for.
+   */
+  --text-nano: 9px;
+  --text-micro: 10px;
+  --text-meta: 11px;
+  --text-code: 12px;
+  --text-ui: 13px;
+  --text-name: 15px;
+
+  --radius-wb: 3px;
+  --radius-wb-lg: 4px;
+
+  /*
+   * The only two region sizes off Tailwind's 4px scale. Everything else the
+   * mockup measures lands on it: top bar 40 is h-10, rail 44 is w-11,
+   * navigator 280 is w-70, sidebar 340 is w-85, collapsed strip 32 is w-8,
+   * status bar 24 is h-6, icon button 28 is size-7. So §3.6 rule 3 costs
+   * nothing here, and an arbitrary value in the shell has no excuse.
+   */
+  --spacing-view-tabs: 34px;
+  --spacing-control: 26px;
+}
+
+@layer base {
+  .t-light {
+    color-scheme: light;
+
+    --color-bg: #f3f3f1;
+    --color-panel: #ffffff;
+    --color-panel-2: #f8f8f6;
+    --color-node: #ffffff;
+    --color-canvas: #fbfbfa;
+    --color-hover: #ecece8;
+    --color-highlight: #eef3fb;
+    --color-line: #d6d6d1;
+    --color-line-2: #e7e7e3;
+    --color-grid: #deded8;
+    --color-edge: #474c53;
+    --color-fg: #1d1f21;
+    --color-muted: #555a61;
+    --color-faint: #7c8189;
+    --color-accent: #1f5fbf;
+    --color-on-accent: #ffffff;
+    --color-accent-bg: #e4edfa;
+    --color-syntax-keyword: #1f4fa8;
+    --color-syntax-type: #0b6e62;
+    --color-syntax-string: #9a4a12;
+    --color-syntax-comment: #666b72;
+    --color-syntax-number: #7a3fa0;
+    --color-ok: #1d7a3a;
+    --color-warn: #8a5a00;
+    --color-err: #b3261e;
   }
 
-  .shell h1 {
-    @apply mb-2 text-3xl font-bold;
+  .t-dark {
+    color-scheme: dark;
+
+    --color-bg: #17181a;
+    --color-panel: #1f2124;
+    --color-panel-2: #232528;
+    --color-node: #232528;
+    --color-canvas: #1a1b1e;
+    --color-hover: #2a2d31;
+    --color-highlight: #1f2a3a;
+    --color-line: #383b40;
+    --color-line-2: #2c2f33;
+    --color-grid: #2c2e33;
+    --color-edge: #b9bdc3;
+    --color-fg: #e4e5e7;
+    --color-muted: #a6abb1;
+    --color-faint: #868b92;
+    --color-accent: #77a7f2;
+    --color-on-accent: #0d1b30;
+    --color-accent-bg: #233450;
+    --color-syntax-keyword: #86adf2;
+    --color-syntax-type: #62c3b2;
+    --color-syntax-string: #e2a574;
+    --color-syntax-comment: #8e939a;
+    --color-syntax-number: #c9a2e6;
+    --color-ok: #72c690;
+    --color-warn: #e3b457;
+    --color-err: #f28b82;
   }
 
-  .shell h2 {
-    @apply mt-8 mb-2 text-sm font-semibold tracking-wide uppercase opacity-60;
-  }
-
-  .shell ul {
-    @apply list-disc space-y-1 pl-6 opacity-80;
+  /*
+   * `body` carries the type but NOT the background. The theme class sits on the
+   * shell root, one element inside `body`, so a background here would be painted
+   * from the `@theme` defaults — the light palette — and would show around a
+   * dark shell wherever the shell does not reach. The first render of this file
+   * did exactly that: in dark mode the page margins stayed light. The element
+   * that owns the theme owns the background.
+   */
+  body {
+    @apply m-0 min-h-screen font-sans text-ui;
   }
 }
