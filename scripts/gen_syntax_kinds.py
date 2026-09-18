@@ -389,6 +389,15 @@ NODES = [
     # Off the SIMPLE_USAGES spine, because it ends in an ActionBody rather than in the
     # UsageCompletion those seven take. Measured to lead 18 of the 46 corpus files that
     # write an action and fail, against one led by the control-flow layer.
+    # The reference layer's feature chain, which is NOT the expression layer's.
+    # `a.b` after `:>>` is an OwnedFeatureChain (SysML 8.2.2.6.5); `a.b` in an expression
+    # is a FeatureChainExpression (KerML 8.2.5.8.2). Same two tokens, different
+    # production, different tree, and the position decides — as it does for `[`.
+    (
+        "OwnedFeatureChain",
+        "`OwnedFeatureChaining ( '.' OwnedFeatureChaining )+`. `SysML` 8.2.2.6.5.",
+    ),
+    ("OwnedFeatureChaining", "`chainingFeature = [QualifiedName]`. `SysML` 8.2.2.6.5."),
     (
         "ActionUsage",
         ("`OccurrenceUsagePrefix 'action' ActionUsageDeclaration ActionBody`. `SysML` 8.2.2.17.2."),

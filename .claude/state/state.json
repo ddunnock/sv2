@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-18T15:08:32Z",
+    "regenerated_utc": "2026-09-18T15:15:08Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 152,
-      "unimplemented": 406,
+      "implemented": 154,
+      "unimplemented": 404,
       "absent": 0,
-      "percent": 27.2
+      "percent": 27.6
     },
     "tests": {
-      "unit": 296,
+      "unit": 299,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 95,
+      "negative_cases": 97,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "e8bd462 Read an action usage, and watch the blocker move rather than clear",
       "b8e183a Read an action definition, and measure what the action layer really costs",
       "d9924ec Read a required and an assumed constraint, both spellings",
       "f87d2ed Read a bracketed quantity, and settle which bracket is which",
       "63f9b07 Read a feature chain, and bound it like every other nesting",
       "ae7a303 Read a calculation body, whose last part is an expression",
       "6dc5cb3 Read the subject of a requirement",
-      "47b8e0d Read a requirement definition, and the body only it has",
-      "8ccfc0d Widen one allowed path in the bash hook fixture"
+      "47b8e0d Read a requirement definition, and the body only it has"
     ]
   },
   "authored": {

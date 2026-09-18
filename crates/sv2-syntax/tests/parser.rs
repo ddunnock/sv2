@@ -405,6 +405,83 @@ fn an_action_definition_needs_a_body_and_a_def() {
     parse_rejected("package P { perform action stop; }");
 }
 
+// -- OwnedFeatureChain, SysML 8.2.2.6.5 -------------------------------------------
+//
+// OwnedFeatureChain    = OwnedFeatureChaining ( '.' OwnedFeatureChaining )+
+// OwnedFeatureChaining = chainingFeature = [QualifiedName]
+//
+// The REFERENCE layer's chain, which is not the expression layer's. All four of
+// 8.2.2.6.5's reference productions take it, and all four were marked with it absent.
+
+#[test]
+fn a_reference_may_be_a_feature_chain() {
+    // Every one of these is a shape the corpus writes; a chained reference appears 60
+    // times. Before this they were rejected, while coverage counted the four reference
+    // productions as implemented.
+    parse_accepted("package P { part p :>> a.b; }");
+    parse_accepted("package P { part p :>> localClock.currentTime; }");
+    parse_accepted("package P { part p :>> a.b.c; }");
+    parse_accepted("package P { part p :> a.b; }");
+    parse_accepted("package P { attribute x subsets a.b; }");
+    parse_accepted("package P { attribute x redefines a.b; }");
+    // The plain QualifiedName alternative still works, and `::` is within one link.
+    parse_accepted("package P { part p :>> a; }");
+    parse_accepted("package P { part p :>> X::y.z; }");
+}
+
+#[test]
+fn a_reference_chain_is_flat_where_an_expression_chain_folds() {
+    // Two productions, two shapes, and the position is what chooses between them — as it
+    // is for `[` between a MultiplicityRange and a BracketExpression.
+    //
+    // SysML 8.2.2.6.5 — OwnedFeatureChain = OwnedFeatureChaining
+    //                                       ( '.' OwnedFeatureChaining )+   flat
+    // KerML 8.2.5.8.2 — FeatureChainExpression = NonFeatureChainPrimaryArgumentMember
+    //                                            '.' FeatureChainMember     folds left
+    let reference = render(&parse_accepted("package P { part p :>> a.b.c; }").syntax());
+    assert_eq!(
+        nodes_named(&reference, "OwnedFeatureChain"),
+        1,
+        "{reference}"
+    );
+    // Three links as SIBLINGS under one chain, not three nested chains.
+    assert_eq!(
+        nodes_named(&reference, "OwnedFeatureChaining"),
+        3,
+        "{reference}"
+    );
+    assert_eq!(
+        nodes_named(&reference, "FeatureChainExpression"),
+        0,
+        "{reference}"
+    );
+
+    let expression = render(&parse_accepted("constraint def C { a.b.c }").syntax());
+    assert_eq!(
+        nodes_named(&expression, "FeatureChainExpression"),
+        2,
+        "{expression}"
+    );
+    assert_eq!(
+        nodes_named(&expression, "OwnedFeatureChain"),
+        0,
+        "{expression}"
+    );
+}
+
+#[test]
+fn a_reference_of_one_link_is_not_a_chain() {
+    // The `+` means a chain is at least two links, so a bare name is the QualifiedName
+    // alternative. A chain node over one link would be a level carrying nothing.
+    let rendered = render(&parse_accepted("package P { part p :>> a; }").syntax());
+    assert_eq!(nodes_named(&rendered, "OwnedFeatureChain"), 0, "{rendered}");
+    assert_eq!(nodes_named(&rendered, "OwnedRedefinition"), 1, "{rendered}");
+    // Held as files by tests/rejection/feature-chain-needs-a-link-after-every-dot.sysml
+    // and owned-feature-chain-needs-two-links.sysml.
+    parse_rejected("package P { part p :>> a.; }");
+    parse_rejected("package P { part p :>> .b; }");
+}
+
 // -- ActionUsage, SysML 8.2.2.17.2 ------------------------------------------------
 //
 // ActionUsage            = OccurrenceUsagePrefix 'action'

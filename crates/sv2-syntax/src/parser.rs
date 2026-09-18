@@ -2361,12 +2361,8 @@ impl<'a> Parser<'a> {
     //     subsettedFeature = [QualifiedName]
     //     | ownedRelatedElement += OwnedFeatureChain              (SysML 8.2.2.6.5)
     //
-    // The OwnedFeatureChain alternative is not implemented; see owned_feature_typing.
     fn owned_subsetting(&mut self) {
-        self.eat_trivia();
-        self.start_node(SyntaxKind::OwnedSubsetting);
-        self.qualified_name();
-        self.finish_node();
+        self.reference_target(SyntaxKind::OwnedSubsetting);
     }
 
     // production: Redefinitions
@@ -2405,10 +2401,7 @@ impl<'a> Parser<'a> {
     //     redefinedFeature = [QualifiedName]
     //     | ownedRelatedElement += OwnedFeatureChain              (SysML 8.2.2.6.5)
     fn owned_redefinition(&mut self) {
-        self.eat_trivia();
-        self.start_node(SyntaxKind::OwnedRedefinition);
-        self.qualified_name();
-        self.finish_node();
+        self.reference_target(SyntaxKind::OwnedRedefinition);
     }
 
     // production: References
@@ -2438,9 +2431,79 @@ impl<'a> Parser<'a> {
     // OwnedReferenceSubsetting : ReferenceSubsetting =
     //     referencedFeature = [QualifiedName]
     //     | ownedRelatedElement += OwnedFeatureChain              (SysML 8.2.2.6.5)
+    //
+    // The second alternative was MARKED AND ABSENT until this change: the marker claimed
+    // the production and the body read only a QualifiedName, so `part p :>> a.b;` was
+    // rejected while coverage counted the production as done. The corpus writes a chained
+    // reference 60 times. A false `implemented` is the one kind of coverage error that
+    // cannot be found by reading the report, which is why it survived.
     fn owned_reference_subsetting(&mut self) {
+        self.reference_target(SyntaxKind::OwnedReferenceSubsetting);
+    }
+
+    /// One of the four reference productions of `SysML` 8.2.2.6.5, under `node`.
+    ///
+    /// `OwnedSubsetting`, `OwnedRedefinition`, `OwnedReferenceSubsetting` and
+    /// `OwnedCrossSubsetting` are stated with one shape and differ only in which feature
+    /// the target is assigned to:
+    ///
+    /// ```text
+    /// <x>Feature = [QualifiedName] | <x>Feature = OwnedFeatureChain
+    /// ```
+    ///
+    /// All four were MARKED with the chain alternative absent, so `part p :>> a.b;` was
+    /// rejected while coverage counted four productions as done. One method now reads the
+    /// shape they share, which is also what keeps the four from drifting apart again.
+    fn reference_target(&mut self, node: SyntaxKind) {
         self.eat_trivia();
-        self.start_node(SyntaxKind::OwnedReferenceSubsetting);
+        self.start_node(node);
+        let start = self.builder.checkpoint();
+        self.qualified_name();
+        if self.at_feature_chain() {
+            self.owned_feature_chain(start);
+        }
+        self.finish_node();
+    }
+
+    // production: OwnedFeatureChain
+    //
+    // OwnedFeatureChain : Feature =
+    //     ownedRelationship += OwnedFeatureChaining
+    //     ( '.' ownedRelationship += OwnedFeatureChaining )+     (SysML 8.2.2.6.5)
+    //
+    // production: OwnedFeatureChaining
+    //
+    // OwnedFeatureChaining : FeatureChaining =
+    //     chainingFeature = [QualifiedName]                      (SysML 8.2.2.6.5)
+    //
+    // NOT the expression layer's chain. `a.b` after `:>>` is this; `a.b` in an expression
+    // is a FeatureChainExpression (KerML 8.2.5.8.2). The two tokens are identical and the
+    // POSITION decides, exactly as it does for `[` between a MultiplicityRange and a
+    // BracketExpression — and for the same structural reason: this one is reachable only
+    // from a reference, and that one only from a primary operand, and neither position
+    // can be reached from the other.
+    //
+    // The shapes differ too, which is why one could not serve for both. This is FLAT —
+    // `( '.' link )+` over one node, with every link a sibling — where the expression
+    // chain FOLDS, nesting one FeatureChainExpression per link. The `+` means a chain has
+    // at least two links, so a bare `a` is the QualifiedName alternative and never an
+    // OwnedFeatureChain of one.
+    //
+    // The first link is already in the tree when the `.` is seen, so the node is opened
+    // retroactively at `start`, as the postfix expressions do.
+    fn owned_feature_chain(&mut self, start: rowan::Checkpoint) {
+        self.start_node_at(start, SyntaxKind::OwnedFeatureChain);
+        self.wrap_at(start, &[SyntaxKind::OwnedFeatureChaining]);
+        while self.at_feature_chain() {
+            self.bump();
+            self.owned_feature_chaining();
+        }
+        self.finish_node();
+    }
+
+    fn owned_feature_chaining(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OwnedFeatureChaining);
         self.qualified_name();
         self.finish_node();
     }
@@ -2467,10 +2530,7 @@ impl<'a> Parser<'a> {
     //     crossedFeature = [QualifiedName]
     //     | ownedRelatedElement += OwnedFeatureChain              (SysML 8.2.2.6.5)
     fn owned_cross_subsetting(&mut self) {
-        self.eat_trivia();
-        self.start_node(SyntaxKind::OwnedCrossSubsetting);
-        self.qualified_name();
-        self.finish_node();
+        self.reference_target(SyntaxKind::OwnedCrossSubsetting);
     }
 
     /// Consume one of the special lexical terminals of `SysML` 8.2.2.1.2, in either
