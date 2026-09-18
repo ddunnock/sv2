@@ -28,3 +28,9 @@ CLAUDE.local.md
 
 # JetBrains IDE workspace, per-machine.
 .idea/
+
+# Bun/TypeScript build inputs and outputs under app/. bun.lock IS committed —
+# it plus bunfig's install settings are the reproducibility story, and a
+# committed node_modules would put platform binaries in the history.
+node_modules/
+dist/

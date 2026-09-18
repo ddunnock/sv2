@@ -2,7 +2,7 @@
 title: "STD-004-TS: TypeScript and React Standards"
 status: draft
 date: 2026-09-18
-version: 0.3.0
+version: 0.4.0
 owner: David Dunnock
 ---
 
@@ -74,6 +74,42 @@ makes `tsc` refuse it as well.
 Most of Biome's type-aware rules are in the `nursery` group, which means their
 behavior can change between releases. [§13.4](#134-biomejson) records the
 upgrade procedure.
+
+### 1.2 TypeScript 7, and what the compiler is used for
+
+The compiler is TypeScript 7, the native implementation, installed from the
+`typescript` package and invoked as `tsc`. It type-checks and does nothing else.
+
+| Job                                   | Done by                                   |
+| ------------------------------------- | ----------------------------------------- |
+| Type-checking (the gate, the editor)  | `tsc --noEmit`, TypeScript 7              |
+| Transpiling tests, preload, `tools/`  | Bun's built-in transpiler                 |
+| Transpiling and bundling the webview  | Vite                                      |
+| Declaration or JavaScript emit        | nothing; `noEmit` is set                  |
+
+That division is why the webview can move to TypeScript 7 without waiting for
+anything. TypeScript 7.0 has no stable programmatic API, and nothing here uses
+one: Biome carries its own parser and inference, Bun and Vite transpile without
+the compiler, and the IPC contract is emitted from Zod rather than from types.
+`erasableSyntaxOnly` ([§5.1](#51-compiler-flags)) is what keeps the transpilers
+and the compiler in agreement, since every file means the same thing with its
+types removed.
+
+**Rules.**
+
+1. **No dependency may require the TypeScript compiler API.** A tool that imports
+   `typescript` as a library, or that needs the TypeScript 6 compatibility
+   package to run, is rejected at the allowlist review
+   ([§3.1](#31-a-closed-allowlist)) until a stable API exists and a decision
+   record adopts it. This rules out, for now, tools built on the compiler API
+   such as typescript-eslint and ts-morph, and anything that depends on them.
+2. **No deprecated compiler options, and no `ignoreDeprecations`.** Options that
+   TypeScript 6 deprecated are removed in 7, and `ignoreDeprecations` itself no
+   longer works there. The configuration in [§13.3](#133-tsconfigjson-and-tsconfigtestjson)
+   uses none of them: `paths` without `baseUrl`, and `moduleResolution: "bundler"`.
+3. **The compiler runs with its default parallelism.** `--singleThreaded` is for
+   a constrained machine, set on the command line there, never in the
+   configuration.
 
 ---
 
@@ -315,7 +351,7 @@ decision, and nothing arrives transitively as a direct import.**
 | `@tauri-apps/api`              | runtime | IPC to the Rust backend                                           |
 | `sv2-wasm`                     | runtime | the parser, built from `crates/sv2-wasm` in the same commit (§2, rule 6); the one non-registry dependency |
 | `zod`                          | runtime | boundary validation and the TypeScript half of the contract (§4)  |
-| `typescript`                   | dev     | the type authority (§1.1)                                         |
+| `typescript`                   | dev     | the type authority, at version 7: type-checking only (§1.2)       |
 | `@biomejs/biome`               | dev     | lint and format                                                   |
 | `vite`, `@vitejs/plugin-react` | dev     | build                                                             |
 | `@types/bun`                   | dev     | types for `bun:test` and the Bun APIs used by tests and `tools/`  |
@@ -1156,7 +1192,7 @@ error ([§2](#2-source-layout), rule 5).
 ```
 
 `declaration` is on only because `isolatedDeclarations` requires it. `noEmit`
-means nothing is written; Vite does the build. Type tests (`*.test-d.ts`) are
+means nothing is written; Vite does the build ([§1.2](#12-typescript-7-and-what-the-compiler-is-used-for)). Type tests (`*.test-d.ts`) are
 deliberately inside this configuration: they prove properties of the webview's
 own types, and need nothing from Bun.
 

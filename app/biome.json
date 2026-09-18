@@ -2,7 +2,7 @@
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
-    "includes": ["src/**", "tools/**", "vite.config.ts", "!contract/**", "!**/generated/**"]
+    "includes": ["src/**", "tools/**", "!contract/**", "!**/generated/**"]
   },
   "formatter": {
     "enabled": true,
@@ -139,10 +139,6 @@
         { "group": ["../**", "@/wasm/**"], "message": "shell/ reaches the parser through editor/ (STD-004-TS §2.1)." },
         { "group": ["@tauri-apps/**", "@codemirror/**", "@lezer/**", "sv2-wasm", "react-dom", "react-dom/**"], "message": "shell/ imports react only (STD-004-TS §2.1)." }
       ] } } } } }
-    },
-    {
-      "includes": ["vite.config.ts"],
-      "linter": { "rules": { "style": { "noDefaultExport": "off" } } }
     }
   ]
 }

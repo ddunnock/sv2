@@ -1,8 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": ["vite/client", "bun"]
+    "types": ["bun"]
   },
-  "include": ["src", "tools", "vite.config.ts"],
+  "include": ["src", "tools"],
   "exclude": []
 }

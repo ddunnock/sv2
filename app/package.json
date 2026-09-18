@@ -1,23 +1,25 @@
 {
-  "name": "sv2-studio",
+  "name": "bun-react-template",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "bun@1.4.2",
-  "description": "The sv2 Studio front end.",
-  "author": "David Dunnock <dunnoda@gmail.com>",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ddunnock/sv2.git"
-  },
   "scripts": {
-    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
-    "lint": "biome ci --error-on-warnings .",
-    "build": "vite build",
-    "emit-contract": "bun tools/emit-contract.ts"
+    "dev": "bun --hot src/index.ts",
+    "start": "NODE_ENV=production bun src/index.ts",
+    "build": "bun run build.ts"
   },
-  "trustedDependencies": [],
   "dependencies": {
-    "sv2-wasm": "file:../crates/sv2-wasm/pkg"
+    "bun-plugin-tailwind": "^0.1.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/bun": "^1.4.2"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
   }
 }
