@@ -21,7 +21,7 @@ membership wrapper — which docs/DERIVATION.md names as the way to build a pars
 that looks more conformant while being less so.
 
     python3.11 scripts/bnf_coverage.py           write .claude/state/coverage.json
-    python3.11 scripts/bnf_coverage.py --check   fail on any `absent`
+    python3.11 scripts/bnf_coverage.py --check   fail on any `absent`, or on a stale report
 """
 
 from __future__ import annotations
@@ -56,7 +56,43 @@ def xtext_only() -> set[str]:
     return xtext - set(json.loads(INVENTORY.read_text())["productions"])
 
 
-def _check(absent: list[str], *, implemented: int, declared: int, unimplemented: int) -> int:
+def build_report(
+    declared: set[str], implemented: list[str], unimplemented: list[str], absent: list[str]
+) -> dict[str, object]:
+    """The report as it should be on disk for this inventory and these markers."""
+    percent = 100.0 * len(implemented) / len(declared) if declared else 0.0
+    return {
+        "_generated_by": "scripts/bnf_coverage.py",
+        "_note": "`unimplemented` is a tracked state, not a failure. `absent` is a defect.",
+        "declared": len(declared),
+        "implemented": len(implemented),
+        "unimplemented": len(unimplemented),
+        "absent": len(absent),
+        "percent": round(percent, 1),
+        "unimplemented_productions": unimplemented,
+        "absent_productions": absent,
+    }
+
+
+def is_stale(report: dict[str, object]) -> bool:
+    """Whether the report on disk disagrees with the one just built.
+
+    `--check` failing only on `absent` left the report free to drift: a marker added
+    without regenerating left `coverage.json` reporting the previous count, and the gate
+    stayed green while `state.json` published the stale number. A derived artifact that
+    cannot be caught out of date is not derived, it is authored by accident.
+    """
+    if not REPORT.is_file():
+        return True
+    try:
+        on_disk: object = json.loads(REPORT.read_text())
+    except json.JSONDecodeError:
+        # A half-written report is not a current one. Regenerating is always safe.
+        return True
+    return on_disk != report
+
+
+def _check(absent: list[str], report: dict[str, object]) -> int:
     if absent:
         ported = sorted(set(absent) & xtext_only())
         invented = sorted(set(absent) - set(ported))
@@ -77,9 +113,12 @@ def _check(absent: list[str], *, implemented: int, declared: int, unimplemented:
             print("The parser accepts syntax no pinned grammar declares — either the marker is")
             print("misspelled, or a production was invented. Both are defects.")
         return 1
+    if is_stale(report):
+        print(f"{REPORT} is stale. Run python3.11 scripts/bnf_coverage.py")
+        return 1
     print(
-        f"coverage ok: {implemented}/{declared} implemented, "
-        f"{unimplemented} unimplemented, 0 absent"
+        f"coverage ok: {report['implemented']}/{report['declared']} implemented, "
+        f"{report['unimplemented']} unimplemented, 0 absent"
     )
     return 0
 
@@ -87,7 +126,9 @@ def _check(absent: list[str], *, implemented: int, declared: int, unimplemented:
 def main(argv: list[str] | None = None) -> int:
     """Write the coverage report, or with --check fail on an absent production."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true", help="fail on any absent production")
+    parser.add_argument(
+        "--check", action="store_true", help="fail on any absent production, or a stale report"
+    )
     args = parser.parse_args(argv)
     os.chdir(ROOT)
 
@@ -105,26 +146,11 @@ def main(argv: list[str] | None = None) -> int:
     unimplemented = sorted(declared - claimed)
     absent = sorted(claimed - declared)
 
-    if args.check:
-        return _check(
-            absent,
-            implemented=len(implemented),
-            declared=len(declared),
-            unimplemented=len(unimplemented),
-        )
+    report = build_report(declared, implemented, unimplemented, absent)
 
-    percent = 100.0 * len(implemented) / len(declared) if declared else 0.0
-    report = {
-        "_generated_by": "scripts/bnf_coverage.py",
-        "_note": "`unimplemented` is a tracked state, not a failure. `absent` is a defect.",
-        "declared": len(declared),
-        "implemented": len(implemented),
-        "unimplemented": len(unimplemented),
-        "absent": len(absent),
-        "percent": round(percent, 1),
-        "unimplemented_productions": unimplemented,
-        "absent_productions": absent,
-    }
+    if args.check:
+        return _check(absent, report)
+
     REPORT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.write_text(json.dumps(report, indent=2) + "\n")
     print(f"wrote {REPORT} ({len(implemented)}/{len(declared)} implemented)")

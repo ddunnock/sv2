@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-17T22:58:13Z",
+    "regenerated_utc": "2026-09-18T11:28:10Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 106,
-      "unimplemented": 452,
+      "implemented": 107,
+      "unimplemented": 451,
       "absent": 0,
-      "percent": 19.0
+      "percent": 19.2
     },
     "tests": {
-      "unit": 185,
+      "unit": 194,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 65,
+      "negative_cases": 67,
       "known_permissive": 0
     },
     "pins": {
@@ -37,19 +37,19 @@
       "vendor_total": 332
     },
     "commits": [
+      "122abd8 Record the session's own commits in the state block",
       "938c2f4 Read the expression operator core, with precedence from the table rather than the rule order",
       "14ecfc3 Assign every capability the accepted ADRs require to exactly one crate",
       "4c482b4 Spell the prose in American English, and fix the punctuation around two clauses",
       "39dc95e Read five more usages, and make the shape they share a table rather than five copies",
       "37ce54e Parse the other four feature specializations, and attribute usages over the same spine",
       "ee6ff8e Rebuild sv2 before every sweep, so a rejection case cannot pass against the previous parser",
-      "8ddc351 Parse part usages, with their prefix keywords and their typings",
-      "4c0c0d8 Rewrite the state file for a derived and frozen grammar, and open the session log"
+      "8ddc351 Parse part usages, with their prefix keywords and their typings"
     ]
   },
   "authored": {
-    "objective": "sv2-syntax parses a lossless CST for packages, imports, aliases, owned annotations (comment, doc, rep) in relationship bodies, part definitions, seven usages with all five feature specializations, AND the expression operator core: 106 of 558 productions. The reference grammar is DERIVED IN FULL through the six-phase pipeline and FROZEN at sha256 0b9abe64f1f3ce2b: 554 of 554 live units verified, none pending and none in conflict, in both languages. The derived grammar's oracle parses every one of the 311 corpus files and catches all 37 negatives, leaking none.",
-    "next_step": "THE POSTFIX LAYER of KerML 8.2.5.8.2, in Parser::primary_expression in crates/sv2-syntax/src/parser.rs. The operator core reads all fifteen precedence tiers and stops at the base expression; primary_expression currently dispatches NullExpression, SequenceExpression, LiteralExpression and FeatureReferenceExpression and nothing else. Turn it into a postfix LOOP over the base expression, because BracketExpression, IndexExpression, FeatureChainExpression, SelectExpression, CollectExpression and FunctionOperationExpression are all written left-recursive in the frozen reference (reference.ebnf lines 68, 85, 171, 218, 236, 445) and so are left-associative BY CONSTRUCTION -- unlike the fifteen tiers, this layer needs no table. Build each node retroactively with Parser::start_node_at and Parser::wrap_at at a checkpoint taken before the base expression, exactly as Parser::infix_tail already does. START WITH FeatureChainExpression ('.') and BracketExpression ('['), and do BracketExpression's disambiguation first because it is the one hard part: '[' after a declared feature name is a MultiplicityPart (SysML 8.2.2.6.6, IMPLEMENTED, Parser::multiplicity_part) and '[' after an expression operand is a BracketExpression (the quantity form, 297 corpus hits such as `1200 [kg]` and the hard case `(hubDiameter + 2 * tire.height) [mm]` at validation/15-Properties-Values-Expressions/15_03-Value Expression.sysml line 15). Those two are the SAME TOKEN in different roles and the parser must not confuse them; tests/rejection/bracket-expression-is-not-implemented.sysml states the distinction and is the case to remove when it lands, alongside feature-chain-expression-is-not-implemented.sysml. Do NOT start with SelectExpression, CollectExpression or FunctionOperationExpression's body form: all three take a BodyArgumentMember, which reaches BodyExpression -> ExpressionBody, and in SysML that reads CalculationBody, which is most of the language.",
+    "objective": "sv2-syntax parses a lossless CST against TWO grammars, chosen by file suffix: KerML and SysML have two start symbols, and sv2_syntax::parse requires a Language with no default (ADR-0014, implemented 2026-09-18). It reads packages, imports, aliases, owned annotations (comment, doc, rep) in relationship bodies, part definitions, seven usages with all five feature specializations, AND the expression operator core: 107 of 558 productions. The reference grammar is DERIVED IN FULL through the six-phase pipeline and FROZEN at sha256 0b9abe64f1f3ce2b: 554 of 554 live units verified, none pending and none in conflict, in both languages. The derived grammar's oracle parses every one of the 311 corpus files and catches all 37 negatives, leaking none. The RUST parser is far behind that oracle and the gap is now measured rather than assumed: it accepts 18 of 253 .sysml and 0 of 58 .kerml corpus files, recorded per file in tests/corpus-accepted.txt and ratcheted by scripts/corpus_sweep.py. That set may grow and must never shrink.",
+    "next_step": "KERML'S ELEMENTS, in crates/sv2-syntax/src/parser.rs. The KerML start symbol is implemented (RootNamespace = NamespaceBodyElement*, KerML 8.2.3.4.1) and reads package, import and alias, so .kerml files now fail on their ELEMENTS rather than on their root -- the corpus rejects at `class`, `struct`, `feature` and `assoc`. That is why .kerml acceptance is 0 of 58, and it is now the honest number rather than an artifact of applying SysML's root to both file kinds. Do MemberElement's NonFeatureElement alternatives FIRST: Package is currently the only one implemented, so Parser::at_member_element tests a single keyword under Language::KerMl and has to become a set -- start there, because the shape of that test is what every later element plugs into. THEN NamespaceFeatureMember -> FeatureElement -> Feature (KerML 8.2.4.3.1), which is the larger half: FeatureDeclaration carries the specialization parts, and tests/rejection/end-feature-requires-a-declaration.kerml already states one rule about it. Every element needs its coverage marker, a positive case in crates/sv2-syntax/tests/kerml.rs, and a rejection case in the same change. `scripts/corpus-sweep.sh --record` is how the ledger moves, and it moves only up.\n\nALSO OUTSTANDING, both larger than the above and both cheapest right now:\n(1) Parse::errors() is Vec<String>. It carries no range, no code and no severity, so nothing can underline a token in an editor or decorate a diagram row the way ADR-0002 requires. About 40 emission sites today, and one more with every production added. sv2-cli's ErrorCode is a separate vocabulary -- it is about the PROCESS, not the model -- and the two must not be merged.\n(2) Element identity is undecided: ADR-0009 and ADR-0016 both decide it, both are `proposed`, and neither carries supersedes/superseded-by frontmatter naming the other. It blocks the sidecar schema, stable handles in sv2-resolve, and any bidirectional graphical edit.",
     "pending_decisions": [
       {
         "id": "ADR-0009",
