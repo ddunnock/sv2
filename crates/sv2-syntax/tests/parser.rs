@@ -11,7 +11,7 @@
 
 use std::fmt::Write as _;
 
-use sv2_syntax::{Language, Parse, SyntaxElement, SyntaxNode, parse};
+use sv2_syntax::{DiagnosticCode, Language, Parse, Severity, SyntaxElement, SyntaxNode, parse};
 
 /// Parse text the `SysML` grammar accepts, asserting that nothing was reported.
 ///
@@ -286,6 +286,64 @@ fn a_definition_whose_body_is_not_a_definition_body_is_not_in_the_table() {
     ] {
         parse_rejected(source);
     }
+}
+
+// -- the diagnostics themselves ---------------------------------------------------
+
+#[test]
+fn only_errors_are_raised_today() {
+    // Severity has three variants and this crate produces one of them. Asserted rather
+    // than assumed, so that the first Warning or Info raised has to come here and say
+    // what it is: the doc comment on Severity claims this, and a claim nothing checks
+    // is how a doc comment stops being true.
+    for source in [
+        "package",
+        "class Wrong;",
+        "package P { filter",
+        "/* never closed",
+        "part def",
+        "}}}",
+    ] {
+        for diagnostic in parse(source, Language::SysMl).errors() {
+            assert_eq!(
+                diagnostic.severity(),
+                Severity::Error,
+                "{source:?} raised {diagnostic:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_diagnostic_points_at_the_token_it_is_about() {
+    // The whole point of the range: a caller underlines it. `class` is KerML's, so in
+    // a SysML file it is unexpected, and the range must cover exactly those five bytes.
+    let source = "package P { class Wrong; }";
+    let parsed = parse(source, Language::SysMl);
+    let first = parsed
+        .errors()
+        .iter()
+        .find(|d| d.code() == DiagnosticCode::Unexpected)
+        .expect("`class` is not a SysML element");
+    let start = usize::from(first.range().start());
+    let end = usize::from(first.range().end());
+    // `get`, not a slice: the workspace forbids indexing a str, because a range landing
+    // inside a multi-byte character panics — which is the same reason the range is
+    // required to be on character boundaries in the first place.
+    assert_eq!(source.get(start..end), Some("class"));
+}
+
+#[test]
+fn a_diagnostic_about_the_end_of_the_file_is_an_empty_range_there() {
+    // "expected X, found end of file" is about a position, not about any bytes.
+    let source = "package P {";
+    let parsed = parse(source, Language::SysMl);
+    let last = parsed
+        .errors()
+        .last()
+        .expect("an unclosed body is reported");
+    assert!(last.range().is_empty(), "{last:?}");
+    assert_eq!(usize::from(last.range().start()), source.len());
 }
 
 // -- reserved words are not names (KerML 8.2.2.6) ---------------------------------
@@ -833,7 +891,10 @@ fn an_unterminated_annotation_body_is_reported_and_kept() {
     // terminator, whether the comment is trivia or a body.
     let parsed = parse_rejected("public import A::* { doc /* never closed");
     assert!(
-        parsed.errors().iter().any(|e| e.contains("never closed")),
+        parsed
+            .errors()
+            .iter()
+            .any(|e| e.code() == DiagnosticCode::UnterminatedComment),
         "{:?}",
         parsed.errors()
     );

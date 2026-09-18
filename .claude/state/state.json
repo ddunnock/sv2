@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-18T11:50:25Z",
+    "regenerated_utc": "2026-09-18T12:02:49Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -23,7 +23,7 @@
       "percent": 22.2
     },
     "tests": {
-      "unit": 210,
+      "unit": 228,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 75,
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "14c262d Record the measured blockers, and put the typed diagnostic ahead of them",
       "747befa Read the eight SysML definitions that share one spine",
       "4b064d6 Let an annotating element be a member, in both grammars",
       "7220350 Read KerML's eight classifiers, from the shape the units already agree on",
       "8817b4a Fail the coverage check when the report it writes is out of date",
       "9409545 Read KerML against KerML's grammar, and SysML against SysML's",
       "f0cca37 Sweep the corpus that is actually pinned, and ratchet what parses",
-      "122abd8 Record the session's own commits in the state block",
-      "938c2f4 Read the expression operator core, with precedence from the table rather than the rule order"
+      "122abd8 Record the session's own commits in the state block"
     ]
   },
   "authored": {

@@ -22,14 +22,41 @@ Concretely:
 ## Error recovery is a first-class path, not a fallback
 
 The editor parses invalid text constantly, because a file is invalid for most of the
-seconds it is open. Two entry points:
+seconds it is open. There is **one** entry point and it is always resilient:
 
-- `parse()` — strict. Returns a tree plus the full diagnostic list.
-- `parse_for_editor()` — resilient. Always returns a tree, with error nodes where recovery
-  kicked in. Never returns `None`, never panics, never loses the parts that did parse.
+```rust
+pub fn parse(source: &str, language: Language) -> Parse
+```
+
+It always returns a tree, with `Error` nodes where recovery kicked in. It never returns
+`None`, never panics, and never loses the parts that did parse. There is no strict
+variant, and adding one would be a second parser: acceptance is "the parser reported
+nothing", which is `Parse::errors().is_empty()`, not a different function.
+
+`language` is required and has no default. KerML and SysML are two grammars with two
+start symbols (ADR-0014), and reading a file against the one its author did not write it
+in accepts constructs that language does not have.
 
 A resilient parse that drops a whole file because one token was wrong makes the diagram
 blank on every keystroke. Recover at the nearest enclosing body and continue.
+
+## Diagnostics carry a range, never just a sentence
+
+`Parse::errors()` returns `&[Diagnostic]`, and a `Diagnostic` cannot be constructed
+without a `TextRange`. That is deliberate: an editor underlines a span, and ADR-0002
+decorates a diagram row rather than dropping it — neither can be done with prose.
+
+- The code (`DiagnosticCode`) is the stable identity; the message is free to be reworded.
+- Codes are namespaced by the crate that raises them: `PARSE-*` here, `HIR-*` above.
+- Severity is a property of the code, not of the site, so two raisers of one code cannot
+  disagree about how much it matters.
+- `sv2-cli`'s `ErrorCode` is a **different** vocabulary — how the *process* failed, one
+  per exit status (STD-002-RS §3.2). Do not merge them.
+
+`OffsetMap` is the single designated boundary for turning a byte offset into anything
+else — a line and column now, UTF-16 code units when a language server needs them
+(ADR-0013 RISK-013-2). A second conversion anywhere defeats the test that this one is
+right.
 
 ## sv2-ast owns no data
 

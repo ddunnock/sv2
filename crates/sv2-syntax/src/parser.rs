@@ -53,7 +53,9 @@
 //! round-trip holds for malformed input.
 
 use rowan::{GreenNode, GreenNodeBuilder, Language as _};
+use text_size::{TextRange, TextSize};
 
+use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use crate::generated::kinds::{KEYWORDS, OPERATORS, SyntaxKind};
 use crate::grammar::Language;
 use crate::language::{Sv2Language, SyntaxNode};
@@ -63,7 +65,7 @@ use crate::lexer::{Token, is_trivia, is_unterminated_comment, tokenize};
 #[derive(Debug, Clone)]
 pub struct Parse {
     green: GreenNode,
-    errors: Vec<String>,
+    errors: Vec<Diagnostic>,
 }
 
 impl Parse {
@@ -82,8 +84,12 @@ impl Parse {
     }
 
     /// What the parser could not make sense of, in source order.
+    ///
+    /// Each carries the range it is about, so a caller can point at it: underline the
+    /// token in an editor, decorate the row in a diagram (ADR-0002), or print a line
+    /// and column. A rendered sentence cannot be pointed at.
     #[must_use]
-    pub fn errors(&self) -> &[String] {
+    pub fn errors(&self) -> &[Diagnostic] {
         &self.errors
     }
 }
@@ -739,7 +745,7 @@ struct Parser<'a> {
     tokens: Vec<Token>,
     pos: usize,
     builder: GreenNodeBuilder<'static>,
-    errors: Vec<String>,
+    errors: Vec<Diagnostic>,
     /// How many nesting levels of recursive production this parser is inside.
     ///
     /// Bounded by [`MAX_DEPTH`]. Invariant 3 is that the parser does not die on any
@@ -1048,8 +1054,11 @@ impl<'a> Parser<'a> {
     /// as trivia or as an annotation's body, and both must report it.
     fn push(&mut self, token: Token, kind: SyntaxKind) {
         if is_unterminated_comment(token.kind, self.text_of(token)) {
-            self.errors
-                .push("comment is never closed: expected `*/`".to_owned());
+            self.emit(
+                DiagnosticCode::UnterminatedComment,
+                Self::range_of(token),
+                "comment is never closed: expected `*/`".to_owned(),
+            );
         }
         self.builder
             .token(Sv2Language::kind_to_raw(kind), self.text_of(token));
@@ -1112,16 +1121,56 @@ impl<'a> Parser<'a> {
             return;
         }
         self.depth_reported = true;
-        self.errors
-            .push(format!("nested deeper than {MAX_DEPTH} levels"));
+        let range = self.here();
+        self.emit(
+            DiagnosticCode::TooDeeplyNested,
+            range,
+            format!("nested deeper than {MAX_DEPTH} levels"),
+        );
     }
 
     fn error_expected(&mut self, what: &str) {
         let found = self
             .peek()
             .map_or("end of file", |token| self.text_of(token));
-        self.errors
-            .push(format!("expected {what}, found `{found}`"));
+        let message = format!("expected {what}, found `{found}`");
+        let range = self.here();
+        self.emit(DiagnosticCode::Expected, range, message);
+    }
+
+    /// Record one diagnostic.
+    ///
+    /// Every diagnostic this parser raises goes through here, so that the range is
+    /// never forgotten: a `Diagnostic` without one cannot be constructed, which is what
+    /// keeps "underline the offending token" from being a thing a caller has to guess.
+    fn emit(&mut self, code: DiagnosticCode, range: TextRange, message: String) {
+        self.errors.push(Diagnostic::new(code, range, message));
+    }
+
+    /// The range a diagnostic about what comes next is about.
+    ///
+    /// The next non-trivia token, or an empty range at the end of the source when there
+    /// is none. Empty is the honest answer for "expected `}`, found end of file": it is
+    /// about a position rather than about any bytes, and it still has to be pointed at.
+    fn here(&self) -> TextRange {
+        self.peek().map_or_else(
+            || TextRange::empty(Self::size(self.source.len())),
+            Self::range_of,
+        )
+    }
+
+    /// One token's half-open byte range.
+    fn range_of(token: Token) -> TextRange {
+        TextRange::new(Self::size(token.start), Self::size(token.end))
+    }
+
+    /// A byte offset as a `TextSize`, saturating rather than wrapping.
+    ///
+    /// `TextSize` is 32-bit. A source file large enough to overflow it is not one this
+    /// parser has to place diagnostics in correctly, but it is one it must not panic on
+    /// (invariant 3), so the conversion saturates and the position is merely wrong.
+    fn size(offset: usize) -> TextSize {
+        TextSize::new(u32::try_from(offset).unwrap_or(u32::MAX))
     }
 
     /// One token nothing accepts, wrapped so its bytes survive in the tree.
@@ -1130,8 +1179,8 @@ impl<'a> Parser<'a> {
         let Some(token) = self.tokens.get(self.pos).copied() else {
             return;
         };
-        self.errors
-            .push(format!("unexpected `{}`", self.text_of(token)));
+        let message = format!("unexpected `{}`", self.text_of(token));
+        self.emit(DiagnosticCode::Unexpected, Self::range_of(token), message);
         self.start_node(SyntaxKind::Error);
         self.push(token, token.kind);
         self.finish_node();
@@ -1147,7 +1196,7 @@ impl<'a> Parser<'a> {
     // The one production the two grammars state differently at the start symbol, which
     // is what ADR-0014 exists for. `Body::Root` carries the difference; the loop below
     // is shared, because everything else about reading a body is.
-    fn root_namespace(mut self) -> (GreenNode, Vec<String>) {
+    fn root_namespace(mut self) -> (GreenNode, Vec<Diagnostic>) {
         self.start_node(SyntaxKind::RootNamespace);
         self.body_elements(None, Body::Root);
         // Trailing trivia belongs to the tree as much as anything else.
@@ -3169,8 +3218,7 @@ impl<'a> Parser<'a> {
             self.depth -= 1;
             self.expect(SyntaxKind::RBrace, "`}`");
         } else {
-            self.errors
-                .push("expected `;` or `{` after a definition declaration".to_owned());
+            self.error_expected("`;` or `{` after a definition declaration");
         }
         self.finish_node();
     }
@@ -3360,8 +3408,7 @@ impl<'a> Parser<'a> {
             self.bump();
             self.with_significant_comments(Self::owned_annotations);
         } else {
-            self.errors
-                .push("expected `;` or `{` after an import declaration".to_owned());
+            self.error_expected("`;` or `{` after an import declaration");
         }
         self.finish_node();
     }
@@ -3691,8 +3738,7 @@ impl<'a> Parser<'a> {
             self.depth -= 1;
             self.expect(SyntaxKind::RBrace, "`}`");
         } else {
-            self.errors
-                .push("expected `;` or `{` after a classifier declaration".to_owned());
+            self.error_expected("`;` or `{` after a classifier declaration");
         }
         self.finish_node();
     }
@@ -3710,8 +3756,7 @@ impl<'a> Parser<'a> {
             self.depth -= 1;
             self.expect(SyntaxKind::RBrace, "`}`");
         } else {
-            self.errors
-                .push("expected `;` or `{` after a package declaration".to_owned());
+            self.error_expected("`;` or `{` after a package declaration");
         }
         self.finish_node();
     }

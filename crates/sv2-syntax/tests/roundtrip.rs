@@ -73,6 +73,30 @@ proptest! {
         }
     }
 
+    /// Every diagnostic points somewhere inside the text it is about.
+    ///
+    /// A range past the end, or reversed, is a crash or a silent mis-highlight in
+    /// whatever underlines it. This is the invariant the typed diagnostic exists for,
+    /// so it is asserted over generated input rather than over examples.
+    #[test]
+    fn every_diagnostic_range_lies_within_the_source(source in source_text()) {
+        for language in LANGUAGES {
+            for diagnostic in parse(&source, language).errors() {
+                let range = diagnostic.range();
+                prop_assert!(range.start() <= range.end(), "{:?}", diagnostic);
+                prop_assert!(
+                    usize::from(range.end()) <= source.len(),
+                    "{:?} past the end of {} bytes",
+                    diagnostic,
+                    source.len()
+                );
+                // And it must not split a character, or slicing it panics.
+                prop_assert!(source.is_char_boundary(usize::from(range.start())), "{:?}", diagnostic);
+                prop_assert!(source.is_char_boundary(usize::from(range.end())), "{:?}", diagnostic);
+            }
+        }
+    }
+
     /// Arbitrary Unicode, including text no branch of the lexer was written for.
     #[test]
     fn parse_round_trips_arbitrary_text(source in ".{0,120}") {

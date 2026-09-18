@@ -174,10 +174,31 @@ fn parse_file(path: &Path) -> Result<(), CommandError> {
     if parsed.errors().is_empty() {
         return Ok(());
     }
+    // Located here, where the source is, rather than carried into the error: a
+    // Diagnostic holds a byte range, and turning one into a line and a column needs
+    // the text it came from. Rendering is the whole of what this crate does (§2.5).
+    let map = sv2_syntax::OffsetMap::new(&source);
     Err(CommandError::Parse {
         path: path.to_path_buf(),
-        diagnostics: parsed.errors().to_vec(),
+        diagnostics: parsed.errors().iter().map(|d| located(&map, d)).collect(),
     })
+}
+
+/// One diagnostic as `line:col: severity[CODE]: message`.
+///
+/// The shape every compiler prints, because it is the shape every editor and every
+/// `grep` already knows how to read. The code is in the line so that a diagnostic can
+/// be named in a bug report without quoting its prose, which is free to be reworded.
+fn located(map: &sv2_syntax::OffsetMap, diagnostic: &sv2_syntax::Diagnostic) -> String {
+    let at = map.line_col(diagnostic.range().start());
+    format!(
+        "{}:{}: {}[{}]: {}",
+        at.line,
+        at.col,
+        diagnostic.severity().as_str(),
+        diagnostic.code().as_str(),
+        diagnostic.message()
+    )
 }
 
 /// Write the error to `stderr`: one line naming its code, then what it is made of.
@@ -222,6 +243,54 @@ mod tests {
 
     fn exit(code: ErrorCode) -> ExitCode {
         ExitCode::from(code.exit_code())
+    }
+
+    #[test]
+    fn a_diagnostic_renders_as_line_col_severity_code_and_message() {
+        // The shape every compiler prints. Asserted on a Diagnostic built here rather
+        // than on one the parser happened to produce, so the rendering is pinned
+        // independently of which production raised it.
+        use sv2_syntax::{Diagnostic, DiagnosticCode, OffsetMap};
+
+        let map = OffsetMap::new("package P;\npackage Q;\n");
+        // Byte 11 is the first character of line 2.
+        let at = text_range(11, 18);
+        let diagnostic =
+            Diagnostic::new(DiagnosticCode::Unexpected, at, "unexpected `x`".to_owned());
+        assert_eq!(
+            located(&map, &diagnostic),
+            "2:1: error[PARSE-UNEXPECTED]: unexpected `x`"
+        );
+    }
+
+    /// A range built from two byte offsets, for the test above.
+    fn text_range(start: u32, end: u32) -> sv2_syntax::TextRange {
+        sv2_syntax::TextRange::new(start.into(), end.into())
+    }
+
+    #[test]
+    fn a_file_that_does_not_parse_reports_where() {
+        // The point of the typed diagnostic: a position, not a sentence. Written to a
+        // real file because parse_file is what builds the OffsetMap.
+        let dir = std::env::temp_dir().join(format!("sv2-cli-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("Broken.sysml");
+        std::fs::write(&path, "package P {\n  class Wrong;\n}\n").unwrap();
+
+        let (code, out, err) = invoke(&["sv2", "parse", path.to_str().unwrap()]);
+        std::fs::remove_file(&path).ok();
+
+        assert_eq!(code, exit(ErrorCode::ParseFailed));
+        assert!(out.is_empty());
+        // `class` is KerML's, and this is a .sysml file: line 2, column 3.
+        assert!(err.contains("2:3: error[PARSE-UNEXPECTED]"), "{err}");
+    }
+
+    #[test]
+    fn a_file_naming_neither_grammar_is_a_usage_error() {
+        let (code, _, err) = invoke(&["sv2", "parse", "notes.md"]);
+        assert_eq!(code, exit(ErrorCode::Usage));
+        assert!(err.contains("names neither grammar"), "{err}");
     }
 
     #[test]

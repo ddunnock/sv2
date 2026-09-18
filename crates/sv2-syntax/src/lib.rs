@@ -9,14 +9,22 @@
 //!
 //! Nothing here does I/O, and nothing here panics on any input.
 
+mod diagnostic;
 pub mod generated;
 mod grammar;
 mod language;
 mod lexer;
+mod offset;
 mod parser;
 
+pub use crate::diagnostic::{Diagnostic, DiagnosticCode, Severity};
 pub use crate::generated::kinds::SyntaxKind;
 pub use crate::grammar::Language;
+pub use crate::offset::{LineCol, OffsetMap};
+// Re-exported because it is in this crate's public signatures — `Diagnostic::range`
+// returns one. A consumer that had to name `text_size` itself could end up on a
+// different version of the type than the tree uses.
 pub use crate::language::{Sv2Language, SyntaxElement, SyntaxNode, SyntaxToken};
 pub use crate::lexer::{Token, is_trivia, tokenize};
 pub use crate::parser::{Parse, infix_table_for_test, parse};
+pub use text_size::{TextRange, TextSize};
