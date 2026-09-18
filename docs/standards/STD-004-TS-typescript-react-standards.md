@@ -1,5 +1,4 @@
 ---
-
 title: "STD-004-TS: TypeScript and React Standards" 
 status: draft 
 date: 2026-09-18 
@@ -17,12 +16,12 @@ This standard is a sibling of STD-001-PY, STD-002-RS, and STD-003-SH. Where it m
 
 **Assumptions.** These are labeled so that each one can be struck when it is confirmed or corrected.
 
-|ID|Assumption|Impact if wrong|
-|---|---|---|
-|A-001|All TypeScript is the Tauri v2 webview: the React shell, the CodeMirror 6 editor, and the all-SVG diagram island|A TypeScript service or CLI would need its own output and dependency rules|
-|A-003|Bun is the only JavaScript tool in the build: package manager, script runner, bundler, development server, and test runner. Node and Vite are not installed|§3.5 states when Vite would be reintroduced, and what that changes|
-|A-004|Bun is not packaged in RHEL 9 AppStream, so it is installed from a vendored release archive verified by sha256|If a packaged Bun becomes available, only the install source in §3.2 changes|
-|A-005|Rust IPC types derive `schemars::JsonSchema` so that the Rust side can emit its half of the contract (§4.2)|Without it, the IPC contract check in §4.2 has nothing to compare against|
+| ID    | Assumption                                                                                                                                                  | Impact if wrong                                                              |
+|-------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| A-001 | All TypeScript is the Tauri v2 webview: the React shell, the CodeMirror 6 editor, and the all-SVG diagram island                                            | A TypeScript service or CLI would need its own output and dependency rules   |
+| A-003 | Bun is the only JavaScript tool in the build: package manager, script runner, bundler, development server, and test runner. Node and Vite are not installed | §3.5 states when Vite would be reintroduced, and what that changes           |
+| A-004 | Bun is not packaged in RHEL 9 AppStream, so it is installed from a vendored release archive verified by sha256                                              | If a packaged Bun becomes available, only the install source in §3.2 changes |
+| A-005 | Rust IPC types derive `schemars::JsonSchema` so that the Rust side can emit its half of the contract (§4.2)                                                 | Without it, the IPC contract check in §4.2 has nothing to compare against    |
 
 The product is the Rust workspace plus this webview. The TypeScript here is product code, not tooling, so this standard is stricter about architecture than STD-001-PY: it has layers, and they are enforced.
 
@@ -30,11 +29,11 @@ The product is the Rust workspace plus this webview. The TypeScript here is prod
 
 ## 1. What this covers and how to use it
 
-|You are|Read|
-|---|---|
-|Writing webview code in `web/src/`|All of it|
-|Changing the Rust side of a Tauri command|§4.1 through §4.3, then STD-002-RS for the Rust half|
-|Reviewing a contribution|§14, then the section it points at|
+| You are                                   | Read                                                 |
+|-------------------------------------------|------------------------------------------------------|
+| Writing webview code in `app/src/`        | All of it                                            |
+| Changing the Rust side of a Tauri command | §4.1 through §4.3, then STD-002-RS for the Rust half |
+| Reviewing a contribution                  | §14, then the section it points at                   |
 
 Rules are `must`, `should`, or `may`. A `must` that is not machine-checkable is a candidate defect in this document. See whether it can be moved into [§13](#13-enforcement-configuration) before accepting it as prose. [§13.7](#137-enforcement-gaps) lists the rules whose checks do not exist yet, so that a gap is recorded rather than implied.
 
@@ -53,12 +52,12 @@ Most of Biome's type-aware rules are in the `nursery` group, which means their b
 
 The compiler is TypeScript 7, the native implementation, installed from the `typescript` package and invoked as `tsc`. It type-checks and does nothing else.
 
-|Job|Done by|
-|---|---|
-|Type-checking (the gate, the editor)|`tsc --noEmit`, TypeScript 7|
-|Transpiling tests, preload, `tools/`|Bun's built-in transpiler|
-|Transpiling and bundling the webview|Bun's bundler (§3.4)|
-|Declaration or JavaScript emit|nothing; `noEmit` is set|
+| Job                                  | Done by                      |
+|--------------------------------------|------------------------------|
+| Type-checking (the gate, the editor) | `tsc --noEmit`, TypeScript 7 |
+| Transpiling tests, preload, `tools/` | Bun's built-in transpiler    |
+| Transpiling and bundling the webview | Bun's bundler (§3.4)         |
+| Declaration or JavaScript emit       | nothing; `noEmit` is set     |
 
 That division is why the webview can move to TypeScript 7 without waiting for anything. TypeScript 7.0 has no stable programmatic API, and nothing here uses one: Biome carries its own parser and inference, Bun transpiles and bundles without the compiler, and the IPC contract is emitted from Zod rather than from types. `erasableSyntaxOnly` ([§5.1](#51-compiler-flags)) is what keeps the transpilers and the compiler in agreement, since every file means the same thing with its types removed.
 
@@ -74,7 +73,7 @@ That division is why the webview can move to TypeScript 7 without waiting for an
 
 ### Where the webview sits in the repository
 
-The repository root is the Cargo workspace. Tauri's default layout, with `package.json` at the root, `src/` for the frontend, and `src-tauri/` for Rust, assumes the frontend package is the repository. Here it is one member among several, so the frontend package lives in `web/`, and the Tauri application is a workspace crate like any other.
+The repository root is the Cargo workspace. Tauri's default layout, with `package.json` at the root, `src/` for the frontend, and `src-tauri/` for Rust, assumes the frontend package is the repository. Here it is one member among several, so the frontend package lives in `app/`, and the Tauri application is a workspace crate like any other.
 
 ```text
 <repository root>/
@@ -94,14 +93,14 @@ The repository root is the Cargo workspace. Tauri's default layout, with `packag
 │   └── sv2-app/                 the Tauri shell: what Tauri's default layout calls src-tauri
 │       ├── Cargo.toml
 │       ├── build.rs             tauri_build::build(), and nothing else
-│       ├── tauri.conf.json      frontendDist ../../web/dist; devUrl is the tools/dev.ts server
+│       ├── tauri.conf.json      frontendDist ../../app/dist; devUrl is the tools/dev.ts server
 │       ├── capabilities/
 │       │   └── default.json     the IPC commands the webview may call
 │       ├── icons/
 │       └── src/
 │           ├── main.rs          thin: calls sv2_app::run()
 │           └── lib.rs           the Tauri builder and the #[tauri::command] handlers
-├── web/                         the frontend package (below)
+├── app/                         the frontend package (below)
 ├── scripts/  docs/  vendor/  tests/  .claude/
 ```
 
@@ -109,16 +108,16 @@ The repository root is the Cargo workspace. Tauri's default layout, with `packag
 
 1. **`crates/sv2-app` is an ordinary workspace member.** It is governed by STD-002-RS: workspace lints, `cargo-deny`, the program header, and an entry in `scripts/rust_binaries.toml`, because it is a binary target (STD-002-RS §2.2). Nothing about it is exempt because Tauri generated its first version.
 2. **`main.rs` is thin.** It calls `sv2_app::run()` and does nothing else. The builder and every command handler live in `lib.rs`, where they are library code and can be tested without starting a window. This is also Tauri v2's own convention.
-3. **The capability file mirrors the contract.** `capabilities/default.json` allows exactly the commands registered in `web/src/contract/registry.ts`. A command the webview may call without a Zod schema is a boundary with no check; a command with a schema but no permission is dead code. Plugin permissions are added one at a time, never through a plugin's default set.
-4. **The IPC schemas are emitted by `crates/sv2-app`.** The command handlers live there, so its test writes `web/contract/rust.schema.json` ([§4.2](#42-the-ipc-contract-has-two-halves-and-a-check-compares-them)).
-5. **Tauri builds no frontend of its own.** `beforeDevCommand` and `beforeBuildCommand` in `tauri.conf.json` are empty. The build order is stated once, in the gate ([§13.6](#136-ci-command-set)), and a second statement of it inside a JSON file would drift. During development, `bun run dev` in `web/` and `cargo tauri dev` are started separately.
+3. **The capability file mirrors the contract.** `capabilities/default.json` allows exactly the commands registered in `app/src/contract/registry.ts`. A command the webview may call without a Zod schema is a boundary with no check; a command with a schema but no permission is dead code. Plugin permissions are added one at a time, never through a plugin's default set.
+4. **The IPC schemas are emitted by `crates/sv2-app`.** The command handlers live there, so its test writes `app/contract/rust.schema.json` ([§4.2](#42-the-ipc-contract-has-two-halves-and-a-check-compares-them)).
+5. **Tauri builds no frontend of its own.** `beforeDevCommand` and `beforeBuildCommand` in `tauri.conf.json` are empty. The build order is stated once, in the gate ([§13.6](#136-ci-command-set)), and a second statement of it inside a JSON file would drift. During development, `bun run dev` in `app/` and `cargo tauri dev` are started separately.
 6. **`sv2-wasm` reaches the webview as a local path dependency**, never through a registry: `"sv2-wasm": "file:../crates/sv2-wasm/pkg"`. The committed `pkg/package.json` names the package and its entry points; everything else in `pkg/` is written by `wasm-bindgen` and ignored by Git. Because the package is built from source in the same commit, it carries no registry integrity hash, and none is needed.
 7. **`wasm-bindgen` is invoked directly**, with its version equal to the `wasm-bindgen` crate version in `Cargo.lock`. A mismatch fails at run time with an error that does not name the cause, so the gate compares them first.
 
 ### The frontend package
 
 ```text
-web/
+app/
 ├── package.json                 exact versions, pinned Bun version, scripts
 ├── bun.lock                     committed text lockfile; integrity hashes for every package
 ├── bunfig.toml                  install and test configuration
@@ -156,17 +155,17 @@ web/
 
 Every layer imports only the layers listed for it. The matrix is the rule; the diagram is a picture of it.
 
-|Layer|May import from the project|May import from outside|
-|---|---|---|
-|`contract`|none|`zod`|
-|`model`|`contract`|none|
-|`ipc`|`contract`, `model`|`@tauri-apps/api`|
-|`wasm`|`contract`, `model`|`@lezer/common`, the generated `sv2-wasm` package|
-|`diagnostics`|`contract`, `model`, `ipc`|none|
-|`editor`|`contract`, `model`, `ipc`, `wasm`, `diagnostics`|`@codemirror/*`, `@lezer/*`, `react`|
-|`diagram`|`contract`, `model`, `ipc`, `diagnostics`|`react`|
-|`shell`|`contract`, `model`, `ipc`, `diagnostics`, `editor`, `diagram`|`react`|
-|`main.tsx`|`shell`, `diagnostics`|`react`, `react-dom`|
+| Layer         | May import from the project                                    | May import from outside                           |
+|---------------|----------------------------------------------------------------|---------------------------------------------------|
+| `contract`    | none                                                           | `zod`                                             |
+| `model`       | `contract`                                                     | none                                              |
+| `ipc`         | `contract`, `model`                                            | `@tauri-apps/api`                                 |
+| `wasm`        | `contract`, `model`                                            | `@lezer/common`, the generated `sv2-wasm` package |
+| `diagnostics` | `contract`, `model`, `ipc`                                     | none                                              |
+| `editor`      | `contract`, `model`, `ipc`, `wasm`, `diagnostics`              | `@codemirror/*`, `@lezer/*`, `react`              |
+| `diagram`     | `contract`, `model`, `ipc`, `diagnostics`                      | `react`                                           |
+| `shell`       | `contract`, `model`, `ipc`, `diagnostics`, `editor`, `diagram` | `react`                                           |
+| `main.tsx`    | `shell`, `diagnostics`                                         | `react`, `react-dom`                              |
 
 ```mermaid
 flowchart TB
@@ -224,7 +223,7 @@ Every module opens in the same order. Nothing may precede the header.
 3. **No historical change comments**, anywhere. Version control answers "what changed" accurately; a comment answers it inaccurately within two commits.
 4. Import order is enforced by Biome's organize-imports assist, not by hand.
 
-**Enforcement.** `scripts/check_headers.py`, extended to `web/**/*.ts` and `web/**/*.tsx` ([§13.7](#137-enforcement-gaps)). The required strings are the `[tool.sv2.headers]` table in `pyproject.toml`, which STD-001-PY already defines, so the three languages share one statement of the header.
+**Enforcement.** `scripts/check_headers.py`, extended to `app/**/*.ts` and `app/**/*.tsx` ([§13.7](#137-enforcement-gaps)). The required strings are the `[tool.sv2.headers]` table in `pyproject.toml`, which STD-001-PY already defines, so the three languages share one statement of the header.
 
 ---
 
@@ -234,26 +233,28 @@ Every module opens in the same order. Nothing may precede the header.
 
 STD-001-PY can require the standard library alone. This standard cannot: React, CodeMirror, and Tauri's JavaScript API are the platform. The rule that replaces "standard library only" serves the same purpose: **every dependency is a recorded decision, and nothing arrives transitively as a direct import.**
 
-|Package|Kind|Why it is here|
-|---|---|---|
-|`react`, `react-dom`|runtime|the UI framework|
-|`@codemirror/*`|runtime|the editor component (ADR-0013, A-001 there)|
-|`@lezer/common`, `@lezer/highlight`|runtime|CodeMirror's tree and highlighting interfaces (ADR-0013)|
-|`@tauri-apps/api`|runtime|IPC to the Rust backend|
-|`sv2-wasm`|runtime|the parser, built from `crates/sv2-wasm` in the same commit (§2, rule 6); the one non-registry dependency|
-|`zod`|runtime|boundary validation and the TypeScript half of the contract (§4)|
-|`typescript`|dev|the type authority, at version 7: type-checking only (§1.2)|
-|`@biomejs/biome`|dev|lint and format|
-|`@types/bun`|dev|types for `bun:test` and the Bun APIs used by tests and `tools/`|
-|`@happy-dom/global-registrator`|dev|the DOM for component tests under `bun test`|
-|`@testing-library/react`, `@testing-library/user-event`|dev|component tests|
+| Package                                                 | Kind    | Why it is here                                                                                            |
+|---------------------------------------------------------|---------|-----------------------------------------------------------------------------------------------------------|
+| `react`, `react-dom`                                    | runtime | the UI framework                                                                                          |
+| `@codemirror/*`                                         | runtime | the editor component (ADR-0013, A-001 there)                                                              |
+| `@lezer/common`, `@lezer/highlight`                     | runtime | CodeMirror's tree and highlighting interfaces (ADR-0013)                                                  |
+| `@tauri-apps/api`                                       | runtime | IPC to the Rust backend                                                                                   |
+| `sv2-wasm`                                              | runtime | the parser, built from `crates/sv2-wasm` in the same commit (§2, rule 6); the one non-registry dependency |
+| `zod`                                                   | runtime | boundary validation and the TypeScript half of the contract (§4)                                          |
+| `typescript`                                            | dev     | the type authority, at version 7: type-checking only (§1.2)                                               |
+| `tailwindcss`                                           | runtime | the styling system (§3.6); its output is CSS in the bundle |
+| `bun-plugin-tailwind`                                   | dev     | the Bun bundler plugin that compiles it (§3.4, rule 1) |
+| `@biomejs/biome`                                        | dev     | lint and format                                                                                           |
+| `@types/bun`                                            | dev     | types for `bun:test` and the Bun APIs used by tests and `tools/`                                          |
+| `@happy-dom/global-registrator`                         | dev     | the DOM for component tests under `bun test`                                                              |
+| `@testing-library/react`, `@testing-library/user-event` | dev     | component tests                                                                                           |
 
 **Rules.**
 
-1. A package not in `web/allowed-dependencies.toml` must not appear in `package.json`. Adding one is a change to that file, reviewed like code, with a one-line reason in the same form as the table above.
+1. A package not in `app/allowed-dependencies.toml` must not appear in `package.json`. Adding one is a change to that file, reviewed like code, with a one-line reason in the same form as the table above.
 2. Versions are exact. No `^`, no `~`, no ranges. `exact = true` in `bunfig.toml` makes this the default for `bun add`.
 3. **A module imports only packages declared in `package.json`.** A package that happens to be installed because something else depends on it is not a dependency of this code. Biome's `correctness/noUndeclaredDependencies` enforces this.
-4. A state-management library, a CSS-in-JS library, a component kit, or a utility belt such as lodash each need a decision record before they are added. React state, CSS modules, and the platform cover this application's needs until one of them demonstrably does not.
+4. A state-management library, a CSS-in-JS library, a component kit, or a utility belt such as lodash each need a decision record before they are added. React state, Tailwind ([§3.6](#36-styling)), and the platform cover this application's needs until one of them demonstrably does not. Tailwind is **not** a CSS-in-JS library and is not covered by the first sentence: it emits a stylesheet at build time and ships no runtime, which is the property that made it acceptable here.
 5. **Bun itself is a toolchain binary, not a package.** Its version is pinned in the `packageManager` field of `package.json`, and the release archive it is installed from is recorded in `vendor/sources.lock.toml` with its sha256, like every other pinned input.
 
 ### 3.2 Offline and reproducible installs
@@ -279,15 +280,15 @@ This is STD-001-PY §2.1 restated for the webview, and it matters more here beca
 
 Bun builds and serves the webview. There is no Vite, and no second bundler. Tauri needs two things from the frontend, and Bun provides both:
 
-|Tauri needs|Provided by|
-|---|---|
-|a URL during development (`devUrl`)|`tools/dev.ts`: `Bun.serve` with `index.html` imported as a route, hot reload, and React Fast Refresh|
-|a static folder for release (`frontendDist`)|`tools/build.ts`: `Bun.build` from `index.html` into `web/dist`|
+| Tauri needs                                  | Provided by                                                                                           |
+|----------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| a URL during development (`devUrl`)          | `tools/dev.ts`: `Bun.serve` with `index.html` imported as a route, hot reload, and React Fast Refresh |
+| a static folder for release (`frontendDist`) | `tools/build.ts`: `Bun.build` from `index.html` into `app/dist`                                       |
 
 **Rules.**
 
 1. **Both are scripts, not command-line flags.** The build options live in `tools/build.ts` as a typed `Bun.build` call, checked by `tsconfig.test.json`. A misspelled option is a type error, where a misspelled flag in a script string is silently ignored.
-2. **The production build** targets the browser, minifies, writes linked source maps, and defines `process.env.NODE_ENV` as `"production"`. `web/dist/` is ignored by Git and is rebuilt from the lockfile and the source, never edited.
+2. **The production build** targets the browser, minifies, writes linked source maps, and defines `process.env.NODE_ENV` as `"production"`. `app/dist/` is ignored by Git and is rebuilt from the lockfile and the source, never edited.
 3. **The development server binds `127.0.0.1` only,** on a fixed port that matches `devUrl` in `tauri.conf.json`. It serves a webview that has IPC access to the file system, and nothing off the machine has a reason to reach it.
 4. **Application code does not use the hot-reload API.** `import.meta.hot` does not appear under `src/`. React Fast Refresh covers components, and the effect cleanup rules in [§8.3](#83-state-and-effects) and [§8.4](#84-codemirror-owns-the-text) are what make a hot-replaced module leave no stale listener or orphaned `EditorView` behind.
 5. **The WebAssembly file is an explicit asset.** `wasm/loader.ts` imports the `.wasm` file with `with { type: "file" }`, which makes the bundler copy it into the build and return its URL, and passes that URL to the wasm-bindgen initializer as `module_or_path`. It does not rely on the generated glue code locating the file through `new URL(..., import.meta.url)`, which is the step most likely to differ between bundlers. `crates/sv2-wasm/pkg/package.json` exports the `.wasm` path so the import resolves.
@@ -298,14 +299,14 @@ Bun builds and serves the webview. There is no Vite, and no second bundler. Taur
 
 Dropping Vite is a bet that Bun's bundler and development server cover this application. The bet is checked, not assumed. **Any one of these conditions, reproduced in the Tauri window on the target RHEL platform, is grounds to reintroduce Vite:**
 
-|ID|Condition|Checked by|
-|---|---|---|
-|VF-1|React Fast Refresh loses component state on an edit, or recreates the CodeMirror `EditorView` when an unrelated module changes|editing a shell component with a document open|
-|VF-2|The `sv2-wasm` asset fails to load in the development server or in the production build, using the pattern in §3.4 rule 5|opening a file in both `bun run dev` and a release build|
-|VF-3|The chosen styling tool has no working Bun bundler plugin, or its output differs from its reference integration|the styling decision's own verification|
-|VF-4|Hot reload cannot work within `devCsp`, or the production build cannot work under the production `csp` unrelaxed|the Tauri window's console in each mode|
-|VF-5|A capability the application needs exists only as a Vite plugin, and the allowlist review accepts it|the allowlist review ([§3.1](#31-a-closed-allowlist))|
-|VF-6|A Bun upgrade regresses any of VF-1 to VF-4, and the regression persists for more than one Bun release|the gate and the checks above, after each upgrade|
+| ID   | Condition                                                                                                                      | Checked by                                               |
+|------|--------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
+| VF-1 | React Fast Refresh loses component state on an edit, or recreates the CodeMirror `EditorView` when an unrelated module changes | editing a shell component with a document open           |
+| VF-2 | The `sv2-wasm` asset fails to load in the development server or in the production build, using the pattern in §3.4 rule 5      | opening a file in both `bun run dev` and a release build |
+| VF-3 | `bun-plugin-tailwind` stops compiling the stylesheet that Tailwind's reference integration produces, or is unmaintained against a Tailwind major version| `bun run build`, and the rendered window                 |
+| VF-4 | Hot reload cannot work within `devCsp`, or the production build cannot work under the production `csp` unrelaxed               | the Tauri window's console in each mode                  |
+| VF-5 | A capability the application needs exists only as a Vite plugin, and the allowlist review accepts it                           | the allowlist review ([§3.1](#31-a-closed-allowlist))    |
+| VF-6 | A Bun upgrade regresses any of VF-1 to VF-4, and the regression persists for more than one Bun release                         | the gate and the checks above, after each upgrade        |
 
 A condition that is slow, inconvenient, or fixable in the application's own code is not on this list. Build speed is not a trigger in either direction.
 
@@ -320,6 +321,24 @@ Bun stays the package manager, the script runner, and the test runner. Vite runs
 
 ---
 
+### 3.6 Styling
+
+Tailwind is the styling system. `src/index.css` imports it, `bun-plugin-tailwind` compiles it in `tools/build.ts`, and the output is an ordinary stylesheet in the bundle.
+
+It is on the allowlist ([§3.1](#31-a-closed-allowlist)) rather than needing a decision record under rule 4, because it is not what rule 4 is about. **Tailwind emits CSS at build time and ships no runtime.** A CSS-in-JS library puts a style engine in the bundle and computes rules while the application runs, which costs load time on every start and puts styling on the critical path of a webview that also has to load WebAssembly. Tailwind costs a build step and nothing at run time. That difference is the whole reason it is acceptable where `styled-components` would need its own record.
+
+**Rules.**
+
+1. **One stylesheet.** `src/index.css` is where `@import "tailwindcss"` appears, and it is the only file that imports it. A second entry point means two Tailwind builds scanning the same sources.
+2. **Utilities in the markup, component classes in `@layer components`.** A rule that is repeated across components belongs in `@layer components` with a name; a rule used once belongs in the `className`. The test is repetition, not length.
+3. **No arbitrary values where a token exists.** `p-8` rather than `p-[2rem]`. An arbitrary value is a token that was not defined, and the next person writes a slightly different one.
+4. **No CSS-in-JS, and no component kit**, which is [§3.1](#31-a-closed-allowlist) rule 4 unchanged. Tailwind covers this application's styling; a component kit would also bring its own tokens, its own accessibility behaviour, and a second opinion about layout.
+5. **The diagram is not styled by Tailwind.** It is SVG produced from the model, and its presentation is part of the projection ([ADR-0001](../adr/0001-text-is-authoritative.md)), not of the shell's visual language. A utility class on a projected element is a styling decision in the wrong layer.
+
+**What would undo this.** A failure of `bun-plugin-tailwind` is VF-3 in [§3.5](#35-when-vite-is-required) and sends the build back to Vite, not Tailwind back to plain CSS. Replacing Tailwind itself is a different change and needs its own decision record, because the markup is where the styling lives and every component would be rewritten.
+
+---
+
 ## 4. Modeling data: which construct, and where
 
 ### 4.1 The boundary rule
@@ -328,22 +347,22 @@ Bun stays the package manager, the script runner, and the test runner. Vite runs
 
 This is STD-001-PY §4.1's rule. What changes is the list of boundaries.
 
-|Boundary|What crosses it|How it is read|
-|---|---|---|
-|Tauri IPC (`invoke` results and events)|resolved model queries, diagnostics, layout|Zod `safeParse` in `ipc/`, returned as a `Result` (§7.1)|
-|The WASM flat node buffer|`(type, from, to, childCount)` per node|structural check once per buffer in `wasm/`, not Zod per node (§4.7)|
-|`localStorage`|per-machine UI preferences only|Zod `safeParse` on every read; an older build may have written it|
-|CodeMirror transactions|text changes from the user|not validated: CodeMirror owns the text (§8.4)|
-|Fixture files in tests|captured IPC responses and buffers|parsed by the same schema the application uses (§11)|
+| Boundary                                | What crosses it                             | How it is read                                                       |
+|-----------------------------------------|---------------------------------------------|----------------------------------------------------------------------|
+| Tauri IPC (`invoke` results and events) | resolved model queries, diagnostics, layout | Zod `safeParse` in `ipc/`, returned as a `Result` (§7.1)             |
+| The WASM flat node buffer               | `(type, from, to, childCount)` per node     | structural check once per buffer in `wasm/`, not Zod per node (§4.7) |
+| `localStorage`                          | per-machine UI preferences only             | Zod `safeParse` on every read; an older build may have written it    |
+| CodeMirror transactions                 | text changes from the user                  | not validated: CodeMirror owns the text (§8.4)                       |
+| Fixture files in tests                  | captured IPC responses and buffers          | parsed by the same schema the application uses (§11)                 |
 
-|Construct|Use for|Do not use for|
-|---|---|---|
-|A Zod schema in `contract/`|every shape that crosses a boundary|internal values that never cross one|
-|`type X = z.infer<typeof XSchema>`|the TypeScript type for a boundary shape|anything else; a type for a wire shape is never hand-written|
-|A branded type|an identifier or a unit whose values must not mix: `ElementId`, `Utf16Offset`|a value with no confusable sibling|
-|A discriminated union|any value with states: resolved or unresolved, loading or ready|two booleans that cannot both be true|
-|`Readonly<{...}>` object type|internal values and component props|accumulators owned by one function|
-|`as const` object plus a union of its values|closed vocabularies|`enum`, which `erasableSyntaxOnly` forbids|
+| Construct                                    | Use for                                                                       | Do not use for                                               |
+|----------------------------------------------|-------------------------------------------------------------------------------|--------------------------------------------------------------|
+| A Zod schema in `contract/`                  | every shape that crosses a boundary                                           | internal values that never cross one                         |
+| `type X = z.infer<typeof XSchema>`           | the TypeScript type for a boundary shape                                      | anything else; a type for a wire shape is never hand-written |
+| A branded type                               | an identifier or a unit whose values must not mix: `ElementId`, `Utf16Offset` | a value with no confusable sibling                           |
+| A discriminated union                        | any value with states: resolved or unresolved, loading or ready               | two booleans that cannot both be true                        |
+| `Readonly<{...}>` object type                | internal values and component props                                           | accumulators owned by one function                           |
+| `as const` object plus a union of its values | closed vocabularies                                                           | `enum`, which `erasableSyntaxOnly` forbids                   |
 
 ### 4.2 The IPC contract has two halves, and a check compares them
 
@@ -351,21 +370,21 @@ STD-001-PY §4.2 could say "the schema is the contract" because nothing generate
 
 **The rule: the Zod schema is hand-written, and a check proves it matches the Rust type.**
 
-1. Every Rust type that crosses IPC derives `schemars::JsonSchema` (A-005). A test in `crates/sv2-app` writes `web/contract/rust.schema.json`.
-2. `web/tools/emit-contract.ts` collects every IPC schema from the registry in `src/contract/registry.ts` and writes `web/contract/ts.schema.json` using Zod's `z.toJSONSchema`. Bun runs it directly, with no build step ([§2](#2-source-layout), rule 5, allows Bun APIs in `tools/`).
+1. Every Rust type that crosses IPC derives `schemars::JsonSchema` (A-005). A test in `crates/sv2-app` writes `app/contract/rust.schema.json`.
+2. `app/tools/emit-contract.ts` collects every IPC schema from the registry in `src/contract/registry.ts` and writes `app/contract/ts.schema.json` using Zod's `z.toJSONSchema`. Bun runs it directly, with no build step ([§2](#2-source-layout), rule 5, allows Bun APIs in `tools/`).
 3. `scripts/check_ipc_contract.py` compares the two, per command, on property names, the required set, JSON types, `const` and `enum` values, string patterns, and `additionalProperties`. A difference that is not recorded in `.claude/state/deviations.json` fails the gate.
 
 Generating Zod from Rust was considered and rejected. The generators available are pre-1.0, and a generated schema cannot carry the brands and refinements ([§4.4](#44-branded-types-and-where-they-are-minted)) that are the point of having Zod at all. Hand-written plus compared is the same differential approach ADR-0010 takes for the grammar.
 
 **Wire conventions, which both halves must follow:**
 
-|Concern|Rule|
-|---|---|
-|Absent values|Rust `Option<T>` serializes as `null`, never skipped. Zod uses `.nullable()`, never `.optional()`, on wire shapes. With `exactOptionalPropertyTypes`, "missing" and "null" are distinct and only one of them may cross the wire.|
-|Integers|`u32` or smaller. A `u64` or `i64` above 2^53 loses precision in a JavaScript number, so any such value crosses as a decimal string.|
-|Offsets|UTF-16 code units, converted in the Rust core before crossing (ADR-0013, RISK-013-2). The webview never receives a UTF-8 offset.|
-|Field names|`camelCase` on the wire, through `#[serde(rename_all = "camelCase")]`. No renaming on the TypeScript side.|
-|Unions|Rust enums serialize internally tagged (`#[serde(tag = "kind")]`), and the Zod side is `z.discriminatedUnion("kind", ...)`.|
+| Concern       | Rule                                                                                                                                                                                                                             |
+|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Absent values | Rust `Option<T>` serializes as `null`, never skipped. Zod uses `.nullable()`, never `.optional()`, on wire shapes. With `exactOptionalPropertyTypes`, "missing" and "null" are distinct and only one of them may cross the wire. |
+| Integers      | `u32` or smaller. A `u64` or `i64` above 2^53 loses precision in a JavaScript number, so any such value crosses as a decimal string.                                                                                             |
+| Offsets       | UTF-16 code units, converted in the Rust core before crossing (ADR-0013, RISK-013-2). The webview never receives a UTF-8 offset.                                                                                                 |
+| Field names   | `camelCase` on the wire, through `#[serde(rename_all = "camelCase")]`. No renaming on the TypeScript side.                                                                                                                       |
+| Unions        | Rust enums serialize internally tagged (`#[serde(tag = "kind")]`), and the Zod side is `z.discriminatedUnion("kind", ...)`.                                                                                                      |
 
 ### 4.3 Schemas and inferred types
 
@@ -406,12 +425,12 @@ export type ElementRef = z.infer<typeof ElementRefSchema>;
 
 A brand is what makes two numbers or two strings distinct to the compiler. ADR-0002 requires that an unresolved reference not be representable as a resolved one; brands extend the same idea to identifiers and units.
 
-|Brand|Underlying|Minted by|Prevents|
-|---|---|---|---|
-|`ElementId`|`string`|`ElementIdSchema` (the ADR-0016 grammar)|a qualified name, or any string, used as an identity|
-|`ViewId`|`string`|`ViewIdSchema`|a view identifier used as an element identifier|
-|`Utf16Offset`|`number`|`Utf16OffsetSchema`, and the buffer decoder in `wasm/tree-buffer.ts`|a byte offset or line number passed to CodeMirror|
-|`GridUnit`|`number`|`GridUnitSchema` (ADR-0017 R-1)|a pixel value written into a layout record|
+| Brand         | Underlying | Minted by                                                            | Prevents                                             |
+|---------------|------------|----------------------------------------------------------------------|------------------------------------------------------|
+| `ElementId`   | `string`   | `ElementIdSchema` (the ADR-0016 grammar)                             | a qualified name, or any string, used as an identity |
+| `ViewId`      | `string`   | `ViewIdSchema`                                                       | a view identifier used as an element identifier      |
+| `Utf16Offset` | `number`   | `Utf16OffsetSchema`, and the buffer decoder in `wasm/tree-buffer.ts` | a byte offset or line number passed to CodeMirror    |
+| `GridUnit`    | `number`   | `GridUnitSchema` (ADR-0017 R-1)                                      | a pixel value written into a layout record           |
 
 **The minting rule: every brand has named minting sites, and nothing else may produce one.** A minting site is either a Zod schema with `.brand<"Name">()`, which checks the value before branding it, or a single function that checks the value itself and carries the one permitted type assertion:
 
@@ -474,18 +493,18 @@ The general rule: **validate the container once; do not validate its elements on
 
 `tsc` runs in the strictest configuration the project can sustain. Every flag in [§13.3](#133-tsconfigjson) is there for a stated reason; these are the ones that change how code is written.
 
-|Flag|What it forces|
-|---|---|
-|`strict`|the baseline, including `useUnknownInCatchVariables`, so a caught value is `unknown` and must be narrowed|
-|`noUncheckedIndexedAccess`|`array[i]` and `record[key]` are `T \| undefined`; the check that the element exists is written, not assumed|
-|`exactOptionalPropertyTypes`|`{ x?: T }` does not accept `{ x: undefined }`; "absent" and "undefined" are distinct, which the wire rule in §4.2 relies on|
-|`noPropertyAccessFromIndexSignature`|a key that might not exist is read as `record["key"]`, so it looks different from a declared property|
-|`noImplicitReturns`, `noImplicitOverride`, `noFallthroughCasesInSwitch`|control flow is stated, not implied|
-|`noUnusedLocals`, `noUnusedParameters`|dead code fails the build; a deliberately unused parameter is prefixed `_`|
-|`isolatedDeclarations`|every exported function, constant, and class member has an explicit type; an export's contract is readable from its signature without reading its body. This is the counterpart of STD-001-PY's required return types, enforced by the compiler rather than a lint rule|
-|`verbatimModuleSyntax`|type-only imports are written `import type`, so the emitted JavaScript imports exactly what runs|
-|`erasableSyntaxOnly`|no `enum`, `namespace`, or parameter properties. Every file is a pure erasure: removing the types yields the program, so Bun's transpiler and bundler and `tsc` cannot disagree about what a file means|
-|`noUncheckedSideEffectImports`|a bare `import "./x.css"` must resolve|
+| Flag                                                                    | What it forces                                                                                                                                                                                                                                                          |
+|-------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `strict`                                                                | the baseline, including `useUnknownInCatchVariables`, so a caught value is `unknown` and must be narrowed                                                                                                                                                               |
+| `noUncheckedIndexedAccess`                                              | `array[i]` and `record[key]` are `T \| undefined`; the check that the element exists is written, not assumed                                                                                                                                                            |
+| `exactOptionalPropertyTypes`                                            | `{ x?: T }` does not accept `{ x: undefined }`; "absent" and "undefined" are distinct, which the wire rule in §4.2 relies on                                                                                                                                            |
+| `noPropertyAccessFromIndexSignature`                                    | a key that might not exist is read as `record["key"]`, so it looks different from a declared property                                                                                                                                                                   |
+| `noImplicitReturns`, `noImplicitOverride`, `noFallthroughCasesInSwitch` | control flow is stated, not implied                                                                                                                                                                                                                                     |
+| `noUnusedLocals`, `noUnusedParameters`                                  | dead code fails the build; a deliberately unused parameter is prefixed `_`                                                                                                                                                                                              |
+| `isolatedDeclarations`                                                  | every exported function, constant, and class member has an explicit type; an export's contract is readable from its signature without reading its body. This is the counterpart of STD-001-PY's required return types, enforced by the compiler rather than a lint rule |
+| `verbatimModuleSyntax`                                                  | type-only imports are written `import type`, so the emitted JavaScript imports exactly what runs                                                                                                                                                                        |
+| `erasableSyntaxOnly`                                                    | no `enum`, `namespace`, or parameter properties. Every file is a pure erasure: removing the types yields the program, so Bun's transpiler and bundler and `tsc` cannot disagree about what a file means                                                                 |
+| `noUncheckedSideEffectImports`                                          | a bare `import "./x.css"` must resolve                                                                                                                                                                                                                                  |
 
 `skipLibCheck` is `true`, and it is the one relaxation. It stops `tsc` from type-checking the internals of third-party declaration files, which this project cannot fix. It does not relax any check on how this code uses those declarations.
 
@@ -509,12 +528,12 @@ The general rule: **validate the container once; do not validate its elements on
 
 Each threshold maps to a check that fails the build. Where a threshold from STD-001-PY has no Biome equivalent, the table says so rather than implying a check exists.
 
-|Property|Limit|Check|Why|
-|---|---|---|---|
-|Cognitive complexity|15|`complexity/noExcessiveCognitiveComplexity`|Cognitive complexity weights nesting, so this one threshold covers what STD-001-PY splits across cyclomatic complexity, nested blocks, and branches.|
-|Parameters|3|`complexity/useMaxParams`|TypeScript has no keyword arguments. Past three positional parameters, an options object gives every argument a name at the call site.|
-|Lines per function|none|`complexity/noExcessiveLinesPerFunction` set to `off`|Line count does not measure what a reader must hold in mind, and a gate on it is passed by extraction that moves the number and nothing else. Recorded as an explicit `off` so the decision is visible.|
-|Returns, statements, boolean terms|none|review only|Biome has no rule for these. The STD-001-PY limits (6, 40, 5) are review guidance here.|
+| Property                           | Limit | Check                                                 | Why                                                                                                                                                                                                     |
+|------------------------------------|-------|-------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Cognitive complexity               | 15    | `complexity/noExcessiveCognitiveComplexity`           | Cognitive complexity weights nesting, so this one threshold covers what STD-001-PY splits across cyclomatic complexity, nested blocks, and branches.                                                    |
+| Parameters                         | 3     | `complexity/useMaxParams`                             | TypeScript has no keyword arguments. Past three positional parameters, an options object gives every argument a name at the call site.                                                                  |
+| Lines per function                 | none  | `complexity/noExcessiveLinesPerFunction` set to `off` | Line count does not measure what a reader must hold in mind, and a gate on it is passed by extraction that moves the number and nothing else. Recorded as an explicit `off` so the decision is visible. |
+| Returns, statements, boolean terms | none  | review only                                           | Biome has no rule for these. The STD-001-PY limits (6, 40, 5) are review guidance here.                                                                                                                 |
 
 Module length is unbounded, for the reason STD-001-PY §5.1 gives.
 
@@ -673,23 +692,23 @@ Every report names its subject: an element identity, a view identity, a boundary
 
 ## 10. Naming and module organization
 
-|Kind|Convention|Note|
-|---|---|---|
-|Module file|`kebab-case.ts`|named for what it holds: `tree-buffer.ts`, `element-id.ts`|
-|Component file|`PascalCase.tsx`, one exported component|`ElementRow.tsx` exports `ElementRow`|
-|Test file|`<module>.test.ts` or `<Component>.test.tsx`|beside the module|
-|Type|`PascalCase`, noun, no `I` prefix|`ElementRef`, not `IElementRef`|
-|Zod schema|`<Type>Schema`|`ElementRefSchema`, paired with `type ElementRef`|
-|Branded type|`PascalCase` noun naming the unit or identity|`Utf16Offset`, `ElementId`|
-|Function|`camelCase`, verb phrase|`decodeTreeBuffer`, not `treeBufferDecoding`|
-|Predicate|`is`, `has`, `can` prefix|returns `boolean`, no side effects|
-|Hook|`use` prefix|required by React's rules of hooks|
-|Constant|`UPPER_SNAKE` for module-scope primitives|`GRID_SIZE`; an object constant is `camelCase` with `as const`|
-|Error class|`PascalCase` + `Error`|name the condition; never shadow a builtin|
+| Kind           | Convention                                    | Note                                                           |
+|----------------|-----------------------------------------------|----------------------------------------------------------------|
+| Module file    | `kebab-case.ts`                               | named for what it holds: `tree-buffer.ts`, `element-id.ts`     |
+| Component file | `PascalCase.tsx`, one exported component      | `ElementRow.tsx` exports `ElementRow`                          |
+| Test file      | `<module>.test.ts` or `<Component>.test.tsx`  | beside the module                                              |
+| Type           | `PascalCase`, noun, no `I` prefix             | `ElementRef`, not `IElementRef`                                |
+| Zod schema     | `<Type>Schema`                                | `ElementRefSchema`, paired with `type ElementRef`              |
+| Branded type   | `PascalCase` noun naming the unit or identity | `Utf16Offset`, `ElementId`                                     |
+| Function       | `camelCase`, verb phrase                      | `decodeTreeBuffer`, not `treeBufferDecoding`                   |
+| Predicate      | `is`, `has`, `can` prefix                     | returns `boolean`, no side effects                             |
+| Hook           | `use` prefix                                  | required by React's rules of hooks                             |
+| Constant       | `UPPER_SNAKE` for module-scope primitives     | `GRID_SIZE`; an object constant is `camelCase` with `as const` |
+| Error class    | `PascalCase` + `Error`                        | name the condition; never shadow a builtin                     |
 
 **Banned names: `utils`, `helpers`, `misc`, `common`, `manager`, `handler`, and `index`.** The first six are STD-001-PY §9's list, for the same reason: each names a module by what it is not, and becomes the place code goes when nobody decided where it belongs. `index` is added because an `index.ts` is either a barrel, which [§8.1](#81-components) forbids, or a module with no name.
 
-**Enforcement.** `style/useFilenamingConvention` for file case. The banned names are checked by `scripts/check_rust_patterns.py`'s list, extended to `web/` ([§13.7](#137-enforcement-gaps)).
+**Enforcement.** `style/useFilenamingConvention` for file case. The banned names are checked by `scripts/check_rust_patterns.py`'s list, extended to `app/` ([§13.7](#137-enforcement-gaps)).
 
 ---
 
@@ -705,7 +724,7 @@ Every report names its subject: an element identity, a view identity, a boundary
 4. **Test behavior through the public surface.** A component test queries by role and accessible name, as a user or screen reader would, never by class name or test ID where a role exists. A module test calls exported functions.
 5. **Test doubles cannot lie about shape.** An IPC double returns data built by parsing a fixture through the real schema, so a double that has drifted from the contract fails in the test that uses it. `as unknown as T` in a test is forbidden for the same reason it is forbidden in the source: it hides the shape defect the test exists to find.
 6. **IPC doubles live in `ipc/`**, in `ipc-double.ts`, which wraps Tauri's `mockIPC`. That keeps `@tauri-apps/api` inside the one layer allowed to import it, and it gives every island's tests the same double.
-7. **Fixture inputs are data** in `web/test-data/`: captured IPC responses and captured WASM buffers. A file constructed by a test is built in the test.
+7. **Fixture inputs are data** in `app/test-data/`: captured IPC responses and captured WASM buffers. A file constructed by a test is built in the test.
 8. **No network.** The test preload replaces `fetch` with a function that throws. The target environment is air-gapped (STD-001-PY §10, rule 4).
 9. **No wall clock.** Time-dependent code takes a clock as a parameter, or the test fixes the time with `setSystemTime` from `bun:test` and resets it in the same test.
 10. **Parametrize with `it.each`** rather than looping inside a test, and write one behavior per test.
@@ -735,13 +754,13 @@ TSDoc `/** */` comments are required on every module, every exported function, t
 
 ## 13. Enforcement configuration
 
-Every file in this section is committed in `web/`. There is no second place to configure these tools, and there should not be one.
+Every file in this section is committed in `app/`. There is no second place to configure these tools, and there should not be one.
 
 ### 13.1 `package.json` (excerpt)
 
 ```json
 {
-  "name": "sv2-web",
+  "name": "sv2-studio",
   "private": true,
   "type": "module",
   "packageManager": "bun@<pinned version>",
@@ -1016,7 +1035,7 @@ It sits under `src/` outside a layer directory, as `main.tsx` and `ambient.d.ts`
 cargo build -p sv2-wasm --target wasm32-unknown-unknown --release
 wasm-bindgen --target web --out-dir crates/sv2-wasm/pkg \
     target/wasm32-unknown-unknown/release/sv2_wasm.wasm
-cd web
+cd app
 bun install --frozen-lockfile --ignore-scripts
 bun run typecheck
 bun run lint
@@ -1029,7 +1048,7 @@ python3.11 scripts/check_headers.py
 python3.11 scripts/check_standards_config.py
 ```
 
-The order is the build order. `sv2-wasm` is built before the install because the install resolves it as a local path, and a missing `pkg/` fails the install. `sv2-app` is built after the webview by `cargo tauri build`, which reads `web/dist` through `frontendDist` and runs nothing itself ([§2](#2-source-layout), rule 5). Offline, the `wasm32-unknown-unknown` target and the `wasm-bindgen` binary come from the vendored Rust toolchain, like every other tool the gate runs.
+The order is the build order. `sv2-wasm` is built before the install because the install resolves it as a local path, and a missing `pkg/` fails the install. `sv2-app` is built after the webview by `cargo tauri build`, which reads `app/dist` through `frontendDist` and runs nothing itself ([§2](#2-source-layout), rule 5). Offline, the `wasm32-unknown-unknown` target and the `wasm-bindgen` binary come from the vendored Rust toolchain, like every other tool the gate runs.
 
 All of them run in `scripts/gate.sh`, which remains the single definition of "done." The Bun and WebAssembly commands run through `run_optional` and are skipped with a visible notice when `bun` or `wasm-bindgen` is not on `PATH`, as ruff and mypy are. The three Python checks use the standard library only and always run.
 
@@ -1037,17 +1056,17 @@ All of them run in `scripts/gate.sh`, which remains the single definition of "do
 
 These rules are normative now, and their checks do not exist yet. Each is a recorded gap, not an implied check.
 
-|Rule|Section|Check needed|
-|---|---|---|
-|Header on every `.ts` and `.tsx` file|§2.3|extend `scripts/check_headers.py` to `web/src/**` and `web/tools/**`|
-|Dependencies match the allowlist|§3.1|`scripts/check_web_dependencies.py`: `package.json` against `web/allowed-dependencies.toml`, no ranges, and `trustedDependencies` empty unless a deviation is recorded|
-|Installed Bun matches the pin|§3.2|a gate step comparing `bun --version` with `packageManager` and with `vendor/sources.lock.toml`|
-|Zod and Rust halves of the IPC contract agree|§4.2|`scripts/check_ipc_contract.py`, the `schemars` test in `crates/sv2-app`, and `web/tools/emit-contract.ts`|
-|Capabilities allow exactly the registered commands|§2|extend `scripts/check_ipc_contract.py` to compare `crates/sv2-app/capabilities/default.json` with the registry|
-|`wasm-bindgen` CLI matches the crate version|§2|a gate step comparing `wasm-bindgen --version` with the `wasm-bindgen` entry in `Cargo.lock`|
-|`tsconfig.json`, `tsconfig.test.json`, `biome.json`, and `bunfig.toml` match this document|§13|extend `scripts/check_standards_config.py` to compare these files with the blocks in §13, the way it compares TOML tables|
-|Banned module names|§10|extend the list check in `scripts/check_rust_patterns.py` to `web/src/**`|
-|Returns, statements, and boolean-term limits|§6|none available in Biome; review only|
+| Rule                                                                                       | Section | Check needed                                                                                                                                                           |
+|--------------------------------------------------------------------------------------------|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Header on every `.ts` and `.tsx` file                                                      | §2.3    | extend `scripts/check_headers.py` to `app/src/**` and `app/tools/**`                                                                                                   |
+| Dependencies match the allowlist                                                           | §3.1    | `scripts/check_web_dependencies.py`: `package.json` against `app/allowed-dependencies.toml`, no ranges, and `trustedDependencies` empty unless a deviation is recorded |
+| Installed Bun matches the pin                                                              | §3.2    | a gate step comparing `bun --version` with `packageManager` and with `vendor/sources.lock.toml`                                                                        |
+| Zod and Rust halves of the IPC contract agree                                              | §4.2    | `scripts/check_ipc_contract.py`, the `schemars` test in `crates/sv2-app`, and `app/tools/emit-contract.ts`                                                             |
+| Capabilities allow exactly the registered commands                                         | §2      | extend `scripts/check_ipc_contract.py` to compare `crates/sv2-app/capabilities/default.json` with the registry                                                         |
+| `wasm-bindgen` CLI matches the crate version                                               | §2      | a gate step comparing `wasm-bindgen --version` with the `wasm-bindgen` entry in `Cargo.lock`                                                                           |
+| `tsconfig.json`, `tsconfig.test.json`, `biome.json`, and `bunfig.toml` match this document | §13     | extend `scripts/check_standards_config.py` to compare these files with the blocks in §13, the way it compares TOML tables                                              |
+| Banned module names                                                                        | §10     | extend the list check in `scripts/check_rust_patterns.py` to `app/src/**`                                                                                              |
+| Returns, statements, and boolean-term limits                                               | §6      | none available in Biome; review only                                                                                                                                   |
 
 ---
 

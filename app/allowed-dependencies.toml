@@ -1,0 +1,112 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
+#
+# The closed allowlist, STD-004-TS §3.1.
+#
+# A package not listed here must not appear in package.json. Adding one is a
+# change to this file, reviewed like code, with a one-line reason in the same
+# form as the table in §3.1 — which this file is the machine-readable half of.
+#
+# `allowed` is what MAY be depended on. `present` is what currently IS. The two
+# are separate because the allowlist is a decision and the dependency list is a
+# state: React and Tailwind are both decided, and only some of what is decided
+# has been installed, because a package that nothing imports is load cost and
+# supply-chain surface for nothing.
+#
+# Versions are exact (§3.1 rule 2). No `^`, no `~`, no ranges: a range means the
+# build is reproducible only until someone publishes.
+
+[meta]
+standard = "STD-004-TS §3.1"
+package = "sv2-studio"
+
+# -- runtime: ships in the bundle ---------------------------------------------
+
+[allowed.react]
+kind = "runtime"
+why = "the UI framework"
+
+[allowed.react-dom]
+kind = "runtime"
+why = "the UI framework"
+
+[allowed."@codemirror/*"]
+kind = "runtime"
+why = "the editor component (ADR-0013, A-001 there)"
+
+[allowed."@lezer/common"]
+kind = "runtime"
+why = "CodeMirror's tree interface (ADR-0013)"
+
+[allowed."@lezer/highlight"]
+kind = "runtime"
+why = "CodeMirror's highlighting interface (ADR-0013)"
+
+[allowed."@tauri-apps/api"]
+kind = "runtime"
+why = "IPC to the Rust backend; only src/ipc/ may import it"
+
+[allowed.sv2-wasm]
+kind = "runtime"
+why = "the parser, built from crates/sv2-wasm in the same commit (§2 rule 6); the one non-registry dependency"
+
+[allowed.zod]
+kind = "runtime"
+why = "boundary validation and the TypeScript half of the IPC contract (§4)"
+
+[allowed.tailwindcss]
+kind = "runtime"
+why = "the styling system (§3.6); emits CSS at build time and ships no runtime"
+
+# -- dev: toolchain only, never in the bundle ---------------------------------
+
+[allowed.typescript]
+kind = "dev"
+why = "the type authority, at version 7: type-checking only (§1.2)"
+
+[allowed.bun-plugin-tailwind]
+kind = "dev"
+why = "the Bun bundler plugin that compiles Tailwind (§3.4 rule 1)"
+
+[allowed."@biomejs/biome"]
+kind = "dev"
+why = "lint and format"
+
+[allowed."@types/bun"]
+kind = "dev"
+why = "types for bun:test and the Bun APIs used by tests and tools/"
+
+[allowed."@types/react"]
+kind = "dev"
+why = "React's types; the webview tsconfig loads no types package, so these come through the import"
+
+[allowed."@types/react-dom"]
+kind = "dev"
+why = "React DOM's types, for the same reason"
+
+[allowed."@happy-dom/global-registrator"]
+kind = "dev"
+why = "the DOM for component tests under bun test (§13.5)"
+
+[allowed."@testing-library/react"]
+kind = "dev"
+why = "component tests"
+
+[allowed."@testing-library/user-event"]
+kind = "dev"
+why = "component tests"
+
+# -- what is installed today --------------------------------------------------
+#
+# Every entry must also appear under [allowed]. The rest of the allowlist is
+# decided and not yet needed; installing one is a package.json change and a
+# lockfile change, and nothing else.
+
+[present]
+react = "19.3.0"
+react-dom = "19.3.0"
+tailwindcss = "4.3.3"
+bun-plugin-tailwind = "0.1.2"
+"@types/bun" = "1.4.2"
+"@types/react" = "19.3.0"
+"@types/react-dom" = "19.3.0"

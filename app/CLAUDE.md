@@ -70,6 +70,14 @@ directory.
 
 Stubs. `main.tsx`, `shell/Shell.tsx`, `diagnostics/handlers.ts`,
 `model/result.ts` and its test exist; `contract/`, `ipc/`, `wasm/`, `editor/`
-and `diagram/` do not, because `zod`, `@tauri-apps/api`, `@codemirror/*` and
-`sv2-wasm` are not yet dependencies. `main.tsx` names the missing Zod
-configuration step in place rather than omitting it silently.
+and `diagram/` do not.
+
+`zod`, `@tauri-apps/api`, `@codemirror/*` and `sv2-wasm` are all **allowed and
+not installed** — the allowlist is a decision about what may be depended on,
+`allowed-dependencies.toml`'s `[present]` table is what currently is, and the two
+are deliberately not the same list. Each arrives in the change that adds the
+first module importing it, because a package nothing imports is load cost and
+supply-chain surface for nothing.
+
+`main.tsx` names the missing Zod configuration step in place rather than omitting
+it silently.

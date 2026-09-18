@@ -21,9 +21,11 @@ import { createRoot } from "react-dom/client";
 import { installGlobalHandlers, reportToConsole } from "@/diagnostics/handlers";
 import { Shell } from "@/shell/Shell";
 
-// 1. Configure Zod for the Tauri CSP — not yet: `zod` is not on the allowlist
-//    (§3.1) and the `contract` layer does not exist. When it lands it goes here,
-//    before anything can parse.
+// 1. Configure Zod for the Tauri CSP — not yet. `zod` IS on the allowlist
+//    (§3.1); it is simply not installed, because the `contract` layer does not
+//    exist and a package nothing imports is load cost and supply-chain surface
+//    for nothing. It is installed in the same change that adds the first schema,
+//    and the configuration goes here, before anything can parse.
 
 // 2. Install the global failure handlers, before the first render can fail.
 installGlobalHandlers(reportToConsole);
