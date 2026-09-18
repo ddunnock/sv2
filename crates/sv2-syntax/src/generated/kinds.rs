@@ -617,6 +617,10 @@ pub enum SyntaxKind {
     ConstraintUsageDeclaration,
     /// `OccurrenceDefinitionPrefix 'constraint' 'def' DefinitionDeclaration CalculationBody`. `SysML` 8.2.2.20.
     ConstraintDefinition,
+    /// `OccurrenceDefinitionPrefix 'action' 'def' DefinitionDeclaration ActionBody`. `SysML` 8.2.2.17.1.
+    ActionDefinition,
+    /// `';' | '{' ActionBodyItem* '}'`. `SysML` 8.2.2.17.1.
+    ActionBody,
     /// `';' | '{' CalculationBodyPart '}'`. `SysML` 8.2.2.19.
     CalculationBody,
     /// `CalculationBodyItem* ResultExpressionMember?`. `SysML` 8.2.2.19.
@@ -1109,6 +1113,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::RequirementConstraintUsage,
     SyntaxKind::ConstraintUsageDeclaration,
     SyntaxKind::ConstraintDefinition,
+    SyntaxKind::ActionDefinition,
+    SyntaxKind::ActionBody,
     SyntaxKind::CalculationBody,
     SyntaxKind::CalculationBodyPart,
     SyntaxKind::FeatureChainExpression,

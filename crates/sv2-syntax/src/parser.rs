@@ -612,6 +612,27 @@ enum Body {
     /// definition body is not a `SubjectMember` — `DefinitionBodyItem` has no such
     /// alternative — and without this variant it would be read as one.
     Requirement,
+    /// The braced form of `ActionBody`. `SysML` only.
+    ///
+    /// ```text
+    /// ActionBodyItem = NonBehaviorBodyItem
+    ///                | InitialNodeMember ActionTargetSuccessionMember*
+    ///                | SourceSuccessionMember? ActionBehaviorMember
+    ///                  ActionTargetSuccessionMember*
+    ///                | GuardedSuccessionMember                    SysML 8.2.2.17.1
+    /// ```
+    ///
+    /// It DECIDES NOTHING TODAY. `NonBehaviorBodyItem`'s implemented alternatives —
+    /// `Import`, `AliasMember`, `DefinitionMember` — are the three a definition body
+    /// reads, and the other three alternatives are the control-flow layer and are absent,
+    /// so every question a `Body` answers, this answers as `Definition` does.
+    ///
+    /// It is a variant anyway, because the ITEM SET differs in the grammar even where
+    /// the implemented part does not, and the control-flow members attach to this one.
+    /// The last time this file argued that a body variant would never differ from
+    /// `Definition` — in `requirement_body`, one commit before `SubjectMember` — it
+    /// differed in the next commit, and the dispatch had to be unpicked to find out.
+    Action,
     /// The item run inside the braced form of `CalculationBody`. `SysML` only.
     ///
     /// `CalculationBodyItem = ActionBodyItem | ReturnParameterMember` (8.2.2.19), and
@@ -636,7 +657,7 @@ impl Body {
             // SubjectMember. A calculation body reaches DefinitionMember too, by the
             // other road: CalculationBodyItem to ActionBodyItem to NonBehaviorBodyItem,
             // whose third alternative it is (8.2.2.17.1).
-            (Self::Definition | Self::Requirement | Self::Calculation, _) => {
+            (Self::Definition | Self::Requirement | Self::Calculation | Self::Action, _) => {
                 SyntaxKind::DefinitionMember
             }
             (_, Language::SysMl) => SyntaxKind::PackageMember,
@@ -656,7 +677,11 @@ impl Body {
             Self::Root => language == Language::SysMl,
             // TypeBodyElement has no ElementFilterMember alternative, and neither
             // DefinitionBodyItem, RequirementBodyItem nor NonBehaviorBodyItem reaches one.
-            Self::Definition | Self::Requirement | Self::Calculation | Self::Type => false,
+            Self::Definition
+            | Self::Requirement
+            | Self::Calculation
+            | Self::Action
+            | Self::Type => false,
         }
     }
 
@@ -1015,7 +1040,17 @@ impl<'a> Parser<'a> {
             || self.at_port_definition(n)
             || self.at_requirement_definition(n)
             || self.at_constraint_definition(n)
+            || self.at_action_definition(n)
             || self.at_simple_definition(n).is_some()
+    }
+
+    /// Whether an `ActionDefinition` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceDefinitionPrefix 'action' 'def'` (`SysML` 8.2.2.17.1). Only the `def`
+    /// separates it from an `ActionUsage`, which is unimplemented.
+    fn at_action_definition(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_definition_prefix(n);
+        self.nth_is_keyword(after, "action") && self.nth_is_keyword(after + 1, "def")
     }
 
     /// Whether a `ConstraintDefinition` starts at the `n`th meaningful token.
@@ -1850,6 +1885,8 @@ impl<'a> Parser<'a> {
             self.requirement_definition();
         } else if self.language == Language::SysMl && self.at_constraint_definition(0) {
             self.constraint_definition();
+        } else if self.language == Language::SysMl && self.at_action_definition(0) {
+            self.action_definition();
         } else if let Some(definition) = self
             .at_simple_definition(0)
             .filter(|_| self.language == Language::SysMl)
@@ -3945,6 +3982,70 @@ impl<'a> Parser<'a> {
             self.expect(SyntaxKind::RBrace, "`}`");
         } else {
             self.error_expected("`;` or `{` after a requirement definition declaration");
+        }
+        self.finish_node();
+    }
+
+    // production: ActionDefinition
+    //
+    // ActionDefinition = OccurrenceDefinitionPrefix 'action' 'def'
+    //                    DefinitionDeclaration ActionBody        (SysML 8.2.2.17.1)
+    //
+    // Off the SIMPLE_DEFINITIONS spine for the reason RequirementDefinition and
+    // ConstraintDefinition are: it names the declaration and the body separately rather
+    // than taking a Definition, so there is no Definition node in its tree.
+    //
+    // The metaclass is SysML::ActionDefinition (8.3.17.3), both a Behavior and an
+    // OccurrenceDefinition. checkActionDefinitionSpecialization is an implied
+    // specialization and belongs in sv2-hir, not here (ADR-0002).
+    fn action_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ActionDefinition);
+        self.occurrence_definition_prefix();
+        self.expect_keyword("action");
+        self.expect_keyword("def");
+        self.definition_declaration();
+        self.action_body();
+        self.finish_node();
+    }
+
+    // production: ActionBody
+    //
+    // ActionBody : Type = ';' | '{' ActionBodyItem* '}'          (SysML 8.2.2.17.1)
+    //
+    // ActionBodyItem is NOT marked, and it is the largest unimplemented thing left in
+    // this grammar:
+    //
+    //     ActionBodyItem = NonBehaviorBodyItem
+    //                    | InitialNodeMember ActionTargetSuccessionMember*
+    //                    | SourceSuccessionMember? ActionBehaviorMember
+    //                      ActionTargetSuccessionMember*
+    //                    | GuardedSuccessionMember
+    //
+    // Only the first alternative is read, and only the part of it this parser already
+    // had: NonBehaviorBodyItem is Import | AliasMember | DefinitionMember |
+    // VariantUsageMember | NonOccurrenceUsageMember | SourceSuccessionMember?
+    // StructureUsageMember (8.2.2.17.1), and the first three are the three a definition
+    // body reads. So `action def Brake;` and `action def Brake { part p; }` are read, and
+    // `first`, `then`, `accept`, `send`, `fork`, `join`, `merge`, `decide` and `assign`
+    // are all reported where they stand.
+    //
+    // That is deliberate and it is most of the corpus's action text: 403 `then` and 139
+    // `first` against 41 failing files that mention an action and write no control flow
+    // at all. This change is for those 41; the control-flow layer is its own work.
+    fn action_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ActionBody);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.body_elements(Some(SyntaxKind::RBrace), Body::Action);
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.error_expected("`;` or `{` after an action definition declaration");
         }
         self.finish_node();
     }

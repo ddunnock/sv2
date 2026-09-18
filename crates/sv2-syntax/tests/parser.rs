@@ -310,7 +310,7 @@ fn a_definition_whose_body_is_not_a_definition_body_is_not_in_the_table() {
     // `requirement def R;` was in this list and is not any more: RequirementBody is
     // implemented, and it left the list because the production is now read, not because
     // the claim was relaxed. The four that remain are still absent.
-    for source in ["action def Brake;", "calc def C;", "state def S;"] {
+    for source in ["calc def C;", "state def S;"] {
         parse_rejected(source);
     }
     // `requirement def` left this list when RequirementBody landed, and
@@ -320,6 +320,99 @@ fn a_definition_whose_body_is_not_a_definition_body_is_not_in_the_table() {
     // it — held by tests/rejection/calculation-definition-is-not-implemented.sysml.
     parse_accepted("requirement def R;");
     parse_accepted("constraint def C;");
+    parse_accepted("action def Brake;");
+}
+
+// -- ActionDefinition and ActionBody, SysML 8.2.2.17.1 ----------------------------
+//
+// ActionDefinition = OccurrenceDefinitionPrefix 'action' 'def'
+//                    DefinitionDeclaration ActionBody
+// ActionBody       = ';' | '{' ActionBodyItem* '}'
+//
+// The shell of the action layer. ActionBodyItem's three control-flow alternatives are
+// absent, which is deliberate and is most of what the layer is.
+
+#[test]
+fn an_action_definition_reads_the_declaration_and_its_own_body() {
+    parse_accepted("action def Brake;");
+    parse_accepted("action def Brake { }");
+    parse_accepted("action def <'a1'> GenerateTorque :> Behavior { }");
+    parse_accepted("individual action def Brake;");
+    parse_accepted("abstract action def Brake;");
+}
+
+#[test]
+fn an_action_body_reads_the_items_a_definition_body_reads() {
+    // ActionBodyItem's first alternative is NonBehaviorBodyItem, whose Import,
+    // AliasMember and DefinitionMember are the three a definition body already read
+    // (SysML 8.2.2.17.1). Nothing new was needed for any of these.
+    parse_accepted("action def Brake { part p; }");
+    parse_accepted("action def Brake { doc /* how it stops */ }");
+    parse_accepted("action def Brake { private import Actions::*; }");
+    parse_accepted("action def Brake { alias b for brake; }");
+    parse_accepted("action def Brake { attribute force; part def Pedal; }");
+}
+
+#[test]
+fn an_action_body_does_not_admit_the_control_flow_layer() {
+    // The three alternatives of ActionBodyItem that are NOT NonBehaviorBodyItem:
+    // initial nodes, successions and guards. Rejected by absence — every one is
+    // well-formed SysML, and the corpus writes 403 `then` and 139 `first`. Held as a
+    // file by tests/rejection/action-body-control-flow-is-not-implemented.sysml.
+    parse_rejected("action def B { first start; }");
+    parse_rejected("action def B { then stop; }");
+    parse_rejected("action def B { accept Signal; }");
+    parse_rejected("action def B { send Sig to target; }");
+    parse_rejected("action def B { assign x := 1; }");
+}
+
+#[test]
+fn an_action_definition_owns_no_definition_node() {
+    // Like RequirementDefinition and ConstraintDefinition, it names the declaration and
+    // the body separately rather than taking a Definition (SysML 8.2.2.17.1).
+    // The direct children are the production, part for part. That alone says the body is
+    // an ActionBody and that no Definition node stands between the declaration and it.
+    let rendered = render(&parse_accepted("action def Brake { part p; }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "ActionDefinition"),
+        [
+            "OccurrenceDefinitionPrefix",
+            "KwAction",
+            "KwDef",
+            "DefinitionDeclaration",
+            "ActionBody"
+        ],
+        "{rendered}"
+    );
+    // Counted over the WHOLE tree only where nothing nested can contribute one: the
+    // `part p;` above owns a DefinitionBody of its own through its UsageBody, and a
+    // whole-tree count would read the neighbour's node as this one's. That is the same
+    // contains-versus-owns confusion child_kinds exists to avoid.
+    let empty = render(&parse_accepted("action def Brake;").syntax());
+    assert_eq!(nodes_named(&empty, "DefinitionBody"), 0, "{empty}");
+    assert_eq!(nodes_named(&empty, "Definition"), 0, "{empty}");
+    assert_eq!(nodes_named(&empty, "ActionBody"), 1, "{empty}");
+}
+
+#[test]
+fn an_action_definition_needs_a_body_and_a_def() {
+    // ActionBody is not optional. Held as a file by
+    // tests/rejection/action-definition-missing-action-body.sysml.
+    parse_rejected("action def Brake");
+    // Without `def` it is an ActionUsage, and `perform` is a PerformActionUsage
+    // (SysML 8.2.2.17.2). Both are unimplemented, and both are what the corpus is
+    // actually blocked on rather than the control-flow layer. Held as a file by
+    // tests/rejection/action-usage-is-not-an-action-definition.sysml.
+    parse_rejected("package P { action brake; }");
+    parse_rejected("package P { perform action stop; }");
+}
+
+#[test]
+fn an_action_definition_nests_where_a_definition_element_may_go() {
+    parse_accepted("package P { action def Brake; }");
+    parse_accepted("part def Vehicle { action def Brake; }");
+    // And the line the training corpus file needed, beside the port it sits next to.
+    parse_accepted("package P { port def ClutchPort; action def GenerateTorque; }");
 }
 
 // -- CalculationBody, SysML 8.2.2.19 ----------------------------------------------

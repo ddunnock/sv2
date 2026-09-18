@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-18T14:51:54Z",
+    "regenerated_utc": "2026-09-18T15:02:10Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 148,
-      "unimplemented": 410,
+      "implemented": 150,
+      "unimplemented": 408,
       "absent": 0,
-      "percent": 26.5
+      "percent": 26.9
     },
     "tests": {
-      "unit": 286,
+      "unit": 292,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 92,
+      "negative_cases": 94,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "d9924ec Read a required and an assumed constraint, both spellings",
       "f87d2ed Read a bracketed quantity, and settle which bracket is which",
       "63f9b07 Read a feature chain, and bound it like every other nesting",
       "ae7a303 Read a calculation body, whose last part is an expression",
       "6dc5cb3 Read the subject of a requirement",
       "47b8e0d Read a requirement definition, and the body only it has",
       "8ccfc0d Widen one allowed path in the bash hook fixture",
-      "b985cfc Spell licence the way LICENSE does",
-      "37049c6 Configure the TypeScript side of sv2-studio"
+      "b985cfc Spell licence the way LICENSE does"
     ]
   },
   "authored": {

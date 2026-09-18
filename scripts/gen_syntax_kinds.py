@@ -375,6 +375,17 @@ NODES = [
             "CalculationBody`. `SysML` 8.2.2.20."
         ),
     ),
+    # The action layer's outer shell. The body is the same loop every other body uses;
+    # what makes the action layer large is ActionBodyItem's three CONTROL-FLOW
+    # alternatives, and none of those is here.
+    (
+        "ActionDefinition",
+        (
+            "`OccurrenceDefinitionPrefix 'action' 'def' DefinitionDeclaration "
+            "ActionBody`. `SysML` 8.2.2.17.1."
+        ),
+    ),
+    ("ActionBody", "`';' | '{' ActionBodyItem* '}'`. `SysML` 8.2.2.17.1."),
     ("CalculationBody", "`';' | '{' CalculationBodyPart '}'`. `SysML` 8.2.2.19."),
     (
         "CalculationBodyPart",
