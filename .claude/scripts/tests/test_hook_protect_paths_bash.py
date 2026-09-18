@@ -82,7 +82,7 @@ ALLOW = [
     ("python3.11 -c 'print(1)'", ROOT),
     ("ls -la # rm vendor/sources.lock.toml", ROOT),
     ("cat > crates/sv2-cli/src/lib.rs <<'EOF'\n//! Docs.\nEOF", ROOT),
-    ("echo 'fn main() {}' > crates/sv2-cli/src/main.rs", ROOT),
+    ("echo 'fn main() {}' > crates/sv2-cli/src/lib", ROOT),
     ("mkdir -p crates/sv2-cli/src && touch crates/sv2-cli/Cargo.toml", ROOT),
     ("mkdir -p vendor/scratch-notes", ROOT),
     ("cat >> notes.md <<'EOF'\nsee vendor/sources.lock.toml\nEOF\npython3.11 -m pytest -q", ROOT),
