@@ -601,6 +601,10 @@ pub enum SyntaxKind {
     DefinitionMember,
     /// `OccurrenceUsagePrefix 'part' Usage`. `SysML` 8.2.2.11.
     PartUsage,
+    /// `( EndUsagePrefix | RefPrefix ) 'ref' Usage`. `SysML` 8.2.2.6.2.
+    ReferenceUsage,
+    /// `'end'? RefPrefix ( Identification FeatureSpecializationPart? | FeatureSpecializationPart ) UsageCompletion`. `SysML` 8.2.2.6.2 — a usage with no keyword at all, carried by its declaration.
+    DefaultReferenceUsage,
     /// `UsagePrefix 'attribute' Usage`. `SysML` 8.2.2.7.
     AttributeUsage,
     /// `OccurrenceUsagePrefix 'item' Usage`. `SysML` 8.2.2.10.
@@ -1061,6 +1065,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::DefinitionBody,
     SyntaxKind::DefinitionMember,
     SyntaxKind::PartUsage,
+    SyntaxKind::ReferenceUsage,
+    SyntaxKind::DefaultReferenceUsage,
     SyntaxKind::AttributeUsage,
     SyntaxKind::ItemUsage,
     SyntaxKind::OccurrenceUsage,

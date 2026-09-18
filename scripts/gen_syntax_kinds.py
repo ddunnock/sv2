@@ -320,6 +320,21 @@ NODES = [
     ("DefinitionBody", "`';' | '{' DefinitionBodyItem* '}'`. `SysML` 8.2.2.6.1."),
     ("DefinitionMember", "`MemberPrefix DefinitionElement`. `SysML` 8.2.2.6.1."),
     ("PartUsage", "`OccurrenceUsagePrefix 'part' Usage`. `SysML` 8.2.2.11."),
+    # The two usages written without one of the seven keywords. SysML's analogue of
+    # KerML's keywordless Feature, and between them the top two remaining SysML blockers
+    # after the action layer.
+    (
+        "ReferenceUsage",
+        "`( EndUsagePrefix | RefPrefix ) 'ref' Usage`. `SysML` 8.2.2.6.2.",
+    ),
+    (
+        "DefaultReferenceUsage",
+        (
+            "`'end'? RefPrefix ( Identification FeatureSpecializationPart? "
+            "| FeatureSpecializationPart ) UsageCompletion`. `SysML` 8.2.2.6.2 — a usage "
+            "with no keyword at all, carried by its declaration."
+        ),
+    ),
     ("AttributeUsage", "`UsagePrefix 'attribute' Usage`. `SysML` 8.2.2.7."),
     ("ItemUsage", "`OccurrenceUsagePrefix 'item' Usage`. `SysML` 8.2.2.10."),
     ("OccurrenceUsage", "`OccurrenceUsagePrefix 'occurrence' Usage`. `SysML` 8.2.2.9.2."),

@@ -979,7 +979,13 @@ impl<'a> Parser<'a> {
                     || self.at_classifier(n).is_some()
                     || self.at_feature(n)
             }
-            Language::SysMl => self.at_definition_element(n) || self.at_simple_usage(n).is_some(),
+            Language::SysMl => {
+                self.at_definition_element(n)
+                    || self.at_simple_usage(n).is_some()
+                    // Only when no keyword usage starts here; see `membership`.
+                    || self.at_reference_usage(n)
+                    || self.at_default_reference_usage(n)
+            }
         }
     }
 
@@ -1643,12 +1649,132 @@ impl<'a> Parser<'a> {
             self.language == Language::SysMl
         }) {
             self.simple_usage(usage);
+        } else if self.language == Language::SysMl && self.at_reference_usage(0) {
+            // After the seven keyword usages, never before: `at_reference_usage` sees
+            // the `ref` in `ref attribute y;` too, and that one is an AttributeUsage
+            // whose BasicUsagePrefix carries it.
+            self.reference_usage();
+        } else if self.language == Language::SysMl && self.at_default_reference_usage(0) {
+            // Last of all, because it is the usage with no keyword: everything that
+            // opens with one has already been taken.
+            self.default_reference_usage();
         } else if self.language == Language::KerMl {
             self.error_expected("a package or a classifier");
         } else {
             self.error_expected("a package, a part definition or a usage");
         }
         self.finish_node();
+    }
+
+    // ReferenceUsage : ReferenceUsage =
+    //     ( EndUsagePrefix | RefPrefix ) 'ref' Usage             (SysML 8.2.2.6.2)
+    //
+    // NOT marked for coverage: EndUsagePrefix, the first of the two alternatives, is
+    // unimplemented — the same gap OccurrenceUsagePrefix has, held by
+    // tests/rejection/end-usage-prefix-is-not-implemented.sysml.
+    //
+    // The `ref` here is the production's own keyword, not BasicUsagePrefix's optional
+    // one. `ref attribute y;` is an AttributeUsage whose prefix carries `ref`, and
+    // `ref y;` is a ReferenceUsage; the difference is whether a usage keyword follows,
+    // which is why `at_simple_usage` is asked first.
+    fn reference_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ReferenceUsage);
+        self.ref_prefix();
+        self.expect_keyword("ref");
+        self.usage();
+        self.finish_node();
+    }
+
+    /// Whether a `ReferenceUsage` starts at the `n`th meaningful token.
+    fn at_reference_usage(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_ref_prefix(n), "ref")
+    }
+
+    /// The index just past a `RefPrefix` written from the `n`th token.
+    ///
+    /// `RefPrefix = FeatureDirection? 'derived'? ( 'abstract' | 'variation' )?
+    /// 'constant'?` (`SysML` 8.2.2.6.2) — every part optional, and NOT including the
+    /// `ref` that `BasicUsagePrefix` adds after it.
+    fn skip_ref_prefix(&self, n: usize) -> usize {
+        let mut n = n;
+        for words in [
+            &["in", "out", "inout"][..],
+            &["derived"],
+            &["abstract", "variation"],
+            &["constant"],
+        ] {
+            if words.iter().any(|word| self.nth_is_keyword(n, word)) {
+                n += 1;
+            }
+        }
+        n
+    }
+
+    // production: DefaultReferenceUsage
+    //
+    // DefaultReferenceUsage : ReferenceUsage =
+    //     ( isEnd ?= 'end' )? RefPrefix
+    //     ( Identification FeatureSpecializationPart? | FeatureSpecializationPart )
+    //     UsageCompletion                                        (SysML 8.2.2.6.2)
+    //
+    // A usage with NO keyword, carried by its declaration alone — SysML's analogue of
+    // KerML's keywordless Feature, and the same shape: a name with an optional
+    // specialization, or a bare specialization with no name. The second form is what
+    // `:>> length = 4800 [mm];` is, a redefinition that names nothing.
+    //
+    // Unlike KerML's Feature, the bare-specialization form IS read here, because this
+    // production states it directly rather than reaching it through a FeatureDeclaration
+    // shared with a keyword form.
+    fn default_reference_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::DefaultReferenceUsage);
+        self.eat_optional_keyword("end");
+        self.ref_prefix();
+        if self.at_name() || self.at(SyntaxKind::Lt) {
+            self.identification();
+            if self.at_feature_specialization() || self.at_multiplicity_part() {
+                self.feature_specialization_part();
+            }
+        } else {
+            self.feature_specialization_part();
+        }
+        self.usage_completion();
+        self.finish_node();
+    }
+
+    /// Whether a `DefaultReferenceUsage` starts at the `n`th meaningful token.
+    ///
+    /// Asked last of the usages, because it is the one with no keyword: anything that
+    /// opens with `part`, `attribute`, `ref` or a definition keyword has already been
+    /// taken by then, and a reserved keyword is not a name (`KerML` 8.2.2.6), so
+    /// `package P;` is not read as a usage called `package`.
+    fn at_default_reference_usage(&self, n: usize) -> bool {
+        let after = self.skip_ref_prefix(n + usize::from(self.nth_is_keyword(n, "end")));
+        self.nth_is_name(after)
+            || self
+                .peek_nth(after)
+                .is_some_and(|t| t.kind == SyntaxKind::Lt)
+            || self.nth_at_feature_specialization(after)
+    }
+
+    /// Whether a `FeatureSpecialization` is written at the `n`th meaningful token.
+    ///
+    /// The `n`th-token form of `at_feature_specialization`, needed because a
+    /// `DefaultReferenceUsage` may open on one.
+    fn nth_at_feature_specialization(&self, n: usize) -> bool {
+        const SYMBOLS: [SyntaxKind; 5] = [
+            SyntaxKind::Colon,
+            SyntaxKind::ColonGt,
+            SyntaxKind::ColonGtGt,
+            SyntaxKind::ColonColonGt,
+            SyntaxKind::FatArrow,
+        ];
+        self.peek_nth(n).is_some_and(|t| SYMBOLS.contains(&t.kind))
+            || ["subsets", "redefines", "references", "crosses"]
+                .iter()
+                .any(|word| self.nth_is_keyword(n, word))
+            || (self.nth_is_keyword(n, "defined") && self.nth_is_keyword(n + 1, "by"))
     }
 
     // production: AttributeUsage

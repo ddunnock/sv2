@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-18T13:02:35Z",
+    "regenerated_utc": "2026-09-18T13:11:56Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 132,
-      "unimplemented": 426,
+      "implemented": 133,
+      "unimplemented": 425,
       "absent": 0,
-      "percent": 23.7
+      "percent": 23.8
     },
     "tests": {
-      "unit": 244,
+      "unit": 248,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 76,
+      "negative_cases": 77,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "925e861 Record where the parser is, and what the histogram does not tell you",
       "34d9b91 Read a feature written with no keyword at all",
       "91b7c82 Read KerML's Feature, in its keyword form",
       "a60aca9 Read PortDefinition, whose extra part consumes no tokens",
       "5fa2770 Rewrite CRATES.md as a map of this repository",
       "3b792f6 A binary per process shape, and every binary a shim (ADR-0018)",
       "3d0c583 Decide element identity: accept ADR-0016, supersede ADR-0009",
-      "ce21f14 Point next_step back at the parser, with the diagnostic shape settled",
-      "4a337a7 Give a diagnostic a range, a code and a severity"
+      "ce21f14 Point next_step back at the parser, with the diagnostic shape settled"
     ]
   },
   "authored": {

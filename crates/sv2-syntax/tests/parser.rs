@@ -391,6 +391,56 @@ fn a_diagnostic_about_the_end_of_the_file_is_an_empty_range_there() {
     assert_eq!(usize::from(last.range().start()), source.len());
 }
 
+// -- the usages written without a keyword, SysML 8.2.2.6.2 ------------------------
+//
+// ReferenceUsage        = ( EndUsagePrefix | RefPrefix ) 'ref' Usage
+// DefaultReferenceUsage = 'end'? RefPrefix
+//                         ( Identification FeatureSpecializationPart?
+//                         | FeatureSpecializationPart ) UsageCompletion
+
+#[test]
+fn a_reference_usage_carries_its_own_ref_keyword() {
+    parse_accepted("package P { ref y; }");
+    parse_accepted("package P { ref z : ScalarValues::Integer; }");
+    parse_accepted("package P { in ref y : A; }");
+}
+
+#[test]
+fn ref_before_a_usage_keyword_is_the_prefixs_ref_and_not_a_reference_usage() {
+    // `ref attribute y;` is an AttributeUsage whose BasicUsagePrefix carries `ref`.
+    // Only the absence of a usage keyword makes `ref y;` a ReferenceUsage, which is
+    // why the keyword usages are asked first.
+    let attribute =
+        render(&parse_accepted("package P { derived constant ref attribute y :> x; }").syntax());
+    assert!(attribute.contains("AttributeUsage"), "{attribute}");
+    assert!(!attribute.contains("ReferenceUsage"), "{attribute}");
+
+    let reference = render(&parse_accepted("package P { ref y; }").syntax());
+    assert!(reference.contains("ReferenceUsage"), "{reference}");
+    assert!(!reference.contains("AttributeUsage"), "{reference}");
+}
+
+#[test]
+fn a_usage_may_be_written_with_no_keyword_at_all() {
+    // DefaultReferenceUsage: the declaration alone carries it, as KerML's keywordless
+    // Feature does. Both forms of its declaration are read.
+    parse_accepted("package P { y : A; }");
+    parse_accepted("package P { <y> yy : A; }");
+    // The bare-specialization form, which names nothing: this is what the corpus
+    // writes inside a definition body.
+    parse_accepted("part def V { :>> length = 4800; }");
+    parse_accepted("part def V { :>> self : Timeslice; }");
+}
+
+#[test]
+fn a_keyword_is_not_read_as_a_keywordless_usage() {
+    // A reserved keyword is not a name (KerML 8.2.2.6). Without that, every
+    // `package P;` would be a usage called `package`.
+    let package = render(&parse_accepted("package P;").syntax());
+    assert!(package.contains("Package"), "{package}");
+    assert!(!package.contains("DefaultReferenceUsage"), "{package}");
+}
+
 // -- reserved words are not names (KerML 8.2.2.6) ---------------------------------
 
 #[test]
