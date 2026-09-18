@@ -62,6 +62,24 @@ fn subtree(rendered: &str, kind: &str) -> String {
         .join("\n")
 }
 
+/// The DIRECT children of the first `kind` node in `rendered`, in order.
+///
+/// `subtree` gives descendants, which answers "contains". A production says what it
+/// OWNS, and the two differ by exactly one level: an `EmptyResultMember` belonging to a
+/// nested operand is in the subtree of every node above it, and belongs to none of them.
+fn child_kinds(rendered: &str, kind: &str) -> Vec<String> {
+    let body = subtree(rendered, kind);
+    let mut lines = body.lines();
+    let Some(head) = lines.next() else {
+        return Vec::new();
+    };
+    let depth = head.len() - head.trim_start().len();
+    lines
+        .filter(|l| l.len() - l.trim_start().len() == depth + 2)
+        .map(|l| l.split_whitespace().next().unwrap_or_default().to_owned())
+        .collect()
+}
+
 /// How many nodes in `rendered` are exactly `kind`.
 ///
 /// Whole lines, not substrings: several node names contain another's, so
@@ -416,6 +434,140 @@ fn a_constraint_definition_needs_a_body_and_a_def() {
     parse_rejected("constraint c { a <= b }");
     // An unclosed body is still an error, and the expression inside it is still read.
     parse_rejected("constraint def C { a <= b");
+}
+
+// -- FeatureChainExpression, KerML 8.2.5.8.2 --------------------------------------
+//
+// FeatureChainExpression = NonFeatureChainPrimaryArgumentMember '.' FeatureChainMember
+//
+// PrimaryExpression's other alternative, written postfix, and the only expression in
+// this parser that folds to the LEFT.
+
+#[test]
+fn a_feature_chain_reads_the_postfix_dot() {
+    // The corpus form, from vendor/corpus/sysml/src/validation/08-Requirements:
+    // `vehicle.fuelMass == vehicle.fuelFullMass`.
+    parse_accepted("constraint def C { a.b }");
+    parse_accepted("constraint def C { a.b.c.d }");
+    parse_accepted("constraint def C { vehicle.fuelMass == vehicle.fuelFullMass }");
+    // A chain link is a QualifiedName, so `::` may appear within a link.
+    parse_accepted("constraint def C { x::y.z }");
+}
+
+#[test]
+fn a_feature_chain_folds_to_the_left() {
+    // `a.b.c` is `(a.b).c`, NOT `a.(b.c)`. The member is called
+    // NonFeatureChainPrimaryArgumentMember but its body is PrimaryArgument, which
+    // reaches PrimaryExpression and so admits a chain on the left — both the clause and
+    // Tier B' state it that way, and the Pilot builds the same association with a
+    // repetition that folds (KerMLExpressions.xtext:301, :319).
+    let rendered = render(&parse_accepted("constraint def C { a.b.c }").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "FeatureChainExpression"),
+        2,
+        "{rendered}"
+    );
+    // The OUTERMOST chain's left operand holds `a` and `b`; `c` is its member. Under a
+    // right fold the left operand would hold only `a`.
+    let left = subtree(&rendered, "NonFeatureChainPrimaryArgumentMember");
+    assert!(left.contains(r#""a""#), "{left}");
+    assert!(left.contains(r#""b""#), "{left}");
+    assert!(!left.contains(r#""c""#), "{left}");
+}
+
+#[test]
+fn a_feature_chain_owns_no_result_member() {
+    // The metaclass IS an OperatorExpression (KerML 8.3.4.8.4) and every operator in the
+    // infix table owns an EmptyResultMember. This production does not, because the BNF
+    // writes EmptyResultMember explicitly where there is one — BinaryOperatorExpression
+    // and FeatureReferenceExpression both name it (8.2.5.8.1, 8.2.5.8.3) — and
+    // 8.2.5.8.2 does not. Adding one by analogy would put an element in the tree that
+    // the grammar does not state.
+    // Asked of the DIRECT children, not the subtree: the subtree does hold one, and it
+    // belongs to the FeatureReferenceExpression on the left, which has one by
+    // 8.2.5.8.3. Confusing "contains" with "owns" is how this test first passed the
+    // wrong claim.
+    let rendered = render(&parse_accepted("constraint def C { a.b }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "FeatureChainExpression"),
+        [
+            "NonFeatureChainPrimaryArgumentMember",
+            "Dot",
+            "FeatureReferenceMember"
+        ],
+        "{rendered}"
+    );
+    // The one in the tree is the left operand's, one level further down.
+    assert_eq!(nodes_named(&rendered, "EmptyResultMember"), 1, "{rendered}");
+    assert_eq!(
+        child_kinds(&rendered, "FeatureReferenceExpression"),
+        ["FeatureReferenceMember", "EmptyResultMember"],
+        "{rendered}"
+    );
+    // And the contrast that makes the point: a binary operator DOES own one (8.2.5.8.1).
+    let sum = render(&parse_accepted("constraint def C { a + b }").syntax());
+    assert!(
+        child_kinds(&sum, "BinaryOperatorExpression").contains(&"EmptyResultMember".to_owned()),
+        "{sum}"
+    );
+}
+
+#[test]
+fn a_dot_after_a_primary_is_not_always_a_chain() {
+    // Three other productions put a `.` after a primary, and none is a chain
+    // (KerML 8.2.5.8.2, 8.2.5.8.3). All three are unimplemented, and must stay that way
+    // rather than be quietly accepted as chains. Held as files by
+    // tests/rejection/metadata-access-expression-is-not-implemented.sysml and
+    // tests/rejection/collect-expression-is-not-implemented.sysml.
+    parse_rejected("constraint def C { E.metadata }");
+    parse_rejected("constraint def C { x.{ a } }");
+    parse_rejected("constraint def C { x.?{ a } }");
+    // A chain needs a name after the dot; `a.` alone is neither.
+    parse_rejected("constraint def C { a. }");
+}
+
+#[test]
+fn a_feature_chain_binds_tighter_than_any_infix_operator() {
+    // It is a PrimaryExpression, so it is below every tier of table 6. `a.b + c.d` is
+    // `(a.b) + (c.d)`: one addition over two chains, not a chain over an addition.
+    let rendered = render(&parse_accepted("constraint def C { a.b + c.d }").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "FeatureChainExpression"),
+        2,
+        "{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "BinaryOperatorExpression"),
+        1,
+        "{rendered}"
+    );
+    // The addition is the outer node, so the chains are inside it.
+    let sum = subtree(&rendered, "BinaryOperatorExpression");
+    assert_eq!(nodes_named(&sum, "FeatureChainExpression"), 2, "{sum}");
+}
+
+#[test]
+fn a_feature_chain_is_bounded_by_the_depth_limit() {
+    // Each link WRAPS the last, so the tree is as deep as the chain is long even though
+    // the fold is a loop and uses no stack. The first draft of this test asserted the
+    // opposite — that chain length was free — and a 50000-link chain aborted the test
+    // thread, which is what invariant 3 forbids. Chains are counted against MAX_DEPTH
+    // like any other nesting.
+    //
+    // Losslessness at that length is asserted in tests/roundtrip.rs beside the three
+    // other constructs the same guard covers.
+    let source = format!("constraint def C {{ a{} }}", ".b".repeat(50_000));
+    let parsed = parse(&source, Language::SysMl);
+    assert!(
+        parsed
+            .errors()
+            .iter()
+            .any(|d| d.code() == DiagnosticCode::TooDeeplyNested),
+        "expected a depth diagnostic, got {:?}",
+        parsed.errors()
+    );
+    // A chain shorter than the limit is read whole and reports nothing.
+    parse_accepted(&format!("constraint def C {{ a{} }}", ".b".repeat(100)));
 }
 
 #[test]

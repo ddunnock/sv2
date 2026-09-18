@@ -613,6 +613,14 @@ pub enum SyntaxKind {
     CalculationBody,
     /// `CalculationBodyItem* ResultExpressionMember?`. `SysML` 8.2.2.19.
     CalculationBodyPart,
+    /// `NonFeatureChainPrimaryArgumentMember '.' FeatureChainMember`. `KerML` 8.2.5.8.2 — the metaclass is an `OperatorExpression`, 8.3.4.8.4.
+    FeatureChainExpression,
+    /// `ownedMemberParameter = PrimaryArgument`. `KerML` 8.2.5.8.2.
+    NonFeatureChainPrimaryArgumentMember,
+    /// `ownedRelationship += PrimaryArgumentValue`. `KerML` 8.2.5.8.2.
+    PrimaryArgument,
+    /// `value = PrimaryExpression`. `KerML` 8.2.5.8.2.
+    PrimaryArgumentValue,
     /// `MemberPrefix? ownedRelatedElement += OwnedExpression`. `SysML` 8.2.2.19 — the metaclass is `KerML`'s `ResultExpressionMembership`, 8.3.4.7.7.
     ResultExpressionMember,
     /// `OccurrenceUsagePrefix 'part' Usage`. `SysML` 8.2.2.11.
@@ -1087,6 +1095,10 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ConstraintDefinition,
     SyntaxKind::CalculationBody,
     SyntaxKind::CalculationBodyPart,
+    SyntaxKind::FeatureChainExpression,
+    SyntaxKind::NonFeatureChainPrimaryArgumentMember,
+    SyntaxKind::PrimaryArgument,
+    SyntaxKind::PrimaryArgumentValue,
     SyntaxKind::ResultExpressionMember,
     SyntaxKind::PartUsage,
     SyntaxKind::ReferenceUsage,

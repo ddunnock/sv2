@@ -213,6 +213,15 @@ fn deeply_nested_input_is_reported_and_not_a_stack_overflow() {
                 "}".repeat(50_000)
             ),
         ),
+        // Feature chains are the fourth, and the one that shows depth is a property of
+        // the TREE and not of the parser's recursion. The fold that builds them is a
+        // loop and uses no stack at all, and a 50000-link chain still overflowed a test
+        // thread — because each link wraps the last, so the tree is as deep as the
+        // chain is long. It is counted against the same budget for that reason.
+        (
+            "feature chains",
+            format!("attribute x = a{};", ".b".repeat(50_000)),
+        ),
     ] {
         // SysML: `attribute` and `part` are usages, which KerML has none of.
         let parsed = parse(&source, Language::SysMl);

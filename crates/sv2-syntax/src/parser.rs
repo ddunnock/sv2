@@ -3084,6 +3084,128 @@ impl<'a> Parser<'a> {
     // carrying nothing, because the alternative that matched already says which was
     // taken.
     fn primary_expression(&mut self) {
+        self.eat_trivia();
+        let start = self.builder.checkpoint();
+        self.non_feature_chain_primary_expression();
+        self.feature_chain_tail(start);
+    }
+
+    // production: FeatureChainExpression
+    //
+    // FeatureChainExpression =
+    //     ownedRelationship += NonFeatureChainPrimaryArgumentMember '.'
+    //     ownedRelationship += FeatureChainMember                 (KerML 8.2.5.8.2)
+    //
+    // production: NonFeatureChainPrimaryArgumentMember
+    //
+    // NonFeatureChainPrimaryArgumentMember =
+    //     ownedMemberParameter = PrimaryArgument                  (KerML 8.2.5.8.2)
+    //
+    // production: PrimaryArgument
+    // production: PrimaryArgumentValue
+    //
+    // PrimaryArgument      = ownedRelationship += PrimaryArgumentValue
+    // PrimaryArgumentValue = value = PrimaryExpression            (KerML 8.2.5.8.2)
+    //
+    // FOLDS LEFT, so `a.b.c` is `(a.b).c`. The member is named
+    // NonFeatureChainPrimaryArgumentMember and its body is `PrimaryArgument`, NOT
+    // NonFeatureChainPrimaryArgument — both the clause and Tier B' state it that way,
+    // and the derived unit adjudicates it: the Pilot builds the same association with
+    // `{FeatureChainExpression.operand += current}` inside a repetition
+    // (KerMLExpressions.xtext:301, :319), which is the Xtext idiom for a left fold. A
+    // left operand restricted to non-chains would forbid `a.b.c` outright.
+    //
+    // The loop is why this is iterative rather than recursive: a chain of ten thousand
+    // links is one stack frame, and invariant 3 is that no input kills the parser.
+    //
+    // NO EmptyResultMember, although the metaclass IS an OperatorExpression (8.3.4.8.4)
+    // and every operator in the infix table owns one. The BNF writes EmptyResultMember
+    // explicitly where a production has one — BinaryOperatorExpression and
+    // FeatureReferenceExpression both name it — and this production does not. Adding one
+    // by analogy would put an element in the tree that the grammar does not state.
+    //
+    // FeatureChainMember = FeatureReferenceMember | OwnedFeatureChainMember, and is NOT
+    // marked: the second alternative, a FeatureChain of two or more links, is absent.
+    // With the left fold it is also unreachable here — every member this loop reads is a
+    // single link, because the accumulated chain is the LEFT operand. It is reachable
+    // from SysML's AssignmentActionUsage (8.2.2.17.5), which is unimplemented.
+    fn feature_chain_tail(&mut self, start: rowan::Checkpoint) {
+        let mut links: u32 = 0;
+        while self.at_feature_chain() {
+            // BOUNDED, although this loop uses no stack of its own. Every link wraps
+            // what is already there, so the TREE is as deep as the chain is long even
+            // when the parser's own recursion is flat — and a consumer walking a
+            // 50000-level tree overflows on a thread with a 2 MiB stack, which aborts
+            // rather than panics (invariant 3). Folding also stops being linear at that
+            // size. The depth counter is the mechanism the rest of the parser already
+            // uses, so a chain is counted against the same budget as a nested body.
+            if self.depth >= MAX_DEPTH {
+                self.report_too_deep();
+                break;
+            }
+            self.depth += 1;
+            links += 1;
+            self.start_node_at(start, SyntaxKind::FeatureChainExpression);
+            self.wrap_at(
+                start,
+                &[
+                    SyntaxKind::NonFeatureChainPrimaryArgumentMember,
+                    SyntaxKind::PrimaryArgument,
+                    SyntaxKind::PrimaryArgumentValue,
+                ],
+            );
+            self.bump();
+            self.feature_chain_member();
+            self.finish_node();
+        }
+        // The links are levels of this expression, not of anything enclosing it, so the
+        // budget is returned when the chain ends. A `.` past the limit is left where it
+        // stands and reaches the tree through the enclosing body's recovery, which is
+        // what keeps the text lossless.
+        self.depth -= links;
+    }
+
+    /// Whether a `'.'` here opens a `FeatureChainExpression` rather than something else.
+    ///
+    /// Three other productions put a `.` after a primary expression, and none of them is
+    /// a chain:
+    ///
+    /// ```text
+    /// SelectExpression          = PrimaryArgumentMember '.?' BodyArgumentMember
+    /// CollectExpression         = PrimaryArgumentMember '.'  BodyArgumentMember
+    /// MetadataAccessExpression  = ElementReferenceMember '.' 'metadata'
+    /// ```
+    ///
+    /// `.?` lexes as one token, so a select is already not a `Dot`. The other two are
+    /// separated by what FOLLOWS the dot: a collect takes a `BodyExpression`, which opens
+    /// on `'{'`, and a metadata access takes the keyword `metadata`. A
+    /// `FeatureChainMember` reaches a `QualifiedName`, which opens on a NAME — and a
+    /// keyword is not a name (`KerML` 8.2.2.6), so asking for a name excludes both.
+    ///
+    /// All three are unimplemented. This check is what keeps them that way rather than
+    /// letting a chain quietly accept text it is not: `E.metadata` reads as a metadata
+    /// access or not at all, never as a feature called `metadata`.
+    fn at_feature_chain(&self) -> bool {
+        self.at(SyntaxKind::Dot) && self.nth_is_name(1)
+    }
+
+    /// The `FeatureChainMember` after the dot, in its `FeatureReferenceMember` form.
+    ///
+    /// The nodes are `FeatureReferenceMember` and `FeatureReference`, both of which
+    /// `feature_reference_expression` also builds and marks. They are built here without
+    /// the `FeatureReferenceExpression` around them and without the `EmptyResultMember`
+    /// after them, because neither is in this production.
+    fn feature_chain_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FeatureReferenceMember);
+        self.start_node(SyntaxKind::FeatureReference);
+        self.qualified_name();
+        self.finish_node();
+        self.finish_node();
+    }
+
+    /// `PrimaryExpression`'s alternatives other than `FeatureChainExpression`.
+    fn non_feature_chain_primary_expression(&mut self) {
         // NullExpression = 'null' | '(' ')' — the empty pair is decided before
         // SequenceExpression, which would otherwise read the '(' and find no
         // expression.

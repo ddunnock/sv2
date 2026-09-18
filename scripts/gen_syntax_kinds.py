@@ -356,6 +356,23 @@ NODES = [
         "CalculationBodyPart",
         "`CalculationBodyItem* ResultExpressionMember?`. `SysML` 8.2.2.19.",
     ),
+    # The postfix `.`. PrimaryExpression's other alternative, and the only expression
+    # form in this parser that folds to the LEFT: `a.b.c` is `(a.b).c`, because the left
+    # operand is a PrimaryArgument and not a NonFeatureChainPrimaryArgument despite the
+    # member's name. The derived unit adjudicates that against the Pilot's fold.
+    (
+        "FeatureChainExpression",
+        (
+            "`NonFeatureChainPrimaryArgumentMember '.' FeatureChainMember`. "
+            "`KerML` 8.2.5.8.2 — the metaclass is an `OperatorExpression`, 8.3.4.8.4."
+        ),
+    ),
+    (
+        "NonFeatureChainPrimaryArgumentMember",
+        "`ownedMemberParameter = PrimaryArgument`. `KerML` 8.2.5.8.2.",
+    ),
+    ("PrimaryArgument", "`ownedRelationship += PrimaryArgumentValue`. `KerML` 8.2.5.8.2."),
+    ("PrimaryArgumentValue", "`value = PrimaryExpression`. `KerML` 8.2.5.8.2."),
     (
         "ResultExpressionMember",
         (

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-18T14:06:09Z",
+    "regenerated_utc": "2026-09-18T14:27:13Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 139,
-      "unimplemented": 419,
+      "implemented": 143,
+      "unimplemented": 415,
       "absent": 0,
-      "percent": 24.9
+      "percent": 25.6
     },
     "tests": {
-      "unit": 269,
+      "unit": 275,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 86,
+      "negative_cases": 88,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "ae7a303 Read a calculation body, whose last part is an expression",
       "6dc5cb3 Read the subject of a requirement",
       "47b8e0d Read a requirement definition, and the body only it has",
       "8ccfc0d Widen one allowed path in the bash hook fixture",
       "b985cfc Spell licence the way LICENSE does",
       "37049c6 Configure the TypeScript side of sv2-studio",
       "42aee67 Answer the body-shape question, and put requirement ahead of action",
-      "52d7f3b Read the two SysML usages written without a keyword",
-      "925e861 Record where the parser is, and what the histogram does not tell you"
+      "52d7f3b Read the two SysML usages written without a keyword"
     ]
   },
   "authored": {

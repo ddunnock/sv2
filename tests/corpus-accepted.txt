@@ -30,6 +30,8 @@ vendor/corpus/sysml/src/examples/Simple Tests/ImportTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ItemTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/MultiplicityTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/RootPackageTest.sysml
+vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition - Updated.sysml
+vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition.sysml
 vendor/corpus/sysml/src/training/01. Packages/Comment Example.sysml
 vendor/corpus/sysml/src/training/01. Packages/Documentation Example.sysml
 vendor/corpus/sysml/src/training/01. Packages/Package Example.sysml
@@ -41,6 +43,7 @@ vendor/corpus/sysml/src/training/07. Parts/Parts Example-1.sysml
 vendor/corpus/sysml/src/training/07. Parts/Parts Example-2.sysml
 vendor/corpus/sysml/src/training/08. Items/Items Example.sysml
 vendor/corpus/sysml/src/training/10. Ports/Port Example.sysml
+vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-2.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_02-Basic Value Properties.sysml
