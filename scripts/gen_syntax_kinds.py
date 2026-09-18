@@ -159,6 +159,51 @@ NODES = [
         "SuperclassingPart",
         "`SPECIALIZES OwnedSubclassification ( ',' OwnedSubclassification )*`. `KerML` 8.2.4.2.",
     ),
+    # KerML's Feature and the prefixes it carries. The largest production in the
+    # language: FeatureElement's ten alternatives all reach it, and 33 of the 56 failing
+    # KerML corpus files reported `feature` first.
+    (
+        "Feature",
+        (
+            "`( FeaturePrefix ( 'feature' | PrefixMetadataMember ) FeatureDeclaration? "
+            "| ( EndFeaturePrefix | BasicFeaturePrefix ) FeatureDeclaration ) "
+            "ValuePart? TypeBody`. `KerML` 8.2.4.3.1."
+        ),
+    ),
+    (
+        "FeaturePrefix",
+        (
+            "`( EndFeaturePrefix OwnedCrossFeatureMember? | BasicFeaturePrefix ) "
+            "PrefixMetadataMember*`. `KerML` 8.2.4.3.1."
+        ),
+    ),
+    (
+        "BasicFeaturePrefix",
+        (
+            "`FeatureDirection? 'derived'? 'abstract'? ( 'composite' | 'portion' )? "
+            "( 'var' | 'const' )?`. `KerML` 8.2.4.3.1."
+        ),
+    ),
+    ("EndFeaturePrefix", "`'const'? 'end'`. `KerML` 8.2.4.3.1."),
+    (
+        "FeatureDeclaration",
+        (
+            "`'all'? ( FeatureIdentification ( FeatureSpecializationPart "
+            "| ConjugationPart )? | FeatureSpecializationPart | ConjugationPart ) "
+            "FeatureRelationshipPart*`. `KerML` 8.2.4.3.1."
+        ),
+    ),
+    (
+        "FeatureIdentification",
+        (
+            "`'<' NAME '>' NAME? | NAME`. `KerML` 8.2.4.3.1 — NOT `Identification`, "
+            "whose parts are both optional. A feature declaration must name something."
+        ),
+    ),
+    (
+        "NamespaceFeatureMember",
+        "`MemberPrefix FeatureElement`. `KerML` 8.2.3.4.1.",
+    ),
     (
         "NonFeatureMember",
         (

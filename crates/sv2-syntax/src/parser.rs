@@ -974,7 +974,11 @@ impl<'a> Parser<'a> {
             return true;
         }
         match self.language {
-            Language::KerMl => self.nth_is_keyword(n, "package") || self.at_classifier(n).is_some(),
+            Language::KerMl => {
+                self.nth_is_keyword(n, "package")
+                    || self.at_classifier(n).is_some()
+                    || self.at_feature(n)
+            }
             Language::SysMl => self.at_definition_element(n) || self.at_simple_usage(n).is_some(),
         }
     }
@@ -1257,6 +1261,13 @@ impl<'a> Parser<'a> {
                 // tests/rejection/element-filter-member-is-not-a-definition-body-item.sysml
                 // and element-filter-member-is-not-a-kerml-root-element.kerml hold those.
                 self.element_filter_member();
+            } else if self.language == Language::KerMl
+                && self.at_feature(usize::from(self.at_visibility()))
+            {
+                // NamespaceMember = NonFeatureMember | NamespaceFeatureMember
+                // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
+                // its own membership node rather than the one `membership` builds.
+                self.namespace_feature_member();
             } else if self.at_member_element(usize::from(self.at_visibility())) {
                 self.membership(body);
             } else {
@@ -1328,6 +1339,237 @@ impl<'a> Parser<'a> {
     // A definition is tried before a usage. The two share every prefix keyword and
     // the keyword after them, so `at_part_definition` — which requires the `def` —
     // must decide first; the usages are what is left.
+    // Feature : Feature =
+    //     ( FeaturePrefix ( 'feature' | ownedRelationship += PrefixMetadataMember )
+    //       FeatureDeclaration?
+    //     | ( EndFeaturePrefix | BasicFeaturePrefix ) FeatureDeclaration
+    //     ) ValuePart? TypeBody                                   (KerML 8.2.4.3.1)
+    //
+    // NOT marked for coverage. Two of the three ways in are unimplemented, and each is
+    // a construct the language has rather than an optional slot left empty:
+    //
+    //   - The PrefixMetadataMember alternative to the `feature` keyword. A feature may
+    //     be introduced by a `#` prefix instead of the word, and prefix metadata is
+    //     unimplemented everywhere in this parser.
+    //   - The second alternative entirely, where a feature is written with NO keyword
+    //     and the declaration alone carries it: `vitesse : Speed;`. It is held by
+    //     tests/rejection/keywordless-feature-is-not-implemented.kerml.
+    //
+    // What IS read is the keyword form, which is what the corpus overwhelmingly writes.
+    fn feature(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Feature);
+        self.feature_prefix();
+        self.expect_keyword("feature");
+        if self.at_feature_declaration() {
+            self.feature_declaration();
+        }
+        if self.at_value_part() {
+            self.value_part();
+        }
+        self.type_body();
+        self.finish_node();
+    }
+
+    /// Whether a `Feature`'s keyword form starts at the `n`th meaningful token.
+    fn at_feature(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_feature_prefix(n), "feature")
+    }
+
+    /// The index just past a `FeaturePrefix` written from the `n`th token.
+    ///
+    /// `FeaturePrefix = ( EndFeaturePrefix OwnedCrossFeatureMember? | BasicFeaturePrefix )
+    /// PrefixMetadataMember*` (`KerML` 8.2.4.3.1). Neither `OwnedCrossFeatureMember` nor
+    /// `PrefixMetadataMember` is looked past: both are unimplemented, and leaving them to
+    /// the enclosing body's recovery reports them.
+    fn skip_feature_prefix(&self, n: usize) -> usize {
+        // EndFeaturePrefix = 'const'? 'end'. Tried first: it may open with `const`,
+        // which is also BasicFeaturePrefix's last slot, and only the `end` tells them
+        // apart.
+        let end = n + usize::from(self.nth_is_keyword(n, "const"));
+        if self.nth_is_keyword(end, "end") {
+            return end + 1;
+        }
+        self.skip_basic_feature_prefix(n)
+    }
+
+    /// The index just past a `BasicFeaturePrefix` written from the `n`th token.
+    ///
+    /// Every part is optional, so this returns `n` unchanged when none is written. The
+    /// keywords are counted in the clause's order and each at most once, which is what
+    /// makes `derived in feature f;` two errors rather than a longer prefix.
+    fn skip_basic_feature_prefix(&self, n: usize) -> usize {
+        let mut n = n;
+        for words in [
+            &["in", "out", "inout"][..],
+            &["derived"],
+            &["abstract"],
+            &["composite", "portion"],
+            &["var", "const"],
+        ] {
+            if words.iter().any(|word| self.nth_is_keyword(n, word)) {
+                n += 1;
+            }
+        }
+        n
+    }
+
+    // FeaturePrefix : Feature =
+    //     ( EndFeaturePrefix ownedRelationship += OwnedCrossFeatureMember?
+    //     | BasicFeaturePrefix ) ownedRelationship += PrefixMetadataMember*
+    //                                                            (KerML 8.2.4.3.1)
+    //
+    // NOT marked: OwnedCrossFeatureMember and PrefixMetadataMember are unimplemented,
+    // the same two gaps UsagePrefix has one level up. The node is built even when empty,
+    // as MemberPrefix's is.
+    fn feature_prefix(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FeaturePrefix);
+        if self.at_end_feature_prefix() {
+            self.end_feature_prefix();
+        } else {
+            self.basic_feature_prefix();
+        }
+        self.finish_node();
+    }
+
+    /// Whether an `EndFeaturePrefix` rather than a `BasicFeaturePrefix` is written here.
+    fn at_end_feature_prefix(&self) -> bool {
+        self.nth_is_keyword(usize::from(self.at_keyword("const")), "end")
+    }
+
+    // production: EndFeaturePrefix
+    //
+    // EndFeaturePrefix : Feature = ( isConstant ?= 'const' )? isEnd ?= 'end'
+    //                                                            (KerML 8.2.4.3.1)
+    fn end_feature_prefix(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::EndFeaturePrefix);
+        self.eat_optional_keyword("const");
+        self.expect_keyword("end");
+        self.finish_node();
+    }
+
+    // production: BasicFeaturePrefix
+    //
+    // BasicFeaturePrefix : Feature =
+    //     ( direction = FeatureDirection )? ( isDerived ?= 'derived' )?
+    //     ( isAbstract ?= 'abstract' )?
+    //     ( isComposite ?= 'composite' | isPortion ?= 'portion' )?
+    //     ( isVariable ?= 'var' | isConstant ?= 'const' )?        (KerML 8.2.4.3.1)
+    //
+    // Every part is optional, so the node may be empty — `feature f;` writes a
+    // FeaturePrefix whose BasicFeaturePrefix holds nothing.
+    //
+    // The two alternations forecloses: taking `composite` rules out `portion`, so
+    // `composite portion feature f;` leaves the second word for the caller to report.
+    fn basic_feature_prefix(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::BasicFeaturePrefix);
+        if self.at_keyword("in") || self.at_keyword("out") || self.at_keyword("inout") {
+            self.feature_direction();
+        }
+        self.eat_optional_keyword("derived");
+        self.eat_optional_keyword("abstract");
+        self.eat_one_of(&["composite", "portion"]);
+        self.eat_one_of(&["var", "const"]);
+        self.finish_node();
+    }
+
+    /// Consume whichever of `words` is written here, or nothing.
+    ///
+    /// An alternation of keyword flags: taking one forecloses the others, which is what
+    /// leaves the second word of `composite portion` for the caller to report.
+    fn eat_one_of(&mut self, words: &[&str]) {
+        if let Some(word) = words.iter().find(|word| self.at_keyword(word)) {
+            self.bump_as(keyword(word).unwrap_or(SyntaxKind::BasicName));
+        }
+    }
+
+    /// Whether a `FeatureDeclaration` starts here.
+    ///
+    /// It is optional after the `feature` keyword, and it cannot be empty: a
+    /// `FeatureIdentification` needs a name, and the other two alternatives need a
+    /// specialization or a conjugation. So `feature;` is a feature with no declaration,
+    /// and `feature : A;` is one whose declaration is a bare specialization.
+    fn at_feature_declaration(&self) -> bool {
+        self.at_keyword("all")
+            || self.at_name()
+            || self.at(SyntaxKind::Lt)
+            || self.at_feature_specialization()
+            || self.at_multiplicity_part()
+    }
+
+    // FeatureDeclaration : Feature =
+    //     ( isSufficient ?= 'all' )?
+    //     ( FeatureIdentification ( FeatureSpecializationPart | ConjugationPart )?
+    //     | FeatureSpecializationPart
+    //     | ConjugationPart )
+    //     FeatureRelationshipPart*                                (KerML 8.2.4.3.1)
+    //
+    // NOT marked for coverage. ConjugationPart — the whole third alternative, and the
+    // second half of the first — is unimplemented, as is FeatureRelationshipPart, which
+    // reaches the chaining, inverting and featuring parts as well as the four
+    // TypeRelationshipParts. Each is held by a case in tests/rejection/.
+    fn feature_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FeatureDeclaration);
+        self.eat_optional_keyword("all");
+        if self.at_name() || self.at(SyntaxKind::Lt) {
+            self.feature_identification();
+            if self.at_feature_specialization() || self.at_multiplicity_part() {
+                self.feature_specialization_part();
+            }
+        } else {
+            self.feature_specialization_part();
+        }
+        self.finish_node();
+    }
+
+    // production: FeatureIdentification
+    //
+    // FeatureIdentification : Feature =
+    //     '<' declaredShortName = NAME '>' ( declaredName = NAME )?
+    //   | declaredName = NAME                                     (KerML 8.2.4.3.1)
+    //
+    // NOT Identification, whose two parts are BOTH optional (SysML 8.2.2.2). A feature
+    // declaration must name something, and that difference is the whole of what
+    // tests/rejection/end-feature-requires-a-declaration.kerml records: the Pilot writes
+    // Identification here and so accepts a declaration that names nothing.
+    fn feature_identification(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FeatureIdentification);
+        if self.at(SyntaxKind::Lt) {
+            self.bump();
+            self.expect_name("a short name");
+            self.expect(SyntaxKind::Gt, "`>`");
+            if self.at_name() {
+                self.bump();
+            }
+        } else {
+            self.expect_name("a feature name");
+        }
+        self.finish_node();
+    }
+
+    // production: NamespaceFeatureMember
+    //
+    // NamespaceFeatureMember : OwningMembership =
+    //     MemberPrefix ownedRelatedElement += FeatureElement      (KerML 8.2.3.4.1)
+    //
+    // FeatureElement's ten alternatives are Feature, Step, Expression,
+    // BooleanExpression, Invariant, Connector, BindingConnector, Succession, Flow and
+    // SuccessionFlow. One is implemented; the member itself is, which is what this
+    // marks, exactly as NonFeatureMember marks its own shape rather than MemberElement's
+    // alternatives.
+    fn namespace_feature_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::NamespaceFeatureMember);
+        self.member_prefix();
+        self.feature();
+        self.finish_node();
+    }
+
     // production: NonFeatureMember
     //
     // NonFeatureMember : OwningMembership =
@@ -1635,7 +1877,10 @@ impl<'a> Parser<'a> {
             || ["subsets", "redefines", "references", "crosses"]
                 .iter()
                 .any(|word| self.at_keyword(word))
-            || (self.at_keyword("defined") && self.nth_is_keyword(1, "by"))
+            || (self.at_keyword(match self.language {
+                Language::KerMl => "typed",
+                Language::SysMl => "defined",
+            }) && self.nth_is_keyword(1, "by"))
     }
 
     // FeatureSpecialization = Typings | Subsettings | References | Crosses
@@ -1893,7 +2138,14 @@ impl<'a> Parser<'a> {
         if self.at(SyntaxKind::Colon) {
             self.bump();
         } else {
-            self.expect_keyword("defined");
+            // The one place the two grammars spell this differently:
+            // TYPED_BY = ':' | 'typed' 'by'    (KerML 8.2.4.3.1)
+            // DEFINED_BY = ':' | 'defined' 'by' (SysML 8.2.2.1.2)
+            // The `:` form is shared, which is what the corpus almost always writes.
+            self.expect_keyword(match self.language {
+                Language::KerMl => "typed",
+                Language::SysMl => "defined",
+            });
             self.expect_keyword("by");
         }
         self.feature_typing();

@@ -523,6 +523,20 @@ pub enum SyntaxKind {
     TypeBody,
     /// `SPECIALIZES OwnedSubclassification ( ',' OwnedSubclassification )*`. `KerML` 8.2.4.2.
     SuperclassingPart,
+    /// `( FeaturePrefix ( 'feature' | PrefixMetadataMember ) FeatureDeclaration? | ( EndFeaturePrefix | BasicFeaturePrefix ) FeatureDeclaration ) ValuePart? TypeBody`. `KerML` 8.2.4.3.1.
+    Feature,
+    /// `( EndFeaturePrefix OwnedCrossFeatureMember? | BasicFeaturePrefix ) PrefixMetadataMember*`. `KerML` 8.2.4.3.1.
+    FeaturePrefix,
+    /// `FeatureDirection? 'derived'? 'abstract'? ( 'composite' | 'portion' )? ( 'var' | 'const' )?`. `KerML` 8.2.4.3.1.
+    BasicFeaturePrefix,
+    /// `'const'? 'end'`. `KerML` 8.2.4.3.1.
+    EndFeaturePrefix,
+    /// `'all'? ( FeatureIdentification ( FeatureSpecializationPart | ConjugationPart )? | FeatureSpecializationPart | ConjugationPart ) FeatureRelationshipPart*`. `KerML` 8.2.4.3.1.
+    FeatureDeclaration,
+    /// `'<' NAME '>' NAME? | NAME`. `KerML` 8.2.4.3.1 — NOT `Identification`, whose parts are both optional. A feature declaration must name something.
+    FeatureIdentification,
+    /// `MemberPrefix FeatureElement`. `KerML` 8.2.3.4.1.
+    NamespaceFeatureMember,
     /// `MemberPrefix MemberElement`. `KerML` 8.2.3.4.1 — what a `PackageMember` is in a `KerML` file, where the members are `MemberElement` and `FeatureElement` rather than `DefinitionElement` and `UsageElement`.
     NonFeatureMember,
     /// `( visibility = VisibilityIndicator )?`. `SysML` 8.2.2.5.1.
@@ -1008,6 +1022,13 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ClassifierDeclaration,
     SyntaxKind::TypeBody,
     SyntaxKind::SuperclassingPart,
+    SyntaxKind::Feature,
+    SyntaxKind::FeaturePrefix,
+    SyntaxKind::BasicFeaturePrefix,
+    SyntaxKind::EndFeaturePrefix,
+    SyntaxKind::FeatureDeclaration,
+    SyntaxKind::FeatureIdentification,
+    SyntaxKind::NamespaceFeatureMember,
     SyntaxKind::NonFeatureMember,
     SyntaxKind::MemberPrefix,
     SyntaxKind::AliasMember,

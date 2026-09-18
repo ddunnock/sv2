@@ -22,7 +22,9 @@
 //! alternatives are unimplemented, as are `Type`, `Function` and `Predicate`, and the
 //! cases below say so rather than pretending they parse.
 
-use sv2_syntax::{Language, Parse, parse};
+use std::fmt::Write as _;
+
+use sv2_syntax::{Language, Parse, SyntaxElement, SyntaxNode, parse};
 
 /// Parse text the `KerML` grammar accepts, asserting that nothing was reported.
 fn kerml_accepted(source: &str) -> Parse {
@@ -113,14 +115,14 @@ fn a_filter_is_admitted_in_a_kerml_package_body_and_not_at_a_kerml_root() {
 }
 
 #[test]
-fn a_feature_element_is_unimplemented_rather_than_accepted() {
-    // NamespaceFeatureMember reaches FeatureElement's ten alternatives, none of which
-    // is implemented. Reporting them is the honest state; accepting them would be a
-    // parser that says it understands KerML when it does not.
+fn the_other_feature_elements_are_unimplemented_rather_than_accepted() {
+    // NamespaceFeatureMember reaches FeatureElement's ten alternatives. Feature is
+    // implemented; the other nine are not, and reporting them is the honest state.
     for source in [
-        "feature f : A;",
         "connector c from a to b;",
         "succession s;",
+        "step s;",
+        "inv { true }",
     ] {
         kerml_rejected(source);
     }
@@ -247,6 +249,113 @@ fn a_metadata_annotating_element_is_not_implemented() {
     kerml_rejected("metadata M about X;");
 }
 
+// -- Feature, KerML 8.2.4.3.1 -----------------------------------------------------
+//
+// Feature = ( FeaturePrefix ( 'feature' | PrefixMetadataMember ) FeatureDeclaration?
+//           | ( EndFeaturePrefix | BasicFeaturePrefix ) FeatureDeclaration
+//           ) ValuePart? TypeBody
+//
+// The keyword form is read; the keywordless one is not.
+
+#[test]
+fn a_feature_reads_its_declaration_and_body() {
+    kerml_accepted("feature f;");
+    kerml_accepted("feature f : A;");
+    kerml_accepted("feature f typed by A;");
+    kerml_accepted("feature <f> vitesse : Speed;");
+    kerml_accepted("feature f { feature g : B; }");
+    kerml_accepted("feature all f : A;");
+}
+
+#[test]
+fn a_feature_declaration_is_optional_after_the_keyword() {
+    // FeatureDeclaration? — the `?` is on the keyword alternative and nowhere else.
+    kerml_accepted("feature;");
+    kerml_accepted("feature : A;");
+}
+
+#[test]
+fn every_basic_feature_prefix_keyword_is_read() {
+    // BasicFeaturePrefix = FeatureDirection? 'derived'? 'abstract'?
+    //                      ( 'composite' | 'portion' )? ( 'var' | 'const' )?
+    for prefix in [
+        "in",
+        "out",
+        "inout",
+        "derived",
+        "abstract",
+        "composite",
+        "portion",
+        "var",
+        "const",
+    ] {
+        kerml_accepted(&format!("{prefix} feature f : A;"));
+    }
+    kerml_accepted("in derived abstract composite var feature f : A;");
+}
+
+#[test]
+fn the_two_prefix_alternations_foreclose() {
+    // `composite | portion` and `var | const` are alternations, so taking one rules
+    // out the other: the second word is left for the caller to report.
+    kerml_rejected("composite portion feature f;");
+    kerml_rejected("var const feature f;");
+}
+
+#[test]
+fn an_end_feature_prefix_is_told_from_a_const_basic_prefix() {
+    // EndFeaturePrefix = 'const'? 'end', and BasicFeaturePrefix's last slot is also
+    // `const`. Only the `end` tells them apart.
+    kerml_accepted("end feature f : A;");
+    kerml_accepted("const end feature f : A;");
+    kerml_accepted("const feature f : A;");
+}
+
+#[test]
+fn typed_by_is_spelled_differently_in_the_two_grammars() {
+    // TYPED_BY = ':' | 'typed' 'by'     (KerML 8.2.4.3.1)
+    // DEFINED_BY = ':' | 'defined' 'by' (SysML 8.2.2.1.2)
+    // The `:` form is shared; the word form is not, and each grammar rejects the
+    // other's.
+    kerml_accepted("feature f typed by A;");
+    kerml_rejected("feature f defined by A;");
+
+    let sysml = parse("part p defined by A;", Language::SysMl);
+    assert!(sysml.errors().is_empty(), "{:?}", sysml.errors());
+    let wrong = parse("part p typed by A;", Language::SysMl);
+    assert!(
+        !wrong.errors().is_empty(),
+        "`typed by` is not SysML's spelling"
+    );
+}
+
+#[test]
+fn a_feature_is_owned_through_a_namespace_feature_member() {
+    // NamespaceMember = NonFeatureMember | NamespaceFeatureMember (KerML 8.2.3.4.1).
+    // A feature takes the second; a package or a classifier takes the first.
+    let feature = render(&kerml_accepted("feature f : A;").syntax());
+    assert!(feature.contains("NamespaceFeatureMember"), "{feature}");
+    assert!(!feature.contains("NonFeatureMember"), "{feature}");
+
+    let class = render(&kerml_accepted("class A;").syntax());
+    assert!(class.contains("NonFeatureMember"), "{class}");
+    assert!(!class.contains("NamespaceFeatureMember"), "{class}");
+}
+
+#[test]
+fn a_keywordless_feature_is_not_implemented() {
+    // Feature's second alternative, where the declaration alone carries it. Held as a
+    // file by tests/rejection/keywordless-feature-is-not-implemented.kerml.
+    kerml_rejected("vitesse : Speed;");
+    kerml_rejected("f;");
+}
+
+#[test]
+fn the_unimplemented_halves_of_a_feature_declaration_are_reported() {
+    kerml_rejected("feature f conjugates g;");
+    kerml_rejected("feature f chains a.b;");
+}
+
 // -- the invariants, under this grammar too ---------------------------------------
 
 #[test]
@@ -255,6 +364,28 @@ fn parsing_kerml_never_panics_on_truncated_input() {
     for end in 0..=source.len() {
         if let Some(prefix) = source.get(..end) {
             assert_eq!(parse(prefix, Language::KerMl).text(), prefix);
+        }
+    }
+}
+
+/// The tree as indented text, so a membership node can be asserted on by name.
+fn render(node: &SyntaxNode) -> String {
+    let mut out = String::new();
+    write_element(&mut out, node.clone().into(), 0);
+    out
+}
+
+fn write_element(out: &mut String, element: SyntaxElement, depth: usize) {
+    let pad = "  ".repeat(depth);
+    match element {
+        SyntaxElement::Node(node) => {
+            let _ = writeln!(out, "{pad}{:?}", node.kind());
+            for child in node.children_with_tokens() {
+                write_element(out, child, depth + 1);
+            }
+        }
+        SyntaxElement::Token(token) => {
+            let _ = writeln!(out, "{pad}{:?} {:?}", token.kind(), token.text());
         }
     }
 }

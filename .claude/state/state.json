@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-18T12:53:40Z",
+    "regenerated_utc": "2026-09-18T12:58:55Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 128,
-      "unimplemented": 430,
+      "implemented": 132,
+      "unimplemented": 426,
       "absent": 0,
-      "percent": 22.9
+      "percent": 23.7
     },
     "tests": {
-      "unit": 233,
+      "unit": 242,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 75,
+      "negative_cases": 77,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "a60aca9 Read PortDefinition, whose extra part consumes no tokens",
       "5fa2770 Rewrite CRATES.md as a map of this repository",
       "3b792f6 A binary per process shape, and every binary a shim (ADR-0018)",
       "3d0c583 Decide element identity: accept ADR-0016, supersede ADR-0009",
       "ce21f14 Point next_step back at the parser, with the diagnostic shape settled",
       "4a337a7 Give a diagnostic a range, a code and a severity",
       "14c262d Record the measured blockers, and put the typed diagnostic ahead of them",
-      "747befa Read the eight SysML definitions that share one spine",
-      "4b064d6 Let an annotating element be a member, in both grammars"
+      "747befa Read the eight SysML definitions that share one spine"
     ]
   },
   "authored": {
