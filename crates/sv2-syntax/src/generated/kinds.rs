@@ -555,6 +555,14 @@ pub enum SyntaxKind {
     AllocationDefinition,
     /// `OccurrenceDefinitionPrefix 'rendering' 'def' Definition`. `SysML` 8.2.2.26.3.
     RenderingDefinition,
+    /// `DefinitionPrefix 'port' 'def' Definition ConjugatedPortDefinitionMember`. `SysML` 8.2.2.12.
+    PortDefinition,
+    /// `ownedRelatedElement += ConjugatedPortDefinition`. `SysML` 8.2.2.12.
+    ConjugatedPortDefinitionMember,
+    /// `ownedRelationship += PortConjugation`. `SysML` 8.2.2.12.
+    ConjugatedPortDefinition,
+    /// `{ }`, which consumes no tokens. `SysML` 8.2.2.12.
+    PortConjugation,
     /// `BasicDefinitionPrefix? DefinitionExtensionKeyword*`. `SysML` 8.2.2.6.1 — `OccurrenceDefinitionPrefix` without the `individual` part, for the definitions that are not occurrences.
     DefinitionPrefix,
     /// `BasicDefinitionPrefix? ( 'individual' EmptyMultiplicityMember )? DefinitionExtensionKeyword*`. `SysML` 8.2.2.9.1.
@@ -1016,6 +1024,10 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::FlowDefinition,
     SyntaxKind::AllocationDefinition,
     SyntaxKind::RenderingDefinition,
+    SyntaxKind::PortDefinition,
+    SyntaxKind::ConjugatedPortDefinitionMember,
+    SyntaxKind::ConjugatedPortDefinition,
+    SyntaxKind::PortConjugation,
     SyntaxKind::DefinitionPrefix,
     SyntaxKind::OccurrenceDefinitionPrefix,
     SyntaxKind::BasicDefinitionPrefix,

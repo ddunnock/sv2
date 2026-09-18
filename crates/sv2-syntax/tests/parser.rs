@@ -282,10 +282,55 @@ fn a_definition_whose_body_is_not_a_definition_body_is_not_in_the_table() {
         "constraint def C;",
         "requirement def R;",
         "state def S;",
-        "port def P;",
     ] {
         parse_rejected(source);
     }
+}
+
+// -- PortDefinition, SysML 8.2.2.12 -----------------------------------------------
+//
+// PortDefinition = DefinitionPrefix 'port' 'def' Definition
+//                  ConjugatedPortDefinitionMember
+//
+// Off the shared spine, because of a trailing part that consumes no tokens at all.
+
+#[test]
+fn a_port_definition_reads_the_definition_spine() {
+    parse_accepted("port def P;");
+    parse_accepted("port def P { }");
+    parse_accepted("abstract port def <p> P :> Q;");
+}
+
+#[test]
+fn a_port_definition_always_declares_its_conjugate() {
+    // ConjugatedPortDefinitionMember consumes nothing, and is built anyway: `port def P;`
+    // gives you `~P`, and the abstract syntax says three elements are there. Omitting
+    // the nodes would leave a consumer to know to synthesise them.
+    let rendered = render(&parse_accepted("port def P;").syntax());
+    for node in [
+        "ConjugatedPortDefinitionMember",
+        "ConjugatedPortDefinition",
+        "PortConjugation",
+    ] {
+        assert!(rendered.contains(node), "{node} missing from {rendered}");
+    }
+}
+
+#[test]
+fn a_port_definition_is_not_an_occurrence() {
+    // DefinitionPrefix, not OccurrenceDefinitionPrefix (SysML 8.2.2.12 against
+    // 8.2.2.9.1). Held as a file by
+    // tests/rejection/port-definition-is-not-an-occurrence.sysml.
+    parse_rejected("individual port def P;");
+    // The occurrence definitions do carry it.
+    parse_accepted("individual part def V;");
+}
+
+#[test]
+fn a_port_usage_is_not_a_port_definition() {
+    let usage = render(&parse_accepted("port p;").syntax());
+    assert!(usage.contains("PortUsage"), "{usage}");
+    assert!(!usage.contains("PortDefinition"), "{usage}");
 }
 
 // -- the diagnostics themselves ---------------------------------------------------
@@ -1524,11 +1569,12 @@ fn each_remaining_usage_is_not_its_definition() {
         assert!(rendered.contains(node), "{rendered}");
         assert!(!rendered.contains("Usage"), "{rendered}");
     }
-    // Still rejection by absence, and for two different reasons. PortDefinition carries
-    // a ConjugatedPortDefinitionMember the shared spine has no place for, and
-    // EnumerationDefinition takes an EnumerationBody rather than a DefinitionBody.
-    // Each has a file in tests/rejection/ naming its clause.
-    parse_rejected("port def FuelPort;");
+    // PortDefinition is implemented now, off the shared spine and with its own method,
+    // so it reads as its own node.
+    let port = render(&parse_accepted("port def FuelPort;").syntax());
+    assert!(port.contains("PortDefinition"), "{port}");
+    // Still rejection by absence: EnumerationDefinition takes an EnumerationBody rather
+    // than a DefinitionBody, and tests/rejection/ names the clause.
     parse_rejected("enum def Color;");
 }
 

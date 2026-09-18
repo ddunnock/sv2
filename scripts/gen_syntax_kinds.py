@@ -228,6 +228,25 @@ NODES = [
         "RenderingDefinition",
         "`OccurrenceDefinitionPrefix 'rendering' 'def' Definition`. `SysML` 8.2.2.26.3.",
     ),
+    # PortDefinition is not on the shared definition spine: it carries one more part,
+    # and that part consumes no tokens at all. `port def P;` declares the conjugated
+    # port `~P` implicitly, and the abstract syntax says three elements are there.
+    (
+        "PortDefinition",
+        (
+            "`DefinitionPrefix 'port' 'def' Definition ConjugatedPortDefinitionMember`. "
+            "`SysML` 8.2.2.12."
+        ),
+    ),
+    (
+        "ConjugatedPortDefinitionMember",
+        "`ownedRelatedElement += ConjugatedPortDefinition`. `SysML` 8.2.2.12.",
+    ),
+    (
+        "ConjugatedPortDefinition",
+        "`ownedRelationship += PortConjugation`. `SysML` 8.2.2.12.",
+    ),
+    ("PortConjugation", "`{ }`, which consumes no tokens. `SysML` 8.2.2.12."),
     (
         "DefinitionPrefix",
         (

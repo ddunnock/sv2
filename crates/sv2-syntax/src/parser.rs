@@ -924,7 +924,19 @@ impl<'a> Parser<'a> {
 
     /// Whether an implemented `DefinitionElement` starts at the `n`th meaningful token.
     fn at_definition_element(&self, n: usize) -> bool {
-        self.nth_is_keyword(n, "package") || self.at_simple_definition(n).is_some()
+        self.nth_is_keyword(n, "package")
+            || self.at_port_definition(n)
+            || self.at_simple_definition(n).is_some()
+    }
+
+    /// Whether a `PortDefinition` starts at the `n`th meaningful token.
+    ///
+    /// Its own question rather than a row in `SIMPLE_DEFINITIONS`, because it is not on
+    /// that spine: it takes a `DefinitionPrefix` like an attribute and then carries a
+    /// trailing member none of the eight has.
+    fn at_port_definition(&self, n: usize) -> bool {
+        let after = self.skip_definition_prefix(n);
+        self.nth_is_keyword(after, "port") && self.nth_is_keyword(after + 1, "def")
     }
 
     /// Whether an implemented element of this grammar's member starts at the `n`th token.
@@ -1347,6 +1359,8 @@ impl<'a> Parser<'a> {
             self.language == Language::KerMl
         }) {
             self.classifier(classifier);
+        } else if self.language == Language::SysMl && self.at_port_definition(0) {
+            self.port_definition();
         } else if let Some(definition) = self
             .at_simple_definition(0)
             .filter(|_| self.language == Language::SysMl)
@@ -3015,6 +3029,56 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::UsageBody);
         self.definition_body();
+        self.finish_node();
+    }
+
+    // production: PortDefinition
+    //
+    // PortDefinition = DefinitionPrefix 'port' 'def' Definition
+    //                  ownedRelationship += ConjugatedPortDefinitionMember
+    //                                                            (SysML 8.2.2.12)
+    //
+    // Not in SIMPLE_DEFINITIONS, and the one part that keeps it out consumes no tokens.
+    // Every port definition implicitly declares its conjugate — `port def P;` gives you
+    // `~P` — so reading it with the shared spine would accept the text and silently drop
+    // three elements the abstract syntax says are there.
+    //
+    // A DefinitionPrefix, not an OccurrenceDefinitionPrefix: a port is not an occurrence,
+    // so `individual port def P;` is an error, as it is for an attribute.
+    fn port_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PortDefinition);
+        self.definition_prefix();
+        self.expect_keyword("port");
+        self.expect_keyword("def");
+        self.definition();
+        self.conjugated_port_definition_member();
+        self.finish_node();
+    }
+
+    // production: ConjugatedPortDefinitionMember
+    //
+    // ConjugatedPortDefinitionMember : OwningMembership =
+    //     ownedRelatedElement += ConjugatedPortDefinition        (SysML 8.2.2.12)
+    //
+    // production: ConjugatedPortDefinition
+    //
+    // ConjugatedPortDefinition = ownedRelationship += PortConjugation
+    //
+    // production: PortConjugation
+    //
+    // PortConjugation = { }
+    //
+    // Three nested nodes and not one token, exactly as EmptyMultiplicityMember is two.
+    // The nodes are built rather than omitted so the tree carries the elements the
+    // abstract syntax puts there; a consumer asking a port definition for its conjugate
+    // finds it, rather than having to know to synthesise one.
+    fn conjugated_port_definition_member(&mut self) {
+        self.start_node(SyntaxKind::ConjugatedPortDefinitionMember);
+        self.start_node(SyntaxKind::ConjugatedPortDefinition);
+        self.start_node(SyntaxKind::PortConjugation);
+        self.finish_node();
+        self.finish_node();
         self.finish_node();
     }
 
