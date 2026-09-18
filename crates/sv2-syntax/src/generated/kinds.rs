@@ -617,6 +617,10 @@ pub enum SyntaxKind {
     FeatureChainExpression,
     /// `ownedMemberParameter = PrimaryArgument`. `KerML` 8.2.5.8.2.
     NonFeatureChainPrimaryArgumentMember,
+    /// `PrimaryArgumentMember '[' SequenceExpressionListMember ']'`. `KerML` 8.2.5.8.2 — the quantity form, `1200 [kg]`.
+    BracketExpression,
+    /// `ownedMemberParameter = PrimaryArgument`. `KerML` 8.2.5.8.2.
+    PrimaryArgumentMember,
     /// `ownedRelationship += PrimaryArgumentValue`. `KerML` 8.2.5.8.2.
     PrimaryArgument,
     /// `value = PrimaryExpression`. `KerML` 8.2.5.8.2.
@@ -1097,6 +1101,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::CalculationBodyPart,
     SyntaxKind::FeatureChainExpression,
     SyntaxKind::NonFeatureChainPrimaryArgumentMember,
+    SyntaxKind::BracketExpression,
+    SyntaxKind::PrimaryArgumentMember,
     SyntaxKind::PrimaryArgument,
     SyntaxKind::PrimaryArgumentValue,
     SyntaxKind::ResultExpressionMember,

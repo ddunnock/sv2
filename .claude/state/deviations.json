@@ -925,6 +925,11 @@
           "kind": "file_id",
           "ref": "ptc/25-04-04",
           "note": "The KerML Tier A pin the governing clause belongs to."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "Pilot side read from the pinned grammar, and it corrects this entry's generic rationale. The spec_only bucket's boilerplate says to expect the corpus not to exercise the production. That is false here: the pinned corpus writes a bracketed quantity in hundreds of places, and the Pilot DOES implement the form. It simply does not name the rule, inlining it in PrimaryExpression's postfix repetition as `{SysML::OperatorExpression.operand += current} operator = '[' operand += SequenceExpression ']'`. grammar_diff.py compares production NAMES, so a rule the Xtext inlines without naming reports as spec_only. The resolution is unchanged - follow the spec, which names the production - but the reason is a naming difference, not a gap in the Pilot."
         }
       ]
     },
@@ -4960,6 +4965,11 @@
           "kind": "file_id",
           "ref": "ptc/25-04-04",
           "note": "The KerML Tier A pin the governing clause belongs to."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "Pilot side read from the pinned grammar, and it corrects this entry's generic rationale. The spec_only bucket's boilerplate says to expect the corpus not to exercise the production. That is false here: the pinned corpus writes a bracketed quantity in hundreds of places, and the Pilot DOES implement the form. It simply does not name the rule, inlining it in PrimaryExpression's postfix repetition as `{SysML::OperatorExpression.operand += current} operator = '[' operand += SequenceExpression ']'`. grammar_diff.py compares production NAMES, so a rule the Xtext inlines without naming reports as spec_only. The resolution is unchanged - follow the spec, which names the production - but the reason is a naming difference, not a gap in the Pilot."
         }
       ]
     },

@@ -371,6 +371,17 @@ NODES = [
         "NonFeatureChainPrimaryArgumentMember",
         "`ownedMemberParameter = PrimaryArgument`. `KerML` 8.2.5.8.2.",
     ),
+    (
+        "BracketExpression",
+        (
+            "`PrimaryArgumentMember '[' SequenceExpressionListMember ']'`. "
+            "`KerML` 8.2.5.8.2 — the quantity form, `1200 [kg]`."
+        ),
+    ),
+    (
+        "PrimaryArgumentMember",
+        "`ownedMemberParameter = PrimaryArgument`. `KerML` 8.2.5.8.2.",
+    ),
     ("PrimaryArgument", "`ownedRelationship += PrimaryArgumentValue`. `KerML` 8.2.5.8.2."),
     ("PrimaryArgumentValue", "`value = PrimaryExpression`. `KerML` 8.2.5.8.2."),
     (

@@ -124,6 +124,29 @@ fn keyword(text: &str) -> Option<SyntaxKind> {
 /// still enter the tree through the enclosing body's recovery, so the round-trip holds.
 const MAX_DEPTH: u32 = 400;
 
+/// The membership an operand of a postfix expression is owned through.
+///
+/// `PrimaryArgumentMember = ownedMemberParameter = PrimaryArgument`, `PrimaryArgument =
+/// ownedRelationship += PrimaryArgumentValue`, `PrimaryArgumentValue = value =
+/// PrimaryExpression` (`KerML` 8.2.5.8.2). Three productions and no tokens, wrapped
+/// around an operand that is already in the tree.
+const PRIMARY_ARGUMENT: [SyntaxKind; 3] = [
+    SyntaxKind::PrimaryArgumentMember,
+    SyntaxKind::PrimaryArgument,
+    SyntaxKind::PrimaryArgumentValue,
+];
+
+/// The same three for a `FeatureChainExpression`, whose member has its own name.
+///
+/// Only the outermost differs. `NonFeatureChainPrimaryArgumentMember`'s body is
+/// `PrimaryArgument` despite the name, which is what makes the chain fold left — see
+/// `feature_chain_expression`.
+const NON_FEATURE_CHAIN_PRIMARY_ARGUMENT: [SyntaxKind; 3] = [
+    SyntaxKind::NonFeatureChainPrimaryArgumentMember,
+    SyntaxKind::PrimaryArgument,
+    SyntaxKind::PrimaryArgumentValue,
+];
+
 /// The three `VisibilityIndicator` keywords, in the order the specification
 /// writes them (`SysML` 8.2.2.5.1). Looked up in the pinned token set like every
 /// other keyword; this is only the list of which ones the production names.
@@ -3087,7 +3110,7 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         let start = self.builder.checkpoint();
         self.non_feature_chain_primary_expression();
-        self.feature_chain_tail(start);
+        self.postfix_tail(start);
     }
 
     // production: FeatureChainExpression
@@ -3129,12 +3152,66 @@ impl<'a> Parser<'a> {
     // With the left fold it is also unreachable here — every member this loop reads is a
     // single link, because the accumulated chain is the LEFT operand. It is reachable
     // from SysML's AssignmentActionUsage (8.2.2.17.5), which is unimplemented.
-    fn feature_chain_tail(&mut self, start: rowan::Checkpoint) {
-        let mut links: u32 = 0;
-        while self.at_feature_chain() {
-            // BOUNDED, although this loop uses no stack of its own. Every link wraps
-            // what is already there, so the TREE is as deep as the chain is long even
-            // when the parser's own recursion is flat — and a consumer walking a
+    // production: BracketExpression
+    //
+    // BracketExpression =
+    //     ownedRelationship += PrimaryArgumentMember operator = '['
+    //     ownedRelationship += SequenceExpressionListMember ']'   (KerML 8.2.5.8.2)
+    //
+    // production: PrimaryArgumentMember
+    //
+    // PrimaryArgumentMember = ownedMemberParameter = PrimaryArgument
+    //                                                            (KerML 8.2.5.8.2)
+    //
+    // The quantity form: `1200 [kg]`. Postfix and left-folding like the chain, and in
+    // the same loop because the Pilot puts them in the same loop
+    // (KerMLExpressions.xtext:299–322) and because `a.b[kg]` and `a[1].b` both have to
+    // work.
+    //
+    // No EmptyResultMember, for the reason FeatureChainExpression has none: the BNF
+    // names one where a production has one, and 8.2.5.8.2 does not.
+    //
+    // deviations.json buckets this spec_only/follow_spec, whose generic rationale says
+    // to expect the corpus not to exercise it. That is wrong for THIS production and the
+    // record now says so: the corpus writes a bracketed quantity in hundreds of places,
+    // and the Pilot implements the form — it simply does not give the rule a name,
+    // inlining it as `{OperatorExpression.operand += current} operator = '['`
+    // (KerMLExpressions.xtext:307). The bucket is a naming difference, not a gap.
+    fn bracket_expression(&mut self, start: rowan::Checkpoint) {
+        self.start_node_at(start, SyntaxKind::BracketExpression);
+        self.wrap_at(start, &PRIMARY_ARGUMENT);
+        self.bump();
+        self.sequence_expression_list_member();
+        self.expect(SyntaxKind::RBracket, "`]`");
+        self.finish_node();
+    }
+
+    /// One `FeatureChainExpression`, folded over what is already at `start`.
+    fn feature_chain_expression(&mut self, start: rowan::Checkpoint) {
+        self.start_node_at(start, SyntaxKind::FeatureChainExpression);
+        self.wrap_at(start, &NON_FEATURE_CHAIN_PRIMARY_ARGUMENT);
+        self.bump();
+        self.feature_chain_member();
+        self.finish_node();
+    }
+
+    /// The postfix layer of `PrimaryExpression`, folded left over `start`.
+    ///
+    /// `FeatureChainExpression` and `BracketExpression` are both written after their
+    /// operand and both take that operand as a `PrimaryArgument`, so they nest in
+    /// whatever order they are written: `a.b[kg]` is a bracket over a chain and `a[1].b`
+    /// is a chain over a bracket. One loop is what makes that fall out rather than being
+    /// arranged.
+    ///
+    /// The remaining postfix forms of 8.2.5.8.2 — `IndexExpression` (`#(`),
+    /// `FunctionOperationExpression` (`->`), `CollectExpression` and `SelectExpression` —
+    /// are absent, each with a rejection case.
+    fn postfix_tail(&mut self, start: rowan::Checkpoint) {
+        let mut levels: u32 = 0;
+        while self.at_feature_chain() || self.at(SyntaxKind::LBracket) {
+            // BOUNDED, although this loop uses no stack of its own. Every level wraps
+            // what is already there, so the TREE is as deep as the expression is long
+            // even when the parser's own recursion is flat — and a consumer walking a
             // 50000-level tree overflows on a thread with a 2 MiB stack, which aborts
             // rather than panics (invariant 3). Folding also stops being linear at that
             // size. The depth counter is the mechanism the rest of the parser already
@@ -3144,25 +3221,18 @@ impl<'a> Parser<'a> {
                 break;
             }
             self.depth += 1;
-            links += 1;
-            self.start_node_at(start, SyntaxKind::FeatureChainExpression);
-            self.wrap_at(
-                start,
-                &[
-                    SyntaxKind::NonFeatureChainPrimaryArgumentMember,
-                    SyntaxKind::PrimaryArgument,
-                    SyntaxKind::PrimaryArgumentValue,
-                ],
-            );
-            self.bump();
-            self.feature_chain_member();
-            self.finish_node();
+            levels += 1;
+            if self.at(SyntaxKind::LBracket) {
+                self.bracket_expression(start);
+            } else {
+                self.feature_chain_expression(start);
+            }
         }
-        // The links are levels of this expression, not of anything enclosing it, so the
-        // budget is returned when the chain ends. A `.` past the limit is left where it
-        // stands and reaches the tree through the enclosing body's recovery, which is
-        // what keeps the text lossless.
-        self.depth -= links;
+        // The levels belong to this expression, not to anything enclosing it, so the
+        // budget is returned when the run ends. A `.` or `[` past the limit is left
+        // where it stands and reaches the tree through the enclosing body's recovery,
+        // which is what keeps the text lossless.
+        self.depth -= levels;
     }
 
     /// Whether a `'.'` here opens a `FeatureChainExpression` rather than something else.

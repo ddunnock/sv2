@@ -67,7 +67,18 @@ fn subtree(rendered: &str, kind: &str) -> String {
 /// `subtree` gives descendants, which answers "contains". A production says what it
 /// OWNS, and the two differ by exactly one level: an `EmptyResultMember` belonging to a
 /// nested operand is in the subtree of every node above it, and belongs to none of them.
+///
+/// Unconditional trivia is skipped, because a production does not own the author's
+/// spacing: `1200 [kg]` and `1200[kg]` are the same production and differ by one
+/// `Whitespace` child. Losslessness is asserted by the round-trip property test in
+/// tests/roundtrip.rs, which is where it belongs — an assertion here that happened to
+/// include a space would be testing the input's formatting, not the grammar.
+///
+/// `RegularComment` is NOT skipped. It is trivia in most positions and a TOKEN in an
+/// annotating one (`doc /* … */`), so a helper that dropped it could hide the
+/// difference.
 fn child_kinds(rendered: &str, kind: &str) -> Vec<String> {
+    const TRIVIA: [&str; 3] = ["Whitespace", "SingleLineNote", "MultilineNote"];
     let body = subtree(rendered, kind);
     let mut lines = body.lines();
     let Some(head) = lines.next() else {
@@ -77,6 +88,7 @@ fn child_kinds(rendered: &str, kind: &str) -> Vec<String> {
     lines
         .filter(|l| l.len() - l.trim_start().len() == depth + 2)
         .map(|l| l.split_whitespace().next().unwrap_or_default().to_owned())
+        .filter(|name| !TRIVIA.contains(&name.as_str()))
         .collect()
 }
 
@@ -544,6 +556,117 @@ fn a_feature_chain_binds_tighter_than_any_infix_operator() {
     // The addition is the outer node, so the chains are inside it.
     let sum = subtree(&rendered, "BinaryOperatorExpression");
     assert_eq!(nodes_named(&sum, "FeatureChainExpression"), 2, "{sum}");
+}
+
+// -- BracketExpression, KerML 8.2.5.8.2 -------------------------------------------
+//
+// BracketExpression = PrimaryArgumentMember '[' SequenceExpressionListMember ']'
+//
+// The quantity form. The other half of the `[` question: a bracket in an expression is
+// this, and a bracket in a declaration is a MultiplicityRange.
+
+#[test]
+fn a_bracket_expression_reads_the_quantity_form() {
+    // Every one of these is a line the pinned corpus writes.
+    parse_accepted("attribute x = 1200 [kg];");
+    parse_accepted("attribute x = 4.82 [m];");
+    parse_accepted("attribute x = 7.2973525693E-3[one];");
+    parse_accepted("attribute x = 299792458[m/s];");
+    parse_accepted("attribute x = 9.80665['m/s²'];");
+    parse_accepted("attribute x = 5 [N*m];");
+    parse_accepted("attribute x = 3 [SI::kg];");
+    // The operand may be a parenthesised sequence, not just a literal.
+    parse_accepted("attribute x = (0, 0, 0) [spatialCF];");
+}
+
+#[test]
+fn the_two_roles_of_a_bracket_are_told_apart_by_position() {
+    // THE [bracket-role] QUESTION, and the line that answers it. The corpus writes
+    //     attribute mass : MassValue[1] = 1200 [kg];
+    // where `[1]` is a MultiplicityRange in the declaration (SysML 8.2.2.6.6) and
+    // `[kg]` is a BracketExpression over the value (KerML 8.2.5.8.2). The two are told
+    // apart by POSITION and nothing else: multiplicity_part is reachable only from
+    // feature_specialization_part, which is inside UsageDeclaration, and a UsageDeclaration
+    // is finished before the ValuePart's `=` is read. So the roles cannot meet.
+    let rendered = render(&parse_accepted("attribute mass : MassValue[1] = 1200 [kg];").syntax());
+    assert_eq!(nodes_named(&rendered, "MultiplicityRange"), 1, "{rendered}");
+    assert_eq!(nodes_named(&rendered, "BracketExpression"), 1, "{rendered}");
+    // The multiplicity is inside the declaration and the bracket is inside the value.
+    let declaration = subtree(&rendered, "UsageDeclaration");
+    assert_eq!(
+        nodes_named(&declaration, "MultiplicityRange"),
+        1,
+        "{declaration}"
+    );
+    assert_eq!(
+        nodes_named(&declaration, "BracketExpression"),
+        0,
+        "{declaration}"
+    );
+    let value = subtree(&rendered, "ValuePart");
+    assert_eq!(nodes_named(&value, "BracketExpression"), 1, "{value}");
+    assert_eq!(nodes_named(&value, "MultiplicityRange"), 0, "{value}");
+    // And a ranged multiplicity beside a qualified unit, which the corpus also writes.
+    parse_accepted("attribute q : Real[1..*] = 3 [SI::kg];");
+}
+
+#[test]
+fn a_bracket_expression_needs_an_operand_and_a_sequence() {
+    // The operand is what a MultiplicityRange has not got, so it is the whole of the
+    // distinction. Held as files by
+    // tests/rejection/bracket-expression-needs-an-operand.sysml,
+    // bracket-expression-unclosed.sysml and bracket-expression-needs-a-sequence.sysml.
+    parse_rejected("attribute x = [kg];");
+    parse_rejected("attribute x = 1200 [kg;");
+    parse_rejected("attribute x = 1200 [];");
+}
+
+#[test]
+fn the_postfix_forms_nest_in_the_order_they_are_written() {
+    // FeatureChainExpression and BracketExpression share one left-folding loop, so they
+    // nest by what is written rather than by any rule between them — which is how the
+    // Pilot arranges them too (KerMLExpressions.xtext:299-322).
+    let bracket_over_chain = render(&parse_accepted("attribute x = a.b [kg];").syntax());
+    assert_eq!(
+        child_kinds(&bracket_over_chain, "BracketExpression")
+            .first()
+            .map(String::as_str),
+        Some("PrimaryArgumentMember"),
+        "{bracket_over_chain}"
+    );
+    // The chain is inside the bracket's operand, so the bracket is the outer node.
+    let operand = subtree(&bracket_over_chain, "PrimaryArgumentMember");
+    assert_eq!(
+        nodes_named(&operand, "FeatureChainExpression"),
+        1,
+        "{operand}"
+    );
+
+    // Written the other way round, the chain is outside.
+    let chain_over_bracket = render(&parse_accepted("attribute x = a[1].b;").syntax());
+    let chain_operand = subtree(&chain_over_bracket, "NonFeatureChainPrimaryArgumentMember");
+    assert_eq!(
+        nodes_named(&chain_operand, "BracketExpression"),
+        1,
+        "{chain_operand}"
+    );
+}
+
+#[test]
+fn a_bracket_expression_owns_no_result_member() {
+    // For the reason FeatureChainExpression owns none: the BNF names EmptyResultMember
+    // where a production has one (8.2.5.8.1), and 8.2.5.8.2 does not.
+    let rendered = render(&parse_accepted("attribute x = 1200 [kg];").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "BracketExpression"),
+        [
+            "PrimaryArgumentMember",
+            "LBracket",
+            "SequenceExpressionListMember",
+            "RBracket"
+        ],
+        "{rendered}"
+    );
 }
 
 #[test]

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-18T14:27:13Z",
+    "regenerated_utc": "2026-09-18T14:43:59Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 143,
-      "unimplemented": 415,
+      "implemented": 145,
+      "unimplemented": 413,
       "absent": 0,
-      "percent": 25.6
+      "percent": 26.0
     },
     "tests": {
-      "unit": 275,
+      "unit": 280,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 88,
+      "negative_cases": 90,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "63f9b07 Read a feature chain, and bound it like every other nesting",
       "ae7a303 Read a calculation body, whose last part is an expression",
       "6dc5cb3 Read the subject of a requirement",
       "47b8e0d Read a requirement definition, and the body only it has",
       "8ccfc0d Widen one allowed path in the bash hook fixture",
       "b985cfc Spell licence the way LICENSE does",
       "37049c6 Configure the TypeScript side of sv2-studio",
-      "42aee67 Answer the body-shape question, and put requirement ahead of action",
-      "52d7f3b Read the two SysML usages written without a keyword"
+      "42aee67 Answer the body-shape question, and put requirement ahead of action"
     ]
   },
   "authored": {
@@ -96,10 +96,8 @@
       },
       {
         "id": "bracket-role",
-        "question": "How is '[' disambiguated between MultiplicityPart and BracketExpression? Both are implemented-or-planned in the same grammar and the token is identical. The working hypothesis is positional -- a '[' reached from UsageDeclaration's FeatureSpecializationPart is a multiplicity, a '[' reached from an expression operand is a BracketExpression -- which is what the current code already does by construction, since multiplicity_part is only called from feature_specialization_part. Confirm that holds for every corpus shape before BracketExpression lands, in particular where a value part's expression is followed by a unit: `attribute m = 1200 [kg];` reaches the '[' from the expression side with a MultiplicityPart already consumed on the declaration side.",
-        "blocks": [
-          "BracketExpression, IndexExpression, and the 297 corpus files that write a bracketed unit"
-        ]
+        "question": "RESOLVED: positional, and the position cannot be reached from both sides. A '[' reached from UsageDeclaration's FeatureSpecializationPart is a MultiplicityRange (SysML 8.2.2.6.6); a '[' reached after a primary expression operand is a BracketExpression (KerML 8.2.5.8.2). The hypothesis held for every corpus shape. The decisive line is `attribute mass : MassValue[1] = 1200 [kg];`, which writes BOTH roles and parses: multiplicity_part is reachable only from feature_specialization_part, which sits inside UsageDeclaration, and a UsageDeclaration is finished before the ValuePart's '=' is read, so the two can never contend for one token. What separates the productions themselves is the OPERAND: a BracketExpression has one before the '[' and a MultiplicityRange has none, which is what tests/rejection/bracket-expression-needs-an-operand.sysml holds. The corpus also writes a bracketed name (`[one]`, `[spatialCF]`, `[source]`) that is indistinguishable from a multiplicity bound by CONTENT, which is why content was never a candidate rule. Both roles are implemented and 297 corpus files are no longer blocked on this; acceptance went 32 to 39 .sysml when BracketExpression landed.",
+        "blocks": []
       },
       {
         "id": "max-depth",
