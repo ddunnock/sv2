@@ -7,7 +7,7 @@ decision, and nothing arrives transitively as a direct import.* The allowlist in
 ``app/allowed-dependencies.toml`` is the machine-readable half of the table in
 that section, and this is what compares it to ``app/package.json``.
 
-    python3.11 scripts/check_web_dependencies.py
+    python3.12 scripts/check_web_dependencies.py
 
 The two tables in the allowlist are deliberately different lists. ``[allowed]``
 is what MAY be depended on — a decision. ``[present]`` is what currently IS — a
