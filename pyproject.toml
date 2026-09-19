@@ -6,7 +6,12 @@
 # it, and without it `uv sync` and `uv run` warn and guess an interpreter. It
 # declares no dependencies and no build system, so uv treats the repository as a
 # virtual project and builds nothing. The scripts are still run by path, under the
-# interpreter named in .python-version.
+# system python3.12, and import the standard library only (STD-001-PY §3).
+#
+# The `dev` dependency group at the end is the TEST TOOLING — pytest, and jsonschema
+# for validate_state.py's full check — installed into .venv by `uv sync`. The gate
+# uses .venv for those two steps when it exists and skips or falls back when it does
+# not, so nothing here is needed for the gate to run (STD-001-PY §3.1).
 #
 # The tool tables below are STD-001-PY §12.
 
@@ -137,4 +142,10 @@ required = true
 must_contain = [
     "SPDX-License-Identifier: MIT",
     "Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>",
+]
+
+[dependency-groups]
+dev = [
+    "jsonschema>=4.26.0",
+    "pytest>=9.1.1",
 ]

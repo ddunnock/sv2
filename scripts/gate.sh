@@ -12,9 +12,17 @@
 #
 # Network: none. vendor_sync.py is the only script that fetches, and it is never
 # called from a gate or a build.
+#
+# Two interpreters. Every check script runs under the system ${PY}, standard library
+# only, so the gate runs where nothing is installed (STD-001-PY §3.1). The TEST
+# TOOLING — pytest, and jsonschema for the state schema's full check — comes from
+# the project .venv that `uv sync` builds from pyproject's dev group, when it exists;
+# without one, the tests are skipped and the schema check takes its structural
+# fallback, exactly as before.
 set -euo pipefail
 
 readonly PY=python3.12
+readonly VENV_PY=.venv/bin/python
 failed=0
 
 run_check() {
@@ -45,6 +53,12 @@ main() {
   if ! command -v "${PY}" >/dev/null 2>&1; then
     printf 'gate: %s not on PATH\n' "${PY}" >&2
     exit 1
+  fi
+  # The interpreter for the test tooling: the project .venv when `uv sync` has built
+  # one, else the system interpreter, which may simply not have pytest.
+  local tools=${PY}
+  if [[ -x ${VENV_PY} ]]; then
+    tools=${VENV_PY}
   fi
 
   echo "gate: running deterministic checks"
@@ -96,15 +110,17 @@ main() {
   run_optional "ruff" ruff check
   run_optional "ruff format" ruff format --check
   run_optional "mypy" mypy
-  if "${PY}" -m pytest --version >/dev/null 2>&1; then
-    run_check "script tests" "${PY}" -m pytest -q
+  if "${tools}" -m pytest --version >/dev/null 2>&1; then
+    run_check "script tests" "${tools}" -m pytest -q
   else
-    printf '  skip  script tests (pytest not installed for %s)\n' "${PY}"
+    printf '  skip  script tests (pytest not installed for %s; run uv sync)\n' "${tools}"
   fi
 
   # --- corpus and state ---
   run_check "corpus sweep" scripts/corpus-sweep.sh
-  run_check "state schema" "${PY}" .claude/scripts/validate_state.py
+  # Under ${tools} so jsonschema is there for the full check when .venv is; the
+  # script falls back to a structural check when it is not.
+  run_check "state schema" "${tools}" .claude/scripts/validate_state.py
   run_check "state file" "${PY}" .claude/scripts/regen_state.py --check
 
   if ((failed == 0)); then

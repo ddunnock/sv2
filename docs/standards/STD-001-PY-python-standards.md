@@ -2,7 +2,7 @@
 title: Python Standards
 document_id: STD-PY-001
 status: baselined
-version: 2.1.0
+version: 2.2.0
 date: 2026-09-19
 review_date: 2027-03-16
 owner: David — CSE
@@ -248,6 +248,15 @@ mypy needs the `[[tool.mypy.overrides]]` entry in
 pytest themselves are development tools rather than imports: `scripts/gate.sh`
 runs each with `run_optional` and skips it with a visible notice when it is not on
 `PATH`.
+
+pytest and `jsonschema` are declared in `pyproject.toml`'s `dev` dependency group, not
+in `[project]`, and `uv sync` installs them into the project `.venv`. The gate runs
+the script tests and `validate_state.py` under `.venv/bin/python` when that exists,
+and under the system `python3.12` otherwise — where pytest is usually absent and is
+skipped, and `jsonschema` is absent and the structural fallback runs. Every CHECK
+script still runs under the system `python3.12`. So a `.venv` makes the gate check
+more, and its absence never makes the gate fail: the property this section exists
+for holds on a machine where nothing has been installed.
 
 ### 3.2 Import cost at the hook boundary
 
@@ -821,7 +830,8 @@ licence out of that output.
 
 Workspace root `pyproject.toml`. This repository ships no Python distribution, so
 its `[project]` table carries three keys and no dependencies — it is tool
-configuration and nothing else.
+configuration and nothing else. The test tooling is a `[dependency-groups]` `dev`
+group outside `[project]` ([§3.1](#31-the-standard-library-and-one-optional-import)).
 There is no second place to configure these tools from, and there should not be
 one.
 
@@ -961,7 +971,7 @@ architectural rule — `scripts/` does not import `.claude/scripts/` — is stat
 ruff check
 ruff format --check
 mypy
-python3.12 -m pytest -q
+.venv/bin/python -m pytest -q     # python3.12 -m pytest -q when there is no .venv
 python3.12 scripts/check_headers.py
 python3.12 scripts/check_shell_standard.py
 python3.12 scripts/check_standards_config.py

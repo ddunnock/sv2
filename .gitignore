@@ -2,9 +2,10 @@
 **/*.rs.bk
 *.pending-snap
 
-# uv creates one here if anyone runs `uv venv`; .python-version decides which
-# interpreter it gets. Nothing in the gate uses it — the scripts run under the
-# system python3.12 directly.
+# `uv sync` builds it from pyproject's dev group; .python-version decides which
+# interpreter it gets. The gate uses it for the test tooling only (pytest, and
+# jsonschema for the state schema) and runs every check script under the system
+# python3.12 directly — STD-001-PY §3.1.
 .venv/
 
 # Tool caches for the Python scripts.

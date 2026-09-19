@@ -142,10 +142,8 @@
       },
       {
         "id": "script-tests-skipped",
-        "question": "The gate's `script tests` step is SKIPPED on this machine: 'pytest not installed for python3.12'. It was skipped under python3.11 too. So none of the Python test suites in scripts/tests and .claude/scripts/tests ran in any gate this session -- including test_check_path_case.py (added in b3ae9e7; its five cases were run by calling each function directly, which is weaker) and the two test files whose data strings the 3.12 move edited. Installing pytest for 3.12 (`python3.12 -m pip install pytest`, or through uv) turns the skip into a real check; do it before trusting a green gate about the scripts. The Rust tests are unaffected.",
-        "blocks": [
-          "trusting the gate about any script change"
-        ]
+        "question": "RESOLVED on 2026-09-19. The gate's `script tests` step had been SKIPPED on this machine ('pytest not installed for python3.12', and under 3.11 before it), so no Python test suite ran in any gate, and validate_state.py only ever took its structural fallback. Homebrew's python3.12 is externally managed and refuses a pip install, so pytest and jsonschema are now a uv `dev` dependency group -- outside `[project]`, which keeps STD-001-PY §12's 'three keys and no dependencies' -- and gate.sh runs the script tests and validate_state.py under .venv/bin/python when it exists. Every check script still runs under the system python3.12, standard library only. First run: 454 passed, 1 skipped, including test_check_path_case.py and the test files the 3.12 move edited; the state schema check is now the full jsonschema one (1129 units). With .venv moved aside the gate falls back exactly as before -- tests skipped with a `uv sync` hint, schema structural -- and stays green, so it still runs where nothing is installed (STD-001-PY 2.2.0 §3.1).",
+        "blocks": []
       }
     ],
     "log": [
