@@ -264,11 +264,11 @@ NODES = [
     ),
     (
         "FlowDefinition",
-        "`OccurrenceDefinitionPrefix 'flow' 'def' Definition`. `SysML` 8.2.2.15.",
+        "`OccurrenceDefinitionPrefix 'flow' 'def' Definition`. `SysML` 8.2.2.16.",
     ),
     (
         "AllocationDefinition",
-        "`OccurrenceDefinitionPrefix 'allocation' 'def' Definition`. `SysML` 8.2.2.16.",
+        "`OccurrenceDefinitionPrefix 'allocation' 'def' Definition`. `SysML` 8.2.2.15.",
     ),
     (
         "RenderingDefinition",

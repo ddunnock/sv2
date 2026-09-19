@@ -563,9 +563,9 @@ pub enum SyntaxKind {
     ItemDefinition,
     /// `OccurrenceDefinitionPrefix 'connection' 'def' Definition`. `SysML` 8.2.2.13.
     ConnectionDefinition,
-    /// `OccurrenceDefinitionPrefix 'flow' 'def' Definition`. `SysML` 8.2.2.15.
+    /// `OccurrenceDefinitionPrefix 'flow' 'def' Definition`. `SysML` 8.2.2.16.
     FlowDefinition,
-    /// `OccurrenceDefinitionPrefix 'allocation' 'def' Definition`. `SysML` 8.2.2.16.
+    /// `OccurrenceDefinitionPrefix 'allocation' 'def' Definition`. `SysML` 8.2.2.15.
     AllocationDefinition,
     /// `OccurrenceDefinitionPrefix 'rendering' 'def' Definition`. `SysML` 8.2.2.26.3.
     RenderingDefinition,
