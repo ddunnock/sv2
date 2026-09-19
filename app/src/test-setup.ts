@@ -5,22 +5,33 @@
  * any test file (STD-004-TS §13.5).
  *
  * It is one of the two files allowed directly under `src/`; everything else
- * there belongs to a layer (§2, rule 1).
+ * there belongs to a layer (§2, rule 1). It does §13.5's three things and
+ * nothing else:
  *
- * A STUB, and the two things it will own are stated rather than implied:
- *
- * 1. DOM registration, via `@happy-dom/global-registrator`, so component tests
- *    have a document. Not installed — it is on the allowlist (§3.1) but not yet
- *    a dependency, and registering a DOM that no test needs would be load cost
- *    for nothing.
- * 2. A network stub that FAILS rather than passes. A test that reaches the
- *    network is a test that depends on something outside the repository, and
- *    this project has no network at run time at all (invariant 6). The stub
- *    turns that into a loud test failure instead of a slow one.
- *
- * Both arrive with the first component test. Until then this file exists so the
- * preload path in bunfig.toml resolves, and so that the place they go is
- * already decided.
+ * 1. Registers happy-dom's global DOM, so component tests have a document
+ *    (§11 rule 2). `model/`, `contract/` and `wasm/` tests must still not touch
+ *    it — those layers have no DOM in production.
+ * 2. Replaces `fetch` with one that throws. The target is air-gapped
+ *    (invariant 6, §11 rule 8), so a test that reaches for the network fails
+ *    loudly rather than slowly, or worse, passes on a machine that has one.
+ * 3. After every test, restores mocks and the system clock, so neither leaks
+ *    from one test into the next.
  */
 
-export {};
+import { afterEach, mock, setSystemTime } from "bun:test";
+import { GlobalRegistrator } from "@happy-dom/global-registrator";
+
+GlobalRegistrator.register();
+
+globalThis.fetch = Object.assign(
+  (): Promise<Response> => {
+    throw new Error("network access in a test: the target environment is air-gapped (§11 rule 8)");
+  },
+  { preconnect: (): void => undefined },
+);
+
+afterEach(() => {
+  mock.restore();
+  // Called with no argument, setSystemTime returns the clock to real time.
+  setSystemTime();
+});
