@@ -599,6 +599,14 @@ pub enum SyntaxKind {
     DefinitionBody,
     /// `MemberPrefix DefinitionElement`. `SysML` 8.2.2.6.1.
     DefinitionMember,
+    /// `MemberPrefix NonOccurrenceUsageElement`. `SysML` 8.2.2.6.1.
+    NonOccurrenceUsageMember,
+    /// `MemberPrefix OccurrenceUsageElement`. `SysML` 8.2.2.6.1.
+    OccurrenceUsageMember,
+    /// `MemberPrefix StructureUsageElement`. `SysML` 8.2.2.6.1.
+    StructureUsageMember,
+    /// `MemberPrefix BehaviorUsageElement`. `SysML` 8.2.2.6.1.
+    BehaviorUsageMember,
     /// `OccurrenceDefinitionPrefix 'requirement' 'def' DefinitionDeclaration RequirementBody`. `SysML` 8.2.2.21.1.
     RequirementDefinition,
     /// `';' | '{' RequirementBodyItem* '}'`. `SysML` 8.2.2.21.1.
@@ -1154,6 +1162,10 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::OwnedSubclassification,
     SyntaxKind::DefinitionBody,
     SyntaxKind::DefinitionMember,
+    SyntaxKind::NonOccurrenceUsageMember,
+    SyntaxKind::OccurrenceUsageMember,
+    SyntaxKind::StructureUsageMember,
+    SyntaxKind::BehaviorUsageMember,
     SyntaxKind::RequirementDefinition,
     SyntaxKind::RequirementBody,
     SyntaxKind::SubjectMember,

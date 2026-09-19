@@ -526,6 +526,44 @@ struct SimpleUsage {
     /// An occurrence may carry `'individual'` and a `PortionKind` (`SysML` 8.2.2.9.2);
     /// an attribute and an enumeration may not, because neither is an occurrence.
     is_occurrence: bool,
+    /// Which of 8.2.2.6.4's three sorts of usage this is, which decides the membership
+    /// a body owns it through. Stated per usage rather than read off `is_occurrence`:
+    /// the two agree for these seven, but one is about the prefix and the other about
+    /// the element, and `ActionUsage` is an occurrence whose class is `Behavior`.
+    class: UsageClass,
+}
+
+/// The three sorts of usage `SysML` 8.2.2.6.4 names, each with its own element
+/// alternation and so its own membership.
+///
+/// ```text
+/// NonOccurrenceUsageElement = DefaultReferenceUsage | ReferenceUsage | AttributeUsage
+///                           | EnumerationUsage | BindingConnectorAsUsage
+///                           | SuccessionAsUsage | ExtendedUsage
+/// StructureUsageElement     = OccurrenceUsage | IndividualUsage | PortionUsage
+///                           | EventOccurrenceUsage | ItemUsage | PartUsage | ViewUsage
+///                           | RenderingUsage | PortUsage | ConnectionUsage | ...
+/// BehaviorUsageElement      = ActionUsage | CalculationUsage | StateUsage | ...
+///                           | PerformActionUsage | ...
+/// ```
+///
+/// `OccurrenceUsageElement = StructureUsageElement | BehaviorUsageElement`, so a
+/// definition body, which asks only occurrence or not, does not tell the last two apart
+/// and an action body does.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum UsageClass {
+    NonOccurrence,
+    Structure,
+    Behavior,
+}
+
+/// What `membership` found after the `MemberPrefix`, which decides the member's node.
+#[derive(Clone, Copy)]
+enum MemberElement {
+    /// A package, definition, classifier or annotating element: not a usage.
+    Other,
+    /// A usage of this class.
+    Usage(UsageClass),
 }
 
 /// Every usage production that is a prefix, one keyword and the `Usage` spine.
@@ -537,36 +575,43 @@ const SIMPLE_USAGES: [SimpleUsage; 7] = [
         keyword: "attribute",
         node: SyntaxKind::AttributeUsage,
         is_occurrence: false,
+        class: UsageClass::NonOccurrence,
     },
     SimpleUsage {
         keyword: "enum",
         node: SyntaxKind::EnumerationUsage,
         is_occurrence: false,
+        class: UsageClass::NonOccurrence,
     },
     SimpleUsage {
         keyword: "occurrence",
         node: SyntaxKind::OccurrenceUsage,
         is_occurrence: true,
+        class: UsageClass::Structure,
     },
     SimpleUsage {
         keyword: "item",
         node: SyntaxKind::ItemUsage,
         is_occurrence: true,
+        class: UsageClass::Structure,
     },
     SimpleUsage {
         keyword: "part",
         node: SyntaxKind::PartUsage,
         is_occurrence: true,
+        class: UsageClass::Structure,
     },
     SimpleUsage {
         keyword: "port",
         node: SyntaxKind::PortUsage,
         is_occurrence: true,
+        class: UsageClass::Structure,
     },
     SimpleUsage {
         keyword: "rendering",
         node: SyntaxKind::RenderingUsage,
         is_occurrence: true,
+        class: UsageClass::Structure,
     },
 ];
 
@@ -650,23 +695,56 @@ enum Body {
 
 impl Body {
     /// The membership node a nested element is owned through.
-    fn member(self, language: Language) -> SyntaxKind {
-        match (self, language) {
+    ///
+    /// In a `SysML` definition or action body the answer depends on the ELEMENT, not only
+    /// on the body: `DefinitionMember` owns definitions alone (8.2.2.6.1), and a usage is
+    /// owned through the membership its body's item production names for its class.
+    /// Until this distinction was drawn every usage in these bodies was built as a
+    /// `DefinitionMember`, a node the grammar gives no usage.
+    fn member(self, language: Language, element: MemberElement) -> SyntaxKind {
+        match (self, language, element) {
             // A requirement body owns its DefinitionBodyItem alternative exactly as a
             // definition body does; what it owns differently owns itself, through
             // SubjectMember. A calculation body reaches DefinitionMember too, by the
             // other road: CalculationBodyItem to ActionBodyItem to NonBehaviorBodyItem,
             // whose third alternative it is (8.2.2.17.1).
-            (Self::Definition | Self::Requirement | Self::Calculation | Self::Action, _) => {
-                SyntaxKind::DefinitionMember
+            (
+                Self::Definition | Self::Requirement | Self::Calculation | Self::Action,
+                _,
+                MemberElement::Other,
+            ) => SyntaxKind::DefinitionMember,
+            // Both DefinitionBodyItem (8.2.2.6.1) and NonBehaviorBodyItem (8.2.2.17.1)
+            // name NonOccurrenceUsageMember.
+            (
+                Self::Definition | Self::Requirement | Self::Calculation | Self::Action,
+                _,
+                MemberElement::Usage(UsageClass::NonOccurrence),
+            ) => SyntaxKind::NonOccurrenceUsageMember,
+            // DefinitionBodyItem: `SourceSuccessionMember? OccurrenceUsageMember`
+            // (8.2.2.6.1), and OccurrenceUsageElement is both of the other classes.
+            (Self::Definition | Self::Requirement, _, MemberElement::Usage(_)) => {
+                SyntaxKind::OccurrenceUsageMember
             }
-            (_, Language::SysMl) => SyntaxKind::PackageMember,
+            // NonBehaviorBodyItem: `SourceSuccessionMember? StructureUsageMember`
+            // (8.2.2.17.1).
+            (Self::Calculation | Self::Action, _, MemberElement::Usage(UsageClass::Structure)) => {
+                SyntaxKind::StructureUsageMember
+            }
+            // ActionBodyItem's third alternative: `SourceSuccessionMember?
+            // ActionBehaviorMember ActionTargetSuccessionMember*`, and
+            // ActionBehaviorMember = BehaviorUsageMember | ActionNodeMember (8.2.2.17.1).
+            // Only the member is read here; the `then` before it and the target
+            // successions after it are not implemented.
+            (Self::Calculation | Self::Action, _, MemberElement::Usage(UsageClass::Behavior)) => {
+                SyntaxKind::BehaviorUsageMember
+            }
+            (_, Language::SysMl, _) => SyntaxKind::PackageMember,
             // Both KerML bodies own the same membership. `TypeBodyElement` is
             // `NonFeatureMember | FeatureMember | AliasMember | Import` (8.2.4.1) and
             // `NamespaceBodyElement` reaches `NonFeatureMember` too (8.2.3.4.1), so
             // `Body::Type` needs no arm of its own. `FeatureMember` is unimplemented in
             // both, which is what leaves them identical for now rather than by rule.
-            (_, Language::KerMl) => SyntaxKind::NonFeatureMember,
+            (_, Language::KerMl, _) => SyntaxKind::NonFeatureMember,
         }
     }
 
@@ -1644,8 +1722,10 @@ impl<'a> Parser<'a> {
     // DefinitionMember : OwningMembership =
     //     MemberPrefix ownedRelatedElement += DefinitionElement      (SysML 8.2.2.6.1)
     //
-    // The two differ only in PackageMember's UsageElement alternative, which is not
-    // implemented, so one method builds both under the node the caller names.
+    // The two differ only in PackageMember's UsageElement alternative. A package owns a
+    // usage through PackageMember itself; a definition or action body owns one through
+    // a usage membership instead, never through DefinitionMember — see below. One method
+    // builds all of them, the node chosen by `Body::member` from the body and the element.
     //
     // `DefinitionElement` and `UsageElement` get no node of their own. They are
     // alternations over element productions, and the element that matched already
@@ -1930,10 +2010,27 @@ impl<'a> Parser<'a> {
     //
     // NamespaceFeatureMember, its sibling, is NOT implemented: every one of
     // FeatureElement's ten alternatives is unimplemented, so there is nothing to own.
+    //
+    // production: NonOccurrenceUsageMember
+    // production: OccurrenceUsageMember
+    // production: StructureUsageMember
+    // production: BehaviorUsageMember
+    //
+    // <kind>UsageMember : OwningMembership =
+    //     MemberPrefix ownedRelatedElement += <kind>UsageElement    (SysML 8.2.2.6.1)
+    //
+    // The four usage memberships, with the same shape again. Which one a member is
+    // depends on the element after the MemberPrefix, so the node is opened at a
+    // checkpoint once the element has said what it is — `Body::member` maps the two to
+    // the node. Each is marked as the member it is, as DefinitionMember is: the
+    // <kind>UsageElement alternations are not, most of their alternatives being
+    // unimplemented. BehaviorUsageMember is reached only from ActionBodyItem's third
+    // alternative, whose `then` prefix and trailing target successions are not read yet.
     fn membership(&mut self, body: Body) {
         self.eat_trivia();
-        self.start_node(body.member(self.language));
+        let start = self.builder.checkpoint();
         self.member_prefix();
+        let mut element = MemberElement::Other;
         if self.at_annotating_member(0) {
             // The body is a REGULAR_COMMENT, so it has to be a token here rather than
             // trivia for the production to be able to read it.
@@ -1950,9 +2047,14 @@ impl<'a> Parser<'a> {
             self.classifier(classifier);
         } else if self.language == Language::KerMl {
             self.error_expected("a package or a classifier");
-        } else if !(self.definition_element() || self.usage_element()) {
+        } else if self.definition_element() {
+            // A definition: `MemberElement::Other`, which `element` already is.
+        } else if let Some(class) = self.usage_element_of_class() {
+            element = MemberElement::Usage(class);
+        } else {
             self.error_expected("a package, a part definition or a usage");
         }
+        self.start_node_at(start, body.member(self.language, element));
         self.finish_node();
     }
 
@@ -2004,20 +2106,33 @@ impl<'a> Parser<'a> {
     /// - `DefaultReferenceUsage` is last of all, because it is the usage with no
     ///   keyword, so everything that opens with one has already been taken.
     fn usage_element(&mut self) -> bool {
+        self.usage_element_of_class().is_some()
+    }
+
+    /// `usage_element`, answering which of 8.2.2.6.4's classes the usage read is in.
+    ///
+    /// `ActionUsage` and `PerformActionUsage` are `BehaviorUsageElement`s;
+    /// `ReferenceUsage` and `DefaultReferenceUsage` are `NonOccurrenceUsageElement`s;
+    /// the seven `SIMPLE_USAGES` carry their own.
+    fn usage_element_of_class(&mut self) -> Option<UsageClass> {
         if self.at_perform_action_usage(0) {
             self.perform_action_usage();
+            Some(UsageClass::Behavior)
         } else if self.at_action_usage(0) {
             self.action_usage();
+            Some(UsageClass::Behavior)
         } else if let Some(usage) = self.at_simple_usage(0) {
             self.simple_usage(usage);
+            Some(usage.class)
         } else if self.at_reference_usage(0) {
             self.reference_usage();
+            Some(UsageClass::NonOccurrence)
         } else if self.at_default_reference_usage(0) {
             self.default_reference_usage();
+            Some(UsageClass::NonOccurrence)
         } else {
-            return false;
+            None
         }
-        true
     }
 
     // ReferenceUsage : ReferenceUsage =

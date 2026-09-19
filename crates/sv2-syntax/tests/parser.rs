@@ -959,6 +959,123 @@ fn a_return_parameter_member_needs_a_usage_element() {
     parse_rejected("calc def C { return; }");
 }
 
+// -- Usage memberships, SysML 8.2.2.6.1 / 8.2.2.6.4 / 8.2.2.17.1 --------------------
+//
+// DefinitionMember : OwningMembership = MemberPrefix DefinitionElement      (8.2.2.6.1)
+//
+// owns DEFINITIONS only. A usage in a body is owned through the membership the body's
+// item production names for its kind (8.2.2.6.4 sorts the usages):
+//
+// DefinitionBodyItem = DefinitionMember | VariantUsageMember
+//                    | NonOccurrenceUsageMember
+//                    | SourceSuccessionMember? OccurrenceUsageMember | ...  (8.2.2.6.1)
+// NonBehaviorBodyItem = ... | DefinitionMember | VariantUsageMember
+//                     | NonOccurrenceUsageMember
+//                     | SourceSuccessionMember? StructureUsageMember        (8.2.2.17.1)
+// ActionBodyItem = NonBehaviorBodyItem | ...
+//                | SourceSuccessionMember? ActionBehaviorMember ...         (8.2.2.17.1)
+// ActionBehaviorMember = BehaviorUsageMember | ActionNodeMember             (8.2.2.17.1)
+//
+// NonOccurrenceUsageElement: ReferenceUsage, DefaultReferenceUsage, AttributeUsage,
+//     EnumerationUsage, ...
+// StructureUsageElement: OccurrenceUsage, ItemUsage, PartUsage, PortUsage,
+//     RenderingUsage, ...
+// BehaviorUsageElement: ActionUsage, PerformActionUsage, ...                (8.2.2.6.4)
+
+/// The kind of the one membership in `action def A { <item> }` or
+/// `part def P { <item> }`, whichever `body` names.
+fn member_of(body: &str, item: &str) -> Vec<String> {
+    let source = format!("{body} {{ {item} }}");
+    let tree = render(&parse_accepted(&source).syntax());
+    child_kinds(&tree, "DefinitionBody")
+        .into_iter()
+        .chain(child_kinds(&tree, "ActionBody"))
+        .filter(|kind| kind.ends_with("Member"))
+        .collect()
+}
+
+#[test]
+fn a_definition_body_owns_a_usage_through_its_kind_of_usage_membership() {
+    for item in ["attribute a;", "enum e;", "ref r;", "x;"] {
+        assert_eq!(
+            member_of("part def P", item),
+            ["NonOccurrenceUsageMember"],
+            "{item}"
+        );
+    }
+    // OccurrenceUsageElement = StructureUsageElement | BehaviorUsageElement: a
+    // definition body does not tell the two apart.
+    for item in [
+        "occurrence o;",
+        "item i;",
+        "part p;",
+        "port q;",
+        "action a;",
+    ] {
+        assert_eq!(
+            member_of("part def P", item),
+            ["OccurrenceUsageMember"],
+            "{item}"
+        );
+    }
+    // And a definition is still a DefinitionMember.
+    assert_eq!(member_of("part def P", "part def Q;"), ["DefinitionMember"]);
+}
+
+#[test]
+fn an_action_body_tells_structure_from_behaviour() {
+    for item in ["attribute a;", "ref r;", "x;"] {
+        assert_eq!(
+            member_of("action def A", item),
+            ["NonOccurrenceUsageMember"],
+            "{item}"
+        );
+    }
+    for item in ["occurrence o;", "item i;", "part p;"] {
+        assert_eq!(
+            member_of("action def A", item),
+            ["StructureUsageMember"],
+            "{item}"
+        );
+    }
+    // Behaviour usages are ActionBodyItem's third alternative, through
+    // ActionBehaviorMember, which has no node of its own: it is an alternation.
+    for item in ["action a;", "perform p;"] {
+        assert_eq!(
+            member_of("action def A", item),
+            ["BehaviorUsageMember"],
+            "{item}"
+        );
+    }
+    assert_eq!(
+        member_of("action def A", "part def Q;"),
+        ["DefinitionMember"]
+    );
+}
+
+#[test]
+fn a_usage_membership_owns_its_prefix_and_its_usage() {
+    // MemberPrefix ownedRelatedElement += <kind>UsageElement — all four usage
+    // memberships are stated so in 8.2.2.6.1. The visibility is the member's.
+    let tree = render(&parse_accepted("action def A { private action a; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "BehaviorUsageMember"),
+        ["MemberPrefix", "ActionUsage"],
+        "{tree}"
+    );
+    assert_eq!(nodes_named(&tree, "DefinitionMember"), 0, "{tree}");
+    // A package still owns a usage through PackageMember, whose UsageElement
+    // alternative is exactly that (8.2.2.5.1).
+    // The package body's one member is a PackageMember (the root owns `P` through
+    // another, which is why this asks the body and does not count the tree).
+    let package = render(&parse_accepted("package P { part p; }").syntax());
+    assert_eq!(
+        child_kinds(&package, "PackageBody"),
+        ["LBrace", "PackageMember", "RBrace"],
+        "{package}"
+    );
+}
+
 // -- InitialNodeMember, SysML 8.2.2.17.1 ------------------------------------------
 //
 // ActionBodyItem    = NonBehaviorBodyItem

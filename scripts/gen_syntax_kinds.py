@@ -320,6 +320,16 @@ NODES = [
     ("OwnedSubclassification", "`superClassifier = [QualifiedName]`. `SysML` 8.2.2.6.5."),
     ("DefinitionBody", "`';' | '{' DefinitionBodyItem* '}'`. `SysML` 8.2.2.6.1."),
     ("DefinitionMember", "`MemberPrefix DefinitionElement`. `SysML` 8.2.2.6.1."),
+    # The usage memberships. DefinitionMember owns definitions only; a usage in a body
+    # is owned through the membership that body's item production names for the kind
+    # of usage it is (8.2.2.6.4 sorts them into non-occurrence, structure, behaviour).
+    (
+        "NonOccurrenceUsageMember",
+        "`MemberPrefix NonOccurrenceUsageElement`. `SysML` 8.2.2.6.1.",
+    ),
+    ("OccurrenceUsageMember", "`MemberPrefix OccurrenceUsageElement`. `SysML` 8.2.2.6.1."),
+    ("StructureUsageMember", "`MemberPrefix StructureUsageElement`. `SysML` 8.2.2.6.1."),
+    ("BehaviorUsageMember", "`MemberPrefix BehaviorUsageElement`. `SysML` 8.2.2.6.1."),
     # The first definition off the `Definition` spine at its BODY end rather than its
     # prefix end. It takes a DefinitionDeclaration directly — there is no `Definition`
     # node in the tree — and then a RequirementBody, whose item set is a SUPERSET of
