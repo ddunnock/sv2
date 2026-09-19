@@ -160,3 +160,22 @@ export const ElementHandleSchema: z.ZodType<ElementHandle, unknown> = z.discrimi
   libraryArm,
   unidentifiedArm,
 ]);
+
+/**
+ * A handle that can be persisted: every arm except `unidentified`.
+ *
+ * ADR-0017 keys sidecar records by ADR-0016 identities, which is all four
+ * identified rows — an edge can be an implied relationship, and a view can
+ * expose a library element. What it can never key by is a span: that is
+ * meaningful only in the file it came from, and ADR-0020 makes it transient.
+ * The type excludes the arm, so a persisted record cannot be built from one.
+ */
+export type DurableHandle = Exclude<ElementHandle, { kind: "unidentified" }>;
+
+/** A handle that can be persisted. */
+export const DurableHandleSchema: z.ZodType<DurableHandle, unknown> = z.discriminatedUnion("kind", [
+  petnameArm,
+  membershipArm,
+  derivedArm,
+  libraryArm,
+]);

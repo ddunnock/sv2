@@ -21,7 +21,7 @@ this unless it is opened. Say "read `.claude/plans/ui-shell.md`" and it is all h
 | Branch | `ui/shell` |
 | Worktree | `../sv2-ui`, created with `git worktree add` |
 | Based on | `main` at `081d85a`, merged up to `752ff41` for the case-collision fix |
-| Commits | 14, all green |
+| Commits | 15, all green |
 
 The worktree exists so the UI work does not collide with grammar work in the main
 checkout. To recreate it elsewhere:
@@ -198,15 +198,25 @@ Done:
   that forgets a kind does not compile. **Known seam:** a view is an element, but
   `ViewId` and `ElementId` are separate brands, so opening a view in the sidebar
   needs its own query rather than a cast.
+- `contract/layout.ts` — ADR-0017's layout sidecar, one view at a time. **The wire is
+  not the file:** camelCase per §4.2 (so the file's `engine_version` crosses as
+  `engineVersion`, converted by serde), handles instead of bare strings, records
+  grouped by kind. Grouping is lossless (R-2's order is a sort) and avoids a
+  string-kinded catch-all arm that would defeat narrowing. R-6 is tested as
+  *preservation*, not acceptance: unknown fields and unknown record kinds come back
+  out of the parse intact. `schema` is `z.literal(1)` — R-7 bumps it only on a
+  breaking change, and DD-4 makes a failed read safe. `GridUnit` is signed `i32`.
+  Records are keyed by a new `DurableHandle` in `element-id.ts`: every handle arm
+  except `unidentified`. The style sidecar is not here — ADR-0017 gives it no record
+  shape.
 
 Remaining, in order:
 
-1. `contract/layout.ts` — ADR-0017, `GridUnit` brand, `z.looseObject` per R-6.
-2. `contract/availability.ts` — see below. High value.
-3. `contract/preferences.ts`, `contract/registry.ts`.
-4. `model/` — `assert-never.ts`, `Query<T>`, `element-handle.ts` (`isLogSafe`),
+1. `contract/availability.ts` — see below. High value.
+2. `contract/preferences.ts`, `contract/registry.ts`.
+3. `model/` — `assert-never.ts`, `Query<T>`, `element-handle.ts` (`isLogSafe`),
    `tree.ts`, `grid.ts`. Pure, no DOM.
-5. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
+4. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
    `tools/embed-fixtures.ts`, `tools/emit-contract.ts`.
 
 **Make "unavailable" a contract citizen.** The highest-value remaining move:
