@@ -21,7 +21,7 @@ this unless it is opened. Say "read `.claude/plans/ui-shell.md`" and it is all h
 | Branch | `ui/shell` |
 | Worktree | `../sv2-ui`, created with `git worktree add` |
 | Based on | `main` at `081d85a`, merged up to `752ff41` for the case-collision fix |
-| Commits | 18, all green |
+| Commits | 19, all green |
 
 The worktree exists so the UI work does not collide with grammar work in the main
 checkout. To recreate it elsewhere:
@@ -234,11 +234,25 @@ Done:
 
 **The contract layer is complete for Phase 4's needs.**
 
+- `model/` — pure, no DOM:
+  - `assert-never.ts`. **Its message carries only the discriminant** (`kind=…` or
+    `status=…`), not the value: §4.5's own example stringifies the value, which §9.3
+    forbids, since an unhandled `ElementRef` can carry what the author wrote.
+  - `element-handle.ts`. `logLabel` in place of the planned `isLogSafe` predicate:
+    no arm carries model meaning, so every handle has a safe label and the function
+    is total (membership is ADR-0016's `<owned-ID>/m`). `sameHandle` for equality.
+  - `query.ts`. `Query<T, E>` = loading | failed | answered. **Loading holds the
+    previous answer**, so a reload after an edit never blanks a panel (ADR-0002, no
+    flicker); only a first load has nothing to show. `E` is a parameter because
+    `IpcError` lives in `ipc/`.
+  - `tree.ts`. Builds the Files tree from the flat list: folders first, natural
+    case-blind order with a code-point tiebreak (locale-independent), folder `key` =
+    its path, diagnostic counts summed upward (IX-10).
+  - `grid.ts` **deferred** with the Grid View, which is built last.
+
 Remaining, in order:
 
-1. `model/` — `assert-never.ts`, `Query<T>`, `element-handle.ts` (`isLogSafe`),
-   `tree.ts`, `grid.ts`. Pure, no DOM.
-2. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
+1. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
    `tools/embed-fixtures.ts`, `tools/emit-contract.ts`.
 
 **Make "unavailable" a contract citizen.** Done as `contract/availability.ts`; the
