@@ -21,7 +21,7 @@ this unless it is opened. Say "read `.claude/plans/ui-shell.md`" and it is all h
 | Branch | `ui/shell` |
 | Worktree | `../sv2-ui`, created with `git worktree add` |
 | Based on | `main` at `081d85a`, merged up to `752ff41` for the case-collision fix |
-| Commits | 13, all green |
+| Commits | 14, all green |
 
 The worktree exists so the UI work does not collide with grammar work in the main
 checkout. To recreate it elsewhere:
@@ -189,18 +189,24 @@ Done:
   converted Rust-side like offsets, and the schema rejects rather than normalizes.
   `language` is carried, not derived from the extension, for the severity reason.
   No ADR yet names the Rust owner of workspace enumeration.
+- `contract/view.ts` — `ViewKind` is all eight standard views of clause 9.2.20.2
+  (`StandardViewDefinitions`, subclauses .1–.8, no gaps — the wiki receipts cite
+  each), `state-transition` included. `ViewSummary` carries `exposes`, because the
+  mockup names every view by kind and exposed element ("GV ThermalControl"), never
+  by its own name. `kind: null` is a view whose definition specializes no standard
+  view: legal SysML, listed, rendered unavailable. The type test proves a switch
+  that forgets a kind does not compile. **Known seam:** a view is an element, but
+  `ViewId` and `ElementId` are separate brands, so opening a view in the sidebar
+  needs its own query rather than a cast.
 
 Remaining, in order:
 
-1. `contract/view.ts` — `ViewKind` as the **complete** union including
-   `state-transition` even though OD-03 leaves it undesigned. A deliberately
-   incomplete union gets widened under pressure.
-2. `contract/layout.ts` — ADR-0017, `GridUnit` brand, `z.looseObject` per R-6.
-3. `contract/availability.ts` — see below. High value.
-4. `contract/preferences.ts`, `contract/registry.ts`.
-5. `model/` — `assert-never.ts`, `Query<T>`, `element-handle.ts` (`isLogSafe`),
+1. `contract/layout.ts` — ADR-0017, `GridUnit` brand, `z.looseObject` per R-6.
+2. `contract/availability.ts` — see below. High value.
+3. `contract/preferences.ts`, `contract/registry.ts`.
+4. `model/` — `assert-never.ts`, `Query<T>`, `element-handle.ts` (`isLogSafe`),
    `tree.ts`, `grid.ts`. Pure, no DOM.
-6. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
+5. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
    `tools/embed-fixtures.ts`, `tools/emit-contract.ts`.
 
 **Make "unavailable" a contract citizen.** The highest-value remaining move:
