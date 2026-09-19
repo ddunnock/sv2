@@ -32,6 +32,7 @@ vendor/corpus/sysml/src/examples/Mass Roll-up Example/Vehicles.sysml
 vendor/corpus/sysml/src/examples/Packet Example/PacketUsage.sysml
 vendor/corpus/sysml/src/examples/Packet Example/Packets.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ImportTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ItemTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/MultiplicityTest.sysml
@@ -54,6 +55,8 @@ vendor/corpus/sysml/src/training/13. Flows/Flow Usage Example.sysml
 vendor/corpus/sysml/src/training/14. Action Definitions/Action Shorthand Example.sysml
 vendor/corpus/sysml/src/training/15. Actions/Action Decomposition.sysml
 vendor/corpus/sysml/src/training/17. Control/Camera.sysml
+vendor/corpus/sysml/src/training/17. Control/Fork Join Example.sysml
+vendor/corpus/sysml/src/training/17. Control/Merge Example.sysml
 vendor/corpus/sysml/src/training/18. Action Performance/Action Performance Example.sysml
 vendor/corpus/sysml/src/training/22. Opaque Actions/Opaque Action Example.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 1.sysml

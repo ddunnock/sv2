@@ -591,6 +591,27 @@ NODES = [
             "| 'action' UsageDeclaration ) ValuePart?`. `SysML` 8.2.2.17.2."
         ),
     ),
+    # ActionBehaviorMember's second alternative. It owns an ActionNode, which is not a
+    # UsageElement, so it is a membership of its own beside BehaviorUsageMember. ControlNode
+    # gets no node, as UsageElement gets none: the alternative taken says which it was.
+    (
+        "ActionNodeMember",
+        (
+            "`MemberPrefix ownedRelatedElement += ActionNode`. `SysML` 8.2.2.17.1 — the "
+            "metaclass is `FeatureMembership`."
+        ),
+    ),
+    (
+        "ControlNodePrefix",
+        ("`RefPrefix 'individual'? PortionKind? UsageExtensionKeyword*`. `SysML` 8.2.2.17.3."),
+    ),
+    ("MergeNode", "`ControlNodePrefix 'merge' UsageDeclaration ActionBody`. `SysML` 8.2.2.17.3."),
+    (
+        "DecisionNode",
+        "`ControlNodePrefix 'decide' UsageDeclaration ActionBody`. `SysML` 8.2.2.17.3.",
+    ),
+    ("JoinNode", "`ControlNodePrefix 'join' UsageDeclaration ActionBody`. `SysML` 8.2.2.17.3."),
+    ("ForkNode", "`ControlNodePrefix 'fork' UsageDeclaration ActionBody`. `SysML` 8.2.2.17.3."),
     ("CalculationBody", "`';' | '{' CalculationBodyPart '}'`. `SysML` 8.2.2.19."),
     (
         "CalculationBodyPart",

@@ -691,6 +691,18 @@ pub enum SyntaxKind {
     PerformActionUsage,
     /// `( OwnedReferenceSubsetting FeatureSpecializationPart? | 'action' UsageDeclaration ) ValuePart?`. `SysML` 8.2.2.17.2.
     PerformActionUsageDeclaration,
+    /// `MemberPrefix ownedRelatedElement += ActionNode`. `SysML` 8.2.2.17.1 — the metaclass is `FeatureMembership`.
+    ActionNodeMember,
+    /// `RefPrefix 'individual'? PortionKind? UsageExtensionKeyword*`. `SysML` 8.2.2.17.3.
+    ControlNodePrefix,
+    /// `ControlNodePrefix 'merge' UsageDeclaration ActionBody`. `SysML` 8.2.2.17.3.
+    MergeNode,
+    /// `ControlNodePrefix 'decide' UsageDeclaration ActionBody`. `SysML` 8.2.2.17.3.
+    DecisionNode,
+    /// `ControlNodePrefix 'join' UsageDeclaration ActionBody`. `SysML` 8.2.2.17.3.
+    JoinNode,
+    /// `ControlNodePrefix 'fork' UsageDeclaration ActionBody`. `SysML` 8.2.2.17.3.
+    ForkNode,
     /// `';' | '{' CalculationBodyPart '}'`. `SysML` 8.2.2.19.
     CalculationBody,
     /// `CalculationBodyItem* ResultExpressionMember?`. `SysML` 8.2.2.19.
@@ -1238,6 +1250,12 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ActionUsageDeclaration,
     SyntaxKind::PerformActionUsage,
     SyntaxKind::PerformActionUsageDeclaration,
+    SyntaxKind::ActionNodeMember,
+    SyntaxKind::ControlNodePrefix,
+    SyntaxKind::MergeNode,
+    SyntaxKind::DecisionNode,
+    SyntaxKind::JoinNode,
+    SyntaxKind::ForkNode,
     SyntaxKind::CalculationBody,
     SyntaxKind::CalculationBodyPart,
     SyntaxKind::FeatureChainExpression,

@@ -1772,6 +1772,175 @@ fn a_source_succession_member_needs_an_occurrence_usage_after_it() {
     parse_rejected("action def A { part p; then b; }");
 }
 
+// -- ControlNode, SysML 8.2.2.17.3 ----------------------------------------------------
+//
+// ActionBehaviorMember = BehaviorUsageMember | ActionNodeMember              (8.2.2.17.1)
+// ActionNodeMember : FeatureMembership = MemberPrefix ActionNode            (8.2.2.17.1)
+// ControlNode = MergeNode | DecisionNode | JoinNode | ForkNode              (8.2.2.17.3)
+// ControlNodePrefix : OccurrenceUsage =
+//     RefPrefix 'individual'? PortionKind? UsageExtensionKeyword*           (8.2.2.17.3)
+// MergeNode = ControlNodePrefix 'merge' UsageDeclaration ActionBody         (8.2.2.17.3)
+//
+// and DecisionNode, JoinNode and ForkNode the same over `decide`, `join` and `fork`.
+// ControlNode is an ActionNode, so it reaches ActionBodyItem's third alternative
+// through ActionNodeMember, and takes the same `then` prefix and the same
+// ActionTargetSuccessionMember* after it as a behaviour usage does.
+
+#[test]
+fn a_control_node_reads_the_corpus_forms() {
+    // vendor/corpus/sysml/src/training/17. Control/Merge Example.sysml:14 — the merge
+    // is a succession's target, and the `then action` after it is NOT a target
+    // succession of the merge but the next item's source-succession prefix.
+    let merge = render(
+        &parse_accepted(
+            "action def A { first start; then merge continue; then action trigger { } }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&merge, "MergeNode"), 1, "{merge}");
+    assert_eq!(nodes_named(&merge, "SourceSuccessionMember"), 2, "{merge}");
+    assert_eq!(
+        nodes_named(&merge, "ActionTargetSuccessionMember"),
+        0,
+        "{merge}"
+    );
+    // training/17. Control/Fork Join Example.sysml:14-17, 38-39 — an anonymous fork
+    // followed by its target successions, and a named join followed by one.
+    let fork = render(
+        &parse_accepted(
+            "action def A { first start; then fork; then a; then b; join j; then done; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&fork, "ForkNode"), 1, "{fork}");
+    assert_eq!(nodes_named(&fork, "JoinNode"), 1, "{fork}");
+    assert_eq!(
+        nodes_named(&fork, "ActionTargetSuccessionMember"),
+        3,
+        "{fork}"
+    );
+    // examples/Simple Tests/ControlNodeTest.sysml:13-19 — a node with a braced
+    // ActionBody holding directed parameters, then its targets.
+    let braced = render(
+        &parse_accepted("action def A { join J; then fork F { in a; out b1; } then B1; then B2; }")
+            .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&braced, "ActionTargetSuccessionMember"),
+        2,
+        "{braced}"
+    );
+    // training/17. Control/Decision Example.sysml writes `then decide;`.
+    parse_accepted("action def A { first start; then decide; }");
+}
+
+#[test]
+fn every_control_node_keyword_builds_its_own_node() {
+    for (keyword, node) in [
+        ("merge", "MergeNode"),
+        ("decide", "DecisionNode"),
+        ("join", "JoinNode"),
+        ("fork", "ForkNode"),
+    ] {
+        let source = format!("action def A {{ {keyword} n; }}");
+        let tree = render(&parse_accepted(&source).syntax());
+        assert_eq!(
+            member_of("action def A", &format!("{keyword} n;")),
+            ["ActionNodeMember"],
+            "{source}"
+        );
+        assert_eq!(
+            child_kinds(&tree, "ActionNodeMember"),
+            ["MemberPrefix", node],
+            "{tree}"
+        );
+        // `isComposite ?= 'merge'` sets a property; it adds no token beyond the keyword.
+        assert_eq!(
+            child_kinds(&tree, node),
+            [
+                "ControlNodePrefix",
+                &format!("Kw{}", capitalise(keyword)),
+                "UsageDeclaration",
+                "ActionBody"
+            ],
+            "{tree}"
+        );
+    }
+}
+
+fn capitalise(word: &str) -> String {
+    let mut chars = word.chars();
+    chars
+        .next()
+        .map(|first| first.to_uppercase().chain(chars).collect())
+        .unwrap_or_default()
+}
+
+#[test]
+fn a_control_node_takes_a_ref_prefix_but_not_ref() {
+    // ControlNodePrefix = RefPrefix 'individual'? PortionKind? — every part optional,
+    // and the node is built even when empty, as OccurrenceUsagePrefix's is.
+    let tree = render(&parse_accepted("action def A { merge m; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "ControlNodePrefix"),
+        ["RefPrefix"],
+        "{tree}"
+    );
+    let full =
+        render(&parse_accepted("action def A { abstract individual snapshot fork f; }").syntax());
+    assert_eq!(
+        child_kinds(&full, "ControlNodePrefix"),
+        ["RefPrefix", "KwIndividual", "PortionKind"],
+        "{full}"
+    );
+    // RefPrefix, NOT BasicUsagePrefix: there is no `ref` slot (8.2.2.6.2 against
+    // 8.2.2.17.3). Held as a file by tests/rejection/control-node-prefix-has-no-ref.sysml.
+    parse_rejected("action def A { ref merge m; }");
+}
+
+#[test]
+fn a_control_node_declares_a_usage() {
+    // UsageDeclaration = Identification FeatureSpecializationPart?, all optional.
+    parse_accepted("action def A { merge m : M [1]; }");
+    parse_accepted("action def A { private decide <d> 'the decision'; }");
+    parse_accepted("action def A { then [1] join; }");
+}
+
+#[test]
+fn a_control_node_is_an_action_body_item_only() {
+    // A calculation body reaches ActionBodyItem (8.2.2.19), and its item run does not
+    // end at a control node.
+    let calc = render(&parse_accepted("calc def C { merge m; then b; x }").syntax());
+    assert_eq!(nodes_named(&calc, "ActionNodeMember"), 1, "{calc}");
+    assert_eq!(nodes_named(&calc, "ResultExpressionMember"), 1, "{calc}");
+    // An action usage's body is an ActionBody too.
+    parse_accepted("part def P { action a { fork f; } }");
+    // DefinitionBodyItem (8.2.2.6.1), RequirementBodyItem (8.2.2.21.1) and
+    // PackageBodyElement (8.2.2.5.1) have no ActionNodeMember, which is also what
+    // validateControlNodeOwningType states of the metaclass (8.3.17.6, receipt 695df335).
+    // Held as files by tests/rejection/control-node-is-not-*.sysml.
+    parse_rejected("part def P { merge m; }");
+    parse_rejected("part def P { then merge m; }");
+    parse_rejected("requirement def R { decide d; }");
+    parse_rejected("package P { fork f; }");
+    parse_rejected("join j;");
+}
+
+#[test]
+fn a_control_node_needs_its_action_body() {
+    // ActionBody = ';' | '{' ActionBodyItem* '}' — not optional in the production.
+    // Held as a file by tests/rejection/control-node-needs-an-action-body.sysml.
+    parse_rejected("action def A { merge m }");
+    // And the keyword is not a name: `merge def M;` is no definition.
+    parse_rejected("action def A { merge def M; }");
+}
+
+#[test]
+fn a_control_node_keeps_every_byte() {
+    let source = "action def A {\n\tthen /* s */ merge // n\n\t\tm { }\n\tthen b;\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- FeatureChainExpression, KerML 8.2.5.8.2 --------------------------------------
 //
 // FeatureChainExpression = NonFeatureChainPrimaryArgumentMember '.' FeatureChainMember

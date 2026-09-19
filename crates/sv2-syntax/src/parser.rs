@@ -564,7 +564,21 @@ enum MemberElement {
     Other,
     /// A usage of this class.
     Usage(UsageClass),
+    /// An `ActionNode`, which is not a `UsageElement` at all: `ActionBehaviorMember =
+    /// BehaviorUsageMember | ActionNodeMember` (`SysML` 8.2.2.17.1), so it is owned
+    /// beside the behaviour usages rather than as one of them.
+    ActionNode,
 }
+
+/// The four `ControlNode`s: `ControlNodePrefix KEYWORD UsageDeclaration ActionBody`,
+/// differing in the keyword and the metaclass (`SysML` 8.2.2.17.3). The keywords are
+/// reserved and disjoint, so the order decides nothing.
+const CONTROL_NODES: [(&str, SyntaxKind); 4] = [
+    ("merge", SyntaxKind::MergeNode),
+    ("decide", SyntaxKind::DecisionNode),
+    ("join", SyntaxKind::JoinNode),
+    ("fork", SyntaxKind::ForkNode),
+];
 
 /// Every usage production that is a prefix, one keyword and the `Usage` spine.
 ///
@@ -733,10 +747,13 @@ impl Body {
             // ActionBodyItem's third alternative: `SourceSuccessionMember?
             // ActionBehaviorMember ActionTargetSuccessionMember*`, and
             // ActionBehaviorMember = BehaviorUsageMember | ActionNodeMember (8.2.2.17.1).
-            // Only the member is read here; the `then` before it and the target
-            // successions after it are not implemented.
+            // Only the member is read here; `source_succession_item` reads the `then`
+            // before it and `behaviour_targets` the target successions after it.
             (Self::Calculation | Self::Action, _, MemberElement::Usage(UsageClass::Behavior)) => {
                 SyntaxKind::BehaviorUsageMember
+            }
+            (Self::Calculation | Self::Action, _, MemberElement::ActionNode) => {
+                SyntaxKind::ActionNodeMember
             }
             (_, Language::SysMl, _) => SyntaxKind::PackageMember,
             // Both KerML bodies own the same membership. `TypeBodyElement` is
@@ -1241,7 +1258,10 @@ impl<'a> Parser<'a> {
             || self.at_action_usage(n)
             || self.at_perform_action_usage(n)
             || self.at_flow_usage(n)
-            || self.at_source_succession_member()
+            || self.at_control_node(n).is_some()
+            // Asked only of a body that ends in a result expression, and
+            // `ends_in_result_expression` says that is a calculation body alone.
+            || self.at_source_succession_member(Body::Calculation)
         {
             return false;
         }
@@ -1696,11 +1716,22 @@ impl<'a> Parser<'a> {
                 // of its own — SubjectMembership — so it cannot go through `membership`,
                 // which builds the body's ordinary member node.
                 self.subject_member();
-            } else if body.admits_source_succession() && self.at_source_succession_member() {
+            } else if body.admits_source_succession() && self.at_source_succession_member(body) {
                 // `SourceSuccessionMember? <occurrence usage member>`, in whichever of
                 // three item productions this body has; see `source_succession_item`.
                 self.source_succession_item(body);
-            } else if self.at_member_element(usize::from(self.at_visibility())) {
+            } else if self.at_member_element(usize::from(self.at_visibility()))
+                || (body.admits_action_body_item()
+                    && self
+                        .at_control_node(usize::from(self.at_visibility()))
+                        .is_some())
+            {
+                // A control node is an ActionNodeMember, ActionBehaviorMember's second
+                // alternative (8.2.2.17.1), and so an item of the action-body family only:
+                // no other body's item production reaches ActionNode, which
+                // validateControlNodeOwningType states of the metaclass too (8.3.17.6,
+                // receipt 695df335). Hence here, with the body in hand, and not in the
+                // body-agnostic `at_member_element`.
                 let element = self.membership(body);
                 self.behaviour_targets(body, element);
             } else {
@@ -1725,12 +1756,16 @@ impl<'a> Parser<'a> {
     ///
     /// `ActionBodyItem`'s third alternative is `SourceSuccessionMember?
     /// ActionBehaviorMember ActionTargetSuccessionMember*` (8.2.2.17.1), so the `then X;`
-    /// members belong to the item just read when — and only when — it was a
-    /// `BehaviorUsageMember`; the `NonBehaviorBodyItem` alternative that reads structure
-    /// usages takes no such suffix, so `part p; then b;` leaves the `then` reported.
+    /// members belong to the item just read when — and only when — it was an
+    /// `ActionBehaviorMember`, a `BehaviorUsageMember` or an `ActionNodeMember`; the
+    /// `NonBehaviorBodyItem` alternative that reads structure usages takes no such
+    /// suffix, so `part p; then b;` leaves the `then` reported.
     fn behaviour_targets(&mut self, body: Body, element: MemberElement) {
         if body.admits_action_body_item()
-            && matches!(element, MemberElement::Usage(UsageClass::Behavior))
+            && matches!(
+                element,
+                MemberElement::Usage(UsageClass::Behavior) | MemberElement::ActionNode
+            )
         {
             while self.at_action_target_succession_member() {
                 self.action_target_succession_member();
@@ -2091,7 +2126,23 @@ impl<'a> Parser<'a> {
     // the node. Each is marked as the member it is, as DefinitionMember is: the
     // <kind>UsageElement alternations are not, most of their alternatives being
     // unimplemented. BehaviorUsageMember is reached only from ActionBodyItem's third
-    // alternative, whose `then` prefix and trailing target successions are not read yet.
+    // alternative, whose `then` prefix and trailing target successions its callers read.
+    //
+    // production: ActionNodeMember@sysml
+    //
+    // ActionNodeMember : FeatureMembership =
+    //     MemberPrefix ownedRelatedElement += ActionNode            (SysML 8.2.2.17.1)
+    //
+    // The same shape once more, marked as the member it is while ActionNode is not: of
+    // its eight alternatives only ControlNode is read, and SendNode, AcceptNode,
+    // AssignmentNode, TerminateNode, IfNode, WhileLoopNode and ForLoopNode are reported.
+    //
+    // production: ActionBehaviorMember@sysml
+    //
+    // ActionBehaviorMember = BehaviorUsageMember | ActionNodeMember   (SysML 8.2.2.17.1)
+    //
+    // An alternation with no node, marked because both of its alternatives are read —
+    // the convention OwnedExpression follows. Which one was taken is the member node.
     fn membership(&mut self, body: Body) -> MemberElement {
         self.eat_trivia();
         let start = self.builder.checkpoint();
@@ -2113,6 +2164,16 @@ impl<'a> Parser<'a> {
             self.classifier(classifier);
         } else if self.language == Language::KerMl {
             self.error_expected("a package or a classifier");
+        } else if let Some((word, node)) = self
+            .at_control_node(0)
+            .filter(|_| body.admits_action_body_item())
+        {
+            // Only the action-body family reaches ActionNodeMember; `body_elements`
+            // asks the same question before calling here. The guard is repeated for
+            // the reason the classifier one above is: a dispatch that is only correct
+            // when reached one way is a trap.
+            self.control_node(node, word);
+            element = MemberElement::ActionNode;
         } else if self.definition_element() {
             // A definition: `MemberElement::Other`, which `element` already is.
         } else if let Some(class) = self.usage_element_of_class() {
@@ -4602,15 +4663,13 @@ impl<'a> Parser<'a> {
     // The first alternative is read in the part this parser already had:
     // NonBehaviorBodyItem is Import | AliasMember | DefinitionMember | VariantUsageMember
     // | NonOccurrenceUsageMember | SourceSuccessionMember? StructureUsageMember
-    // (8.2.2.17.1), and the first three are the three a definition body reads. Of the
-    // second, InitialNodeMember is read and the ActionTargetSuccessionMember* after it is
-    // not. So `action def Brake;`, `action def Brake { part p; }` and `first start;` are
-    // read, and `then`, `accept`, `send`, `fork`, `join`, `merge`, `decide` and `assign`
-    // are all reported where they stand.
-    //
-    // That is deliberate and it is most of the corpus's action text: 403 `then` and 139
-    // `first` against 41 failing files that mention an action and write no control flow
-    // at all. This change is for those 41; the control-flow layer is its own work.
+    // (8.2.2.17.1), and the first three are the three a definition body reads. The
+    // second is read whole in its TargetSuccession form. The third is read over the
+    // behaviour usages that exist (ActionUsage, PerformActionUsage) and over the one
+    // ActionNode that does, ControlNode — `merge`, `decide`, `join`, `fork`. What is
+    // still reported where it stands: the other ActionNodes (`accept`, `send`,
+    // `assign`, `terminate`, `if`, `while`, `for`), GuardedSuccessionMember, and the
+    // guarded and default target successions.
     fn action_body(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ActionBody);
@@ -5377,7 +5436,11 @@ impl<'a> Parser<'a> {
     /// occurrence usage. A `then` before anything else is not this: before a NAME and a
     /// `UsageBody` it is a target succession, and before a non-occurrence usage or a
     /// definition no item production has it at all.
-    fn at_source_succession_member(&self) -> bool {
+    ///
+    /// Before a control node it is this only where `ActionBodyItem` is an item
+    /// production, which is why the body is asked: `DefinitionBodyItem`'s `then`
+    /// prefixes an `OccurrenceUsageMember`, and an `ActionNode` is not one (8.2.2.6.1).
+    fn at_source_succession_member(&self, body: Body) -> bool {
         if !self.nth_is_keyword(0, "then") {
             return false;
         }
@@ -5395,6 +5458,83 @@ impl<'a> Parser<'a> {
             || self
                 .at_simple_usage(n)
                 .is_some_and(|usage| usage.class != UsageClass::NonOccurrence)
+            || (body.admits_action_body_item() && self.at_control_node(n).is_some())
+    }
+
+    /// Which `ControlNode` starts at the `n`th meaningful token, if one does.
+    ///
+    /// A `ControlNodePrefix` looked past, then one of the four keywords. The prefix is
+    /// `RefPrefix 'individual'? PortionKind?` (`SysML` 8.2.2.17.3) — `RefPrefix`, not
+    /// `BasicUsagePrefix`, so a `ref` is not looked past and `ref merge m;` is reported.
+    /// `UsageExtensionKeyword*` is not looked past either: it is unimplemented, as it is
+    /// on `OccurrenceUsagePrefix`.
+    fn at_control_node(&self, n: usize) -> Option<(&'static str, SyntaxKind)> {
+        let mut n = self.skip_ref_prefix(n);
+        n += usize::from(self.nth_is_keyword(n, "individual"));
+        n += usize::from(self.nth_is_keyword(n, "snapshot") || self.nth_is_keyword(n, "timeslice"));
+        CONTROL_NODES
+            .into_iter()
+            .find(|(word, _)| self.nth_is_keyword(n, word))
+    }
+
+    // production: ControlNode@sysml
+    //
+    // ControlNode = MergeNode | DecisionNode | JoinNode | ForkNode   (SysML 8.2.2.17.3)
+    //
+    // production: MergeNode@sysml
+    // production: DecisionNode@sysml
+    // production: JoinNode@sysml
+    // production: ForkNode@sysml
+    //
+    // MergeNode = ControlNodePrefix isComposite ?= 'merge' UsageDeclaration ActionBody
+    //
+    // and the other three the same over `decide`, `join` and `fork` (8.2.2.17.3, receipt
+    // 08ce2499). One method reads all four, as `simple_usage` reads the seven, because
+    // they differ in nothing the parser decides; each builds its own node so the tree
+    // says which metaclass it is. ControlNode itself gets no node — an alternation, like
+    // UsageElement — and is marked because every alternative is read.
+    //
+    // `isComposite ?= 'merge'` assigns a property from the keyword and adds no token:
+    // validateControlNodeIsComposite requires a ControlNode to be composite (8.3.17.6,
+    // receipt 695df335), and the keyword is how the text says so.
+    //
+    // The metaclasses are MergeNode (8.3.17.13, receipt e6e46c06), DecisionNode
+    // (8.3.17.7, receipt 630e3433), JoinNode (8.3.17.11, receipt 48153851) and ForkNode
+    // (8.3.17.8, receipt 58ebdb55), each a ControlNode, an ActionUsage (8.3.17.6).
+    //
+    // implied specialization: Actions::Action::merges, ::decisions, ::join, ::forks
+    // constraint: MergeNode::checkMergeNodeSpecialization and its three siblings
+    //     `specializesFromLibrary('Actions::Action::merges')` and so on. Injections
+    //     belong in sv2-hir; this layer builds the tree only (ADR-0002).
+    fn control_node(&mut self, node: SyntaxKind, word: &str) {
+        self.eat_trivia();
+        self.start_node(node);
+        self.control_node_prefix();
+        self.expect_keyword(word);
+        self.usage_declaration();
+        self.action_body();
+        self.finish_node();
+    }
+
+    // ControlNodePrefix : OccurrenceUsage =
+    //     RefPrefix ( isIndividual ?= 'individual' )?
+    //     ( portionKind = PortionKind { isPortion = true } )?
+    //     UsageExtensionKeyword*                                   (SysML 8.2.2.17.3)
+    //
+    // NOT marked for coverage: UsageExtensionKeyword (`#` prefix metadata) is
+    // unimplemented, as on OccurrenceUsagePrefix. The clause's `'individual` is missing
+    // its closing quote; deviation ControlNodePrefix (spec_only, follow_spec, SYSML21-400)
+    // closes it, and the keyword read here is that repaired one. The node is built even
+    // when every slot is empty, as OccurrenceUsagePrefix's is.
+    fn control_node_prefix(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ControlNodePrefix);
+        self.ref_prefix();
+        self.eat_optional_keyword("individual");
+        if self.at_keyword("snapshot") || self.at_keyword("timeslice") {
+            self.portion_kind();
+        }
+        self.finish_node();
     }
 
     // production: SourceSuccessionMember@sysml
@@ -6519,6 +6659,10 @@ mod tests {
         "abstract",
         "variation",
         "individual",
+        "merge",
+        "decide",
+        "join",
+        "fork",
         "specializes",
         "comment",
         "about",
