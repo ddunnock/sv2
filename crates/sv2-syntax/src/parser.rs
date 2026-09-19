@@ -830,6 +830,28 @@ impl Body {
     fn admits_action_body_item(self) -> bool {
         matches!(self, Self::Action | Self::Calculation)
     }
+
+    /// Whether `SourceSuccessionMember` may prefix a member here.
+    ///
+    /// `DefinitionBodyItem` puts it before `OccurrenceUsageMember` (8.2.2.6.1), and a
+    /// requirement body reaches `DefinitionBodyItem` (8.2.2.21.1); `NonBehaviorBodyItem`
+    /// puts it before `StructureUsageMember` and `ActionBodyItem` before
+    /// `ActionBehaviorMember` (8.2.2.17.1), both reached from action and calculation
+    /// bodies. `PackageBodyElement` (8.2.2.5.1) has no such alternative, nor has `KerML`.
+    ///
+    /// NOT only action bodies, although 7.17.4 says its shorthands "may be used only
+    /// within the body of an action definition or usage" (receipt 339ef468). That
+    /// sentence scopes the ACTION shorthands of that clause; `DefinitionBodyItem` states
+    /// `then` before any occurrence usage unconditionally, and the corpus uses it so:
+    /// `then snapshot part vehicle_1_t1 {` inside an `individual part` (training/28.
+    /// Individuals/Individuals and Roles-1.sysml:18), and `then event occurrence …` in
+    /// the Occurrences examples of training/27.
+    fn admits_source_succession(self) -> bool {
+        matches!(
+            self,
+            Self::Definition | Self::Requirement | Self::Action | Self::Calculation
+        )
+    }
 }
 
 /// A `SysML` definition production: one keyword over a shared spine.
@@ -1211,6 +1233,15 @@ impl<'a> Parser<'a> {
             || self.at_definition_element(n)
             || self.at_simple_usage(n).is_some()
             || self.at_reference_usage(n)
+            // CalculationBodyItem = ActionBodyItem | ... (8.2.2.19), and ActionBodyItem
+            // reads behaviour usages, flows and the `then` prefix. Until these were
+            // listed a calculation body ended its items at `action a;` and tried to read
+            // it as the result expression — a defect since ActionUsage landed, found
+            // when `then action` joined them.
+            || self.at_action_usage(n)
+            || self.at_perform_action_usage(n)
+            || self.at_flow_usage(n)
+            || self.at_source_succession_member()
         {
             return false;
         }
@@ -1665,10 +1696,44 @@ impl<'a> Parser<'a> {
                 // of its own — SubjectMembership — so it cannot go through `membership`,
                 // which builds the body's ordinary member node.
                 self.subject_member();
+            } else if body.admits_source_succession() && self.at_source_succession_member() {
+                // `SourceSuccessionMember? <occurrence usage member>`, in whichever of
+                // three item productions this body has; see `source_succession_item`.
+                self.source_succession_item(body);
             } else if self.at_member_element(usize::from(self.at_visibility())) {
-                self.membership(body);
+                let element = self.membership(body);
+                self.behaviour_targets(body, element);
             } else {
                 self.error_token();
+            }
+        }
+    }
+
+    /// A `SourceSuccessionMember` and the member it prefixes, as one item.
+    ///
+    /// `at_source_succession_member` has already seen an occurrence usage after the
+    /// `then`, so `membership` builds the member the body's item production names for
+    /// it: `OccurrenceUsageMember` in a definition body, `StructureUsageMember` or
+    /// `BehaviorUsageMember` in an action body (8.2.2.6.1, 8.2.2.17.1).
+    fn source_succession_item(&mut self, body: Body) {
+        self.source_succession_member();
+        let element = self.membership(body);
+        self.behaviour_targets(body, element);
+    }
+
+    /// The `ActionTargetSuccessionMember*` after a behaviour usage in an action body.
+    ///
+    /// `ActionBodyItem`'s third alternative is `SourceSuccessionMember?
+    /// ActionBehaviorMember ActionTargetSuccessionMember*` (8.2.2.17.1), so the `then X;`
+    /// members belong to the item just read when — and only when — it was a
+    /// `BehaviorUsageMember`; the `NonBehaviorBodyItem` alternative that reads structure
+    /// usages takes no such suffix, so `part p; then b;` leaves the `then` reported.
+    fn behaviour_targets(&mut self, body: Body, element: MemberElement) {
+        if body.admits_action_body_item()
+            && matches!(element, MemberElement::Usage(UsageClass::Behavior))
+        {
+            while self.at_action_target_succession_member() {
+                self.action_target_succession_member();
             }
         }
     }
@@ -2027,7 +2092,7 @@ impl<'a> Parser<'a> {
     // <kind>UsageElement alternations are not, most of their alternatives being
     // unimplemented. BehaviorUsageMember is reached only from ActionBodyItem's third
     // alternative, whose `then` prefix and trailing target successions are not read yet.
-    fn membership(&mut self, body: Body) {
+    fn membership(&mut self, body: Body) -> MemberElement {
         self.eat_trivia();
         let start = self.builder.checkpoint();
         self.member_prefix();
@@ -2057,6 +2122,7 @@ impl<'a> Parser<'a> {
         }
         self.start_node_at(start, body.member(self.language, element));
         self.finish_node();
+        element
     }
 
     /// `SysML`'s `DefinitionElement`, minus the `package` `membership` takes first.
@@ -5178,12 +5244,22 @@ impl<'a> Parser<'a> {
     /// `connector_end` reads it, and the token after it decides.
     ///
     /// `then fork;` and `then action a;` are declined sooner: `fork` and `action` are
-    /// reserved, so not a NAME. `GuardedTargetSuccession` (`if`),
-    /// `DefaultTargetSuccession` (`else`) and a leading `OwnedCrossMultiplicityMember`
-    /// (`[`) are declined for the same reason and are unimplemented, so each is left to
-    /// the enclosing body's recovery and reported.
+    /// reserved, so not a NAME — the second is `SourceSuccessionMember`'s, and the first
+    /// an `ActionNode`'s. `GuardedTargetSuccession` (`if`), `DefaultTargetSuccession`
+    /// (`else`) and a `[` AFTER the `then` — the `ConnectorEnd`'s
+    /// `OwnedCrossMultiplicityMember` — are declined for the same reason and are
+    /// unimplemented, so each is left to the enclosing body's recovery and reported. A
+    /// `[` BEFORE the `then` is the `SourceEnd`'s multiplicity and is looked past.
     fn at_action_target_succession_member(&self) -> bool {
-        let first = usize::from(self.at_visibility());
+        let mut first = usize::from(self.at_visibility());
+        // TargetSuccession's SourceEnd, `OwnedMultiplicity?`, stands BEFORE its `then`
+        // (8.2.2.17.8, 8.2.2.9.3): `first start; [1] then a;`.
+        if self.nth_is(first, SyntaxKind::LBracket) {
+            let Some(after) = self.skip_bracketed(first) else {
+                return false;
+            };
+            first = after;
+        }
         if !self.nth_is_keyword(first, "then") {
             return false;
         }
@@ -5266,22 +5342,80 @@ impl<'a> Parser<'a> {
     // SourceEndMember : EndFeatureMembership =
     //     ownedRelatedElement += SourceEnd                          (SysML 8.2.2.9.3)
     //
+    // production: SourceEnd@sysml
+    //
     // SourceEnd : ReferenceUsage =
     //     ( ownedRelationship += OwnedMultiplicity )?               (SysML 8.2.2.9.3)
     //
-    // Both are built from no tokens — the one node shape in this parser with nothing in
+    // Usually built from no tokens — the one node shape in this parser with nothing in
     // it but what MemberPrefix already has. Trivia is NOT eaten first: an empty node that
     // swallowed the whitespace before the `then` would put it inside an end the author
     // never wrote.
     //
-    // SourceEnd is NOT marked. Its multiplicity is written BEFORE the `then` —
-    // `first start; [1] then a;` is grammatical — and `at_action_target_succession_member`
-    // wants `then` first, so that form is declined and reported, not read. Only the empty
-    // alternative is. SourceEndMember is marked over it as ConnectorEndMember is over a
-    // partial ConnectorEnd: its own body is the one reference, read.
+    // The multiplicity is read wherever it is written, and the two callers put it on
+    // opposite sides of their `then`: TargetSuccession writes `SourceEndMember 'then'`,
+    // so `first start; [1] then a;` has it BEFORE, and SourceSuccessionMember writes
+    // `'then' SourceSuccession`, so `then [1] action a;` has it AFTER. Each caller's
+    // recogniser looks past a `[…]` in its position, which is what makes both
+    // alternatives of this production reachable and so markable.
     fn source_end_member(&mut self) {
         self.start_node(SyntaxKind::SourceEndMember);
         self.start_node(SyntaxKind::SourceEnd);
+        if self.at(SyntaxKind::LBracket) {
+            self.owned_multiplicity();
+        }
+        self.finish_node();
+        self.finish_node();
+    }
+
+    /// Whether a `SourceSuccessionMember` starts here, before the occurrence usage it
+    /// must precede.
+    ///
+    /// `then`, the `SourceEnd`'s optional multiplicity, and then the MEMBER that the
+    /// item production pairs it with — `OccurrenceUsageMember`, `StructureUsageMember`
+    /// or `ActionBehaviorMember` (8.2.2.6.1, 8.2.2.17.1), each `MemberPrefix` and an
+    /// occurrence usage. A `then` before anything else is not this: before a NAME and a
+    /// `UsageBody` it is a target succession, and before a non-occurrence usage or a
+    /// definition no item production has it at all.
+    fn at_source_succession_member(&self) -> bool {
+        if !self.nth_is_keyword(0, "then") {
+            return false;
+        }
+        let mut n = 1;
+        if self.nth_is(n, SyntaxKind::LBracket) {
+            let Some(after) = self.skip_bracketed(n) else {
+                return false;
+            };
+            n = after;
+        }
+        n += usize::from(VISIBILITY.iter().any(|word| self.nth_is_keyword(n, word)));
+        self.at_action_usage(n)
+            || self.at_perform_action_usage(n)
+            || self.at_flow_usage(n)
+            || self
+                .at_simple_usage(n)
+                .is_some_and(|usage| usage.class != UsageClass::NonOccurrence)
+    }
+
+    // production: SourceSuccessionMember@sysml
+    //
+    // SourceSuccessionMember : FeatureMembership =
+    //     'then' ownedRelatedElement += SourceSuccession           (SysML 8.2.2.9.3)
+    //
+    // production: SourceSuccession@sysml
+    //
+    // SourceSuccession : SuccessionAsUsage =
+    //     ownedRelationship += SourceEndMember                     (SysML 8.2.2.9.3)
+    //
+    // The TARGET's half of a succession whose target is the usage after it and whose
+    // source is not written: 7.17.4 makes it the nearest occurrence lexically before the
+    // `then` (receipt 339ef468), which is resolution's to find.
+    fn source_succession_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SourceSuccessionMember);
+        self.expect_keyword("then");
+        self.start_node(SyntaxKind::SourceSuccession);
+        self.source_end_member();
         self.finish_node();
         self.finish_node();
     }

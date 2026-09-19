@@ -1545,6 +1545,19 @@ fn a_target_succession_takes_every_form_its_productions_state() {
         "{named}"
     );
     parse_accepted("action def A { first start; then e references a; }");
+    // TargetSuccession = SourceEndMember 'then' ConnectorEndMember: the source end's
+    // OwnedMultiplicity (8.2.2.9.3) stands BEFORE the `then`.
+    let multiplied = render(&parse_accepted("action def A { first start; [1] then a; }").syntax());
+    assert_eq!(
+        child_kinds(&multiplied, "SourceEnd"),
+        ["OwnedMultiplicity"],
+        "{multiplied}"
+    );
+    assert_eq!(
+        nodes_named(&multiplied, "ActionTargetSuccessionMember"),
+        1,
+        "{multiplied}"
+    );
     // CalculationBodyItem reaches ActionBodyItem (8.2.2.19), and the trailing
     // result expression still follows the item run.
     let calc = render(&parse_accepted("calc def C { first start; then a; x + 1 }").syntax());
@@ -1614,6 +1627,153 @@ fn a_then_that_opens_another_production_is_not_a_target_succession() {
             "{source}\n{tree}"
         );
     }
+}
+
+// -- SourceSuccessionMember, SysML 8.2.2.9.3 / 8.2.2.6.1 / 8.2.2.17.1 --------------
+//
+// SourceSuccessionMember : FeatureMembership = 'then' SourceSuccession      (8.2.2.9.3)
+// SourceSuccession : SuccessionAsUsage = SourceEndMember                    (8.2.2.9.3)
+// SourceEnd = OwnedMultiplicity?                                            (8.2.2.9.3)
+//
+// A prefix, never an item alone. It stands before the occurrence usage it makes the
+// TARGET of a succession, as a sibling member:
+//
+// DefinitionBodyItem  = ... | SourceSuccessionMember? OccurrenceUsageMember  (8.2.2.6.1)
+// NonBehaviorBodyItem = ... | SourceSuccessionMember? StructureUsageMember   (8.2.2.17.1)
+// ActionBodyItem      = ... | SourceSuccessionMember? ActionBehaviorMember
+//                             ActionTargetSuccessionMember*                (8.2.2.17.1)
+//
+// The source is not written: 7.17.4 makes it the nearest occurrence lexically before
+// the `then`, which is resolution's to find.
+
+#[test]
+fn then_before_an_action_reads_the_corpus_form() {
+    // vendor/corpus/sysml/src/training/14. Action Definitions/Action Shorthand
+    // Example.sysml:20 — after a flow, which is a structure usage; the grammar does not
+    // ask what came before.
+    let tree = render(
+        &parse_accepted(
+            "action def A { flow from focus.image to shoot.image; then action shoot : Shoot { } }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "SourceSuccessionMember"), 1, "{tree}");
+    // 7.17.4's own example: `first start; then action a;` — and with no
+    // ActionTargetSuccessionMember, since `action a` is not a ConnectorEnd.
+    let spec = render(&parse_accepted("action def A { first start; then action a; }").syntax());
+    assert_eq!(nodes_named(&spec, "SourceSuccessionMember"), 1, "{spec}");
+    assert_eq!(
+        nodes_named(&spec, "ActionTargetSuccessionMember"),
+        0,
+        "{spec}"
+    );
+    parse_accepted("action def A { then perform p; }");
+}
+
+#[test]
+fn a_source_succession_member_owns_what_its_productions_write() {
+    let tree = render(&parse_accepted("action def A { then action a; }").syntax());
+    // The prefix and the member it precedes are siblings in the body.
+    assert_eq!(
+        child_kinds(&tree, "ActionBody"),
+        [
+            "LBrace",
+            "SourceSuccessionMember",
+            "BehaviorUsageMember",
+            "RBrace"
+        ],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "SourceSuccessionMember"),
+        ["KwThen", "SourceSuccession"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "SourceSuccession"),
+        ["SourceEndMember"],
+        "{tree}"
+    );
+    // Written empty, as TargetSuccession's is...
+    assert_eq!(
+        child_kinds(&tree, "SourceEnd"),
+        Vec::<String>::new(),
+        "{tree}"
+    );
+    // ...or with its OwnedMultiplicity, which here comes AFTER the `then`.
+    let multiplied = render(&parse_accepted("action def A { then [1] action a; }").syntax());
+    assert_eq!(
+        child_kinds(&multiplied, "SourceEnd"),
+        ["OwnedMultiplicity"],
+        "{multiplied}"
+    );
+}
+
+#[test]
+fn then_prefixes_occurrence_and_structure_usages_too() {
+    // DefinitionBodyItem: before an OccurrenceUsageMember — `then part p;` in a part def.
+    assert_eq!(
+        member_of("part def P", "then part p;"),
+        ["SourceSuccessionMember", "OccurrenceUsageMember"]
+    );
+    assert_eq!(
+        member_of("part def P", "then action a;"),
+        ["SourceSuccessionMember", "OccurrenceUsageMember"]
+    );
+    // NonBehaviorBodyItem: before a StructureUsageMember in an action body.
+    assert_eq!(
+        member_of("action def A", "then part p;"),
+        ["SourceSuccessionMember", "StructureUsageMember"]
+    );
+    // And a requirement body, which reaches DefinitionBodyItem (8.2.2.21.1).
+    parse_accepted("requirement def R { then part p; }");
+}
+
+#[test]
+fn target_successions_follow_a_behaviour_usage() {
+    // `SourceSuccessionMember? ActionBehaviorMember ActionTargetSuccessionMember*`: the
+    // `then X;` loop runs after a behaviour usage, with or without the `then` before it.
+    let tree = render(&parse_accepted("action def A { action a; then b; then c; }").syntax());
+    assert_eq!(
+        nodes_named(&tree, "ActionTargetSuccessionMember"),
+        2,
+        "{tree}"
+    );
+    let prefixed = render(&parse_accepted("action def A { then action a; then b; }").syntax());
+    assert_eq!(
+        nodes_named(&prefixed, "ActionTargetSuccessionMember"),
+        1,
+        "{prefixed}"
+    );
+    // A calculation body reaches ActionBodyItem (8.2.2.19), and its item run does not
+    // end at a behaviour usage — it did, until at_result_expression learned them.
+    let calc = render(&parse_accepted("calc def C { action a; then b; x + 1 }").syntax());
+    assert_eq!(nodes_named(&calc, "BehaviorUsageMember"), 1, "{calc}");
+    assert_eq!(nodes_named(&calc, "ResultExpressionMember"), 1, "{calc}");
+    parse_accepted("calc def C { perform p; flow a.b to c.d; then action q; x }");
+}
+
+#[test]
+fn a_source_succession_keeps_every_byte() {
+    let source = "action def A {\n\tthen /* s */ [ 1 ] // n\n\t\taction a;\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
+#[test]
+fn a_source_succession_member_needs_an_occurrence_usage_after_it() {
+    // Held as files by tests/rejection/source-succession-member-*.sysml.
+    // Alone: the prefix is never an item.
+    parse_rejected("action def A { then; }");
+    // Before a non-occurrence usage: no item production pairs the two.
+    parse_rejected("part def P { then attribute x; }");
+    parse_rejected("action def A { then attribute x; }");
+    // Before a definition.
+    parse_rejected("part def P { then part def Q; }");
+    // In a package body, which has no SourceSuccessionMember (8.2.2.5.1).
+    parse_rejected("package P { then part p; }");
+    // After a structure usage in an action body there is no target loop: only
+    // ActionBehaviorMember takes the ActionTargetSuccessionMember* suffix.
+    parse_rejected("action def A { part p; then b; }");
 }
 
 // -- FeatureChainExpression, KerML 8.2.5.8.2 --------------------------------------

@@ -665,6 +665,10 @@ pub enum SyntaxKind {
     SourceEndMember,
     /// `( ownedRelationship += OwnedMultiplicity )?`. `SysML` 8.2.2.9.3 — the metaclass is `ReferenceUsage`.
     SourceEnd,
+    /// `'then' SourceSuccession`. `SysML` 8.2.2.9.3 — the metaclass is `FeatureMembership`.
+    SourceSuccessionMember,
+    /// `SourceEndMember`. `SysML` 8.2.2.9.3 — the metaclass is `SuccessionAsUsage`.
+    SourceSuccession,
     /// `ownedRelatedElement += ConnectorEnd`. `SysML` 8.2.2.13.1 — the metaclass is `EndFeatureMembership`.
     ConnectorEndMember,
     /// `OwnedCrossMultiplicityMember? ( NAME REFERENCES )? OwnedReferenceSubsetting`. `SysML` 8.2.2.13.1 — the metaclass is `ReferenceUsage`.
@@ -1221,6 +1225,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::TargetSuccession,
     SyntaxKind::SourceEndMember,
     SyntaxKind::SourceEnd,
+    SyntaxKind::SourceSuccessionMember,
+    SyntaxKind::SourceSuccession,
     SyntaxKind::ConnectorEndMember,
     SyntaxKind::ConnectorEnd,
     SyntaxKind::CalculationDefinition,

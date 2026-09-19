@@ -51,6 +51,7 @@ vendor/corpus/sysml/src/training/08. Items/Items Example.sysml
 vendor/corpus/sysml/src/training/10. Ports/Port Example.sysml
 vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-2.sysml
 vendor/corpus/sysml/src/training/13. Flows/Flow Usage Example.sysml
+vendor/corpus/sysml/src/training/14. Action Definitions/Action Shorthand Example.sysml
 vendor/corpus/sysml/src/training/15. Actions/Action Decomposition.sysml
 vendor/corpus/sysml/src/training/17. Control/Camera.sysml
 vendor/corpus/sysml/src/training/18. Action Performance/Action Performance Example.sysml

@@ -512,6 +512,16 @@ NODES = [
             "metaclass is `ReferenceUsage`."
         ),
     ),
+    # The `then` that stands BEFORE an occurrence usage, making it a succession's
+    # target; a sibling member of the usage it precedes, never an item alone.
+    (
+        "SourceSuccessionMember",
+        ("`'then' SourceSuccession`. `SysML` 8.2.2.9.3 — the metaclass is `FeatureMembership`."),
+    ),
+    (
+        "SourceSuccession",
+        "`SourceEndMember`. `SysML` 8.2.2.9.3 — the metaclass is `SuccessionAsUsage`.",
+    ),
     (
         "ConnectorEndMember",
         (
