@@ -353,11 +353,14 @@ fn an_action_body_reads_the_items_a_definition_body_reads() {
 
 #[test]
 fn an_action_body_does_not_admit_the_control_flow_layer() {
-    // The three alternatives of ActionBodyItem that are NOT NonBehaviorBodyItem:
-    // initial nodes, successions and guards. Rejected by absence — every one is
-    // well-formed SysML, and the corpus writes 403 `then` and 139 `first`. Held as a
-    // file by tests/rejection/action-body-control-flow-is-not-implemented.sysml.
-    parse_rejected("action def B { first start; }");
+    // The alternatives of ActionBodyItem that are NOT NonBehaviorBodyItem, less
+    // InitialNodeMember: successions and guards. Rejected by absence — every one is well-formed
+    // SysML. Held as a file by tests/rejection/action-body-control-flow-is-not-implemented.sysml.
+    //
+    // `first start;` was here and is not: it is InitialNodeMember, ActionBodyItem's
+    // second alternative (SysML 8.2.2.17.1) — well-formed, and rejected only while that
+    // production was absent. Asserting it rejected is asserting the absence, which is
+    // the one thing this case must not outlive.
     parse_rejected("action def B { then stop; }");
     parse_rejected("action def B { accept Signal; }");
     parse_rejected("action def B { send Sig to target; }");
