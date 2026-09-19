@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-18T19:01:15Z",
+    "regenerated_utc": "2026-09-19T12:27:03Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 166,
-      "unimplemented": 392,
+      "implemented": 167,
+      "unimplemented": 391,
       "absent": 0,
-      "percent": 29.7
+      "percent": 29.9
     },
     "tests": {
-      "unit": 326,
+      "unit": 333,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 103,
+      "negative_cases": 106,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "b3ae9e7 Untrack two retired units that are one file on disk, and gate on it",
+      "193e9f7 Run the scripts on python3.12, as STD-001-PY already planned",
+      "df4e4ba Close the session: two misquoted metaclasses, and a corrected count",
       "6ecf8c1 Read an invocation, and move both languages for once",
       "081d85a Correct two claims the conformance review found false",
       "8565c00 Read a returned parameter, and move acceptance by one",
       "54d567e Read a calculation definition, and buy nothing with it",
-      "1da960b Install Biome, and make 13.4 the configuration that actually runs",
-      "0d52c71 Decide Tailwind, and call the front-end package app rather than web",
-      "5bbb9b8 Make the front end Bun-only, and say what would bring Vite back",
-      "4f53680 Replace the bun init template with sv2-studio stubs"
+      "1da960b Install Biome, and make 13.4 the configuration that actually runs"
     ]
   },
   "authored": {
@@ -65,7 +65,7 @@
       },
       {
         "id": "state-commits-fixed-point",
-        "question": "RESOLVED. regen_state.py recorded `git log --oneline -8` in the generated block and --check compared it, which has no fixed point: the commit carrying state.json cannot record its own hash, and amending only moves it. The gate was therefore red after every commit, for ever. Fixed by naming the compared measurements explicitly — COMPARED = (coverage, tests, pins) — and a pure is_stale() over them, with four tests including the one that says a new commit is not staleness. `commits` is still measured and written for whoever reads the block at session start; it is simply not evidence. Nothing else read it: not state_report.py, not the schema's required list. NOT weakened: coverage, tests and pins are still compared exactly as before, so an un-regenerated block after real work still fails.",
+        "question": "RESOLVED. regen_state.py recorded `git log --oneline -8` in the generated block and --check compared it, which has no fixed point: the commit carrying state.json cannot record its own hash, and amending only moves it. The gate was therefore red after every commit, for ever. Fixed by naming the compared measurements explicitly \u2014 COMPARED = (coverage, tests, pins) \u2014 and a pure is_stale() over them, with four tests including the one that says a new commit is not staleness. `commits` is still measured and written for whoever reads the block at session start; it is simply not evidence. Nothing else read it: not state_report.py, not the schema's required list. NOT weakened: coverage, tests and pins are still compared exactly as before, so an un-regenerated block after real work still fails.",
         "blocks": []
       },
       {

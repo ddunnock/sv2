@@ -619,6 +619,8 @@ pub enum SyntaxKind {
     ConstraintDefinition,
     /// `MemberPrefix? 'return' ownedRelatedElement += UsageElement`. `SysML` 8.2.2.19 — the metaclass is `ReturnParameterMembership`.
     ReturnParameterMember,
+    /// `MemberPrefix 'first' memberFeature = [QualifiedName] RelationshipBody`. `SysML` 8.2.2.17.1 — the metaclass is `FeatureMembership`.
+    InitialNodeMember,
     /// `OccurrenceDefinitionPrefix 'calc' 'def' DefinitionDeclaration CalculationBody`. `SysML` 8.2.2.19.
     CalculationDefinition,
     /// `OccurrenceDefinitionPrefix 'action' 'def' DefinitionDeclaration ActionBody`. `SysML` 8.2.2.17.1.
@@ -1148,6 +1150,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ConstraintUsageDeclaration,
     SyntaxKind::ConstraintDefinition,
     SyntaxKind::ReturnParameterMember,
+    SyntaxKind::InitialNodeMember,
     SyntaxKind::CalculationDefinition,
     SyntaxKind::ActionDefinition,
     SyntaxKind::ActionBody,

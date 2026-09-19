@@ -959,6 +959,112 @@ fn a_return_parameter_member_needs_a_usage_element() {
     parse_rejected("calc def C { return; }");
 }
 
+// -- InitialNodeMember, SysML 8.2.2.17.1 ------------------------------------------
+//
+// ActionBodyItem    = NonBehaviorBodyItem
+//                   | InitialNodeMember ActionTargetSuccessionMember*
+//                   | …
+// InitialNodeMember : FeatureMembership =
+//     MemberPrefix 'first' memberFeature = [QualifiedName] RelationshipBody
+//
+// `first X;` names the source of a succession apart from its target, which the next
+// `then` supplies (SysML 7.17.4). ActionBodyItem is reached by ActionBody,
+// CalculationBodyItem (8.2.2.19), CaseBodyItem (8.2.2.22), ActionBodyParameter
+// (8.2.2.17.7) and the four Transition*ActionUsage bodies (8.2.2.18.3) — never by
+// DefinitionBodyItem or RequirementBodyItem.
+
+#[test]
+fn an_initial_node_member_reads_the_corpus_form() {
+    // `first start;` is 15 of the corpus's 16 `first X;` lines — e.g. vendor/corpus/
+    // sysml/src/training/17. Control/Merge Example.sysml. `start` is the snapshot every
+    // action inherits from Actions::Action (7.17.4). ActionBody belongs to both the
+    // definition (8.2.2.17.1) and the usage (8.2.2.17.2).
+    let def = render(&parse_accepted("action def A { first start; }").syntax());
+    assert_eq!(nodes_named(&def, "InitialNodeMember"), 1, "{def}");
+    let usage = render(&parse_accepted("action a { first start; }").syntax());
+    assert_eq!(nodes_named(&usage, "InitialNodeMember"), 1, "{usage}");
+}
+
+#[test]
+fn an_initial_node_member_owns_exactly_what_the_production_writes() {
+    // MemberPrefix 'first' [QualifiedName] RelationshipBody, in that order. The
+    // memberFeature is a REFERENCE, so the name is a QualifiedName and no usage node is
+    // built for it — and no DefinitionMember is built around the member, because it is
+    // a FeatureMembership of its own, dispatched as ReturnParameterMember is.
+    let tree = render(&parse_accepted("action def A { first start; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "InitialNodeMember"),
+        [
+            "MemberPrefix",
+            "KwFirst",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{tree}"
+    );
+    assert_eq!(nodes_named(&tree, "DefinitionMember"), 0, "{tree}");
+}
+
+#[test]
+fn an_initial_node_member_takes_a_visibility_a_qualified_name_and_a_braced_body() {
+    // `private first A3;` is the 16th, in vendor/corpus/sysml/src/examples/Simple Tests/
+    // DecisionTest.sysml.
+    parse_accepted("action def A { private first A3; }");
+    // [QualifiedName], not a simple name (8.2.2.17.1); the corpus does not qualify one.
+    parse_accepted("action def A { first Actions::Action::start; }");
+    // RelationshipBody's braced form (8.2.2.2). The corpus writes none; the production
+    // states it, so the parser must not require the corpus's habits.
+    parse_accepted("action def A { first start { /* the initial node */ } }");
+}
+
+#[test]
+fn an_initial_node_member_is_admitted_by_a_calculation_body_too() {
+    // CalculationBodyItem = ActionBodyItem | ReturnParameterMember (8.2.2.19), so the
+    // containment runs from calculation to action and `first` comes with it. A
+    // constraint def shares CalculationBody (8.2.2.20), so it does as well.
+    parse_accepted("calc def C { first start; }");
+    parse_accepted("constraint def C { first start; }");
+    // And it is an item, so the trailing ResultExpressionMember still follows it.
+    let tree = render(&parse_accepted("calc def C { first start; x + 1 }").syntax());
+    assert_eq!(nodes_named(&tree, "InitialNodeMember"), 1, "{tree}");
+    assert_eq!(nodes_named(&tree, "ResultExpressionMember"), 1, "{tree}");
+}
+
+#[test]
+fn an_initial_node_member_is_not_a_definition_or_requirement_body_item() {
+    // DefinitionBodyItem has no ActionBodyItem alternative (8.2.2.6.1), and
+    // RequirementBodyItem reaches only DefinitionBodyItem (8.2.2.21.1) — so a requirement
+    // body does NOT admit `first`, however much it looks like a behaviour. Held as files
+    // by tests/rejection/initial-node-member-is-not-a-definition-body-item.sysml and
+    // initial-node-member-is-not-a-requirement-body-item.sysml.
+    parse_rejected("part def V { first start; }");
+    parse_rejected("requirement def R { first start; }");
+    parse_rejected("package P { first start; }");
+    parse_rejected("first start;");
+}
+
+#[test]
+fn an_initial_node_member_needs_its_name_and_its_body() {
+    // memberFeature = [QualifiedName] is not optional, and neither is RelationshipBody.
+    parse_rejected("action def A { first; }");
+    parse_rejected("action def A { first start }");
+    // A feature chain is not a QualifiedName (KerML 8.2.3.4.1 against 8.2.5.8.2); the
+    // successions that take one write `then` after it. Held as a file by
+    // tests/rejection/initial-node-member-names-a-qualified-name-not-a-feature-chain.sysml.
+    parse_rejected("action def A { first a.b; }");
+}
+
+#[test]
+fn a_succession_that_opens_on_first_is_not_an_initial_node_member() {
+    // `first a then b;` is SuccessionAsUsage (8.2.2.13.3), and GuardedSuccession
+    // (8.2.2.17.8) opens on `first` too. Neither is implemented, so the text is rejected
+    // — but it must be rejected WITHOUT an InitialNodeMember in the tree, because
+    // `first a` followed by `then` is not one: the production ends in RelationshipBody,
+    // which is `;` or `{`. A rejection file cannot show this; the tree can.
+    let tree = render(&parse_rejected("action def A { first a then b; }").syntax());
+    assert_eq!(nodes_named(&tree, "InitialNodeMember"), 0, "{tree}");
+}
+
 // -- FeatureChainExpression, KerML 8.2.5.8.2 --------------------------------------
 //
 // FeatureChainExpression = NonFeatureChainPrimaryArgumentMember '.' FeatureChainMember

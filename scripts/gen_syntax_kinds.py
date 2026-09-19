@@ -387,6 +387,18 @@ NODES = [
             "`SysML` 8.2.2.19 — the metaclass is `ReturnParameterMembership`."
         ),
     ),
+    # ActionBodyItem's second alternative, and the first piece of the control-flow layer.
+    # Its memberFeature is a REFERENCE — `[QualifiedName]`, not an owned usage — so it
+    # owns no element, and like ReturnParameterMember it is a membership of its own
+    # (FeatureMembership, where the Pilot returns Membership) rather than the body's
+    # ordinary member.
+    (
+        "InitialNodeMember",
+        (
+            "`MemberPrefix 'first' memberFeature = [QualifiedName] RelationshipBody`. "
+            "`SysML` 8.2.2.17.1 — the metaclass is `FeatureMembership`."
+        ),
+    ),
     # ConstraintDefinition's shape differing in one keyword, over the body the two share.
     # The metaclass is different — an ActionDefinition that is also a Function (8.3.19.2),
     # where a ConstraintDefinition is a Predicate — so the node is its own and not a

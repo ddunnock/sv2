@@ -622,16 +622,16 @@ enum Body {
     ///                | GuardedSuccessionMember                    SysML 8.2.2.17.1
     /// ```
     ///
-    /// It DECIDES NOTHING TODAY. `NonBehaviorBodyItem`'s implemented alternatives —
-    /// `Import`, `AliasMember`, `DefinitionMember` — are the three a definition body
-    /// reads, and the other three alternatives are the control-flow layer and are absent,
-    /// so every question a `Body` answers, this answers as `Definition` does.
+    /// `NonBehaviorBodyItem`'s implemented alternatives — `Import`, `AliasMember`,
+    /// `DefinitionMember` — are the three a definition body reads, so for those this
+    /// answers as `Definition` does. It differs in the control-flow alternatives, of
+    /// which `InitialNodeMember` is implemented: see `admits_action_body_item`.
     ///
-    /// It is a variant anyway, because the ITEM SET differs in the grammar even where
-    /// the implemented part does not, and the control-flow members attach to this one.
-    /// The last time this file argued that a body variant would never differ from
-    /// `Definition` — in `requirement_body`, one commit before `SubjectMember` — it
-    /// differed in the next commit, and the dispatch had to be unpicked to find out.
+    /// It was a variant before it decided anything, because the ITEM SET differs in the
+    /// grammar even where the implemented part did not. That is what let `first` attach
+    /// here with no change to the dispatch of anything else — the second time a body
+    /// variant argued to be identical to `Definition` stopped being so one production
+    /// later, `requirement_body` and `SubjectMember` being the first.
     Action,
     /// The item run inside the braced form of `CalculationBody`. `SysML` only.
     ///
@@ -703,7 +703,7 @@ impl Body {
     /// Asked separately from `admits_subject` although both answer `Requirement` today,
     /// because they stop agreeing the moment `CaseBody` lands: `CaseBodyItem` reaches
     /// `SubjectMember` and does NOT reach `RequirementConstraintMember` (`SysML`
-    /// 8.2.2.21.1 against 8.2.2.23). Folding them into one question now would have to be
+    /// 8.2.2.21.1 against 8.2.2.22). Folding them into one question now would have to be
     /// unfolded then, and the unfolding is the kind that gets missed.
     fn admits_requirement_constraint(self) -> bool {
         matches!(self, Self::Requirement)
@@ -728,11 +728,29 @@ impl Body {
     /// come to be admitted in an action body by accident;
     /// tests/rejection/return-parameter-member-is-not-an-action-body-item.sysml is the
     /// file that fails if it ever is.
-    ///
-    /// `ActionBodyItem` is also reached by `RequirementBodyItem` and by
-    /// `DefinitionBodyItem`, neither of which reaches this member either.
     fn admits_return_parameter(self) -> bool {
         matches!(self, Self::Calculation)
+    }
+
+    /// Whether `ActionBodyItem`'s alternatives beyond `NonBehaviorBodyItem` belong to
+    /// this body — today, `InitialNodeMember`.
+    ///
+    /// `ActionBodyItem` is reached by eight productions: `ActionBody` (`SysML`
+    /// 8.2.2.17.1), `CalculationBodyItem` (8.2.2.19), `CaseBodyItem` (8.2.2.22),
+    /// `ActionBodyParameter` (8.2.2.17.7), and the braced bodies of the four
+    /// `Transition*ActionUsage`s (8.2.2.18.3). NOT by `RequirementBodyItem`, which reaches
+    /// only `DefinitionBodyItem` (8.2.2.21.1), and NOT by `DefinitionBodyItem` (8.2.2.6.1).
+    /// A comment on `admits_return_parameter` once said the opposite; it was false, and
+    /// widening this to `Requirement` on its word would have admitted `first` where the
+    /// grammar has none. tests/rejection/initial-node-member-is-not-a-requirement-body-item.sysml
+    /// fails if it ever is. Of the eight, only `ActionBody` and `CalculationBody` have a
+    /// `Body` variant — the rest are unimplemented — so `Action` and `Calculation` are the
+    /// whole of it today, and each of the others joins this when its body lands.
+    ///
+    /// `Calculation` covers `ConstraintDefinition` too, which shares `CalculationBody`
+    /// (8.2.2.20): a constraint body admits `first` by the grammar, however unusual.
+    fn admits_action_body_item(self) -> bool {
+        matches!(self, Self::Action | Self::Calculation)
     }
 }
 
@@ -1535,6 +1553,13 @@ impl<'a> Parser<'a> {
                 // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
                 // its own membership node rather than the one `membership` builds.
                 self.namespace_feature_member();
+            } else if body.admits_action_body_item() && self.at_initial_node_member() {
+                // ActionBodyItem's second alternative (SysML 8.2.2.17.1), reached from an
+                // action body and, through CalculationBodyItem (8.2.2.19), a calculation
+                // body. Owns its membership as ReturnParameterMember below does, so it
+                // cannot go through `membership`. Before the result-expression test for
+                // the same reason `return` is: it continues the item run.
+                self.initial_node_member();
             } else if body.admits_return_parameter() && self.at_return_parameter_member() {
                 // CalculationBodyItem's second alternative (SysML 8.2.2.19). Before the
                 // result-expression test below, because `return` is where the item run
@@ -4390,12 +4415,13 @@ impl<'a> Parser<'a> {
     //                      ActionTargetSuccessionMember*
     //                    | GuardedSuccessionMember
     //
-    // Only the first alternative is read, and only the part of it this parser already
-    // had: NonBehaviorBodyItem is Import | AliasMember | DefinitionMember |
-    // VariantUsageMember | NonOccurrenceUsageMember | SourceSuccessionMember?
-    // StructureUsageMember (8.2.2.17.1), and the first three are the three a definition
-    // body reads. So `action def Brake;` and `action def Brake { part p; }` are read, and
-    // `first`, `then`, `accept`, `send`, `fork`, `join`, `merge`, `decide` and `assign`
+    // The first alternative is read in the part this parser already had:
+    // NonBehaviorBodyItem is Import | AliasMember | DefinitionMember | VariantUsageMember
+    // | NonOccurrenceUsageMember | SourceSuccessionMember? StructureUsageMember
+    // (8.2.2.17.1), and the first three are the three a definition body reads. Of the
+    // second, InitialNodeMember is read and the ActionTargetSuccessionMember* after it is
+    // not. So `action def Brake;`, `action def Brake { part p; }` and `first start;` are
+    // read, and `then`, `accept`, `send`, `fork`, `join`, `merge`, `decide` and `assign`
     // are all reported where they stand.
     //
     // That is deliberate and it is most of the corpus's action text: 403 `then` and 139
@@ -4589,6 +4615,75 @@ impl<'a> Parser<'a> {
         if !self.usage_element() {
             self.error_expected("a usage after `return`");
         }
+        self.finish_node();
+    }
+
+    /// Whether an `InitialNodeMember` starts here.
+    ///
+    /// `first` alone does not say so. Three productions reachable from an action body
+    /// open on it — this one, `SuccessionAsUsage` (`'first' ConnectorEndMember 'then'`,
+    /// `SysML` 8.2.2.13.3) and `GuardedSuccession` (`'first' FeatureChainMember
+    /// GuardExpressionMember 'then'`, 8.2.2.17.8) — and what separates them is what
+    /// follows the name: only this one ends in `RelationshipBody`, which opens on `;` or
+    /// `{` (8.2.2.2). So the whole `QualifiedName` is looked past, by the same rule
+    /// `qualified_name` reads it with, and the token after it decides. Committing on
+    /// `first` would build an `InitialNodeMember` out of `first a then b;` and report the
+    /// rest, which is a tree for a production the text does not contain.
+    ///
+    /// The other two are unimplemented, so a `first` this declines is recovered over and
+    /// reported — `first a then b;` is rejected by absence, not by rule.
+    fn at_initial_node_member(&self) -> bool {
+        let first = usize::from(self.at_visibility());
+        if !self.nth_is_keyword(first, "first") {
+            return false;
+        }
+        let is = |n: usize, kind: SyntaxKind| self.peek_nth(n).is_some_and(|t| t.kind == kind);
+        let named = |n: usize| self.peek_nth(n).is_some_and(|t| self.is_name(t));
+        // QualifiedName = ( '$' '::' )? ( NAME '::' )* NAME   (KerML 8.2.3.4.1)
+        let mut n = first + 1;
+        if is(n, SyntaxKind::Dollar) && is(n + 1, SyntaxKind::ColonColon) {
+            n += 2;
+        }
+        if !named(n) {
+            return false;
+        }
+        n += 1;
+        // A `::` is the name's only when a NAME follows it, as in `qualified_name`.
+        while is(n, SyntaxKind::ColonColon) && named(n + 1) {
+            n += 2;
+        }
+        is(n, SyntaxKind::Semicolon) || is(n, SyntaxKind::LBrace)
+    }
+
+    // production: InitialNodeMember
+    //
+    // InitialNodeMember : FeatureMembership =
+    //     MemberPrefix 'first' memberFeature = [QualifiedName]
+    //     RelationshipBody                                        (SysML 8.2.2.17.1)
+    //
+    // `first X;` names the SOURCE of a succession separately from its target, which a
+    // following `then` supplies (SysML 7.17.4); `first start;` — the start snapshot every
+    // action inherits from Actions::Action — is 15 of the corpus's 16. The succession it
+    // opens is ActionTargetSuccessionMember, which is unimplemented, so today the member
+    // stands alone: every corpus file that writes it goes on to `then`.
+    //
+    // The memberFeature is a REFERENCE, `[QualifiedName]`, not an ownedRelatedElement:
+    // the member owns no element, which is why the tree holds a QualifiedName and no
+    // usage node. The clause states the metaclass as FeatureMembership; the Pilot returns
+    // SysML::Membership and assigns memberElement — the same syntax, and the verified
+    // reference unit (InitialNodeMember@sysml) follows the clause. Like
+    // ReturnParameterMember it is its own membership, so it is dispatched in
+    // `body_elements` and not in `membership`.
+    //
+    // The RelationshipBody is not optional, so `first start` with no `;` is not this
+    // production: `at_initial_node_member` declines it and the recovery reports it.
+    fn initial_node_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::InitialNodeMember);
+        self.member_prefix();
+        self.expect_keyword("first");
+        self.qualified_name();
+        self.relationship_body();
         self.finish_node();
     }
 
