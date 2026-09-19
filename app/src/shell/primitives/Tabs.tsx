@@ -95,7 +95,12 @@ export function Tabs(props: TabsProps): React.JSX.Element {
               setFocused(index);
               props.onSelect(tab.id);
             }}
-            className="border-transparent border-b-2 px-3 text-muted text-ui hover:text-fg aria-selected:border-accent aria-selected:text-fg"
+            // Vertical tabs read top to bottom, as UI-09's 32 px strip does,
+            // and mark the selected tab on the edge that faces the content.
+            style={orientation === "vertical" ? { writingMode: "vertical-rl" } : undefined}
+            className={`border-transparent text-muted text-ui hover:text-fg aria-selected:border-accent aria-selected:text-fg ${
+              orientation === "vertical" ? "border-l-2 px-2 py-3" : "border-b-2 px-3"
+            }`}
           >
             {tab.label}
           </button>

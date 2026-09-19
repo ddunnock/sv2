@@ -40,18 +40,22 @@ export type Theme = (typeof THEMES)[number];
 const ThemeSchema: z.ZodType<Theme, unknown> = z.enum(THEMES);
 
 /**
- * The navigator (UI-03): hidden, or open in one of IX-01's two modes.
+ * The navigator (UI-03): hidden or open, and in which of IX-01's two modes.
  *
- * A union rather than a visibility flag beside a mode, per §4.5.
+ * `hidden` still carries `mode`, for the reason `collapsed` carries `tab`
+ * below: showing the navigator again returns to the mode it was in. An earlier
+ * shape dropped the mode on hide, so Ctrl+B twice lost it. Nothing had written
+ * the `v1` key when it changed, so the key did not need a new version.
  */
-export type NavigatorState =
-  | Readonly<{ kind: "hidden" }>
-  | Readonly<{ kind: "open"; mode: "files" | "elements" }>;
+export type NavigatorState = Readonly<{
+  kind: "hidden" | "open";
+  mode: "files" | "elements";
+}>;
 
-const NavigatorStateSchema: z.ZodType<NavigatorState, unknown> = z.discriminatedUnion("kind", [
-  z.strictObject({ kind: z.literal("hidden") }),
-  z.strictObject({ kind: z.literal("open"), mode: z.enum(["files", "elements"]) }),
-]);
+const NavigatorStateSchema: z.ZodType<NavigatorState, unknown> = z.strictObject({
+  kind: z.enum(["hidden", "open"]),
+  mode: z.enum(["files", "elements"]),
+});
 
 /**
  * The Specification sidebar (UI-08, UI-09).

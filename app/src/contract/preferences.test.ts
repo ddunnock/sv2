@@ -32,7 +32,7 @@ describe("navigator", () => {
   const { schema } = PREFERENCES.navigator;
 
   test.each([
-    ["hidden", { kind: "hidden" }],
+    ["hidden, remembering files", { kind: "hidden", mode: "files" }],
     ["open on files", { kind: "open", mode: "files" }],
     ["open on elements", { kind: "open", mode: "elements" }],
   ])("%s is a navigator state", (_name, value) => {
@@ -43,7 +43,7 @@ describe("navigator", () => {
     // §4.5: the two booleans this union replaces.
     ["a visibility flag beside a mode", { visible: false, mode: "files" }],
     ["open with no mode", { kind: "open" }],
-    ["hidden with a mode", { kind: "hidden", mode: "files" }],
+    ["hidden with no mode to return to", { kind: "hidden" }],
     ["a mode outside IX-01", { kind: "open", mode: "search" }],
   ])("%s is not a navigator state", (_name, value) => {
     expect(schema.safeParse(value).success).toBe(false);

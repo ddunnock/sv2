@@ -37,6 +37,6 @@ if (container === null) {
 
 createRoot(container).render(
   <StrictMode>
-    <Shell />
+    <Shell report={reportToConsole} />
   </StrictMode>,
 );

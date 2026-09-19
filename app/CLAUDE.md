@@ -78,13 +78,18 @@ collide with grammar work in the main checkout.
 
 ## Current state
 
-`main.tsx`, `shell/Shell.tsx`, `diagnostics/handlers.ts` and `model/result.ts`
-exist, and so does `contract/`: `offset.ts`, `element-id.ts` and `diagnostic.ts`,
-each with its tests. `ipc/`, `wasm/`, `editor/` and `diagram/` do not.
+Phases 1–3 of `.claude/plans/ui-shell.md` are done; read its phase notes rather
+than trusting a summary here.
 
-`src/index.css` carries the design tokens — the mockup's palette in two themes,
-with IBM Plex vendored under `src/assets/fonts/`. No component classes yet:
-§3.6 rule 2's test is repetition, and nothing repeats until there are panels.
+- `contract/` is complete for Phase 4: offsets, identities, diagnostics, elements,
+  files, views, layout, availability, preferences, and the command registry.
+- `model/`: `result`, `assert-never`, `element-handle`, `query`, `tree`.
+- `ipc/`: one parse path under a `Transport`; the fixture transport answers from
+  the mockup's sample model. There is no Tauri client yet (Phase 6).
+- `shell/`: five accessible primitives, the island boundary, `Unavailable`,
+  `useSelection`, the layout reducer, and the window skeleton. Panels are not yet
+  wired to data (Phase 4).
+- `wasm/`, `editor/` and `diagram/` do not exist.
 
 **A schema is declared, not inferred.** `isolatedDeclarations` cannot state the
 type of an exported Zod schema, so the type is written and the schema is
@@ -92,12 +97,10 @@ annotated `z.ZodType<Name, Wire>`. §4.3 rule 1 carries the whole argument, and
 `contract/offset.ts` is the reference example. Brands mint through
 `.transform()`, never `.brand()`.
 
-`zod` is installed. `@tauri-apps/api`, `@codemirror/*` and `sv2-wasm` remain
-**allowed and not installed** — the allowlist is a decision about what may be
-depended on, `allowed-dependencies.toml`'s `[present]` table is what currently
-is, and the two are deliberately not the same list. Each arrives in the change
-that adds the first module importing it, because a package nothing imports is
-load cost and supply-chain surface for nothing.
+`@tauri-apps/api`, `@codemirror/*` and `sv2-wasm` remain **allowed and not
+installed**. Each arrives in the change that adds the first module importing it,
+because a package nothing imports is load cost and supply-chain surface for
+nothing.
 
-`main.tsx` still names the missing Zod configuration step in place rather than
-omitting it silently; it lands with the first module that parses at a boundary.
+**Test keys by code when the shortcut reads code.** `user-event` gives `{F11}` the
+code `Unknown`; write `[F11]`.

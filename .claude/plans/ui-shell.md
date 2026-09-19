@@ -21,7 +21,7 @@ this unless it is opened. Say "read `.claude/plans/ui-shell.md`" and it is all h
 | Branch | `ui/shell` |
 | Worktree | `../sv2-ui`, created with `git worktree add` |
 | Based on | `main` at `081d85a`, merged up to `752ff41` for the case-collision fix |
-| Commits | 20, all green |
+| Commits | 26, all green |
 
 The worktree exists so the UI work does not collide with grammar work in the main
 checkout. To recreate it elsewhere:
@@ -289,7 +289,7 @@ a permanent reason; ADR-0002 admits a partially parsed file as `ready`, so it is
 `contract/` module's TSDoc names the Rust type it mirrors, even before that type
 exists. Without this the shell can be built to fixtures for months and be wrong.
 
-### Phase 3 — Primitives, accessibility, layout skeleton
+### Phase 3 — Primitives, accessibility, layout skeleton · **DONE**
 
 Installs `@happy-dom/global-registrator`, `@testing-library/react`,
 `@testing-library/user-event`; wires `test-setup.ts` to §13.5's three duties.
@@ -306,17 +306,53 @@ whole a11y recommended group is blocking via `preset: "recommended"` plus
 six flags varied. Its state unions, per §4.5:
 
 ```ts
-type NavigatorState = { kind: "hidden" } | { kind: "open"; mode: "files" | "elements" };
+type NavigatorState = { kind: "hidden" | "open"; mode: "files" | "elements" };
 type SidebarState   = { kind: "collapsed" | "open"; tab: "specification" | "source" };
 type LayoutMode     = { kind: "normal" }
                     | { kind: "focus"; restore: { navigator: NavigatorState; sidebar: SidebarState } };
 ```
 
-`collapsed` still carries `tab` because IX-03 expands *to that tab*. `focus` carries
-its restore payload because F11 must be exactly reversible (IX-09).
+`collapsed` still carries `tab` because IX-03 expands *to that tab*, and `hidden`
+carries `mode` for the same reason — the first sketch dropped it, so Ctrl+B twice lost
+the mode. `focus` carries its restore payload because F11 must be exactly reversible
+(IX-09).
 
 Also: `shell/IslandBoundary.tsx` (§7.4), `shell/Unavailable.tsx`, `useSelection()` —
 the seam that stops the second window moving selection later.
+
+**What was built:**
+
+- Test deps installed (already allowlisted); `test-setup.ts` registers happy-dom, makes
+  `fetch` throw, and restores mocks and the clock after each test.
+- `shell/primitives/`: `IconButton` (a disabled button *must* carry its reason, and
+  stays focusable via `aria-disabled`), `Icon` (decorative, `aria-hidden`), `Toolbar`
+  and `Tabs` (one tab stop, shared `roving.ts` keyboard; `Tabs` links tab↔panel both
+  ways, automatic or manual activation, no panel for the collapsed strip, vertical
+  text when vertical), `Tree` (APG tree view, flat rows with level/setsize/posinset;
+  pure keyboard in `tree-rows.ts`; focus ≠ selection), `Splitter` (APG window
+  splitter, keyboard and pointer, clamped).
+- `IslandBoundary`, `Unavailable` (plain statement from the reason; `opening` alone is
+  a live status), `selection.tsx` (`useSelection`, throws outside its provider).
+- `layout-state.ts`: one reducer; an explicit toggle while focused leaves focus mode
+  and discards the record, so F11 never undoes a choice just made. Shortcuts match on
+  `code` (Option+B types "∫"); Cmd counts as Ctrl.
+- `Shell.tsx`: the regions as landmarks. Unwired panels say what sv2 cannot do yet;
+  deferred controls are disabled with reasons. `main.tsx` passes the reporter in.
+- Checked by eye in Chrome, light and dark; that caught the collapsed strip rendering
+  as a wide column instead of UI-09's narrow vertical one.
+
+**Known:** in a plain browser F11 belongs to the browser's fullscreen and cannot be
+taken; in the Tauri window it is ours. Test with `[F11]`, not `{F11}` — user-event
+gives the latter the code `Unknown`.
+
+**Open, from §11 — raised, not yet decided:**
+
+- §11 rule 7 puts fixtures in `app/test-data/` as data; the Phase 2 fixture is a TS
+  module in `ipc/`. It is also the app's shipped sample data, which rule 7 does not
+  contemplate. Either amend rule 7 or move the data and accept `resolveJsonModule`.
+- §11 rule 6 names `ipc/ipc-double.ts` wrapping Tauri's `mockIPC`. With the
+  `Transport` seam, the fixture transport is that double and no Tauri dependency is
+  needed in tests; rule 6 could say so.
 
 ### Phase 4 — Wire the shell
 
