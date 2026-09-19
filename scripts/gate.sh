@@ -49,6 +49,9 @@ main() {
 
   echo "gate: running deterministic checks"
 
+  # --- the checkout itself ---
+  run_check "path case" "${PY}" scripts/check_path_case.py
+
   # --- pinned inputs ---
   run_check "vendor hashes" "${PY}" scripts/vendor_verify.py
   run_check "namespace link" "${PY}" scripts/check_namespace_link.py
