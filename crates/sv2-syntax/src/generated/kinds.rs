@@ -565,6 +565,32 @@ pub enum SyntaxKind {
     ConnectionDefinition,
     /// `OccurrenceDefinitionPrefix 'flow' 'def' Definition`. `SysML` 8.2.2.16.
     FlowDefinition,
+    /// `OccurrenceUsagePrefix 'flow' FlowDeclaration DefinitionBody`. `SysML` 8.2.2.16.
+    FlowUsage,
+    /// `UsageDeclaration ValuePart? ( 'of' FlowPayloadFeatureMember )? ( 'from' FlowEndMember 'to' FlowEndMember )? | FlowEndMember 'to' FlowEndMember`. `SysML` 8.2.2.16 — returns `FlowUsage`.
+    FlowDeclaration,
+    /// `FlowEnd`. `SysML` 8.2.2.16 — the metaclass is `EndFeatureMembership`.
+    FlowEndMember,
+    /// `FlowEndSubsetting? FlowFeatureMember`. `SysML` 8.2.2.16.
+    FlowEnd,
+    /// `[QualifiedName] '.' | FeatureChainPrefix`. `SysML` 8.2.2.16, with the '.' of deviation `FlowEndSubsetting` — the metaclass is `ReferenceSubsetting`.
+    FlowEndSubsetting,
+    /// `( OwnedFeatureChaining '.' )+ OwnedFeatureChaining '.'`. `SysML` 8.2.2.16.
+    FeatureChainPrefix,
+    /// `FlowFeature`. `SysML` 8.2.2.16 — the metaclass is `FeatureMembership`.
+    FlowFeatureMember,
+    /// `FlowFeatureRedefinition`. `SysML` 8.2.2.16 — the metaclass is `ReferenceUsage`.
+    FlowFeature,
+    /// `[QualifiedName]`. `SysML` 8.2.2.16, stated alike in `KerML` 8.2.5.9.2 — `Redefinition`.
+    FlowFeatureRedefinition,
+    /// `FlowPayloadFeature`. `SysML` 8.2.2.16 — the metaclass is `FeatureMembership`.
+    FlowPayloadFeatureMember,
+    /// `PayloadFeature`. `SysML` 8.2.2.16 — the metaclass is `PayloadFeature`.
+    FlowPayloadFeature,
+    /// `Identification? PayloadFeatureSpecializationPart ValuePart? | OwnedFeatureTyping OwnedMultiplicity? | OwnedMultiplicity OwnedFeatureTyping`. `SysML` 8.2.2.16.
+    PayloadFeature,
+    /// `FeatureSpecialization+ MultiplicityPart? FeatureSpecialization* | MultiplicityPart FeatureSpecialization+`. `SysML` 8.2.2.16.
+    PayloadFeatureSpecializationPart,
     /// `OccurrenceDefinitionPrefix 'allocation' 'def' Definition`. `SysML` 8.2.2.15.
     AllocationDefinition,
     /// `OccurrenceDefinitionPrefix 'rendering' 'def' Definition`. `SysML` 8.2.2.26.3.
@@ -1145,6 +1171,19 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ItemDefinition,
     SyntaxKind::ConnectionDefinition,
     SyntaxKind::FlowDefinition,
+    SyntaxKind::FlowUsage,
+    SyntaxKind::FlowDeclaration,
+    SyntaxKind::FlowEndMember,
+    SyntaxKind::FlowEnd,
+    SyntaxKind::FlowEndSubsetting,
+    SyntaxKind::FeatureChainPrefix,
+    SyntaxKind::FlowFeatureMember,
+    SyntaxKind::FlowFeature,
+    SyntaxKind::FlowFeatureRedefinition,
+    SyntaxKind::FlowPayloadFeatureMember,
+    SyntaxKind::FlowPayloadFeature,
+    SyntaxKind::PayloadFeature,
+    SyntaxKind::PayloadFeatureSpecializationPart,
     SyntaxKind::AllocationDefinition,
     SyntaxKind::RenderingDefinition,
     SyntaxKind::PortDefinition,

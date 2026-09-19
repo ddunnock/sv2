@@ -266,6 +266,71 @@ NODES = [
         "FlowDefinition",
         "`OccurrenceDefinitionPrefix 'flow' 'def' Definition`. `SysML` 8.2.2.16.",
     ),
+    # The flow usage and its ends. One node per production, as everywhere: a flow end
+    # with no subsetting is a FlowEnd holding only its FlowFeatureMember.
+    (
+        "FlowUsage",
+        "`OccurrenceUsagePrefix 'flow' FlowDeclaration DefinitionBody`. `SysML` 8.2.2.16.",
+    ),
+    (
+        "FlowDeclaration",
+        (
+            "`UsageDeclaration ValuePart? ( 'of' FlowPayloadFeatureMember )? "
+            "( 'from' FlowEndMember 'to' FlowEndMember )? "
+            "| FlowEndMember 'to' FlowEndMember`. `SysML` 8.2.2.16 — returns `FlowUsage`."
+        ),
+    ),
+    (
+        "FlowEndMember",
+        "`FlowEnd`. `SysML` 8.2.2.16 — the metaclass is `EndFeatureMembership`.",
+    ),
+    ("FlowEnd", "`FlowEndSubsetting? FlowFeatureMember`. `SysML` 8.2.2.16."),
+    (
+        "FlowEndSubsetting",
+        (
+            "`[QualifiedName] '.' | FeatureChainPrefix`. `SysML` 8.2.2.16, with the '.' of "
+            "deviation `FlowEndSubsetting` — the metaclass is `ReferenceSubsetting`."
+        ),
+    ),
+    (
+        "FeatureChainPrefix",
+        "`( OwnedFeatureChaining '.' )+ OwnedFeatureChaining '.'`. `SysML` 8.2.2.16.",
+    ),
+    (
+        "FlowFeatureMember",
+        "`FlowFeature`. `SysML` 8.2.2.16 — the metaclass is `FeatureMembership`.",
+    ),
+    (
+        "FlowFeature",
+        "`FlowFeatureRedefinition`. `SysML` 8.2.2.16 — the metaclass is `ReferenceUsage`.",
+    ),
+    (
+        "FlowFeatureRedefinition",
+        "`[QualifiedName]`. `SysML` 8.2.2.16, stated alike in `KerML` 8.2.5.9.2 — `Redefinition`.",
+    ),
+    (
+        "FlowPayloadFeatureMember",
+        "`FlowPayloadFeature`. `SysML` 8.2.2.16 — the metaclass is `FeatureMembership`.",
+    ),
+    (
+        "FlowPayloadFeature",
+        "`PayloadFeature`. `SysML` 8.2.2.16 — the metaclass is `PayloadFeature`.",
+    ),
+    (
+        "PayloadFeature",
+        (
+            "`Identification? PayloadFeatureSpecializationPart ValuePart? "
+            "| OwnedFeatureTyping OwnedMultiplicity? "
+            "| OwnedMultiplicity OwnedFeatureTyping`. `SysML` 8.2.2.16."
+        ),
+    ),
+    (
+        "PayloadFeatureSpecializationPart",
+        (
+            "`FeatureSpecialization+ MultiplicityPart? FeatureSpecialization* "
+            "| MultiplicityPart FeatureSpecialization+`. `SysML` 8.2.2.16."
+        ),
+    ),
     (
         "AllocationDefinition",
         "`OccurrenceDefinitionPrefix 'allocation' 'def' Definition`. `SysML` 8.2.2.15.",

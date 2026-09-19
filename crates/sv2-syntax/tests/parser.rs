@@ -1076,6 +1076,234 @@ fn a_usage_membership_owns_its_prefix_and_its_usage() {
     );
 }
 
+// -- FlowUsage, SysML 8.2.2.16 ----------------------------------------------------
+//
+// FlowUsage = OccurrenceUsagePrefix 'flow' FlowDeclaration DefinitionBody
+// FlowDeclaration : FlowUsage =
+//       UsageDeclaration ValuePart?
+//       ( 'of'  FlowPayloadFeatureMember )?
+//       ( 'from' FlowEndMember 'to' FlowEndMember )?
+//     | FlowEndMember 'to' FlowEndMember
+// FlowEndMember : EndFeatureMembership = FlowEnd
+// FlowEnd = FlowEndSubsetting? FlowFeatureMember
+// FlowEndSubsetting : ReferenceSubsetting = [QualifiedName] '.' | FeatureChainPrefix
+//     — the '.' is deviation FlowEndSubsetting (follow_xtext): the clause drops it,
+//       and nothing else in the clause could consume it.
+// FeatureChainPrefix : Feature =
+//     ( OwnedFeatureChaining '.' )+ OwnedFeatureChaining '.'
+// FlowFeatureMember : FeatureMembership = FlowFeature
+// FlowFeature : ReferenceUsage = FlowFeatureRedefinition
+// FlowFeatureRedefinition : Redefinition = [QualifiedName]
+// FlowPayloadFeatureMember : FeatureMembership = FlowPayloadFeature
+// FlowPayloadFeature : PayloadFeature = PayloadFeature
+// PayloadFeature : Feature =
+//       Identification? PayloadFeatureSpecializationPart ValuePart?
+//     | OwnedFeatureTyping OwnedMultiplicity?
+//     | OwnedMultiplicity OwnedFeatureTyping
+//
+// FlowUsage is a StructureUsageElement (8.2.2.6.4), so it is owned as the other
+// structure usages are: a StructureUsageMember in an action body, an
+// OccurrenceUsageMember in a definition body, a PackageMember in a package.
+
+#[test]
+fn a_flow_usage_reads_the_corpus_forms() {
+    // vendor/corpus/sysml/src/training/15. Actions/Action Decomposition.sysml:19
+    let from =
+        render(&parse_accepted("action def A { flow from focus.image to shoot.image; }").syntax());
+    assert_eq!(nodes_named(&from, "FlowUsage"), 1, "{from}");
+    assert_eq!(
+        member_of("action def A", "flow from a.b to c.d;"),
+        ["StructureUsageMember"]
+    );
+    // vendor/corpus/sysml/src/training/17. Control/Camera.sysml:17 — the second
+    // FlowDeclaration alternative, in a part definition.
+    assert_eq!(
+        member_of(
+            "part def P",
+            "flow autoFocus.realImage to imager.focusedImage;"
+        ),
+        ["OccurrenceUsageMember"]
+    );
+    // vendor/corpus/sysml/src/training/13. Flows/Flow Usage Example.sysml:10-12 — a
+    // payload, three-segment ends, and the statement across three lines.
+    parse_accepted(
+        "part def P {\n\tflow of Fuel\n\t  from tankAssy.fuelTankPort.fuelSupply\n\t\tto eng.engineFuelPort.fuelSupply;\n}",
+    );
+    // vendor/corpus/sysml/src/examples/Camera Example/PictureTaking.sysml:9
+    parse_accepted("action def A { flow of Exposure from focus.xrsl to shoot.xsf; }");
+    // And at package level, through PackageMember's UsageElement.
+    parse_accepted("package P { flow a.b to c.d; }");
+}
+
+#[test]
+fn a_flow_usage_owns_what_its_productions_write() {
+    let tree = render(&parse_accepted("part def P { flow from a.b to c.d; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "FlowUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwFlow",
+            "FlowDeclaration",
+            "DefinitionBody"
+        ],
+        "{tree}"
+    );
+    // The first alternative: its UsageDeclaration is there even when it declares
+    // nothing, as Identification may be empty.
+    assert_eq!(
+        child_kinds(&tree, "FlowDeclaration"),
+        [
+            "UsageDeclaration",
+            "KwFrom",
+            "FlowEndMember",
+            "KwTo",
+            "FlowEndMember"
+        ],
+        "{tree}"
+    );
+    assert_eq!(child_kinds(&tree, "FlowEndMember"), ["FlowEnd"], "{tree}");
+    assert_eq!(
+        child_kinds(&tree, "FlowEnd"),
+        ["FlowEndSubsetting", "FlowFeatureMember"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "FlowEndSubsetting"),
+        ["QualifiedName", "Dot"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "FlowFeatureMember"),
+        ["FlowFeature"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "FlowFeature"),
+        ["FlowFeatureRedefinition"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "FlowFeatureRedefinition"),
+        ["QualifiedName"],
+        "{tree}"
+    );
+
+    // The second alternative has no UsageDeclaration at all.
+    let bare = render(&parse_accepted("part def P { flow a.b to c.d; }").syntax());
+    assert_eq!(
+        child_kinds(&bare, "FlowDeclaration"),
+        ["FlowEndMember", "KwTo", "FlowEndMember"],
+        "{bare}"
+    );
+}
+
+#[test]
+fn a_flow_end_splits_its_segments_by_the_productions() {
+    // One segment: no FlowEndSubsetting, the feature alone.
+    let one = render(&parse_accepted("part def P { flow a to b; }").syntax());
+    assert_eq!(child_kinds(&one, "FlowEnd"), ["FlowFeatureMember"], "{one}");
+    // Three: FeatureChainPrefix takes all but the last, each chaining with its '.'.
+    let three = render(&parse_accepted("part def P { flow a.b.c to d.e; }").syntax());
+    assert_eq!(
+        child_kinds(&three, "FlowEndSubsetting"),
+        ["FeatureChainPrefix"],
+        "{three}"
+    );
+    assert_eq!(
+        child_kinds(&three, "FeatureChainPrefix"),
+        ["OwnedFeatureChaining", "Dot", "OwnedFeatureChaining", "Dot"],
+        "{three}"
+    );
+    // A segment is a QualifiedName, so `::` stays inside one.
+    parse_accepted("part def P { flow A::a.b to C::c.d; }");
+}
+
+#[test]
+fn a_flow_declaration_takes_a_name_a_type_a_value_and_a_payload() {
+    // UsageDeclaration: `flow : FuelFlow of Fuel` is the corpus's (training/13. Flows/
+    // Flow Definition Example.sysml); a named one is the same production.
+    parse_accepted("part def P { flow : FuelFlow of Fuel from a.b to c.d; }");
+    parse_accepted("part def P { flow f : FuelFlow from a.b to c.d; }");
+    // Every part of the first alternative is optional; a braced body too.
+    parse_accepted("part def P { flow f; }");
+    parse_accepted("part def P { flow f { } }");
+}
+
+#[test]
+fn a_payload_feature_reads_all_three_alternatives() {
+    fn payload(item: &str) -> Vec<String> {
+        let tree = render(&parse_accepted(&format!("part def P {{ {item} }}")).syntax());
+        child_kinds(&tree, "PayloadFeature")
+    }
+    // OwnedFeatureTyping OwnedMultiplicity? — the corpus's `of Fuel`.
+    assert_eq!(
+        payload("flow of Fuel from a.b to c.d;"),
+        ["OwnedFeatureTyping"]
+    );
+    assert_eq!(
+        payload("flow of Fuel[1] from a.b to c.d;"),
+        ["OwnedFeatureTyping", "OwnedMultiplicity"]
+    );
+    // OwnedMultiplicity OwnedFeatureTyping.
+    assert_eq!(
+        payload("flow of [1] Fuel from a.b to c.d;"),
+        ["OwnedMultiplicity", "OwnedFeatureTyping"]
+    );
+    // Identification? PayloadFeatureSpecializationPart ValuePart?
+    assert_eq!(
+        payload("flow of fuel : Fuel from a.b to c.d;"),
+        ["Identification", "PayloadFeatureSpecializationPart"]
+    );
+    assert_eq!(
+        payload("flow of fuel [1] : Fuel = f from a.b to c.d;"),
+        [
+            "Identification",
+            "PayloadFeatureSpecializationPart",
+            "ValuePart"
+        ]
+    );
+    // The member and its wrapper are one node each, as their productions are.
+    let tree = render(&parse_accepted("part def P { flow of Fuel from a.b to c.d; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "FlowPayloadFeatureMember"),
+        ["FlowPayloadFeature"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "FlowPayloadFeature"),
+        ["PayloadFeature"],
+        "{tree}"
+    );
+}
+
+#[test]
+fn a_flow_usage_keeps_every_byte() {
+    let source = "part def P {\n\tflow /* c */ of Fuel // n\n\t  from a . b\n\t\tto c.d.e ;\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
+#[test]
+fn a_flow_usage_is_not_a_flow_definition() {
+    // `flow def` is FlowDefinition (8.2.2.16), already implemented: the `def` after the
+    // keyword is what separates the two, as it does for every usage and its definition.
+    let tree = render(&parse_accepted("part def P { flow def F; }").syntax());
+    assert_eq!(nodes_named(&tree, "FlowUsage"), 0, "{tree}");
+    assert_eq!(nodes_named(&tree, "FlowDefinition"), 1, "{tree}");
+    assert_eq!(member_of("part def P", "flow def F;"), ["DefinitionMember"]);
+}
+
+#[test]
+fn a_flow_usage_rejects_what_its_productions_do_not_state() {
+    // Held as files by tests/rejection/flow-*.sysml.
+    parse_rejected("part def P { flow from a.b; }");
+    parse_rejected("part def P { flow a. to c.d; }");
+    parse_rejected("part def P { flow of [1] from a.b to c.d; }");
+    // A named payload with a multiplicity keyword and no FeatureSpecialization: the
+    // one this list lacked until a mutation of payload_feature_specialization_part
+    // went uncaught.
+    parse_rejected("part def P { flow of x ordered from a.b to c.d; }");
+}
+
 // -- InitialNodeMember, SysML 8.2.2.17.1 ------------------------------------------
 //
 // ActionBodyItem    = NonBehaviorBodyItem
