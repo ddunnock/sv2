@@ -92,6 +92,21 @@ be fixed from here, only waited out.
   registry's, registered in `generate_handler!` and nowhere else (DD-5).
 - Tauri's generated `gen/` directory is ignored, not committed.
 
+### What the host answers
+
+`sv2-studio` owns two of the registry's commands, and only while nothing below it can:
+`workspace` (list the `.sysml` and `.kerml` files under the root, with each file's
+diagnostic counts from `sv2-syntax`) and `file_text` (one file's text). Both are
+**read-only**. ADR-0020 has opening a workspace allocate identities, which writes; this
+host writes nothing until that is built. Both are file access, not model reading, so
+they do not break ADR-0018's rule that a binary crate holds no logic about the model.
+When a crate below the host loads workspaces — `sv2-resolve` has to, to resolve across
+files — ownership moves there and this paragraph is superseded.
+
+The other three commands are registered and answer `not-implemented`, which is the true
+answer while `sv2-resolve` is a stub. `view_layout` stays unowned: no record says which
+crate reads the layout sidecar.
+
 ### Consequences
 
 Good: a real window over the same contract the fixtures satisfy, so no component

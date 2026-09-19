@@ -1,7 +1,13 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "The main window. Core defaults only; the app's own commands are the registry's (STD-004-TS §2 rule 3).",
+  "description": "The main window: exactly the commands in app/src/contract/registry.ts, and nothing from a default set (STD-004-TS §2 rule 3).",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": [
+    "allow-workspace",
+    "allow-views",
+    "allow-element-detail",
+    "allow-view-layout",
+    "allow-file-text"
+  ]
 }

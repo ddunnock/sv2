@@ -78,14 +78,16 @@ collide with grammar work in the main checkout.
 
 ## Current state
 
-Phases 1–4 of `.claude/plans/ui-shell.md` are done, and Phase 5's split editor; read its phase notes rather
-than trusting a summary here.
+Phases 1–5 of `.claude/plans/ui-shell.md` are done and Phase 6 is under way; read
+its phase notes rather than trusting a summary here.
 
 - `contract/` is complete for Phase 4: offsets, identities, diagnostics, elements,
   files, views, layout, availability, preferences, and the command registry.
 - `model/`: `result`, `assert-never`, `element-handle`, `query`, `tree`.
-- `ipc/`: one parse path under a `Transport`; the fixture transport answers from
-  the mockup's sample model. There is no Tauri client yet (Phase 6).
+- `ipc/`: one parse path under a `Transport`. Inside a Tauri window the Tauri
+  transport asks the Rust core (`crates/sv2-studio`); in a plain browser the
+  fixture transport answers from the mockup's sample model, and the status bar
+  says "Fixture data".
 - `shell/`: five accessible primitives, the island boundary, `Unavailable`,
   `useSelection`, the layout reducer, and the window, wired to the queries:
   Files tree, Views list, view tabs with the `ViewKind` dispatcher, Specification.
@@ -98,10 +100,11 @@ annotated `z.ZodType<Name, Wire>`. §4.3 rule 1 carries the whole argument, and
 `contract/offset.ts` is the reference example. Brands mint through
 `.transform()`, never `.brand()`.
 
-`@tauri-apps/api` and `sv2-wasm` remain **allowed and not installed**; of
-`@codemirror/*`, only `state`, `view` and `commands` are installed. Each arrives in the change that adds the first module importing it,
-because a package nothing imports is load cost and supply-chain surface for
-nothing.
+`sv2-wasm` remains **allowed and not installed**; `@tauri-apps/api` is imported
+by `ipc/tauri-client.ts` alone. Of `@codemirror/*`, only `state`, `view` and
+`commands` are installed. Each arrives in the change that adds the first module
+importing it, because a package nothing imports is load cost and supply-chain
+surface for nothing.
 
 **Test keys by code when the shortcut reads code.** `user-event` gives `{F11}` the
 code `Unknown`; write `[F11]`.

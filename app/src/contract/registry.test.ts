@@ -35,7 +35,12 @@ describe("COMMANDS", () => {
     const unassigned = ENTRIES.filter(([, entry]) => entry.owner === "unassigned").map(
       ([key]) => key,
     );
-    expect(unassigned.sort()).toEqual(["fileText", "viewLayout", "workspace"]);
+    expect(unassigned.sort()).toEqual(["viewLayout"]);
+  });
+
+  test("the host answers exactly these, the file access ADR-0021 gives it", () => {
+    const studio = ENTRIES.filter(([, entry]) => entry.owner === "sv2-studio").map(([key]) => key);
+    expect(studio.sort()).toEqual(["fileText", "workspace"]);
   });
 });
 

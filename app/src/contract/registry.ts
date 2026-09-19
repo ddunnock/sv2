@@ -9,11 +9,12 @@
  * commands (§2 rule 3); and `ipc/` looks commands up here rather than naming a
  * string at a call site. A command not listed here is a boundary with no check.
  *
- * NO COMMAND EXISTS IN RUST YET. `sv2-studio` is a stub that exits 2. So this
- * list states the queries the shell needs, in the shape the Rust side must
- * answer, and each entry names its owner — the standing rule that a field with
- * no named Rust owner is a defect. Where no ADR assigns one, the owner is
- * `unassigned`, which keeps the gap searchable instead of filled with a guess.
+ * EVERY COMMAND IS REGISTERED IN RUST, AND TWO ARE ANSWERED. `sv2-studio`
+ * answers `workspace` and `file_text` from disk; the rest answer
+ * `not-implemented` until `sv2-resolve` exists (ADR-0021). Each entry names its
+ * owner — the standing rule that a field with no named Rust owner is a defect.
+ * Where no ADR assigns one, the owner is `unassigned`, which keeps the gap
+ * searchable instead of filled with a guess.
  *
  * THE NAMES ARE RUST'S. A Tauri command is invoked by its Rust function's name,
  * so `command` is snake_case; arguments and answers follow §4.2's camelCase,
@@ -44,10 +45,11 @@ import { type ViewSummary, ViewSummarySchema } from "./view";
 /**
  * The crate that answers a command.
  *
- * `sv2-resolve` owns anything resolved. `unassigned` is honest: no ADR says
- * which crate enumerates a workspace or reads a sidecar.
+ * `sv2-resolve` owns anything resolved. `sv2-studio` owns plain file access
+ * until a crate below it loads workspaces (ADR-0021). `unassigned` is honest:
+ * no ADR says which crate reads a layout sidecar.
  */
-export type RustOwner = "sv2-resolve" | "unassigned";
+export type RustOwner = "sv2-resolve" | "sv2-studio" | "unassigned";
 
 /** One command: its Rust name, what it takes, what it answers, and who answers it. */
 export type Command<A, R> = Readonly<{
@@ -82,7 +84,7 @@ export const COMMANDS: Commands = {
   /** The Files tree (IX-01). */
   workspace: {
     command: "workspace",
-    owner: "unassigned",
+    owner: "sv2-studio",
     args: noArgs,
     answer: answerSchema(WorkspaceSchema),
   },
@@ -110,7 +112,7 @@ export const COMMANDS: Commands = {
   /** A model file's text, for the editor. */
   fileText: {
     command: "file_text",
-    owner: "unassigned",
+    owner: "sv2-studio",
     args: z.strictObject({ path: WorkspacePathSchema }),
     answer: answerSchema(FileTextSchema),
   },
