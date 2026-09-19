@@ -43,10 +43,10 @@ DENY = [
     # wrappers and inline programs
     ("sudo rm vendor/sources.lock.toml", ROOT),
     ("FOO=1 env BAR=2 rm vendor/sources.lock.toml", ROOT),
-    ('python3.11 -c \'open("docs/conformance-target.toml", "w").write("x")\'', ROOT),
+    ('python3.12 -c \'open("docs/conformance-target.toml", "w").write("x")\'', ROOT),
     (
         (
-            "python3.11 - <<'PY'\nfrom pathlib import Path\n"
+            "python3.12 - <<'PY'\nfrom pathlib import Path\n"
             "Path('docs/conformance-target.toml').write_text('')\nPY"
         ),
         ROOT,
@@ -71,23 +71,23 @@ ALLOW = [
     ("git diff -- docs/conformance-target.toml", ROOT),
     ("git add docs/conformance-target.toml && git commit -m 'Pin vendor/sources.lock.toml'", ROOT),
     ("head -5 .claude/state/schema/state.schema.json > /tmp/head.txt", ROOT),
-    ("python3.11 scripts/vendor_sync.py --accept-new", ROOT),
-    ("python3.11 .claude/scripts/regen_state.py", ROOT),
+    ("python3.12 scripts/vendor_sync.py --accept-new", ROOT),
+    ("python3.12 .claude/scripts/regen_state.py", ROOT),
     ("./scripts/gate.sh 2>&1 | tail -20", ROOT),
     ("echo x > .claude/state/grammar/units/Name.json", ROOT),
     ("rm -rf target/debug", ROOT),
     ("rm /etc/vendor/sources.lock.toml", ROOT),
     ("cp vendor/sources.lock.toml /tmp/lock.bak", ROOT),
     ('echo done > "$TMPDIR/out"', ROOT),
-    ("python3.11 -c 'print(1)'", ROOT),
+    ("python3.12 -c 'print(1)'", ROOT),
     ("ls -la # rm vendor/sources.lock.toml", ROOT),
     ("cat > crates/sv2-cli/src/lib.rs <<'EOF'\n//! Docs.\nEOF", ROOT),
     ("echo 'fn main() {}' > crates/sv2-cli/src/lib", ROOT),
     ("mkdir -p crates/sv2-cli/src && touch crates/sv2-cli/Cargo.toml", ROOT),
     ("mkdir -p vendor/scratch-notes", ROOT),
-    ("cat >> notes.md <<'EOF'\nsee vendor/sources.lock.toml\nEOF\npython3.11 -m pytest -q", ROOT),
-    ('python3.11 -c \'from pathlib import Path; print(Path("/repo") / "pyproject.toml")\'', ROOT),
-    ("python3.11 scripts/check_shell_standard.py .", ROOT),
+    ("cat >> notes.md <<'EOF'\nsee vendor/sources.lock.toml\nEOF\npython3.12 -m pytest -q", ROOT),
+    ('python3.12 -c \'from pathlib import Path; print(Path("/repo") / "pyproject.toml")\'', ROOT),
+    ("python3.12 scripts/check_shell_standard.py .", ROOT),
     ("uvx ruff format --check .", ROOT),
     ("uvx ruff check . && uvx mypy", ROOT),
     ("uvx --from shellcheck-py shellcheck scripts/*.sh", ROOT),
@@ -174,4 +174,4 @@ def test_src_directory_is_protected_only_when_it_holds_generated_code(tmp_path):
     root = str(tmp_path)
     assert bash_violation("rm -rf crates/sv2-syntax/src", root, root) is not None
     assert bash_violation("rm -rf crates/sv2-cli/src", root, root) is None
-    assert bash_violation("python3.11 edit.py scripts/tools/src", root, root) is None
+    assert bash_violation("python3.12 edit.py scripts/tools/src", root, root) is None

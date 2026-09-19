@@ -2,15 +2,15 @@
 title: Python Standards
 document_id: STD-PY-001
 status: baselined
-version: 2.0.0
-date: 2026-09-16
+version: 2.1.0
+date: 2026-09-19
 review_date: 2027-03-16
 owner: David — CSE
 applies_to: the repository's Python tooling — scripts/, .claude/scripts/, and their pytest suites
 supersedes: null
 superseded_by: null
 related: [STD-002-RS, STD-003-SH]
-python: "3.11"
+python: "3.12"
 ---
 
 # Python Standards
@@ -28,8 +28,8 @@ disagree, the configuration is authoritative and the prose is a defect.
 tooling around it. There is no installable distribution — `pyproject.toml` has no
 `[project]` table beyond the three keys uv needs, there is no `src/` layout, no
 package, and nothing to build —
-so the rules below govern scripts, not artifacts. Python 3.11: scripts run on the
-RHEL 9 AppStream `python3.11` package, invoked explicitly as `python3.11`,
+so the rules below govern scripts, not artifacts. Python 3.12: scripts run on the
+RHEL 9 AppStream `python3.12` package, invoked explicitly as `python3.12`,
 because the platform `/usr/bin/python3` is 3.9. The version is pinned in four
 places, each of which acts on something different: `.python-version` for anything
 uv creates, `requires-python` so uv stops guessing, `target-version` for ruff, and
@@ -109,7 +109,7 @@ There is no `__init__.py` anywhere in this repository, and there **must not** be
 one. Each script directory is placed on the import path by `pythonpath` and
 `mypy_path` ([§12](#12-enforcement-configuration)), which is what makes
 `from _lock import read_lock` work from a file invoked as
-`python3.11 scripts/vendor_verify.py`. Adding an `__init__.py` would make the
+`python3.12 scripts/vendor_verify.py`. Adding an `__init__.py` would make the
 directory a package, change every import line in it, and break that invocation —
 which is the one the hooks, the gate, and the README all use. `INP001` is ignored
 for both directories in [§12](#12-enforcement-configuration) for exactly this
@@ -125,7 +125,7 @@ before every tool call ([§3.2](#32-import-cost-at-the-hook-boundary)).
 
 ### 2.2 Entry points
 
-Every script is invoked by path — `python3.11 scripts/bnf_coverage.py --check` —
+Every script is invoked by path — `python3.12 scripts/bnf_coverage.py --check` —
 never as `python -m` and never through a console script. Two rules follow.
 
 1. The file ends with a call and nothing else:
@@ -162,7 +162,7 @@ from __future__ import annotations
 
 **No shebang line, anywhere in this repository's Python.** Nothing here is
 invoked as a bare script: the gate, CI, and the hook shims all call
-`python3.11 <path>`, and none of them reads a shebang. A shebang on a module that
+`python3.12 <path>`, and none of them reads a shebang. A shebang on a module that
 is never executed directly is a claim the file does not support.
 
 #### Program header
@@ -627,7 +627,7 @@ print(f"program headers present and correct on {len(files)} file(s)")   # the su
 - **One summary line**, stating the counts, whether or not there were findings. A
   check that prints nothing on success is a check nobody can tell ran.
 - **Where a fix exists, name the command.**
-  `"no production inventory — run python3.11 scripts/vendor_sync.py then python3.11 scripts/extract_productions.py"`.
+  `"no production inventory — run python3.12 scripts/vendor_sync.py then python3.12 scripts/extract_productions.py"`.
   A diagnostic that names the failure but not the remedy sends its reader into the
   source of the script that produced it.
 
@@ -748,7 +748,7 @@ scripts/tests/
    [§12](#12-enforcement-configuration) are what make the imports resolve.
 2. **Test the functions, not the process.** A test imports `check`, `settings`,
    and `leading_comment` and calls them; it does not spawn
-   `python3.11 scripts/check_headers.py` and grep the output. This is why
+   `python3.12 scripts/check_headers.py` and grep the output. This is why
    [§2.2](#22-entry-points) keeps `main` thin and makes it return an `int` rather
    than exit.
 3. **Fixture inputs are data.** A file a test must read lives in `tests/data/`; a
@@ -805,8 +805,8 @@ invocation, indented, one line per mode.
     unimplemented  in the inventory, deliberately not yet handled  -- legitimate
     absent         parser claims a production the inventory does not contain  -- DEFECT
 
-    python3.11 scripts/bnf_coverage.py           write .claude/state/coverage.json
-    python3.11 scripts/bnf_coverage.py --check   fail on any `absent`
+    python3.12 scripts/bnf_coverage.py           write .claude/state/coverage.json
+    python3.12 scripts/bnf_coverage.py --check   fail on any `absent`
 """
 ```
 
@@ -827,11 +827,10 @@ one.
 
 ```toml
 [tool.ruff]
-# py312 is the floor the lints assume: the interpreter this repository is moving
-# to, and the newest one RHEL 9 AppStream provides as a supported package. The
-# scripts are still invoked as `python3.11` until python3.12 is installed on the
-# machines that run the gate, and mypy stays at 3.11 until then — which is what
-# would catch 3.12-only syntax reaching a 3.11 interpreter.
+# py312 is the interpreter the scripts run on — invoked as `python3.12`, the
+# newest one RHEL 9 AppStream provides as a supported package — and ruff and mypy
+# both target it, so the lints and the type check assume the interpreter that
+# actually runs the gate.
 target-version = "py312"
 line-length = 100
 src = ["scripts", ".claude/scripts"]
@@ -917,7 +916,7 @@ docstring-code-format = true
 
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = true
 warn_unreachable = true
 warn_no_return = true
@@ -962,10 +961,10 @@ architectural rule — `scripts/` does not import `.claude/scripts/` — is stat
 ruff check
 ruff format --check
 mypy
-python3.11 -m pytest -q
-python3.11 scripts/check_headers.py
-python3.11 scripts/check_shell_standard.py
-python3.11 scripts/check_standards_config.py
+python3.12 -m pytest -q
+python3.12 scripts/check_headers.py
+python3.12 scripts/check_shell_standard.py
+python3.12 scripts/check_standards_config.py
 ```
 
 All seven run in `scripts/gate.sh`, which is the single definition of "done" — the

@@ -4,9 +4,9 @@ Grammar inputs are pinned by `vendor/sources.lock.toml` (sha256 per file) and fe
 into `vendor/pilot/`, not placed here by hand. To pin or move a pin:
 
 ```bash
-python3.11 scripts/vendor_sync.py                # fetch missing files, verify pinned ones
-python3.11 scripts/vendor_sync.py --accept-new   # a reviewed upgrade
-python3.11 scripts/vendor_verify.py              # offline check; the gate runs this
+python3.12 scripts/vendor_sync.py                # fetch missing files, verify pinned ones
+python3.12 scripts/vendor_sync.py --accept-new   # a reviewed upgrade
+python3.12 scripts/vendor_verify.py              # offline check; the gate runs this
 ```
 
 Record the source and revision in `docs/conformance-target.toml` at the same time.

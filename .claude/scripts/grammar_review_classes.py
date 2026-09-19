@@ -28,8 +28,8 @@ Entries written here are tagged MACHINE-GROUNDED in their evidence note, so a
 re-run replaces them instead of layering a second opinion beside the first, and a
 reviewer can tell them from the hand-written ones at a glance.
 
-    python3.11 .claude/scripts/grammar_review_classes.py           write entries
-    python3.11 .claude/scripts/grammar_review_classes.py --dry-run report only
+    python3.12 .claude/scripts/grammar_review_classes.py           write entries
+    python3.12 .claude/scripts/grammar_review_classes.py --dry-run report only
 """
 
 from __future__ import annotations

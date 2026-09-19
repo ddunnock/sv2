@@ -1,5 +1,5 @@
 # Positive-corpus files the parser accepts, one repository-relative path per line.
-# Written by `python3.11 scripts/corpus_sweep.py --record`; do not hand-edit.
+# Written by `python3.12 scripts/corpus_sweep.py --record`; do not hand-edit.
 #
 # This set may grow and must never shrink. See the module docstring of
 # scripts/corpus_sweep.py for why both directions fail the gate.

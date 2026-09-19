@@ -12,8 +12,8 @@ and nothing in the pinned inputs implies one. Lexical token kinds are authored t
 because the specification names them (KerML 8.2.2) while the Xtext hides them inside
 terminal regexes.
 
-    python3.11 scripts/gen_syntax_kinds.py           write the generated module
-    python3.11 scripts/gen_syntax_kinds.py --check   fail if it is stale
+    python3.12 scripts/gen_syntax_kinds.py           write the generated module
+    python3.12 scripts/gen_syntax_kinds.py --check   fail if it is stale
 """
 
 from __future__ import annotations
@@ -893,13 +893,13 @@ def main(argv: list[str] | None = None) -> int:
     os.chdir(ROOT)
 
     if not TOKENS.is_file():
-        print("no token set — run python3.11 scripts/extract_productions.py")
+        print("no token set — run python3.12 scripts/extract_productions.py")
         return 0
 
     text = build()
     if args.check:
         if not OUT.is_file() or OUT.read_text() != text:
-            print(f"{OUT} is stale — run python3.11 {GENERATED_BY}")
+            print(f"{OUT} is stale — run python3.12 {GENERATED_BY}")
             return 1
         print(f"syntax kinds current ({OUT})")
         return 0

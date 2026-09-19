@@ -14,7 +14,7 @@ would reject on those grounds, but it is a subset: it does not understand $ref
 or the conditional requirements in the unit schema, so a machine without
 jsonschema checks the units less thoroughly than the gate does.
 
-    python3.11 .claude/scripts/validate_state.py
+    python3.12 .claude/scripts/validate_state.py
 """
 
 from __future__ import annotations

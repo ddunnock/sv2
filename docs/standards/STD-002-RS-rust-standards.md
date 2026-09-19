@@ -1455,10 +1455,10 @@ cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 cargo test --workspace --all-features --locked
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --locked
 cargo-deny --offline check bans licenses sources
-python3.11 scripts/check_headers.py
-python3.11 scripts/check_rust_workspace.py
-python3.11 scripts/check_rust_patterns.py
-python3.11 scripts/check_standards_config.py
+python3.12 scripts/check_headers.py
+python3.12 scripts/check_rust_workspace.py
+python3.12 scripts/check_rust_patterns.py
+python3.12 scripts/check_standards_config.py
 ```
 
 This is the Rust part of `scripts/gate.sh`, which is the single definition of

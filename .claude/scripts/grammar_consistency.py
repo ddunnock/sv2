@@ -6,7 +6,7 @@ Run once per language. KerML and SysML are two grammars that share most of their
 units (ADR-0014), so a reference can be defined in one and dangle in the other, and
 a production can be reachable from one start symbol and not the other.
 
-python3.11 .claude/scripts/grammar_consistency.py
+python3.12 .claude/scripts/grammar_consistency.py
 """
 
 from __future__ import annotations
@@ -123,7 +123,7 @@ def main(argv: list[str] | None = None) -> int:
         # languages would silently read different rules depending on load order.
         failed = True
         print(f"  FAIL {len(both)} production(s) have a live shared unit AND a variant:")
-        print(f"    {', '.join(both[:12])} — re-run python3.11 .claude/scripts/grammar_plan.py")
+        print(f"    {', '.join(both[:12])} — re-run python3.12 .claude/scripts/grammar_plan.py")
     for scope in SCOPES:
         failed = _check_scope(scope, units) or failed
 

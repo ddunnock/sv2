@@ -2,8 +2,8 @@
 # Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 """Acceptance sweep over the pinned corpus and the rejection set.
 
-    python3.11 scripts/corpus_sweep.py             check the sweep against the ledger
-    python3.11 scripts/corpus_sweep.py --record    rewrite the ledger from this sweep
+    python3.12 scripts/corpus_sweep.py             check the sweep against the ledger
+    python3.12 scripts/corpus_sweep.py --record    rewrite the ledger from this sweep
 
 Two halves, and each is worthless without the other: a parser that accepts
 everything passes a positive-only sweep, and one that rejects everything passes a
@@ -44,7 +44,7 @@ PRUNED = "known-permissive"
 
 LEDGER_HEADER = """\
 # Positive-corpus files the parser accepts, one repository-relative path per line.
-# Written by `python3.11 scripts/corpus_sweep.py --record`; do not hand-edit.
+# Written by `python3.12 scripts/corpus_sweep.py --record`; do not hand-edit.
 #
 # This set may grow and must never shrink. See the module docstring of
 # scripts/corpus_sweep.py for why both directions fail the gate.

@@ -14,7 +14,7 @@
 # called from a gate or a build.
 set -euo pipefail
 
-readonly PY=python3.11
+readonly PY=python3.12
 failed=0
 
 run_check() {

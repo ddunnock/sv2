@@ -20,8 +20,8 @@ means a rule was ported from the Pilot — the LL cascade, a keyword factoring, 
 membership wrapper — which docs/DERIVATION.md names as the way to build a parser
 that looks more conformant while being less so.
 
-    python3.11 scripts/bnf_coverage.py           write .claude/state/coverage.json
-    python3.11 scripts/bnf_coverage.py --check   fail on any `absent`, or on a stale report
+    python3.12 scripts/bnf_coverage.py           write .claude/state/coverage.json
+    python3.12 scripts/bnf_coverage.py --check   fail on any `absent`, or on a stale report
 """
 
 from __future__ import annotations
@@ -114,7 +114,7 @@ def _check(absent: list[str], report: dict[str, object]) -> int:
             print("misspelled, or a production was invented. Both are defects.")
         return 1
     if is_stale(report):
-        print(f"{REPORT} is stale. Run python3.11 scripts/bnf_coverage.py")
+        print(f"{REPORT} is stale. Run python3.12 scripts/bnf_coverage.py")
         return 1
     print(
         f"coverage ok: {report['implemented']}/{report['declared']} implemented, "
@@ -134,8 +134,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if not INVENTORY.is_file():
         print(
-            "no specification production inventory — run python3.11 scripts/vendor_sync.py"
-            " then python3.11 scripts/extract_bnf.py"
+            "no specification production inventory — run python3.12 scripts/vendor_sync.py"
+            " then python3.12 scripts/extract_bnf.py"
         )
         return 0
 

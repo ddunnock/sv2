@@ -93,15 +93,15 @@ variable can still reach one. The gate's `--check` modes catch those after the f
 ```bash
 git init
 # set tier_b_pilot.revision in docs/conformance-target.toml to a full Pilot commit sha
-python3.11 scripts/vendor_sync.py          # needs network — the only script that does
-python3.11 scripts/extract_productions.py
-python3.11 scripts/bnf_coverage.py && python3.11 scripts/grammar_diff.py
-python3.11 .claude/scripts/index_decisions.py
-python3.11 .claude/scripts/regen_state.py
+python3.12 scripts/vendor_sync.py          # needs network — the only script that does
+python3.12 scripts/extract_productions.py
+python3.12 scripts/bnf_coverage.py && python3.12 scripts/grammar_diff.py
+python3.12 .claude/scripts/index_decisions.py
+python3.12 .claude/scripts/regen_state.py
 ./scripts/gate.sh
 ```
 
-Python scripts run on `python3.11` explicitly: on RHEL 9 `/usr/bin/python3` is the 3.9
+Python scripts run on `python3.12` explicitly: on RHEL 9 `/usr/bin/python3` is the 3.9
 platform interpreter. Shell scripts follow `docs/standards/STD-003-SH-bash-standards.md`;
 Python follows STD-001-PY with the deviations recorded in `pyproject.toml`.
 
@@ -124,7 +124,7 @@ Two things stay Markdown because they cannot be otherwise: `CLAUDE.md` and
 holds arguments, which do not become more useful as JSON. `decisions.json` indexes the
 ADRs; it does not replace them.
 
-Requires `python3.11` (the RHEL 9 AppStream package) for the hooks and scripts. The
+Requires `python3.12` (the RHEL 9 AppStream package) for the hooks and scripts. The
 protect-paths hook blocks every edit and shell command if it is missing, by design. `cargo-deny` and
 `cargo-insta` for the full gate; `shellcheck`, `shfmt`, `ruff`, `mypy`, and `pytest` for
 its script checks, which are skipped with a notice when absent.

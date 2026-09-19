@@ -4,7 +4,7 @@
 
 Creates pending units; never modifies a derived rule.
 
-    python3.11 .claude/scripts/grammar_plan.py
+    python3.12 .claude/scripts/grammar_plan.py
 
 Environment: SV2_WIKI_CLAUSES overrides the specification clause export. Without an
 export the plan refuses to run; see `_clause_export`.
@@ -285,13 +285,13 @@ def main(argv: list[str] | None = None) -> int:
     # belongs.
     inventory = load_json(GRAMMAR / "bnf-productions.json")
     if not inventory:
-        print("no inventory — run python3.11 scripts/extract_bnf.py")
+        print("no inventory — run python3.12 scripts/extract_bnf.py")
         return 1
     clauses = _clause_export()
     if clauses is None:
         path = os.environ.get("SV2_WIKI_CLAUSES", DEFAULT_CLAUSES)
         print(f"no clause export at {path} — refusing to plan, because every unit would go stale")
-        print("  run python3.11 .claude/scripts/export_wiki_clauses.py, then")
+        print("  run python3.12 .claude/scripts/export_wiki_clauses.py, then")
         print("  export SV2_WIKI_CLAUSES=~/.sv2-derivation/bnf-clauses.json")
         return 1
     src = _load_sources(clauses)

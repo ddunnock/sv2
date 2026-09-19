@@ -13,7 +13,7 @@ Discipline did not hold, so this is a check. It flags any run of `WINDOW`
 consecutive words shared between a unit's authored prose and the clause text it was
 derived from. Short quotations survive; a pasted paragraph or table does not.
 
-    python3.11 .claude/scripts/check_derivation_text.py
+    python3.12 .claude/scripts/check_derivation_text.py
 
 The clause text is local and outside the repository, so this is inert without it —
 a fresh clone cannot run it, and is told so rather than passing quietly.
@@ -92,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
     clauses = load_json(CLAUSES, {})
     if not clauses:
         print(f"no clause export at {CLAUSES} — cannot check; build it with")
-        print("  python3.11 .claude/scripts/export_wiki_clauses.py")
+        print("  python3.12 .claude/scripts/export_wiki_clauses.py")
         return 0
 
     units = {n: u for n, u in load_units().items() if u.get("status") != "retired"}

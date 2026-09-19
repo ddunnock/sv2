@@ -5,9 +5,9 @@
 Requires network; this is a deliberate act, not something the gate or a build
 ever does.
 
-    python3.11 scripts/vendor_sync.py                fetch missing files, verify pinned ones
-    python3.11 scripts/vendor_sync.py --accept-new   accept changed hashes (reviewed upgrade)
-    python3.11 scripts/vendor_sync.py --dry-run      show what would be fetched
+    python3.12 scripts/vendor_sync.py                fetch missing files, verify pinned ones
+    python3.12 scripts/vendor_sync.py --accept-new   accept changed hashes (reviewed upgrade)
+    python3.12 scripts/vendor_sync.py --dry-run      show what would be fetched
 """
 
 from __future__ import annotations

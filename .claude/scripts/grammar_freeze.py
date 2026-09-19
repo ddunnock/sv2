@@ -4,8 +4,8 @@
 
 Refuses unless every unit is verified and the oracle is clean.
 
-    python3.11 .claude/scripts/grammar_freeze.py           freeze
-    python3.11 .claude/scripts/grammar_freeze.py --check   verify the frozen grammar still matches
+    python3.12 .claude/scripts/grammar_freeze.py           freeze
+    python3.12 .claude/scripts/grammar_freeze.py --check   verify the frozen grammar still matches
 """
 
 from __future__ import annotations
@@ -64,7 +64,7 @@ def blockers(units: dict[str, Json], oracle: Json) -> list[str]:
     if both := shadowed(units):
         found.append(f"{len(both)} production(s) have a shared unit and a variant: {both[:8]}")
     if not oracle:
-        found.append("oracle has not been run — python3.11 .claude/scripts/grammar_validate.py")
+        found.append("oracle has not been run — python3.12 .claude/scripts/grammar_validate.py")
     elif oracle.get("missed") or oracle.get("leaked"):
         found.append(
             f"oracle not clean: {oracle.get('missed')} missed, {oracle.get('leaked')} leaked"
@@ -101,8 +101,8 @@ def check(units: dict[str, Json], body: dict[str, Json], digest: str) -> int:
             return 0
         print(f"all {len(units)} unit(s) are verified and the grammar has never been frozen.")
         print(
-            "Run python3.11 .claude/scripts/grammar_validate.py"
-            " then python3.11 .claude/scripts/grammar_freeze.py"
+            "Run python3.12 .claude/scripts/grammar_validate.py"
+            " then python3.12 .claude/scripts/grammar_freeze.py"
         )
         return 1
     current = json.loads(REFERENCE.read_text())
@@ -110,7 +110,7 @@ def check(units: dict[str, Json], body: dict[str, Json], digest: str) -> int:
         print("frozen reference grammar no longer matches the units.")
         print(f"  frozen  {current.get('grammar_sha256', '?')[:16]}")
         print(f"  units   {digest[:16]}")
-        print("Re-run python3.11 .claude/scripts/grammar_freeze.py after the units settle.")
+        print("Re-run python3.12 .claude/scripts/grammar_freeze.py after the units settle.")
         return 1
     print(f"reference grammar current ({len(body)} productions, {digest[:16]})")
     return 0

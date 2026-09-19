@@ -1,7 +1,7 @@
 # .claude/state
 
 Machine-readable work state. Everything here is JSON so it can be validated, diffed
-precisely, and read without prose parsing. Humans get `python3.11 .claude/scripts/state_report.py`.
+precisely, and read without prose parsing. Humans get `python3.12 .claude/scripts/state_report.py`.
 
 `.claude/` is Claude Code's configuration namespace — settings, rules, agents, skills.
 This subdirectory is deliberately separate: it holds _state of the work_, not

@@ -10,7 +10,7 @@ That must match the namespace of the XMI pinned in Tier A. If the Pilot moves
 ahead to a newer metamodel, this fires — which is the whole point of pinning
 two sources instead of one.
 
-    python3.11 scripts/check_namespace_link.py
+    python3.12 scripts/check_namespace_link.py
 """
 
 from __future__ import annotations
@@ -56,7 +56,7 @@ def main(argv: list[str] | None = None) -> int:
         print("no Xtext vendored — check inert")
         return 0
     if not INVENTORY.is_file():
-        print("run python3.11 scripts/extract_productions.py first")
+        print("run python3.12 scripts/extract_productions.py first")
         return 0
 
     namespace = read_target().get("tier_a_omg.namespace", "")

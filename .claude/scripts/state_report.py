@@ -5,7 +5,7 @@
 Deliberately not a generated markdown file: a second stored rendering is a
 second thing that goes stale. JSON is the only stored form.
 
-    python3.11 .claude/scripts/state_report.py
+    python3.12 .claude/scripts/state_report.py
 """
 
 from __future__ import annotations

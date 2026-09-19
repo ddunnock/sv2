@@ -9,8 +9,8 @@ Differences are EXPECTED and permanent — the Xtext carries LL workarounds the
 spec does not. The gate fails on an *unreviewed* difference, never on a
 difference. Reviewing one means adding it to .claude/state/deviations.json.
 
-    python3.11 scripts/grammar_diff.py           write .claude/state/grammar-diff.json
-    python3.11 scripts/grammar_diff.py --check   fail on any unreviewed difference
+    python3.12 scripts/grammar_diff.py           write .claude/state/grammar-diff.json
+    python3.12 scripts/grammar_diff.py --check   fail on any unreviewed difference
 
 Environment: SV2_SPEC_BNF overrides the specification inventory path.
 """
@@ -99,12 +99,12 @@ def main(argv: list[str] | None = None) -> int:
 
     spec_path = Path(os.environ.get("SV2_SPEC_BNF", str(SPEC_INVENTORY)))
     if not INVENTORY.is_file():
-        print("run python3.11 scripts/extract_productions.py first")
+        print("run python3.12 scripts/extract_productions.py first")
         return 0
     if not spec_path.is_file():
         print(f"no specification BNF inventory at {spec_path}")
         print("  Derive it from the pinned Tier B-prime transcription with")
-        print("  python3.11 scripts/extract_bnf.py, or set SV2_SPEC_BNF. Until then the")
+        print("  python3.12 scripts/extract_bnf.py, or set SV2_SPEC_BNF. Until then the")
         print("  differential is inert and the Xtext is the only source — which")
         print("  docs/DERIVATION.md explains is not sufficient on its own.")
         return 0

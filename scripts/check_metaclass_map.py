@@ -23,7 +23,7 @@ Out-of-scope metaclasses are reported, not hidden: an Ecore type appearing where
 a SysML one belongs is a real problem, and it cannot be seen if the line is
 silent.
 
-    python3.11 scripts/check_metaclass_map.py
+    python3.12 scripts/check_metaclass_map.py
 """
 
 from __future__ import annotations
@@ -87,7 +87,7 @@ def main(argv: list[str] | None = None) -> int:
     os.chdir(ROOT)
 
     if not METACLASS_MAP.is_file():
-        print("run python3.11 scripts/extract_productions.py first")
+        print("run python3.12 scripts/extract_productions.py first")
         return 0
     if not any(OMG.glob("*/*.xmi")):
         print("no XMI vendored — check inert")
@@ -115,7 +115,7 @@ def main(argv: list[str] | None = None) -> int:
         print()
         print("Either the Xtext is ahead of the metamodel, or the XMI type extraction missed a")
         print(
-            "packaging form. Check python3.11 scripts/check_namespace_link.py first — a namespace"
+            "packaging form. Check python3.12 scripts/check_namespace_link.py first — a namespace"
         )
         print("mismatch explains this and is the more likely cause.")
         return 1

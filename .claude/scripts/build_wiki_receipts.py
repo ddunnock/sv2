@@ -20,8 +20,8 @@ deviations.json under source_selection.clause_retrieval rather than glossed.
 
 Wikis are located by SV2_SYSML_WIKI / SV2_KERML_WIKI, else the default paths below.
 
-    python3.11 .claude/scripts/build_wiki_receipts.py           write the manifest
-    python3.11 .claude/scripts/build_wiki_receipts.py --check   fail if it is stale
+    python3.12 .claude/scripts/build_wiki_receipts.py           write the manifest
+    python3.12 .claude/scripts/build_wiki_receipts.py --check   fail if it is stale
 """
 
 from __future__ import annotations
@@ -139,7 +139,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.check:
         if not MANIFEST.exists() or MANIFEST.read_text() != _render(manifest):
             print("wiki receipts are stale")
-            print(f"run python3.11 {GENERATED_BY}")
+            print(f"run python3.12 {GENERATED_BY}")
             return 1
         print(f"wiki receipts current ({manifest['counts']['total']} atoms)")
         return 0

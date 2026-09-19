@@ -27,11 +27,11 @@ run the `spec-conformance-reviewer` subagent. Unresolved blocking findings go in
 ## 3. Regenerate everything derived
 
 ```bash
-python3.11 scripts/extract_productions.py
-python3.11 scripts/bnf_coverage.py
-python3.11 scripts/grammar_diff.py
-python3.11 .claude/scripts/index_decisions.py
-python3.11 .claude/scripts/regen_state.py
+python3.12 scripts/extract_productions.py
+python3.12 scripts/bnf_coverage.py
+python3.12 scripts/grammar_diff.py
+python3.12 .claude/scripts/index_decisions.py
+python3.12 .claude/scripts/regen_state.py
 ```
 
 Never hand-write these. The PreToolUse hook blocks them, and the reason is that a
@@ -61,7 +61,7 @@ Only you can write this — it is intent, and intent is not derivable. Edit
 Then validate:
 
 ```bash
-python3.11 .claude/scripts/validate_state.py
+python3.12 .claude/scripts/validate_state.py
 ```
 
 ## 5. Deviations, if any were decided
@@ -74,4 +74,4 @@ reviewed differences from unreviewed ones.
 ## 6. Report
 
 Gate status, what changed, what the next step is. Three sentences. Do not re-summarize the
-session — `python3.11 .claude/scripts/state_report.py` is the summary now.
+session — `python3.12 .claude/scripts/state_report.py` is the summary now.

@@ -14,7 +14,7 @@ import os
 import sys
 from pathlib import Path
 
-NO_STATE = '{"error":"no state file","fix":"run python3.11 .claude/scripts/regen_state.py"}'
+NO_STATE = '{"error":"no state file","fix":"run python3.12 .claude/scripts/regen_state.py"}'
 
 
 def main() -> int:

@@ -18,8 +18,8 @@ Re-running changes nothing. A unit that passes and passed before is written back
 byte-identical: `verified_utc` records when a unit reached verified, not when it
 was last looked at, so re-checking a clean tree produces no diff.
 
-    python3.11 .claude/scripts/grammar_check_unit.py              every derived unit
-    python3.11 .claude/scripts/grammar_check_unit.py PartUsage    named units
+    python3.12 .claude/scripts/grammar_check_unit.py              every derived unit
+    python3.12 .claude/scripts/grammar_check_unit.py PartUsage    named units
 """
 
 from __future__ import annotations

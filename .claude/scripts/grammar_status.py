@@ -2,7 +2,7 @@
 # Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 """Summarise grammar derivation: unit statuses, the oracle result, and the frozen grammar.
 
-python3.11 .claude/scripts/grammar_status.py
+python3.12 .claude/scripts/grammar_status.py
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ def main(argv: list[str] | None = None) -> int:
     if not units:
         print(
             "no units — run .claude/scripts/grammar-preflight.sh"
-            " then python3.11 .claude/scripts/grammar_plan.py"
+            " then python3.12 .claude/scripts/grammar_plan.py"
         )
         return 0
 

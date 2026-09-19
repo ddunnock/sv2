@@ -2,7 +2,7 @@
 # Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 """Check every workspace member against the manifest and layout rules of STD-002-RS.
 
-    python3.11 scripts/check_rust_workspace.py
+    python3.12 scripts/check_rust_workspace.py
 
 Checks (STD-002-RS §13.6 table):
   - every member inherits the workspace lint table (§2 rule 1)

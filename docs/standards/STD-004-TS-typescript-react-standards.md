@@ -1309,9 +1309,9 @@ bun test
 bun run build
 bun run emit-contract
 cd ..
-python3.11 scripts/check_ipc_contract.py
-python3.11 scripts/check_headers.py
-python3.11 scripts/check_standards_config.py
+python3.12 scripts/check_ipc_contract.py
+python3.12 scripts/check_headers.py
+python3.12 scripts/check_standards_config.py
 ```
 
 The order is the build order. `sv2-wasm` is built before the install because the install resolves it as a local path, and a missing `pkg/` fails the install. `sv2-app` is built after the webview by `cargo tauri build`, which reads `app/dist` through `frontendDist` and runs nothing itself ([§2](#2-source-layout), rule 5). Offline, the `wasm32-unknown-unknown` target and the `wasm-bindgen` binary come from the vendored Rust toolchain, like every other tool the gate runs.
