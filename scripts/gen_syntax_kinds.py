@@ -399,6 +399,59 @@ NODES = [
             "`SysML` 8.2.2.17.1 — the metaclass is `FeatureMembership`."
         ),
     ),
+    # The `then X;` that follows an InitialNodeMember: a SuccessionAsUsage whose source
+    # end is written empty and whose target is a ConnectorEnd. One node per production,
+    # so the empty SourceEnd is a node with no children rather than a missing one.
+    (
+        "ActionTargetSuccessionMember",
+        (
+            "`MemberPrefix ownedRelatedElement += ActionTargetSuccession`. "
+            "`SysML` 8.2.2.17.1 — the metaclass is `FeatureMembership`."
+        ),
+    ),
+    (
+        "ActionTargetSuccession",
+        (
+            "`( TargetSuccession | GuardedTargetSuccession | DefaultTargetSuccession ) "
+            "UsageBody`. `SysML` 8.2.2.17.8."
+        ),
+    ),
+    (
+        "TargetSuccession",
+        (
+            "`SourceEndMember 'then' ConnectorEndMember`. `SysML` 8.2.2.17.8 — the "
+            "metaclass is `SuccessionAsUsage`."
+        ),
+    ),
+    (
+        "SourceEndMember",
+        (
+            "`ownedRelatedElement += SourceEnd`. `SysML` 8.2.2.9.3 — the metaclass is "
+            "`EndFeatureMembership`."
+        ),
+    ),
+    (
+        "SourceEnd",
+        (
+            "`( ownedRelationship += OwnedMultiplicity )?`. `SysML` 8.2.2.9.3 — the "
+            "metaclass is `ReferenceUsage`."
+        ),
+    ),
+    (
+        "ConnectorEndMember",
+        (
+            "`ownedRelatedElement += ConnectorEnd`. `SysML` 8.2.2.13.1 — the metaclass "
+            "is `EndFeatureMembership`."
+        ),
+    ),
+    (
+        "ConnectorEnd",
+        (
+            "`OwnedCrossMultiplicityMember? ( NAME REFERENCES )? "
+            "OwnedReferenceSubsetting`. `SysML` 8.2.2.13.1 — the metaclass is "
+            "`ReferenceUsage`."
+        ),
+    ),
     # ConstraintDefinition's shape differing in one keyword, over the body the two share.
     # The metaclass is different — an ActionDefinition that is also a Function (8.3.19.2),
     # where a ConstraintDefinition is a Predicate — so the node is its own and not a

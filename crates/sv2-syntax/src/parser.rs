@@ -1559,7 +1559,7 @@ impl<'a> Parser<'a> {
                 // body. Owns its membership as ReturnParameterMember below does, so it
                 // cannot go through `membership`. Before the result-expression test for
                 // the same reason `return` is: it continues the item run.
-                self.initial_node_member();
+                self.initial_node_item();
             } else if body.admits_return_parameter() && self.at_return_parameter_member() {
                 // CalculationBodyItem's second alternative (SysML 8.2.2.19). Before the
                 // result-expression test below, because `return` is where the item run
@@ -4684,6 +4684,186 @@ impl<'a> Parser<'a> {
         self.expect_keyword("first");
         self.qualified_name();
         self.relationship_body();
+        self.finish_node();
+    }
+
+    /// `ActionBodyItem`'s second alternative, whole:
+    /// `InitialNodeMember ActionTargetSuccessionMember*` (`SysML` 8.2.2.17.1).
+    ///
+    /// ONE item, so the `then X;` members are read here, directly after the `first`,
+    /// and are not an arm of `body_elements`: the BNF admits them only as this suffix
+    /// (or an `ActionBehaviorMember`'s, unimplemented). An attribute between the two
+    /// ends the item and the `then` after it is reported —
+    /// tests/rejection/target-succession-member-does-not-skip-a-non-behavior-item.sysml.
+    /// Which element a `then` connects FROM is 7.17.4's "nearest occurrence lexically
+    /// previous to the then" (wiki receipt 339ef468), a question for resolution, not
+    /// for the parser. No node of its own: `ActionBodyItem` is not one.
+    fn initial_node_item(&mut self) {
+        self.initial_node_member();
+        while self.at_action_target_succession_member() {
+            self.action_target_succession_member();
+        }
+    }
+
+    /// Whether an `ActionTargetSuccessionMember` in its `TargetSuccession` form starts
+    /// here.
+    ///
+    /// `then NAME` does not say so. `SourceSuccessionMember ActionBehaviorMember`, the
+    /// third `ActionBodyItem` alternative (`SysML` 8.2.2.17.1), also opens on `then`, and
+    /// one of its behaviours, `SendNode`, opens on an optional `ActionUsageDeclaration`
+    /// — a bare `Identification` — before `send` (8.2.2.17.4). So `then s send x;` has
+    /// a NAME after its `then` and is not this production. What separates them is the
+    /// end: only this one closes the `ConnectorEnd` with `UsageBody`, which opens on `;`
+    /// or `{` (8.2.2.6.1). The whole `ConnectorEnd` is therefore looked past, walked as
+    /// `connector_end` reads it, and the token after it decides.
+    ///
+    /// `then fork;` and `then action a;` are declined sooner: `fork` and `action` are
+    /// reserved, so not a NAME. `GuardedTargetSuccession` (`if`),
+    /// `DefaultTargetSuccession` (`else`) and a leading `OwnedCrossMultiplicityMember`
+    /// (`[`) are declined for the same reason and are unimplemented, so each is left to
+    /// the enclosing body's recovery and reported.
+    fn at_action_target_succession_member(&self) -> bool {
+        let first = usize::from(self.at_visibility());
+        if !self.nth_is_keyword(first, "then") {
+            return false;
+        }
+        let mut n = first + 1;
+        // ( NAME REFERENCES )?, REFERENCES = '::>' | 'references' (8.2.2.1.2).
+        if self.nth_is_name(n)
+            && (self.nth_is(n + 1, SyntaxKind::ColonColonGt)
+                || self.nth_is_keyword(n + 1, "references"))
+        {
+            n += 2;
+        }
+        // OwnedReferenceSubsetting: a QualifiedName, then OwnedFeatureChain's further
+        // links, each as `owned_feature_chain` takes it (8.2.2.6.5).
+        let Some(mut n) = self.skip_qualified_name(n) else {
+            return false;
+        };
+        while self.nth_is(n, SyntaxKind::Dot) && self.nth_is_name(n + 1) {
+            let Some(next) = self.skip_qualified_name(n + 1) else {
+                return false;
+            };
+            n = next;
+        }
+        self.nth_is(n, SyntaxKind::Semicolon) || self.nth_is(n, SyntaxKind::LBrace)
+    }
+
+    // production: ActionTargetSuccessionMember
+    //
+    // ActionTargetSuccessionMember : FeatureMembership =
+    //     MemberPrefix ownedRelatedElement += ActionTargetSuccession  (SysML 8.2.2.17.1)
+    //
+    // `then X;`: the TARGET of a succession written apart from its source, which the
+    // InitialNodeMember before it names (SysML 7.17.4). Like InitialNodeMember it is a
+    // membership of its own, so it is dispatched from `body_elements` and not through
+    // `membership`, and only as the suffix of the item that precedes it.
+    //
+    // Marked although ActionTargetSuccession is not: this production's own body is read
+    // in full, as UsageBody is marked over a partial DefinitionBodyItem.
+    fn action_target_succession_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ActionTargetSuccessionMember);
+        self.member_prefix();
+        self.action_target_succession();
+        self.finish_node();
+    }
+
+    // ActionTargetSuccession : Usage =
+    //     ( TargetSuccession | GuardedTargetSuccession | DefaultTargetSuccession )
+    //     UsageBody                                                (SysML 8.2.2.17.8)
+    //
+    // NOT marked: of its three alternatives only TargetSuccession is implemented, and
+    // `at_action_target_succession_member` admits only that one.
+    fn action_target_succession(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ActionTargetSuccession);
+        self.target_succession();
+        self.usage_body();
+        self.finish_node();
+    }
+
+    // production: TargetSuccession
+    //
+    // TargetSuccession : SuccessionAsUsage =
+    //     ownedRelationship += SourceEndMember
+    //     'then' ownedRelationship += ConnectorEndMember            (SysML 8.2.2.17.8)
+    //
+    // The source end comes BEFORE the `then` and is written empty — `SourceEnd` is only
+    // `OwnedMultiplicity?` — because the source is not named here at all: it is the
+    // preceding InitialNodeMember's feature (7.17.4), connected in resolution.
+    fn target_succession(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TargetSuccession);
+        self.source_end_member();
+        self.expect_keyword("then");
+        self.connector_end_member();
+        self.finish_node();
+    }
+
+    // production: SourceEndMember
+    //
+    // SourceEndMember : EndFeatureMembership =
+    //     ownedRelatedElement += SourceEnd                          (SysML 8.2.2.9.3)
+    //
+    // SourceEnd : ReferenceUsage =
+    //     ( ownedRelationship += OwnedMultiplicity )?               (SysML 8.2.2.9.3)
+    //
+    // Both are built from no tokens — the one node shape in this parser with nothing in
+    // it but what MemberPrefix already has. Trivia is NOT eaten first: an empty node that
+    // swallowed the whitespace before the `then` would put it inside an end the author
+    // never wrote.
+    //
+    // SourceEnd is NOT marked. Its multiplicity is written BEFORE the `then` —
+    // `first start; [1] then a;` is grammatical — and `at_action_target_succession_member`
+    // wants `then` first, so that form is declined and reported, not read. Only the empty
+    // alternative is. SourceEndMember is marked over it as ConnectorEndMember is over a
+    // partial ConnectorEnd: its own body is the one reference, read.
+    fn source_end_member(&mut self) {
+        self.start_node(SyntaxKind::SourceEndMember);
+        self.start_node(SyntaxKind::SourceEnd);
+        self.finish_node();
+        self.finish_node();
+    }
+
+    // production: ConnectorEndMember
+    //
+    // ConnectorEndMember : EndFeatureMembership =
+    //     ownedRelatedElement += ConnectorEnd                       (SysML 8.2.2.13.1)
+    //
+    // The SysML reading. KerML has a production of the same name (8.2.5.5.1) over its
+    // own ConnectorEnd, and coverage counts by name, so this marker counts both: KerML's
+    // connectors are unimplemented and this does NOT read them. The same name collision
+    // OwnedMultiplicity and OwnedReferenceSubsetting carry (ADR-0015).
+    fn connector_end_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ConnectorEndMember);
+        self.connector_end();
+        self.finish_node();
+    }
+
+    // ConnectorEnd : ReferenceUsage =
+    //     ( ownedRelationship += OwnedCrossMultiplicityMember )?
+    //     ( declaredName = NAME REFERENCES )?
+    //     ownedRelationship += OwnedReferenceSubsetting             (SysML 8.2.2.13.1)
+    //
+    // NOT marked: OwnedCrossMultiplicityMember is unimplemented, so a leading `[` is not
+    // read. The other two parts are, and `at_action_target_succession_member` walks them
+    // in this order.
+    fn connector_end(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ConnectorEnd);
+        if self.at_name()
+            && (self.nth_is(1, SyntaxKind::ColonColonGt) || self.nth_is_keyword(1, "references"))
+        {
+            self.bump();
+            self.terminal(
+                SyntaxKind::ColonColonGt,
+                "references",
+                "`::>` or `references`",
+            );
+        }
+        self.owned_reference_subsetting();
         self.finish_node();
     }
 

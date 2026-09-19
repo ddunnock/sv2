@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-19T12:43:19Z",
+    "regenerated_utc": "2026-09-19T13:56:46Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 558,
-      "implemented": 167,
-      "unimplemented": 391,
+      "implemented": 171,
+      "unimplemented": 387,
       "absent": 0,
-      "percent": 29.9
+      "percent": 30.6
     },
     "tests": {
-      "unit": 333,
+      "unit": 341,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 106,
+      "negative_cases": 109,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "dde6245 Run the script tests from the project .venv, and keep the gate runnable without one",
+      "b5e047b Close the session: an initial node, and a gate that checked nothing",
       "752ff41 Read an initial node, and buy nothing with it, as predicted",
       "312fcfe Stop asserting that `first start;` is rejected: it is well-formed SysML",
       "b3ae9e7 Untrack two retired units that are one file on disk, and gate on it",
       "193e9f7 Run the scripts on python3.12, as STD-001-PY already planned",
       "df4e4ba Close the session: two misquoted metaclasses, and a corrected count",
-      "6ecf8c1 Read an invocation, and move both languages for once",
-      "081d85a Correct two claims the conformance review found false",
-      "8565c00 Read a returned parameter, and move acceptance by one"
+      "6ecf8c1 Read an invocation, and move both languages for once"
     ]
   },
   "authored": {

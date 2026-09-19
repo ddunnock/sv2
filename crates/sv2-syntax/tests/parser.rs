@@ -1065,6 +1065,209 @@ fn a_succession_that_opens_on_first_is_not_an_initial_node_member() {
     assert_eq!(nodes_named(&tree, "InitialNodeMember"), 0, "{tree}");
 }
 
+// -- ActionTargetSuccessionMember, SysML 8.2.2.17.1 / 8.2.2.17.8 -------------------
+//
+// ActionTargetSuccessionMember : FeatureMembership =
+//     MemberPrefix ownedRelatedElement += ActionTargetSuccession        (8.2.2.17.1)
+// ActionTargetSuccession = ( TargetSuccession | GuardedTargetSuccession
+//                          | DefaultTargetSuccession ) UsageBody        (8.2.2.17.8)
+// TargetSuccession : SuccessionAsUsage =
+//     SourceEndMember 'then' ConnectorEndMember                         (8.2.2.17.8)
+// SourceEnd = OwnedMultiplicity?                                        (8.2.2.9.3)
+// ConnectorEnd = OwnedCrossMultiplicityMember? ( NAME REFERENCES )?
+//                OwnedReferenceSubsetting                               (8.2.2.13.1)
+//
+// Only the TargetSuccession form: GuardedTargetSuccession (`then` behind `if`) and
+// DefaultTargetSuccession (`else`) are unimplemented, as is OwnedCrossMultiplicityMember.
+// And only after InitialNodeMember — the other predecessor ActionBodyItem gives it,
+// ActionBehaviorMember, is unimplemented.
+
+#[test]
+fn a_target_succession_reads_the_corpus_form() {
+    // SysML 7.17.4's own example, `first action1; then action2;` (wiki receipt 339ef468):
+    // "the target of a succession may be specified separately from the source by using
+    // the keyword then followed by a qualified name or feature chain for the target
+    // action usage". NO corpus file writes this exact shape — a bare-name `then Y;`
+    // directly after `first X;` — measured over all ten files with a `first X;`: every
+    // `then` after one opens on a keyword (`then merge m;`, `then fork;`), which is
+    // SourceSuccessionMember ActionBehaviorMember, not this.
+    let spec = render(&parse_accepted("action def A { first action1; then action2; }").syntax());
+    assert_eq!(
+        nodes_named(&spec, "ActionTargetSuccessionMember"),
+        1,
+        "{spec}"
+    );
+    let def = render(&parse_accepted("action def A { first start; then a; }").syntax());
+    assert_eq!(
+        nodes_named(&def, "ActionTargetSuccessionMember"),
+        1,
+        "{def}"
+    );
+    let usage = render(&parse_accepted("action a { first start; then b; }").syntax());
+    assert_eq!(
+        nodes_named(&usage, "ActionTargetSuccessionMember"),
+        1,
+        "{usage}"
+    );
+}
+
+#[test]
+fn a_target_succession_owns_exactly_what_the_productions_write() {
+    let tree = render(&parse_accepted("action def A { first start; then a; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "ActionTargetSuccessionMember"),
+        ["MemberPrefix", "ActionTargetSuccession"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "ActionTargetSuccession"),
+        ["TargetSuccession", "UsageBody"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "TargetSuccession"),
+        ["SourceEndMember", "KwThen", "ConnectorEndMember"],
+        "{tree}"
+    );
+    // The source end is WRITTEN EMPTY: SourceEnd is `OwnedMultiplicity?` and nothing
+    // stands before the `then`. The node is there with nothing in it, the same honest
+    // shape as an empty MemberPrefix.
+    assert_eq!(
+        child_kinds(&tree, "SourceEndMember"),
+        ["SourceEnd"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "SourceEnd"),
+        Vec::<String>::new(),
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "ConnectorEndMember"),
+        ["ConnectorEnd"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "ConnectorEnd"),
+        ["OwnedReferenceSubsetting"],
+        "{tree}"
+    );
+    // The member is its own FeatureMembership, a sibling of the InitialNodeMember and
+    // not inside it: ActionBodyItem writes them one after the other.
+    assert_eq!(
+        child_kinds(&tree, "InitialNodeMember"),
+        [
+            "MemberPrefix",
+            "KwFirst",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{tree}"
+    );
+}
+
+#[test]
+fn target_successions_repeat_after_one_initial_node_member() {
+    // `ActionTargetSuccessionMember*` (8.2.2.17.1).
+    let tree =
+        render(&parse_accepted("action def A { first start; then a; then b; then c; }").syntax());
+    assert_eq!(nodes_named(&tree, "InitialNodeMember"), 1, "{tree}");
+    assert_eq!(
+        nodes_named(&tree, "ActionTargetSuccessionMember"),
+        3,
+        "{tree}"
+    );
+}
+
+#[test]
+fn a_target_succession_takes_every_form_its_productions_state() {
+    // A feature chain: OwnedReferenceSubsetting's second alternative (8.2.2.6.5), and
+    // 7.17.4 says `then` takes "a qualified name or feature chain". The corpus's
+    // `then returnack.done;` is NOT evidence here: it continues a `succession first …`,
+    // a different production.
+    let chain = render(&parse_accepted("action def A { first start; then a.done; }").syntax());
+    assert_eq!(nodes_named(&chain, "OwnedFeatureChain"), 1, "{chain}");
+    // A qualified name, a visibility (MemberPrefix), and UsageBody's braced form.
+    parse_accepted("action def A { first start; then P::a; }");
+    parse_accepted("action def A { first start; private then a; }");
+    parse_accepted("action def A { first start; then a { } }");
+    // ConnectorEnd's `( NAME REFERENCES )?`, both spellings of REFERENCES (8.2.2.1.2).
+    // The corpus writes neither; the production states them.
+    let named = render(&parse_accepted("action def A { first start; then e ::> a; }").syntax());
+    assert_eq!(
+        child_kinds(&named, "ConnectorEnd"),
+        ["BasicName", "ColonColonGt", "OwnedReferenceSubsetting"],
+        "{named}"
+    );
+    parse_accepted("action def A { first start; then e references a; }");
+    // CalculationBodyItem reaches ActionBodyItem (8.2.2.19), and the trailing
+    // result expression still follows the item run.
+    let calc = render(&parse_accepted("calc def C { first start; then a; x + 1 }").syntax());
+    assert_eq!(
+        nodes_named(&calc, "ActionTargetSuccessionMember"),
+        1,
+        "{calc}"
+    );
+    assert_eq!(nodes_named(&calc, "ResultExpressionMember"), 1, "{calc}");
+}
+
+#[test]
+fn a_target_succession_keeps_every_byte() {
+    // Invariant 1: the empty SourceEnd is built from no tokens, and the trivia around
+    // it must still reach the tree in order.
+    let source = "action def A {\n\tfirst start; // s\n\n\tthen /* t */ a . done ;\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
+#[test]
+fn a_target_succession_follows_an_initial_node_member_and_nothing_else() {
+    // The BNF admits ActionTargetSuccessionMember only directly after an
+    // InitialNodeMember or an ActionBehaviorMember (8.2.2.17.1). 7.17.4's prose — the
+    // source is "the nearest occurrence lexically previous to the then" — decides which
+    // element is the source, not what parses; that is resolution, not syntax.
+    // Held as files by tests/rejection/target-succession-member-*.sysml.
+    parse_rejected("action def A { then a; }");
+    parse_rejected("action def A { first start; attribute x; then a; }");
+    // And not outside an action body at all.
+    parse_rejected("part def V { first start; then a; }");
+}
+
+#[test]
+fn a_target_succession_needs_its_target_and_its_body() {
+    parse_rejected("action def A { first start; then; }");
+    parse_rejected("action def A { first start; then a }");
+}
+
+#[test]
+fn a_then_that_opens_another_production_is_not_a_target_succession() {
+    // Three productions put `then` before something that is not a ConnectorEnd
+    // followed by UsageBody, and none is implemented, so each is rejected — but WITHOUT
+    // an ActionTargetSuccessionMember in the tree, because the text is not one.
+    //
+    // `then fork;` / `then action a;`: SourceSuccessionMember ActionBehaviorMember, the
+    // third ActionBodyItem alternative (8.2.2.17.1). `fork` is reserved, so not a NAME.
+    // `then s send x;`: the same, over SendNode, whose ActionUsageDeclaration opens on a
+    // bare Identification (8.2.2.17.4) — so `then NAME` alone does not decide it, and
+    // the lookahead must reach the UsageBody.
+    for source in [
+        "action def A { first start; then fork; }",
+        "action def A { first start; then action a; }",
+        "action def A { first start; then s send x; }",
+    ] {
+        let tree = render(&parse_rejected(source).syntax());
+        assert_eq!(
+            nodes_named(&tree, "ActionTargetSuccessionMember"),
+            0,
+            "{source}\n{tree}"
+        );
+        assert_eq!(
+            nodes_named(&tree, "InitialNodeMember"),
+            1,
+            "{source}\n{tree}"
+        );
+    }
+}
+
 // -- FeatureChainExpression, KerML 8.2.5.8.2 --------------------------------------
 //
 // FeatureChainExpression = NonFeatureChainPrimaryArgumentMember '.' FeatureChainMember

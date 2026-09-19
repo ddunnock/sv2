@@ -621,6 +621,20 @@ pub enum SyntaxKind {
     ReturnParameterMember,
     /// `MemberPrefix 'first' memberFeature = [QualifiedName] RelationshipBody`. `SysML` 8.2.2.17.1 — the metaclass is `FeatureMembership`.
     InitialNodeMember,
+    /// `MemberPrefix ownedRelatedElement += ActionTargetSuccession`. `SysML` 8.2.2.17.1 — the metaclass is `FeatureMembership`.
+    ActionTargetSuccessionMember,
+    /// `( TargetSuccession | GuardedTargetSuccession | DefaultTargetSuccession ) UsageBody`. `SysML` 8.2.2.17.8.
+    ActionTargetSuccession,
+    /// `SourceEndMember 'then' ConnectorEndMember`. `SysML` 8.2.2.17.8 — the metaclass is `SuccessionAsUsage`.
+    TargetSuccession,
+    /// `ownedRelatedElement += SourceEnd`. `SysML` 8.2.2.9.3 — the metaclass is `EndFeatureMembership`.
+    SourceEndMember,
+    /// `( ownedRelationship += OwnedMultiplicity )?`. `SysML` 8.2.2.9.3 — the metaclass is `ReferenceUsage`.
+    SourceEnd,
+    /// `ownedRelatedElement += ConnectorEnd`. `SysML` 8.2.2.13.1 — the metaclass is `EndFeatureMembership`.
+    ConnectorEndMember,
+    /// `OwnedCrossMultiplicityMember? ( NAME REFERENCES )? OwnedReferenceSubsetting`. `SysML` 8.2.2.13.1 — the metaclass is `ReferenceUsage`.
+    ConnectorEnd,
     /// `OccurrenceDefinitionPrefix 'calc' 'def' DefinitionDeclaration CalculationBody`. `SysML` 8.2.2.19.
     CalculationDefinition,
     /// `OccurrenceDefinitionPrefix 'action' 'def' DefinitionDeclaration ActionBody`. `SysML` 8.2.2.17.1.
@@ -1151,6 +1165,13 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ConstraintDefinition,
     SyntaxKind::ReturnParameterMember,
     SyntaxKind::InitialNodeMember,
+    SyntaxKind::ActionTargetSuccessionMember,
+    SyntaxKind::ActionTargetSuccession,
+    SyntaxKind::TargetSuccession,
+    SyntaxKind::SourceEndMember,
+    SyntaxKind::SourceEnd,
+    SyntaxKind::ConnectorEndMember,
+    SyntaxKind::ConnectorEnd,
     SyntaxKind::CalculationDefinition,
     SyntaxKind::ActionDefinition,
     SyntaxKind::ActionBody,
