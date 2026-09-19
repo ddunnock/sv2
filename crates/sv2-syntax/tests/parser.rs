@@ -1602,31 +1602,27 @@ fn a_then_that_opens_another_production_is_not_a_target_succession() {
     // by UsageBody, and are not implemented, so each is rejected — but WITHOUT an
     // ActionTargetSuccessionMember in the tree, because the text is not one.
     //
-    // `then fork;`: SourceSuccessionMember ActionBehaviorMember, the third ActionBodyItem
-    // alternative (8.2.2.17.1), over a ForkNode. `fork` is reserved, so not a NAME.
-    // `then s send x;`: the same, over SendNode, whose ActionUsageDeclaration opens on a
-    // bare Identification (8.2.2.17.4) — so `then NAME` alone does not decide it, and
-    // the lookahead must reach the UsageBody.
+    // `then s send x;`: SourceSuccessionMember ActionBehaviorMember, the third
+    // ActionBodyItem alternative (8.2.2.17.1), over a SendNode, whose
+    // ActionUsageDeclaration opens on a bare Identification (8.2.2.17.4) — so `then NAME`
+    // alone does not decide it, and the lookahead must reach the UsageBody.
     //
     // `then action a;` was here too, and is not: it is the same alternative over an
-    // ActionUsage, well-formed SysML, and the next commit implements it. Its test there
-    // asserts it is accepted AND builds no ActionTargetSuccessionMember.
-    for source in [
-        "action def A { first start; then fork; }",
-        "action def A { first start; then s send x; }",
-    ] {
-        let tree = render(&parse_rejected(source).syntax());
-        assert_eq!(
-            nodes_named(&tree, "ActionTargetSuccessionMember"),
-            0,
-            "{source}\n{tree}"
-        );
-        assert_eq!(
-            nodes_named(&tree, "InitialNodeMember"),
-            1,
-            "{source}\n{tree}"
-        );
-    }
+    // ActionUsage, well-formed SysML, now implemented and asserted accepted with no
+    // ActionTargetSuccessionMember. `then fork;` was here, and is not, for the same
+    // reason over a ForkNode (8.2.2.17.3); the next commit implements it.
+    let source = "action def A { first start; then s send x; }";
+    let tree = render(&parse_rejected(source).syntax());
+    assert_eq!(
+        nodes_named(&tree, "ActionTargetSuccessionMember"),
+        0,
+        "{source}\n{tree}"
+    );
+    assert_eq!(
+        nodes_named(&tree, "InitialNodeMember"),
+        1,
+        "{source}\n{tree}"
+    );
 }
 
 // -- SourceSuccessionMember, SysML 8.2.2.9.3 / 8.2.2.6.1 / 8.2.2.17.1 --------------
