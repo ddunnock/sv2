@@ -5,7 +5,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { fixtureTransport } from "@/ipc/fixture-client";
-import { THERMAL_CONTROL } from "@/ipc/fixture-thermal-control";
+import { THERMAL_CONTROL } from "@/ipc/generated/thermal-control";
 import { createModelQueries, type Transport } from "@/ipc/model-queries";
 import { ok } from "@/model/result";
 

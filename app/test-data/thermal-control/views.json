@@ -1,0 +1,100 @@
+{
+  "kind": "ready",
+  "data": [
+    {
+      "id": "willow-beacon-551",
+      "name": "thermalOverview",
+      "kind": "general",
+      "exposes": [
+        {
+          "kind": "namespace",
+          "target": {
+            "kind": "resolved",
+            "target": {
+              "kind": "petname",
+              "id": "cedar-harbor-208"
+            },
+            "name": "ThermalControl"
+          },
+          "isRecursive": false
+        }
+      ]
+    },
+    {
+      "id": "birch-signal-612",
+      "name": "subsystemWiring",
+      "kind": "interconnection",
+      "exposes": [
+        {
+          "kind": "namespace",
+          "target": {
+            "kind": "resolved",
+            "target": {
+              "kind": "petname",
+              "id": "slate-orchard-405"
+            },
+            "name": "thermalSubsystem"
+          },
+          "isRecursive": false
+        }
+      ]
+    },
+    {
+      "id": "copper-thistle-733",
+      "name": "regulationFlow",
+      "kind": "action-flow",
+      "exposes": [
+        {
+          "kind": "namespace",
+          "target": {
+            "kind": "resolved",
+            "target": {
+              "kind": "petname",
+              "id": "coral-dune-494"
+            },
+            "name": "regulate"
+          },
+          "isRecursive": false
+        }
+      ]
+    },
+    {
+      "id": "ember-canyon-844",
+      "name": "heaterModes",
+      "kind": "state-transition",
+      "exposes": [
+        {
+          "kind": "namespace",
+          "target": {
+            "kind": "resolved",
+            "target": {
+              "kind": "petname",
+              "id": "pine-valley-382"
+            },
+            "name": "HeaterModes"
+          },
+          "isRecursive": false
+        }
+      ]
+    },
+    {
+      "id": "frost-ledger-955",
+      "name": "requirementsGrid",
+      "kind": "grid",
+      "exposes": [
+        {
+          "kind": "namespace",
+          "target": {
+            "kind": "resolved",
+            "target": {
+              "kind": "petname",
+              "id": "onyx-prairie-160"
+            },
+            "name": "Requirements"
+          },
+          "isRecursive": false
+        }
+      ]
+    }
+  ]
+}

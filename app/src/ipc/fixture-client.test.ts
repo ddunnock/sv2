@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { type ElementHandle, ElementHandleSchema, ViewIdSchema } from "@/contract/element-id";
 
 import { fixtureTransport } from "./fixture-client";
-import { THERMAL_CONTROL } from "./fixture-thermal-control";
+import { THERMAL_CONTROL } from "./generated/thermal-control";
 import { createModelQueries } from "./model-queries";
 
 /** The fixture, answered through the same path a backend reply takes. */

@@ -1,0 +1,264 @@
+{
+  "kind": "ready",
+  "data": {
+    "summary": {
+      "handle": {
+        "kind": "petname",
+        "id": "river-lantern-117"
+      },
+      "metaclass": "PartDefinition",
+      "name": "ThermalController",
+      "shortName": null,
+      "qualifiedName": "ThermalControl::ThermalController"
+    },
+    "facet": {
+      "kind": "type",
+      "isAbstract": false,
+      "specializes": [
+        {
+          "handle": {
+            "kind": "derived",
+            "hash": "a41f0c9e"
+          },
+          "metaclass": "Subclassification",
+          "direction": "outgoing",
+          "other": {
+            "kind": "resolved",
+            "target": {
+              "kind": "library",
+              "uuid": "4f6a2b8c-1d3e-5f7a-9b0c-2d4e6f8a0b1c"
+            },
+            "name": "Part"
+          },
+          "isImplied": true
+        }
+      ]
+    },
+    "owner": {
+      "kind": "resolved",
+      "target": {
+        "kind": "petname",
+        "id": "cedar-harbor-208"
+      },
+      "name": "ThermalControl"
+    },
+    "visibility": "public",
+    "location": {
+      "file": "model/ThermalControl.sysml",
+      "span": {
+        "start": 212,
+        "end": 598
+      }
+    },
+    "documentation": [
+      "Closed-loop regulator for panel temperature."
+    ],
+    "ownedFeatures": [
+      {
+        "handle": {
+          "kind": "petname",
+          "id": "birch-ember-130"
+        },
+        "metaclass": "AttributeUsage",
+        "name": "setpoint",
+        "types": [
+          {
+            "kind": "resolved",
+            "target": {
+              "kind": "library",
+              "uuid": "2d7e1c40-5a3b-5f6e-9a1d-4c8b7e6f5a21"
+            },
+            "name": "TemperatureValue"
+          }
+        ],
+        "multiplicity": {
+          "lower": null,
+          "upper": {
+            "kind": "literal",
+            "value": 1
+          }
+        },
+        "origin": {
+          "kind": "owned"
+        }
+      },
+      {
+        "handle": {
+          "kind": "petname",
+          "id": "birch-ember-131"
+        },
+        "metaclass": "AttributeUsage",
+        "name": "tolerance",
+        "types": [
+          {
+            "kind": "resolved",
+            "target": {
+              "kind": "library",
+              "uuid": "7b3f9e12-0c4d-5a8b-8e2f-1a6d3c9b4e07"
+            },
+            "name": "Real"
+          }
+        ],
+        "multiplicity": {
+          "lower": null,
+          "upper": {
+            "kind": "literal",
+            "value": 1
+          }
+        },
+        "origin": {
+          "kind": "owned"
+        }
+      },
+      {
+        "handle": {
+          "kind": "petname",
+          "id": "birch-ember-132"
+        },
+        "metaclass": "PortUsage",
+        "name": "cmdIn",
+        "types": [
+          {
+            "kind": "resolved",
+            "target": {
+              "kind": "petname",
+              "id": "jade-anchor-615"
+            },
+            "name": "CommandPort"
+          }
+        ],
+        "multiplicity": {
+          "lower": null,
+          "upper": {
+            "kind": "literal",
+            "value": 1
+          }
+        },
+        "origin": {
+          "kind": "owned"
+        }
+      },
+      {
+        "handle": {
+          "kind": "petname",
+          "id": "birch-ember-133"
+        },
+        "metaclass": "PortUsage",
+        "name": "heaterOut",
+        "types": [
+          {
+            "kind": "resolved",
+            "target": {
+              "kind": "petname",
+              "id": "ivory-gate-504"
+            },
+            "name": "PowerPort"
+          }
+        ],
+        "multiplicity": {
+          "lower": null,
+          "upper": {
+            "kind": "literal",
+            "value": 1
+          }
+        },
+        "origin": {
+          "kind": "owned"
+        }
+      },
+      {
+        "handle": {
+          "kind": "petname",
+          "id": "birch-ember-134"
+        },
+        "metaclass": "PortUsage",
+        "name": "sensorIn",
+        "types": [
+          {
+            "kind": "resolved",
+            "target": {
+              "kind": "derived",
+              "hash": "5c2e8a17"
+            },
+            "name": "~TempPort"
+          }
+        ],
+        "multiplicity": {
+          "lower": null,
+          "upper": {
+            "kind": "literal",
+            "value": 1
+          }
+        },
+        "origin": {
+          "kind": "owned"
+        }
+      },
+      {
+        "handle": {
+          "kind": "petname",
+          "id": "birch-ember-135"
+        },
+        "metaclass": "PerformActionUsage",
+        "name": "regulate",
+        "types": [
+          {
+            "kind": "resolved",
+            "target": {
+              "kind": "petname",
+              "id": "coral-dune-493"
+            },
+            "name": "RegulateTemperature"
+          }
+        ],
+        "multiplicity": {
+          "lower": null,
+          "upper": {
+            "kind": "literal",
+            "value": 1
+          }
+        },
+        "origin": {
+          "kind": "owned"
+        }
+      }
+    ],
+    "relationships": [
+      {
+        "handle": {
+          "kind": "petname",
+          "id": "hollow-signal-771"
+        },
+        "metaclass": "SatisfyRequirementUsage",
+        "direction": "outgoing",
+        "other": {
+          "kind": "resolved",
+          "target": {
+            "kind": "petname",
+            "id": "sage-harbor-271"
+          },
+          "name": "TemperatureStability"
+        },
+        "isImplied": false
+      },
+      {
+        "handle": {
+          "kind": "derived",
+          "hash": "e09b33d4"
+        },
+        "metaclass": "FeatureTyping",
+        "direction": "incoming",
+        "other": {
+          "kind": "resolved",
+          "target": {
+            "kind": "petname",
+            "id": "slate-orchard-406"
+          },
+          "name": "controller"
+        },
+        "isImplied": false
+      }
+    ],
+    "diagnostics": []
+  }
+}

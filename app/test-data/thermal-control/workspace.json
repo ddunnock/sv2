@@ -1,0 +1,71 @@
+{
+  "kind": "ready",
+  "data": {
+    "name": "ThermalControl",
+    "files": [
+      {
+        "path": "model/ThermalControl.sysml",
+        "language": "sysml",
+        "diagnostics": {
+          "error": 1,
+          "warning": 0,
+          "info": 0
+        }
+      },
+      {
+        "path": "model/Interfaces.sysml",
+        "language": "sysml",
+        "diagnostics": {
+          "error": 0,
+          "warning": 0,
+          "info": 0
+        }
+      },
+      {
+        "path": "model/Requirements.sysml",
+        "language": "sysml",
+        "diagnostics": {
+          "error": 0,
+          "warning": 0,
+          "info": 0
+        }
+      },
+      {
+        "path": "model/Behavior.sysml",
+        "language": "sysml",
+        "diagnostics": {
+          "error": 0,
+          "warning": 0,
+          "info": 0
+        }
+      },
+      {
+        "path": "library/Units.kerml",
+        "language": "kerml",
+        "diagnostics": {
+          "error": 0,
+          "warning": 0,
+          "info": 0
+        }
+      },
+      {
+        "path": "library/Signals.kerml",
+        "language": "kerml",
+        "diagnostics": {
+          "error": 0,
+          "warning": 0,
+          "info": 0
+        }
+      },
+      {
+        "path": "views/Views.sysml",
+        "language": "sysml",
+        "diagnostics": {
+          "error": 0,
+          "warning": 0,
+          "info": 0
+        }
+      }
+    ]
+  }
+}

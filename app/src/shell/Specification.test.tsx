@@ -5,7 +5,7 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 
 import { type ElementHandle, ElementHandleSchema } from "@/contract/element-id";
 import { fixtureTransport } from "@/ipc/fixture-client";
-import { THERMAL_CONTROL } from "@/ipc/fixture-thermal-control";
+import { THERMAL_CONTROL } from "@/ipc/generated/thermal-control";
 import { createModelQueries } from "@/ipc/model-queries";
 import { Specification } from "./Specification";
 import { ServicesProvider } from "./services";

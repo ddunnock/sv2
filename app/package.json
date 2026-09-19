@@ -15,7 +15,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
     "lint": "biome ci --error-on-warnings .",
     "dev": "bun tools/dev.ts",
-    "build": "bun tools/build.ts"
+    "build": "bun tools/build.ts",
+    "fixtures": "bun tools/embed-fixtures.ts"
   },
   "trustedDependencies": [],
   "dependencies": {

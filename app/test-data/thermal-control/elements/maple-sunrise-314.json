@@ -1,0 +1,170 @@
+{
+  "kind": "ready",
+  "data": {
+    "summary": {
+      "handle": {
+        "kind": "petname",
+        "id": "maple-sunrise-314"
+      },
+      "metaclass": "PartDefinition",
+      "name": "Heater",
+      "shortName": null,
+      "qualifiedName": "ThermalControl::Heater"
+    },
+    "facet": {
+      "kind": "type",
+      "isAbstract": false,
+      "specializes": [
+        {
+          "handle": {
+            "kind": "derived",
+            "hash": "a41f0c9e"
+          },
+          "metaclass": "Subclassification",
+          "direction": "outgoing",
+          "other": {
+            "kind": "resolved",
+            "target": {
+              "kind": "library",
+              "uuid": "4f6a2b8c-1d3e-5f7a-9b0c-2d4e6f8a0b1c"
+            },
+            "name": "Part"
+          },
+          "isImplied": true
+        }
+      ]
+    },
+    "owner": {
+      "kind": "resolved",
+      "target": {
+        "kind": "petname",
+        "id": "cedar-harbor-208"
+      },
+      "name": "ThermalControl"
+    },
+    "visibility": "public",
+    "location": {
+      "file": "model/ThermalControl.sysml",
+      "span": {
+        "start": 602,
+        "end": 761
+      }
+    },
+    "documentation": [
+      "Resistive film heater."
+    ],
+    "ownedFeatures": [
+      {
+        "handle": {
+          "kind": "petname",
+          "id": "quill-harbor-240"
+        },
+        "metaclass": "AttributeUsage",
+        "name": "maxPower",
+        "types": [
+          {
+            "kind": "resolved",
+            "target": {
+              "kind": "library",
+              "uuid": "c1a8e5d3-9f2b-5c4e-b7a6-3e0d1f8c2b94"
+            },
+            "name": "PowerValue"
+          }
+        ],
+        "multiplicity": {
+          "lower": null,
+          "upper": {
+            "kind": "literal",
+            "value": 1
+          }
+        },
+        "origin": {
+          "kind": "owned"
+        }
+      },
+      {
+        "handle": {
+          "kind": "petname",
+          "id": "quill-harbor-241"
+        },
+        "metaclass": "AttributeUsage",
+        "name": "state",
+        "types": [
+          {
+            "kind": "unresolved",
+            "written": "HeaterState",
+            "code": "RES-UNRESOLVED-NAME"
+          }
+        ],
+        "multiplicity": {
+          "lower": null,
+          "upper": {
+            "kind": "literal",
+            "value": 1
+          }
+        },
+        "origin": {
+          "kind": "owned"
+        }
+      },
+      {
+        "handle": {
+          "kind": "petname",
+          "id": "quill-harbor-242"
+        },
+        "metaclass": "PortUsage",
+        "name": "pwrIn",
+        "types": [
+          {
+            "kind": "resolved",
+            "target": {
+              "kind": "derived",
+              "hash": "5c2e8a18"
+            },
+            "name": "~PowerPort"
+          }
+        ],
+        "multiplicity": {
+          "lower": null,
+          "upper": {
+            "kind": "literal",
+            "value": 1
+          }
+        },
+        "origin": {
+          "kind": "owned"
+        }
+      }
+    ],
+    "relationships": [
+      {
+        "handle": {
+          "kind": "derived",
+          "hash": "e09b33d5"
+        },
+        "metaclass": "FeatureTyping",
+        "direction": "incoming",
+        "other": {
+          "kind": "resolved",
+          "target": {
+            "kind": "petname",
+            "id": "slate-orchard-407"
+          },
+          "name": "heater"
+        },
+        "isImplied": false
+      }
+    ],
+    "diagnostics": [
+      {
+        "code": "RES-UNRESOLVED-NAME",
+        "severity": "error",
+        "span": {
+          "start": 688,
+          "end": 699
+        },
+        "message": "cannot resolve type `HeaterState`"
+      }
+    ]
+  }
+}
