@@ -44,4 +44,19 @@ describe("the generated ThermalControl module is current", () => {
       expect(THERMAL_CONTROL.elements[id]).toEqual(await readJson(`elements/${name}`));
     }
   });
+
+  test("files/: the same paths, and each reply equal", async () => {
+    const files = (await readdir(path.join(DATA, "files"), { recursive: true }))
+      .filter((name) => name.endsWith(".json"))
+      .map((name) => name.split(path.sep).join("/"))
+      .sort();
+    expect(Object.keys(THERMAL_CONTROL.files).sort()).toEqual(
+      files.map((name) => name.slice(0, -".json".length)),
+    );
+    for (const name of files) {
+      expect(THERMAL_CONTROL.files[name.slice(0, -".json".length)]).toEqual(
+        await readJson(`files/${name}`),
+      );
+    }
+  });
 });

@@ -21,7 +21,7 @@ this unless it is opened. Say "read `.claude/plans/ui-shell.md`" and it is all h
 | Branch | `ui/shell` |
 | Worktree | `../sv2-ui`, created with `git worktree add` |
 | Based on | `main` at `081d85a`, merged up to `752ff41` for the case-collision fix |
-| Commits | 30, all green |
+| Commits | 31, all green |
 
 The worktree exists so the UI work does not collide with grammar work in the main
 checkout. To recreate it elsewhere:
@@ -384,11 +384,34 @@ that make ADR-0008's "interconnection second" a one-file change.
 query that does not exist, and diagrams are unavailable. The Specification is tested
 directly with a handle; it becomes reachable when an element-selecting surface lands.
 
-### Phase 5 — The editor
+### Phase 5 — The editor · **DONE (split placement)**
 
 CodeMirror, plain text, no WASM. Not scaffolding: ADR-0013 requires the editor to
 accept input unhighlighted before the parser is available, so this is production
 behaviour built first. Split and sidebar placements work in-window.
+
+**What was built:**
+
+- `@codemirror/state`, `view`, `commands` installed (allowlisted). No language package:
+  plain text until the WASM parser (ADR-0013).
+- `editor/shared-document.ts`: **one document, any number of views**. A headless
+  `EditorState` is the authority and holds the only history; views relay changes
+  through it; undo/redo in any view run against it. Tested with two real views: undo
+  in one undoes an edit made in the other. The text is never React state (§8.4).
+- `editor/FileEditor.tsx`: the document made once per file (keyed by path), and
+  `EditorPane` creating/destroying its view in an effect.
+- `file_text` command (owner `unassigned`) and `FileText` contract. The sample text is
+  SCR-05's lines 1–36 exactly; element spans in the fixture are now real offsets, and a
+  test checks Heater's diagnostic span covers `HeaterState`.
+- `shell/EditorSplit.tsx`: choosing a file in the Files tree opens it beside the views,
+  with **"Edits are not saved: sv2 does not yet support writing files."** in the header.
+- Checked in Chrome: typing, and Cmd+Z undoing it through the shared history.
+
+**Deferred: the sidebar placement (Element Source).** It is a view over an element's
+span, and nothing selects an element yet, so it could not be exercised. It is one more
+`EditorPane` over the same document, restricted to the span, when selection exists.
+The §8.4 rule 4 update listener (derived facts such as the element under the cursor)
+arrives with its first consumer.
 
 ### Phase 6 — Tauri, real IPC, the second window
 

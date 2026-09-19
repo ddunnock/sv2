@@ -103,6 +103,9 @@ why = "component tests"
 # lockfile change, and nothing else.
 
 [present]
+"@codemirror/state" = "6.7.4"
+"@codemirror/view" = "6.43.11"
+"@codemirror/commands" = "6.11.0"
 react = "19.3.0"
 react-dom = "19.3.0"
 tailwindcss = "4.3.3"

@@ -204,6 +204,48 @@ describe("Shell", () => {
     });
   });
 
+  describe("the editor, split beside the views (Phase 5)", () => {
+    test("choosing a file opens it, editable, under its path", async () => {
+      shell();
+      await userEvent.click(
+        await screen.findByRole("treeitem", { name: "ThermalControl.sysml, 1 error" }),
+      );
+      const editor = await screen.findByRole("textbox", { name: "model/ThermalControl.sysml" });
+      expect(editor.textContent).toContain("attribute state : HeaterState;");
+      expect(editor.getAttribute("contenteditable")).toBe("true");
+    });
+
+    test("says plainly that edits are not saved", async () => {
+      shell();
+      await userEvent.click(
+        await screen.findByRole("treeitem", { name: "ThermalControl.sysml, 1 error" }),
+      );
+      const region = await screen.findByRole("region", { name: "Editor" });
+      expect(region.textContent).toContain("Edits are not saved");
+    });
+
+    test("a file whose text the core does not have says so", async () => {
+      shell();
+      await userEvent.click(await screen.findByRole("treeitem", { name: "Interfaces.sysml" }));
+      expect(await screen.findByText(/The file is not available/)).toBeDefined();
+    });
+
+    test("Close removes the editor", async () => {
+      shell();
+      await userEvent.click(
+        await screen.findByRole("treeitem", { name: "ThermalControl.sysml, 1 error" }),
+      );
+      await userEvent.click(await screen.findByRole("button", { name: "Close editor" }));
+      expect(screen.queryByRole("region", { name: "Editor" })).toBeNull();
+    });
+
+    test("a folder row does not open an editor", async () => {
+      shell();
+      await userEvent.click(await screen.findByRole("treeitem", { name: "model, 1 error" }));
+      expect(screen.queryByRole("region", { name: "Editor" })).toBeNull();
+    });
+  });
+
   describe("the status bar (UI-10)", () => {
     test("counts the workspace's problems", async () => {
       shell();

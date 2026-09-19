@@ -13,7 +13,8 @@
  * view, because the plan forbids simulated diagrams: an invented layout would
  * read as "the diagram works", which is false. An element the fixture does not
  * describe is `not-found`, which is the true answer for a model that does not
- * contain it.
+ * contain it. A file it has no text for is `not-implemented`, not `not-found`:
+ * the file exists, and only the sample lacks it.
  */
 
 import { COMMANDS } from "@/contract/registry";
@@ -32,9 +33,24 @@ export type Fixtures = Readonly<{
   workspace: unknown;
   views: unknown;
   elements: Readonly<Record<string, unknown>>;
+  /** Keyed by workspace path. */
+  files: Readonly<Record<string, unknown>>;
 }>;
 
 const NOT_FOUND = { kind: "unavailable", reason: { kind: "not-found" } } as const;
+
+/**
+ * A file the sample data has no text for. Not `not-found`: the file is in the
+ * workspace, and saying it is not would be false. What is missing is the
+ * sample's text for it, which is a limit of the fixture, and says so.
+ */
+const NO_TEXT = {
+  kind: "unavailable",
+  reason: {
+    kind: "not-implemented",
+    capability: "showing text for a file the sample data does not include",
+  },
+} as const;
 
 const NO_LAYOUT = {
   kind: "unavailable",
@@ -61,6 +77,8 @@ function reply(
       return elementReply(fixtures, args);
     case COMMANDS.viewLayout.command:
       return ok(NO_LAYOUT);
+    case COMMANDS.fileText.command:
+      return fileReply(fixtures, args);
     default:
       // A command the registry does not list, which a real backend would refuse.
       return err("rejected");
@@ -75,4 +93,13 @@ function elementReply(fixtures: Fixtures, args: unknown): Result<unknown, Transp
     return err("rejected");
   }
   return ok(fixtures.elements[logLabel(parsed.data.handle)] ?? NOT_FOUND);
+}
+
+/** The fixture text for the file `args` names, or an honest statement that there is none. */
+function fileReply(fixtures: Fixtures, args: unknown): Result<unknown, TransportFailure> {
+  const parsed = COMMANDS.fileText.args.safeParse(args);
+  if (!parsed.success) {
+    return err("rejected");
+  }
+  return ok(fixtures.files[parsed.data.path] ?? NO_TEXT);
 }

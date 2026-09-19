@@ -78,7 +78,7 @@ collide with grammar work in the main checkout.
 
 ## Current state
 
-Phases 1–4 of `.claude/plans/ui-shell.md` are done; read its phase notes rather
+Phases 1–4 of `.claude/plans/ui-shell.md` are done, and Phase 5's split editor; read its phase notes rather
 than trusting a summary here.
 
 - `contract/` is complete for Phase 4: offsets, identities, diagnostics, elements,
@@ -89,7 +89,8 @@ than trusting a summary here.
 - `shell/`: five accessible primitives, the island boundary, `Unavailable`,
   `useSelection`, the layout reducer, and the window, wired to the queries:
   Files tree, Views list, view tabs with the `ViewKind` dispatcher, Specification.
-- `wasm/`, `editor/` and `diagram/` do not exist.
+- `editor/`: one shared document per file with any number of views over it,
+  plain text (no parser yet). `wasm/` and `diagram/` do not exist.
 
 **A schema is declared, not inferred.** `isolatedDeclarations` cannot state the
 type of an exported Zod schema, so the type is written and the schema is
@@ -97,8 +98,8 @@ annotated `z.ZodType<Name, Wire>`. §4.3 rule 1 carries the whole argument, and
 `contract/offset.ts` is the reference example. Brands mint through
 `.transform()`, never `.brand()`.
 
-`@tauri-apps/api`, `@codemirror/*` and `sv2-wasm` remain **allowed and not
-installed**. Each arrives in the change that adds the first module importing it,
+`@tauri-apps/api` and `sv2-wasm` remain **allowed and not installed**; of
+`@codemirror/*`, only `state`, `view` and `commands` are installed. Each arrives in the change that adds the first module importing it,
 because a package nothing imports is load cost and supply-chain surface for
 nothing.
 

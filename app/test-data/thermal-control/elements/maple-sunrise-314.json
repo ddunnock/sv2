@@ -46,8 +46,8 @@
     "location": {
       "file": "model/ThermalControl.sysml",
       "span": {
-        "start": 602,
-        "end": 761
+        "start": 740,
+        "end": 916
       }
     },
     "documentation": [
@@ -160,8 +160,8 @@
         "code": "RES-UNRESOLVED-NAME",
         "severity": "error",
         "span": {
-          "start": 688,
-          "end": 699
+          "start": 865,
+          "end": 876
         },
         "message": "cannot resolve type `HeaterState`"
       }

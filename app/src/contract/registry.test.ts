@@ -35,7 +35,7 @@ describe("COMMANDS", () => {
     const unassigned = ENTRIES.filter(([, entry]) => entry.owner === "unassigned").map(
       ([key]) => key,
     );
-    expect(unassigned.sort()).toEqual(["viewLayout", "workspace"]);
+    expect(unassigned.sort()).toEqual(["fileText", "viewLayout", "workspace"]);
   });
 });
 

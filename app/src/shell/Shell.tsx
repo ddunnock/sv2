@@ -23,7 +23,7 @@
 import { type Dispatch, useEffect, useReducer, useState } from "react";
 
 import type { ViewId } from "@/contract/element-id";
-import type { Workspace } from "@/contract/file";
+import type { Workspace, WorkspaceFile, WorkspacePath } from "@/contract/file";
 import type { SidebarState } from "@/contract/preferences";
 import type { ViewSummary } from "@/contract/view";
 import type { IpcError } from "@/ipc/ipc-error";
@@ -32,6 +32,7 @@ import { answerToShow, type Query } from "@/model/query";
 import { buildFileTree } from "@/model/tree";
 
 import { AnswerView } from "./AnswerView";
+import { EditorSplit } from "./EditorSplit";
 import { fileNodes, folderIds, plural } from "./file-nodes";
 import { IslandBoundary, type Report } from "./IslandBoundary";
 import {
@@ -99,6 +100,7 @@ function Window(): React.JSX.Element {
   const [sidebarWidth, setSidebarWidth] = useState(340);
   const [openViews, setOpenViews] = useState<readonly ViewSummary[]>([]);
   const [activeView, setActiveView] = useState<ViewId | null>(null);
+  const [openFile, setOpenFile] = useState<WorkspacePath | null>(null);
   const openView = (view: ViewSummary): void => {
     if (!openViews.some((candidate) => candidate.id === view.id)) {
       setOpenViews([...openViews, view]);
@@ -143,6 +145,9 @@ function Window(): React.JSX.Element {
               width={navigatorWidth}
               workspace={workspace}
               onOpenView={openView}
+              onOpenFile={(file) => {
+                setOpenFile(file.path);
+              }}
             />
             <Splitter
               label="Resize navigator"
@@ -156,6 +161,15 @@ function Window(): React.JSX.Element {
           </>
         ) : null}
         <ViewArea open={openViews} active={activeView} onActivate={setActiveView} />
+        {openFile === null ? null : (
+          <EditorSplit
+            key={openFile}
+            path={openFile}
+            onClose={() => {
+              setOpenFile(null);
+            }}
+          />
+        )}
         {layout.sidebar.kind === "open" ? (
           <Splitter
             label="Resize sidebar"
@@ -288,11 +302,13 @@ function Navigator({
   width,
   workspace,
   onOpenView,
+  onOpenFile,
 }: RegionProps &
   Readonly<{
     width: number;
     workspace: Query<Workspace, IpcError>;
     onOpenView: (view: ViewSummary) => void;
+    onOpenFile: (file: WorkspaceFile) => void;
   }>): React.JSX.Element {
   const mode = layout.navigator.mode;
   return (
@@ -314,7 +330,7 @@ function Navigator({
         panel={
           mode === "files" ? (
             <AnswerView query={workspace} what="The Files tree">
-              {(data) => <FilesTree workspace={data} />}
+              {(data) => <FilesTree workspace={data} onOpen={onOpenFile} />}
             </AnswerView>
           ) : (
             <Unavailable
@@ -387,7 +403,10 @@ function SidebarPanel({ tab }: Readonly<{ tab: SidebarState["tab"] }>): React.JS
 }
 
 /** The Files tree, all folders open until the user closes one. */
-function FilesTree({ workspace }: Readonly<{ workspace: Workspace }>): React.JSX.Element {
+function FilesTree({
+  workspace,
+  onOpen,
+}: Readonly<{ workspace: Workspace; onOpen: (file: WorkspaceFile) => void }>): React.JSX.Element {
   const nodes = fileNodes(buildFileTree(workspace));
   // Closed folders are the state; open is derived, so a new folder arrives open (§8.3 rule 1).
   const [closed, setClosed] = useState<ReadonlySet<string>>(new Set());
@@ -406,7 +425,14 @@ function FilesTree({ workspace }: Readonly<{ workspace: Workspace }>): React.JSX
         setClosed(next);
       }}
       selected={selected}
-      onSelect={setSelected}
+      onSelect={(id) => {
+        setSelected(id);
+        // A file row opens the file; a folder row only selects (and toggles).
+        const file = workspace.files.find((candidate) => `file:${candidate.path}` === id);
+        if (file !== undefined) {
+          onOpen(file);
+        }
+      }}
     />
   );
 }

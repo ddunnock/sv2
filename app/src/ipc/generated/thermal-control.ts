@@ -11,6 +11,7 @@ export const THERMAL_CONTROL: Readonly<{
   workspace: unknown;
   views: unknown;
   elements: Readonly<Record<string, unknown>>;
+  files: Readonly<Record<string, unknown>>;
 }> = {
   "workspace": {
     "kind": "ready",
@@ -232,8 +233,8 @@ export const THERMAL_CONTROL: Readonly<{
         "location": {
           "file": "model/ThermalControl.sysml",
           "span": {
-            "start": 602,
-            "end": 761
+            "start": 740,
+            "end": 916
           }
         },
         "documentation": [
@@ -346,8 +347,8 @@ export const THERMAL_CONTROL: Readonly<{
             "code": "RES-UNRESOLVED-NAME",
             "severity": "error",
             "span": {
-              "start": 688,
-              "end": 699
+              "start": 865,
+              "end": 876
             },
             "message": "cannot resolve type `HeaterState`"
           }
@@ -402,8 +403,8 @@ export const THERMAL_CONTROL: Readonly<{
         "location": {
           "file": "model/ThermalControl.sysml",
           "span": {
-            "start": 212,
-            "end": 598
+            "start": 389,
+            "end": 734
           }
         },
         "documentation": [
@@ -616,6 +617,15 @@ export const THERMAL_CONTROL: Readonly<{
           }
         ],
         "diagnostics": []
+      }
+    }
+  },
+  "files": {
+    "model/ThermalControl.sysml": {
+      "kind": "ready",
+      "data": {
+        "path": "model/ThermalControl.sysml",
+        "text": "package ThermalControl {\n    doc /* Thermal control subsystem model (sample) */\n    private import ScalarValues::*;\n    private import ISQ::*;\n    private import SI::*;\n    public import Interfaces::*;\n    public import Requirements::*;\n    attribute def TemperatureValue :> ThermodynamicTemperatureValue;\n\n    enum def HeaterMode { enum off; enum low; enum high; }\n\n    // Structure\n\n    part def ThermalController {\n        doc /* Closed-loop regulator for panel temperature */\n        attribute setpoint : TemperatureValue;\n        attribute tolerance : Real = 0.5;\n        port cmdIn : CommandPort;\n        port heaterOut : PowerPort;\n        port sensorIn : ~TempPort;\n        perform action regulate : RegulateTemperature;\n    }\n\n    part def Heater {\n        doc /* Resistive film heater */\n        attribute maxPower : PowerValue;\n        attribute state : HeaterState;\n        port pwrIn : ~PowerPort;\n    }\n\n    part def TempSensor {\n        doc /* Platinum RTD temperature sensor */\n        attribute accuracy : Real;\n        attribute sampleRate : FrequencyValue;\n        port tempOut : TempPort;\n    }\n"
       }
     }
   }

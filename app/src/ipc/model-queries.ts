@@ -19,7 +19,7 @@
 import type { Answer } from "@/contract/availability";
 import type { ElementDetail } from "@/contract/element";
 import type { ElementHandle, ViewId } from "@/contract/element-id";
-import type { Workspace } from "@/contract/file";
+import type { FileText, Workspace, WorkspacePath } from "@/contract/file";
 import type { ViewLayout } from "@/contract/layout";
 import { COMMANDS, type Command } from "@/contract/registry";
 import type { ViewSummary } from "@/contract/view";
@@ -55,6 +55,7 @@ export type ModelQueries = Readonly<{
   views: () => Reply<readonly ViewSummary[]>;
   elementDetail: (handle: ElementHandle) => Reply<ElementDetail>;
   viewLayout: (view: ViewId) => Reply<ViewLayout>;
+  fileText: (path: WorkspacePath) => Reply<FileText>;
 }>;
 
 /** The queries, answered through `transport`. */
@@ -65,6 +66,7 @@ export function createModelQueries(transport: Transport, provenance: Provenance)
     views: () => call(transport, COMMANDS.views, {}),
     elementDetail: (handle) => call(transport, COMMANDS.elementDetail, { handle }),
     viewLayout: (view) => call(transport, COMMANDS.viewLayout, { view }),
+    fileText: (path) => call(transport, COMMANDS.fileText, { path }),
   };
 }
 

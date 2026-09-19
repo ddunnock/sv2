@@ -169,3 +169,18 @@ export const WorkspaceSchema: z.ZodType<Workspace, unknown> = z.strictObject({
     .readonly()
     .refine(hasUniquePaths, { message: "two files share one workspace path" }),
 });
+
+/**
+ * A model file's text, as the editor opens it.
+ *
+ * The text crosses whole. The webview never edits it as a string: it becomes
+ * the CodeMirror document and lives there (§8.4), and `path` says which file
+ * it is. Offsets into it are UTF-16 code units, as every offset here is.
+ */
+export type FileText = Readonly<{ path: WorkspacePath; text: string }>;
+
+/** A model file's text. */
+export const FileTextSchema: z.ZodType<FileText, unknown> = z.strictObject({
+  path: WorkspacePathSchema,
+  text: z.string(),
+});

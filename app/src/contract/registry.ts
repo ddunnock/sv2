@@ -20,8 +20,8 @@
  * which Tauri converts. Every answer is an `Answer`, so `unavailable` has one
  * path from the first fixture to the last query that retires it.
  *
- * NOT HERE YET: the Elements tree (IX-01's second mode), the editor's file
- * text, the Problems panel, and anything that writes. Each arrives with the
+ * NOT HERE YET: the Elements tree (IX-01's second mode), the Problems panel,
+ * and anything that writes — so the editor's edits are not yet saved. Each arrives with the
  * phase that renders it.
  */
 
@@ -30,7 +30,14 @@ import { z } from "zod";
 import { type Answer, answerSchema } from "./availability";
 import { type ElementDetail, ElementDetailSchema } from "./element";
 import { type ElementHandle, ElementHandleSchema, type ViewId, ViewIdSchema } from "./element-id";
-import { type Workspace, WorkspaceSchema } from "./file";
+import {
+  type FileText,
+  FileTextSchema,
+  type Workspace,
+  type WorkspacePath,
+  WorkspacePathSchema,
+  WorkspaceSchema,
+} from "./file";
 import { type ViewLayout, ViewLayoutSchema } from "./layout";
 import { type ViewSummary, ViewSummarySchema } from "./view";
 
@@ -61,6 +68,7 @@ export type Commands = Readonly<{
   views: Command<NoArgs, readonly ViewSummary[]>;
   elementDetail: Command<Readonly<{ handle: ElementHandle }>, ElementDetail>;
   viewLayout: Command<Readonly<{ view: ViewId }>, ViewLayout>;
+  fileText: Command<Readonly<{ path: WorkspacePath }>, FileText>;
 }>;
 
 /**
@@ -98,5 +106,12 @@ export const COMMANDS: Commands = {
     owner: "unassigned",
     args: z.strictObject({ view: ViewIdSchema }),
     answer: answerSchema(ViewLayoutSchema),
+  },
+  /** A model file's text, for the editor. */
+  fileText: {
+    command: "file_text",
+    owner: "unassigned",
+    args: z.strictObject({ path: WorkspacePathSchema }),
+    answer: answerSchema(FileTextSchema),
   },
 };

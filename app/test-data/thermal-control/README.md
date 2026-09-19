@@ -9,6 +9,7 @@ inputs are data, here.
 | `workspace.json` | `workspace` |
 | `views.json` | `views` |
 | `elements/<petname>.json` | `element_detail` for that petname |
+| `files/<workspace path>.json` | `file_text` for that file |
 
 **Everything here is sample data.** Every petname, offset and library UUID is
 invented. It reaches the screen only behind the status bar's "Fixture data" badge.
@@ -22,6 +23,14 @@ so the Rust side can load the same replies to check its own serialization.
 does not exist — the mockup's deliberate diagnostic. No `RES-*` code exists in
 `sv2-syntax` yet; the code has the shape `contract/diagnostic.ts` admits, which is all
 a fixture can honestly claim.
+
+**The file text is the mockup's own.** `files/model/ThermalControl.sysml.json` is the
+text SCR-05's pop-out editor shows, lines 1–36 exactly, including line 27's
+`attribute state : HeaterState;`. The mockup's view is scrolled and shows no more, so
+the text stops there — unclosed — rather than inventing the rest. The element spans in
+`elements/` are real offsets into this text. Only this file has text; asking for any
+other is answered `not-implemented`, because the file exists and only the sample
+lacks it.
 
 **What is deliberately absent.** No layout: every view's layout is answered
 `not-implemented` by `src/ipc/fixture-client.ts`, because the plan forbids simulated

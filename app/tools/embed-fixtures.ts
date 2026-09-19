@@ -38,10 +38,22 @@ for (const name of elementFiles) {
   elements[name.slice(0, -".json".length)] = await readJson(path.join(elementsDir, name));
 }
 
+// files/<workspace path>.json, keyed by the workspace path.
+const filesDir = path.join(source, "files");
+const fileEntries = (await readdir(filesDir, { recursive: true }))
+  .filter((name) => name.endsWith(".json"))
+  .map((name) => name.split(path.sep).join("/"))
+  .sort();
+const files: Record<string, unknown> = {};
+for (const name of fileEntries) {
+  files[name.slice(0, -".json".length)] = await readJson(path.join(filesDir, name));
+}
+
 const replies = {
   workspace: await readJson(path.join(source, "workspace.json")),
   views: await readJson(path.join(source, "views.json")),
   elements,
+  files,
 };
 
 const module = `// SPDX-License-Identifier: MIT
@@ -57,8 +69,11 @@ export const THERMAL_CONTROL: Readonly<{
   workspace: unknown;
   views: unknown;
   elements: Readonly<Record<string, unknown>>;
+  files: Readonly<Record<string, unknown>>;
 }> = ${JSON.stringify(replies, null, 2)};
 `;
 
 await Bun.write(target, module);
-console.log(`wrote ${path.relative(root, target)} (${elementFiles.length} elements)`);
+console.log(
+  `wrote ${path.relative(root, target)} (${elementFiles.length} elements, ${fileEntries.length} files)`,
+);

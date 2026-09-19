@@ -3,6 +3,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { type ElementHandle, ElementHandleSchema, ViewIdSchema } from "@/contract/element-id";
+import { WorkspacePathSchema } from "@/contract/file";
 
 import { fixtureTransport } from "./fixture-client";
 import { THERMAL_CONTROL } from "./generated/thermal-control";
@@ -65,6 +66,40 @@ describe("what the fixture will not pretend", () => {
         reason: { kind: "not-implemented", capability: "diagram layout" },
       });
     }
+  });
+});
+
+describe("file text", () => {
+  const path = (value: string) => {
+    const parsed = WorkspacePathSchema.safeParse(value);
+    if (!parsed.success) {
+      throw new Error("fixture does not satisfy WorkspacePathSchema");
+    }
+    return parsed.data;
+  };
+
+  test("the mockup's ThermalControl.sysml is ready, with its line 27", async () => {
+    const result = await queries.fileText(path("model/ThermalControl.sysml"));
+    const text = result.ok && result.value.kind === "ready" ? result.value.data.text : "";
+    expect(text.split("\n")[26]).toBe("        attribute state : HeaterState;");
+  });
+
+  test("a file without sample text is not-implemented, not not-found: the file exists", async () => {
+    const result = await queries.fileText(path("model/Interfaces.sysml"));
+    expect(result.ok && result.value.kind === "unavailable" && result.value.reason.kind).toBe(
+      "not-implemented",
+    );
+  });
+
+  test("Heater's diagnostic span covers HeaterState in the real text", async () => {
+    const file = await queries.fileText(path("model/ThermalControl.sysml"));
+    const text = file.ok && file.value.kind === "ready" ? file.value.data.text : "";
+    const heater = await queries.elementDetail(petname("maple-sunrise-314"));
+    const span =
+      heater.ok && heater.value.kind === "ready"
+        ? heater.value.data.diagnostics[0]?.span
+        : undefined;
+    expect(span === undefined ? "" : text.slice(span.start, span.end)).toBe("HeaterState");
   });
 });
 
