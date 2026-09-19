@@ -10,15 +10,19 @@
 //                                         += ActionTargetSuccessionMember )*
 //                                   | ownedRelationship += GuardedSuccessionMember
 // ActionBody IS implemented and reads the part of NonBehaviorBodyItem this parser already
-// had — Import, AliasMember and DefinitionMember — and, of the second alternative,
-// InitialNodeMember. So `first start;` below PARSES, and the rejection is on the `then`
-// line: the ActionTargetSuccessionMember* after it is unimplemented, and so are the third
-// and fourth alternatives. Together they are the control-flow layer, the largest
-// unimplemented thing left in this grammar.
+// had — Import, AliasMember and DefinitionMember — and the whole of the second
+// alternative: InitialNodeMember and, in its TargetSuccession form, the
+// ActionTargetSuccessionMember* after it. So `first start;` and `then accelerate;` below
+// PARSE, and the rejection is on the last line: `then action …` is SourceSuccessionMember
+// followed by ActionBehaviorMember, the third alternative, and both are unimplemented,
+// as is the fourth. Together they are what is left of the control-flow layer.
+// This file rejected on `then accelerate;` until ActionTargetSuccessionMember landed; that
+// line is now asserted ACCEPTED in crates/sv2-syntax/tests/parser.rs.
 // Measured when ActionBody landed: of the 46 corpus files that write an `action def` and
 // still fail, exactly ONE fails first on `first`. The rest fail on ActionUsage and
 // PerformActionUsage, which are declarations rather than control flow.
 action def Brake {
 	first start;
 	then accelerate;
+	then action decelerate;
 }
