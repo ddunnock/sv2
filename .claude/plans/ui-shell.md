@@ -21,7 +21,7 @@ this unless it is opened. Say "read `.claude/plans/ui-shell.md`" and it is all h
 | Branch | `ui/shell` |
 | Worktree | `../sv2-ui`, created with `git worktree add` |
 | Based on | `main` at `081d85a`, merged up to `752ff41` for the case-collision fix |
-| Commits | 29, all green |
+| Commits | 30, all green |
 
 The worktree exists so the UI work does not collide with grammar work in the main
 checkout. To recreate it elsewhere:
@@ -258,13 +258,11 @@ Done:
   - `model-queries.ts` — a `Transport` (command, args → raw reply, never throws) under
     **one parse path** shared by the fixture and, later, the Tauri client. Every reply
     is parsed with its registry schema; `provenance` drives the "fixture data" badge.
-  - `fixture-client.ts` + `fixture-thermal-control.ts` — the mockup's sample model as
+  - `fixture-client.ts` + the sample data (now `test-data/thermal-control/`) — the mockup's sample model as
     raw replies, parsed like any backend reply. Layout answers `not-implemented` for
     every view (no simulated diagrams); an undescribed element is `not-found`.
-    **Fixtures are a TS module, not JSON in `app/test-data/`**: importing JSON needs
-    `resolveJsonModule`, a change to §13.3's normative tsconfig, and a generated
-    embedding (`tools/embed-fixtures.ts`) would need its own staleness check.
-    Revisit if the Rust side wants to share the fixtures.
+    *(Superseded: the fixture is now JSON in `app/test-data/`, embedded by
+    `tools/embed-fixtures.ts` — see "Resolved, from §11" under Phase 3.)*
   - `main.tsx` now runs `z.config({ jitless: true })` (§4.3 rule 6).
 - **Deferred:** `tools/emit-contract.ts`, until `rust.schema.json` exists for
   `check_ipc_contract.py` to compare it with.
@@ -345,14 +343,17 @@ the seam that stops the second window moving selection later.
 taken; in the Tauri window it is ours. Test with `[F11]`, not `{F11}` — user-event
 gives the latter the code `Unknown`.
 
-**Open, from §11 — raised, not yet decided:**
+**Resolved, from §11:**
 
-- §11 rule 7 puts fixtures in `app/test-data/` as data; the Phase 2 fixture is a TS
-  module in `ipc/`. It is also the app's shipped sample data, which rule 7 does not
-  contemplate. Either amend rule 7 or move the data and accept `resolveJsonModule`.
-- §11 rule 6 names `ipc/ipc-double.ts` wrapping Tauri's `mockIPC`. With the
-  `Transport` seam, the fixture transport is that double and no Tauri dependency is
-  needed in tests; rule 6 could say so.
+- Rule 7 — **the code now follows it.** The replies are JSON in
+  `app/test-data/thermal-control/` (one file per reply, so the Rust side can load
+  them); `tools/embed-fixtures.ts` (`bun run fixtures`) generates
+  `src/ipc/generated/thermal-control.ts` for the bundle, with no tsconfig change; and
+  `ipc/fixture-data.test.ts` fails on a stale copy (mutation-checked). The rule gained
+  one sentence covering a fixture the app also ships.
+- Rule 6 — **the standard was amended** (0.6.0). Doubles are `Transport`s in `ipc/`;
+  `mockIPC` is confined to the Tauri transport's own tests. Wrapping `mockIPC` for every
+  island would mock Tauri underneath the parse path and couple every test to it.
 
 ### Phase 4 — Wire the shell · **DONE**
 
@@ -424,9 +425,8 @@ env -C app bun run typecheck && env -C app bun run lint && env -C app bun test
 
 ## Open questions
 
-- **§2.1's row for `main.tsx` omits `zod` and `ipc`,** which §4.3 rule 6 and §2.2
-  require `main.tsx` to import (configure Zod; build the services). Those rules are
-  specific, so `main.tsx` follows them; the row should be fixed.
+- ~~§2.1's row for `main.tsx` omits `zod` and `ipc`~~ — **resolved by amending the
+  standard** (STD-004-TS 0.6.0): §2.2 and §4.3 rule 6 require both imports.
 - **The mockup's Files tree shows `workspace.json` and an empty `verification/`,**
   contradicting its own IX-01 ("a folder tree of `.sysml`/`.kerml` files"). The
   contract follows IX-01.

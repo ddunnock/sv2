@@ -1,8 +1,8 @@
 ---
 title: "STD-004-TS: TypeScript and React Standards" 
 status: draft 
-date: 2026-09-18 
-version: 0.5.0 
+date: 2026-09-19 
+version: 0.6.0 
 owner: David Dunnock
 ---
 
@@ -165,11 +165,12 @@ Every layer imports only the layers listed for it. The matrix is the rule; the d
 | `editor`      | `contract`, `model`, `ipc`, `wasm`, `diagnostics`              | `@codemirror/*`, `@lezer/*`, `react`              |
 | `diagram`     | `contract`, `model`, `ipc`, `diagnostics`                      | `react`                                           |
 | `shell`       | `contract`, `model`, `ipc`, `diagnostics`, `editor`, `diagram` | `react`                                           |
-| `main.tsx`    | `shell`, `diagnostics`                                         | `react`, `react-dom`                              |
+| `main.tsx`    | `shell`, `diagnostics`, `ipc`                                  | `react`, `react-dom`, `zod`                       |
 
 ```mermaid
 flowchart TB
     main["main.tsx"] --> shell
+    main --> ipc
     shell --> editor
     shell --> diagram
     shell --> diagnostics
@@ -185,6 +186,8 @@ flowchart TB
 ```
 
 `contract` and `model` are importable from every layer above them. The diagram omits those edges for legibility.
+
+`main.tsx` imports `ipc` and `zod` because the rules for the composition root require it to: §2.2 has it build the services, the IPC client among them, and §4.3 rule 6 has it configure Zod. An earlier revision of its row listed neither, which made the two rules impossible to follow together.
 
 Three consequences are worth stating because they are the ones a contributor will hit first.
 
@@ -734,8 +737,10 @@ Every report names its subject: an element identity, a view identity, a boundary
 3. **Import from `bun:test` explicitly.** No globals: `describe`, `it`, and `expect` are imports, so a test file type-checks like any other module.
 4. **Test behavior through the public surface.** A component test queries by role and accessible name, as a user or screen reader would, never by class name or test ID where a role exists. A module test calls exported functions.
 5. **Test doubles cannot lie about shape.** An IPC double returns data built by parsing a fixture through the real schema, so a double that has drifted from the contract fails in the test that uses it. `as unknown as T` in a test is forbidden for the same reason it is forbidden in the source: it hides the shape defect the test exists to find.
-6. **IPC doubles live in `ipc/`**, in `ipc-double.ts`, which wraps Tauri's `mockIPC`. That keeps `@tauri-apps/api` inside the one layer allowed to import it, and it gives every island's tests the same double.
-7. **Fixture inputs are data** in `app/test-data/`: captured IPC responses and captured WASM buffers. A file constructed by a test is built in the test.
+6. **IPC doubles are transports, and live in `ipc/`.** `ipc/model-queries.ts` parses every reply behind a `Transport` seam — a function from a command and its arguments to a raw, unparsed reply. A test double is a `Transport`, and the fixture transport in `ipc/fixture-client.ts` is the one every island's tests share. So a double exercises the real parse path (rule 5), and no test outside `ipc/` needs `@tauri-apps/api` at all. Tauri's `mockIPC` is used in exactly one place: the tests of the Tauri transport, the one module that calls `invoke`.
+
+   An earlier revision put every double in an `ipc-double.ts` wrapping `mockIPC`. That mocked the Tauri runtime underneath the parse path, so every island test also depended on Tauri's internals, and it wrapped a module that did not yet exist. Both of that rule's goals — `@tauri-apps/api` kept inside `ipc/`, one double for every island — hold more strongly behind the seam.
+7. **Fixture inputs are data** in `app/test-data/`: captured IPC responses and captured WASM buffers. A file constructed by a test is built in the test. Data, not a TypeScript module, so the Rust side can load the same replies to check its own serialization. Where the app also ships a fixture — sample data behind a visible "Fixture data" indicator, until a real backend exists — `tools/embed-fixtures.ts` copies it into `src/ipc/generated/`, and a test fails if that copy is stale.
 8. **No network.** The test preload replaces `fetch` with a function that throws. The target environment is air-gapped (STD-001-PY §10, rule 4).
 9. **No wall clock.** Time-dependent code takes a clock as a parameter, or the test fixes the time with `setSystemTime` from `bun:test` and resets it in the same test.
 10. **Parametrize with `it.each`** rather than looping inside a test, and write one behavior per test.
