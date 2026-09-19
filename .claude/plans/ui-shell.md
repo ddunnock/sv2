@@ -19,17 +19,20 @@ this unless it is opened. Say "read `.claude/plans/ui-shell.md`" and it is all h
 | | |
 |---|---|
 | Branch | `ui/shell` |
-| Worktree | `../sysmlv2-editor-ui`, created with `git worktree add` |
-| Based on | `main` at `081d85a` |
-| Commits | 9, all green |
+| Worktree | `../sv2-ui`, created with `git worktree add` |
+| Based on | `main` at `081d85a`, merged up to `752ff41` for the case-collision fix |
+| Commits | 12, all green |
 
 The worktree exists so the UI work does not collide with grammar work in the main
 checkout. To recreate it elsewhere:
 
 ```bash
-git worktree add ../sysmlv2-editor-ui ui/shell
-cd ../sysmlv2-editor-ui/app && bun install --frozen-lockfile
+git worktree add ../sv2-ui ui/shell
+cd ../sv2-ui/app && bun install --frozen-lockfile
 ```
+
+That needs Bun 1.4.2, the `packageManager` pin. Bun 1.3.x cannot read `bun.lock`'s
+lockfile version 2, so the install fails and every web gate goes red with it.
 
 **One hazard.** Both checkouts share `CARGO_TARGET_DIR=~/.cargo-target`. A `cargo
 test` in one while the other builds produced a transient failure that vanished on
@@ -169,25 +172,28 @@ Done:
   diagnostic from a newer core — filtering on diagnostic state, which ADR-0002
   forbids. Severity is *carried, not re-derived*: re-applying Rust's map in TypeScript
   is a second opinion in a second language (ADR-0013 DD-1).
+- `contract/element.ts` — `ElementRef` (the plan's `TypeRef`; §4.3 already names it
+  that), `FeatureRow` with `origin`, `RelationshipRow`, `ElementSummary`,
+  `ElementFacet`, `ElementDetail`. Every field is checked against the pinned
+  metamodel. Three readings worth keeping: `~TempPort` is the *effective name* of a
+  `ConjugatedPortDefinition`, so a reference needs no conjugation flag; multiplicity
+  bounds are carried as written, not evaluated; `isReference` is left off because
+  the metamodel derives it as `isComposite = false`. **`MetaclassSchema` checks shape
+  only**, and closes when the Rust type exists and `check_ipc_contract.py` compares
+  the two enums — a closed list typed out by hand would be unsourced (invariant 4).
 
 Remaining, in order:
 
-1. `contract/element.ts` — the big one. `ElementSummary`, `OwnedFeature`,
-   `Relationship`, `ElementDetail`, and `TypeRef` as ADR-0002's resolved/unresolved
-   union. **Add `origin: {kind:"owned"} | {kind:"inherited"; from: ElementHandle}` to
-   every feature row even though the UI ships owned-only** — OD-04 is a resolver
-   question with a wire consequence, and one field now beats a wire change and a full
-   fixture regeneration later.
-2. `contract/file.ts` — the Files tree.
-3. `contract/view.ts` — `ViewKind` as the **complete** union including
+1. `contract/file.ts` — the Files tree.
+2. `contract/view.ts` — `ViewKind` as the **complete** union including
    `state-transition` even though OD-03 leaves it undesigned. A deliberately
    incomplete union gets widened under pressure.
-4. `contract/layout.ts` — ADR-0017, `GridUnit` brand, `z.looseObject` per R-6.
-5. `contract/availability.ts` — see below. High value.
-6. `contract/preferences.ts`, `contract/registry.ts`.
-7. `model/` — `assert-never.ts`, `Query<T>`, `element-handle.ts` (`isLogSafe`),
+3. `contract/layout.ts` — ADR-0017, `GridUnit` brand, `z.looseObject` per R-6.
+4. `contract/availability.ts` — see below. High value.
+5. `contract/preferences.ts`, `contract/registry.ts`.
+6. `model/` — `assert-never.ts`, `Query<T>`, `element-handle.ts` (`isLogSafe`),
    `tree.ts`, `grid.ts`. Pure, no DOM.
-8. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
+7. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
    `tools/embed-fixtures.ts`, `tools/emit-contract.ts`.
 
 **Make "unavailable" a contract citizen.** The highest-value remaining move:
@@ -275,8 +281,8 @@ is not loading.
 Per commit, from the repo root:
 
 ```bash
-python3.11 scripts/check_headers.py
-python3.11 scripts/check_web_dependencies.py
+python3.12 scripts/check_headers.py
+python3.12 scripts/check_web_dependencies.py
 env -C app bun run typecheck && env -C app bun run lint && env -C app bun test
 ./scripts/gate.sh            # the only definition of done
 ```
