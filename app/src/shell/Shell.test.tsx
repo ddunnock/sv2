@@ -127,8 +127,15 @@ describe("Shell", () => {
     test("a reply that fails its schema is an alert and a report, never shown as data", async () => {
       const report = mock((_what: string, _detail: unknown) => undefined);
       const queries = createModelQueries(
-        () =>
-          Promise.resolve(ok({ kind: "ready", data: { name: "W", files: [{ path: "/abs" }] } })),
+        // Only the workspace reply is malformed; every other query is honestly unavailable.
+        (command) =>
+          Promise.resolve(
+            ok(
+              command === "workspace"
+                ? { kind: "ready", data: { name: "W", files: [{ path: "/abs" }] } }
+                : { kind: "unavailable", reason: { kind: "no-workspace" } },
+            ),
+          ),
         "backend",
       );
       render(<Shell services={{ queries, report }} />);
@@ -136,6 +143,62 @@ describe("Shell", () => {
         "The Files tree could not be read",
       );
       expect(report.mock.calls[0]?.[0]).toBe("query workspace failed");
+    });
+  });
+
+  describe("the Views list and view tabs (UI-03, UI-04)", () => {
+    test("lists the fixture's five views, each named by kind and what it exposes", async () => {
+      shell();
+      for (const name of [
+        "General View, ThermalControl",
+        "Interconnection View, thermalSubsystem",
+        "Action Flow View, regulate",
+        "State Transition View, HeaterModes",
+        "Grid View, Requirements",
+      ]) {
+        expect(await screen.findByRole("button", { name })).toBeDefined();
+      }
+    });
+
+    test("opening a view gives it a tab and says why it cannot be drawn yet", async () => {
+      shell();
+      await userEvent.click(
+        await screen.findByRole("button", { name: "General View, ThermalControl" }),
+      );
+      expect(screen.getByRole("tab", { name: "GV ThermalControl", selected: true })).toBeDefined();
+      expect(screen.getByRole("tabpanel", { name: "GV ThermalControl" }).textContent).toContain(
+        "sv2 cannot do drawing a General View yet",
+      );
+    });
+
+    test("opening a view that is already open selects its tab rather than adding another", async () => {
+      shell();
+      const general = await screen.findByRole("button", { name: "General View, ThermalControl" });
+      await userEvent.click(general);
+      await userEvent.click(screen.getByRole("button", { name: "Grid View, Requirements" }));
+      await userEvent.click(general);
+      expect(screen.getAllByRole("tab", { name: "GV ThermalControl" })).toHaveLength(1);
+      expect(screen.getByRole("tab", { name: "GV ThermalControl", selected: true })).toBeDefined();
+    });
+
+    test("the undesigned State Transition view (OD-03) opens and says so", async () => {
+      shell();
+      await userEvent.click(
+        await screen.findByRole("button", { name: "State Transition View, HeaterModes" }),
+      );
+      expect(screen.getByRole("tabpanel", { name: "ST HeaterModes" }).textContent).toContain(
+        "drawing a State Transition View",
+      );
+    });
+
+    test("no view shows an empty canvas: nothing is drawn that is not true", async () => {
+      shell();
+      await userEvent.click(
+        await screen.findByRole("button", { name: "General View, ThermalControl" }),
+      );
+      expect(
+        screen.getByRole("tabpanel", { name: "GV ThermalControl" }).querySelector("svg, canvas"),
+      ).toBeNull();
     });
   });
 

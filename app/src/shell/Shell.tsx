@@ -22,8 +22,10 @@
 
 import { type Dispatch, useEffect, useReducer, useState } from "react";
 
+import type { ViewId } from "@/contract/element-id";
 import type { Workspace } from "@/contract/file";
 import type { SidebarState } from "@/contract/preferences";
+import type { ViewSummary } from "@/contract/view";
 import type { IpcError } from "@/ipc/ipc-error";
 import type { Provenance } from "@/ipc/model-queries";
 import { answerToShow, type Query } from "@/model/query";
@@ -48,6 +50,8 @@ import { Tree } from "./primitives/Tree";
 import { SelectionProvider, useSelection } from "./selection";
 import { type Services, ServicesProvider, useAnswer, useServices } from "./services";
 import { Unavailable } from "./Unavailable";
+import { ViewArea } from "./ViewArea";
+import { ViewsList } from "./ViewsList";
 
 /** Props for `Shell`. Services come from the composition root, never from an import (§2.2). */
 export type ShellProps = Readonly<{ services: Services }>;
@@ -92,6 +96,14 @@ function Window(): React.JSX.Element {
   const [theme, setTheme] = useState<Theme>("light");
   const [navigatorWidth, setNavigatorWidth] = useState(280);
   const [sidebarWidth, setSidebarWidth] = useState(340);
+  const [openViews, setOpenViews] = useState<readonly ViewSummary[]>([]);
+  const [activeView, setActiveView] = useState<ViewId | null>(null);
+  const openView = (view: ViewSummary): void => {
+    if (!openViews.some((candidate) => candidate.id === view.id)) {
+      setOpenViews([...openViews, view]);
+    }
+    setActiveView(view.id);
+  };
 
   useEffect(() => {
     // A window listener is outside React, which is what an effect is for (§8.3 rule 2).
@@ -129,6 +141,7 @@ function Window(): React.JSX.Element {
               dispatch={dispatch}
               width={navigatorWidth}
               workspace={workspace}
+              onOpenView={openView}
             />
             <Splitter
               label="Resize navigator"
@@ -141,7 +154,7 @@ function Window(): React.JSX.Element {
             />
           </>
         ) : null}
-        <ViewArea />
+        <ViewArea open={openViews} active={activeView} onActivate={setActiveView} />
         {layout.sidebar.kind === "open" ? (
           <Splitter
             label="Resize sidebar"
@@ -273,8 +286,13 @@ function Navigator({
   dispatch,
   width,
   workspace,
+  onOpenView,
 }: RegionProps &
-  Readonly<{ width: number; workspace: Query<Workspace, IpcError> }>): React.JSX.Element {
+  Readonly<{
+    width: number;
+    workspace: Query<Workspace, IpcError>;
+    onOpenView: (view: ViewSummary) => void;
+  }>): React.JSX.Element {
   const mode = layout.navigator.mode;
   return (
     <nav
@@ -305,16 +323,8 @@ function Navigator({
           )
         }
       />
+      <ViewsList onOpen={onOpenView} />
     </nav>
-  );
-}
-
-/** UI-05: the open views. None can be opened until Phase 4 wires the Views list. */
-function ViewArea(): React.JSX.Element {
-  return (
-    <main aria-label="Views" className="flex min-w-0 flex-1 flex-col bg-canvas">
-      <p className="p-4 text-muted">No view is open.</p>
-    </main>
   );
 }
 
