@@ -6,8 +6,8 @@ The ADRs stay markdown — they are arguments, and an argument does not become
 more useful as JSON. This is an index of them, so an agent can see what is
 decided and what is open without reading ten files.
 
-    python3.11 .claude/scripts/index_decisions.py           write the index
-    python3.11 .claude/scripts/index_decisions.py --check   fail if it is stale
+    python3.12 .claude/scripts/index_decisions.py           write the index
+    python3.12 .claude/scripts/index_decisions.py --check   fail if it is stale
 """
 
 from __future__ import annotations
@@ -177,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
     summary = f"{len(index['decisions'])} ADRs, {len(index['open'])} open"
     if args.check:
         if not INDEX.exists() or INDEX.read_text() != text:
-            print("decisions.json stale — run python3.11 .claude/scripts/index_decisions.py")
+            print("decisions.json stale — run python3.12 .claude/scripts/index_decisions.py")
             return 1
         print(f"decisions index current ({summary})")
         return 0

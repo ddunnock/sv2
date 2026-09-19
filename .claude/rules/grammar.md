@@ -22,7 +22,7 @@ Every file is pinned by sha256 and, for OMG artifacts, by File ID. The PreToolUs
 blocks edits. To move to a new upstream version:
 
 ```bash
-python3.11 scripts/vendor_sync.py --accept-new     # needs network; a deliberate act
+python3.12 scripts/vendor_sync.py --accept-new     # needs network; a deliberate act
 ```
 
 then record why in `.claude/state/deviations.json`. An OMG namespace-dated URL changing content is

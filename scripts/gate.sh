@@ -14,7 +14,7 @@
 # called from a gate or a build.
 set -euo pipefail
 
-readonly PY=python3.11
+readonly PY=python3.12
 failed=0
 
 run_check() {
@@ -48,6 +48,9 @@ main() {
   fi
 
   echo "gate: running deterministic checks"
+
+  # --- the checkout itself ---
+  run_check "path case" "${PY}" scripts/check_path_case.py
 
   # --- pinned inputs ---
   run_check "vendor hashes" "${PY}" scripts/vendor_verify.py

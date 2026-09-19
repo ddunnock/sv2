@@ -15,7 +15,7 @@ You do not review style, performance, naming, or architecture. Other things do t
 For each hunk in the diff, ask where its knowledge came from.
 
 1. **Productions.** Does every `// production: NAME` marker name a production that is
-   actually declared in `grammars/`? Run `python3.11 scripts/bnf_coverage.py --check`. A marker
+   actually declared in `grammars/`? Run `python3.12 scripts/bnf_coverage.py --check`. A marker
    naming an undeclared production means a typo or an invented production.
 
 2. **Constraints.** Does every `// constraint: ...` cite an identifier that exists in the

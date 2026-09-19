@@ -9,9 +9,9 @@
 # (STD-003-SH §9.2).
 set -euo pipefail
 
-if ! command -v python3.11 >/dev/null 2>&1; then
-  printf 'hook-post-edit: python3.11 not on PATH; skipping.\n' >&2
+if ! command -v python3.12 >/dev/null 2>&1; then
+  printf 'hook-post-edit: python3.12 not on PATH; skipping.\n' >&2
   exit 0
 fi
 here=$(dirname "${BASH_SOURCE[0]}")
-exec python3.11 "${here}/hook_post_edit.py"
+exec python3.12 "${here}/hook_post_edit.py"

@@ -68,7 +68,7 @@ def main() -> int:
     if half:
         return block(
             f"{half} grammar unit(s) are derived but not verified.\n"
-            "Run python3.11 .claude/scripts/grammar_check_unit.py and fix what fails"
+            "Run python3.12 .claude/scripts/grammar_check_unit.py and fix what fails"
             " before ending the turn."
         )
 

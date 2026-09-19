@@ -1,10 +1,12 @@
 # Positive-corpus files the parser accepts, one repository-relative path per line.
-# Written by `python3.11 scripts/corpus_sweep.py --record`; do not hand-edit.
+# Written by `python3.12 scripts/corpus_sweep.py --record`; do not hand-edit.
 #
 # This set may grow and must never shrink. See the module docstring of
 # scripts/corpus_sweep.py for why both directions fail the gate.
 vendor/corpus/kerml/src/examples/Address Book Example/AddressBookModel.kerml
 vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-Atoms.kerml
+vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_1.kerml
+vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_2.kerml
 vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_1.kerml
 vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_2.kerml
 vendor/corpus/kerml/src/examples/Packet Example/PacketUsage.kerml
@@ -51,6 +53,7 @@ vendor/corpus/sysml/src/training/18. Action Performance/Action Performance Examp
 vendor/corpus/sysml/src/training/22. Opaque Actions/Opaque Action Example.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 1.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 2.sysml
+vendor/corpus/sysml/src/training/29. Expressions/MassRollup1.sysml
 vendor/corpus/sysml/src/training/30. Calculations/Calculation Definitions.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Definitions.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml

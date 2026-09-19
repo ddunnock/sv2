@@ -15,7 +15,7 @@ What this does NOT check: that the cited clause actually says what the entry cla
 No script can check that. It checks that the thing cited exists and is pinned, which
 is the part a script can own.
 
-    python3.11 scripts/check_citations.py
+    python3.12 scripts/check_citations.py
 """
 
 from __future__ import annotations
@@ -77,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
     if not RECEIPTS.is_file():
         # Inert before the wikis are pinned, like every other pinned-input check.
         print(f"no wiki receipts at {RECEIPTS} — {len(cited)} citation(s) unverifiable")
-        print("run python3.11 .claude/scripts/build_wiki_receipts.py on a machine with the wikis")
+        print("run python3.12 .claude/scripts/build_wiki_receipts.py on a machine with the wikis")
         return 0
 
     pinned = {r["region_sha256"] for r in json.loads(RECEIPTS.read_text())["receipts"]}

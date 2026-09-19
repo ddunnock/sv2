@@ -8,9 +8,9 @@ output does not depend on what was derived before it — same inputs, same
 result, regardless of session boundaries or order. Any workflow that shows the
 model the whole grammar at once forfeits that.
 
-    python3.11 .claude/scripts/grammar_next.py                      next pending unit
-    python3.11 .claude/scripts/grammar_next.py PartUsage            a specific unit
-    python3.11 .claude/scripts/grammar_next.py RootNamespace@sysml  one language's variant
+    python3.12 .claude/scripts/grammar_next.py                      next pending unit
+    python3.12 .claude/scripts/grammar_next.py PartUsage            a specific unit
+    python3.12 .claude/scripts/grammar_next.py RootNamespace@sysml  one language's variant
 
 A production KerML and SysML state differently is two units, one per language
 (ADR-0014). Each variant's pack carries only its own language's clause, Xtext and
@@ -77,7 +77,7 @@ def _select(units: dict[str, Json], wanted: str | None) -> tuple[Json | None, Js
         return None, {
             "done": True,
             "message": "no pending units",
-            "next": "python3.11 .claude/scripts/grammar_consistency.py",
+            "next": "python3.12 .claude/scripts/grammar_consistency.py",
         }
     # Deterministic order: fewest dependencies first, then alphabetical, so the
     # same repository always yields the same sequence.
@@ -122,7 +122,7 @@ def clause_text(name: str, scope: str | None = None) -> tuple[str, str]:
     if not clauses:
         return "", (
             f"no clause export at {CLAUSES} — run "
-            "python3.11 .claude/scripts/export_wiki_clauses.py, then set SV2_WIKI_CLAUSES"
+            "python3.12 .claude/scripts/export_wiki_clauses.py, then set SV2_WIKI_CLAUSES"
         )
     entry = clauses.get(name)
     if not entry:
@@ -187,7 +187,7 @@ def context_pack(unit: Json) -> Json:
             "rule_is": "a JSON AST per .claude/state/schema/grammar-unit.schema.json",
             "hard_rules": HARD_RULES,
         },
-        "then_run": f"python3.11 .claude/scripts/grammar_check_unit.py {key}",
+        "then_run": f"python3.12 .claude/scripts/grammar_check_unit.py {key}",
     }
 
 
@@ -202,7 +202,7 @@ def main(argv: list[str] | None = None) -> int:
     if not units:
         print(
             json.dumps(
-                {"error": "no units", "fix": "run python3.11 .claude/scripts/grammar_plan.py"}
+                {"error": "no units", "fix": "run python3.12 .claude/scripts/grammar_plan.py"}
             )
         )
         return 1

@@ -437,11 +437,11 @@ its failure policy, and `exec`s a Python module that holds the logic.
 # PreToolUse: blocks edits to generated, vendored, and pinned paths.
 # Failure policy: CLOSED — a guard that cannot run must block, not pass.
 set -euo pipefail
-if ! command -v python3.11 >/dev/null 2>&1; then
-  printf 'BLOCKED: this hook needs python3.11 and it is not on PATH.\n' >&2
+if ! command -v python3.12 >/dev/null 2>&1; then
+  printf 'BLOCKED: this hook needs python3.12 and it is not on PATH.\n' >&2
   exit 2
 fi
-exec python3.11 "$(dirname "$0")/hook_protect_paths.py"
+exec python3.12 "$(dirname "$0")/hook_protect_paths.py"
 ```
 
 The logic is Python because every hook parses JSON from stdin (§2.1), and because
@@ -454,7 +454,7 @@ non-blocking error. A guard invoked directly through a missing interpreter
 
 **Name the interpreter version explicitly.** On RHEL 9, `/usr/bin/python3` is
 the platform Python (3.9) and newer interpreters are separate binaries such as
-`python3.11`. A shim that calls bare `python3` runs whichever one is first on the
+`python3.12`. A shim that calls bare `python3` runs whichever one is first on the
 hook's `PATH`, which differs between a workstation and the enclave.
 
 ### 9.2 Failure policy
@@ -618,8 +618,8 @@ The rules neither tool expresses, each mapped to its section:
 ### 12.4 CI command set
 
 ```bash
-python3.11 scripts/check_shell_standard.py
-python3.11 scripts/check_headers.py
+python3.12 scripts/check_shell_standard.py
+python3.12 scripts/check_headers.py
 shellcheck scripts/*.sh .claude/scripts/*.sh
 shfmt -d scripts .claude/scripts
 ```

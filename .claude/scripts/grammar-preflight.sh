@@ -13,7 +13,7 @@
 # Network: none.
 set -euo pipefail
 
-readonly PY=python3.11
+readonly PY=python3.12
 failed=0
 
 # run_check <label> <command...>: run the command, report pass or FAIL with its output.

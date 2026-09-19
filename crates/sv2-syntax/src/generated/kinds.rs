@@ -619,6 +619,8 @@ pub enum SyntaxKind {
     ConstraintDefinition,
     /// `MemberPrefix? 'return' ownedRelatedElement += UsageElement`. `SysML` 8.2.2.19 — the metaclass is `ReturnParameterMembership`.
     ReturnParameterMember,
+    /// `MemberPrefix 'first' memberFeature = [QualifiedName] RelationshipBody`. `SysML` 8.2.2.17.1 — the metaclass is `FeatureMembership`.
+    InitialNodeMember,
     /// `OccurrenceDefinitionPrefix 'calc' 'def' DefinitionDeclaration CalculationBody`. `SysML` 8.2.2.19.
     CalculationDefinition,
     /// `OccurrenceDefinitionPrefix 'action' 'def' DefinitionDeclaration ActionBody`. `SysML` 8.2.2.17.1.
@@ -805,6 +807,24 @@ pub enum SyntaxKind {
     FeatureReferenceMember,
     /// `[QualifiedName]`. `KerML` 8.2.5.8.3.
     FeatureReference,
+    /// `InstantiatedTypeMember ArgumentList EmptyResultMember`. `KerML` 8.2.5.8.3.
+    InvocationExpression,
+    /// `memberElement = InstantiatedTypeReference | OwnedFeatureChainMember`. `KerML` 8.2.5.8.3 — only the first alternative is read.
+    InstantiatedTypeMember,
+    /// `[QualifiedName]`. `KerML` 8.2.5.8.3.
+    InstantiatedTypeReference,
+    /// `'(' ( PositionalArgumentList | NamedArgumentList )? ')'`. `KerML` 8.2.5.8.3.
+    ArgumentList,
+    /// `ArgumentMember ( ',' ArgumentMember )*`. `KerML` 8.2.5.8.3.
+    PositionalArgumentList,
+    /// `NamedArgumentMember ( ',' NamedArgumentMember )*`. `KerML` 8.2.5.8.3.
+    NamedArgumentList,
+    /// `ownedMemberFeature = NamedArgument`. `KerML` 8.2.5.8.3.
+    NamedArgumentMember,
+    /// `ParameterRedefinition '=' ArgumentValue`. `KerML` 8.2.5.8.3.
+    NamedArgument,
+    /// `redefinedFeature = [QualifiedName]`. `KerML` 8.2.5.8.3.
+    ParameterRedefinition,
     /// `'true' | 'false'`. `KerML` 8.2.5.8.4.
     LiteralBoolean,
     /// `STRING_VALUE`. `KerML` 8.2.5.8.4.
@@ -1130,6 +1150,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ConstraintUsageDeclaration,
     SyntaxKind::ConstraintDefinition,
     SyntaxKind::ReturnParameterMember,
+    SyntaxKind::InitialNodeMember,
     SyntaxKind::CalculationDefinition,
     SyntaxKind::ActionDefinition,
     SyntaxKind::ActionBody,
@@ -1223,6 +1244,15 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::FeatureReferenceExpression,
     SyntaxKind::FeatureReferenceMember,
     SyntaxKind::FeatureReference,
+    SyntaxKind::InvocationExpression,
+    SyntaxKind::InstantiatedTypeMember,
+    SyntaxKind::InstantiatedTypeReference,
+    SyntaxKind::ArgumentList,
+    SyntaxKind::PositionalArgumentList,
+    SyntaxKind::NamedArgumentList,
+    SyntaxKind::NamedArgumentMember,
+    SyntaxKind::NamedArgument,
+    SyntaxKind::ParameterRedefinition,
     SyntaxKind::LiteralBoolean,
     SyntaxKind::LiteralString,
     SyntaxKind::LiteralInteger,

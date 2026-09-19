@@ -12,8 +12,8 @@ What this deliberately does NOT extract: rule bodies. See docs/DERIVATION.md —
 the Xtext encodes the pilot parser's LL limitations as if they were language
 rules, and a hand-written recursive-descent parser must not inherit them.
 
-    python3.11 scripts/extract_productions.py           write the artifacts
-    python3.11 scripts/extract_productions.py --check   fail if any is stale
+    python3.12 scripts/extract_productions.py           write the artifacts
+    python3.12 scripts/extract_productions.py --check   fail if any is stale
 """
 
 from __future__ import annotations
@@ -249,7 +249,7 @@ def _check(artifacts: dict[str, dict[str, Any]], inv: Inventory) -> int:
     stale = [name for name, data in artifacts.items() if not _is_current(OUT_DIR / name, data)]
     if stale:
         print("derived artifacts are stale: " + ", ".join(stale))
-        print("run python3.11 scripts/extract_productions.py")
+        print("run python3.12 scripts/extract_productions.py")
         return 1
     print(
         f"derived artifacts current ({len(inv.productions)} productions, "
@@ -286,7 +286,7 @@ def main(argv: list[str] | None = None) -> int:
 
     files = sorted(PILOT.glob("*.xtext"))
     if not files:
-        print("no Xtext grammars vendored — run python3.11 scripts/vendor_sync.py")
+        print("no Xtext grammars vendored — run python3.12 scripts/vendor_sync.py")
         return 0
 
     inv = extract(files)

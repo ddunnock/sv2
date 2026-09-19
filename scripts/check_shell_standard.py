@@ -2,8 +2,8 @@
 # Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 """Check shell scripts against the rules of STD-003-SH that ShellCheck and shfmt cannot express.
 
-    python3.11 scripts/check_shell_standard.py              scripts/ and .claude/scripts/
-    python3.11 scripts/check_shell_standard.py PATH...      specific files or directories
+    python3.12 scripts/check_shell_standard.py              scripts/ and .claude/scripts/
+    python3.12 scripts/check_shell_standard.py PATH...      specific files or directories
 
 Each finding names the section of STD-003-SH it enforces (§12.3).
 """

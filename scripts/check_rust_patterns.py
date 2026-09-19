@@ -2,8 +2,8 @@
 # Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 """Reject the Rust patterns STD-002-RS forbids and neither rustc nor Clippy can catch.
 
-    python3.11 scripts/check_rust_patterns.py              every crates/**/*.rs
-    python3.11 scripts/check_rust_patterns.py PATH...      specific files or directories
+    python3.12 scripts/check_rust_patterns.py              every crates/**/*.rs
+    python3.12 scripts/check_rust_patterns.py PATH...      specific files or directories
 
 Rules (STD-002-RS §13.6 table):
   - §8.4   every ``#[instrument]`` uses ``skip_all``: by default it records every

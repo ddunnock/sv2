@@ -19,8 +19,8 @@ specification prose, and this repository is MIT and public; that is the same
 constraint that keeps the wikis themselves out (state.json, "wiki-reproducibility").
 The default output path is outside the tree, and `--out` may not name one inside it.
 
-    python3.11 .claude/scripts/export_wiki_clauses.py
-    python3.11 .claude/scripts/export_wiki_clauses.py --out ~/somewhere/clauses.json
+    python3.12 .claude/scripts/export_wiki_clauses.py
+    python3.12 .claude/scripts/export_wiki_clauses.py --out ~/somewhere/clauses.json
 
 Then point the pipeline at it:
 

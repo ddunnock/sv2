@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
     from _state import Json
 
-REGEN_VENDOR = "python3.11 scripts/vendor_sync.py"
+REGEN_VENDOR = "python3.12 scripts/vendor_sync.py"
 
 # First match wins, as in a shell `case`. A None message means "writable".
 RULES: list[tuple[tuple[str, ...], str | None]] = [
@@ -61,7 +61,7 @@ RULES: list[tuple[tuple[str, ...], str | None]] = [
         ),
         (
             "Script-owned. reference/ledger come from"
-            " python3.11 .claude/scripts/grammar_freeze.py,\n"
+            " python3.12 .claude/scripts/grammar_freeze.py,\n"
             "validation from grammar_validate.py, rebase from grammar_rebase.py."
         ),
     ),
@@ -69,8 +69,8 @@ RULES: list[tuple[tuple[str, ...], str | None]] = [
         (".claude/state/grammar/*",),
         (
             "Derived from the pinned grammars. Regenerate with"
-            " python3.11 scripts/extract_productions.py\n"
-            "(from the Xtext) or python3.11 scripts/extract_bnf.py (from the specification BNF).\n"
+            " python3.12 scripts/extract_productions.py\n"
+            "(from the Xtext) or python3.12 scripts/extract_bnf.py (from the specification BNF).\n"
             "If the content is wrong, the extractor or the pinned grammar is wrong — not this file."
         ),
     ),
@@ -87,7 +87,7 @@ RULES: list[tuple[tuple[str, ...], str | None]] = [
         (
             "Wiki receipts. Every clause citation in deviations.json resolves against this\n"
             "file, so hand-editing it would make an unpinned citation look pinned.\n"
-            "Regenerate with python3.11 .claude/scripts/build_wiki_receipts.py."
+            "Regenerate with python3.12 .claude/scripts/build_wiki_receipts.py."
         ),
     ),
     (
@@ -109,7 +109,7 @@ RULES: list[tuple[tuple[str, ...], str | None]] = [
 
 GENERATED_STATE = (
     'The "generated" object of state.json is written by'
-    " python3.11 .claude/scripts/regen_state.py.\n"
+    " python3.12 .claude/scripts/regen_state.py.\n"
     'Edit "authored" freely — objective, next_step, pending_decisions, log.'
 )
 

@@ -9,7 +9,7 @@ Six phases. Only phase 3 uses judgment; the other five are deterministic. That r
 the design — it is what makes an AI-assisted derivation repeatable across sessions and
 across OMG releases.
 
-Run `python3.11 .claude/scripts/grammar_status.py` first. If units already exist, you are resuming, not
+Run `python3.12 .claude/scripts/grammar_status.py` first. If units already exist, you are resuming, not
 starting: go to whichever phase the status implies.
 
 ## Phase 1 — preflight
@@ -29,7 +29,7 @@ language. See `docs/DERIVATION.md`.
 
 ```bash
 export SV2_WIKI_CLAUSES=~/.sv2-derivation/bnf-clauses.json   # from export_wiki_clauses.py
-python3.11 .claude/scripts/grammar_plan.py
+python3.12 .claude/scripts/grammar_plan.py
 ```
 
 It refuses to run without the clause export: every fingerprint hashes the clause text,
@@ -49,7 +49,7 @@ variant alone (ADR-0015); the plan prints how many of each. Name the variant whe
 This is the only phase where you make decisions. Loop:
 
 ```bash
-python3.11 .claude/scripts/grammar_next.py           # emits the context pack for ONE unit
+python3.12 .claude/scripts/grammar_next.py           # emits the context pack for ONE unit
 ```
 
 **Work only from that pack.** Do not open other unit files, do not look at the assembled
@@ -79,7 +79,7 @@ picking whichever is easier to implement.
 Then check it:
 
 ```bash
-python3.11 .claude/scripts/grammar_check_unit.py <Production>
+python3.12 .claude/scripts/grammar_check_unit.py <Production>
 ```
 
 All checks pass → status becomes `verified` automatically. Any fail → fix the rule, not
@@ -91,7 +91,7 @@ unit files are the checkpoint.
 ## Phase 4 — consistency
 
 ```bash
-python3.11 .claude/scripts/grammar_consistency.py
+python3.12 .claude/scripts/grammar_consistency.py
 ```
 
 Cross-unit structure: undefined references, unreachable productions, normalization. Some
@@ -100,7 +100,7 @@ undefined references are expected mid-derivation; they must be empty before free
 ## Phase 5 — validate against the oracle
 
 ```bash
-python3.11 .claude/scripts/grammar_validate.py
+python3.12 .claude/scripts/grammar_validate.py
 ```
 
 Runs an independent Earley recognizer over the derived grammar against the corpus. A
@@ -114,7 +114,7 @@ a positive-only sweep.
 ## Phase 6 — freeze
 
 ```bash
-python3.11 .claude/scripts/grammar_freeze.py
+python3.12 .claude/scripts/grammar_freeze.py
 ```
 
 Refuses unless every unit is verified and the oracle is clean. Writes `reference.json`,
@@ -126,11 +126,11 @@ This is the reason the whole workflow is fingerprinted.
 
 ```bash
 # re-pin Tier A / Tier B in docs/conformance-target.toml, then:
-python3.11 scripts/vendor_sync.py --accept-new
-python3.11 scripts/extract_productions.py
-python3.11 .claude/scripts/export_wiki_clauses.py
-SV2_WIKI_CLAUSES=~/.sv2-derivation/bnf-clauses.json python3.11 .claude/scripts/grammar_plan.py
-python3.11 .claude/scripts/grammar_rebase.py
+python3.12 scripts/vendor_sync.py --accept-new
+python3.12 scripts/extract_productions.py
+python3.12 .claude/scripts/export_wiki_clauses.py
+SV2_WIKI_CLAUSES=~/.sv2-derivation/bnf-clauses.json python3.12 .claude/scripts/grammar_plan.py
+python3.12 .claude/scripts/grammar_rebase.py
 ```
 
 The rebase report tells you exactly which units need work. Unchanged units carry forward

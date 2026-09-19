@@ -42,7 +42,7 @@ Already done? `jq -r --arg n Import '.unimplemented_productions | index($n)'
 .claude/state/coverage.json` — a null means it is implemented or absent, not pending.
 
 These are `jq` because the PreToolUse hook blocks Bash that names a machine-owned path
-unless the command is a known reader. `python3.11 -c` reading one of these files is
+unless the command is a known reader. `python3.12 -c` reading one of these files is
 denied, and correctly so: the hook cannot tell a read from a write.
 
 ## 2. Retrieve the semantics before writing any code
@@ -107,7 +107,7 @@ writing it. Add the variant to `NODES` in `scripts/gen_syntax_kinds.py`, one lin
 node with its production and clause, then regenerate:
 
 ```bash
-python3.11 scripts/gen_syntax_kinds.py
+python3.12 scripts/gen_syntax_kinds.py
 ```
 
 Then the parser. Productions are methods on `Parser` in `crates/sv2-syntax/src/parser.rs`,
@@ -138,8 +138,8 @@ injection site.
 ## 6. Verify
 
 ```bash
-python3.11 scripts/gen_syntax_kinds.py --check   # the generated module is current
-python3.11 scripts/bnf_coverage.py               # refresh the report
+python3.12 scripts/gen_syntax_kinds.py --check   # the generated module is current
+python3.12 scripts/bnf_coverage.py               # refresh the report
 ./scripts/corpus-sweep.sh                        # every rejection case still caught
 ./scripts/gate.sh                                # must be green
 ```

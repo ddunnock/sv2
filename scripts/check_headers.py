@@ -7,7 +7,7 @@ one is MIT, so the header is two lines — the SPDX identifier and the copyright
 and their whole job is to travel with a file that someone copies out of the
 repository, which is the only thing the licence asks for.
 
-    python3.11 scripts/check_headers.py
+    python3.12 scripts/check_headers.py
 
 The required values come from ``[tool.sv2.headers]`` in pyproject.toml, and each
 must appear in the file's opening comment block: ``#`` lines in Python and shell,
@@ -18,7 +18,7 @@ the presence of a block is the point: a header naming the wrong licence passes a
 presence check and fails a review.
 
 Whether or not headers are required, a Python module must not start with a
-shebang (STD-001-PY §2.3); the scripts here are run as ``python3.11 <path>``.
+shebang (STD-001-PY §2.3); the scripts here are run as ``python3.12 <path>``.
 """
 
 from __future__ import annotations

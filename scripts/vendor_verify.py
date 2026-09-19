@@ -6,7 +6,7 @@ This is the gate's check, so it must never touch the network — the tool has to
 build and test inside an air-gapped enclave. Fetching is a separate, deliberate
 act (vendor_sync.py).
 
-    python3.11 scripts/vendor_verify.py
+    python3.12 scripts/vendor_verify.py
 """
 
 from __future__ import annotations
@@ -61,7 +61,7 @@ def _report_drift(result: Verification) -> None:
     print()
     print("A vendored file no longer matches the lockfile. Either restore it, or — if the")
     print(
-        "change is intentional — re-fetch with python3.11 scripts/vendor_sync.py --accept-new and"
+        "change is intentional — re-fetch with python3.12 scripts/vendor_sync.py --accept-new and"
     )
     print("record why in .claude/state/deviations.json.")
 
@@ -83,7 +83,7 @@ def main(argv: list[str] | None = None) -> int:
     if not any(Path(e["path"]).exists() for e in entries):
         print(
             f"vendor: nothing fetched yet ({len(entries)} files in lockfile)"
-            " — run python3.11 scripts/vendor_sync.py"
+            " — run python3.12 scripts/vendor_sync.py"
         )
         return 0
 

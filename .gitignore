@@ -4,7 +4,7 @@
 
 # uv creates one here if anyone runs `uv venv`; .python-version decides which
 # interpreter it gets. Nothing in the gate uses it — the scripts run under the
-# system python3.11 directly.
+# system python3.12 directly.
 .venv/
 
 # Tool caches for the Python scripts.
@@ -23,7 +23,7 @@ CLAUDE.local.md
 # The derivation units ARE committed: they carry the derived rule, the decision and
 # the evidence, and none of them carries the clause text. See NOTICE.md.
 # The clause export they are derived from is not, and lives outside the tree:
-#   python3.11 .claude/scripts/export_wiki_clauses.py
+#   python3.12 .claude/scripts/export_wiki_clauses.py
 #   export SV2_WIKI_CLAUSES=~/.sv2-derivation/bnf-clauses.json
 
 # JetBrains IDE workspace, per-machine.

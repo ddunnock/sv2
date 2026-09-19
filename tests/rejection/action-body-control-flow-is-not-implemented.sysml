@@ -9,10 +9,12 @@
 //                                     ( ownedRelationship
 //                                         += ActionTargetSuccessionMember )*
 //                                   | ownedRelationship += GuardedSuccessionMember
-// ActionBody IS implemented and reads the FIRST alternative only, and only the part of
-// NonBehaviorBodyItem this parser already had: Import, AliasMember and DefinitionMember.
-// The other three alternatives are the control-flow layer — initial nodes, successions
-// and guards — and they are the largest unimplemented thing left in this grammar.
+// ActionBody IS implemented and reads the part of NonBehaviorBodyItem this parser already
+// had — Import, AliasMember and DefinitionMember — and, of the second alternative,
+// InitialNodeMember. So `first start;` below PARSES, and the rejection is on the `then`
+// line: the ActionTargetSuccessionMember* after it is unimplemented, and so are the third
+// and fourth alternatives. Together they are the control-flow layer, the largest
+// unimplemented thing left in this grammar.
 // Measured when ActionBody landed: of the 46 corpus files that write an `action def` and
 // still fail, exactly ONE fails first on `first`. The rest fail on ActionUsage and
 // PerformActionUsage, which are declarations rather than control flow.

@@ -16,7 +16,7 @@ file is lexed with its own language's reserved words: KerML 8.2.2.6 and SysML
 8.2.2.1.2 reserve different sets, and a SysML word reserved in a KerML file turns
 a valid name into a keyword.
 
-    python3.11 .claude/scripts/grammar_validate.py
+    python3.12 .claude/scripts/grammar_validate.py
 """
 
 from __future__ import annotations

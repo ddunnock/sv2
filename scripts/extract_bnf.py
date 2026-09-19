@@ -16,8 +16,8 @@ not normative — its own header reads "Manual corrections by HP de Koning" — 
 clause recorded beside each rule is the citation, and the PDF clause arbitrates
 wherever the two disagree. See .claude/state/deviations.json under source_selection.
 
-    python3.11 scripts/extract_bnf.py           write the artifact
-    python3.11 scripts/extract_bnf.py --check   fail if it is stale
+    python3.12 scripts/extract_bnf.py           write the artifact
+    python3.12 scripts/extract_bnf.py --check   fail if it is stale
 """
 
 from __future__ import annotations
@@ -149,7 +149,7 @@ def _check(artifact: dict[str, Any]) -> int:
     path = OUT_DIR / ARTIFACT
     if not path.exists() or path.read_text() != _render(artifact):
         print(f"derived BNF inventory is stale: {ARTIFACT}")
-        print(f"run python3.11 {GENERATED_BY}")
+        print(f"run python3.12 {GENERATED_BY}")
         return 1
     counts = artifact["counts"]
     print(f"BNF inventory current ({counts['total']} productions, {counts['with_clause']} cited)")
@@ -177,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
     if not files:
         # Inert before vendoring, like every other check: a fresh clone has nothing
         # pinned yet and must not fail its own gate.
-        print("no specification BNF vendored — run python3.11 scripts/vendor_sync.py")
+        print("no specification BNF vendored — run python3.12 scripts/vendor_sync.py")
         return 0
 
     artifact = build_artifact(files, extract(files))

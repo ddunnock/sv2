@@ -16,7 +16,7 @@ the root, not the symptoms.
 
 Order of suspicion, cheapest first:
 
-1. **Vendor hashes.** Did a pinned file change? `python3.11 scripts/vendor_verify.py` and
+1. **Vendor hashes.** Did a pinned file change? `python3.12 scripts/vendor_verify.py` and
    `git diff vendor/`. An unintentional change here invalidates every downstream result.
 2. **Namespace link.** Does the Xtext's metamodel import still match the pinned XMI
    namespace? A mismatch explains most metaclass-map failures and is the likelier root.

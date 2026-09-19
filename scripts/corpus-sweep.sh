@@ -16,7 +16,7 @@
 # Network: none.
 set -euo pipefail
 
-readonly PY=python3.11
+readonly PY=python3.12
 readonly SWEEP=scripts/corpus_sweep.py
 
 main() {

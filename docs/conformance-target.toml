@@ -5,7 +5,7 @@
 # a moved pin silently invalidates every snapshot, coverage number, and corpus
 # result in the repository.
 #
-# Update deliberately: re-run `python3.11 scripts/vendor_sync.py`, which re-pins
+# Update deliberately: re-run `python3.12 scripts/vendor_sync.py`, which re-pins
 # vendor/sources.lock.toml, and record why in .claude/state/deviations.json.
 
 [tier_a_omg]

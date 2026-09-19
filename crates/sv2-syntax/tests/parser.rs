@@ -353,11 +353,14 @@ fn an_action_body_reads_the_items_a_definition_body_reads() {
 
 #[test]
 fn an_action_body_does_not_admit_the_control_flow_layer() {
-    // The three alternatives of ActionBodyItem that are NOT NonBehaviorBodyItem:
-    // initial nodes, successions and guards. Rejected by absence — every one is
-    // well-formed SysML, and the corpus writes 403 `then` and 139 `first`. Held as a
-    // file by tests/rejection/action-body-control-flow-is-not-implemented.sysml.
-    parse_rejected("action def B { first start; }");
+    // The alternatives of ActionBodyItem that are NOT NonBehaviorBodyItem, less
+    // InitialNodeMember: successions and guards. Rejected by absence — every one is well-formed
+    // SysML. Held as a file by tests/rejection/action-body-control-flow-is-not-implemented.sysml.
+    //
+    // `first start;` was here and is not: it is InitialNodeMember, ActionBodyItem's
+    // second alternative (SysML 8.2.2.17.1) — well-formed, and rejected only while that
+    // production was absent. Asserting it rejected is asserting the absence, which is
+    // the one thing this case must not outlive.
     parse_rejected("action def B { then stop; }");
     parse_rejected("action def B { accept Signal; }");
     parse_rejected("action def B { send Sig to target; }");
@@ -954,6 +957,112 @@ fn a_return_parameter_member_needs_a_usage_element() {
     // UsageElement is not optional: `return` alone is the keyword with nothing to own.
     // Held as a file by tests/rejection/return-parameter-member-needs-a-usage.sysml.
     parse_rejected("calc def C { return; }");
+}
+
+// -- InitialNodeMember, SysML 8.2.2.17.1 ------------------------------------------
+//
+// ActionBodyItem    = NonBehaviorBodyItem
+//                   | InitialNodeMember ActionTargetSuccessionMember*
+//                   | …
+// InitialNodeMember : FeatureMembership =
+//     MemberPrefix 'first' memberFeature = [QualifiedName] RelationshipBody
+//
+// `first X;` names the source of a succession apart from its target, which the next
+// `then` supplies (SysML 7.17.4). ActionBodyItem is reached by ActionBody,
+// CalculationBodyItem (8.2.2.19), CaseBodyItem (8.2.2.22), ActionBodyParameter
+// (8.2.2.17.7) and the four Transition*ActionUsage bodies (8.2.2.18.3) — never by
+// DefinitionBodyItem or RequirementBodyItem.
+
+#[test]
+fn an_initial_node_member_reads_the_corpus_form() {
+    // `first start;` is 15 of the corpus's 16 `first X;` lines — e.g. vendor/corpus/
+    // sysml/src/training/17. Control/Merge Example.sysml. `start` is the snapshot every
+    // action inherits from Actions::Action (7.17.4). ActionBody belongs to both the
+    // definition (8.2.2.17.1) and the usage (8.2.2.17.2).
+    let def = render(&parse_accepted("action def A { first start; }").syntax());
+    assert_eq!(nodes_named(&def, "InitialNodeMember"), 1, "{def}");
+    let usage = render(&parse_accepted("action a { first start; }").syntax());
+    assert_eq!(nodes_named(&usage, "InitialNodeMember"), 1, "{usage}");
+}
+
+#[test]
+fn an_initial_node_member_owns_exactly_what_the_production_writes() {
+    // MemberPrefix 'first' [QualifiedName] RelationshipBody, in that order. The
+    // memberFeature is a REFERENCE, so the name is a QualifiedName and no usage node is
+    // built for it — and no DefinitionMember is built around the member, because it is
+    // a FeatureMembership of its own, dispatched as ReturnParameterMember is.
+    let tree = render(&parse_accepted("action def A { first start; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "InitialNodeMember"),
+        [
+            "MemberPrefix",
+            "KwFirst",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{tree}"
+    );
+    assert_eq!(nodes_named(&tree, "DefinitionMember"), 0, "{tree}");
+}
+
+#[test]
+fn an_initial_node_member_takes_a_visibility_a_qualified_name_and_a_braced_body() {
+    // `private first A3;` is the 16th, in vendor/corpus/sysml/src/examples/Simple Tests/
+    // DecisionTest.sysml.
+    parse_accepted("action def A { private first A3; }");
+    // [QualifiedName], not a simple name (8.2.2.17.1); the corpus does not qualify one.
+    parse_accepted("action def A { first Actions::Action::start; }");
+    // RelationshipBody's braced form (8.2.2.2). The corpus writes none; the production
+    // states it, so the parser must not require the corpus's habits.
+    parse_accepted("action def A { first start { /* the initial node */ } }");
+}
+
+#[test]
+fn an_initial_node_member_is_admitted_by_a_calculation_body_too() {
+    // CalculationBodyItem = ActionBodyItem | ReturnParameterMember (8.2.2.19), so the
+    // containment runs from calculation to action and `first` comes with it. A
+    // constraint def shares CalculationBody (8.2.2.20), so it does as well.
+    parse_accepted("calc def C { first start; }");
+    parse_accepted("constraint def C { first start; }");
+    // And it is an item, so the trailing ResultExpressionMember still follows it.
+    let tree = render(&parse_accepted("calc def C { first start; x + 1 }").syntax());
+    assert_eq!(nodes_named(&tree, "InitialNodeMember"), 1, "{tree}");
+    assert_eq!(nodes_named(&tree, "ResultExpressionMember"), 1, "{tree}");
+}
+
+#[test]
+fn an_initial_node_member_is_not_a_definition_or_requirement_body_item() {
+    // DefinitionBodyItem has no ActionBodyItem alternative (8.2.2.6.1), and
+    // RequirementBodyItem reaches only DefinitionBodyItem (8.2.2.21.1) — so a requirement
+    // body does NOT admit `first`, however much it looks like a behaviour. Held as files
+    // by tests/rejection/initial-node-member-is-not-a-definition-body-item.sysml and
+    // initial-node-member-is-not-a-requirement-body-item.sysml.
+    parse_rejected("part def V { first start; }");
+    parse_rejected("requirement def R { first start; }");
+    parse_rejected("package P { first start; }");
+    parse_rejected("first start;");
+}
+
+#[test]
+fn an_initial_node_member_needs_its_name_and_its_body() {
+    // memberFeature = [QualifiedName] is not optional, and neither is RelationshipBody.
+    parse_rejected("action def A { first; }");
+    parse_rejected("action def A { first start }");
+    // A feature chain is not a QualifiedName (KerML 8.2.3.4.1 against 8.2.5.8.2); the
+    // successions that take one write `then` after it. Held as a file by
+    // tests/rejection/initial-node-member-names-a-qualified-name-not-a-feature-chain.sysml.
+    parse_rejected("action def A { first a.b; }");
+}
+
+#[test]
+fn a_succession_that_opens_on_first_is_not_an_initial_node_member() {
+    // `first a then b;` is SuccessionAsUsage (8.2.2.13.3), and GuardedSuccession
+    // (8.2.2.17.8) opens on `first` too. Neither is implemented, so the text is rejected
+    // — but it must be rejected WITHOUT an InitialNodeMember in the tree, because
+    // `first a` followed by `then` is not one: the production ends in RelationshipBody,
+    // which is `;` or `{`. A rejection file cannot show this; the tree can.
+    let tree = render(&parse_rejected("action def A { first a then b; }").syntax());
+    assert_eq!(nodes_named(&tree, "InitialNodeMember"), 0, "{tree}");
 }
 
 // -- FeatureChainExpression, KerML 8.2.5.8.2 --------------------------------------
@@ -3511,6 +3620,182 @@ fn null_is_written_two_ways() {
             "{source} is not a sequence expression:\n{rendered}"
         );
     }
+}
+
+// -- InvocationExpression and ArgumentList, KerML 8.2.5.8.3 ------------------------
+//
+// InvocationExpression   = InstantiatedTypeMember ArgumentList EmptyResultMember
+// InstantiatedTypeMember = memberElement = InstantiatedTypeReference
+//                        | OwnedFeatureChainMember
+// ArgumentList           = '(' ( PositionalArgumentList | NamedArgumentList )? ')'
+// PositionalArgumentList = ArgumentMember ( ',' ArgumentMember )*
+// NamedArgumentList      = NamedArgumentMember ( ',' NamedArgumentMember )*
+// NamedArgument          = ParameterRedefinition '=' ArgumentValue
+//
+// BaseExpression's alternative that a name followed by `(` selects. ArgumentMember,
+// Argument, ArgumentValue and EmptyResultMember were already implemented by the
+// operator core; this is the caller that reaches them through a written `(`.
+
+#[test]
+fn an_invocation_reads_the_positional_form_the_corpus_writes() {
+    // `sum(partMasses)` is the line from vendor/corpus/sysml/src/examples/
+    // Simple Tests/CalculationTest.sysml that this production exists for.
+    parse_accepted("calc def C { sum(partMasses) }");
+    parse_accepted("calc def C { return totalMass : MassValue = sum(partMasses); }");
+    // Several arguments, as the trade-study files write `EngineEvaluation(a, b, c)`.
+    parse_accepted("calc def C { EngineEvaluation(a, b, c) }");
+    // An argument is an OwnedExpression, not just a name (ArgumentValue, 8.2.5.8.1).
+    parse_accepted("calc def C { f(a + b, c * 2) }");
+    // And ParameterTest's `F(a, 2)`.
+    parse_accepted("calc def C { F(a, 2) }");
+}
+
+#[test]
+fn an_invocation_takes_no_arguments_at_all() {
+    // The `?` in `'(' ( PositionalArgumentList | NamedArgumentList )? ')'`. The corpus
+    // writes `size()`.
+    parse_accepted("calc def C { size() }");
+}
+
+#[test]
+fn an_invocation_names_its_type_with_a_qualified_name() {
+    // InstantiatedTypeReference = [QualifiedName] (KerML 8.2.5.8.3), so the `::` form
+    // the corpus imports through is a target too.
+    parse_accepted("calc def C { ISQ::sum(x) }");
+    parse_accepted("calc def C { NumericalFunctions::round(x) }");
+}
+
+#[test]
+fn an_invocation_reads_the_named_form() {
+    // NamedArgument = ParameterRedefinition '=' ArgumentValue (KerML 8.2.5.8.3), which
+    // ParameterTest writes as `F(q = 1, p = a)`.
+    parse_accepted("calc def C { F(q = 1, p = a) }");
+    parse_accepted("calc def C { F(q = 1) }");
+}
+
+#[test]
+fn an_invocation_nests_in_itself_and_in_other_expressions() {
+    // An argument is a full OwnedExpression, so an invocation is an argument.
+    parse_accepted("calc def C { sum(f(x), g(y)) }");
+    // And an invocation is an operand like any other primary expression.
+    parse_accepted("calc def C { sum(x) + 1 }");
+    parse_accepted("calc def C { a <= sum(x) }");
+}
+
+#[test]
+fn an_invocation_is_told_from_the_expressions_that_share_its_tokens() {
+    // A `(` with no name before it is a SequenceExpression or a NullExpression
+    // (KerML 8.2.5.8.2, 8.2.5.8.3), not an invocation. `and` is a reserved keyword and
+    // a keyword is not a name (SysML 8.2.2.1.2), so `x and (y)` is an operator over a
+    // parenthesised operand — the case that makes the recogniser ask for a NAME rather
+    // than for any token before the `(`.
+    let grouped = render(&parse_accepted("calc def C { (a + b) * c }").syntax());
+    assert_eq!(
+        nodes_named(&grouped, "InvocationExpression"),
+        0,
+        "{grouped}"
+    );
+    let conjunction = render(&parse_accepted("calc def C { x and (y) }").syntax());
+    assert_eq!(
+        nodes_named(&conjunction, "InvocationExpression"),
+        0,
+        "{conjunction}"
+    );
+    // A bare name with no `(` after it stays a FeatureReferenceExpression (8.2.5.8.3).
+    let bare = render(&parse_accepted("calc def C { x }").syntax());
+    assert_eq!(nodes_named(&bare, "InvocationExpression"), 0, "{bare}");
+    assert_eq!(
+        nodes_named(&bare, "FeatureReferenceExpression"),
+        1,
+        "{bare}"
+    );
+}
+
+#[test]
+fn an_invocation_builds_the_members_the_clause_names() {
+    let rendered = render(&parse_accepted("calc def C { f(a, b) }").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "InvocationExpression"),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "ArgumentList"), 1, "{rendered}");
+    assert_eq!(
+        nodes_named(&rendered, "PositionalArgumentList"),
+        1,
+        "{rendered}"
+    );
+    // One ArgumentMember per argument, and each owns an Argument and an ArgumentValue.
+    assert_eq!(nodes_named(&rendered, "ArgumentMember"), 2, "{rendered}");
+    assert_eq!(nodes_named(&rendered, "ArgumentValue"), 2, "{rendered}");
+    assert_eq!(
+        nodes_named(&rendered, "InstantiatedTypeReference"),
+        1,
+        "{rendered}"
+    );
+    // THREE EmptyResultMembers, not one. KerML 8.2.5.8.3 names an EmptyResultMember in
+    // FeatureReferenceExpression as well as in InvocationExpression, and `a` and `b` are
+    // each a FeatureReferenceExpression: one result parameter per argument, plus the
+    // invocation's own. The empty form below isolates the invocation's.
+    assert_eq!(nodes_named(&rendered, "EmptyResultMember"), 3, "{rendered}");
+    assert_eq!(nodes_named(&rendered, "NamedArgumentList"), 0, "{rendered}");
+}
+
+#[test]
+fn an_empty_argument_list_builds_the_invocations_own_result_parameter() {
+    // With no arguments there is no other expression to own one, so the only
+    // EmptyResultMember left is the result parameter the invocation itself owns —
+    // which is what isolates it from the three the two-argument form has.
+    let empty = render(&parse_accepted("calc def C { f() }").syntax());
+    assert_eq!(nodes_named(&empty, "EmptyResultMember"), 1, "{empty}");
+    assert_eq!(nodes_named(&empty, "ArgumentList"), 1, "{empty}");
+    // The `?` was not taken, so neither list node is built.
+    assert_eq!(nodes_named(&empty, "PositionalArgumentList"), 0, "{empty}");
+    assert_eq!(nodes_named(&empty, "NamedArgumentList"), 0, "{empty}");
+}
+
+#[test]
+fn a_named_argument_builds_the_other_alternative() {
+    // NamedArgument = ParameterRedefinition '=' ArgumentValue (KerML 8.2.5.8.3): the
+    // value hangs off the NamedArgument directly, with no Argument between them, which
+    // is the shape difference from a positional ArgumentMember.
+    let named = render(&parse_accepted("calc def C { f(q = 1) }").syntax());
+    assert_eq!(nodes_named(&named, "NamedArgumentList"), 1, "{named}");
+    assert_eq!(nodes_named(&named, "NamedArgumentMember"), 1, "{named}");
+    assert_eq!(nodes_named(&named, "NamedArgument"), 1, "{named}");
+    assert_eq!(nodes_named(&named, "ParameterRedefinition"), 1, "{named}");
+    assert_eq!(nodes_named(&named, "ArgumentValue"), 1, "{named}");
+    assert_eq!(nodes_named(&named, "PositionalArgumentList"), 0, "{named}");
+    assert_eq!(nodes_named(&named, "ArgumentMember"), 0, "{named}");
+    assert_eq!(nodes_named(&named, "Argument"), 0, "{named}");
+}
+
+#[test]
+fn an_argument_list_is_one_alternative_or_the_other_and_never_both() {
+    // ArgumentList = '(' ( PositionalArgumentList | NamedArgumentList )? ')' — the two
+    // lists are alternatives, so a mixed list is not this grammar. `=` is not an infix
+    // operator in KerML 8.2.5.8.1 table 6, so `q = 1` is not an OwnedExpression either
+    // and cannot be read as a positional argument. Held as files by
+    // tests/rejection/argument-list-does-not-mix-positional-and-named.sysml and
+    // argument-list-does-not-mix-named-and-positional.sysml.
+    parse_rejected("calc def C { f(a, q = 1) }");
+    parse_rejected("calc def C { f(q = 1, a) }");
+    // No trailing comma: the list is `ArgumentMember ( ',' ArgumentMember )*`, unlike a
+    // SequenceExpressionList, which states a trailing `','?` and does admit `( a , )`.
+    // Held as a file by tests/rejection/argument-list-takes-no-trailing-comma.sysml.
+    parse_rejected("calc def C { f(a,) }");
+    // An unclosed list is still an error.
+    parse_rejected("calc def C { f(a }");
+}
+
+#[test]
+fn a_constructor_expression_is_still_absent() {
+    // BaseExpression's other ArgumentList-bearing alternative is ConstructorExpression
+    // (KerML 8.2.5.8.3), `new A(y = a)`, and implementing ArgumentList does NOT
+    // implement it: `new` is a keyword this parser does not read. ParameterTest writes
+    // it, which is why that file still does not parse. Held as a file by
+    // tests/rejection/constructor-expression-is-not-implemented.sysml.
+    parse_rejected("calc def C { new A(y = a) }");
 }
 
 // -- multiplicity, SysML 8.2.2.6.6 -------------------------------------------------

@@ -8,7 +8,7 @@ an AI; unchanged units carry forward untouched with their evidence intact.
 
 Run AFTER grammar_plan.py, which does the reclassification.
 
-    python3.11 .claude/scripts/grammar_rebase.py
+    python3.12 .claude/scripts/grammar_rebase.py
 """
 
 from __future__ import annotations

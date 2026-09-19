@@ -12,8 +12,8 @@ and nothing in the pinned inputs implies one. Lexical token kinds are authored t
 because the specification names them (KerML 8.2.2) while the Xtext hides them inside
 terminal regexes.
 
-    python3.11 scripts/gen_syntax_kinds.py           write the generated module
-    python3.11 scripts/gen_syntax_kinds.py --check   fail if it is stale
+    python3.12 scripts/gen_syntax_kinds.py           write the generated module
+    python3.12 scripts/gen_syntax_kinds.py --check   fail if it is stale
 """
 
 from __future__ import annotations
@@ -387,6 +387,18 @@ NODES = [
             "`SysML` 8.2.2.19 — the metaclass is `ReturnParameterMembership`."
         ),
     ),
+    # ActionBodyItem's second alternative, and the first piece of the control-flow layer.
+    # Its memberFeature is a REFERENCE — `[QualifiedName]`, not an owned usage — so it
+    # owns no element, and like ReturnParameterMember it is a membership of its own
+    # (FeatureMembership, where the Pilot returns Membership) rather than the body's
+    # ordinary member.
+    (
+        "InitialNodeMember",
+        (
+            "`MemberPrefix 'first' memberFeature = [QualifiedName] RelationshipBody`. "
+            "`SysML` 8.2.2.17.1 — the metaclass is `FeatureMembership`."
+        ),
+    ),
     # ConstraintDefinition's shape differing in one keyword, over the body the two share.
     # The metaclass is different — an ActionDefinition that is also a Function (8.3.19.2),
     # where a ConstraintDefinition is a Predicate — so the node is its own and not a
@@ -684,6 +696,41 @@ NODES = [
     ),
     ("FeatureReferenceMember", "`memberElement = FeatureReference`. `KerML` 8.2.5.8.3."),
     ("FeatureReference", "`[QualifiedName]`. `KerML` 8.2.5.8.3."),
+    # The invocation, KerML 8.2.5.8.3. A name followed by `(` — the one thing that tells
+    # it from a FeatureReferenceExpression, which is the same name without the `(`.
+    (
+        "InvocationExpression",
+        ("`InstantiatedTypeMember ArgumentList EmptyResultMember`. `KerML` 8.2.5.8.3."),
+    ),
+    (
+        "InstantiatedTypeMember",
+        (
+            "`memberElement = InstantiatedTypeReference | OwnedFeatureChainMember`. "
+            "`KerML` 8.2.5.8.3 — only the first alternative is read."
+        ),
+    ),
+    ("InstantiatedTypeReference", "`[QualifiedName]`. `KerML` 8.2.5.8.3."),
+    (
+        "ArgumentList",
+        ("`'(' ( PositionalArgumentList | NamedArgumentList )? ')'`. `KerML` 8.2.5.8.3."),
+    ),
+    (
+        "PositionalArgumentList",
+        "`ArgumentMember ( ',' ArgumentMember )*`. `KerML` 8.2.5.8.3.",
+    ),
+    (
+        "NamedArgumentList",
+        "`NamedArgumentMember ( ',' NamedArgumentMember )*`. `KerML` 8.2.5.8.3.",
+    ),
+    ("NamedArgumentMember", "`ownedMemberFeature = NamedArgument`. `KerML` 8.2.5.8.3."),
+    (
+        "NamedArgument",
+        "`ParameterRedefinition '=' ArgumentValue`. `KerML` 8.2.5.8.3.",
+    ),
+    (
+        "ParameterRedefinition",
+        "`redefinedFeature = [QualifiedName]`. `KerML` 8.2.5.8.3.",
+    ),
     # Literal expressions, KerML 8.2.5.8.4.
     ("LiteralBoolean", "`'true' | 'false'`. `KerML` 8.2.5.8.4."),
     ("LiteralString", "`STRING_VALUE`. `KerML` 8.2.5.8.4."),
@@ -858,13 +905,13 @@ def main(argv: list[str] | None = None) -> int:
     os.chdir(ROOT)
 
     if not TOKENS.is_file():
-        print("no token set — run python3.11 scripts/extract_productions.py")
+        print("no token set — run python3.12 scripts/extract_productions.py")
         return 0
 
     text = build()
     if args.check:
         if not OUT.is_file() or OUT.read_text() != text:
-            print(f"{OUT} is stale — run python3.11 {GENERATED_BY}")
+            print(f"{OUT} is stale — run python3.12 {GENERATED_BY}")
             return 1
         print(f"syntax kinds current ({OUT})")
         return 0

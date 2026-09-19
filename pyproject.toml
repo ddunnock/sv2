@@ -16,11 +16,10 @@ version = "0.1.0"
 requires-python = ">=3.12"
 
 [tool.ruff]
-# py312 is the floor the lints assume: the interpreter this repository is moving
-# to, and the newest one RHEL 9 AppStream provides as a supported package. The
-# scripts are still invoked as `python3.11` until python3.12 is installed on the
-# machines that run the gate, and mypy stays at 3.11 until then — which is what
-# would catch 3.12-only syntax reaching a 3.11 interpreter.
+# py312 is the interpreter the scripts run on — invoked as `python3.12`, the
+# newest one RHEL 9 AppStream provides as a supported package — and ruff and mypy
+# both target it, so the lints and the type check assume the interpreter that
+# actually runs the gate.
 target-version = "py312"
 line-length = 100
 src = ["scripts", ".claude/scripts"]
@@ -104,7 +103,7 @@ docstring-code-format = true
 
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = true
 warn_unreachable = true
 warn_no_return = true

@@ -8,7 +8,7 @@ in the standard and the configuration in the repository are the same text.
 Nothing otherwise stops the two drifting, and a standard that describes a lint
 setup nobody runs is worse than no standard, because it is trusted.
 
-    python3.11 scripts/check_standards_config.py
+    python3.12 scripts/check_standards_config.py
 
 Every key a standard's TOML block sets must have the same value in the governed
 file; keys the repository adds are not compared. A block is bound to its file by

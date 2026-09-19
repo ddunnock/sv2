@@ -622,16 +622,16 @@ enum Body {
     ///                | GuardedSuccessionMember                    SysML 8.2.2.17.1
     /// ```
     ///
-    /// It DECIDES NOTHING TODAY. `NonBehaviorBodyItem`'s implemented alternatives —
-    /// `Import`, `AliasMember`, `DefinitionMember` — are the three a definition body
-    /// reads, and the other three alternatives are the control-flow layer and are absent,
-    /// so every question a `Body` answers, this answers as `Definition` does.
+    /// `NonBehaviorBodyItem`'s implemented alternatives — `Import`, `AliasMember`,
+    /// `DefinitionMember` — are the three a definition body reads, so for those this
+    /// answers as `Definition` does. It differs in the control-flow alternatives, of
+    /// which `InitialNodeMember` is implemented: see `admits_action_body_item`.
     ///
-    /// It is a variant anyway, because the ITEM SET differs in the grammar even where
-    /// the implemented part does not, and the control-flow members attach to this one.
-    /// The last time this file argued that a body variant would never differ from
-    /// `Definition` — in `requirement_body`, one commit before `SubjectMember` — it
-    /// differed in the next commit, and the dispatch had to be unpicked to find out.
+    /// It was a variant before it decided anything, because the ITEM SET differs in the
+    /// grammar even where the implemented part did not. That is what let `first` attach
+    /// here with no change to the dispatch of anything else — the second time a body
+    /// variant argued to be identical to `Definition` stopped being so one production
+    /// later, `requirement_body` and `SubjectMember` being the first.
     Action,
     /// The item run inside the braced form of `CalculationBody`. `SysML` only.
     ///
@@ -703,7 +703,7 @@ impl Body {
     /// Asked separately from `admits_subject` although both answer `Requirement` today,
     /// because they stop agreeing the moment `CaseBody` lands: `CaseBodyItem` reaches
     /// `SubjectMember` and does NOT reach `RequirementConstraintMember` (`SysML`
-    /// 8.2.2.21.1 against 8.2.2.23). Folding them into one question now would have to be
+    /// 8.2.2.21.1 against 8.2.2.22). Folding them into one question now would have to be
     /// unfolded then, and the unfolding is the kind that gets missed.
     fn admits_requirement_constraint(self) -> bool {
         matches!(self, Self::Requirement)
@@ -728,11 +728,29 @@ impl Body {
     /// come to be admitted in an action body by accident;
     /// tests/rejection/return-parameter-member-is-not-an-action-body-item.sysml is the
     /// file that fails if it ever is.
-    ///
-    /// `ActionBodyItem` is also reached by `RequirementBodyItem` and by
-    /// `DefinitionBodyItem`, neither of which reaches this member either.
     fn admits_return_parameter(self) -> bool {
         matches!(self, Self::Calculation)
+    }
+
+    /// Whether `ActionBodyItem`'s alternatives beyond `NonBehaviorBodyItem` belong to
+    /// this body — today, `InitialNodeMember`.
+    ///
+    /// `ActionBodyItem` is reached by eight productions: `ActionBody` (`SysML`
+    /// 8.2.2.17.1), `CalculationBodyItem` (8.2.2.19), `CaseBodyItem` (8.2.2.22),
+    /// `ActionBodyParameter` (8.2.2.17.7), and the braced bodies of the four
+    /// `Transition*ActionUsage`s (8.2.2.18.3). NOT by `RequirementBodyItem`, which reaches
+    /// only `DefinitionBodyItem` (8.2.2.21.1), and NOT by `DefinitionBodyItem` (8.2.2.6.1).
+    /// A comment on `admits_return_parameter` once said the opposite; it was false, and
+    /// widening this to `Requirement` on its word would have admitted `first` where the
+    /// grammar has none. tests/rejection/initial-node-member-is-not-a-requirement-body-item.sysml
+    /// fails if it ever is. Of the eight, only `ActionBody` and `CalculationBody` have a
+    /// `Body` variant — the rest are unimplemented — so `Action` and `Calculation` are the
+    /// whole of it today, and each of the others joins this when its body lands.
+    ///
+    /// `Calculation` covers `ConstraintDefinition` too, which shares `CalculationBody`
+    /// (8.2.2.20): a constraint body admits `first` by the grammar, however unusual.
+    fn admits_action_body_item(self) -> bool {
+        matches!(self, Self::Action | Self::Calculation)
     }
 }
 
@@ -1535,6 +1553,13 @@ impl<'a> Parser<'a> {
                 // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
                 // its own membership node rather than the one `membership` builds.
                 self.namespace_feature_member();
+            } else if body.admits_action_body_item() && self.at_initial_node_member() {
+                // ActionBodyItem's second alternative (SysML 8.2.2.17.1), reached from an
+                // action body and, through CalculationBodyItem (8.2.2.19), a calculation
+                // body. Owns its membership as ReturnParameterMember below does, so it
+                // cannot go through `membership`. Before the result-expression test for
+                // the same reason `return` is: it continues the item run.
+                self.initial_node_member();
             } else if body.admits_return_parameter() && self.at_return_parameter_member() {
                 // CalculationBodyItem's second alternative (SysML 8.2.2.19). Before the
                 // result-expression test below, because `return` is where the item run
@@ -3501,6 +3526,10 @@ impl<'a> Parser<'a> {
             self.sequence_expression();
         } else if self.at_literal_expression() {
             self.literal_expression();
+        } else if self.at_invocation_expression() {
+            // BEFORE the feature reference, and the two are told apart by ONE token:
+            // both open on a QualifiedName and only an invocation has a `(` after it.
+            self.invocation_expression();
         } else if self.at_feature_reference() {
             self.feature_reference_expression();
         } else {
@@ -3593,6 +3622,209 @@ impl<'a> Parser<'a> {
     /// or with the `'$'` of its global-scope prefix (`KerML` 8.2.3.4.1).
     fn at_feature_reference(&self) -> bool {
         self.at_name() || self.at(SyntaxKind::Dollar)
+    }
+
+    /// The index just past a `QualifiedName` written at the `n`th meaningful token, or
+    /// `None` if one is not written there.
+    ///
+    /// `QualifiedName = ( '$' '::' )? ( NAME '::' )* NAME` (`KerML` 8.2.3.4.1), walked
+    /// exactly as `qualified_name` consumes it — including the two-token test that a
+    /// `::` belongs to the name only when a NAME follows it, so `A::*` ends at `A`.
+    /// A recogniser that walked it differently from the parser would accept a prefix the
+    /// parser then failed to read.
+    fn skip_qualified_name(&self, n: usize) -> Option<usize> {
+        let mut n = n;
+        if self
+            .peek_nth(n)
+            .is_some_and(|t| t.kind == SyntaxKind::Dollar)
+        {
+            n += 1;
+            if !self.nth_is(n, SyntaxKind::ColonColon) {
+                return None;
+            }
+            n += 1;
+        }
+        if !self.nth_is_name(n) {
+            return None;
+        }
+        n += 1;
+        while self.nth_is(n, SyntaxKind::ColonColon) && self.nth_is_name(n + 1) {
+            n += 2;
+        }
+        Some(n)
+    }
+
+    /// Whether an `InvocationExpression` starts here.
+    ///
+    /// A `QualifiedName` with a `'('` after it — the whole of what separates it from a
+    /// `FeatureReferenceExpression`, which is the same name with nothing after it
+    /// (`KerML` 8.2.5.8.3).
+    ///
+    /// It asks for a NAME rather than for any token before the `(`, which is what keeps
+    /// `x and (y)` an operator over a parenthesised operand: `and` is reserved
+    /// (`SysML` 8.2.2.1.2) and a keyword is not a name, so `nth_is_name` says no. A `(`
+    /// with nothing before it never reaches here at all — `null_expression` and
+    /// `sequence_expression` are asked first.
+    fn at_invocation_expression(&self) -> bool {
+        self.skip_qualified_name(0)
+            .is_some_and(|n| self.nth_is(n, SyntaxKind::LParen))
+    }
+
+    // production: InvocationExpression
+    //
+    // InvocationExpression : InvocationExpression =
+    //     ownedRelationship += InstantiatedTypeMember
+    //     ArgumentList
+    //     ownedRelationship += EmptyResultMember                 (KerML 8.2.5.8.3)
+    //
+    // production: InstantiatedTypeReference
+    //
+    // InstantiatedTypeReference : Type = [QualifiedName]         (KerML 8.2.5.8.3)
+    //
+    // InstantiatedTypeMember is NOT marked. It is
+    //
+    //     InstantiatedTypeMember = memberElement = InstantiatedTypeReference
+    //                            | OwnedFeatureChainMember       (KerML 8.2.5.8.3)
+    //
+    // and only the first alternative is read here. The second is a FeatureChain — `a.b(x)`
+    // — and it is absent for the same reason FeatureChainMember's chain alternative is:
+    // the chain productions read a single link, and a multi-link chain in this position
+    // has no caller yet. The node is still built, because the membership is in the tree
+    // either way; what is not claimed is the alternation.
+    //
+    // The EmptyResultMember is the result parameter every invocation owns and nobody
+    // writes, exactly as FeatureReferenceExpression owns one (8.2.5.8.3 names it in both).
+    fn invocation_expression(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::InvocationExpression);
+        self.start_node(SyntaxKind::InstantiatedTypeMember);
+        self.start_node(SyntaxKind::InstantiatedTypeReference);
+        self.qualified_name();
+        self.finish_node();
+        self.finish_node();
+        self.argument_list();
+        self.empty_result_member();
+        self.finish_node();
+    }
+
+    // production: ArgumentList
+    //
+    // ArgumentList = '(' ( PositionalArgumentList | NamedArgumentList )? ')'
+    //                                                            (KerML 8.2.5.8.3)
+    //
+    // The two lists are ALTERNATIVES, so a list commits to one of them and a mixed list
+    // is not this grammar — tests/rejection/argument-list-does-not-mix-positional-and-
+    // named.sysml and its mirror hold both directions.
+    //
+    // `at_named_argument` decides which, and it is one token of lookahead past a
+    // QualifiedName: a NamedArgument is `ParameterRedefinition '=' ...` and a positional
+    // argument is an OwnedExpression, which cannot contain a bare `=` because `=` is not
+    // in the precedence table of 8.2.5.8.1 (docs/operator-precedence.toml, which a test
+    // diffs against the parser's INFIX table both ways).
+    fn argument_list(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ArgumentList);
+        self.expect(SyntaxKind::LParen, "`(`");
+        if !self.at(SyntaxKind::RParen) {
+            if self.at_named_argument() {
+                self.named_argument_list();
+            } else {
+                self.positional_argument_list();
+            }
+        }
+        self.expect(SyntaxKind::RParen, "`)`");
+        self.finish_node();
+    }
+
+    /// Whether a `NamedArgument` rather than a positional one is written here.
+    ///
+    /// `NamedArgument = ParameterRedefinition '=' ArgumentValue` (`KerML` 8.2.5.8.3),
+    /// and `ParameterRedefinition` is a `QualifiedName`, so the question is whether a
+    /// single `'='` follows one. The `=` is checked by its own token kind, so the `==`
+    /// of an equality expression is a different token and does not answer this.
+    fn at_named_argument(&self) -> bool {
+        self.skip_qualified_name(0)
+            .is_some_and(|n| self.nth_is(n, SyntaxKind::Eq))
+    }
+
+    // production: PositionalArgumentList
+    //
+    // PositionalArgumentList =
+    //     ownedRelationship += ArgumentMember
+    //     ( ',' ownedRelationship += ArgumentMember )*           (KerML 8.2.5.8.3)
+    //
+    // NO trailing comma, unlike the SequenceExpressionList three clauses away, which
+    // states `','?` and does admit `( a , )` —
+    // tests/rejection/argument-list-takes-no-trailing-comma.sysml is that difference.
+    //
+    // TIER_LOOSEST because an ArgumentMember's value is a whole OwnedExpression
+    // (ArgumentValue, 8.2.5.8.1): the `(` and `)` bound it, so no operator inside can
+    // reach past them and nothing needs to be held back from the climb.
+    fn positional_argument_list(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PositionalArgumentList);
+        self.argument_member(TIER_LOOSEST);
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.argument_member(TIER_LOOSEST);
+        }
+        self.finish_node();
+    }
+
+    // production: NamedArgumentList
+    //
+    // NamedArgumentList =
+    //     ownedRelationship += NamedArgumentMember
+    //     ( ',' ownedRelationship += NamedArgumentMember )*      (KerML 8.2.5.8.3)
+    fn named_argument_list(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::NamedArgumentList);
+        self.named_argument_member();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.named_argument_member();
+        }
+        self.finish_node();
+    }
+
+    // production: NamedArgumentMember
+    //
+    // NamedArgumentMember : FeatureMembership =
+    //     ownedMemberFeature = NamedArgument                     (KerML 8.2.5.8.3)
+    //
+    // A FeatureMembership, and NOT the ParameterMembership its positional sibling
+    // ArgumentMember is (8.2.5.8.1). The two argument forms therefore differ in the
+    // abstract syntax and not only in the text. What the grammar states about the
+    // difference and this comment does not infer past: a NamedArgument names the
+    // parameter it supplies through a ParameterRedefinition, and an ArgumentMember has
+    // no such relationship.
+    //
+    // production: NamedArgument
+    //
+    // NamedArgument : Feature =
+    //     ownedRelationship += ParameterRedefinition '='
+    //     ownedRelationship += ArgumentValue                     (KerML 8.2.5.8.3)
+    //
+    // production: ParameterRedefinition
+    //
+    // ParameterRedefinition : Redefinition =
+    //     redefinedFeature = [QualifiedName]                     (KerML 8.2.5.8.3)
+    //
+    // The ArgumentValue node is built here rather than by `argument_member`, because a
+    // NamedArgument owns its value directly and has no Argument between the two.
+    fn named_argument_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::NamedArgumentMember);
+        self.start_node(SyntaxKind::NamedArgument);
+        self.start_node(SyntaxKind::ParameterRedefinition);
+        self.qualified_name();
+        self.finish_node();
+        self.expect(SyntaxKind::Eq, "`=` after a named argument's parameter");
+        self.start_node(SyntaxKind::ArgumentValue);
+        self.owned_expression();
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
     }
 
     // production: FeatureReferenceExpression
@@ -4183,12 +4415,13 @@ impl<'a> Parser<'a> {
     //                      ActionTargetSuccessionMember*
     //                    | GuardedSuccessionMember
     //
-    // Only the first alternative is read, and only the part of it this parser already
-    // had: NonBehaviorBodyItem is Import | AliasMember | DefinitionMember |
-    // VariantUsageMember | NonOccurrenceUsageMember | SourceSuccessionMember?
-    // StructureUsageMember (8.2.2.17.1), and the first three are the three a definition
-    // body reads. So `action def Brake;` and `action def Brake { part p; }` are read, and
-    // `first`, `then`, `accept`, `send`, `fork`, `join`, `merge`, `decide` and `assign`
+    // The first alternative is read in the part this parser already had:
+    // NonBehaviorBodyItem is Import | AliasMember | DefinitionMember | VariantUsageMember
+    // | NonOccurrenceUsageMember | SourceSuccessionMember? StructureUsageMember
+    // (8.2.2.17.1), and the first three are the three a definition body reads. Of the
+    // second, InitialNodeMember is read and the ActionTargetSuccessionMember* after it is
+    // not. So `action def Brake;`, `action def Brake { part p; }` and `first start;` are
+    // read, and `then`, `accept`, `send`, `fork`, `join`, `merge`, `decide` and `assign`
     // are all reported where they stand.
     //
     // That is deliberate and it is most of the corpus's action text: 403 `then` and 139
@@ -4382,6 +4615,75 @@ impl<'a> Parser<'a> {
         if !self.usage_element() {
             self.error_expected("a usage after `return`");
         }
+        self.finish_node();
+    }
+
+    /// Whether an `InitialNodeMember` starts here.
+    ///
+    /// `first` alone does not say so. Three productions reachable from an action body
+    /// open on it — this one, `SuccessionAsUsage` (`'first' ConnectorEndMember 'then'`,
+    /// `SysML` 8.2.2.13.3) and `GuardedSuccession` (`'first' FeatureChainMember
+    /// GuardExpressionMember 'then'`, 8.2.2.17.8) — and what separates them is what
+    /// follows the name: only this one ends in `RelationshipBody`, which opens on `;` or
+    /// `{` (8.2.2.2). So the whole `QualifiedName` is looked past, by the same rule
+    /// `qualified_name` reads it with, and the token after it decides. Committing on
+    /// `first` would build an `InitialNodeMember` out of `first a then b;` and report the
+    /// rest, which is a tree for a production the text does not contain.
+    ///
+    /// The other two are unimplemented, so a `first` this declines is recovered over and
+    /// reported — `first a then b;` is rejected by absence, not by rule.
+    fn at_initial_node_member(&self) -> bool {
+        let first = usize::from(self.at_visibility());
+        if !self.nth_is_keyword(first, "first") {
+            return false;
+        }
+        let is = |n: usize, kind: SyntaxKind| self.peek_nth(n).is_some_and(|t| t.kind == kind);
+        let named = |n: usize| self.peek_nth(n).is_some_and(|t| self.is_name(t));
+        // QualifiedName = ( '$' '::' )? ( NAME '::' )* NAME   (KerML 8.2.3.4.1)
+        let mut n = first + 1;
+        if is(n, SyntaxKind::Dollar) && is(n + 1, SyntaxKind::ColonColon) {
+            n += 2;
+        }
+        if !named(n) {
+            return false;
+        }
+        n += 1;
+        // A `::` is the name's only when a NAME follows it, as in `qualified_name`.
+        while is(n, SyntaxKind::ColonColon) && named(n + 1) {
+            n += 2;
+        }
+        is(n, SyntaxKind::Semicolon) || is(n, SyntaxKind::LBrace)
+    }
+
+    // production: InitialNodeMember
+    //
+    // InitialNodeMember : FeatureMembership =
+    //     MemberPrefix 'first' memberFeature = [QualifiedName]
+    //     RelationshipBody                                        (SysML 8.2.2.17.1)
+    //
+    // `first X;` names the SOURCE of a succession separately from its target, which a
+    // following `then` supplies (SysML 7.17.4); `first start;` — the start snapshot every
+    // action inherits from Actions::Action — is 15 of the corpus's 16. The succession it
+    // opens is ActionTargetSuccessionMember, which is unimplemented, so today the member
+    // stands alone: every corpus file that writes it goes on to `then`.
+    //
+    // The memberFeature is a REFERENCE, `[QualifiedName]`, not an ownedRelatedElement:
+    // the member owns no element, which is why the tree holds a QualifiedName and no
+    // usage node. The clause states the metaclass as FeatureMembership; the Pilot returns
+    // SysML::Membership and assigns memberElement — the same syntax, and the verified
+    // reference unit (InitialNodeMember@sysml) follows the clause. Like
+    // ReturnParameterMember it is its own membership, so it is dispatched in
+    // `body_elements` and not in `membership`.
+    //
+    // The RelationshipBody is not optional, so `first start` with no `;` is not this
+    // production: `at_initial_node_member` declines it and the recovery reports it.
+    fn initial_node_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::InitialNodeMember);
+        self.member_prefix();
+        self.expect_keyword("first");
+        self.qualified_name();
+        self.relationship_body();
         self.finish_node();
     }
 

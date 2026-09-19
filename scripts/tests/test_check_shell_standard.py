@@ -39,7 +39,7 @@ def test_conforming_executable_has_no_findings(tmp_path):
             True,
             "embedded interpreter",
         ),
-        ("a.sh", GOOD.replace("echo ok", "python3.11 -c 'print(1)'"), True, "embedded interpreter"),
+        ("a.sh", GOOD.replace("echo ok", "python3.12 -c 'print(1)'"), True, "embedded interpreter"),
         ("a.sh", GOOD.replace("echo ok", 'eval "$cmd"'), True, "`eval` is prohibited"),
         ("Bad_Name.sh", GOOD, True, "kebab-case"),
         (
@@ -57,7 +57,7 @@ def test_violation_is_reported(tmp_path, name, text, executable, expected):
 
 
 def test_running_a_python_file_is_not_an_embedded_program(tmp_path):
-    text = GOOD.replace("echo ok", 'exec python3.11 "${here}/hook_x.py"')
+    text = GOOD.replace("echo ok", 'exec python3.12 "${here}/hook_x.py"')
     assert messages(write(tmp_path, "shim.sh", text)) == []
 
 

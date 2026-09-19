@@ -10,7 +10,7 @@ the check is right.
 ## Before anything else
 
 - **`.claude/state/state.json` is the state of the work.** Objective, next step,
-  pending decisions, and the last gate results. `python3.11
+  pending decisions, and the last gate results. `python3.12
   .claude/scripts/state_report.py` renders it. Do not guess what is in progress.
 - **`./scripts/gate.sh` is the single definition of done.** Run it before claiming
   anything works. The Stop hook runs it too, so a red gate will not let the turn end.
@@ -67,7 +67,7 @@ The PreToolUse hook blocks writes to these. If one looks wrong, the generator or
 pinned input is wrong — never the file.
 
 - `vendor/**` — pinned by sha256 and OMG File ID. Moving to a new upstream is
-  `python3.11 scripts/vendor_sync.py --accept-new`, a deliberate act, recorded in
+  `python3.12 scripts/vendor_sync.py --accept-new`, a deliberate act, recorded in
   `.claude/state/deviations.json`.
 - `.claude/state/grammar/**`, `coverage.json`, `grammar-diff.json`, `decisions.json` —
   derived. Regenerate; do not edit.

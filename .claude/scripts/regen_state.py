@@ -5,8 +5,8 @@
 The "authored" object is never touched. ``--check`` compares everything except the
 gates snapshot, which only a regeneration writes.
 
-    python3.11 .claude/scripts/regen_state.py           rewrite
-    python3.11 .claude/scripts/regen_state.py --check   fail if stale (ignoring the timestamp)
+    python3.12 .claude/scripts/regen_state.py           rewrite
+    python3.12 .claude/scripts/regen_state.py --check   fail if stale (ignoring the timestamp)
 """
 
 from __future__ import annotations
@@ -177,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
         # itself. Re-running them here doubled every gate run's cargo and corpus work.
         if is_stale(doc["generated"], measured):
             print(
-                "state.json generated block is stale. Run python3.11 .claude/scripts/regen_state.py"
+                "state.json generated block is stale. Run python3.12 .claude/scripts/regen_state.py"
             )
             return 1
         print("state.json current")
