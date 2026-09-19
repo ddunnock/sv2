@@ -1,15 +1,22 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+
+import { fixtureTransport } from "@/ipc/fixture-client";
+import { THERMAL_CONTROL } from "@/ipc/fixture-thermal-control";
+import { createModelQueries, type Transport } from "@/ipc/model-queries";
+import { ok } from "@/model/result";
 
 import { Shell } from "./Shell";
 
 afterEach(cleanup);
 
-const shell = (): void => {
-  render(<Shell report={() => undefined} />);
+/** The shell on the fixture transport — the real parse path (§11 rule 5). */
+const shell = (transport: Transport = fixtureTransport(THERMAL_CONTROL)): void => {
+  const queries = createModelQueries(transport, "fixture");
+  render(<Shell services={{ queries, report: () => undefined }} />);
 };
 
 const navigator = (): HTMLElement | null => screen.queryByRole("navigation", { name: "Navigator" });
@@ -96,9 +103,61 @@ describe("Shell", () => {
 
   test("panels without data say what sv2 cannot do yet, rather than showing anything false", async () => {
     shell();
-    expect(screen.getByText(/sv2 cannot do listing a workspace's files yet/)).toBeDefined();
+    await userEvent.click(screen.getByRole("tab", { name: "Elements" }));
+    expect(screen.getByText(/sv2 cannot do building the element hierarchy yet/)).toBeDefined();
     await userEvent.click(screen.getByRole("tab", { name: "Element Source" }));
     expect(screen.getByText(/sv2 cannot do showing an element's source yet/)).toBeDefined();
+  });
+
+  describe("the Files tree (IX-01), from the workspace query", () => {
+    test("shows the workspace, its folders and files, with error counts in the names (IX-10)", async () => {
+      shell();
+      expect(await screen.findByRole("tree", { name: "Files" })).toBeDefined();
+      expect(screen.getByRole("treeitem", { name: "ThermalControl, 1 error" })).toBeDefined();
+      expect(screen.getByRole("treeitem", { name: "model, 1 error" })).toBeDefined();
+      expect(screen.getByRole("treeitem", { name: "ThermalControl.sysml, 1 error" })).toBeDefined();
+      expect(screen.getByRole("treeitem", { name: "Units.kerml" })).toBeDefined();
+    });
+
+    test("an unavailable answer is shown as the core's reason", async () => {
+      shell(() => Promise.resolve(ok({ kind: "unavailable", reason: { kind: "no-workspace" } })));
+      expect(await screen.findByText(/The Files tree needs an open workspace/)).toBeDefined();
+    });
+
+    test("a reply that fails its schema is an alert and a report, never shown as data", async () => {
+      const report = mock((_what: string, _detail: unknown) => undefined);
+      const queries = createModelQueries(
+        () =>
+          Promise.resolve(ok({ kind: "ready", data: { name: "W", files: [{ path: "/abs" }] } })),
+        "backend",
+      );
+      render(<Shell services={{ queries, report }} />);
+      expect((await screen.findByRole("alert")).textContent).toContain(
+        "The Files tree could not be read",
+      );
+      expect(report.mock.calls[0]?.[0]).toBe("query workspace failed");
+    });
+  });
+
+  describe("the status bar (UI-10)", () => {
+    test("counts the workspace's problems", async () => {
+      shell();
+      const footer = screen.getByRole("contentinfo");
+      await screen.findByRole("tree", { name: "Files" });
+      expect(footer.textContent).toContain("1 error");
+      expect(footer.textContent).toContain("0 warnings");
+    });
+
+    test("says, persistently, when the answers are fixture data", () => {
+      shell();
+      expect(screen.getByText("Fixture data")).toBeDefined();
+    });
+
+    test("says nothing about fixtures when the answers come from the core", () => {
+      const queries = createModelQueries(fixtureTransport(THERMAL_CONTROL), "backend");
+      render(<Shell services={{ queries, report: () => undefined }} />);
+      expect(screen.queryByText("Fixture data")).toBeNull();
+    });
   });
 
   test("the splitters size the navigator and the sidebar", () => {

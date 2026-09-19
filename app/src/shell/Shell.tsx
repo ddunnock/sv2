@@ -22,8 +22,15 @@
 
 import { type Dispatch, useEffect, useReducer, useState } from "react";
 
+import type { Workspace } from "@/contract/file";
 import type { SidebarState } from "@/contract/preferences";
+import type { IpcError } from "@/ipc/ipc-error";
+import type { Provenance } from "@/ipc/model-queries";
+import { answerToShow, type Query } from "@/model/query";
+import { buildFileTree } from "@/model/tree";
 
+import { AnswerView } from "./AnswerView";
+import { fileNodes, folderIds, plural } from "./file-nodes";
 import { IslandBoundary, type Report } from "./IslandBoundary";
 import {
   INITIAL_LAYOUT,
@@ -37,11 +44,13 @@ import { type Availability, ENABLED, IconButton } from "./primitives/IconButton"
 import { Splitter } from "./primitives/Splitter";
 import { Tabs } from "./primitives/Tabs";
 import { Toolbar, type ToolbarItem } from "./primitives/Toolbar";
+import { Tree } from "./primitives/Tree";
 import { SelectionProvider, useSelection } from "./selection";
+import { type Services, ServicesProvider, useAnswer, useServices } from "./services";
 import { Unavailable } from "./Unavailable";
 
-/** Props for `Shell`. Services come from the composition root, never from an import. */
-export type ShellProps = Readonly<{ report: Report }>;
+/** Props for `Shell`. Services come from the composition root, never from an import (§2.2). */
+export type ShellProps = Readonly<{ services: Services }>;
 
 type Theme = "light" | "dark";
 
@@ -64,8 +73,21 @@ const NAVIGATOR_MODES = [
 const NAVIGATOR_ID = "navigator-panel";
 const SIDEBAR_ID = "sidebar-panel";
 
-/** The whole window. */
-export function Shell({ report }: ShellProps): React.JSX.Element {
+/** The whole window, inside the services and selection it runs on. */
+export function Shell({ services }: ShellProps): React.JSX.Element {
+  return (
+    <ServicesProvider services={services}>
+      <SelectionProvider>
+        <Window />
+      </SelectionProvider>
+    </ServicesProvider>
+  );
+}
+
+/** The window itself. Asks for the workspace once; the tree and the status bar share it. */
+function Window(): React.JSX.Element {
+  const { queries, report } = useServices();
+  const workspace = useAnswer((q) => q.workspace(), "workspace");
   const [layout, dispatch] = useReducer(layoutReducer, INITIAL_LAYOUT);
   const [theme, setTheme] = useState<Theme>("light");
   const [navigatorWidth, setNavigatorWidth] = useState(280);
@@ -87,56 +109,59 @@ export function Shell({ report }: ShellProps): React.JSX.Element {
   }, []);
 
   return (
-    <SelectionProvider>
-      <div
-        className={`flex h-screen flex-col bg-bg font-sans text-fg text-ui ${theme === "dark" ? "t-dark" : "t-light"}`}
-      >
-        <TopBar
-          layout={layout}
-          dispatch={dispatch}
-          theme={theme}
-          onTheme={() => {
-            setTheme(theme === "dark" ? "light" : "dark");
-          }}
-        />
-        <div className="flex min-h-0 flex-1">
-          <ActivityRail layout={layout} dispatch={dispatch} />
-          {layout.navigator.kind === "open" ? (
-            <>
-              <Navigator layout={layout} dispatch={dispatch} width={navigatorWidth} />
-              <Splitter
-                label="Resize navigator"
-                controls={NAVIGATOR_ID}
-                side="start"
-                value={navigatorWidth}
-                min={200}
-                max={480}
-                onChange={setNavigatorWidth}
-              />
-            </>
-          ) : null}
-          <ViewArea />
-          {layout.sidebar.kind === "open" ? (
-            <Splitter
-              label="Resize sidebar"
-              controls={SIDEBAR_ID}
-              side="end"
-              value={sidebarWidth}
-              min={260}
-              max={560}
-              onChange={setSidebarWidth}
+    <div
+      className={`flex h-screen flex-col bg-bg font-sans text-fg text-ui ${theme === "dark" ? "t-dark" : "t-light"}`}
+    >
+      <TopBar
+        layout={layout}
+        dispatch={dispatch}
+        theme={theme}
+        onTheme={() => {
+          setTheme(theme === "dark" ? "light" : "dark");
+        }}
+      />
+      <div className="flex min-h-0 flex-1">
+        <ActivityRail layout={layout} dispatch={dispatch} />
+        {layout.navigator.kind === "open" ? (
+          <>
+            <Navigator
+              layout={layout}
+              dispatch={dispatch}
+              width={navigatorWidth}
+              workspace={workspace}
             />
-          ) : null}
-          <Sidebar
-            sidebar={layout.sidebar}
-            dispatch={dispatch}
-            width={sidebarWidth}
-            report={report}
+            <Splitter
+              label="Resize navigator"
+              controls={NAVIGATOR_ID}
+              side="start"
+              value={navigatorWidth}
+              min={200}
+              max={480}
+              onChange={setNavigatorWidth}
+            />
+          </>
+        ) : null}
+        <ViewArea />
+        {layout.sidebar.kind === "open" ? (
+          <Splitter
+            label="Resize sidebar"
+            controls={SIDEBAR_ID}
+            side="end"
+            value={sidebarWidth}
+            min={260}
+            max={560}
+            onChange={setSidebarWidth}
           />
-        </div>
-        <StatusBar layout={layout} />
+        ) : null}
+        <Sidebar
+          sidebar={layout.sidebar}
+          dispatch={dispatch}
+          width={sidebarWidth}
+          report={report}
+        />
       </div>
-    </SelectionProvider>
+      <StatusBar layout={layout} workspace={workspace} provenance={queries.provenance} />
+    </div>
   );
 }
 
@@ -242,12 +267,14 @@ function ActivityRail({ layout, dispatch }: RegionProps): React.JSX.Element {
   );
 }
 
-/** UI-03: the Files and Elements trees, not wired to data until Phase 4. */
+/** UI-03: the Files tree from the workspace, and the Elements tree, which needs a query that does not exist yet. */
 function Navigator({
   layout,
   dispatch,
   width,
-}: RegionProps & Readonly<{ width: number }>): React.JSX.Element {
+  workspace,
+}: RegionProps &
+  Readonly<{ width: number; workspace: Query<Workspace, IpcError> }>): React.JSX.Element {
   const mode = layout.navigator.mode;
   return (
     <nav
@@ -267,10 +294,9 @@ function Navigator({
         orientation="horizontal"
         panel={
           mode === "files" ? (
-            <Unavailable
-              what="The Files tree"
-              because={{ kind: "not-implemented", capability: "listing a workspace's files" }}
-            />
+            <AnswerView query={workspace} what="The Files tree">
+              {(data) => <FilesTree workspace={data} />}
+            </AnswerView>
           ) : (
             <Unavailable
               what="The Elements tree"
@@ -352,12 +378,64 @@ function SidebarPanel({ tab }: Readonly<{ tab: SidebarState["tab"] }>): React.JS
   );
 }
 
-/** UI-10: the window's state in one line. */
-function StatusBar({ layout }: Readonly<{ layout: LayoutState }>): React.JSX.Element {
+/** The Files tree, all folders open until the user closes one. */
+function FilesTree({ workspace }: Readonly<{ workspace: Workspace }>): React.JSX.Element {
+  const nodes = fileNodes(buildFileTree(workspace));
+  // Closed folders are the state; open is derived, so a new folder arrives open (§8.3 rule 1).
+  const [closed, setClosed] = useState<ReadonlySet<string>>(new Set());
+  const [selected, setSelected] = useState<string | null>(null);
+  const expanded = new Set(folderIds(nodes).filter((id) => !closed.has(id)));
+  return (
+    <Tree
+      label="Files"
+      nodes={nodes}
+      expanded={expanded}
+      onToggle={(id) => {
+        const next = new Set(closed);
+        if (!next.delete(id)) {
+          next.add(id);
+        }
+        setClosed(next);
+      }}
+      selected={selected}
+      onSelect={setSelected}
+    />
+  );
+}
+
+/** UI-10: problem counts, where the answers come from, and the layout mode. */
+function StatusBar(
+  props: Readonly<{
+    layout: LayoutState;
+    workspace: Query<Workspace, IpcError>;
+    provenance: Provenance;
+  }>,
+): React.JSX.Element {
+  const answer = answerToShow(props.workspace);
+  const totals = answer?.kind === "ready" ? buildFileTree(answer.data).diagnostics : null;
   return (
     <footer className="flex h-6 shrink-0 items-center gap-3 border-line border-t bg-panel-2 px-3 text-meta text-muted">
-      {layout.mode.kind === "focus" ? <span>Focus mode</span> : null}
-      <span className="ml-auto">SysML v2 · KerML</span>
+      {totals === null ? null : (
+        <>
+          <span className={totals.error > 0 ? "text-err" : undefined}>
+            {plural(totals.error, "error")}
+          </span>
+          <span className={totals.warning > 0 ? "text-warn" : undefined}>
+            {plural(totals.warning, "warning")}
+          </span>
+        </>
+      )}
+      {props.layout.mode.kind === "focus" ? <span>Focus mode</span> : null}
+      <span className="ml-auto" />
+      {props.provenance === "fixture" ? (
+        <span
+          title="Everything shown is the mockup's sample model, not a workspace on disk"
+          className="rounded-wb border border-warn px-1.5 text-warn"
+        >
+          Fixture data
+        </span>
+      ) : null}
+      <span>SysML v2 · KerML</span>
     </footer>
   );
 }
