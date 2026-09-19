@@ -136,11 +136,11 @@ function Row({ row, expanded, selected, tabStop, onPress }: RowProps): React.JSX
       <span className="inline-flex size-4 shrink-0 items-center justify-center text-faint">
         {isParent ? <Icon name={expanded ? "chevron-down" : "chevron-right"} /> : null}
       </span>
-      <span className="truncate">{node.label}</span>
+      <span className="min-w-0 truncate">{node.label}</span>
       {node.description === undefined ? null : (
         <span
           aria-hidden="true"
-          className={`ml-auto text-meta ${node.tone === "error" ? "text-err" : "text-faint"}`}
+          className={`ml-auto shrink-0 whitespace-nowrap pl-2 text-meta ${node.tone === "error" ? "text-err" : "text-faint"}`}
         >
           {node.description}
         </span>

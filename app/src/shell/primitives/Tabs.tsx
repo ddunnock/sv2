@@ -73,7 +73,13 @@ export function Tabs(props: TabsProps): React.JSX.Element {
   const panelId = `${base}-panel`;
 
   return (
-    <div className={`flex ${orientation === "vertical" ? "flex-row" : "flex-col"} min-h-0`}>
+    // With a panel, the widget fills its container and the panel scrolls, so a
+    // long panel (a workspace's Files tree) never spills over what follows it.
+    <div
+      className={`flex ${orientation === "vertical" ? "flex-row" : "flex-col"} min-h-0 ${
+        panel === null ? "" : "flex-1"
+      }`}
+    >
       <div
         ref={list}
         role="tablist"
@@ -111,7 +117,7 @@ export function Tabs(props: TabsProps): React.JSX.Element {
           role="tabpanel"
           id={panelId}
           aria-labelledby={tabId(selected)}
-          className="min-h-0 flex-1"
+          className="min-h-0 flex-1 overflow-auto"
         >
           {panel}
         </div>

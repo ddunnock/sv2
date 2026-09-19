@@ -23,7 +23,7 @@ export type ViewsListProps = Readonly<{ onOpen: (view: ViewSummary) => void }>;
 export function ViewsList({ onOpen }: ViewsListProps): React.JSX.Element {
   const views = useAnswer((queries) => queries.views(), "views");
   return (
-    <section aria-labelledby="views-heading" className="border-line border-t">
+    <section aria-labelledby="views-heading" className="shrink-0 border-line border-t">
       <h2 id="views-heading" className="px-3 pt-2 font-semibold text-meta text-muted uppercase">
         Views
       </h2>
