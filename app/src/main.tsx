@@ -6,9 +6,7 @@
  *
  * It does three things in this order and nothing else: configure Zod for the
  * Tauri content-security policy, install the global failure handlers, then
- * create the React root and render the shell. The first of the three is absent
- * until `zod` is on the allowlist and the `contract` layer exists; the comment
- * below is the placeholder, and it is deliberately not a silent omission.
+ * create the React root and render the shell.
  *
  * Every other module defines and does not execute (§3.3). A module that needs a
  * service receives it here, through a parameter or React context, and never
@@ -18,14 +16,15 @@
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { z } from "zod";
 import { installGlobalHandlers, reportToConsole } from "@/diagnostics/handlers";
 import { Shell } from "@/shell/Shell";
 
-// 1. Configure Zod for the Tauri CSP — not yet. `zod` IS on the allowlist
-//    (§3.1); it is simply not installed, because the `contract` layer does not
-//    exist and a package nothing imports is load cost and supply-chain surface
-//    for nothing. It is installed in the same change that adds the first schema,
-//    and the configuration goes here, before anything can parse.
+// 1. Configure Zod for the Tauri CSP, before anything can parse (§4.3 rule 6).
+//    Zod's compiled fast path builds functions with `new Function`, and the
+//    content-security policy allows no `unsafe-eval`. §2.1's row for this file
+//    does not list `zod`; rule 6 names this file, and the row is the defect.
+z.config({ jitless: true });
 
 // 2. Install the global failure handlers, before the first render can fail.
 installGlobalHandlers(reportToConsole);

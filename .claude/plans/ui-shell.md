@@ -21,7 +21,7 @@ this unless it is opened. Say "read `.claude/plans/ui-shell.md`" and it is all h
 | Branch | `ui/shell` |
 | Worktree | `../sv2-ui`, created with `git worktree add` |
 | Based on | `main` at `081d85a`, merged up to `752ff41` for the case-collision fix |
-| Commits | 19, all green |
+| Commits | 20, all green |
 
 The worktree exists so the UI work does not collide with grammar work in the main
 checkout. To recreate it elsewhere:
@@ -250,10 +250,26 @@ Done:
     its path, diagnostic counts summed upward (IX-10).
   - `grid.ts` **deferred** with the Grid View, which is built last.
 
-Remaining, in order:
+- `ipc/`:
+  - `ipc-error.ts` — `IpcError` = unreachable | rejected | contract. A contract error
+    keeps each issue's path and code only; a test proves the rejected value never
+    appears in it. Zod's error is taken structurally, because §2.1 lets `ipc/` import
+    only `@tauri-apps/api` from outside.
+  - `model-queries.ts` — a `Transport` (command, args → raw reply, never throws) under
+    **one parse path** shared by the fixture and, later, the Tauri client. Every reply
+    is parsed with its registry schema; `provenance` drives the "fixture data" badge.
+  - `fixture-client.ts` + `fixture-thermal-control.ts` — the mockup's sample model as
+    raw replies, parsed like any backend reply. Layout answers `not-implemented` for
+    every view (no simulated diagrams); an undescribed element is `not-found`.
+    **Fixtures are a TS module, not JSON in `app/test-data/`**: importing JSON needs
+    `resolveJsonModule`, a change to §13.3's normative tsconfig, and a generated
+    embedding (`tools/embed-fixtures.ts`) would need its own staleness check.
+    Revisit if the Rust side wants to share the fixtures.
+  - `main.tsx` now runs `z.config({ jitless: true })` (§4.3 rule 6).
+- **Deferred:** `tools/emit-contract.ts`, until `rust.schema.json` exists for
+  `check_ipc_contract.py` to compare it with.
 
-1. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
-   `tools/embed-fixtures.ts`, `tools/emit-contract.ts`.
+Remaining, in order: Phase 3.
 
 **Make "unavailable" a contract citizen.** Done as `contract/availability.ts`; the
 sketch below is the original, and the entry above says where the module differs.
@@ -349,6 +365,12 @@ env -C app bun run typecheck && env -C app bun run lint && env -C app bun test
 ```
 
 ## Open questions
+
+- **§2.1's row for `main.tsx` omits `zod`,** which §4.3 rule 6 requires `main.tsx` to
+  import. Rule 6 is specific, so `main.tsx` follows it; the row should be fixed.
+- **The mockup's Files tree shows `workspace.json` and an empty `verification/`,**
+  contradicting its own IX-01 ("a folder tree of `.sysml`/`.kerml` files"). The
+  contract follows IX-01.
 
 - **How the user is told** that opening a workspace writes IDs (ADR-0020 DD-4 requires
   it be visible). A UI decision, belongs with the shell.
