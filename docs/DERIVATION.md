@@ -165,10 +165,15 @@ same URL.
    across OMG releases, and the unit fingerprint is a claim about exactly that.
 3. A conflict between sources stops the work and goes to the `grammar-adjudicator`
    agent. Picking whichever reading is easier to implement is not adjudication.
-4. Coverage counts `unimplemented` honestly, against the **specification's** 558
-   productions rather than the Xtext's 727 — every one of the 281 reviewed differences
-   resolved `follow_spec`, so the Xtext-only rules are productions this parser has
-   decided not to have. `absent` is the defect, and it now separates its two causes: a
-   marker naming an Xtext-only production means a pilot rule was **ported**, which is
-   the failure this document exists to prevent, and a marker naming neither inventory
-   means it was invented or misspelt.
+4. Coverage counts `unimplemented` honestly, against the **specification's** grammar
+   rather than the Xtext's 727 rules — every one of the 281 reviewed differences resolved
+   `follow_spec`, so the Xtext-only rules are productions this parser has decided not to
+   have. The unit is the live **grammar unit** of ADR-0015, 554 of them, not the 558
+   inventory names: a production the two languages state differently is two units, and
+   counting its name once let a SysML marker report KerML's different production
+   implemented too; the names also included the lexical terminals, which the lexer
+   reads. A marker on a split production must say `@kerml` or `@sysml`. `absent` is the
+   defect, and it separates its causes: a marker naming an Xtext-only production means a
+   pilot rule was **ported**, which is the failure this document exists to prevent; one
+   on a split production with no scope, or a scope with no live unit, cannot say what it
+   claims; and one naming no unit at all was invented or misspelt.

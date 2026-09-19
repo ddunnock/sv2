@@ -12,8 +12,16 @@ remains; batching is how partially-implemented productions get marked complete.
 
 The pinned grammar is `vendor/spec-bnf/*.kebnf` (the specification BNF) and
 `vendor/pilot/*.xtext` (the Pilot). There are no `.g4` files. The derived inventory is
-`.claude/state/grammar/bnf-productions.json`, whose 558 unique names are the denominator
-the coverage gate measures against.
+`.claude/state/grammar/bnf-productions.json`. The coverage gate does NOT measure against
+its names: it measures against the 554 live grammar units in
+`.claude/state/grammar/units/`, where a production the two languages state differently is
+two units, `Name@kerml` and `Name@sysml` (ADR-0015). Which units a name has:
+
+```bash
+ls .claude/state/grammar/units | grep -E '^Import(@|\.)'
+```
+
+and `jq -r .status` on each, since a `retired` unit is history, not grammar.
 
 ```bash
 jq -r --arg n Import '.rules[] | select(.name==$n)
@@ -38,8 +46,9 @@ Marking one fails the coverage gate, because it is not in the inventory. `Import
 `ImportedMembership` and `FilterPackageMembershipImport` are all in this bucket — reading
 the Xtext alone would have you implement three productions the language does not have.
 
-Already done? `jq -r --arg n Import '.unimplemented_productions | index($n)'
-.claude/state/coverage.json` — a null means it is implemented or absent, not pending.
+Already done? `jq -r --arg n Import '.unimplemented_productions | map(select(test("^" + $n
++ "(@|$)")))' .claude/state/coverage.json` — it lists the name's pending units, as `Import`
+or `Import@sysml`; an empty list means every unit of it is claimed.
 
 These are `jq` because the PreToolUse hook blocks Bash that names a machine-owned path
 unless the command is a known reader. `python3.12 -c` reading one of these files is
@@ -122,6 +131,12 @@ fn import(&mut self) {
     self.finish_node();
 }
 ```
+
+A production the two languages state differently takes a scope: `// production:
+MultiplicityRange@sysml` for SysML's `[1..*]`, which is not KerML's `multiplicity`
+declaration. A bare marker on such a name fails the gate, and so does a scope on a shared
+unit. A method that genuinely reads both bodies carries two markers, as `root_namespace`
+does — and only then.
 
 Mark only what you implemented. A production whose alternatives are partly done is better
 left unmarked with the gap recorded in `state.json` than marked and counted — coverage is

@@ -1489,14 +1489,16 @@ impl<'a> Parser<'a> {
 
     // -- productions ------------------------------------------------------------
 
-    // production: RootNamespace
+    // production: RootNamespace@kerml
+    // production: RootNamespace@sysml
     //
     // RootNamespace = PackageBodyElement*                          (SysML 8.2.2.5.1)
     // RootNamespace = NamespaceBodyElement*                        (KerML 8.2.3.4.1)
     //
     // The one production the two grammars state differently at the start symbol, which
     // is what ADR-0014 exists for. `Body::Root` carries the difference; the loop below
-    // is shared, because everything else about reading a body is.
+    // is shared, because everything else about reading a body is. Two grammar units, and
+    // this reads both bodies, so it carries both markers.
     fn root_namespace(mut self) -> (GreenNode, Vec<Diagnostic>) {
         self.start_node(SyntaxKind::RootNamespace);
         self.body_elements(None, Body::Root);
@@ -2458,7 +2460,7 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // production: OwnedSubsetting
+    // production: OwnedSubsetting@sysml
     //
     // OwnedSubsetting : Subsetting =
     //     subsettedFeature = [QualifiedName]
@@ -2498,7 +2500,7 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // production: OwnedRedefinition
+    // production: OwnedRedefinition@sysml
     //
     // OwnedRedefinition : Redefinition =
     //     redefinedFeature = [QualifiedName]
@@ -2529,7 +2531,7 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // production: OwnedReferenceSubsetting
+    // production: OwnedReferenceSubsetting@sysml
     //
     // OwnedReferenceSubsetting : ReferenceSubsetting =
     //     referencedFeature = [QualifiedName]
@@ -2570,7 +2572,7 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // production: OwnedFeatureChain
+    // production: OwnedFeatureChain@sysml
     //
     // OwnedFeatureChain : Feature =
     //     ownedRelationship += OwnedFeatureChaining
@@ -2629,7 +2631,7 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // production: OwnedCrossSubsetting
+    // production: OwnedCrossSubsetting@sysml
     //
     // OwnedCrossSubsetting : CrossSubsetting =
     //     crossedFeature = [QualifiedName]
@@ -2694,7 +2696,7 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // production: Typings
+    // production: Typings@sysml
     //
     // Typings : Feature = TypedBy ( ',' ownedRelationship += FeatureTyping )*
     //                                                            (SysML 8.2.2.6.5)
@@ -2709,7 +2711,7 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // production: TypedBy
+    // production: TypedBy@sysml
     //
     // TypedBy : Feature = DEFINED_BY ownedRelationship += FeatureTyping
     //                                                            (SysML 8.2.2.6.5)
@@ -2739,7 +2741,7 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // production: FeatureTyping
+    // production: FeatureTyping@sysml
     //
     // FeatureTyping = OwnedFeatureTyping | ConjugatedPortTyping  (SysML 8.2.2.6.5)
     //
@@ -2752,7 +2754,7 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // production: OwnedFeatureTyping
+    // production: OwnedFeatureTyping@sysml
     //
     // OwnedFeatureTyping : FeatureTyping =
     //     type = [QualifiedName] | ownedRelatedElement += OwnedFeatureChain
@@ -2893,7 +2895,7 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // production: OwnedMultiplicity
+    // production: OwnedMultiplicity@sysml
     //
     // OwnedMultiplicity : OwningMembership =
     //     ownedRelatedElement += MultiplicityRange               (SysML 8.2.2.6.6)
@@ -2910,7 +2912,7 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // production: MultiplicityRange
+    // production: MultiplicityRange@sysml
     //
     // MultiplicityRange : MultiplicityRange =
     //     '[' ( ownedRelationship += MultiplicityExpressionMember '..' )?
@@ -4831,10 +4833,9 @@ impl<'a> Parser<'a> {
     // ConnectorEndMember : EndFeatureMembership =
     //     ownedRelatedElement += ConnectorEnd                       (SysML 8.2.2.13.1)
     //
-    // The SysML reading. KerML has a production of the same name (8.2.5.5.1) over its
-    // own ConnectorEnd, and coverage counts by name, so this marker counts both: KerML's
-    // connectors are unimplemented and this does NOT read them. The same name collision
-    // OwnedMultiplicity and OwnedReferenceSubsetting carry (ADR-0015).
+    // KerML states the same production (8.2.5.5.1) with the same body, differing only in
+    // the metaclass it returns, so ADR-0015 makes it ONE shared grammar unit and this
+    // marker claims that unit. ConnectorEnd is shared the same way.
     fn connector_end_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ConnectorEndMember);
@@ -4964,7 +4965,7 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // production: ResultExpressionMember
+    // production: ResultExpressionMember@sysml
     //
     // ResultExpressionMember : ResultExpressionMembership =
     //     MemberPrefix? ownedRelatedElement += OwnedExpression   (SysML 8.2.2.19)
@@ -5503,7 +5504,7 @@ impl<'a> Parser<'a> {
         self.peek_nth(1).is_some_and(|token| self.is_name(token))
     }
 
-    // production: RelationshipBody
+    // production: RelationshipBody@sysml
     //
     // RelationshipBody = ';' | '{' ( ownedRelationship += OwnedAnnotation )* '}'
     //                                                            (SysML 8.2.2.2)
@@ -5858,7 +5859,17 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // production: PackageBody
+    // production: PackageBody@kerml
+    // production: PackageBody@sysml
+    //
+    // PackageBody = ';' | '{' PackageBodyElement* '}'              (SysML 8.2.2.5.1)
+    // PackageBody = ';' | '{' ( NamespaceBodyElement
+    //                         | ElementFilterMember )* '}'         (KerML 8.2.5.13)
+    //
+    // Two grammar units, one method: `Body::Package` asks `body_elements` for the
+    // language's own items, and admits ElementFilterMember in both, where both grammars
+    // put it. Marked on DefinitionBody's convention — the body is read in full, its item
+    // productions only in part.
     fn package_body(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::PackageBody);

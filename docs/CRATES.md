@@ -362,10 +362,10 @@ the gate, so this section is checkable rather than remembered.
 
 | Measure | Value |
 |---|---|
-| Productions implemented | 124 of 558 (22.2%) |
-| Corpus files accepted | 28 of 311 — 26 of 253 `.sysml`, 2 of 58 `.kerml` |
-| Unit tests | 229 |
-| Rejection cases | 75 |
+| Grammar units implemented | 173 of 554 (31.2%) — ADR-0015 units, not names |
+| Corpus files accepted | 63 of 311 — 46 of 253 `.sysml`, 17 of 58 `.kerml` |
+| Unit tests | 341 |
+| Rejection cases | 109 |
 | Snapshots | 8 |
 
 The two measures do different jobs and both are needed. Production coverage counts what
