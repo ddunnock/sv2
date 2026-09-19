@@ -21,7 +21,7 @@ this unless it is opened. Say "read `.claude/plans/ui-shell.md`" and it is all h
 | Branch | `ui/shell` |
 | Worktree | `../sv2-ui`, created with `git worktree add` |
 | Based on | `main` at `081d85a`, merged up to `752ff41` for the case-collision fix |
-| Commits | 12, all green |
+| Commits | 13, all green |
 
 The worktree exists so the UI work does not collide with grammar work in the main
 checkout. To recreate it elsewhere:
@@ -181,19 +181,26 @@ Done:
   the metamodel derives it as `isComposite = false`. **`MetaclassSchema` checks shape
   only**, and closes when the Rust type exists and `check_ipc_contract.py` compares
   the two enums — a closed list typed out by hand would be unsourced (invariant 4).
+- `contract/file.ts` — `Workspace`, `WorkspaceFile`, `Language`, `DiagnosticCounts`,
+  and a `WorkspacePath` brand that `element.ts`'s `SourceLocation` now uses too.
+  **The wire is flat; the tree is derived** — a nested shape would state each folder
+  twice, as a node and as a path prefix, so `model/tree.ts` builds folders and sorts.
+  Only model files cross (IX-01); sidecars do not. Paths arrive in one form,
+  converted Rust-side like offsets, and the schema rejects rather than normalizes.
+  `language` is carried, not derived from the extension, for the severity reason.
+  No ADR yet names the Rust owner of workspace enumeration.
 
 Remaining, in order:
 
-1. `contract/file.ts` — the Files tree.
-2. `contract/view.ts` — `ViewKind` as the **complete** union including
+1. `contract/view.ts` — `ViewKind` as the **complete** union including
    `state-transition` even though OD-03 leaves it undesigned. A deliberately
    incomplete union gets widened under pressure.
-3. `contract/layout.ts` — ADR-0017, `GridUnit` brand, `z.looseObject` per R-6.
-4. `contract/availability.ts` — see below. High value.
-5. `contract/preferences.ts`, `contract/registry.ts`.
-6. `model/` — `assert-never.ts`, `Query<T>`, `element-handle.ts` (`isLogSafe`),
+2. `contract/layout.ts` — ADR-0017, `GridUnit` brand, `z.looseObject` per R-6.
+3. `contract/availability.ts` — see below. High value.
+4. `contract/preferences.ts`, `contract/registry.ts`.
+5. `model/` — `assert-never.ts`, `Query<T>`, `element-handle.ts` (`isLogSafe`),
    `tree.ts`, `grid.ts`. Pure, no DOM.
-7. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
+6. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
    `tools/embed-fixtures.ts`, `tools/emit-contract.ts`.
 
 **Make "unavailable" a contract citizen.** The highest-value remaining move:

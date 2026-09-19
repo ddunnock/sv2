@@ -36,6 +36,7 @@ import { z } from "zod";
 
 import { type Diagnostic, DiagnosticCodeSchema, DiagnosticSchema } from "./diagnostic";
 import { type ElementHandle, ElementHandleSchema } from "./element-id";
+import { type WorkspacePath, WorkspacePathSchema } from "./file";
 import { type TextSpan, TextSpanSchema } from "./offset";
 
 /**
@@ -307,14 +308,14 @@ export const ElementFacetSchema: z.ZodType<ElementFacet, unknown> = z.discrimina
 /**
  * Where an element's text is.
  *
- * `file` is workspace-relative. The span locates the declaration in it, which
+ * `file` is a `WorkspacePath`, the one form a path crosses in. The span locates the declaration in it, which
  * is what IX-08 scrolls to and what the Element Source view is a window onto.
  */
-export type SourceLocation = Readonly<{ file: string; span: TextSpan }>;
+export type SourceLocation = Readonly<{ file: WorkspacePath; span: TextSpan }>;
 
 /** Where an element's text is. */
 export const SourceLocationSchema: z.ZodType<SourceLocation, unknown> = z.strictObject({
-  file: z.string().min(1),
+  file: WorkspacePathSchema,
   span: TextSpanSchema,
 });
 
