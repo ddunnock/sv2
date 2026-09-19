@@ -21,7 +21,7 @@ this unless it is opened. Say "read `.claude/plans/ui-shell.md`" and it is all h
 | Branch | `ui/shell` |
 | Worktree | `../sv2-ui`, created with `git worktree add` |
 | Based on | `main` at `081d85a`, merged up to `752ff41` for the case-collision fix |
-| Commits | 15, all green |
+| Commits | 16, all green |
 
 The worktree exists so the UI work does not collide with grammar work in the main
 checkout. To recreate it elsewhere:
@@ -209,17 +209,27 @@ Done:
   Records are keyed by a new `DurableHandle` in `element-id.ts`: every handle arm
   except `unidentified`. The style sidecar is not here — ADR-0017 gives it no record
   shape.
+- `contract/availability.ts` — `Answer<T>` and `UnavailableReason`, below. Differs
+  from the sketch that follows in four sourced ways: tagged `kind` not `status`
+  (§4.2); no `parse-failed` (invariant 3 and ADR-0002: a broken file is answered
+  `ready`, decorated, from its last good subtree); no `unsupported-language`
+  (ADR-0014, and `WorkspaceFile.language` cannot name a third); and `opening`,
+  `read-only` (both ADR-0020, quoted) and `not-found` (ADR-0002's rename driver)
+  added. The subject is not carried — the caller knows what it asked, and matching
+  a superseded reply is `ipc/`'s job for `ready` answers too. `Answer` is not
+  `Result`: a `Result` error is a defect and is reported; `unavailable` is a
+  correct answer and is rendered.
 
 Remaining, in order:
 
-1. `contract/availability.ts` — see below. High value.
-2. `contract/preferences.ts`, `contract/registry.ts`.
-3. `model/` — `assert-never.ts`, `Query<T>`, `element-handle.ts` (`isLogSafe`),
+1. `contract/preferences.ts`, `contract/registry.ts`.
+2. `model/` — `assert-never.ts`, `Query<T>`, `element-handle.ts` (`isLogSafe`),
    `tree.ts`, `grid.ts`. Pure, no DOM.
-4. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
+3. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
    `tools/embed-fixtures.ts`, `tools/emit-contract.ts`.
 
-**Make "unavailable" a contract citizen.** The highest-value remaining move:
+**Make "unavailable" a contract citizen.** Done as `contract/availability.ts`; the
+sketch below is the original, and the entry above says where the module differs.
 
 ```ts
 UnavailableReason = "not-implemented" | "parse-failed" | "unsupported-language" | "no-model-loaded"
@@ -227,9 +237,10 @@ answered(T) = { status: "ready"; data: T } | { status: "unavailable"; reason; su
 ```
 
 Not because it unblocks the UI, but because **`unavailable` never goes away**. When
-`sv2-resolve` lands, `"not-implemented"` retires and `"parse-failed"` becomes the
-permanent, correct answer for a file ADR-0002 admits partially. The placeholder path
-and the production path become one code path.
+`sv2-resolve` lands, `"not-implemented"` retires query by query, and the other reasons
+stay the permanent, correct answer for their cases. The placeholder path and the
+production path become one code path. (This paragraph first named `"parse-failed"` as
+a permanent reason; ADR-0002 admits a partially parsed file as `ready`, so it is not.)
 
 **Standing rule: a fixture field with no named Rust owner is a defect.** Every
 `contract/` module's TSDoc names the Rust type it mirrors, even before that type
