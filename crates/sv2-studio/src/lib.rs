@@ -12,9 +12,10 @@
 //! What it must not become is a place where logic lives. Every binary in this workspace
 //! is a shim: the model is read by `sv2-resolve` and below, and this crate wires a
 //! window to it.
-//!
-//! A stub: nothing starts yet, so `run` says so and exits 2.
 
+mod commands;
 mod shell;
+mod wire;
+mod workspace;
 
 pub use crate::shell::run;

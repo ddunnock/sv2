@@ -141,6 +141,13 @@
       "status": "accepted",
       "date": "2026-09-18",
       "file": "docs/adr/0020-element-identity-is-allocated-when-a-workspace-opens.md"
+    },
+    {
+      "id": "0021",
+      "title": "Tauri 2 hosts the studio window",
+      "status": "accepted",
+      "date": "2026-09-19",
+      "file": "docs/adr/0021-tauri-2-hosts-the-studio-window.md"
     }
   ]
 }

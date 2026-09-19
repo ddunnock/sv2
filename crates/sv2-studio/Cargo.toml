@@ -13,6 +13,15 @@ name = "sv2-studio"
 path = "src/main.rs"
 
 [dependencies]
+sv2-syntax = { workspace = true }
+tauri = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+
+[build-dependencies]
+tauri-build = { workspace = true }
 
 [lints]
 workspace = true

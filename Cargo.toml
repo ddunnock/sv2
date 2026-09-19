@@ -52,6 +52,13 @@ thiserror = "2"
 insta = { version = "1", features = ["glob"] }
 proptest = "1"
 
+# sv2-studio only: the window host (ADR-0018, ADR-0021) and the IPC wire types.
+# ADR-0021 records what Tauri brings with it and why deny.toml admits it.
+tauri = "2"
+tauri-build = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
 [workspace.lints.rust]
 unsafe_code = "forbid"          # §6.1: forbid, so no attribute can re-allow it
 missing_docs = "warn"           # §11

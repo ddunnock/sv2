@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-19T12:27:03Z",
+    "regenerated_utc": "2026-09-19T15:15:00Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -23,7 +23,7 @@
       "percent": 29.9
     },
     "tests": {
-      "unit": 333,
+      "unit": 345,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 106,
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
-      "b3ae9e7 Untrack two retired units that are one file on disk, and gate on it",
-      "193e9f7 Run the scripts on python3.12, as STD-001-PY already planned",
-      "df4e4ba Close the session: two misquoted metaclasses, and a corrected count",
-      "6ecf8c1 Read an invocation, and move both languages for once",
-      "081d85a Correct two claims the conformance review found false",
-      "8565c00 Read a returned parameter, and move acceptance by one",
-      "54d567e Read a calculation definition, and buy nothing with it",
-      "1da960b Install Biome, and make 13.4 the configuration that actually runs"
+      "5e24234 Record Phase 6's approvals, spike findings and work in progress in the plan",
+      "753701a Say the fixture offsets are real now, not invented",
+      "7992bca Open a file in a plain-text editor, one document however many views show it",
+      "9b3db38 Amend STD-004-TS where it contradicted itself or the design it describes",
+      "739cea8 Keep the sample model as data in test-data, as the standard's rule 7 says",
+      "932e3c3 Show an element's specification, decorated by its problems rather than hidden",
+      "565e775 List the views, open them in tabs, and dispatch every kind before any draws",
+      "1041d2d Wire the Files tree and the status bar to the workspace query"
     ]
   },
   "authored": {

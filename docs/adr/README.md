@@ -33,3 +33,4 @@ silently is not.
 | [0018](0018-a-binary-per-process-shape.md) | A binary per process shape, and every binary a shim | accepted |
 | [0019](0019-extensions-are-in-tree-consumers-of-the-resolved-model.md) | Extensions are in-tree consumers of the resolved model | **proposed** |
 | [0020](0020-element-identity-is-allocated-when-a-workspace-opens.md) | Element identity is allocated when a workspace opens | accepted |
+| [0021](0021-tauri-2-hosts-the-studio-window.md) | Tauri 2 hosts the studio window | accepted |

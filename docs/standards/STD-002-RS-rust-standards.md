@@ -2,11 +2,11 @@
 title: Rust Standards
 document_id: STD-002-RS
 status: draft
-version: 0.2.0
-date: 2026-09-16
+version: 0.3.0
+date: 2026-09-19
 review_date: 2027-03-16
 owner: David — CSE
-applies_to: all Rust crates in this workspace — sv2-syntax, sv2-ast, sv2-hir, sv2-resolve, sv2-cli
+applies_to: all Rust crates in this workspace — sv2-syntax, sv2-ast, sv2-hir, sv2-resolve, sv2-cli, sv2-studio, sv2-wasm
 supersedes: null
 superseded_by: null
 related: [STD-001-PY]
@@ -1387,7 +1387,23 @@ all-features = true
 [advisories]
 version = 2
 yanked = "deny"
-ignore = []                       # every entry needs an advisory ID and a dated reason
+ignore = [                        # every entry needs an advisory ID and a dated reason
+    # All seven reach the graph only through Tauri (sv2-studio, ADR-0021). Accepted
+    # 2026-09-19; review each when Tauri or its gtk-rs dependency moves, and by
+    # 2027-03-19 regardless.
+    #
+    # Unsound iterator impls on glib::VariantStrIter. glib 0.18 is the Linux GTK
+    # backend's; no code in this workspace calls that iterator.
+    { id = "RUSTSEC-2024-0429", reason = "2026-09-19: glib via Tauri's Linux GTK backend; VariantStrIter is never called (ADR-0021)" },
+    # Unmaintained, no known vulnerability. proc-macro-error: a build-time macro under
+    # glib-macros. unic-*: Unicode tables under urlpattern, under tauri-utils.
+    { id = "RUSTSEC-2024-0370", reason = "2026-09-19: proc-macro-error, unmaintained, build-time only, via glib-macros (ADR-0021)" },
+    { id = "RUSTSEC-2025-0075", reason = "2026-09-19: unic-char-range, unmaintained, via urlpattern and tauri-utils (ADR-0021)" },
+    { id = "RUSTSEC-2025-0080", reason = "2026-09-19: unic-common, unmaintained, via urlpattern and tauri-utils (ADR-0021)" },
+    { id = "RUSTSEC-2025-0081", reason = "2026-09-19: unic-char-property, unmaintained, via urlpattern and tauri-utils (ADR-0021)" },
+    { id = "RUSTSEC-2025-0098", reason = "2026-09-19: unic-ucd-version, unmaintained, via urlpattern and tauri-utils (ADR-0021)" },
+    { id = "RUSTSEC-2025-0100", reason = "2026-09-19: unic-ucd-ident, unmaintained, via urlpattern and tauri-utils (ADR-0021)" },
+]
 
 [licenses]
 version = 2
@@ -1401,6 +1417,15 @@ allow = [
     # is_ci, reached through miette's `fancy` feature in sv2-cli. ISC is
     # OSI-approved and permissive.
     "ISC",
+    # Tauri (sv2-studio only, ADR-0021). Zlib: foldhash. Apache-2.0 with the LLVM
+    # exception: target-lexicon, build tooling. Both permissive.
+    "Zlib",
+    "Apache-2.0 WITH LLVM-exception",
+    # MPL-2.0 is weak, file-level copyleft, admitted as an exception to "permissive
+    # only": cssparser, cssparser-macros, selectors, dtoa-short and option-ext, all
+    # reached only through Tauri and used unmodified, so no obligation attaches to
+    # this project's files. Tauri 2 cannot be built without them (ADR-0021).
+    "MPL-2.0",
 ]
 
 [bans]
@@ -1431,7 +1456,8 @@ deny = [
     # (ADR-0013 RISK-013-4).
 
     # §7.1 and §8.3: binary-only crates
-    { crate = "anyhow", wrappers = ["sv2-cli"] },
+    # Tauri's own crates use anyhow internally (ADR-0021); none of ours may.
+    { crate = "anyhow", wrappers = ["sv2-cli", "tauri", "tauri-build", "tauri-utils"] },
     { crate = "tracing-subscriber", wrappers = ["sv2-cli"] },
 ]
 

@@ -1,8 +1,0 @@
-crates/sv2-studio/.gitignore
-crates/sv2-studio/build.rs
-crates/sv2-studio/capabilities/default.json
-crates/sv2-studio/icons/icon.png
-crates/sv2-studio/src/commands.rs
-crates/sv2-studio/src/wire.rs
-crates/sv2-studio/src/workspace.rs
-crates/sv2-studio/tauri.conf.json
