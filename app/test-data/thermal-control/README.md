@@ -11,8 +11,9 @@ inputs are data, here.
 | `elements/<petname>.json` | `element_detail` for that petname |
 | `files/<workspace path>.json` | `file_text` for that file |
 
-**Everything here is sample data.** Every petname, offset and library UUID is
-invented. It reaches the screen only behind the status bar's "Fixture data" badge.
+**Everything here is sample data.** Every petname and library UUID is invented; the
+offsets are real positions in the one file text below. It reaches the screen only
+behind the status bar's "Fixture data" badge.
 
 **The files are raw, and are checked.** They are parsed by the same schemas as a
 backend reply (`src/contract/registry.ts`), so a file that drifts from the contract
