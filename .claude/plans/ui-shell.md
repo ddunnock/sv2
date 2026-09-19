@@ -21,7 +21,7 @@ this unless it is opened. Say "read `.claude/plans/ui-shell.md`" and it is all h
 | Branch | `ui/shell` |
 | Worktree | `../sv2-ui`, created with `git worktree add` |
 | Based on | `main` at `081d85a`, merged up to `752ff41` for the case-collision fix |
-| Commits | 31, all green |
+| Commits | 33, all green |
 
 The worktree exists so the UI work does not collide with grammar work in the main
 checkout. To recreate it elsewhere:
@@ -413,12 +413,82 @@ span, and nothing selects an element yet, so it could not be exercised. It is on
 The §8.4 rule 4 update listener (derived facts such as the element under the cursor)
 arrives with its first consumer.
 
-### Phase 6 — Tauri, real IPC, the second window
+### Phase 6 — Tauri, real IPC, the second window · **IN PROGRESS (only the WIP archive is committed)**
 
 `@tauri-apps/api` arrives with `ipc/tauri-client.ts`. The pop-out window is last: it
 is the only item touching the composition root. Note `src/shell/**` is banned from
 importing `@tauri-apps/**`, so "open the editor window" is an `ipc/` function the
 shell calls.
+
+**Scope and approvals (from the user, 2026-09-19).**
+
+- Rust edits allowed in `crates/sv2-studio`, `crates/sv2-wasm`, and — for dependency
+  entries only — root `Cargo.toml`, `Cargo.lock`, and `deny.toml`.
+- **Approved:** Tauri 2 (`tauri = "2"`, `tauri-build = "2"`; 3.x is alpha only), plus
+  `serde` (derive) and `serde_json`. Licences added to `deny.toml`: **Zlib**
+  (`foldhash`), **Apache-2.0 WITH LLVM-exception** (`target-lexicon`), and **MPL-2.0**
+  as a recorded exception to "permissive only" (`cssparser`, `cssparser-macros`,
+  `selectors`, `dtoa-short`, `option-ext`, all via `tauri-utils`, used unmodified).
+  `anyhow`'s wrapper list gains `tauri`, `tauri-build`, `tauri-utils`.
+- **Approved: editing the `deny.toml` block in STD-002-RS §13 to match.**
+  `scripts/check_standards_config.py` compares that block with the repository file,
+  so the policy change lands in the standard in the same commit.
+- To write: **ADR-0021** recording Tauri as the window host, what it brings, and the
+  licence exception.
+
+**Spike findings.**
+
+- Tauri 2 compiles under the workspace lints, including `unsafe_code = "forbid"`.
+- A debug `cargo build` uses `devUrl`; confirm it does not need `app/dist` on a clean
+  checkout (the gate runs cargo before the web build).
+- `cargo deny` with the approved entries: bans, licenses and sources pass.
+  **Advisories fail** — one `unsound` (`glib::VariantStrIter`) and `unmaintained`
+  `unic-*` and `proc-macro-error`. Advisories are deliberately not a gate step
+  (STD-002-RS), but **the user has not yet ruled on them — ask.**
+- The PreToolUse hook blocks any Bash command whose text names `crates/sv2-studio`
+  (it treats Tauri's `gen/` as generated). Write those files with the Write tool, keep
+  the path out of Bash commands, and ignore `/gen/`.
+- A manifest change makes `state.json`'s generated block stale: run
+  `python3.12 .claude/scripts/regen_state.py` before the gate.
+
+**Work in progress: `.claude/plans/phase6-wip/`.** Restore with
+`git apply .claude/plans/phase6-wip/tracked.patch` (root `Cargo.toml` and
+`Cargo.lock`, `deny.toml` with the approved changes, the studio crate's `Cargo.toml`)
+and `tar -xf .claude/plans/phase6-wip/untracked.tar` (the new files, listed in
+`untracked.txt`); then delete the directory. Contents:
+
+- `src/wire.rs` — serde mirrors of the TS contract (`Answer`, `UnavailableReason`,
+  `Workspace`, `WorkspaceFile`, `DiagnosticCounts`, `Language`, `FileText`), tagged
+  `kind`, camelCase.
+- `src/workspace.rs` — `WorkspaceRoot::scan` (walks `.sysml`/`.kerml`; skips hidden,
+  `target`, `node_modules`; counts diagnostics with `sv2_syntax::parse`; an unknown
+  severity is counted as info, never dropped) and `read` (plain relative components
+  only — no `..`, absolute, empty or backslash; refuses non-model files; refuses
+  non-UTF-8 rather than decoding lossily). Seven unit tests, **not yet run**.
+- `src/commands.rs` — `workspace` and `file_text` answered; `views`, `element_detail`
+  and `view_layout` answer `not-implemented` (sv2-resolve is a stub).
+  `element_detail`'s argument type (`InvokeBody`) is a placeholder — check it compiles.
+- `build.rs`, `tauri.conf.json` (devUrl `127.0.0.1:1420`, frontendDist
+  `../../app/dist`, CSP), `capabilities/default.json` (`core:default`),
+  `icons/icon.png`, `.gitignore` (`/gen/`).
+
+**Remaining, in order.**
+
+1. Restore the WIP; add `mod wire; mod workspace; mod commands;` to `lib.rs`.
+2. `shell.rs`: the real `run` — workspace root from the first argument or the current
+   directory; `Builder::default().manage(WorkspaceRoot(..)).invoke_handler(
+   generate_handler![...]).run(generate_context!())`; errors to stderr, exit 1.
+   Replace the stub's test (a behaviour change, not a weakened test) with tests of the
+   argument handling; keep the behaviour in the library (ADR-0018).
+3. Update STD-002-RS §13's `deny.toml` block; write ADR-0021; run `regen_state.py`;
+   gate green; commit.
+4. Front end: install `@tauri-apps/api`; `ipc/tauri-client.ts` (a `Transport` over
+   `invoke`; rejection → `rejected`, outside Tauri → `unreachable`), tested with
+   `mockIPC` (STD-004-TS §11 rule 6 as amended); `main.tsx` uses the Tauri transport
+   with `provenance: "backend"` inside Tauri, fixtures otherwise; capabilities mirror
+   the registry (§2 rule 3).
+5. Run the studio against `bun run dev` on a real workspace and look.
+6. The pop-out editor window (IX-07) — last.
 
 ---
 
