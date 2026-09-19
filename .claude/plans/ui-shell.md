@@ -21,7 +21,7 @@ this unless it is opened. Say "read `.claude/plans/ui-shell.md`" and it is all h
 | Branch | `ui/shell` |
 | Worktree | `../sv2-ui`, created with `git worktree add` |
 | Based on | `main` at `081d85a`, merged up to `752ff41` for the case-collision fix |
-| Commits | 16, all green |
+| Commits | 18, all green |
 
 The worktree exists so the UI work does not collide with grammar work in the main
 checkout. To recreate it elsewhere:
@@ -219,13 +219,26 @@ Done:
   a superseded reply is `ipc/`'s job for `ready` answers too. `Answer` is not
   `Result`: a `Result` error is a defect and is reported; `unavailable` is a
   correct answer and is rendered.
+- `contract/preferences.ts` — theme, navigator, sidebar, two panel widths. **One
+  storage key per preference**, each versioned (`sv2.theme.v1`) and parsed alone: §4.3
+  rule 3 forbids a `.catch()` default, so one record would lose everything to one bad
+  field. A mapped type ties the table to `Preferences`. Defaults live in the shell;
+  per-workspace state (open tabs) waits for a workspace key. The Phase 3
+  `NavigatorState` and `SidebarState` unions are defined here, since they persist.
+- `contract/registry.ts` — `COMMANDS`: `workspace`, `views`, `element_detail`,
+  `view_layout`, each with its Rust command name, args, `Answer`-wrapped answer and
+  owner. No Rust command exists yet, so this *states* the vocabulary Rust must
+  implement. `workspace` and `view_layout` are owned by `unassigned`, pinned by a test
+  so assigning one is a visible change. The Elements tree, file text and Problems
+  panel are not in it yet.
+
+**The contract layer is complete for Phase 4's needs.**
 
 Remaining, in order:
 
-1. `contract/preferences.ts`, `contract/registry.ts`.
-2. `model/` — `assert-never.ts`, `Query<T>`, `element-handle.ts` (`isLogSafe`),
+1. `model/` — `assert-never.ts`, `Query<T>`, `element-handle.ts` (`isLogSafe`),
    `tree.ts`, `grid.ts`. Pure, no DOM.
-3. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
+2. `ipc/model-queries.ts` + `ipc/fixture-client.ts`, `app/test-data/`,
    `tools/embed-fixtures.ts`, `tools/emit-contract.ts`.
 
 **Make "unavailable" a contract citizen.** Done as `contract/availability.ts`; the
