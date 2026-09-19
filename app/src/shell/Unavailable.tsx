@@ -31,7 +31,7 @@ export type UnavailableProps = Readonly<{
 function explain(what: string, because: UnavailableReason): string {
   switch (because.kind) {
     case "not-implemented":
-      return `${what} is not available yet: sv2 cannot do ${because.capability} yet.`;
+      return `${what} is not available yet: sv2 does not yet support ${because.capability}.`;
     case "no-workspace":
       return `${what} needs an open workspace.`;
     case "opening":

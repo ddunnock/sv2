@@ -104,9 +104,11 @@ describe("Shell", () => {
   test("panels without data say what sv2 cannot do yet, rather than showing anything false", async () => {
     shell();
     await userEvent.click(screen.getByRole("tab", { name: "Elements" }));
-    expect(screen.getByText(/sv2 cannot do building the element hierarchy yet/)).toBeDefined();
+    expect(
+      screen.getByText(/sv2 does not yet support building the element hierarchy/),
+    ).toBeDefined();
     await userEvent.click(screen.getByRole("tab", { name: "Element Source" }));
-    expect(screen.getByText(/sv2 cannot do showing an element's source yet/)).toBeDefined();
+    expect(screen.getByText(/sv2 does not yet support showing an element's source/)).toBeDefined();
   });
 
   describe("the Files tree (IX-01), from the workspace query", () => {
@@ -167,7 +169,7 @@ describe("Shell", () => {
       );
       expect(screen.getByRole("tab", { name: "GV ThermalControl", selected: true })).toBeDefined();
       expect(screen.getByRole("tabpanel", { name: "GV ThermalControl" }).textContent).toContain(
-        "sv2 cannot do drawing a General View yet",
+        "sv2 does not yet support drawing a General View",
       );
     });
 

@@ -21,7 +21,7 @@ this unless it is opened. Say "read `.claude/plans/ui-shell.md`" and it is all h
 | Branch | `ui/shell` |
 | Worktree | `../sv2-ui`, created with `git worktree add` |
 | Based on | `main` at `081d85a`, merged up to `752ff41` for the case-collision fix |
-| Commits | 26, all green |
+| Commits | 29, all green |
 
 The worktree exists so the UI work does not collide with grammar work in the main
 checkout. To recreate it elsewhere:
@@ -354,12 +354,34 @@ gives the latter the code `Unknown`.
   `Transport` seam, the fixture transport is that double and no Tauri dependency is
   needed in tests; rule 6 could say so.
 
-### Phase 4 — Wire the shell
+### Phase 4 — Wire the shell · **DONE**
 
 Navigator, spec sidebar, status bar with a **persistent "fixture data" indicator**
 driven by `ModelQueries.provenance`. `ViewArea` dispatches on `ViewKind` with an
 exhaustive switch ending in `assertNever`, **before any view renders** — ~40 lines
 that make ADR-0008's "interconnection second" a one-file change.
+
+**What was built:**
+
+- `main.tsx` builds the services (fixture queries + reporter) and passes them in;
+  `shell/services.tsx` supplies them by context. `useAnswer` is the one way a panel
+  asks: keeps the previous answer while reloading, drops superseded replies (its test
+  was mutation-checked — the first version passed with the guard removed), reports
+  failed reads. `AnswerView` renders every query state.
+- Files tree from `workspace`, all folders open by default (closed set is the state),
+  error counts in accessible names. The workspace is asked once; the status bar reuses
+  it for problem counts and shows a persistent **Fixture data** badge from `provenance`.
+- Views list from `views`; views open in manual-activation tabs. `ViewArea.renderView`
+  is the exhaustive dispatcher; every kind is `<Unavailable>`, and a test asserts no
+  view panel contains an `svg` or `canvas`.
+- `Specification` from `element_detail`: header, problems banner, General, Owned
+  features (owned rows only, OD-04), Relationships, Documentation. Unresolved types are
+  marked, not hidden. Labels in `model/element-label.ts` fall back to the metaclass.
+- Zero arbitrary Tailwind values, still.
+
+**Known gap:** nothing in the UI selects an *element* yet — the Elements tree needs a
+query that does not exist, and diagrams are unavailable. The Specification is tested
+directly with a handle; it becomes reachable when an element-selecting surface lands.
 
 ### Phase 5 — The editor
 
@@ -402,8 +424,9 @@ env -C app bun run typecheck && env -C app bun run lint && env -C app bun test
 
 ## Open questions
 
-- **§2.1's row for `main.tsx` omits `zod`,** which §4.3 rule 6 requires `main.tsx` to
-  import. Rule 6 is specific, so `main.tsx` follows it; the row should be fixed.
+- **§2.1's row for `main.tsx` omits `zod` and `ipc`,** which §4.3 rule 6 and §2.2
+  require `main.tsx` to import (configure Zod; build the services). Those rules are
+  specific, so `main.tsx` follows them; the row should be fixed.
 - **The mockup's Files tree shows `workspace.json` and an empty `verification/`,**
   contradicting its own IX-01 ("a folder tree of `.sysml`/`.kerml` files"). The
   contract follows IX-01.

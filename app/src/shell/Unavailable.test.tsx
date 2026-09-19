@@ -14,7 +14,7 @@ describe("Unavailable", () => {
     [
       "not-implemented names what is missing",
       { kind: "not-implemented", capability: "diagram layout" },
-      "sv2 cannot do diagram layout yet",
+      "sv2 does not yet support diagram layout",
     ],
     ["no-workspace", { kind: "no-workspace" }, "needs an open workspace"],
     ["opening", { kind: "opening" }, "finished opening"],

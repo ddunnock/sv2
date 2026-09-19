@@ -47,6 +47,7 @@ import { Splitter } from "./primitives/Splitter";
 import { Tabs } from "./primitives/Tabs";
 import { Toolbar, type ToolbarItem } from "./primitives/Toolbar";
 import { Tree } from "./primitives/Tree";
+import { Specification } from "./Specification";
 import { SelectionProvider, useSelection } from "./selection";
 import { type Services, ServicesProvider, useAnswer, useServices } from "./services";
 import { Unavailable } from "./Unavailable";
@@ -381,10 +382,7 @@ function SidebarPanel({ tab }: Readonly<{ tab: SidebarState["tab"] }>): React.JS
   return selected === null ? (
     <p className="p-4 text-muted">Nothing is selected.</p>
   ) : (
-    <Unavailable
-      what="The specification"
-      because={{ kind: "not-implemented", capability: "reading an element's specification" }}
-    />
+    <Specification handle={selected} />
   );
 }
 

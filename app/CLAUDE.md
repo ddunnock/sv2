@@ -78,7 +78,7 @@ collide with grammar work in the main checkout.
 
 ## Current state
 
-Phases 1–3 of `.claude/plans/ui-shell.md` are done; read its phase notes rather
+Phases 1–4 of `.claude/plans/ui-shell.md` are done; read its phase notes rather
 than trusting a summary here.
 
 - `contract/` is complete for Phase 4: offsets, identities, diagnostics, elements,
@@ -87,8 +87,8 @@ than trusting a summary here.
 - `ipc/`: one parse path under a `Transport`; the fixture transport answers from
   the mockup's sample model. There is no Tauri client yet (Phase 6).
 - `shell/`: five accessible primitives, the island boundary, `Unavailable`,
-  `useSelection`, the layout reducer, and the window skeleton. Panels are not yet
-  wired to data (Phase 4).
+  `useSelection`, the layout reducer, and the window, wired to the queries:
+  Files tree, Views list, view tabs with the `ViewKind` dispatcher, Specification.
 - `wasm/`, `editor/` and `diagram/` do not exist.
 
 **A schema is declared, not inferred.** `isolatedDeclarations` cannot state the
