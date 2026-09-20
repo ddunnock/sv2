@@ -1765,9 +1765,92 @@ impl<'a> Parser<'a> {
                 let element = self.membership(body);
                 self.behaviour_targets(body, element);
             } else {
-                self.error_token();
+                self.recover_statement();
             }
         }
+    }
+
+    /// Recover over text no item production accepts, as far as the statement goes.
+    ///
+    /// One `Error` node and ONE diagnostic for the whole run, where recovering a token at
+    /// a time gave one of each per token: a line whose only defect was an unimplemented
+    /// `new` reported 23 times, because each skipped token reported itself and each bare
+    /// NAME in the middle of the run restarted a keywordless usage that then failed on the
+    /// token after it.
+    ///
+    /// `SysML` has no newline terminator, so the boundary has to be written: a `;` at the
+    /// depth recovery started from ends the statement and is taken; the enclosing `}` ends
+    /// it and is LEFT for the body loop, which owns it; and a keyword that begins a member
+    /// ends it too, so the valid item after a missing `;` is still read as an item rather
+    /// than swallowed. A bare NAME does NOT end it, which is the whole point — that is the
+    /// restart that cascaded.
+    ///
+    /// Braces are balanced while skipping, so a `;` or `}` inside a nested body does not
+    /// end the outer statement. The first token is always taken, so recovery always
+    /// advances and the loop that calls this cannot spin (invariant 3). Every token still
+    /// enters the tree, so `parse(s).text() == s` holds over the skipped run as it did
+    /// over the single tokens (invariant 1).
+    fn recover_statement(&mut self) {
+        self.eat_trivia();
+        let Some(first) = self.tokens.get(self.pos).copied() else {
+            return;
+        };
+        let start = Self::range_of(first).start();
+        let mut end = Self::range_of(first).end();
+        self.start_node(SyntaxKind::Error);
+        let mut depth: usize = 0;
+        let mut taken = false;
+        while let Some(token) = self.tokens.get(self.pos).copied() {
+            if taken && depth == 0 && (token.kind == SyntaxKind::RBrace || self.at_member_keyword())
+            {
+                break;
+            }
+            match token.kind {
+                SyntaxKind::LBrace => depth += 1,
+                SyntaxKind::RBrace => depth = depth.saturating_sub(1),
+                _ => {}
+            }
+            if !self.skippable(token.kind) {
+                end = Self::range_of(token).end();
+                taken = true;
+            }
+            self.push(token, token.kind);
+            if depth == 0 && token.kind == SyntaxKind::Semicolon {
+                break;
+            }
+        }
+        self.finish_node();
+        let message = format!("unexpected `{}`", self.text_of(first));
+        self.emit(
+            DiagnosticCode::Unexpected,
+            TextRange::new(start, end),
+            message,
+        );
+    }
+
+    /// Whether a KEYWORD that begins a member is written here.
+    ///
+    /// The recogniser is the body loop's, minus everything that opens on a bare NAME: a
+    /// `ReferenceUsage` needs its `ref`, and `DefaultReferenceUsage` is excluded outright,
+    /// because a NAME is exactly what a run of unreadable text is full of. Asked only
+    /// while recovering, where the question is "does a new member start here", not "which
+    /// member is it".
+    fn at_member_keyword(&self) -> bool {
+        self.at_import()
+            || self.at_element_keyword("alias")
+            || self.at_element_keyword("filter")
+            || self.at_annotating_member(0)
+            || match self.language {
+                Language::KerMl => self.at_keyword("package") || self.at_classifier(0).is_some(),
+                Language::SysMl => {
+                    self.at_definition_element(0)
+                        || self.at_simple_usage(0).is_some()
+                        || self.at_action_usage(0)
+                        || self.at_perform_action_usage(0)
+                        || self.at_flow_usage(0)
+                        || self.at_control_node(0).is_some()
+                }
+            }
     }
 
     /// A `SourceSuccessionMember` and the member it prefixes, as one item.

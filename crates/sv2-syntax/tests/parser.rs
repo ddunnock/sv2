@@ -3083,9 +3083,15 @@ fn only_errors_are_raised_today() {
 }
 
 #[test]
-fn a_diagnostic_points_at_the_token_it_is_about() {
-    // The whole point of the range: a caller underlines it. `class` is KerML's, so in
-    // a SysML file it is unexpected, and the range must cover exactly those five bytes.
+fn a_diagnostic_points_at_the_text_it_is_about() {
+    // The whole point of the range: a caller underlines it. `class` is KerML's, so in a
+    // SysML file it is unexpected, and recovery skips to the end of the statement — so the
+    // range covers the RUN it gave up on, from the offending token through the `;`.
+    //
+    // It covered exactly `class` while recovery took one token at a time and reported each
+    // one. That expectation is not relaxed here, it is replaced: the claim is still that
+    // the range is exactly the text the diagnostic is about, and the text it is about is
+    // now the statement. The sibling case below keeps a witness for the one-token form.
     let source = "package P { class Wrong; }";
     let parsed = parse(source, Language::SysMl);
     let first = parsed
@@ -3098,7 +3104,38 @@ fn a_diagnostic_points_at_the_token_it_is_about() {
     // `get`, not a slice: the workspace forbids indexing a str, because a range landing
     // inside a multi-byte character panics — which is the same reason the range is
     // required to be on character boundaries in the first place.
-    assert_eq!(source.get(start..end), Some("class"));
+    assert_eq!(source.get(start..end), Some("class Wrong;"));
+    // One diagnostic for the statement, where there were three: `class`, `Wrong` and `;`.
+    assert_eq!(
+        parsed
+            .errors()
+            .iter()
+            .filter(|d| d.code() == DiagnosticCode::Unexpected)
+            .count(),
+        1,
+        "{:?}",
+        parsed.errors()
+    );
+}
+
+#[test]
+fn a_stray_token_with_no_statement_to_end_is_its_own_range() {
+    // A `}` at a root that has no open body is a statement of one token: recovery takes it,
+    // stops before the next one rather than swallowing the file, and the range is that one
+    // byte. This is the witness that the range stays exact when the run is a single token.
+    let source = "}}}";
+    let parsed = parse(source, Language::SysMl);
+    let unexpected: Vec<_> = parsed
+        .errors()
+        .iter()
+        .filter(|d| d.code() == DiagnosticCode::Unexpected)
+        .collect();
+    assert_eq!(unexpected.len(), 3, "{:?}", parsed.errors());
+    for (n, diagnostic) in unexpected.iter().enumerate() {
+        let start = usize::from(diagnostic.range().start());
+        let end = usize::from(diagnostic.range().end());
+        assert_eq!(source.get(start..end), Some("}"), "diagnostic {n}");
+    }
 }
 
 #[test]
