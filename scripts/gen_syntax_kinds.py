@@ -498,6 +498,44 @@ NODES = [
             "metaclass is `SuccessionAsUsage`."
         ),
     ),
+    # ActionTargetSuccession's second alternative: a guard where TargetSuccession writes
+    # its source end. A TransitionUsage rather than a SuccessionAsUsage, which is why it
+    # owns a TransitionSuccession and not a ConnectorEndMember directly.
+    (
+        "GuardedTargetSuccession",
+        (
+            "`GuardExpressionMember 'then' TransitionSuccessionMember`. `SysML` 8.2.2.17.8 "
+            "— the metaclass is `TransitionUsage`."
+        ),
+    ),
+    (
+        "GuardExpressionMember",
+        (
+            "`'if' { kind = 'guard' } ownedRelatedElement += OwnedExpression`. "
+            "`SysML` 8.2.2.18.3 — the metaclass is `TransitionFeatureMembership`."
+        ),
+    ),
+    (
+        "TransitionSuccessionMember",
+        (
+            "`ownedRelatedElement += TransitionSuccession`. `SysML` 8.2.2.18.3 — the "
+            "metaclass is `OwningMembership`."
+        ),
+    ),
+    (
+        "TransitionSuccession",
+        (
+            "`EmptyEndMember ConnectorEndMember`. `SysML` 8.2.2.18.3 — the metaclass is "
+            "`Succession`, so its source end is empty rather than a `SourceEnd`."
+        ),
+    ),
+    (
+        "EmptyEndMember",
+        (
+            "`ownedRelatedElement += EmptyFeature`. `SysML` 8.2.2.18.3 — the metaclass is "
+            "`EndFeatureMembership`."
+        ),
+    ),
     (
         "SourceEndMember",
         (

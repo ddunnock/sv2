@@ -5310,7 +5310,50 @@ impl<'a> Parser<'a> {
     /// unimplemented, so each is left to the enclosing body's recovery and reported. A
     /// `[` BEFORE the `then` is the `SourceEnd`'s multiplicity and is looked past.
     fn at_action_target_succession_member(&self) -> bool {
-        let mut first = usize::from(self.at_visibility());
+        let first = usize::from(self.at_visibility());
+        self.at_guarded_target_succession(first) || self.at_target_succession(first)
+    }
+
+    /// Whether a `GuardedTargetSuccession` starts at the `n`th meaningful token.
+    ///
+    /// `GuardExpressionMember 'then' TransitionSuccessionMember` (`SysML` 8.2.2.17.8), so
+    /// `if`, an expression, and a `then`. The `then` is what has to be found, because
+    /// `IfNode` opens on `if` as well — `ActionNodePrefix 'if' ExpressionParameterMember
+    /// ActionBodyParameterMember` (8.2.2.17.7), an `ActionNode` that is unimplemented —
+    /// and so does `KerML`'s `ConditionalExpression`, `'if' Expression '?' Expression
+    /// 'else' Expression` (8.2.5.8.1), which a calculation body may write as its result.
+    ///
+    /// The expression between the two keywords is scanned rather than parsed: no
+    /// implemented expression contains a `then`, and none reaches a `;`, a `{` or a `}`
+    /// without ending, so the first of those four tokens decides. `if i < 0 { }` is an
+    /// `IfNode` and reported; `if x ? 1 else 2 }` is the result expression and left to
+    /// the body.
+    fn at_guarded_target_succession(&self, n: usize) -> bool {
+        if !self.nth_is_keyword(n, "if") {
+            return false;
+        }
+        let mut n = n + 1;
+        loop {
+            if self.nth_is_keyword(n, "then") {
+                return true;
+            }
+            // `None` is the end of the input: a truncated `if x` must decline rather
+            // than scan for ever (invariant 3).
+            if self.peek_nth(n).is_none()
+                || self.nth_is(n, SyntaxKind::Semicolon)
+                || self.nth_is(n, SyntaxKind::LBrace)
+                || self.nth_is(n, SyntaxKind::RBrace)
+            {
+                return false;
+            }
+            n += 1;
+        }
+    }
+
+    /// Whether an `ActionTargetSuccessionMember` in its `TargetSuccession` form starts at
+    /// the `n`th meaningful token.
+    fn at_target_succession(&self, n: usize) -> bool {
+        let mut first = n;
         // TargetSuccession's SourceEnd, `OwnedMultiplicity?`, stands BEFORE its `then`
         // (8.2.2.17.8, 8.2.2.9.3): `first start; [1] then a;`.
         if self.nth_is(first, SyntaxKind::LBracket) {
@@ -5368,13 +5411,97 @@ impl<'a> Parser<'a> {
     //     ( TargetSuccession | GuardedTargetSuccession | DefaultTargetSuccession )
     //     UsageBody                                                (SysML 8.2.2.17.8)
     //
-    // NOT marked: of its three alternatives only TargetSuccession is implemented, and
-    // `at_action_target_succession_member` admits only that one.
+    // NOT marked: of its three alternatives DefaultTargetSuccession (`else X;`) is
+    // unimplemented, held by
+    // tests/rejection/default-target-succession-is-not-implemented.sysml. The other two
+    // are read here, and `at_action_target_succession_member` admits exactly those.
     fn action_target_succession(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ActionTargetSuccession);
-        self.target_succession();
+        if self.at_keyword("if") {
+            self.guarded_target_succession();
+        } else {
+            self.target_succession();
+        }
         self.usage_body();
+        self.finish_node();
+    }
+
+    // production: GuardedTargetSuccession@sysml
+    //
+    // GuardedTargetSuccession : TransitionUsage =
+    //     ownedRelationship += GuardExpressionMember
+    //     'then' ownedRelationship += TransitionSuccessionMember    (SysML 8.2.2.17.8)
+    //
+    // A guard where TargetSuccession writes its source end (8.2.2.17.8, receipt
+    // e5f3ae62). The metaclass is a TransitionUsage (8.3.18.9, receipt a6f32577) and NOT
+    // a SuccessionAsUsage, which is why the target hangs off a TransitionSuccession here
+    // and off a ConnectorEndMember there: a TransitionUsage owns the succession it
+    // asserts as a feature, and derives its own source from where it stands (7.17.4).
+    //
+    // implied specialization: Actions::Action::decisionTransitions, for the guarded
+    //     successions after a DecisionNode
+    // constraint: TransitionUsage::checkTransitionUsageSpecialization and its siblings —
+    //     injections, so sv2-hir's (ADR-0002). This layer builds the tree only.
+    fn guarded_target_succession(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::GuardedTargetSuccession);
+        self.guard_expression_member();
+        self.expect_keyword("then");
+        self.transition_succession_member();
+        self.finish_node();
+    }
+
+    // production: GuardExpressionMember@sysml
+    //
+    // GuardExpressionMember : TransitionFeatureMembership =
+    //     'if' { kind = 'guard' }
+    //     ownedRelatedElement += OwnedExpression                    (SysML 8.2.2.18.3)
+    //
+    // `{ kind = 'guard' }` assigns a TransitionFeatureMembership's kind (8.3.18.8,
+    // receipt 7818cc5c) and contributes no token: the `if` is what says the feature is a
+    // guard rather than a trigger or an effect.
+    fn guard_expression_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::GuardExpressionMember);
+        self.expect_keyword("if");
+        self.owned_expression();
+        self.finish_node();
+    }
+
+    // production: TransitionSuccessionMember@sysml
+    //
+    // TransitionSuccessionMember : OwningMembership =
+    //     ownedRelatedElement += TransitionSuccession               (SysML 8.2.2.18.3)
+    //
+    // production: TransitionSuccession@sysml
+    //
+    // TransitionSuccession : Succession =
+    //     ownedRelationship += EmptyEndMember
+    //     ownedRelationship += ConnectorEndMember                   (SysML 8.2.2.18.3)
+    //
+    // production: EmptyEndMember@sysml
+    //
+    // EmptyEndMember : EndFeatureMembership =
+    //     ownedRelatedElement += EmptyFeature                       (SysML 8.2.2.18.3)
+    //
+    // A Succession, not a SuccessionAsUsage, so its source end carries nothing at all —
+    // an EmptyFeature written nowhere in the text (receipt 2da333dc), as
+    // EmptyResultMember's is (KerML 8.2.5.8.1, receipt 423205c7: a different clause and a
+    // different receipt, which is why each is named beside the claim it carries).
+    // TargetSuccession's SourceEnd differs: it may carry an OwnedMultiplicity.
+    // Trivia is not eaten before the empty end, or it would land inside a node the
+    // author never wrote.
+    fn transition_succession_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TransitionSuccessionMember);
+        self.start_node(SyntaxKind::TransitionSuccession);
+        self.start_node(SyntaxKind::EmptyEndMember);
+        self.start_node(SyntaxKind::EmptyFeature);
+        self.finish_node();
+        self.finish_node();
+        self.connector_end_member();
+        self.finish_node();
         self.finish_node();
     }
 

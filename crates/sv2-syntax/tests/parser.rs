@@ -1941,6 +1941,179 @@ fn a_control_node_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- GuardedTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
+//
+// ActionTargetSuccession : Usage =
+//     ( TargetSuccession | GuardedTargetSuccession | DefaultTargetSuccession )
+//     UsageBody                                                        (8.2.2.17.8)
+// GuardedTargetSuccession : TransitionUsage =
+//     GuardExpressionMember 'then' TransitionSuccessionMember           (8.2.2.17.8)
+// GuardExpressionMember : TransitionFeatureMembership =
+//     'if' { kind = 'guard' } OwnedExpression                           (8.2.2.18.3)
+// TransitionSuccessionMember : OwningMembership = TransitionSuccession  (8.2.2.18.3)
+// TransitionSuccession : Succession = EmptyEndMember ConnectorEndMember (8.2.2.18.3)
+// EmptyEndMember : EndFeatureMembership = EmptyFeature                  (8.2.2.18.3)
+//
+// ActionTargetSuccession's second alternative, so it stands where `then X;` stands: in
+// the ActionTargetSuccessionMember* loop after an InitialNodeMember or an
+// ActionBehaviorMember. Where TargetSuccession writes its source end before the `then`,
+// this writes a guard expression there, and its metaclass is a TransitionUsage rather
+// than a SuccessionAsUsage (8.3.18.9, receipt a6f32577).
+
+#[test]
+fn a_guarded_target_succession_reads_the_corpus_forms() {
+    // vendor/corpus/sysml/src/training/17. Control/Decision Example.sysml:22-24 — two
+    // guarded successions after a decision node.
+    let decision = render(
+        &parse_accepted(
+            "action def A { first start; then decide; \
+             if monitor.batteryCharge < 100 then addCharge; \
+             if monitor.batteryCharge >= 100 then endCharging; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&decision, "GuardedTargetSuccession"),
+        2,
+        "{decision}"
+    );
+    assert_eq!(
+        nodes_named(&decision, "ActionTargetSuccessionMember"),
+        2,
+        "{decision}"
+    );
+    // training/16. Conditional Succession/Conditional Succession Example-2.sysml:20 —
+    // after a behaviour usage, with no initial node in front of it.
+    let conditional = render(
+        &parse_accepted(
+            "action def A { action focus : Focus { } if focus.image.isWellFocused then shoot; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&conditional, "GuardedTargetSuccession"),
+        1,
+        "{conditional}"
+    );
+}
+
+#[test]
+fn a_guarded_target_succession_owns_what_its_productions_write() {
+    let tree = render(&parse_accepted("action def A { first start; if x then b; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "ActionTargetSuccessionMember"),
+        ["MemberPrefix", "ActionTargetSuccession"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "ActionTargetSuccession"),
+        ["GuardedTargetSuccession", "UsageBody"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "GuardedTargetSuccession"),
+        [
+            "GuardExpressionMember",
+            "KwThen",
+            "TransitionSuccessionMember"
+        ],
+        "{tree}"
+    );
+    // `'if' { kind = 'guard' } OwnedExpression`: the assignment contributes no token.
+    assert_eq!(
+        child_kinds(&tree, "GuardExpressionMember"),
+        ["KwIf", "FeatureReferenceExpression"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "TransitionSuccessionMember"),
+        ["TransitionSuccession"],
+        "{tree}"
+    );
+    // A Succession, not a SuccessionAsUsage: its source end is EMPTY where
+    // TargetSuccession's is a SourceEnd carrying an optional multiplicity.
+    assert_eq!(
+        child_kinds(&tree, "TransitionSuccession"),
+        ["EmptyEndMember", "ConnectorEndMember"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "EmptyEndMember"),
+        ["EmptyFeature"],
+        "{tree}"
+    );
+    assert_eq!(nodes_named(&tree, "TargetSuccession"), 0, "{tree}");
+    assert_eq!(nodes_named(&tree, "SourceEnd"), 0, "{tree}");
+}
+
+#[test]
+fn a_guard_reads_a_whole_expression() {
+    // OwnedExpression, not a name: every tier is admitted before the `then`.
+    parse_accepted("action def A { first start; if a.b.c == 1 and d then x; }");
+    parse_accepted("action def A { first start; if (x + 1) > 2 then x; }");
+    parse_accepted("action def A { first start; if not x then y; }");
+    // The target is a ConnectorEnd, so it takes a feature chain and the `references` form.
+    parse_accepted("action def A { first start; if x then a.b.c; }");
+    parse_accepted("action def A { first start; if x then e references a; }");
+    // UsageBody may be braced rather than `;`.
+    let braced = render(&parse_accepted("action def A { first start; if x then b { } }").syntax());
+    assert_eq!(
+        nodes_named(&braced, "GuardedTargetSuccession"),
+        1,
+        "{braced}"
+    );
+}
+
+#[test]
+fn an_if_that_is_not_a_guarded_succession_is_left_alone() {
+    // IfNode = ActionNodePrefix 'if' ExpressionParameterMember ActionBodyParameterMember
+    // ( 'else' … )? (8.2.2.17.7) — an ActionNode, unimplemented, and it opens on `if`
+    // too. What separates the two is the `then` before the body, so an `if` with none is
+    // declined at recognition and reported. Held as a file by
+    // tests/rejection/if-node-is-not-implemented.sysml.
+    let if_node = render(&parse_rejected("action def A { action a; if i < 0 { } }").syntax());
+    assert_eq!(
+        nodes_named(&if_node, "GuardedTargetSuccession"),
+        0,
+        "{if_node}"
+    );
+    // And a calculation body's result expression may be a ConditionalExpression, which
+    // opens on `if` as well (KerML 8.2.5.8.1). It has no `then`, so the item loop
+    // declines it and the body reads it as the expression it is.
+    let conditional = render(&parse_accepted("calc def C { action a; if x ? 1 else 2 }").syntax());
+    assert_eq!(
+        nodes_named(&conditional, "ConditionalExpression"),
+        1,
+        "{conditional}"
+    );
+    assert_eq!(
+        nodes_named(&conditional, "ResultExpressionMember"),
+        1,
+        "{conditional}"
+    );
+    assert_eq!(
+        nodes_named(&conditional, "GuardedTargetSuccession"),
+        0,
+        "{conditional}"
+    );
+}
+
+#[test]
+fn a_guarded_target_succession_is_a_suffix_and_nothing_else() {
+    // The same four rules TargetSuccession's own cases hold, over the guarded form.
+    // Held as files by tests/rejection/guarded-target-succession-*.sysml.
+    parse_rejected("action def A { if x then b; }");
+    parse_rejected("action def A { part p; if x then b; }");
+    parse_rejected("part def P { action a; if x then b; }");
+    parse_rejected("action def A { first start; if x then b }");
+}
+
+#[test]
+fn a_guarded_target_succession_keeps_every_byte() {
+    let source = "action def A {\n\tfirst start;\n\tif /* g */ x == 1 // n\n\t\tthen b;\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- FeatureChainExpression, KerML 8.2.5.8.2 --------------------------------------
 //
 // FeatureChainExpression = NonFeatureChainPrimaryArgumentMember '.' FeatureChainMember

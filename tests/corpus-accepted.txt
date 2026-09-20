@@ -54,7 +54,9 @@ vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Examp
 vendor/corpus/sysml/src/training/13. Flows/Flow Usage Example.sysml
 vendor/corpus/sysml/src/training/14. Action Definitions/Action Shorthand Example.sysml
 vendor/corpus/sysml/src/training/15. Actions/Action Decomposition.sysml
+vendor/corpus/sysml/src/training/16. Conditional Succession/Conditional Succession Example-2.sysml
 vendor/corpus/sysml/src/training/17. Control/Camera.sysml
+vendor/corpus/sysml/src/training/17. Control/Decision Example.sysml
 vendor/corpus/sysml/src/training/17. Control/Fork Join Example.sysml
 vendor/corpus/sysml/src/training/17. Control/Merge Example.sysml
 vendor/corpus/sysml/src/training/18. Action Performance/Action Performance Example.sysml

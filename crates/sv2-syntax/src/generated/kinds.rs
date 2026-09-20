@@ -661,6 +661,16 @@ pub enum SyntaxKind {
     ActionTargetSuccession,
     /// `SourceEndMember 'then' ConnectorEndMember`. `SysML` 8.2.2.17.8 — the metaclass is `SuccessionAsUsage`.
     TargetSuccession,
+    /// `GuardExpressionMember 'then' TransitionSuccessionMember`. `SysML` 8.2.2.17.8 — the metaclass is `TransitionUsage`.
+    GuardedTargetSuccession,
+    /// `'if' { kind = 'guard' } ownedRelatedElement += OwnedExpression`. `SysML` 8.2.2.18.3 — the metaclass is `TransitionFeatureMembership`.
+    GuardExpressionMember,
+    /// `ownedRelatedElement += TransitionSuccession`. `SysML` 8.2.2.18.3 — the metaclass is `OwningMembership`.
+    TransitionSuccessionMember,
+    /// `EmptyEndMember ConnectorEndMember`. `SysML` 8.2.2.18.3 — the metaclass is `Succession`, so its source end is empty rather than a `SourceEnd`.
+    TransitionSuccession,
+    /// `ownedRelatedElement += EmptyFeature`. `SysML` 8.2.2.18.3 — the metaclass is `EndFeatureMembership`.
+    EmptyEndMember,
     /// `ownedRelatedElement += SourceEnd`. `SysML` 8.2.2.9.3 — the metaclass is `EndFeatureMembership`.
     SourceEndMember,
     /// `( ownedRelationship += OwnedMultiplicity )?`. `SysML` 8.2.2.9.3 — the metaclass is `ReferenceUsage`.
@@ -1235,6 +1245,11 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ActionTargetSuccessionMember,
     SyntaxKind::ActionTargetSuccession,
     SyntaxKind::TargetSuccession,
+    SyntaxKind::GuardedTargetSuccession,
+    SyntaxKind::GuardExpressionMember,
+    SyntaxKind::TransitionSuccessionMember,
+    SyntaxKind::TransitionSuccession,
+    SyntaxKind::EmptyEndMember,
     SyntaxKind::SourceEndMember,
     SyntaxKind::SourceEnd,
     SyntaxKind::SourceSuccessionMember,
