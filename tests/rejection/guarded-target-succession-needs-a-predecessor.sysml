@@ -10,6 +10,7 @@
 //                                    | GuardedSuccessionMember
 // SysML 8.2.2.17.8  — GuardedTargetSuccession = GuardExpressionMember
 //                                               'then' TransitionSuccessionMember
+// rejects: PARSE-UNEXPECTED on: if x then b;
 action def A {
 	if x then b;
 }

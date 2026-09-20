@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -32,6 +33,21 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = ROOT / "tests" / "corpus-accepted.txt"
 NEGATIVE = ROOT / "tests" / "rejection"
+PENDING = ROOT / "tests" / "rejection-provenance-pending.txt"
+
+# What a rejection file declares about WHY it is rejected, in its header:
+#
+#     // rejects: PARSE-UNEXPECTED on: then merge m;
+#
+# The code of the first diagnostic, and the source line that diagnostic starts on. A
+# file that begins failing for a different reason then fails the gate instead of
+# passing quietly, which is the hole this closes: "rejected" alone cannot tell a rule
+# from an absence, and today's absences become tomorrow's implemented productions.
+#
+# The line TEXT is compared and not the line NUMBER, because a header is edited often
+# and a body line is not.
+DECLARATION = re.compile(r"^//\s*rejects:\s*(?P<code>[A-Z][A-Z-]+)\s+on:\s*(?P<line>.+?)\s*$")
+DIAGNOSTIC = re.compile(r"^\s*(?P<line>\d+):(?P<column>\d+):\s*\w+\[(?P<code>[A-Z][A-Z-]+)\]")
 
 # Both are swept. tests/corpus is authored and vendor/corpus is pinned upstream;
 # regen_state.py counts the two together, and so does this.
@@ -153,6 +169,87 @@ def check_negative(binary: Path) -> int:
     return len(leaked)
 
 
+def declared(path: Path) -> tuple[str, str] | None:
+    """The `// rejects:` declaration in `path`'s header, as (code, source line)."""
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        found = DECLARATION.match(raw.strip())
+        if found:
+            return found["code"], found["line"]
+    return None
+
+
+def first_diagnostic(binary: Path, path: Path) -> tuple[str, str] | None:
+    """The first diagnostic `sv2 parse` raises against `path`, as (code, source line).
+
+    The line is resolved to its TEXT here, so a caller compares what the diagnostic is
+    about rather than where it happens to sit in the file.
+    """
+    done = subprocess.run(
+        [str(binary), "parse", str(path)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    lines = path.read_text(encoding="utf-8").splitlines()
+    for raw in done.stderr.splitlines():
+        found = DIAGNOSTIC.match(raw)
+        if not found:
+            continue
+        number = int(found["line"])
+        text = lines[number - 1].strip() if 0 < number <= len(lines) else ""
+        return found["code"], text
+    return None
+
+
+def read_pending() -> set[str]:
+    """Rejection files not yet carrying a declaration, by repository-relative path."""
+    if not PENDING.is_file():
+        return set()
+    lines = PENDING.read_text(encoding="utf-8").splitlines()
+    return {line.strip() for line in lines if line.strip() and not line.startswith("#")}
+
+
+def check_provenance(binary: Path) -> int:
+    """Report every rejection file whose declared reason is missing or wrong.
+
+    Three failures, and the third is what keeps the backlog honest: a file with no
+    declaration that is not listed as pending, a file whose declaration does not match
+    what the parser raises, and a file that declares AND is still listed as pending.
+    """
+    if not NEGATIVE.is_dir():
+        return 0
+    pending = read_pending()
+    failures = 0
+    declaring = 0
+    for path in model_files(NEGATIVE):
+        name = rel(path)
+        claim = declared(path)
+        if claim is None:
+            if name not in pending:
+                print(f"  no `// rejects:` declaration, and not listed as pending: {name}")
+                failures += 1
+            continue
+        declaring += 1
+        if name in pending:
+            print(f"  declares its reason and is still listed as pending: {name}")
+            failures += 1
+        raised = first_diagnostic(binary, path)
+        if raised is None:
+            print(f"  declares {claim[0]} but the parser raised nothing: {name}")
+            failures += 1
+        elif raised != claim:
+            print(f"  rejected for a different reason: {name}")
+            print(f"      declared: {claim[0]} on: {claim[1]}")
+            print(f"      raised:   {raised[0]} on: {raised[1]}")
+            failures += 1
+    stale = sorted(name for name in pending if not (ROOT / name).is_file())
+    for name in stale:
+        print(f"  listed as pending but the file is gone: {name}")
+    failures += len(stale)
+    print(f"  provenance: {declaring} declared / {len(pending)} pending")
+    return failures
+
+
 def sv2_binary() -> Path:
     """Where cargo left the `sv2` binary."""
     target = Path(os.environ.get("CARGO_TARGET_DIR") or ROOT / "target")
@@ -188,6 +285,7 @@ def main(argv: list[str] | None = None) -> int:
         # until something is pinned — and the negative half still runs.
         print("  no positive corpus — the ledger is not checked")
     failures += check_negative(binary)
+    failures += check_provenance(binary)
 
     print("corpus sweep: green" if failures == 0 else f"corpus sweep: {failures} failure(s)")
     return 1 if failures else 0

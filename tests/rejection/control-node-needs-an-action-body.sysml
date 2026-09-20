@@ -2,6 +2,7 @@
 // body -- not optional.
 // SysML 8.2.2.17.3  — JoinNode = ControlNodePrefix 'join' UsageDeclaration ActionBody
 // SysML 8.2.2.17.1  — ActionBody = ';' | '{' ActionBodyItem* '}'
+// rejects: PARSE-EXPECTED on: }
 action def A {
 	join j
 }

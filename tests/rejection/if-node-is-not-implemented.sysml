@@ -10,6 +10,7 @@
 //                              ActionBodyParameterMember
 //                              ( 'else' ( ActionBodyParameterMember
 //                                       | IfNodeParameterMember ) )?
+// rejects: PARSE-UNEXPECTED on: if i < 0 { }
 action def A {
 	action a;
 	if i < 0 { }

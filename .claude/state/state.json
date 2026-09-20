@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-20T03:30:09Z",
+    "regenerated_utc": "2026-09-20T03:38:21Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -11,7 +11,7 @@
       "coverage": "pass",
       "corpus": "pass",
       "tests": "pass",
-      "clippy": "fail",
+      "clippy": "pass",
       "doc": "pass",
       "deny": "pass"
     },
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "563907c Bound recovery at the statement, not the token: 8,300 becomes 1,502",
       "5b30968 Report one diagnostic per start offset: 11,286 becomes 8,300",
       "e821d4a Read the guarded succession, and close ActionBodyItem's four alternatives",
       "a1a8133 Read the default target succession, buy nothing, and mark the alternation",
       "1c256b7 Stop rejecting `else A3;` by absence: the next commit reads it",
       "286f3ce Say it in full in three cli.rs comments: standard error, and the article",
       "467b570 Regenerate validation.json: its 21 leaks are the by-absence files, all of them",
-      "245a328 Read a guarded succession, and move acceptance by two, as predicted",
-      "88088d2 Read the four control nodes, and move acceptance by three, as predicted"
+      "245a328 Read a guarded succession, and move acceptance by two, as predicted"
     ]
   },
   "authored": {
@@ -108,10 +108,8 @@
       },
       {
         "id": "rejection-provenance",
-        "question": "A rejection file can go stale without the sweep noticing, and this session produced one. tests/rejection/action-usage-is-not-an-action-definition.sysml held `action brake;` and `perform action stop;`. When ActionUsage landed the first line began to parse; the file went on being rejected because of the second, so the sweep stayed green while the file's header comment described a rule the parser no longer had. It was found by reading, not by a check. corpus_sweep.py asserts only that each file is rejected, never WHY, so every multi-construct rejection file is a place this can happen again, and the set is 97 files and growing by three or four per production. Candidate fix: have each rejection file name the diagnostic it expects -- a code, or a line number, or the first error's text -- and have the sweep check that the rejection is the one the comment claims. Cheapest honest version is probably a header directive like `// expect: PARSE-UNEXPECTED at 3:2` parsed by corpus_sweep.py, which also makes the by-rule versus by-absence distinction machine-readable for the first time. Not attempted: it is a change to the harness rather than the parser, and planting a failure to prove the new check bites is most of the work.\n\nA SECOND INSTANCE of the same class, found by the reviewer at session close and not in a rejection file at all: three code comments cited KerML 8.2.2.6 to establish that `ref`, `action` and `constraint` are reserved and therefore not names. KerML 8.2.2.6 lists KerML's OWN reserved words and contains none of the three; SysML 8.2.2.1.2 is the clause that reserves them. The disambiguation was correct and the citation was not, which invariant 4 counts as the expensive kind of wrong because it reads as evidence. Nothing in the gate compares a cited clause against what the comment claims of it, and check_citations.py only verifies that a named receipt was pinned. Worth considering alongside this decision: the two are the same failure -- a claim that still passes after the thing it claimed stopped being true.",
-        "blocks": [
-          "trusting the rejection corpus to mean what its comments say as it grows"
-        ]
+        "question": "PARTLY RESOLVED, and the mechanism is in: a rejection file declares its reason in its header as `// rejects: <CODE> on: <source line>`, and scripts/corpus_sweep.py checks that declaration against the first diagnostic the parser actually raises -- comparing the line's TEXT, not its number, because headers are edited often and body lines are not. Three ways it fails: no declaration and not listed as pending, a declaration the parser contradicts, and a file that declares while still listed as pending. Ten pytest cases, and both live failures were proved by mutation. NOT resolved: 117 of 135 cases predate the check and are listed in tests/rejection-provenance-pending.txt, which may only shrink. Backfilling is authoring work -- each declaration must come from the rule the file states, never from what the parser printed -- so it is done a few at a time, and every NEW case declares from the start.",
+        "blocks": []
       },
       {
         "id": "coverage-marker-audit",

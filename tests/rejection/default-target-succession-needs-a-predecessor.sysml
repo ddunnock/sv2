@@ -8,6 +8,7 @@
 //                                      ActionTargetSuccessionMember*
 //                                    | GuardedSuccessionMember
 // SysML 8.2.2.17.8  — DefaultTargetSuccession = 'else' TransitionSuccessionMember
+// rejects: PARSE-UNEXPECTED on: else b;
 action def A {
 	else b;
 }

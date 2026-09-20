@@ -4,6 +4,7 @@
 // SysML 8.2.2.17.3  — ControlNodePrefix = RefPrefix 'individual'? PortionKind?
 //                                         UsageExtensionKeyword*
 // SysML 8.2.2.6.2   — BasicUsagePrefix = RefPrefix 'ref'?
+// rejects: PARSE-EXPECTED on: ref merge m;
 action def A {
 	ref merge m;
 }

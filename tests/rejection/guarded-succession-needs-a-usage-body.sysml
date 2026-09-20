@@ -6,6 +6,7 @@
 //                                         'then' TransitionSuccessionMember UsageBody
 // SysML 8.2.2.6.2   — UsageBody = DefinitionBody
 // SysML 8.2.2.6.1   — DefinitionBody = ';' | '{' DefinitionBodyItem* '}'
+// rejects: PARSE-EXPECTED on: }
 action def A {
 	first a if x then b
 }

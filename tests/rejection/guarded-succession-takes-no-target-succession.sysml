@@ -8,6 +8,7 @@
 //                                    | SourceSuccessionMember? ActionBehaviorMember
 //                                      ActionTargetSuccessionMember*
 //                                    | GuardedSuccessionMember
+// rejects: PARSE-UNEXPECTED on: then c;
 action def A {
 	first a if x then b;
 	then c;

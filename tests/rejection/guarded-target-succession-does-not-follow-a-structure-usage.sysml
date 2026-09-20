@@ -4,6 +4,7 @@
 // SysML 8.2.2.17.1  — ActionBodyItem = ... | SourceSuccessionMember? ActionBehaviorMember
 //                                            ActionTargetSuccessionMember* | ...
 //                     NonBehaviorBodyItem = ... | SourceSuccessionMember? StructureUsageMember
+// rejects: PARSE-UNEXPECTED on: if x then b;
 action def A {
 	part p;
 	if x then b;

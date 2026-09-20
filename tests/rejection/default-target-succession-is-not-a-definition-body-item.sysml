@@ -5,6 +5,7 @@
 //                                         | SourceSuccessionMember? OccurrenceUsageMember
 // SysML 8.2.2.17.1  — ActionBodyItem = ... | SourceSuccessionMember? ActionBehaviorMember
 //                                            ActionTargetSuccessionMember* | ...
+// rejects: PARSE-UNEXPECTED on: else b;
 part def P {
 	action a;
 	else b;
