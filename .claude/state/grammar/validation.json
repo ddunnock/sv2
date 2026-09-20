@@ -13,8 +13,30 @@
   },
   "accepted": 311,
   "missed": 0,
-  "caught": 37,
-  "leaked": 0,
+  "caught": 107,
+  "leaked": 21,
   "missed_detail": [],
-  "leaked_detail": []
+  "leaked_detail": [
+    "tests/rejection/action-body-control-flow-is-not-implemented.sysml",
+    "tests/rejection/body-expression-is-not-implemented.sysml",
+    "tests/rejection/calculation-usage-is-not-a-calculation-definition.sysml",
+    "tests/rejection/collect-expression-is-not-implemented.sysml",
+    "tests/rejection/conjugation-part-is-not-implemented.kerml",
+    "tests/rejection/constraint-usage-is-not-a-constraint-definition.sysml",
+    "tests/rejection/constructor-expression-is-not-implemented.sysml",
+    "tests/rejection/default-target-succession-is-not-implemented.sysml",
+    "tests/rejection/end-usage-prefix-is-not-implemented.sysml",
+    "tests/rejection/enumeration-definition-takes-an-enumeration-body.sysml",
+    "tests/rejection/feature-relationship-part-is-not-implemented.kerml",
+    "tests/rejection/function-operation-expression-is-not-implemented.sysml",
+    "tests/rejection/if-node-is-not-implemented.sysml",
+    "tests/rejection/index-expression-is-not-implemented.sysml",
+    "tests/rejection/metadata-access-expression-is-not-implemented.sysml",
+    "tests/rejection/metadata-annotating-element-is-not-implemented.sysml",
+    "tests/rejection/requirement-constraint-usage-prefix-metadata-is-not-implemented.sysml",
+    "tests/rejection/requirement-usage-is-not-a-requirement-definition.sysml",
+    "tests/rejection/select-expression-is-not-implemented.sysml",
+    "tests/rejection/subject-usage-carries-no-prefix-metadata.sysml",
+    "tests/rejection/type-relationship-part-is-not-implemented.kerml"
+  ]
 }
