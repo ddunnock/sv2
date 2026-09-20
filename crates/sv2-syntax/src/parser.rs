@@ -5311,7 +5311,15 @@ impl<'a> Parser<'a> {
     /// `[` BEFORE the `then` is the `SourceEnd`'s multiplicity and is looked past.
     fn at_action_target_succession_member(&self) -> bool {
         let first = usize::from(self.at_visibility());
-        self.at_guarded_target_succession(first) || self.at_target_succession(first)
+        self.at_guarded_target_succession(first)
+            // DefaultTargetSuccession = 'else' TransitionSuccessionMember (8.2.2.17.8).
+            // One keyword decides it: `else` is reserved, and the only other production
+            // that writes one is KerML's ConditionalExpression, whose `else` stands
+            // INSIDE the expression (`if c ? a else b`, 8.2.5.8.1) and so is never at an
+            // item position. No UsageBody lookahead, as the guarded form has none: the
+            // member is read and UsageBody reports its own absence.
+            || self.nth_is_keyword(first, "else")
+            || self.at_target_succession(first)
     }
 
     /// Whether a `GuardedTargetSuccession` starts at the `n`th meaningful token.
@@ -5411,19 +5419,46 @@ impl<'a> Parser<'a> {
     //     ( TargetSuccession | GuardedTargetSuccession | DefaultTargetSuccession )
     //     UsageBody                                                (SysML 8.2.2.17.8)
     //
-    // NOT marked: of its three alternatives DefaultTargetSuccession (`else X;`) is
-    // unimplemented, held by
-    // tests/rejection/default-target-succession-is-not-implemented.sysml. The other two
-    // are read here, and `at_action_target_succession_member` admits exactly those.
+    // production: ActionTargetSuccession@sysml
+    //
+    // Marked now that all THREE alternatives are read. It was unmarked while
+    // DefaultTargetSuccession was absent, which is the convention: a production whose
+    // alternatives are partly done is a tracked gap, not a claim.
+    //
+    // The three are told apart on one token each, and none of them can be a name: `if`
+    // opens the guarded form, `else` the default, and anything else is the plain one,
+    // whose own recogniser has already looked past its ConnectorEnd to the UsageBody
+    // before this is called.
     fn action_target_succession(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ActionTargetSuccession);
         if self.at_keyword("if") {
             self.guarded_target_succession();
+        } else if self.at_keyword("else") {
+            self.default_target_succession();
         } else {
             self.target_succession();
         }
         self.usage_body();
+        self.finish_node();
+    }
+
+    // production: DefaultTargetSuccession@sysml
+    //
+    // DefaultTargetSuccession : TransitionUsage =
+    //     'else' ownedRelationship += TransitionSuccessionMember    (SysML 8.2.2.17.8)
+    //
+    // The branch taken when no guard before it held (8.2.2.17.8, receipt e5f3ae62). A
+    // TransitionUsage as the guarded form is (8.3.18.9, receipt a6f32577), over the same
+    // TransitionSuccessionMember, and it owns no GuardExpressionMember at all: the `else`
+    // is the whole of the condition. WHICH guards it defaults over is resolution's to
+    // find, as a succession's unwritten source is (7.17.4, receipt 339ef468) — the
+    // grammar does not require one to precede it, and `first start; else b;` parses.
+    fn default_target_succession(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::DefaultTargetSuccession);
+        self.expect_keyword("else");
+        self.transition_succession_member();
         self.finish_node();
     }
 

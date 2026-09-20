@@ -2108,6 +2108,86 @@ fn a_guarded_target_succession_is_a_suffix_and_nothing_else() {
     parse_rejected("action def A { first start; if x then b }");
 }
 
+// -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
+//
+// DefaultTargetSuccession : TransitionUsage =
+//     'else' ownedRelationship += TransitionSuccessionMember            (8.2.2.17.8)
+//
+// ActionTargetSuccession's third and last alternative: the branch taken when no guard
+// before it was true. A TransitionUsage like the guarded form, over the same
+// TransitionSuccessionMember, and it writes no guard at all — the `else` IS the whole
+// condition.
+
+#[test]
+fn a_default_target_succession_reads_the_corpus_form() {
+    // vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml:4-7 — a decision
+    // node, two guarded successions, and the default after them.
+    let tree = render(
+        &parse_accepted(
+            "action def A { attribute x = 1; decide 'test x'; \
+             if x == 1 then A1; if x > 1 then A2; else A3; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "DefaultTargetSuccession"), 1, "{tree}");
+    assert_eq!(nodes_named(&tree, "GuardedTargetSuccession"), 2, "{tree}");
+    assert_eq!(
+        nodes_named(&tree, "ActionTargetSuccessionMember"),
+        3,
+        "{tree}"
+    );
+}
+
+#[test]
+fn a_default_target_succession_owns_what_its_production_writes() {
+    let tree = render(&parse_accepted("action def A { first start; else b; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "ActionTargetSuccession"),
+        ["DefaultTargetSuccession", "UsageBody"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "DefaultTargetSuccession"),
+        ["KwElse", "TransitionSuccessionMember"],
+        "{tree}"
+    );
+    // The same TransitionSuccession the guarded form owns: an empty source end and the
+    // target's ConnectorEnd.
+    assert_eq!(
+        child_kinds(&tree, "TransitionSuccession"),
+        ["EmptyEndMember", "ConnectorEndMember"],
+        "{tree}"
+    );
+    // No guard is written, so there is no GuardExpressionMember to own.
+    assert_eq!(nodes_named(&tree, "GuardExpressionMember"), 0, "{tree}");
+    // The target is a ConnectorEnd, so a chain and the `references` form are admitted,
+    // and UsageBody may be braced.
+    parse_accepted("action def A { first start; else a.b.c; }");
+    parse_accepted("action def A { first start; else e references a; }");
+    parse_accepted("action def A { first start; else b { } }");
+    parse_accepted("action def A { first start; private else b; }");
+}
+
+#[test]
+fn an_else_that_belongs_to_an_expression_is_left_alone() {
+    // KerML's ConditionalExpression is `'if' Expression '?' Expression 'else' Expression`
+    // (8.2.5.8.1), so its `else` is INSIDE the expression and never at an item position.
+    // A calculation body writing one as its result keeps it.
+    let tree = render(&parse_accepted("calc def C { action a; if x ? 1 else 2 }").syntax());
+    assert_eq!(nodes_named(&tree, "ConditionalExpression"), 1, "{tree}");
+    assert_eq!(nodes_named(&tree, "DefaultTargetSuccession"), 0, "{tree}");
+}
+
+#[test]
+fn a_default_target_succession_is_a_suffix_and_nothing_else() {
+    // The same rules the other two alternatives obey. Held as files by
+    // tests/rejection/default-target-succession-*.sysml.
+    parse_rejected("action def A { else b; }");
+    parse_rejected("action def A { part p; else b; }");
+    parse_rejected("part def P { action a; else b; }");
+    parse_rejected("action def A { first start; else b }");
+}
+
 #[test]
 fn a_guarded_target_succession_keeps_every_byte() {
     let source = "action def A {\n\tfirst start;\n\tif /* g */ x == 1 // n\n\t\tthen b;\n}\n";

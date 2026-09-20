@@ -508,6 +508,14 @@ NODES = [
             "— the metaclass is `TransitionUsage`."
         ),
     ),
+    # The third alternative: no guard at all, the `else` being the whole condition.
+    (
+        "DefaultTargetSuccession",
+        (
+            "`'else' ownedRelationship += TransitionSuccessionMember`. `SysML` 8.2.2.17.8 "
+            "— the metaclass is `TransitionUsage`."
+        ),
+    ),
     (
         "GuardExpressionMember",
         (
