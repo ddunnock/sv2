@@ -508,6 +508,41 @@ NODES = [
             "— the metaclass is `TransitionUsage`."
         ),
     ),
+    # ActionBodyItem's fourth alternative, and the only succession that writes its own
+    # source: `first a if x then b;`. A TransitionUsage like the two guarded targets.
+    (
+        "GuardedSuccessionMember",
+        (
+            "`MemberPrefix ownedRelatedElement += GuardedSuccession`. `SysML` 8.2.2.17.1 "
+            "— the metaclass is `FeatureMembership`."
+        ),
+    ),
+    (
+        "GuardedSuccession",
+        (
+            "`( 'succession' UsageDeclaration )? 'first' FeatureChainMember "
+            "GuardExpressionMember 'then' TransitionSuccessionMember UsageBody`. "
+            "`SysML` 8.2.2.17.8 — the metaclass is `TransitionUsage`."
+        ),
+    ),
+    # `SysML` 8.2.2.17.5's membership, NOT `KerML` 8.2.5.8.2's production of the same name:
+    # that one is `FeatureReferenceMember | OwnedFeatureChainMember` and its first
+    # alternative is read as a `FeatureReferenceMember` in the expression layer. Two
+    # productions, one name, two bodies — ADR-0015's case exactly.
+    (
+        "FeatureChainMember",
+        (
+            "`memberElement = [QualifiedName] | OwnedFeatureChainMember`. "
+            "`SysML` 8.2.2.17.5 — the metaclass is `Membership`."
+        ),
+    ),
+    (
+        "OwnedFeatureChainMember",
+        (
+            "`ownedRelatedElement += OwnedFeatureChain`. `SysML` 8.2.2.17.5 — the "
+            "metaclass is `OwningMembership`."
+        ),
+    ),
     # The third alternative: no guard at all, the `else` being the whole condition.
     (
         "DefaultTargetSuccession",

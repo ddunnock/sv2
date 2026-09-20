@@ -2108,6 +2108,177 @@ fn a_guarded_target_succession_is_a_suffix_and_nothing_else() {
     parse_rejected("action def A { first start; if x then b }");
 }
 
+// -- GuardedSuccession, SysML 8.2.2.17.8 ----------------------------------------------
+//
+// ActionBodyItem = ... | ownedRelationship += GuardedSuccessionMember      (8.2.2.17.1)
+// GuardedSuccessionMember : FeatureMembership =
+//     MemberPrefix ownedRelatedElement += GuardedSuccession               (8.2.2.17.1)
+// GuardedSuccession : TransitionUsage =
+//     ( 'succession' UsageDeclaration )?
+//     'first' FeatureChainMember GuardExpressionMember
+//     'then' TransitionSuccessionMember UsageBody                         (8.2.2.17.8)
+// FeatureChainMember : Membership =
+//     memberElement = [QualifiedName] | OwnedFeatureChainMember           (8.2.2.17.5)
+// OwnedFeatureChainMember : OwningMembership = OwnedFeatureChain          (8.2.2.17.5)
+//
+// ActionBodyItem's FOURTH and last alternative, and an item in its own right rather than
+// a suffix: it writes its own source after `first`, where a target succession leaves the
+// source to the item before it. It takes NO ActionTargetSuccessionMember* after it, where
+// the second and third alternatives both do (the first, NonBehaviorBodyItem, takes none
+// either — what is particular here is a succession with no suffix).
+
+#[test]
+fn a_guarded_succession_reads_the_corpus_forms() {
+    // vendor/corpus/sysml/src/training/16. Conditional Succession/Conditional Succession
+    // Example-1.sysml:21-22 — `first focus` and the guard on the next line.
+    let example = render(
+        &parse_accepted(
+            "action def A { action focus : Focus { } \
+             first focus if focus.image.isWellFocused then shoot; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&example, "GuardedSuccession"), 1, "{example}");
+    assert_eq!(nodes_named(&example, "InitialNodeMember"), 0, "{example}");
+    // vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml:17-18 — with the
+    // optional `succession UsageDeclaration` and a visibility on the member.
+    let declared = render(
+        &parse_accepted("action def A { public succession S first A1 if x == 0 then A2; }")
+            .syntax(),
+    );
+    assert_eq!(nodes_named(&declared, "GuardedSuccession"), 1, "{declared}");
+    assert_eq!(nodes_named(&declared, "UsageDeclaration"), 1, "{declared}");
+}
+
+#[test]
+fn a_guarded_succession_owns_what_its_productions_write() {
+    let tree = render(&parse_accepted("action def A { first a if x then b; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "GuardedSuccessionMember"),
+        ["MemberPrefix", "GuardedSuccession"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "GuardedSuccession"),
+        [
+            "KwFirst",
+            "FeatureChainMember",
+            "GuardExpressionMember",
+            "KwThen",
+            "TransitionSuccessionMember",
+            "UsageBody"
+        ],
+        "{tree}"
+    );
+    // The same guard and the same succession the target forms own.
+    assert_eq!(
+        child_kinds(&tree, "TransitionSuccession"),
+        ["EmptyEndMember", "ConnectorEndMember"],
+        "{tree}"
+    );
+    // With the optional declaration, two tokens and a UsageDeclaration come first.
+    let declared =
+        render(&parse_accepted("action def A { succession S first a if x then b; }").syntax());
+    assert_eq!(
+        child_kinds(&declared, "GuardedSuccession"),
+        [
+            "KwSuccession",
+            "UsageDeclaration",
+            "KwFirst",
+            "FeatureChainMember",
+            "GuardExpressionMember",
+            "KwThen",
+            "TransitionSuccessionMember",
+            "UsageBody"
+        ],
+        "{declared}"
+    );
+}
+
+#[test]
+fn a_guarded_successions_source_takes_either_alternative() {
+    // FeatureChainMember = memberElement = [QualifiedName] | OwnedFeatureChainMember, and
+    // OwnedFeatureChain's `+` means a chain has at least two links — so one name is the
+    // reference alternative and never a chain of one.
+    let one = render(&parse_accepted("action def A { first a if x then b; }").syntax());
+    assert_eq!(
+        child_kinds(&one, "FeatureChainMember"),
+        ["QualifiedName"],
+        "{one}"
+    );
+    assert_eq!(nodes_named(&one, "OwnedFeatureChainMember"), 0, "{one}");
+    // Two or more links take the owned alternative. The corpus does not write one —
+    // OwnedFeatureChainMember is a spec_only deviation (follow_spec) — so this case is
+    // constructed from the production, which is what that deviation asks for.
+    let chained = render(&parse_accepted("action def A { first a.b.c if x then d; }").syntax());
+    assert_eq!(
+        child_kinds(&chained, "FeatureChainMember"),
+        ["OwnedFeatureChainMember"],
+        "{chained}"
+    );
+    assert_eq!(
+        child_kinds(&chained, "OwnedFeatureChainMember"),
+        ["OwnedFeatureChain"],
+        "{chained}"
+    );
+    // A qualified name is not a chain: `::` stays inside the one member element.
+    let qualified = render(&parse_accepted("action def A { first p::a if x then b; }").syntax());
+    assert_eq!(
+        child_kinds(&qualified, "FeatureChainMember"),
+        ["QualifiedName"],
+        "{qualified}"
+    );
+}
+
+#[test]
+fn first_tells_the_initial_node_from_the_guarded_succession() {
+    // InitialNodeMember = MemberPrefix 'first' [QualifiedName] RelationshipBody
+    // (8.2.2.17.1) against GuardedSuccession's `'first' FeatureChainMember
+    // GuardExpressionMember` — decided by what follows the name: `;` or `{` is the
+    // initial node, `if` is the guarded succession.
+    let initial = render(&parse_accepted("action def A { first start; }").syntax());
+    assert_eq!(nodes_named(&initial, "InitialNodeMember"), 1, "{initial}");
+    assert_eq!(nodes_named(&initial, "GuardedSuccession"), 0, "{initial}");
+    // DecisionTest.sysml:20-21 — an initial node, then a guarded TARGET succession on the
+    // next line. Both forms in one body, and neither becomes the other.
+    let both = render(
+        &parse_accepted("action def A { private first A3; if x > 0 then 'test x'; }").syntax(),
+    );
+    assert_eq!(nodes_named(&both, "InitialNodeMember"), 1, "{both}");
+    assert_eq!(nodes_named(&both, "GuardedTargetSuccession"), 1, "{both}");
+    assert_eq!(nodes_named(&both, "GuardedSuccession"), 0, "{both}");
+    // `first a.b;` is still no production at all: the initial node takes a QualifiedName,
+    // and the two that take a chain both go on to a guard or a `then`. Held by
+    // tests/rejection/initial-node-member-names-a-qualified-name-not-a-feature-chain.sysml.
+    parse_rejected("action def A { first a.b; }");
+}
+
+#[test]
+fn a_guarded_succession_is_an_item_with_no_suffix() {
+    // An item in its own right: no predecessor is needed, unlike every target succession.
+    parse_accepted("action def A { first a if x then b; }");
+    // And a calculation body reaches ActionBodyItem (8.2.2.19).
+    let calc = render(&parse_accepted("calc def C { first a if x then b; y }").syntax());
+    assert_eq!(nodes_named(&calc, "GuardedSuccession"), 1, "{calc}");
+    assert_eq!(nodes_named(&calc, "ResultExpressionMember"), 1, "{calc}");
+    // The fourth alternative carries no ActionTargetSuccessionMember* where the second
+    // and third do, so a `then c;` following it is no item. Held as a file by
+    // tests/rejection/guarded-succession-takes-no-target-succession.sysml.
+    parse_rejected("action def A { first a if x then b; then c; }");
+    // Not an item of a definition or package body either.
+    parse_rejected("part def P { first a if x then b; }");
+    parse_rejected("package P { first a if x then b; }");
+    // UsageBody is not optional.
+    parse_rejected("action def A { first a if x then b }");
+}
+
+#[test]
+fn a_guarded_succession_keeps_every_byte() {
+    let source =
+        "action def A {\n\tsuccession /* d */ S // n\n\t\tfirst a.b\n\t\tif x == 1 then c { }\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
 //
 // DefaultTargetSuccession : TransitionUsage =

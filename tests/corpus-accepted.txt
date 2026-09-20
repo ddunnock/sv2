@@ -33,6 +33,7 @@ vendor/corpus/sysml/src/examples/Packet Example/PacketUsage.sysml
 vendor/corpus/sysml/src/examples/Packet Example/Packets.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ImportTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ItemTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/MultiplicityTest.sysml
@@ -54,6 +55,7 @@ vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Examp
 vendor/corpus/sysml/src/training/13. Flows/Flow Usage Example.sysml
 vendor/corpus/sysml/src/training/14. Action Definitions/Action Shorthand Example.sysml
 vendor/corpus/sysml/src/training/15. Actions/Action Decomposition.sysml
+vendor/corpus/sysml/src/training/16. Conditional Succession/Conditional Succession Example-1.sysml
 vendor/corpus/sysml/src/training/16. Conditional Succession/Conditional Succession Example-2.sysml
 vendor/corpus/sysml/src/training/17. Control/Camera.sysml
 vendor/corpus/sysml/src/training/17. Control/Decision Example.sysml

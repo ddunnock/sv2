@@ -1685,6 +1685,13 @@ impl<'a> Parser<'a> {
                 // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
                 // its own membership node rather than the one `membership` builds.
                 self.namespace_feature_member();
+            } else if body.admits_action_body_item() && self.at_guarded_succession_member() {
+                // ActionBodyItem's fourth alternative (SysML 8.2.2.17.1). An item of its
+                // own with no suffix, so it is not `initial_node_item`'s shape: nothing
+                // follows it here, and tests/rejection/guarded-succession-takes-no-target-succession.sysml
+                // holds that. Disjoint from the initial node below on the token after the
+                // source name, so the order of the two arms decides nothing.
+                self.guarded_succession_member();
             } else if body.admits_action_body_item() && self.at_initial_node_member() {
                 // ActionBodyItem's second alternative (SysML 8.2.2.17.1), reached from an
                 // action body and, through CalculationBodyItem (8.2.2.19), a calculation
@@ -3677,7 +3684,7 @@ impl<'a> Parser<'a> {
         self.start_node_at(start, SyntaxKind::FeatureChainExpression);
         self.wrap_at(start, &NON_FEATURE_CHAIN_PRIMARY_ARGUMENT);
         self.bump();
-        self.feature_chain_member();
+        self.kerml_feature_chain_member();
         self.finish_node();
     }
 
@@ -3745,13 +3752,19 @@ impl<'a> Parser<'a> {
         self.at(SyntaxKind::Dot) && self.nth_is_name(1)
     }
 
-    /// The `FeatureChainMember` after the dot, in its `FeatureReferenceMember` form.
+    /// `KerML`'s `FeatureChainMember` after the dot, in its `FeatureReferenceMember` form.
+    ///
+    /// SCOPED IN THE NAME because `SysML` states a production of the same name with a
+    /// different body — `memberElement = [QualifiedName] | OwnedFeatureChainMember`
+    /// (8.2.2.17.5), read by `sysml_feature_chain_member` — where `KerML`'s is
+    /// `FeatureReferenceMember | OwnedFeatureChainMember` (8.2.5.8.2). Two units, not one
+    /// (ADR-0015), and one Rust name for both would hide that.
     ///
     /// The nodes are `FeatureReferenceMember` and `FeatureReference`, both of which
     /// `feature_reference_expression` also builds and marks. They are built here without
     /// the `FeatureReferenceExpression` around them and without the `EmptyResultMember`
     /// after them, because neither is in this production.
-    fn feature_chain_member(&mut self) {
+    fn kerml_feature_chain_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::FeatureReferenceMember);
         self.start_node(SyntaxKind::FeatureReference);
@@ -5215,8 +5228,10 @@ impl<'a> Parser<'a> {
     /// `first` would build an `InitialNodeMember` out of `first a then b;` and report the
     /// rest, which is a tree for a production the text does not contain.
     ///
-    /// The other two are unimplemented, so a `first` this declines is recovered over and
-    /// reported — `first a then b;` is rejected by absence, not by rule.
+    /// `GuardedSuccession` is now implemented and is dispatched before this, so a `first`
+    /// this declines because an `if` follows the name is READ, not reported.
+    /// `SuccessionAsUsage` is not, so `first a then b;` is still recovered over and
+    /// reported — rejected by absence, not by rule.
     fn at_initial_node_member(&self) -> bool {
         let first = usize::from(self.at_visibility());
         if !self.nth_is_keyword(first, "first") {
@@ -5283,6 +5298,144 @@ impl<'a> Parser<'a> {
     /// Which element a `then` connects FROM is 7.17.4's "nearest occurrence lexically
     /// previous to the then" (wiki receipt 339ef468), a question for resolution, not
     /// for the parser. No node of its own: `ActionBodyItem` is not one.
+    /// Whether a `GuardedSuccessionMember` starts here.
+    ///
+    /// `( 'succession' UsageDeclaration )? 'first' FeatureChainMember
+    /// GuardExpressionMember` (`SysML` 8.2.2.17.8), so the `if` after the source name is
+    /// what says so. `at_initial_node_member` requires a `;` or `{` in that same place, and
+    /// `SuccessionAsUsage` a `then` (8.2.2.13.3), so the three `first` productions are
+    /// disjoint on one token and none of them commits before reaching it.
+    ///
+    /// The optional declaration is looked past by scanning to the `first`, bounded by the
+    /// tokens no `UsageDeclaration` contains: a `;`, a body brace, or the end of input.
+    fn at_guarded_succession_member(&self) -> bool {
+        let mut n = usize::from(self.at_visibility());
+        if self.nth_is_keyword(n, "succession") {
+            match self.scan_for_keyword(n + 1, "first") {
+                Some(first) => n = first,
+                None => return false,
+            }
+        }
+        if !self.nth_is_keyword(n, "first") {
+            return false;
+        }
+        // FeatureChainMember: a QualifiedName, and then OwnedFeatureChain's further links.
+        let Some(mut n) = self.skip_qualified_name(n + 1) else {
+            return false;
+        };
+        while self.nth_is(n, SyntaxKind::Dot) && self.nth_is_name(n + 1) {
+            let Some(next) = self.skip_qualified_name(n + 1) else {
+                return false;
+            };
+            n = next;
+        }
+        self.nth_is_keyword(n, "if")
+    }
+
+    // production: GuardedSuccessionMember@sysml
+    //
+    // GuardedSuccessionMember : FeatureMembership =
+    //     MemberPrefix ownedRelatedElement += GuardedSuccession     (SysML 8.2.2.17.1)
+    //
+    // ActionBodyItem's FOURTH alternative (receipt 4e3ffb79). It carries no
+    // ActionTargetSuccessionMember* after it, unlike the SECOND and THIRD, which both do;
+    // the first, NonBehaviorBodyItem, carries none either, so what is particular here is
+    // that a succession takes no suffix, not that only this alternative lacks one. This
+    // is therefore an item, never a suffix, and nothing may suffix it. Owns its element through a membership of its own,
+    // as InitialNodeMember does, so it is dispatched from `body_elements` rather than
+    // through `membership`.
+    fn guarded_succession_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::GuardedSuccessionMember);
+        self.member_prefix();
+        self.guarded_succession();
+        self.finish_node();
+    }
+
+    // production: GuardedSuccession@sysml
+    //
+    // GuardedSuccession : TransitionUsage =
+    //     ( 'succession' UsageDeclaration )?
+    //     'first' ownedRelationship += FeatureChainMember
+    //     ownedRelationship += GuardExpressionMember
+    //     'then' ownedRelationship += TransitionSuccessionMember
+    //     UsageBody                                                 (SysML 8.2.2.17.8)
+    //
+    // The succession that writes its OWN source (receipt e5f3ae62): where a target
+    // succession leaves the source to the item before it (7.17.4), this names it after
+    // `first`. A TransitionUsage (8.3.18.9, receipt a6f32577) over the same
+    // GuardExpressionMember and TransitionSuccessionMember the guarded target uses, which
+    // is why only the source and the optional declaration are new here.
+    //
+    // implied specialization: Actions::Action::decisionTransitions, as the guarded target
+    //     succession carries — sv2-hir's to inject (ADR-0002).
+    fn guarded_succession(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::GuardedSuccession);
+        if self.at_keyword("succession") {
+            self.bump_as(keyword("succession").unwrap_or(SyntaxKind::BasicName));
+            self.usage_declaration();
+        }
+        self.expect_keyword("first");
+        self.sysml_feature_chain_member();
+        self.guard_expression_member();
+        self.expect_keyword("then");
+        self.transition_succession_member();
+        self.usage_body();
+        self.finish_node();
+    }
+
+    // production: FeatureChainMember@sysml
+    //
+    // FeatureChainMember : Membership =
+    //     memberElement = [QualifiedName]
+    //     | ownedRelationship += OwnedFeatureChainMember             (SysML 8.2.2.17.5)
+    //
+    // production: OwnedFeatureChainMember@sysml
+    //
+    // OwnedFeatureChainMember : OwningMembership =
+    //     ownedRelatedElement += OwnedFeatureChain                   (SysML 8.2.2.17.5)
+    //
+    // Stated at 8.2.2.17.5, Assignment Action Usages (receipt dfe847fa), and used by four
+    // productions elsewhere — GuardedSuccession is the first of them this parser reads.
+    // NOT KerML's FeatureChainMember, whose first alternative is a FeatureReferenceMember
+    // (8.2.5.8.2); see `kerml_feature_chain_member`.
+    //
+    // OwnedFeatureChain's `( '.' link )+` needs at least two links (8.2.2.6.5), so one
+    // name is the reference alternative and two or more the owned one. The alternative is
+    // chosen by looking past the name rather than by building one and repairing it: the
+    // member node differs between the two, and a checkpoint cannot un-own an element.
+    //
+    // The deviation register carries ONE entry for OwnedFeatureChainMember, bare-named as
+    // every entry is, and it is evidenced at KerML 8.2.5.8.2 — not at this SysML clause:
+    // spec_only, resolved follow_spec, because the Pilot has no such rule and the
+    // specification is normative. The unit implemented here is the SysML one, verified in
+    // its own right at 8.2.2.17.5 (receipt dfe847fa), and the register's reasoning covers
+    // it as far as it goes: no pinned file exercises the production, which is why
+    // a_guarded_successions_source_takes_either_alternative constructs the case from the
+    // production rather than from the corpus.
+    fn sysml_feature_chain_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FeatureChainMember);
+        if self.at_sysml_owned_feature_chain() {
+            self.start_node(SyntaxKind::OwnedFeatureChainMember);
+            let start = self.builder.checkpoint();
+            self.qualified_name();
+            self.owned_feature_chain(start);
+            self.finish_node();
+        } else {
+            self.qualified_name();
+        }
+        self.finish_node();
+    }
+
+    /// Whether the name starting here is followed by a `.` and another name, making it an
+    /// `OwnedFeatureChain` rather than a bare `QualifiedName`.
+    fn at_sysml_owned_feature_chain(&self) -> bool {
+        self.skip_qualified_name(0)
+            .is_some_and(|after| self.nth_is(after, SyntaxKind::Dot) && self.nth_is_name(after + 1))
+    }
+
     fn initial_node_item(&mut self) {
         self.initial_node_member();
         while self.at_action_target_succession_member() {
@@ -5337,25 +5490,31 @@ impl<'a> Parser<'a> {
     /// `IfNode` and reported; `if x ? 1 else 2 }` is the result expression and left to
     /// the body.
     fn at_guarded_target_succession(&self, n: usize) -> bool {
-        if !self.nth_is_keyword(n, "if") {
-            return false;
-        }
-        let mut n = n + 1;
-        loop {
-            if self.nth_is_keyword(n, "then") {
-                return true;
-            }
-            // `None` is the end of the input: a truncated `if x` must decline rather
-            // than scan for ever (invariant 3).
+        self.nth_is_keyword(n, "if") && self.scan_for_keyword(n + 1, "then").is_some()
+    }
+
+    /// The index of the next `word` at or after the `n`th token, if one is reached before
+    /// the statement ends.
+    ///
+    /// Bounded by the tokens that end a statement — `;` and either brace — and by the end
+    /// of the input, so a truncated `if x` declines rather than scanning for ever
+    /// (invariant 3). This is a token scan and not a parse, which is sound only because
+    /// the words it looks for are RESERVED: `then` and `first` cannot be names
+    /// (`SysML` 8.2.2.1.2), and no implemented production between them writes a `;` or a
+    /// brace and then continues.
+    fn scan_for_keyword(&self, n: usize, word: &str) -> Option<usize> {
+        let mut n = n;
+        while !self.nth_is_keyword(n, word) {
             if self.peek_nth(n).is_none()
                 || self.nth_is(n, SyntaxKind::Semicolon)
                 || self.nth_is(n, SyntaxKind::LBrace)
                 || self.nth_is(n, SyntaxKind::RBrace)
             {
-                return false;
+                return None;
             }
             n += 1;
         }
+        Some(n)
     }
 
     /// Whether an `ActionTargetSuccessionMember` in its `TargetSuccession` form starts at

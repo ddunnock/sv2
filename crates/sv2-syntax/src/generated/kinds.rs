@@ -663,6 +663,14 @@ pub enum SyntaxKind {
     TargetSuccession,
     /// `GuardExpressionMember 'then' TransitionSuccessionMember`. `SysML` 8.2.2.17.8 — the metaclass is `TransitionUsage`.
     GuardedTargetSuccession,
+    /// `MemberPrefix ownedRelatedElement += GuardedSuccession`. `SysML` 8.2.2.17.1 — the metaclass is `FeatureMembership`.
+    GuardedSuccessionMember,
+    /// `( 'succession' UsageDeclaration )? 'first' FeatureChainMember GuardExpressionMember 'then' TransitionSuccessionMember UsageBody`. `SysML` 8.2.2.17.8 — the metaclass is `TransitionUsage`.
+    GuardedSuccession,
+    /// `memberElement = [QualifiedName] | OwnedFeatureChainMember`. `SysML` 8.2.2.17.5 — the metaclass is `Membership`.
+    FeatureChainMember,
+    /// `ownedRelatedElement += OwnedFeatureChain`. `SysML` 8.2.2.17.5 — the metaclass is `OwningMembership`.
+    OwnedFeatureChainMember,
     /// `'else' ownedRelationship += TransitionSuccessionMember`. `SysML` 8.2.2.17.8 — the metaclass is `TransitionUsage`.
     DefaultTargetSuccession,
     /// `'if' { kind = 'guard' } ownedRelatedElement += OwnedExpression`. `SysML` 8.2.2.18.3 — the metaclass is `TransitionFeatureMembership`.
@@ -1248,6 +1256,10 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ActionTargetSuccession,
     SyntaxKind::TargetSuccession,
     SyntaxKind::GuardedTargetSuccession,
+    SyntaxKind::GuardedSuccessionMember,
+    SyntaxKind::GuardedSuccession,
+    SyntaxKind::FeatureChainMember,
+    SyntaxKind::OwnedFeatureChainMember,
     SyntaxKind::DefaultTargetSuccession,
     SyntaxKind::GuardExpressionMember,
     SyntaxKind::TransitionSuccessionMember,
