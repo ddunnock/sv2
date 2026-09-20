@@ -9,9 +9,10 @@
  * commands (§2 rule 3); and `ipc/` looks commands up here rather than naming a
  * string at a call site. A command not listed here is a boundary with no check.
  *
- * EVERY COMMAND IS REGISTERED IN RUST, AND TWO ARE ANSWERED. `sv2-studio`
- * answers `workspace` and `file_text` from disk; the rest answer
- * `not-implemented` until `sv2-resolve` exists (ADR-0021). Each entry names its
+ * EVERY COMMAND IS REGISTERED IN RUST. `sv2-studio` answers `workspace` and
+ * `file_text` from disk, and the `editor_*` commands that move the open file
+ * between windows; the model queries answer `not-implemented` until
+ * `sv2-resolve` exists (ADR-0021). Each entry names its
  * owner — the standing rule that a field with no named Rust owner is a defect.
  * Where no ADR assigns one, the owner is `unassigned`, which keeps the gap
  * searchable instead of filled with a guess.
@@ -29,6 +30,7 @@
 import { z } from "zod";
 
 import { type Answer, answerSchema } from "./availability";
+import { type EditorHandoff, EditorHandoffSchema } from "./editor-window";
 import { type ElementDetail, ElementDetailSchema } from "./element";
 import { type ElementHandle, ElementHandleSchema, type ViewId, ViewIdSchema } from "./element-id";
 import {
@@ -46,7 +48,7 @@ import { type ViewSummary, ViewSummarySchema } from "./view";
  * The crate that answers a command.
  *
  * `sv2-resolve` owns anything resolved. `sv2-studio` owns plain file access
- * until a crate below it loads workspaces (ADR-0021). `unassigned` is honest:
+ * until a crate below it loads workspaces, and its own windows (ADR-0021). `unassigned` is honest:
  * no ADR says which crate reads a layout sidecar.
  */
 export type RustOwner = "sv2-resolve" | "sv2-studio" | "unassigned";
@@ -71,6 +73,11 @@ export type Commands = Readonly<{
   elementDetail: Command<Readonly<{ handle: ElementHandle }>, ElementDetail>;
   viewLayout: Command<Readonly<{ view: ViewId }>, ViewLayout>;
   fileText: Command<Readonly<{ path: WorkspacePath }>, FileText>;
+  editorUndock: Command<Readonly<{ handoff: EditorHandoff }>, null>;
+  editorDock: Command<Readonly<{ handoff: EditorHandoff }>, null>;
+  editorHandoff: Command<NoArgs, EditorHandoff>;
+  editorFocus: Command<NoArgs, null>;
+  editorRequestDock: Command<NoArgs, null>;
 }>;
 
 /**
@@ -115,5 +122,43 @@ export const COMMANDS: Commands = {
     owner: "sv2-studio",
     args: z.strictObject({ path: WorkspacePathSchema }),
     answer: answerSchema(FileTextSchema),
+  },
+  /**
+   * From the main window: move the open file into the editor window (IX-07),
+   * opening it. The file leaves the main window; it is never in both.
+   */
+  editorUndock: {
+    command: "editor_undock",
+    owner: "sv2-studio",
+    args: z.strictObject({ handoff: EditorHandoffSchema }),
+    answer: answerSchema(z.null()),
+  },
+  /** From the editor window: move the file back to the main window, and close. */
+  editorDock: {
+    command: "editor_dock",
+    owner: "sv2-studio",
+    args: z.strictObject({ handoff: EditorHandoffSchema }),
+    answer: answerSchema(z.null()),
+  },
+  /** The file waiting for the calling window, taken once; `not-found` if none is. */
+  editorHandoff: {
+    command: "editor_handoff",
+    owner: "sv2-studio",
+    args: noArgs,
+    answer: answerSchema(EditorHandoffSchema),
+  },
+  /** From the main window: bring the editor window forward (IX-07's Focus). */
+  editorFocus: {
+    command: "editor_focus",
+    owner: "sv2-studio",
+    args: noArgs,
+    answer: answerSchema(z.null()),
+  },
+  /** From the main window: ask the editor window to dock (IX-07's Dock). */
+  editorRequestDock: {
+    command: "editor_request_dock",
+    owner: "sv2-studio",
+    args: noArgs,
+    answer: answerSchema(z.null()),
   },
 };

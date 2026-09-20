@@ -10,25 +10,45 @@
  *
  * The caller keys this by the file's path, so opening another file makes a
  * new document rather than reusing one that holds the wrong text.
+ *
+ * A document can also start from a snapshot, when the file has moved here from
+ * another window (IX-07), and `onDocument` hands the document to the caller so
+ * it can snapshot it to move it on. The caller holds the document, never its
+ * text: the text stays in CodeMirror until the snapshot goes to the wire.
  */
 
 import { useEffect, useRef, useState } from "react";
 
-import { createSharedDocument, type SharedDocument } from "./shared-document";
+import {
+  createSharedDocument,
+  type DocumentSnapshot,
+  type SharedDocument,
+} from "./shared-document";
 
 /** Props for `FileEditor`. */
 export type FileEditorProps = Readonly<{
-  /** The file's text as the core sent it. Read once, when the document is made. */
-  text: string;
+  /**
+   * The file's text as the core sent it, or a snapshot from another window.
+   * Read once, when the document is made.
+   */
+  seed: string | DocumentSnapshot;
   /** The editor's accessible name: the file's path. */
   label: string;
+  /** Receives the document once made, and `null` when it goes. */
+  onDocument?: (document: SharedDocument | null) => void;
 }>;
 
 /** One file's document, shown in one pane. */
-export function FileEditor({ text, label }: FileEditorProps): React.JSX.Element {
+export function FileEditor({ seed, label, onDocument }: FileEditorProps): React.JSX.Element {
   // Lazy initial state: the document is made once and the text is never state
   // again. Later text belongs to CodeMirror (§8.4 rule 1).
-  const [document] = useState(() => createSharedDocument(text));
+  const [document] = useState(() => createSharedDocument(seed));
+  useEffect(() => {
+    onDocument?.(document);
+    return () => {
+      onDocument?.(null);
+    };
+  }, [document, onDocument]);
   return <EditorPane document={document} label={label} />;
 }
 

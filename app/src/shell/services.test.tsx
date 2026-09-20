@@ -5,6 +5,7 @@ import { cleanup, render, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 
 import type { Answer } from "@/contract/availability";
+import { NO_EDITOR_WINDOW } from "@/ipc/editor-window";
 import type { ModelQueries, Reply } from "@/ipc/model-queries";
 import { ok, type Result } from "@/model/result";
 
@@ -25,11 +26,15 @@ function deferred<T>(): { promise: Reply<T>; settle: (answer: Answer<T>) => void
 
 // The hook reaches the queries only through `ask`, so the services' queries are
 // never called here; an empty object stands in for them honestly.
-const wrapper = ({ children }: Readonly<{ children: ReactNode }>): React.JSX.Element => (
+const SERVICES = {
   // biome-ignore lint/nursery/noUnsafeTypeAssertion: the hook under test never touches queries; every question goes through the ask function the test supplies.
-  <ServicesProvider services={{ queries: {} as ModelQueries, report: () => undefined }}>
-    {children}
-  </ServicesProvider>
+  queries: {} as ModelQueries,
+  report: () => undefined,
+  editorWindow: NO_EDITOR_WINDOW,
+} as const;
+
+const wrapper = ({ children }: Readonly<{ children: ReactNode }>): React.JSX.Element => (
+  <ServicesProvider services={SERVICES}>{children}</ServicesProvider>
 );
 
 describe("useAnswer", () => {

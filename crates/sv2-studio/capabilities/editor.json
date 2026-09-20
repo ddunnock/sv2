@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "editor",
+  "description": "The editor window (IX-07): it takes the file it was given and hands it back, and nothing else. It never reads the workspace or the model (STD-004-TS §2 rule 3).",
+  "windows": ["editor"],
+  "permissions": [
+    "allow-editor-handoff",
+    "allow-editor-dock",
+    "core:event:allow-listen",
+    "core:event:allow-unlisten"
+  ]
+}

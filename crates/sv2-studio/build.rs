@@ -14,6 +14,11 @@ const COMMANDS: &[&str] = &[
     "element_detail",
     "view_layout",
     "file_text",
+    "editor_undock",
+    "editor_dock",
+    "editor_handoff",
+    "editor_focus",
+    "editor_request_dock",
 ];
 
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {

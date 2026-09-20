@@ -4,6 +4,8 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { Transaction } from "@codemirror/state";
 import { type EditorView, runScopeHandlers } from "@codemirror/view";
 
+import { EditorHandoffSchema } from "@/contract/editor-window";
+
 import { createSharedDocument, type SharedDocument } from "./shared-document";
 
 const TEXT = "part def Heater {\n}\n";
@@ -103,5 +105,48 @@ describe("createSharedDocument", () => {
     const document = createSharedDocument(TEXT);
     const view = attach(document, "model/ThermalControl.sysml");
     expect(view.contentDOM.getAttribute("aria-label")).toBe("model/ThermalControl.sysml");
+  });
+});
+
+describe("moving a document to another window", () => {
+  test("a restored snapshot has the text as last edited", () => {
+    const original = createSharedDocument(TEXT);
+    type(attach(original, "split"), "// edited\n");
+    const moved = createSharedDocument(original.snapshot());
+    expect(attach(moved, "window").state.doc.toString()).toBe(`${TEXT}// edited\n`);
+  });
+
+  test("the undo history moves with it: undo in the new window undoes the old window's edit", () => {
+    const original = createSharedDocument(TEXT);
+    type(attach(original, "split"), "// edited\n");
+    const view = attach(createSharedDocument(original.snapshot()), "window");
+    press(view, "Ctrl+Z");
+    expect(view.state.doc.toString()).toBe(TEXT);
+  });
+
+  test("the snapshot survives the wire: through JSON and the contract, it still restores", () => {
+    const original = createSharedDocument(TEXT);
+    type(attach(original, "split"), "// edited\n");
+    const sent = { path: "model/Heater.sysml", ...original.snapshot() };
+    const received = EditorHandoffSchema.safeParse(JSON.parse(JSON.stringify(sent)));
+    if (!received.success) {
+      throw new Error("a snapshot does not satisfy EditorHandoffSchema");
+    }
+    const view = attach(createSharedDocument(received.data), "window");
+    press(view, "Ctrl+Z");
+    expect(view.state.doc.toString()).toBe(TEXT);
+  });
+
+  test("a state that will not restore falls back to the text, losing only undo", () => {
+    const view = attach(createSharedDocument({ text: TEXT, state: { nonsense: true } }), "window");
+    expect(view.state.doc.toString()).toBe(TEXT);
+    press(view, "Ctrl+Z");
+    expect(view.state.doc.toString()).toBe(TEXT);
+  });
+
+  test("a state whose text disagrees with the snapshot's text is not trusted", () => {
+    const other = createSharedDocument("something else\n").snapshot();
+    const view = attach(createSharedDocument({ text: TEXT, state: other.state }), "window");
+    expect(view.state.doc.toString()).toBe(TEXT);
   });
 });

@@ -22,10 +22,14 @@
 
 import { type Dispatch, useEffect, useReducer, useState } from "react";
 
+import type { EditorHandoff } from "@/contract/editor-window";
+
 import type { ViewId } from "@/contract/element-id";
-import type { Workspace, WorkspaceFile, WorkspacePath } from "@/contract/file";
+import type { Workspace, WorkspaceFile } from "@/contract/file";
 import type { SidebarState } from "@/contract/preferences";
 import type { ViewSummary } from "@/contract/view";
+import type { SharedDocument } from "@/editor/shared-document";
+import type { EditorWindow } from "@/ipc/editor-window";
 import type { IpcError } from "@/ipc/ipc-error";
 import type { Provenance } from "@/ipc/model-queries";
 import { answerToShow, type Query } from "@/model/query";
@@ -33,6 +37,12 @@ import { buildFileTree } from "@/model/tree";
 
 import { AnswerView } from "./AnswerView";
 import { EditorSplit } from "./EditorSplit";
+import {
+  type EditorPlace,
+  type EditorPlaceAction,
+  editorPlaceReducer,
+  NO_EDITOR,
+} from "./editor-place";
 import { fileNodes, folderIds, plural } from "./file-nodes";
 import { IslandBoundary, type Report } from "./IslandBoundary";
 import {
@@ -92,7 +102,7 @@ export function Shell({ services }: ShellProps): React.JSX.Element {
 
 /** The window itself. Asks for the workspace once; the tree and the status bar share it. */
 function Window(): React.JSX.Element {
-  const { queries, report } = useServices();
+  const { queries, report, editorWindow } = useServices();
   const workspace = useAnswer((q) => q.workspace(), "workspace");
   const [layout, dispatch] = useReducer(layoutReducer, INITIAL_LAYOUT);
   const [theme, setTheme] = useState<Theme>("light");
@@ -100,7 +110,11 @@ function Window(): React.JSX.Element {
   const [sidebarWidth, setSidebarWidth] = useState(340);
   const [openViews, setOpenViews] = useState<readonly ViewSummary[]>([]);
   const [activeView, setActiveView] = useState<ViewId | null>(null);
-  const [openFile, setOpenFile] = useState<WorkspacePath | null>(null);
+  const [editor, placeEditor] = useReducer(editorPlaceReducer, NO_EDITOR);
+  // The docked editor's document, so it can be snapshotted to move. A handle,
+  // never the text (§8.4 rule 1).
+  const [document, setDocument] = useState<SharedDocument | null>(null);
+  const moves = useEditorMoves({ editorWindow, report, editor, document, placeEditor });
   const openView = (view: ViewSummary): void => {
     if (!openViews.some((candidate) => candidate.id === view.id)) {
       setOpenViews([...openViews, view]);
@@ -130,6 +144,7 @@ function Window(): React.JSX.Element {
       <TopBar
         layout={layout}
         dispatch={dispatch}
+        editorWindow={moves.button}
         theme={theme}
         onTheme={() => {
           setTheme(theme === "dark" ? "light" : "dark");
@@ -146,7 +161,11 @@ function Window(): React.JSX.Element {
               workspace={workspace}
               onOpenView={openView}
               onOpenFile={(file) => {
-                setOpenFile(file.path);
+                if (editor.kind === "undocked") {
+                  moves.focus();
+                } else {
+                  placeEditor({ kind: "open", path: file.path });
+                }
               }}
             />
             <Splitter
@@ -161,15 +180,19 @@ function Window(): React.JSX.Element {
           </>
         ) : null}
         <ViewArea open={openViews} active={activeView} onActivate={setActiveView} />
-        {openFile === null ? null : (
+        {editor.kind === "docked" ? (
           <EditorSplit
-            key={openFile}
-            path={openFile}
+            key={editor.path}
+            path={editor.path}
+            seed={editor.seed}
+            undock={moves.undockAvailability}
+            onUndock={moves.undock}
             onClose={() => {
-              setOpenFile(null);
+              placeEditor({ kind: "close" });
             }}
+            onDocument={setDocument}
           />
-        )}
+        ) : null}
         {layout.sidebar.kind === "open" ? (
           <Splitter
             label="Resize sidebar"
@@ -188,7 +211,14 @@ function Window(): React.JSX.Element {
           report={report}
         />
       </div>
-      <StatusBar layout={layout} workspace={workspace} provenance={queries.provenance} />
+      <StatusBar
+        layout={layout}
+        workspace={workspace}
+        provenance={queries.provenance}
+        editor={editor}
+        onFocusEditor={moves.focus}
+        onDockEditor={moves.requestDock}
+      />
     </div>
   );
 }
@@ -197,7 +227,8 @@ type RegionProps = Readonly<{ layout: LayoutState; dispatch: Dispatch<LayoutActi
 
 /** UI-01: the app name, the panel toggles, and the controls not built yet. */
 function TopBar(
-  props: RegionProps & Readonly<{ theme: Theme; onTheme: () => void }>,
+  props: RegionProps &
+    Readonly<{ theme: Theme; onTheme: () => void; editorWindow: EditorWindowButton }>,
 ): React.JSX.Element {
   const { layout, dispatch } = props;
   return (
@@ -231,8 +262,9 @@ function TopBar(
         <IconButton
           label="Editor window"
           icon={<Icon name="window" />}
-          availability={NOT_YET("The separate editor window")}
-          onPress={() => undefined}
+          availability={props.editorWindow.availability}
+          pressed={props.editorWindow.pressed}
+          onPress={props.editorWindow.onPress}
         />
         <button
           type="button"
@@ -443,6 +475,9 @@ function StatusBar(
     layout: LayoutState;
     workspace: Query<Workspace, IpcError>;
     provenance: Provenance;
+    editor: EditorPlace;
+    onFocusEditor: () => void;
+    onDockEditor: () => void;
   }>,
 ): React.JSX.Element {
   const answer = answerToShow(props.workspace);
@@ -460,6 +495,13 @@ function StatusBar(
         </>
       )}
       {props.layout.mode.kind === "focus" ? <span>Focus mode</span> : null}
+      {props.editor.kind === "undocked" ? (
+        <EditorAway
+          path={props.editor.path}
+          onFocus={props.onFocusEditor}
+          onDock={props.onDockEditor}
+        />
+      ) : null}
       <span className="ml-auto" />
       {props.provenance === "fixture" ? (
         <span
@@ -472,4 +514,139 @@ function StatusBar(
       <span>SysML v2 · KerML</span>
     </footer>
   );
+}
+
+/** IX-07: where the editor went, and the two things to do about it. */
+function EditorAway(
+  props: Readonly<{ path: string; onFocus: () => void; onDock: () => void }>,
+): React.JSX.Element {
+  return (
+    <span className="flex items-center gap-2">
+      <span className="text-fg">
+        <span className="font-mono">{props.path}</span> is open in its own window
+      </span>
+      <button type="button" onClick={props.onFocus} className="text-accent hover:underline">
+        Focus
+      </button>
+      <button type="button" onClick={props.onDock} className="text-accent hover:underline">
+        Dock
+      </button>
+    </span>
+  );
+}
+
+/** The top bar's Editor window button: what it does now, or why it cannot. */
+type EditorWindowButton = Readonly<{
+  availability: Availability;
+  pressed: boolean;
+  onPress: () => void;
+}>;
+
+/** Moving the editor between windows, and the controls that do it. */
+type EditorMoves = Readonly<{
+  button: EditorWindowButton;
+  undockAvailability: Availability;
+  undock: () => void;
+  focus: () => void;
+  requestDock: () => void;
+}>;
+
+/**
+ * IX-07 from the main window's side: undock the docked file, focus the editor
+ * window or ask it to dock, and take the file back when it does.
+ *
+ * Each step is a command that can fail. A failure is reported and changes
+ * nothing: an undock that did not happen leaves the file docked, where it is.
+ */
+function useEditorMoves({
+  editorWindow,
+  report,
+  editor,
+  document,
+  placeEditor,
+}: Readonly<{
+  editorWindow: EditorWindow;
+  report: Report;
+  editor: EditorPlace;
+  document: SharedDocument | null;
+  placeEditor: Dispatch<EditorPlaceAction>;
+}>): EditorMoves {
+  useEffect(
+    () =>
+      editorWindow.onDocked(
+        () => {
+          editorWindow.handoff().then(
+            (result) => {
+              if (result.ok && result.value.kind === "ready") {
+                const { path, text, state } = result.value.data;
+                placeEditor({ kind: "docked", path, snapshot: { text, state } });
+              } else {
+                report("taking the docked file failed", result.ok ? result.value : result.error);
+              }
+            },
+            (defect: unknown) => {
+              report("taking the docked file failed", defect);
+            },
+          );
+        },
+        (error) => {
+          report("listening for the editor docking failed", error);
+        },
+      ),
+    [editorWindow, report, placeEditor],
+  );
+
+  /** Runs `command`, reporting anything but a `ready` answer as `what` failing. */
+  const attempt = (what: string, command: () => ReturnType<EditorWindow["focus"]>) => {
+    return (onReady: () => void = () => undefined): void => {
+      command().then(
+        (result) => {
+          if (result.ok && result.value.kind === "ready") {
+            onReady();
+          } else {
+            report(`${what} failed`, result.ok ? result.value : result.error);
+          }
+        },
+        (defect: unknown) => {
+          report(`${what} failed`, defect);
+        },
+      );
+    };
+  };
+
+  const undockAvailability = ((): Availability => {
+    if (!editorWindow.available) {
+      return { kind: "disabled", reason: "A separate editor window needs the sv2 Studio app" };
+    }
+    if (editor.kind !== "docked") {
+      return { kind: "disabled", reason: "Open a file to edit it in its own window" };
+    }
+    if (document === null) {
+      return { kind: "disabled", reason: "The file has not loaded yet" };
+    }
+    return ENABLED;
+  })();
+
+  const undock = (): void => {
+    if (editor.kind !== "docked" || document === null) {
+      return;
+    }
+    const handoff: EditorHandoff = { path: editor.path, ...document.snapshot() };
+    attempt("opening the editor window", () => editorWindow.undock(handoff))(() => {
+      placeEditor({ kind: "undocked" });
+    });
+  };
+  const focus = (): void => {
+    attempt("focusing the editor window", editorWindow.focus)();
+  };
+  const requestDock = (): void => {
+    attempt("docking the editor", editorWindow.requestDock)();
+  };
+
+  const button: EditorWindowButton =
+    editor.kind === "undocked"
+      ? { availability: ENABLED, pressed: true, onPress: focus }
+      : { availability: undockAvailability, pressed: false, onPress: undock };
+
+  return { button, undockAvailability, undock, focus, requestDock };
 }

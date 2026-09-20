@@ -5,7 +5,9 @@
  * `EditorPlacement` `split`).
  *
  * It asks for the file's text, and once it has it, hands it to `editor/`,
- * which owns it from then on (§8.4). The shell never sees the text again.
+ * which owns it from then on (§8.4). The shell never sees the text again. A
+ * file that has just docked back from the editor window arrives as a snapshot
+ * instead, with its unsaved edits and undo history, and is not read again.
  *
  * EDITS ARE NOT SAVED, AND IT SAYS SO. ADR-0013 requires the editor to accept
  * input before the parser exists, so it does; but no command writes a file
@@ -15,20 +17,31 @@
 
 import type { WorkspacePath } from "@/contract/file";
 import { FileEditor } from "@/editor/FileEditor";
+import type { DocumentSnapshot, SharedDocument } from "@/editor/shared-document";
 
 import { AnswerView } from "./AnswerView";
 import { IslandBoundary } from "./IslandBoundary";
 import { Icon } from "./primitives/Icon";
-import { ENABLED, IconButton } from "./primitives/IconButton";
+import { type Availability, ENABLED, IconButton } from "./primitives/IconButton";
 import { useAnswer, useServices } from "./services";
 
 /** Props for `EditorSplit`. */
-export type EditorSplitProps = Readonly<{ path: WorkspacePath; onClose: () => void }>;
+export type EditorSplitProps = Readonly<{
+  path: WorkspacePath;
+  /** A file docked back from the editor window, or `null` to read it from disk. */
+  seed: DocumentSnapshot | null;
+  /** Whether it can move to its own window, and if not, why. */
+  undock: Availability;
+  onUndock: () => void;
+  onClose: () => void;
+  /** Receives the document once made, so the shell can move it. */
+  onDocument: (document: SharedDocument | null) => void;
+}>;
 
 /** One open file, editable, beside the views. */
-export function EditorSplit({ path, onClose }: EditorSplitProps): React.JSX.Element {
+export function EditorSplit(props: EditorSplitProps): React.JSX.Element {
   const { report } = useServices();
-  const file = useAnswer((queries) => queries.fileText(path), `file_text:${path}`);
+  const { path, seed, onDocument } = props;
   return (
     <section
       aria-label="Editor"
@@ -41,19 +54,45 @@ export function EditorSplit({ path, onClose }: EditorSplitProps): React.JSX.Elem
         </span>
         <span className="ml-auto" />
         <IconButton
+          label="Move to its own window"
+          icon={<Icon name="window" />}
+          availability={props.undock}
+          onPress={props.onUndock}
+        />
+        <IconButton
           label="Close editor"
           icon={<Icon name="close" />}
           availability={ENABLED}
-          onPress={onClose}
+          onPress={props.onClose}
         />
       </header>
       <div className="min-h-0 flex-1">
         <IslandBoundary island="editor" report={report}>
-          <AnswerView query={file} what="The file">
-            {(data) => <FileEditor key={data.path} text={data.text} label={data.path} />}
-          </AnswerView>
+          {seed === null ? (
+            <FromDisk path={path} onDocument={onDocument} />
+          ) : (
+            <FileEditor seed={seed} label={path} onDocument={onDocument} />
+          )}
         </IslandBoundary>
       </div>
     </section>
+  );
+}
+
+/** The file read from the workspace, then edited. */
+function FromDisk(
+  props: Readonly<{
+    path: WorkspacePath;
+    onDocument: (document: SharedDocument | null) => void;
+  }>,
+): React.JSX.Element {
+  const { path, onDocument } = props;
+  const file = useAnswer((queries) => queries.fileText(path), `file_text:${path}`);
+  return (
+    <AnswerView query={file} what="The file">
+      {(data) => (
+        <FileEditor key={data.path} seed={data.text} label={data.path} onDocument={onDocument} />
+      )}
+    </AnswerView>
   );
 }

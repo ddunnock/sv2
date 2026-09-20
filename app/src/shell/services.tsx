@@ -17,14 +17,22 @@
 
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 
+import type { EditorWindow } from "@/ipc/editor-window";
 import type { IpcError } from "@/ipc/ipc-error";
 import type { ModelQueries, Reply } from "@/ipc/model-queries";
 import { firstLoad, type Query, reload } from "@/model/query";
 
 import type { Report } from "./IslandBoundary";
 
-/** What the composition root supplies. */
-export type Services = Readonly<{ queries: ModelQueries; report: Report }>;
+/**
+ * What the composition root supplies. `editorWindow` is `NO_EDITOR_WINDOW`
+ * outside the desktop app, so a test or a plain browser says so explicitly.
+ */
+export type Services = Readonly<{
+  queries: ModelQueries;
+  report: Report;
+  editorWindow: EditorWindow;
+}>;
 
 const ServicesContext = createContext<Services | null>(null);
 

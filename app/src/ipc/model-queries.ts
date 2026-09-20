@@ -70,8 +70,8 @@ export function createModelQueries(transport: Transport, provenance: Provenance)
   };
 }
 
-/** Sends one command and parses its reply with the command's own schema. */
-async function call<A, R>(transport: Transport, command: Command<A, R>, args: A): Reply<R> {
+/** Sends one command and parses its reply with the command's own schema. Every IPC call goes through here. */
+export async function call<A, R>(transport: Transport, command: Command<A, R>, args: A): Reply<R> {
   const sent = await transport(command.command, args);
   if (!sent.ok) {
     return err({ kind: sent.error, command: command.command });

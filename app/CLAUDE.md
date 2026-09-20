@@ -78,8 +78,8 @@ collide with grammar work in the main checkout.
 
 ## Current state
 
-Phases 1–5 of `.claude/plans/ui-shell.md` are done and Phase 6 is under way; read
-its phase notes rather than trusting a summary here.
+Phases 1–6 of `.claude/plans/ui-shell.md` are done; read its phase notes rather than
+trusting a summary here.
 
 - `contract/` is complete for Phase 4: offsets, identities, diagnostics, elements,
   files, views, layout, availability, preferences, and the command registry.
@@ -92,7 +92,13 @@ its phase notes rather than trusting a summary here.
   `useSelection`, the layout reducer, and the window, wired to the queries:
   Files tree, Views list, view tabs with the `ViewKind` dispatcher, Specification.
 - `editor/`: one shared document per file with any number of views over it,
-  plain text (no parser yet). `wasm/` and `diagram/` do not exist.
+  plain text (no parser yet), and `snapshot()` to move it to another window.
+  `wasm/` and `diagram/` do not exist.
+- **The editor window (IX-07) is a second Tauri window loading this same page.**
+  `main.tsx` picks the root by window label. A window is a second JavaScript
+  context, so the file *moves* between windows as an `EditorHandoff` carrying its
+  text and undo history; it is never open in both. `shell/editor-place.ts` holds
+  where it is.
 
 **A schema is declared, not inferred.** `isolatedDeclarations` cannot state the
 type of an exported Zod schema, so the type is written and the schema is

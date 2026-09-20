@@ -9,7 +9,7 @@
 //! where each shape was first written down, so the doc comment on each type
 //! names the TypeScript type it must match.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /// Every reply: the data, or why there is none (`contract/availability.ts` `Answer`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -101,6 +101,22 @@ pub(crate) struct Workspace {
     pub(crate) name: String,
     /// Every model file, sorted by path.
     pub(crate) files: Vec<WorkspaceFile>,
+}
+
+/// An open file on its way between windows (`contract/editor-window.ts` `EditorHandoff`).
+///
+/// `state` is the editor's own serialization of the document, undo history
+/// included. This crate carries it and never reads it: it is the editor's,
+/// and the editor that receives it falls back to `text` if it will not restore.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct EditorHandoff {
+    /// The workspace path of the file being edited.
+    pub(crate) path: String,
+    /// The text as last edited, which may differ from the disk: nothing saves yet.
+    pub(crate) text: String,
+    /// The editor's state, opaque here.
+    pub(crate) state: serde_json::Value,
 }
 
 /// A model file's text (`contract/file.ts` `FileText`).

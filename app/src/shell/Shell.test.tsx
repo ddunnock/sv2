@@ -3,21 +3,92 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-
+import type { EditorHandoff } from "@/contract/editor-window";
+import { type EditorWindow, NO_EDITOR_WINDOW } from "@/ipc/editor-window";
 import { fixtureTransport } from "@/ipc/fixture-client";
 import { THERMAL_CONTROL } from "@/ipc/generated/thermal-control";
 import { createModelQueries, type Transport } from "@/ipc/model-queries";
-import { ok } from "@/model/result";
+import { err, ok } from "@/model/result";
 
 import { Shell } from "./Shell";
 
 afterEach(cleanup);
 
 /** The shell on the fixture transport — the real parse path (§11 rule 5). */
-const shell = (transport: Transport = fixtureTransport(THERMAL_CONTROL)): void => {
+const shell = (
+  transport: Transport = fixtureTransport(THERMAL_CONTROL),
+  editorWindow: EditorWindow = NO_EDITOR_WINDOW,
+  report: (what: string, detail: unknown) => void = () => undefined,
+): void => {
   const queries = createModelQueries(transport, "fixture");
-  render(<Shell services={{ queries, report: () => undefined }} />);
+  render(<Shell services={{ queries, report, editorWindow }} />);
 };
+
+const READY = () => Promise.resolve(ok({ kind: "ready", data: null } as const));
+
+/**
+ * An editor window that records what it was asked, and lets a test dock a
+ * file back as Rust would: leave a handoff, then send the event.
+ */
+function fakeEditorWindow(undock: EditorWindow["undock"] = () => READY()): {
+  editorWindow: EditorWindow;
+  calls: string[];
+  sent: EditorHandoff[];
+  dockBack: (handoff: EditorHandoff) => void;
+} {
+  const calls: string[] = [];
+  const sent: EditorHandoff[] = [];
+  let waiting: EditorHandoff | null = null;
+  let docked: (() => void) | null = null;
+  const editorWindow: EditorWindow = {
+    ...NO_EDITOR_WINDOW,
+    available: true,
+    undock: (handoff) => {
+      calls.push("undock");
+      sent.push(handoff);
+      return undock(handoff);
+    },
+    focus: () => {
+      calls.push("focus");
+      return READY();
+    },
+    requestDock: () => {
+      calls.push("requestDock");
+      return READY();
+    },
+    handoff: () =>
+      Promise.resolve(
+        ok(
+          waiting === null
+            ? ({ kind: "unavailable", reason: { kind: "not-found" } } as const)
+            : ({ kind: "ready", data: waiting } as const),
+        ),
+      ),
+    onDocked: (listener) => {
+      docked = listener;
+      return () => {
+        docked = null;
+      };
+    },
+  };
+  return {
+    editorWindow,
+    calls,
+    sent,
+    dockBack: (handoff) => {
+      waiting = handoff;
+      docked?.();
+    },
+  };
+}
+
+/** Opens ThermalControl.sysml in the docked editor and waits for its text. */
+async function openThermalControl(): Promise<void> {
+  await userEvent.click(
+    await screen.findByRole("treeitem", { name: "ThermalControl.sysml, 1 error" }),
+  );
+  await screen.findByRole("textbox", { name: "model/ThermalControl.sysml" });
+}
 
 const navigator = (): HTMLElement | null => screen.queryByRole("navigation", { name: "Navigator" });
 const sidebarPanel = (): HTMLElement | null =>
@@ -94,7 +165,7 @@ describe("Shell", () => {
 
   test("deferred controls are disabled and say why", () => {
     shell();
-    for (const name of ["Validation", "Version control", "Settings", "Editor window"]) {
+    for (const name of ["Validation", "Version control", "Settings"]) {
       const button = screen.getByRole("button", { name });
       expect(button.getAttribute("aria-disabled")).toBe("true");
       expect(button.getAttribute("title")).toContain("not implemented yet");
@@ -140,7 +211,7 @@ describe("Shell", () => {
           ),
         "backend",
       );
-      render(<Shell services={{ queries, report }} />);
+      render(<Shell services={{ queries, report, editorWindow: NO_EDITOR_WINDOW }} />);
       expect((await screen.findByRole("alert")).textContent).toContain(
         "The Files tree could not be read",
       );
@@ -246,6 +317,97 @@ describe("Shell", () => {
     });
   });
 
+  describe("the editor's own window (IX-07)", () => {
+    test("outside the desktop app there is no second window, and the button says so", () => {
+      shell();
+      const button = screen.getByRole("button", { name: "Editor window" });
+      expect(button.getAttribute("aria-disabled")).toBe("true");
+      expect(button.getAttribute("title")).toContain("needs the sv2 Studio app");
+    });
+
+    test("with nothing open there is nothing to move", () => {
+      shell(undefined, fakeEditorWindow().editorWindow);
+      const button = screen.getByRole("button", { name: "Editor window" });
+      expect(button.getAttribute("title")).toContain("Open a file");
+    });
+
+    test("moving sends the file as edited, and the main window says where it went", async () => {
+      const fake = fakeEditorWindow();
+      shell(undefined, fake.editorWindow);
+      await openThermalControl();
+      await userEvent.click(screen.getByRole("button", { name: "Move to its own window" }));
+      expect(fake.calls).toEqual(["undock"]);
+      expect(String(fake.sent[0]?.path)).toBe("model/ThermalControl.sysml");
+      expect(fake.sent[0]?.text).toContain("attribute state : HeaterState;");
+      expect(screen.queryByRole("region", { name: "Editor" })).toBeNull();
+      expect(screen.getByRole("contentinfo").textContent).toContain(
+        "model/ThermalControl.sysml is open in its own window",
+      );
+    });
+
+    test("the top bar's button moves it too, and then focuses it", async () => {
+      const fake = fakeEditorWindow();
+      shell(undefined, fake.editorWindow);
+      await openThermalControl();
+      await userEvent.click(screen.getByRole("button", { name: "Editor window" }));
+      await screen.findByText(/is open in its own window/);
+      await userEvent.click(screen.getByRole("button", { name: "Editor window" }));
+      expect(fake.calls).toEqual(["undock", "focus"]);
+    });
+
+    test("Focus and Dock in the status bar ask the editor window", async () => {
+      const fake = fakeEditorWindow();
+      shell(undefined, fake.editorWindow);
+      await openThermalControl();
+      await userEvent.click(screen.getByRole("button", { name: "Move to its own window" }));
+      await userEvent.click(await screen.findByRole("button", { name: "Focus" }));
+      await userEvent.click(screen.getByRole("button", { name: "Dock" }));
+      expect(fake.calls).toEqual(["undock", "focus", "requestDock"]);
+    });
+
+    test("choosing a file while the editor is away focuses it, and opens nothing", async () => {
+      const fake = fakeEditorWindow();
+      shell(undefined, fake.editorWindow);
+      await openThermalControl();
+      await userEvent.click(screen.getByRole("button", { name: "Move to its own window" }));
+      await screen.findByText(/is open in its own window/);
+      await userEvent.click(screen.getByRole("treeitem", { name: "Interfaces.sysml" }));
+      expect(fake.calls).toEqual(["undock", "focus"]);
+      expect(screen.queryByRole("region", { name: "Editor" })).toBeNull();
+    });
+
+    test("docking back shows the file as it was edited there, not as it is on disk", async () => {
+      const fake = fakeEditorWindow();
+      shell(undefined, fake.editorWindow);
+      await openThermalControl();
+      await userEvent.click(screen.getByRole("button", { name: "Move to its own window" }));
+      await screen.findByText(/is open in its own window/);
+      const moved = fake.sent[0];
+      if (moved === undefined) {
+        throw new Error("nothing was undocked");
+      }
+      fake.dockBack({ ...moved, text: "package Edited;\n", state: null });
+      const editor = await screen.findByRole("textbox", { name: "model/ThermalControl.sysml" });
+      expect(editor.textContent).toContain("package Edited;");
+      expect(screen.queryByText(/is open in its own window/)).toBeNull();
+    });
+
+    test("an undock that fails is reported, and the file stays docked", async () => {
+      const reported: string[] = [];
+      const fake = fakeEditorWindow(() =>
+        Promise.resolve(err({ kind: "rejected", command: "editor_undock" } as const)),
+      );
+      shell(undefined, fake.editorWindow, (what) => {
+        reported.push(what);
+      });
+      await openThermalControl();
+      await userEvent.click(screen.getByRole("button", { name: "Move to its own window" }));
+      await Promise.resolve();
+      expect(reported).toEqual(["opening the editor window failed"]);
+      expect(screen.getByRole("region", { name: "Editor" })).toBeDefined();
+    });
+  });
+
   describe("the status bar (UI-10)", () => {
     test("counts the workspace's problems", async () => {
       shell();
@@ -262,7 +424,9 @@ describe("Shell", () => {
 
     test("says nothing about fixtures when the answers come from the core", () => {
       const queries = createModelQueries(fixtureTransport(THERMAL_CONTROL), "backend");
-      render(<Shell services={{ queries, report: () => undefined }} />);
+      render(
+        <Shell services={{ queries, report: () => undefined, editorWindow: NO_EDITOR_WINDOW }} />,
+      );
       expect(screen.queryByText("Fixture data")).toBeNull();
     });
   });

@@ -1,13 +1,19 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "The main window: exactly the commands in app/src/contract/registry.ts, and nothing from a default set (STD-004-TS §2 rule 3).",
+  "description": "The main window: the registry's commands it calls, and listening for the editor docking. Together with editor.json, exactly the commands in app/src/contract/registry.ts, and nothing from a default set (STD-004-TS §2 rule 3).",
   "windows": ["main"],
   "permissions": [
     "allow-workspace",
     "allow-views",
     "allow-element-detail",
     "allow-view-layout",
-    "allow-file-text"
+    "allow-file-text",
+    "allow-editor-undock",
+    "allow-editor-handoff",
+    "allow-editor-focus",
+    "allow-editor-request-dock",
+    "core:event:allow-listen",
+    "core:event:allow-unlisten"
   ]
 }

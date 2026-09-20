@@ -18,14 +18,64 @@
  */
 
 import { type InvokeArgs, invoke, isTauri } from "@tauri-apps/api/core";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { err, ok, type Result } from "@/model/result";
 
+import type { WindowEvents, WindowRole } from "./editor-window";
 import type { Transport, TransportFailure } from "./model-queries";
+
+/** The editor window's label, as `sv2_studio::editor_window::EDITOR` names it. */
+const EDITOR_LABEL = "editor";
 
 /** Whether this page is running inside a Tauri window, with a core to ask. */
 export function insideTauri(): boolean {
   return isTauri();
+}
+
+/**
+ * Which window this page is. Both windows load the same page, and Tauri knows
+ * each by its label, so the label decides; outside Tauri it is the main window.
+ */
+export function windowRole(): WindowRole {
+  return isTauri() && getCurrentWebviewWindow().label === EDITOR_LABEL ? "editor" : "main";
+}
+
+/**
+ * Events Rust sends to this window, through Tauri's event system.
+ *
+ * Listening is asynchronous and unsubscribing is not, so an unsubscribe that
+ * arrives before the listener is registered is remembered and applied when it
+ * is. A listener that cannot be registered — the capability does not grant
+ * it — is reported through `failed`, never dropped quietly.
+ */
+export function tauriWindowEvents(): WindowEvents {
+  return {
+    subscribe: (event, listener, failed) => {
+      let unlisten: (() => void) | null = null;
+      let cancelled = false;
+      getCurrentWebviewWindow()
+        .listen(event, () => {
+          listener();
+        })
+        .then(
+          (stop) => {
+            if (cancelled) {
+              stop();
+            } else {
+              unlisten = stop;
+            }
+          },
+          () => {
+            failed({ kind: "rejected", command: `listen:${event}` });
+          },
+        );
+      return () => {
+        cancelled = true;
+        unlisten?.();
+      };
+    },
+  };
 }
 
 /** A transport answering from the Rust core. */

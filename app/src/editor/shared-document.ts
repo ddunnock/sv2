@@ -21,9 +21,16 @@
  *
  * THE TEXT NEVER LEAVES CODEMIRROR (§8.4 rule 1). Nothing here hands the text
  * to React; a view shows it, and the authority keeps it.
+ *
+ * MOVING TO ANOTHER WINDOW. A second OS window is a second JavaScript context,
+ * so it cannot hold a view over this document. The document moves instead
+ * (IX-07): `snapshot` serializes the authority, undo history included, and
+ * `createSharedDocument` restores one from it in the other window. The
+ * snapshot is the only time the text leaves CodeMirror, and it goes straight
+ * to the wire.
  */
 
-import { defaultKeymap, history, redo, undo } from "@codemirror/commands";
+import { defaultKeymap, history, historyField, redo, undo } from "@codemirror/commands";
 import {
   Annotation,
   EditorState,
@@ -49,11 +56,23 @@ export type AttachOptions = Readonly<{
   label: string;
 }>;
 
+/**
+ * A document serialized to move between windows: the text, and the state it
+ * restores from. `state` is this module's to write and read, and opaque to
+ * everything the snapshot passes through.
+ */
+export type DocumentSnapshot = Readonly<{ text: string; state: unknown }>;
+
 /** A document that views attach to and detach from. */
 export type SharedDocument = Readonly<{
   attach: (options: AttachOptions) => EditorView;
   detach: (view: EditorView) => void;
+  /** The document now, with its undo history, to move it to another window. */
+  snapshot: () => DocumentSnapshot;
 }>;
+
+/** The state fields a snapshot carries beyond the text and selection. */
+const SNAPSHOT_FIELDS = { history: historyField } as const;
 
 /** Plain-text editing: line numbers, a drawn selection, the default keys (ADR-0013: no parser yet). */
 const PLAIN_TEXT: Extension = [
@@ -72,9 +91,31 @@ const PLAIN_TEXT: Extension = [
   }),
 ];
 
-/** A document holding `text`, with no views yet. */
-export function createSharedDocument(text: string): SharedDocument {
-  let authority = EditorState.create({ doc: text, extensions: history() });
+/**
+ * The authority to start from: fresh from `text`, or restored from a snapshot.
+ *
+ * A snapshot that will not restore, or restores to text other than it claims,
+ * falls back to its `text`: the words survive and only the undo history is
+ * lost, which is what `contract/editor-window.ts` promises.
+ */
+function authorityFrom(seed: string | DocumentSnapshot): EditorState {
+  const text = typeof seed === "string" ? seed : seed.text;
+  if (typeof seed !== "string") {
+    try {
+      const restored = EditorState.fromJSON(seed.state, { extensions: history() }, SNAPSHOT_FIELDS);
+      if (restored.doc.toString() === text) {
+        return restored;
+      }
+    } catch {
+      // Not a state this module wrote. Start from the text, below.
+    }
+  }
+  return EditorState.create({ doc: text, extensions: history() });
+}
+
+/** A document holding `seed`'s text, with no views yet. */
+export function createSharedDocument(seed: string | DocumentSnapshot): SharedDocument {
+  let authority = authorityFrom(seed);
   const views = new Set<EditorView>();
 
   /** Sends `changes` to every view but `except`, marked as relayed. */
@@ -140,5 +181,10 @@ export function createSharedDocument(text: string): SharedDocument {
     view.destroy();
   };
 
-  return { attach, detach };
+  const snapshot = (): DocumentSnapshot => ({
+    text: authority.doc.toString(),
+    state: authority.toJSON(SNAPSHOT_FIELDS),
+  });
+
+  return { attach, detach, snapshot };
 }

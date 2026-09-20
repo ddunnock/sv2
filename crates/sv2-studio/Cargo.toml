@@ -16,8 +16,6 @@ path = "src/main.rs"
 sv2-syntax = { workspace = true }
 tauri = { workspace = true }
 serde = { workspace = true }
-
-[dev-dependencies]
 serde_json = { workspace = true }
 
 [build-dependencies]

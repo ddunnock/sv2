@@ -4,6 +4,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render, screen, within } from "@testing-library/react";
 
 import { type ElementHandle, ElementHandleSchema } from "@/contract/element-id";
+import { NO_EDITOR_WINDOW } from "@/ipc/editor-window";
 import { fixtureTransport } from "@/ipc/fixture-client";
 import { THERMAL_CONTROL } from "@/ipc/generated/thermal-control";
 import { createModelQueries } from "@/ipc/model-queries";
@@ -24,7 +25,9 @@ function petname(id: string): ElementHandle {
 function specification(id: string): void {
   const queries = createModelQueries(fixtureTransport(THERMAL_CONTROL), "fixture");
   render(
-    <ServicesProvider services={{ queries, report: () => undefined }}>
+    <ServicesProvider
+      services={{ queries, report: () => undefined, editorWindow: NO_EDITOR_WINDOW }}
+    >
       <Specification handle={petname(id)} />
     </ServicesProvider>,
   );

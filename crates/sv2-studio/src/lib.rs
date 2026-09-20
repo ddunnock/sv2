@@ -14,6 +14,7 @@
 //! window to it.
 
 mod commands;
+mod editor_window;
 mod shell;
 mod wire;
 mod workspace;

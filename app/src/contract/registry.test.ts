@@ -38,9 +38,17 @@ describe("COMMANDS", () => {
     expect(unassigned.sort()).toEqual(["viewLayout"]);
   });
 
-  test("the host answers exactly these, the file access ADR-0021 gives it", () => {
+  test("the host answers exactly these: file access and its own windows (ADR-0021)", () => {
     const studio = ENTRIES.filter(([, entry]) => entry.owner === "sv2-studio").map(([key]) => key);
-    expect(studio.sort()).toEqual(["fileText", "workspace"]);
+    expect(studio.sort()).toEqual([
+      "editorDock",
+      "editorFocus",
+      "editorHandoff",
+      "editorRequestDock",
+      "editorUndock",
+      "fileText",
+      "workspace",
+    ]);
   });
 });
 

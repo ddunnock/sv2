@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 import { afterEach, describe, expect, test } from "bun:test";
-import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
+import { emit } from "@tauri-apps/api/event";
+import { clearMocks, mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 
 import { WorkspacePathSchema } from "@/contract/file";
-
+import type { IpcError } from "./ipc-error";
 import { createModelQueries } from "./model-queries";
-import { insideTauri, tauriTransport } from "./tauri-client";
+import { insideTauri, tauriTransport, tauriWindowEvents, windowRole } from "./tauri-client";
 
 /**
  * Pretend to be inside a Tauri window. `mockIPC` replaces `invoke` but does not
@@ -115,5 +116,87 @@ describe("a Rust-shaped reply through the real parse path", () => {
       kind: "unavailable",
       reason: { kind: "not-found" },
     });
+  });
+});
+
+/** Lets queued promise callbacks run, so an asynchronous listen has registered. */
+function settle(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
+describe("which window this page is", () => {
+  test("outside Tauri it is the main window", () => {
+    expect(windowRole()).toBe("main");
+  });
+
+  test("inside Tauri the label decides", () => {
+    enterTauri(() => null);
+    mockWindows("editor");
+    expect(windowRole()).toBe("editor");
+    mockWindows("main");
+    expect(windowRole()).toBe("main");
+  });
+});
+
+describe("events Rust sends this window", () => {
+  test("a subscribed listener hears its event, and stops hearing it after unsubscribing", async () => {
+    Reflect.set(globalThis, "isTauri", true);
+    mockIPC(() => null, { shouldMockEvents: true });
+    mockWindows("main");
+    let heard = 0;
+    const stop = tauriWindowEvents().subscribe(
+      "editor-docked",
+      () => {
+        heard += 1;
+      },
+      () => undefined,
+    );
+    await settle();
+    await emit("editor-docked");
+    expect(heard).toBe(1);
+    stop();
+    await settle();
+    await emit("editor-docked");
+    expect(heard).toBe(1);
+  });
+
+  test("unsubscribing before the listener registered still unsubscribes it", async () => {
+    Reflect.set(globalThis, "isTauri", true);
+    mockIPC(() => null, { shouldMockEvents: true });
+    mockWindows("main");
+    let heard = 0;
+    const stop = tauriWindowEvents().subscribe(
+      "editor-docked",
+      () => {
+        heard += 1;
+      },
+      () => undefined,
+    );
+    stop();
+    await settle();
+    await emit("editor-docked");
+    expect(heard).toBe(0);
+  });
+
+  test("a listen the capability refuses is reported, not dropped", async () => {
+    enterTauri((command) => {
+      if (command === "plugin:event|listen") {
+        throw new Error("event.listen not allowed");
+      }
+      return null;
+    });
+    mockWindows("main");
+    const failures: IpcError[] = [];
+    tauriWindowEvents().subscribe(
+      "editor-docked",
+      () => undefined,
+      (error) => {
+        failures.push(error);
+      },
+    );
+    await settle();
+    expect(failures).toEqual([{ kind: "rejected", command: "listen:editor-docked" }]);
   });
 });

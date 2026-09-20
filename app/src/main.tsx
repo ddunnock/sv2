@@ -6,7 +6,8 @@
  *
  * It does three things in this order and nothing else: configure Zod for the
  * Tauri content-security policy, install the global failure handlers, then
- * create the React root and render the shell.
+ * create the React root and render the shell — the main window's, or the
+ * editor window's (IX-07), which load this same page and differ by label.
  *
  * Every other module defines and does not execute (§3.3). A module that needs a
  * service receives it here, through a parameter or React context, and never
@@ -18,10 +19,12 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { z } from "zod";
 import { installGlobalHandlers, reportToConsole } from "@/diagnostics/handlers";
+import { createEditorWindow, NO_EDITOR_WINDOW } from "@/ipc/editor-window";
 import { fixtureTransport } from "@/ipc/fixture-client";
 import { THERMAL_CONTROL } from "@/ipc/generated/thermal-control";
 import { createModelQueries, type ModelQueries } from "@/ipc/model-queries";
-import { insideTauri, tauriTransport } from "@/ipc/tauri-client";
+import { insideTauri, tauriTransport, tauriWindowEvents, windowRole } from "@/ipc/tauri-client";
+import { EditorWindowShell } from "@/shell/EditorWindowShell";
 import { Shell } from "@/shell/Shell";
 
 // 1. Configure Zod for the Tauri CSP, before anything can parse (§4.3 rule 6).
@@ -36,11 +39,18 @@ installGlobalHandlers(reportToConsole);
 //    (§2.2). Inside a Tauri window the Rust core answers. In a plain browser
 //    (`bun run dev` opened directly) there is no core, so the mockup's sample
 //    model answers instead, and `provenance` makes the status bar say so.
-const queries: ModelQueries = insideTauri()
+const inTauri = insideTauri();
+const queries: ModelQueries = inTauri
   ? createModelQueries(tauriTransport(), "backend")
   : createModelQueries(fixtureTransport(THERMAL_CONTROL), "fixture");
 
-const services = { queries, report: reportToConsole } as const;
+const services = {
+  queries,
+  report: reportToConsole,
+  editorWindow: inTauri
+    ? createEditorWindow(tauriTransport(), tauriWindowEvents())
+    : NO_EDITOR_WINDOW,
+} as const;
 
 const container = document.getElementById("root");
 if (container === null) {
@@ -49,6 +59,10 @@ if (container === null) {
 
 createRoot(container).render(
   <StrictMode>
-    <Shell services={services} />
+    {windowRole() === "editor" ? (
+      <EditorWindowShell services={services} />
+    ) : (
+      <Shell services={services} />
+    )}
   </StrictMode>,
 );

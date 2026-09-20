@@ -7,8 +7,8 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use crate::commands;
 use crate::workspace::WorkspaceRoot;
+use crate::{commands, editor_window};
 
 /// Exit status for every failure to start: a bad argument, or a window that would not
 /// open. Nothing reads the status but a person, so one is enough.
@@ -39,12 +39,20 @@ pub fn run(
     };
     let started = tauri::Builder::default()
         .manage(WorkspaceRoot(root))
+        .manage(editor_window::Handoffs::default())
+        .manage(editor_window::DockPending::default())
+        .on_window_event(editor_window::on_window_event)
         .invoke_handler(tauri::generate_handler![
             commands::workspace,
             commands::file_text,
             commands::views,
             commands::element_detail,
             commands::view_layout,
+            editor_window::editor_undock,
+            editor_window::editor_dock,
+            editor_window::editor_handoff,
+            editor_window::editor_focus,
+            editor_window::editor_request_dock,
         ])
         .run(context());
     match started {

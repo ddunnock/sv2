@@ -413,7 +413,7 @@ span, and nothing selects an element yet, so it could not be exercised. It is on
 The §8.4 rule 4 update listener (derived facts such as the element under the cursor)
 arrives with its first consumer.
 
-### Phase 6 — Tauri, real IPC, the second window · **IN PROGRESS (only the pop-out window left)**
+### Phase 6 — Tauri, real IPC, the second window · **DONE**
 
 `@tauri-apps/api` arrives with `ipc/tauri-client.ts`. The pop-out window is last: it
 is the only item touching the composition root. Note `src/shell/**` is banned from
@@ -463,10 +463,46 @@ shell calls.
   it has a panel) and `Tree` (count never shrinks). `screencapture` has no
   permission in-session; ask the user for a screenshot.
 
-**Remaining.**
+**Step 6, done: the pop-out editor window (IX-07).**
 
-1. The pop-out editor window (IX-07). Will need `core:window`/`core:webview`
-   permissions granted one at a time, and a second capability for the new window.
+The plan said a window was another *view* over the one document. It cannot be: two
+windows are two JavaScript contexts, and an `EditorState` does not cross. **The file
+moves instead**, which is what IX-07 describes by offering Focus and Dock. Approved by
+the user, 2026-09-19, along with: closing the editor window **docks** it rather than
+discarding, because nothing saves yet.
+
+- `contract/editor-window.ts` — `EditorHandoff` (`path`, `text`, `state`) and the two
+  event names. `state` is CodeMirror's serialized state, undo history included,
+  opaque to everything but `editor/`; the schema requires only that it is JSON.
+- `editor/shared-document.ts` — `snapshot()` and a document that starts from text *or*
+  a snapshot. A state that will not restore, or whose text disagrees, falls back to
+  the text: the words survive, only undo is lost. Mutation-checked.
+- `crates/sv2-studio/src/editor_window.rs` — a handoff slot per destination window,
+  and five commands: `editor_undock` (opens the window, async because a sync command
+  creating a window deadlocks on Windows), `editor_dock`, `editor_handoff` (taken
+  once), `editor_focus`, `editor_request_dock`. `on_window_event` holds back the
+  editor window's close and asks it to dock; a second close is let through, so a
+  window whose page has failed can still be closed. Closing the main window ends it.
+- `ipc/editor-window.ts` — the commands through the one parse path, and `WindowEvents`,
+  a seam like `Transport`. `NO_EDITOR_WINDOW` is what a plain browser gets.
+  `tauri-client.ts` gains `windowRole()` (by window label) and `tauriWindowEvents()`.
+- `shell/editor-place.ts` — closed | docked | undocked, as a reducer. While the editor
+  is away the main window opens no second file (the returning one needs its place) and
+  cannot close it (its edits are over there); it focuses the window instead.
+- `shell/EditorWindowShell.tsx` — the editor window's own root. **It takes the handoff
+  once per page**, sharing one promise across React's double effect run; without that
+  guard the window comes up empty in development, which the test proves.
+- Capabilities are now **per window**: `default.json` (main) and `editor.json`. The
+  editor window may take a handoff, dock, and listen — it cannot read the workspace.
+
+**Verified in the real app** on a copy of the SysML examples: moved a file out, typed
+in the second window, closed it with its own close button, and the file came back
+docked with the edit and with undo still working.
+
+**Remaining.** Nothing in Phase 6. `tools/emit-contract.ts` and
+`scripts/check_ipc_contract.py` are still deferred, and until they exist the five
+places that must agree — `build.rs`'s command list, `generate_handler!`, the two
+capability files, and `registry.ts` — agree by hand.
 
 **Hazards still true.** The PreToolUse hook blocks any Bash command whose text names
 the studio crate's path; use the Write tool. A manifest change makes `state.json`
