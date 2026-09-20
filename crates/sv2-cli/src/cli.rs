@@ -23,7 +23,7 @@ const WRITE_FAILED: u8 = 1;
 /// Whether a failure about the input is spoken aloud or left to the exit status.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Reporting {
-    /// Write the error, its cause, and the parser's diagnostics to stderr.
+    /// Write the error, its cause, and the parser's diagnostics to standard error (`stderr`).
     Loud,
     /// Say nothing about the file: `--quiet`, and what the corpus sweep passes.
     Silent,
@@ -157,7 +157,7 @@ fn parse_file(path: &Path) -> Result<(), CommandError> {
     //
     // There is no default and must not be: `KerML` and `SysML` are two grammars with
     // two start symbols (ADR-0014), and reading a file against the one its author did
-    // not write it in accepts constructs that language does not have. A positive-only
+    // not write it in accepts constructs that the language does not have. A positive-only
     // corpus sweep cannot see that happen, so the check has to be here.
     let Some(language) = sv2_syntax::Language::from_path(path) else {
         return Err(usage(format!(
@@ -203,8 +203,8 @@ fn located(map: &sv2_syntax::OffsetMap, diagnostic: &sv2_syntax::Diagnostic) -> 
 
 /// Write the error to `stderr`: one line naming its code, then what it is made of.
 ///
-/// §8.2: this is a message, not the command's product, so it goes to stderr and
-/// stdout stays empty.
+/// §8.2: this is a message, not the command's product, so it goes to `stderr` and
+/// `stdout` stays empty.
 fn report(
     error: &CommandError,
     reporting: Reporting,
