@@ -1574,7 +1574,30 @@ impl<'a> Parser<'a> {
     /// Every diagnostic this parser raises goes through here, so that the range is
     /// never forgotten: a `Diagnostic` without one cannot be constructed, which is what
     /// keeps "underline the offending token" from being a thing a caller has to guess.
+    ///
+    /// ONE DIAGNOSTIC PER START OFFSET. A repeat at the offset the last one starts at is
+    /// dropped, keeping the FIRST raiser, which is the innermost: the production that
+    /// could not read the token reports before the enclosing ones that then give up. Four
+    /// reports about one `new` tell a reader nothing the first does not, and a token this
+    /// parser cannot read is one defect however many nested productions fail on it.
+    ///
+    /// The range is compared, not the code: two codes at one offset (`PARSE-EXPECTED` and
+    /// `PARSE-UNEXPECTED` both fire on an unreadable token) are the same defect described
+    /// twice. Only the LAST diagnostic is compared, as Ruff's `add_error` does, because
+    /// recovery moves forward: an offset that repeats does so consecutively, and comparing
+    /// against every diagnostic would make this quadratic on a file full of errors.
+    ///
+    /// Nothing is lost that a caller needs: the tree still carries every byte
+    /// (invariant 1), the element still enters the IR with its diagnostics (invariant 2,
+    /// ADR-0002), and a defect at a NEW offset is never dropped.
     fn emit(&mut self, code: DiagnosticCode, range: TextRange, message: String) {
+        if self
+            .errors
+            .last()
+            .is_some_and(|last| last.range().start() == range.start())
+        {
+            return;
+        }
         self.errors.push(Diagnostic::new(code, range, message));
     }
 

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-20T02:57:00Z",
+    "regenerated_utc": "2026-09-20T03:26:15Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -23,7 +23,7 @@
       "percent": 38.1
     },
     "tests": {
-      "unit": 381,
+      "unit": 383,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 135,
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "e821d4a Read the guarded succession, and close ActionBodyItem's four alternatives",
       "a1a8133 Read the default target succession, buy nothing, and mark the alternation",
       "1c256b7 Stop rejecting `else A3;` by absence: the next commit reads it",
       "286f3ce Say it in full in three cli.rs comments: standard error, and the article",
       "467b570 Regenerate validation.json: its 21 leaks are the by-absence files, all of them",
       "245a328 Read a guarded succession, and move acceptance by two, as predicted",
       "88088d2 Read the four control nodes, and move acceptance by three, as predicted",
-      "56b6549 Stop asserting that `then fork;` is rejected: it is well-formed SysML",
-      "a83c9ae Read `then` before an occurrence usage, and move acceptance by one, as predicted"
+      "56b6549 Stop asserting that `then fork;` is rejected: it is well-formed SysML"
     ]
   },
   "authored": {

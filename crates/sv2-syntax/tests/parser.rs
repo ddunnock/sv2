@@ -2108,6 +2108,59 @@ fn a_guarded_target_succession_is_a_suffix_and_nothing_else() {
     parse_rejected("action def A { first start; if x then b }");
 }
 
+// -- one diagnostic per start offset ---------------------------------------------------
+//
+// Not a grammar rule: a reporting rule, and the reason it belongs beside them is that a
+// reader cannot act on four reports about one token. The expectation comes from what the
+// text contains, not from what the parser printed: `new` is ONE construct this parser does
+// not read (an InstantiationExpression, KerML 8.2.5.8.3), so it is one defect at one
+// position, however many nested productions each raise their own failure there.
+
+#[test]
+fn one_token_is_reported_once_however_many_productions_fail_on_it() {
+    // The expression, the parenthesis around it and the enclosing definition each fail at
+    // `new`. Before this rule they reported four times at that offset.
+    let parsed = parse_rejected("part def P {\n\t:>> x = (new T());\n}\n");
+    let starts: Vec<usize> = parsed
+        .errors()
+        .iter()
+        .map(|d| usize::from(d.range().start()))
+        .collect();
+    let mut unique = starts.clone();
+    unique.dedup();
+    assert_eq!(
+        starts,
+        unique,
+        "one report per start offset: {:?}",
+        parsed.errors()
+    );
+    // The FIRST raiser at an offset is the one kept, and it is the innermost: the
+    // expression that could not be read, not the definition body that gave up later.
+    let first = parsed.errors().first().expect("a diagnostic");
+    assert!(
+        first.message().contains("expression"),
+        "the innermost expectation is the one kept: {first:?}"
+    );
+}
+
+#[test]
+fn a_diagnostic_at_a_new_offset_is_never_dropped() {
+    // The rule drops a repeat at ONE offset; it must not swallow the next position, or a
+    // file with two defects would report one. Two value parts with no expression, a valid
+    // item between them: `attribute ;` alone is NOT one of them — an anonymous
+    // AttributeUsage whose Identification is empty is well formed (SysML 8.2.2.6.2).
+    let parsed = parse_rejected("part def P { attribute x = ; part q; attribute y = ; }");
+    let starts: Vec<usize> = parsed
+        .errors()
+        .iter()
+        .map(|d| usize::from(d.range().start()))
+        .collect();
+    assert!(
+        starts.len() >= 2 && starts[0] != starts[1],
+        "two defects, two offsets: {starts:?}"
+    );
+}
+
 // -- GuardedSuccession, SysML 8.2.2.17.8 ----------------------------------------------
 //
 // ActionBodyItem = ... | ownedRelationship += GuardedSuccessionMember      (8.2.2.17.1)
