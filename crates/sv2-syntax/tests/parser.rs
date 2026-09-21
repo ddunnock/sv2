@@ -1402,11 +1402,12 @@ fn an_initial_node_member_needs_its_name_and_its_body() {
 #[test]
 fn a_succession_that_opens_on_first_is_not_an_initial_node_member() {
     // `first a then b;` is SuccessionAsUsage (8.2.2.13.3), and GuardedSuccession
-    // (8.2.2.17.8) opens on `first` too. Neither is implemented, so the text is rejected
-    // — but it must be rejected WITHOUT an InitialNodeMember in the tree, because
-    // `first a` followed by `then` is not one: the production ends in RelationshipBody,
-    // which is `;` or `{`. A rejection file cannot show this; the tree can.
-    let tree = render(&parse_rejected("action def A { first a then b; }").syntax());
+    // (8.2.2.17.8) opens on `first` too. Whether the text is accepted is that
+    // production's question, not this test's: what is asserted here is that it never
+    // builds an InitialNodeMember, because `first a` followed by `then` is not one — the
+    // production ends in RelationshipBody, which is `;` or `{`. A rejection file cannot
+    // show this; the tree can.
+    let tree = render(&parse("action def A { first a then b; }", Language::SysMl).syntax());
     assert_eq!(nodes_named(&tree, "InitialNodeMember"), 0, "{tree}");
 }
 
