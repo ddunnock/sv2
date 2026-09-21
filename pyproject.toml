@@ -135,7 +135,7 @@ markers = ["slow: excluded from the default run"]
 
 # STD-001-PY §2.3: the header every source file carries. Read by
 # scripts/check_headers.py for Python and, per STD-002-RS §2.3, Rust sources.
-# Two lines, so the licence and the author travel with any file copied out of
+# Two lines, so the license and the author travel with any file copied out of
 # the repository — which is the whole of what MIT asks for.
 [tool.sv2.headers]
 required = true

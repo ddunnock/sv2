@@ -31,7 +31,7 @@ same claim.
 - **DD-1.** §3 is a *batch command* contract: one `run` function over injected streams,
   one exit status per error code, no work before the request is known, tested without a
   subprocess. It is worth keeping intact and it cannot describe a GUI.
-- **DD-2.** `cargo deny` evaluates bans, licences and advisories over the whole
+- **DD-2.** `cargo deny` evaluates bans, licenses and advisories over the whole
   dependency graph. What the batch command drags in is what CI and the corpus sweep
   drag in.
 - **DD-3.** This repository feeds an air-gapped, ATO-governed delivery estate. A small

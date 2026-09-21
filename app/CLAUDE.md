@@ -64,7 +64,7 @@ directory.
 - **Every dependency is a recorded decision.** The §3.1 allowlist is closed;
   nothing arrives transitively as a direct import.
 - **Two `//` lines of SPDX header open every file,** never a `/** */` block —
-  TSDoc would read the licence as documentation (§2.3).
+  TSDoc would read the license as documentation (§2.3).
 
 ## Current state
 

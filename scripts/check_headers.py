@@ -1,20 +1,20 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
-"""Assert the licence header on every source file, where the repository requires one.
+"""Assert the license header on every source file, where the repository requires one.
 
 STD-001-PY §2.3 and STD-002-RS §2.3 make the header a per-repository setting. This
 one is MIT, so the header is two lines — the SPDX identifier and the copyright —
 and their whole job is to travel with a file that someone copies out of the
-repository, which is the only thing the licence asks for.
+repository, which is the only thing the license asks for.
 
     python3.12 scripts/check_headers.py
 
 The required values come from ``[tool.sv2.headers]`` in pyproject.toml, and each
 must appear in the file's opening comment block: ``#`` lines in Python and shell,
 ``//`` lines in Rust (never a ``//!`` or ``///`` doc comment, which would put the
-licence text into rustdoc). In a shell script the block opens with the shebang and
+license text into rustdoc). In a shell script the block opens with the shebang and
 the two required lines follow it (STD-003-SH §3.4). Checking the values rather than
-the presence of a block is the point: a header naming the wrong licence passes a
+the presence of a block is the point: a header naming the wrong license passes a
 presence check and fails a review.
 
 Whether or not headers are required, a Python module must not start with a

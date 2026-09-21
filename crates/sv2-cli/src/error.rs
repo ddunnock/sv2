@@ -81,7 +81,7 @@ pub enum CommandError {
     #[error("not implemented yet; see .claude/state/state.json for what is in progress")]
     NotImplemented,
 
-    /// The input file could not be read, or was not UTF-8.
+    /// The input file could not be read or was not UTF-8.
     #[error("cannot read {path}")]
     Read {
         /// The path as it was given on the command line.

@@ -131,7 +131,7 @@
         ],
         "atoms": 1651,
         "what_is_recorded": "Per atom: wiki, id, kind, clause, pdf_page, printed_page, region_sha256 (the wiki's receipt to the source PDF span) and file_sha256 (this repository's receipt to the rendered atom). Metadata only.",
-        "why_not_a_copy": "The 1651 atoms carry roughly 2.3 MB of verbatim OMG specification prose and ship with no licence or copyright notice. ADR-0010's 'IPR mode Non-Assert' is a patent position on the machine-readable artifacts, not a copyright licence to redistribute specification text, and this repository is MIT and public. Receipts make a citation checkable without redistributing what it cites.",
+        "why_not_a_copy": "The 1651 atoms carry roughly 2.3 MB of verbatim OMG specification prose and ship with no license or copyright notice. ADR-0010's 'IPR mode Non-Assert' is a patent position on the machine-readable artifacts, not a copyright license to redistribute specification text, and this repository is MIT and public. Receipts make a citation checkable without redistributing what it cites.",
         "what_this_does_not_buy": "A fresh clone still cannot build the wikis, so a clause citation is verifiable only on a machine that has them. That limit is inherent \u2014 the source PDFs are not redistributable either \u2014 and it is the honest residue of the earlier 'clause-retrieval-not-pinned' decision rather than a resolution of it. What changed is that drift is now detected and an invented receipt now fails a gate; what did not change is that the evidence base is not self-contained."
       }
     },

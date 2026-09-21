@@ -153,7 +153,7 @@ published IPR terms, the Pilot Xtext under EPL-2.0 with its notice intact. None 
 is compiled into the crates.
 
 **`NOTICE.md` is the attribution**, and `vendor/sources.lock.toml` is its
-machine-readable form — every pinned file with its licence and sha256. The short
+machine-readable form — every pinned file with its license and sha256. The short
 version: no specification clause text is in this repository. The grammar derivation
 reads the clauses from wikis built locally from OMG's PDFs and records only the
 citation, a sha256 of the clause, and what was decided.

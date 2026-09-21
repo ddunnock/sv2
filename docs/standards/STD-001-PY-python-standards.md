@@ -179,7 +179,7 @@ The header is exactly two comment lines, above the module docstring:
 1. The header is a `#` comment block, **never** a docstring. It must not become
    `__doc__`, because the docstring is the script's `--help` text
    ([§11](#11-docstrings)) and its generated documentation; keeping the two
-   separate is what keeps the licence out of both.
+   separate is what keeps the license out of both.
 2. Both lines, verbatim, on every source file. The point of an SPDX identifier and
    a copyright line is that they travel with a file copied out of the repository,
    which is the whole of what MIT asks for. A file missing them is a file that
@@ -673,7 +673,7 @@ it is in a gate log, a CI record, or a model's context — is not.
 - **File contents.** A check reports the path and what is wrong with it, not the
   text it read. `vendor_verify.py` reports a path and two digests, never the bytes.
 - **Vendored source text.** The pinned OMG and Pilot material under `vendor/`
-  carries its own licence terms. Quote a rule name, a production, or a line
+  carries its own license terms. Quote a rule name, a production, or a line
   number — not the file.
 - **Anything a hook hands back to Claude.** A hook's `reason` enters the transcript
   and is read by a model. Keep it to identifiers, counts, and the command that
@@ -822,7 +822,7 @@ invocation, indented, one line per mode.
 A mode that is not in the docstring is a mode that is not in `--help`. The two
 program header lines sit *above* the docstring and are not part of it
 ([§2.3](#23-file-header-module-docstring-and-file-order)), which is what keeps the
-licence out of that output.
+license out of that output.
 
 ---
 

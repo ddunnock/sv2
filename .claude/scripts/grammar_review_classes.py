@@ -16,7 +16,7 @@ supporting text can be located in the pinned inputs rather than judged:
 Grounding is per production, never per class. An entry is written only when this
 script can point at the pinned text that supports that specific production; what
 it cannot ground it reports and leaves unreviewed, which is the honest state and
-keeps the gate red until someone reads it. A class argument is not a licence to
+keeps the gate red until someone reads it. A class argument is not a license to
 record a member the argument does not actually cover.
 
 Everything else in the differential — the expression-precedence chain above all,

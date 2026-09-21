@@ -23,7 +23,7 @@ allow = [
     # is_ci, reached through miette's `fancy` feature in sv2-cli. ISC is
     # OSI-approved and permissive.
     "ISC",
-]                                 # permissive licences only, as the project is MIT
+]                                 # permissive licenses only, as the project is MIT
 
 [bans]
 multiple-versions = "warn"

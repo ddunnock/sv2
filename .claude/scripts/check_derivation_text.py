@@ -42,7 +42,7 @@ PROSE_FIELDS = ("decision", "notes")
 CLAUSES = os.environ.get("SV2_WIKI_CLAUSES", str(Path.home() / ".sv2-derivation/bnf-clauses.json"))
 WORD = re.compile(r"[A-Za-z0-9_']+")
 #: Fenced blocks in a clause atom hold the BNF itself. That content is separately
-#: published as vendor/spec-bnf/*.kebnf, pinned under EPL-2.0 with the licence
+#: published as vendor/spec-bnf/*.kebnf, pinned under EPL-2.0 with the license
 #: text vendored beside it, so restating a production is not reproducing the OMG
 #: document. The prose around the fence — descriptions, notes, tables — is.
 FENCE = re.compile(r"```.*?```", re.DOTALL)

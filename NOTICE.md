@@ -58,7 +58,7 @@ of the Systems-Modeling organization, both under the Eclipse Public License 2.0:
 - `vendor/spec-bnf/*.kebnf` — the textual BNF transcribed from the specifications,
   `// Manual corrections by HP de Koning`.
 
-The licence text is vendored at `vendor/pilot/LICENSE-EPL-2.0.txt`. EPL-2.0 requires
+The license text is vendored at `vendor/pilot/LICENSE-EPL-2.0.txt`. EPL-2.0 requires
 that recipients be told where to obtain the source; `vendor/sources.lock.toml` records
 the upstream URL and commit for every file.
 

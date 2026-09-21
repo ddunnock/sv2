@@ -10,7 +10,7 @@
  *
  * The header is a block comment here rather than two `//` lines because CSS has
  * no line comment. STD-004-TS §2.3 bans the doc-block form for TypeScript
- * because TSDoc and editor hovers would read the licence as documentation;
+ * because TSDoc and editor hovers would read the license as documentation;
  * a stylesheet has no such reader, so the block form is right here.
  */
 

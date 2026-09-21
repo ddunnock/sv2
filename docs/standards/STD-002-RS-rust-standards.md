@@ -214,7 +214,7 @@ reads configuration once, under an `#[expect(clippy::disallowed_methods, reason
 Every source file opens in the same order. Nothing else may precede these.
 
 ```text
-<licence header — two comment lines>
+<license header — two comment lines>
 <inner doc comment: //! ... (crate root and module files)>
 <inner attributes: #![...] (crate root only)>
 <mod declarations>
@@ -226,7 +226,7 @@ Every source file opens in the same order. Nothing else may precede these.
 
 This project is MIT-licensed, so the header is two lines and nothing more: the
 SPDX identifier and the copyright. Their whole job is to travel with a file that
-someone copies out of the repository, which is the only thing the licence asks
+someone copies out of the repository, which is the only thing the license asks
 for.
 
 ```rust
@@ -252,7 +252,7 @@ for.
 **Enforcement.** `scripts/check_headers.py`, the same tool STD-001-PY uses, reads
 `[tool.sv2.headers]` from the workspace `pyproject.toml` and checks
 `crates/*/src/**/*.rs` against it, alongside the Python sources. One repository
-has one licence, so it has one setting, not one per language.
+has one license, so it has one setting, not one per language.
 
 ```toml
 [tool.sv2.headers]
@@ -264,7 +264,7 @@ must_contain = [
 ```
 
 Checking the strings rather than the presence of a block is the point: a header
-naming the wrong licence passes a presence check and fails a review.
+naming the wrong license passes a presence check and fails a review.
 
 ### 2.4 Visibility
 
@@ -951,7 +951,7 @@ The command does not catch panics. It lets the process exit with 101
 means doing the next piece of work in a process whose invariants are already
 known to be broken.
 
-This is not a licence to panic. [§6.3](#63-panics) forbids the constructs that
+This is not a license to panic. [§6.3](#63-panics) forbids the constructs that
 produce one outside tests, and a parser that panics on malformed input has
 failed at its job rather than reported a problem: the corpus sweep would read
 the 101 as "did not parse" and nobody would learn which of the two it was.
@@ -1206,7 +1206,7 @@ fn parse_part_definition(p: &mut Parser) {
    last refresh is recorded where the build log shows it. It is deliberately not
    part of the local gate; see [§13.6](#136-ci-command-set).
 5. **Licenses.** The allowlist in `deny.toml` is this project's dependency
-   licence policy. `cargo deny check licenses` fails on anything outside it.
+   license policy. `cargo deny check licenses` fails on anything outside it.
 6. **New dependencies are reviewed.** A change that adds a crate to
    `[workspace.dependencies]` states what it replaces or why nothing in the
    standard library or the existing set will do. A heavy dependency in
@@ -1248,7 +1248,7 @@ members = ["crates/*"]
 [workspace.package]
 edition = "2024"
 rust-version = "1.98"
-license = "MIT"                      # the project licence; deny.toml governs what dependencies may carry
+license = "MIT"                      # the project license; deny.toml governs what dependencies may carry
 publish = false
 
 [workspace.dependencies]
@@ -1507,7 +1507,7 @@ Fourteen checks, in the order that fails fastest.
 9. No `#[allow]`; every `#[expect]` has a reason that states the invariant.
 10. No function with more than twelve branches, six returns, or a five-term
     condition. Clippy cannot see these ([§5.1](#51-thresholds)).
-11. Licence header present on every source file, exactly two `//` lines, above
+11. License header present on every source file, exactly two `//` lines, above
     the doc comment; no historical change comments.
 12. No subscriber installed outside a binary; no output macro; nothing on stdout
     except the command's product.
@@ -1550,7 +1550,7 @@ before the document is baselined.
 | Only listed entry points have a `__main__.py`          | Only crates in `scripts/rust_binaries.toml` have a binary target                 | `check_rust_workspace.py`        |
 | `main()` returns an int                                | `main` returns `ExitCode`; `process::exit` banned                                | `clippy::exit`                   |
 | No shebang                                             | Not applicable                                                                   | —                                |
-| Licence header, no change comments                     | The same two lines, as `//` comments                                             | `check_headers.py`               |
+| License header, no change comments                     | The same two lines, as `//` comments                                             | `check_headers.py`               |
 | pydantic at the boundary, `extra="forbid"`             | serde types with `deny_unknown_fields`                                           | Review, check 5                  |
 | Frozen slotted dataclasses inside                      | Private fields, no `&mut self` on value types                                    | Review, check 5                  |
 | Complexity thresholds via ruff                         | Clippy thresholds; branches, returns, and condition terms left to review         | Clippy, review                   |

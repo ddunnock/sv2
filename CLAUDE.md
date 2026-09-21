@@ -99,7 +99,7 @@ document's enforcement section is normative — `scripts/check_standards_config.
 fails if the repository and the standard disagree. Rust is STD-002-RS, Python
 STD-001-PY, Bash STD-003-SH.
 
-Every source file opens with the two-line licence header:
+Every source file opens with the two-line license header:
 
 ```
 // SPDX-License-Identifier: MIT
