@@ -2,6 +2,7 @@
   "_generated_by": ".claude/scripts/index_decisions.py",
   "_note": "Index only. docs/adr/ is the source of truth.",
   "open": [
+    "0012",
     "0013",
     "0017",
     "0019"
@@ -84,6 +85,13 @@
       "status": "accepted",
       "date": "2026-09-16",
       "file": "docs/adr/0011-specification-bnf-as-a-pinned-input.md"
+    },
+    {
+      "id": "0012",
+      "title": "The core is built, not adopted",
+      "status": "proposed",
+      "date": "2026-09-19",
+      "file": "docs/adr/0012-the-core-is-built-not-adopted.md"
     },
     {
       "id": "0013",
