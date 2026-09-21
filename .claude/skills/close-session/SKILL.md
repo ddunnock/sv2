@@ -58,11 +58,15 @@ Only you can write this — it is intent, and intent is not derivable. Edit
 }
 ```
 
-Then validate:
+Then validate, under the project `.venv`, which is where jsonschema is:
 
 ```bash
-python3.12 .claude/scripts/validate_state.py
+uv run python .claude/scripts/validate_state.py
 ```
+
+It must print `state schemas valid (N units)`. Under the system `python3.12` it takes a
+structural fallback that does not check types — a `blocks` written as a string rather
+than an array passed it and failed the gate.
 
 ## 5. Deviations, if any were decided
 

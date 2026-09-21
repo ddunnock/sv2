@@ -14,7 +14,8 @@ would reject on those grounds, but it is a subset: it does not understand $ref
 or the conditional requirements in the unit schema, so a machine without
 jsonschema checks the units less thoroughly than the gate does.
 
-    python3.12 .claude/scripts/validate_state.py
+    uv run python .claude/scripts/validate_state.py   # the full check, as the gate runs it
+    python3.12 .claude/scripts/validate_state.py      # the structural fallback
 """
 
 from __future__ import annotations
@@ -162,7 +163,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print(
             f"state schemas valid ({unit_count} units, structural fallback — "
-            "pip install jsonschema for full checking)"
+            "run under uv run python, after uv sync, for full checking)"
         )
     return 0
 
