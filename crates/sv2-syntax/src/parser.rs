@@ -1363,8 +1363,8 @@ impl<'a> Parser<'a> {
     ///
     /// Of `NonFeatureElement`, `Package` — a shared unit, the same production in both
     /// grammars — and the eight classifiers of 8.2.4.2 are implemented. Of
-    /// `FeatureElement`'s ten alternatives, `Feature` and `Succession` are. The rest
-    /// (`step`, `connector`, `binding`, `flow`, `succession flow`, …) are reported
+    /// `FeatureElement`'s ten alternatives, `Feature`, `BindingConnector` and `Succession`
+    /// are. The rest (`step`, `connector`, `flow`, `succession flow`, …) are reported
     /// rather than read.
     ///
     /// This is the check that stops a `SysML` construct being read out of a `KerML`
@@ -1385,6 +1385,7 @@ impl<'a> Parser<'a> {
                     || self.at_classifier(n).is_some()
                     || self.at_feature(n)
                     || self.at_kerml_succession(n)
+                    || self.at_kerml_binding_connector(n)
             }
             Language::SysMl => {
                 self.at_definition_element(n)
@@ -1726,7 +1727,8 @@ impl<'a> Parser<'a> {
             self.element_filter_member();
         } else if self.language == Language::KerMl
             && (self.at_feature(usize::from(self.at_visibility()))
-                || self.at_kerml_succession(usize::from(self.at_visibility())))
+                || self.at_kerml_succession(usize::from(self.at_visibility()))
+                || self.at_kerml_binding_connector(usize::from(self.at_visibility())))
         {
             // NamespaceMember = NonFeatureMember | NamespaceFeatureMember
             // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
@@ -1869,6 +1871,7 @@ impl<'a> Parser<'a> {
                     self.at_keyword("package")
                         || self.at_classifier(0).is_some()
                         || self.at_kerml_succession(0)
+                        || self.at_kerml_binding_connector(0)
                 }
                 Language::SysMl => {
                     self.at_definition_element(0)
@@ -2230,15 +2233,17 @@ impl<'a> Parser<'a> {
     //
     // FeatureElement's ten alternatives are Feature, Step, Expression,
     // BooleanExpression, Invariant, Connector, BindingConnector, Succession, Flow and
-    // SuccessionFlow. Two are implemented, Feature and Succession; the member itself is,
-    // which is what this marks, exactly as NonFeatureMember marks its own shape rather
-    // than MemberElement's alternatives.
+    // SuccessionFlow. Three are implemented, Feature, BindingConnector and Succession; the
+    // member itself is, which is what this marks, exactly as NonFeatureMember marks its own
+    // shape rather than MemberElement's alternatives.
     fn namespace_feature_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::NamespaceFeatureMember);
         self.member_prefix();
         if self.at_kerml_succession(0) {
             self.kerml_succession();
+        } else if self.at_kerml_binding_connector(0) {
+            self.kerml_binding_connector();
         } else {
             self.feature();
         }
@@ -2332,6 +2337,103 @@ impl<'a> Parser<'a> {
                 self.bump_as(keyword("first").unwrap_or(SyntaxKind::BasicName));
                 self.connector_end_member();
                 self.expect_keyword("then");
+                self.connector_end_member();
+            }
+        }
+        self.finish_node();
+    }
+
+    /// Whether a `KerML` `BindingConnector` starts at the `n`th meaningful token.
+    ///
+    /// A `FeaturePrefix`, then `binding`. The keyword is reserved (`KerML` 8.2.2.6) and
+    /// opens no other `KerML` production, so it decides on its own, and `at_feature` never
+    /// claims it as a name. The prefix skipped is `FeaturePrefix`, which is what
+    /// `kerml_binding_connector` reads: a recogniser that looked past more than its
+    /// production consumes would make the body loop ask again at the same token.
+    fn at_kerml_binding_connector(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_feature_prefix(n), "binding")
+    }
+
+    // production: BindingConnector@kerml
+    //
+    // BindingConnector : BindingConnector =
+    //     FeaturePrefix 'binding' BindingConnectorDeclaration TypeBody   (KerML 8.2.5.5.2)
+    //
+    // Scoped `kerml`, as Succession is: SysML writes its binding as
+    // BindingConnectorAsUsage (8.2.2.13.2), over UsagePrefix and `bind`, and a .sysml file
+    // never reaches this (ADR-0014). The two share ConnectorEndMember and nothing else,
+    // so the Rust name is scoped too. Receipt 02578996 is the production's.
+    //
+    // Marked although FeaturePrefix is not, for the reason Succession gives.
+    //
+    // implied specialization: Links::selfLinks
+    // constraint: BindingConnector::checkBindingConnectorSpecialization
+    //     `specializesFromLibrary('Links::selfLinks')` (KerML 8.3.4.5.2), which "requires
+    //     that BindingConnectors specialize the Feature Links::selfLinks" (8.4.4.6.2,
+    //     receipt c87b1db0). An injection, so sv2-hir's; this layer builds the tree only
+    //     (ADR-0002).
+    // constraint: BindingConnector::validateBindingConnectorIsBinary
+    //     `relatedFeature->size() = 2` (KerML 8.3.4.5.2). NOT held by this grammar, unlike
+    //     SysML's: the declaration's ends are optional, so `binding;` and a binding whose
+    //     ends are declared as end features in its body both parse, and whether there are
+    //     two is a question for the layer that counts relatedFeatures (ADR-0002: validity
+    //     gates writes, never reads).
+    fn kerml_binding_connector(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::BindingConnector);
+        self.feature_prefix();
+        self.expect_keyword("binding");
+        self.binding_connector_declaration();
+        self.type_body();
+        self.finish_node();
+    }
+
+    // production: BindingConnectorDeclaration@kerml
+    //
+    // BindingConnectorDeclaration : BindingConnector =
+    //     FeatureDeclaration
+    //       ( 'of' ownedRelationship += ConnectorEndMember
+    //         '=' ownedRelationship += ConnectorEndMember )?
+    //   | ( isSufficient ?= 'all' )?
+    //       ( 'of'? ownedRelationship += ConnectorEndMember
+    //         '=' ownedRelationship += ConnectorEndMember )?          (KerML 8.2.5.5.2)
+    //
+    // SuccessionDeclaration's shape, `of` for `first` and `=` for `then`, and told apart
+    // the same way on what follows an optional `all`: the second alternative when `of` is
+    // written there, when nothing is (`binding;`, `binding { ... }`), or when a
+    // ConnectorEnd is and `=` directly after it (`binding a = b;`); a FeatureDeclaration
+    // otherwise (`binding ab of a = b;`, `binding : T;`). Disjoint because `of` is
+    // reserved (8.2.2.6), so no FeatureDeclaration opens on it, and a FeatureDeclaration
+    // takes no `=` here — this production writes no ValuePart. "If a binding connector
+    // declaration includes only the related features part, then the keyword of can be
+    // omitted" (7.4.6.3, receipt cda2047f).
+    //
+    // The node is built even when empty, as SuccessionDeclaration's is.
+    fn binding_connector_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::BindingConnectorDeclaration);
+        let after_all = usize::from(self.at_keyword("all"));
+        let empty = self.nth_is(after_all, SyntaxKind::Semicolon)
+            || self.nth_is(after_all, SyntaxKind::LBrace)
+            || self.peek_nth(after_all).is_none();
+        let ends = self.nth_is_keyword(after_all, "of")
+            || self
+                .skip_connector_end(after_all)
+                .is_some_and(|after| self.nth_is(after, SyntaxKind::Eq));
+        if empty || ends {
+            self.eat_optional_keyword("all");
+            if ends {
+                self.eat_optional_keyword("of");
+                self.connector_end_member();
+                self.expect(SyntaxKind::Eq, "`=`");
+                self.connector_end_member();
+            }
+        } else {
+            self.feature_declaration();
+            if self.at_keyword("of") {
+                self.bump_as(keyword("of").unwrap_or(SyntaxKind::BasicName));
+                self.connector_end_member();
+                self.expect(SyntaxKind::Eq, "`=`");
                 self.connector_end_member();
             }
         }

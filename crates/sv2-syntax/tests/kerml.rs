@@ -509,6 +509,129 @@ fn parsing_a_succession_never_hangs_or_loses_bytes_on_truncated_input() {
     }
 }
 
+// -- BindingConnector, KerML 8.2.5.5.2 -------------------------------------------
+//
+// BindingConnector = FeaturePrefix 'binding' BindingConnectorDeclaration TypeBody
+//
+// BindingConnectorDeclaration =
+//     FeatureDeclaration ( 'of' ConnectorEndMember '=' ConnectorEndMember )?
+//   | 'all'? ( 'of'? ConnectorEndMember '=' ConnectorEndMember )?
+//
+// Succession's shape with `binding` for `succession`, `of` for `first` and `=` for
+// `then`. "If a binding connector declaration includes only the related features part,
+// then the keyword of can be omitted" (7.4.6.3, receipt cda2047f).
+
+#[test]
+fn a_binding_connector_reads_the_corpus_forms() {
+    // "Simple Tests/Connectors.kerml" lines 14-20: all four shapes the file writes —
+    // ends alone, a name and ends, the EMPTY declaration with its ends declared in the
+    // body, and a typed name.
+    kerml_accepted("binding a = b;");
+    kerml_accepted("binding ab of a = b;");
+    kerml_accepted("binding {\n\tend feature references a;\n\tend feature references b;\n}");
+    kerml_accepted("binding ab1 : AS of a = b;");
+    // "Variable Feature Examples/Enhancements/ExtendedOccurrences.kerml" line 21 — a
+    // feature chain as the source end.
+    kerml_accepted("binding result.portionOf = that;");
+    // 7.4.6.3's own example (receipt cda2047f), in a classifier body.
+    kerml_accepted(
+        "struct Vehicle { binding fuelFlowBinding of fuelTank.fuelFlowOut = engine.fuelFlowIn; \
+         binding fuelTank.fuelFlowOut = engine.fuelFlowIn; }",
+    );
+}
+
+#[test]
+fn a_binding_connector_declaration_takes_either_alternative_by_what_follows_all() {
+    // The second alternative: `of` there, or an end and then `=`, or nothing.
+    for source in [
+        "binding of a = b;",
+        "binding a::b.c = d;",
+        "binding x references a = b;",
+        "binding all of a = b;",
+        "binding all a = b;",
+        "binding all;",
+        "binding;",
+    ] {
+        let tree = render(&kerml_accepted(source).syntax());
+        assert!(has_node(&tree, "BindingConnectorDeclaration"), "{tree}");
+        assert!(!has_node(&tree, "FeatureDeclaration"), "{source}: {tree}");
+    }
+    // The first: anything else after `all` is a FeatureDeclaration — a named binding
+    // with no ends is one, since its ends may be declared in its body.
+    for source in [
+        "binding b;",
+        "binding b of a = c;",
+        "binding all b of a = c;",
+        "binding : T;",
+        "binding <b> of a = c;",
+    ] {
+        let tree = render(&kerml_accepted(source).syntax());
+        assert!(has_node(&tree, "FeatureDeclaration"), "{source}: {tree}");
+    }
+}
+
+#[test]
+fn a_binding_connector_owns_what_its_production_writes() {
+    let tree = render(&kerml_accepted("abstract binding b of a = c { }").syntax());
+    assert!(has_node(&tree, "NamespaceFeatureMember"), "{tree}");
+    assert!(has_node(&tree, "BindingConnector"), "{tree}");
+    assert!(has_node(&tree, "FeaturePrefix"), "{tree}");
+    assert!(
+        !has_node(&tree, "Feature"),
+        "a binding connector is not read as a Feature: {tree}"
+    );
+    assert_eq!(
+        tree.lines()
+            .filter(|line| line.trim().split(' ').next() == Some("ConnectorEndMember"))
+            .count(),
+        2,
+        "{tree}"
+    );
+}
+
+#[test]
+fn a_binding_connector_is_bounded_by_its_rules() {
+    // The ends are a pair: no source without `=` and a target.
+    kerml_rejected("binding of a;");
+    kerml_rejected("binding a =;");
+    kerml_rejected("binding b of a;");
+    // `of` belongs to the ends, not to the declaration: no second one.
+    kerml_rejected("binding b of of a = c;");
+    // TypeBody is not optional.
+    kerml_rejected("binding a = b");
+    // `bind` is SysML's BindingConnectorAsUsage, not a KerML keyword (ADR-0014).
+    kerml_rejected("bind a = b;");
+    // OwnedCrossMultiplicityMember, ConnectorEnd's first part, is unimplemented — rejected
+    // BY ABSENCE, as for the succession.
+    kerml_rejected("binding of [1] a = b;");
+}
+
+#[test]
+fn a_kerml_binding_connector_is_not_reachable_from_the_sysml_start_symbol() {
+    // The SysML binding needs `bind`, and writes no `of`.
+    for source in [
+        "part def P { binding a = b; }",
+        "part def P { binding b of a = c; }",
+    ] {
+        let sysml = parse(source, Language::SysMl);
+        assert!(
+            !sysml.errors().is_empty(),
+            "SysML states no such binding: {source}"
+        );
+    }
+}
+
+#[test]
+fn parsing_a_binding_connector_never_hangs_or_loses_bytes_on_truncated_input() {
+    let source = "class C { abstract binding b : T of a.b = x references c { } \
+                  binding all d = e; binding; binding { end feature references f; } }";
+    for end in 0..=source.len() {
+        if let Some(prefix) = source.get(..end) {
+            assert_eq!(parse(prefix, Language::KerMl).text(), prefix);
+        }
+    }
+}
+
 // -- the invariants, under this grammar too ---------------------------------------
 
 #[test]

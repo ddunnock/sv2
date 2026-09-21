@@ -215,6 +215,21 @@ NODES = [
             "`KerML` 8.2.5.5.3."
         ),
     ),
+    # KerML's BindingConnector, the third FeatureElement implemented, and Succession's
+    # shape over `of` and `=`. The SysML binding is BindingConnectorAsUsage, over
+    # UsagePrefix and `bind`; the two share only ConnectorEndMember.
+    (
+        "BindingConnector",
+        ("`FeaturePrefix 'binding' BindingConnectorDeclaration TypeBody`. `KerML` 8.2.5.5.2."),
+    ),
+    (
+        "BindingConnectorDeclaration",
+        (
+            "`FeatureDeclaration ( 'of' ConnectorEndMember '=' ConnectorEndMember )? "
+            "| 'all'? ( 'of'? ConnectorEndMember '=' ConnectorEndMember )?`. "
+            "`KerML` 8.2.5.5.2."
+        ),
+    ),
     (
         "NamespaceFeatureMember",
         "`MemberPrefix FeatureElement`. `KerML` 8.2.3.4.1.",

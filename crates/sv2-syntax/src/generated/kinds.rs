@@ -539,6 +539,10 @@ pub enum SyntaxKind {
     Succession,
     /// `FeatureDeclaration ( 'first' ConnectorEndMember 'then' ConnectorEndMember )? | 'all'? ( 'first'? ConnectorEndMember 'then' ConnectorEndMember )?`. `KerML` 8.2.5.5.3.
     SuccessionDeclaration,
+    /// `FeaturePrefix 'binding' BindingConnectorDeclaration TypeBody`. `KerML` 8.2.5.5.2.
+    BindingConnector,
+    /// `FeatureDeclaration ( 'of' ConnectorEndMember '=' ConnectorEndMember )? | 'all'? ( 'of'? ConnectorEndMember '=' ConnectorEndMember )?`. `KerML` 8.2.5.5.2.
+    BindingConnectorDeclaration,
     /// `MemberPrefix FeatureElement`. `KerML` 8.2.3.4.1.
     NamespaceFeatureMember,
     /// `MemberPrefix MemberElement`. `KerML` 8.2.3.4.1 — what a `PackageMember` is in a `KerML` file, where the members are `MemberElement` and `FeatureElement` rather than `DefinitionElement` and `UsageElement`.
@@ -1202,6 +1206,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::FeatureIdentification,
     SyntaxKind::Succession,
     SyntaxKind::SuccessionDeclaration,
+    SyntaxKind::BindingConnector,
+    SyntaxKind::BindingConnectorDeclaration,
     SyntaxKind::NamespaceFeatureMember,
     SyntaxKind::NonFeatureMember,
     SyntaxKind::MemberPrefix,
