@@ -470,6 +470,16 @@ NODES = [
         "ConstraintUsageDeclaration",
         "`UsageDeclaration ValuePart?`. `SysML` 8.2.2.20.",
     ),
+    # A constraint asserted to hold, `assert constraint { a <= b }`, or asserted by
+    # reference, `assert not c;`. A BehaviorUsageElement, so owned as an action is.
+    (
+        "AssertConstraintUsage",
+        (
+            "`OccurrenceUsagePrefix 'assert' 'not'? ( OwnedReferenceSubsetting "
+            "FeatureSpecializationPart? | 'constraint' ConstraintUsageDeclaration ) "
+            "CalculationBody`. `SysML` 8.2.2.20."
+        ),
+    ),
     # The calculation body, and the first body in this grammar whose last part is an
     # EXPRESSION rather than a member. That trailing ResultExpressionMember is what makes
     # `constraint { a <= b }` a body and not a malformed usage.

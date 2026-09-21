@@ -2648,6 +2648,165 @@ fn a_binding_connector_as_usage_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- AssertConstraintUsage, SysML 8.2.2.20 --------------------------------------------
+//
+// AssertConstraintUsage =
+//     OccurrenceUsagePrefix 'assert' ( isNegated ?= 'not' )?
+//     ( ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?
+//     | 'constraint' ConstraintUsageDeclaration )
+//     CalculationBody                                                     (8.2.2.20)
+// BehaviorUsageElement = ... | AssertConstraintUsage | ...                (8.2.2.6.4)
+//
+// An OCCURRENCE usage, unlike the two bindings and the succession: it takes
+// OccurrenceUsagePrefix, and it is owned as an action is — an OccurrenceUsageMember in a
+// definition body, a BehaviorUsageMember in an action body, where a `then` may come before
+// it and target successions after it (8.2.2.6.1, 8.2.2.17.1).
+
+#[test]
+fn an_assert_constraint_usage_reads_the_corpus_forms() {
+    // examples/Simple Tests/TextualRepresentationTest.sysml:5-9 — a named assertion whose
+    // body is a textual representation, in an item def.
+    let named = render(
+        &parse_accepted(
+            "item def C { attribute x: Real; assert constraint x_constraint {\n\
+             rep inOCL language \"ocl\"\n/* self.x > 0.0 */\n} }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&named, "AssertConstraintUsage"), 1, "{named}");
+    // training/31. Constraints/Constraint Assertions-1.sysml:17,19 — typed, with an `in`
+    // parameter bound in the body, in a part def.
+    parse_accepted(
+        "part def Vehicle { assert constraint massConstraint : MassConstraint { \
+         in massLimit = 2500[kg]; } }",
+    );
+    // training/31. Constraints/Derivation Constraints.sysml:7 — anonymous, its body the
+    // result expression alone, in a part USAGE's body.
+    parse_accepted(
+        "part vehicle1 : Vehicle { attribute totalMass : MassValue; \
+         assert constraint {totalMass == chassisMass + engine.mass + transmission.mass} }",
+    );
+    // validation/15-Properties-Values-Expressions/15_01-Constants.sysml:22-24 — in an
+    // attribute usage's body.
+    parse_accepted(
+        "attribute e: Real { assert constraint { round(e * 1E20) == 271828182845904523536.0 } }",
+    );
+    // 15_04-Logical Expressions.sysml:18-21 — a conditional expression as the result.
+    parse_accepted(
+        "part def Vehicle { assert constraint {\n\
+         if isHighPerformance? engine istype '6CylEngine'\n\
+         else engine istype '4CylEngine'\n} }",
+    );
+    // 7.20.3's own examples (receipt 44d633db): negated, and by reference with no
+    // `constraint` keyword, whose body binds a parameter by redefinition.
+    let negated = render(
+        &parse_accepted(
+            "part testObject { attribute computedMass : MassValue; \
+             assert constraint { computedMass >= 0[kg] } \
+             assert not constraint { computedMass < 0[kg] } }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&negated, "AssertConstraintUsage"),
+        2,
+        "{negated}"
+    );
+    let referenced = render(
+        &parse_accepted(
+            "part testObject { attribute computedMass : MassValue; \
+             assert not negativeMass { :>> mass = computedMass; } }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&referenced, "OwnedReferenceSubsetting"),
+        1,
+        "{referenced}"
+    );
+}
+
+#[test]
+fn an_assert_constraint_usage_owns_what_its_production_writes() {
+    let tree = render(&parse_accepted("part def P { assert constraint c { x > 0 } }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "OccurrenceUsageMember"),
+        ["MemberPrefix", "AssertConstraintUsage"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "AssertConstraintUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwAssert",
+            "KwConstraint",
+            "ConstraintUsageDeclaration",
+            "CalculationBody"
+        ],
+        "{tree}"
+    );
+    // The first alternative: a reference and its specialization part, no `constraint`.
+    let referenced = render(&parse_accepted("part def P { assert not c : C; }").syntax());
+    assert_eq!(
+        child_kinds(&referenced, "AssertConstraintUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwAssert",
+            "KwNot",
+            "OwnedReferenceSubsetting",
+            "FeatureSpecializationPart",
+            "CalculationBody"
+        ],
+        "{referenced}"
+    );
+    // OccurrenceUsagePrefix, so the occurrence keywords apply to it — the binding and the
+    // succession reject exactly these (7.13.3, 7.13.5).
+    parse_accepted("part def P { individual assert constraint c; snapshot assert c; }");
+    // A BehaviorUsageElement, so in an action body it is a BehaviorUsageMember, a `then`
+    // may precede it and target successions may follow it (8.2.2.17.1).
+    let action = render(
+        &parse_accepted("action def A { action a; then assert constraint c { x > 0 } then b; }")
+            .syntax(),
+    );
+    assert_eq!(nodes_named(&action, "BehaviorUsageMember"), 2, "{action}");
+    assert_eq!(
+        nodes_named(&action, "SourceSuccessionMember"),
+        1,
+        "{action}"
+    );
+    assert_eq!(
+        nodes_named(&action, "ActionTargetSuccessionMember"),
+        1,
+        "{action}"
+    );
+}
+
+#[test]
+fn an_assert_constraint_usage_is_bounded_by_its_rules() {
+    // CalculationBody is not optional.
+    parse_rejected("part def P { assert constraint c }");
+    // One of the two alternatives is required: a reference, or `constraint`.
+    parse_rejected("part def P { assert; }");
+    parse_rejected("part def P { assert not; }");
+    // The reference alternative takes no declaration: the name after the reference is
+    // no FeatureSpecializationPart and no body.
+    parse_rejected("part def P { assert c d; }");
+    // `assert satisfy` is SatisfyRequirementUsage (8.2.2.21.2), unimplemented, and the
+    // recogniser declines it, so it is rejected BY ABSENCE rather than read as an
+    // assertion referencing `satisfy` — which is reserved and cannot be a name.
+    parse_rejected("part def P { assert satisfy r; }");
+    parse_rejected("part def P { assert not satisfy r; }");
+    // A ConstraintUsage without `assert` is a different production, unimplemented.
+    parse_rejected("part def P { constraint c { x > 0 } }");
+}
+
+#[test]
+fn an_assert_constraint_usage_keeps_every_byte() {
+    let source =
+        "part def P {\n\tassert /* n */ not constraint c // d\n\t\t: C {\n\t\tx > 0\n\t}\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
 //
 // DefaultTargetSuccession : TransitionUsage =

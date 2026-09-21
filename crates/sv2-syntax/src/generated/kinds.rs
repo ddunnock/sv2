@@ -657,6 +657,8 @@ pub enum SyntaxKind {
     RequirementConstraintUsage,
     /// `UsageDeclaration ValuePart?`. `SysML` 8.2.2.20.
     ConstraintUsageDeclaration,
+    /// `OccurrenceUsagePrefix 'assert' 'not'? ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'constraint' ConstraintUsageDeclaration ) CalculationBody`. `SysML` 8.2.2.20.
+    AssertConstraintUsage,
     /// `OccurrenceDefinitionPrefix 'constraint' 'def' DefinitionDeclaration CalculationBody`. `SysML` 8.2.2.20.
     ConstraintDefinition,
     /// `MemberPrefix? 'return' ownedRelatedElement += UsageElement`. `SysML` 8.2.2.19 — the metaclass is `ReturnParameterMembership`.
@@ -1265,6 +1267,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::RequirementKind,
     SyntaxKind::RequirementConstraintUsage,
     SyntaxKind::ConstraintUsageDeclaration,
+    SyntaxKind::AssertConstraintUsage,
     SyntaxKind::ConstraintDefinition,
     SyntaxKind::ReturnParameterMember,
     SyntaxKind::InitialNodeMember,

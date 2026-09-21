@@ -1394,6 +1394,7 @@ impl<'a> Parser<'a> {
                     || self.at_flow_usage(n)
                     || self.at_succession_as_usage(n)
                     || self.at_binding_connector_as_usage(n)
+                    || self.at_assert_constraint_usage(n)
                     || self.at_simple_usage(n).is_some()
                     // Only when no keyword usage starts here; see `membership`.
                     || self.at_reference_usage(n)
@@ -1881,6 +1882,7 @@ impl<'a> Parser<'a> {
                         || self.at_flow_usage(0)
                         || self.at_succession_as_usage(0)
                         || self.at_binding_connector_as_usage(0)
+                        || self.at_assert_constraint_usage(0)
                         || self.at_control_node(0).is_some()
                 }
             }
@@ -2592,6 +2594,10 @@ impl<'a> Parser<'a> {
             Some(UsageClass::Behavior)
         } else if self.at_action_usage(0) {
             self.action_usage();
+            Some(UsageClass::Behavior)
+        } else if self.at_assert_constraint_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
+            self.assert_constraint_usage();
             Some(UsageClass::Behavior)
         } else if self.at_flow_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), though its metaclass is an ActionUsage.
@@ -6127,6 +6133,7 @@ impl<'a> Parser<'a> {
         n += usize::from(VISIBILITY.iter().any(|word| self.nth_is_keyword(n, word)));
         self.at_action_usage(n)
             || self.at_perform_action_usage(n)
+            || self.at_assert_constraint_usage(n)
             || self.at_flow_usage(n)
             || self
                 .at_simple_usage(n)
@@ -6633,6 +6640,77 @@ impl<'a> Parser<'a> {
         if self.at_value_part() {
             self.value_part();
         }
+        self.finish_node();
+    }
+
+    /// Whether an `AssertConstraintUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix`, then `assert`. The keyword is reserved (`SysML` 8.2.2.1.2)
+    /// and opens one other production, `SatisfyRequirementUsage` (8.2.2.21.2), whose
+    /// `satisfy` comes after the same optional `not`: that is declined here, so it is
+    /// reported rather than read as an assertion referencing `satisfy`, which is reserved
+    /// and cannot be a name anyway.
+    ///
+    /// The prefix skipped is `OccurrenceUsagePrefix`, and `assert_constraint_usage` reads
+    /// exactly that with `occurrence_usage_prefix` — the pairing that must match, since a
+    /// recogniser that looks past more than its production reads leaves the body loop at
+    /// the same token.
+    fn at_assert_constraint_usage(&self, n: usize) -> bool {
+        let n = self.skip_occurrence_usage_prefix(n);
+        if !self.nth_is_keyword(n, "assert") {
+            return false;
+        }
+        let after = n + 1 + usize::from(self.nth_is_keyword(n + 1, "not"));
+        !self.nth_is_keyword(after, "satisfy")
+    }
+
+    // production: AssertConstraintUsage@sysml
+    //
+    // AssertConstraintUsage =
+    //     OccurrenceUsagePrefix 'assert' ( isNegated ?= 'not' )?
+    //     ( ownedRelationship += OwnedReferenceSubsetting
+    //       FeatureSpecializationPart?
+    //     | 'constraint' ConstraintUsageDeclaration )
+    //     CalculationBody                                          (SysML 8.2.2.20)
+    //
+    // The metaclass is AssertConstraintUsage (8.3.20.2, receipt 11f7047a), a
+    // ConstraintUsage that is also a KerML Invariant. "An assert constraint usage is
+    // declared like a regular constraint usage ... except using the kind keyword assert
+    // constraint", and "may also be declared using just the keyword assert", naming the
+    // constraint asserted "immediately after the assert keyword" (7.20.3, receipt
+    // 44d633db). The alternatives are told apart on their first token: `constraint` is
+    // reserved, and the other opens on a QualifiedName.
+    //
+    // Marked although OccurrenceUsagePrefix is not: this production's own parts are all
+    // read, and OccurrenceUsagePrefix's two gaps (EndUsagePrefix, UsageExtensionKeyword)
+    // are every occurrence usage's, as they are ActionUsage's.
+    //
+    // implied specialization: Constraints::assertedConstraintChecks, or
+    //     Constraints::negatedConstraintChecks when `not` is written
+    // constraint: AssertConstraintUsage::checkAssertConstraintUsageSpecialization,
+    //     `if isNegated then specializesFromLibrary('Constraints::negatedConstraintChecks')
+    //     else specializesFromLibrary('Constraints::assertedConstraintChecks') endif`
+    //     (8.3.20.2; 8.4.16.3, receipt 9a163399). An injection, so sv2-hir's; this layer
+    //     builds the tree only (ADR-0002).
+    // constraint: AssertConstraintUsage::validateAssertConstraintUsageReference
+    //     (8.3.20.2): the reference alternative's target must be a ConstraintUsage. A
+    //     question of resolution, so sv2-resolve's.
+    fn assert_constraint_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::AssertConstraintUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("assert");
+        self.eat_optional_keyword("not");
+        if self.at_keyword("constraint") {
+            self.bump_as(keyword("constraint").unwrap_or(SyntaxKind::BasicName));
+            self.constraint_usage_declaration();
+        } else {
+            self.owned_reference_subsetting();
+            if self.at_feature_specialization() {
+                self.feature_specialization_part();
+            }
+        }
+        self.calculation_body();
         self.finish_node();
     }
 
