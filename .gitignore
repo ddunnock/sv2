@@ -35,3 +35,7 @@ CLAUDE.local.md
 # committed node_modules would put platform binaries in the history.
 node_modules/
 dist/
+
+# CodeGraph's index, a per-machine derived cache: a 514K binary rebuilt by
+# `codegraph init`, holding nothing the tree does not already hold.
+.codegraph/
