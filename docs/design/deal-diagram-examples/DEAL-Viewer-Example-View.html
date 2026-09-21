@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEAL Viewer — Example View: EVPlatform::Propulsion (showcase)</title>
+<style>
+  :root {
+    --bg:#fdfdfc; --fg:#1a1a18; --muted:#6b6b66; --accent:#0b5d8a;
+    --card:#f4f3ef; --border:#ddd9d0; --good:#1a7a3c; --warn:#a05a00; --bad:#a32020;
+    --mono: ui-monospace,"SF Mono","Cascadia Code",Menlo,monospace;
+    --eb-stroke:#1a1a18; --eb-fill:#ffffff; --eb-text:#1a1a18; --eb-dim:#555550;
+    --cn-stroke:#1a1a18; --cn-fill:#ffffff; --cn-solid:#1a1a18;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#16181a; --fg:#e8e6e1; --muted:#9a9a93; --accent:#5db3e0;
+            --card:#1f2225; --border:#34383c; --good:#5fc788; --warn:#e0a458; --bad:#e07070;
+            --eb-stroke:#d8d6d1; --eb-fill:#1c1f22; --eb-text:#e8e6e1; --eb-dim:#b0aea8;
+            --cn-stroke:#d8d6d1; --cn-fill:#1c1f22; --cn-solid:#d8d6d1; }
+  }
+  body { background:var(--bg); color:var(--fg); font:16px/1.55 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+         max-width:1140px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  h1 { font-size:1.7rem; border-bottom:3px solid var(--accent); padding-bottom:.5rem; }
+  h2 { font-size:1.25rem; margin-top:2.4rem; color:var(--accent); }
+  .meta { color:var(--muted); font-size:.9rem; }
+  code { font-family:var(--mono); font-size:.86em; background:var(--card); padding:.1em .35em; border-radius:4px; }
+  .note { color:var(--muted); font-size:.85rem; }
+  .dims { color:var(--muted); font-size:.82rem; font-family:var(--mono); min-height:1.2em; }
+  table { border-collapse:collapse; width:100%; margin:1rem 0; font-size:.85rem; }
+  th, td { border:1px solid var(--border); padding:.45rem .6rem; text-align:left; vertical-align:top; }
+  th { background:var(--card); }
+  button.preset { border:1px solid var(--border); background:var(--card); color:var(--fg); border-radius:6px;
+                  padding:4px 10px; font-size:12.5px; cursor:pointer; margin:0 6px 6px 0; }
+  button.preset.on { border-color:var(--accent); background:var(--accent); color:#fff; }
+
+  .eb-ref:hover { text-decoration:underline; cursor:pointer; }
+  .eb-fold-hit { cursor:pointer; }
+  .eb-fold-hit:hover { fill:rgba(127,127,127,.10); }
+  .cn-ref path.cn-line-hit { cursor:pointer; }
+  .cn-ref:has(path.cn-line-hit:hover) path.cn-line, .cn-ref path.cn-line:hover { stroke-width:2.5; }
+  .cn-label-hit { cursor:grab; }
+  .cn-label-hit:hover { fill:rgba(127,127,127,.10); }
+  #cn-card { position:absolute; z-index:50; max-width:340px; background:var(--bg);
+             border:1.5px solid var(--cn-stroke); border-radius:8px; padding:10px 14px;
+             box-shadow:0 4px 16px rgba(0,0,0,.18); pointer-events:none; display:none;
+             font-size:12.5px; line-height:1.45; }
+  #cn-card .ck { font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  #cn-card .cr { font-weight:700; font-size:13.5px; margin:.25rem 0 .35rem; color:var(--fg); }
+  #cn-card .cm { color:var(--muted); }
+  #cn-card .cd { color:var(--muted); font-style:italic; margin-top:.3rem; }
+  #cn-card .cf { font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:.5rem;
+                 border-top:1px solid var(--border); padding-top:.4rem; }
+
+  /* eb-theme.css (RG-9.6) — paint only */
+  .eb-plain g[data-eb] { --eb-outline:var(--eb-stroke); --eb-rule:var(--eb-stroke);
+    --eb-sep:var(--eb-stroke); --eb-kw:var(--eb-dim); --eb-header-fill:transparent; }
+  .eb-brand g[data-eb] { --eb-accent:#5a6570; --eb-header-fill:#eeefec;
+    --eb-outline:var(--eb-accent); --eb-rule:var(--eb-accent); --eb-kw:var(--eb-accent);
+    --eb-sep:#d4d5d0; --eb-dim:#5d6166; }
+  .eb-brand g[data-family="part"]        { --eb-accent:#2e6f9e; --eb-header-fill:#e9f1f7; }
+  .eb-brand g[data-family="requirement"] { --eb-accent:#2e7d52; --eb-header-fill:#e9f3ed; }
+  .eb-brand g[data-family="package"]     { --eb-accent:#8a6f2f; --eb-header-fill:#f5edd8; }
+  @media (prefers-color-scheme: dark) {
+    .eb-brand g[data-eb] { --eb-sep:#3c4045; --eb-dim:#a3a7ab; --eb-header-fill:#262b30; --eb-accent:#9aa4ad; }
+    .eb-brand g[data-family="part"]        { --eb-accent:#6aa9d4; --eb-header-fill:#1e2c38; }
+    .eb-brand g[data-family="requirement"] { --eb-accent:#66b58c; --eb-header-fill:#1e3127; }
+    .eb-brand g[data-family="package"]     { --eb-accent:#cfae5e; --eb-header-fill:#33290f; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Example View — <code>EVPlatform::Propulsion</code> interconnection</h1>
+<p class="meta">v0.1 · 2026-06-12 · Composed from the real showcase model: <code>spec/examples/showcase/model/vehicle.dealx</code> + <code>packages/vehicle/{motor,components,battery}.deal</code> + <code>packages/requirements/system.deal</code> · Built entirely from the three component contracts (Package, ElementBox, Connector)</p>
+
+<p>What the viewer's P2 interconnection family will produce for the Propulsion subsystem — here with <strong>hand-placed coordinates that obey every layout rule</strong> (spacings, perpendicular approaches, run-outs, no box crossings); in production the Place/Route stages compute them. Everything is live: <strong>hover a connector ~½s</strong> for the explainer card, <strong>Cmd/Ctrl+click</strong> anything underlined to see its goto target, <strong>drag «satisfy»</strong> along its line, and <strong>click any fold footer</strong> — the whole view relayouts and re-validates.</p>
+<div>
+  <button class="preset on" id="btn-brand">Branded</button>
+  <button class="preset" id="btn-plain">Standard notation</button>
+</div>
+<div id="view-wrap" class="eb-brand" style="overflow-x:auto">
+  <svg id="view" xmlns="http://www.w3.org/2000/svg" width="1100" height="680" viewBox="0 0 1100 680"></svg>
+</div>
+<div class="dims" id="nav-out"></div>
+<div class="dims" id="slide-out"></div>
+
+<h2>What this view demonstrates</h2>
+<table>
+<tr><th>In the picture</th><th>Contract / rule</th></tr>
+<tr><td>The <code>Propulsion</code> package folder as the outermost containment / diagram frame, manila tab</td><td>RG-9.10 / RG-9.1 / RG-9.6</td></tr>
+<tr><td>Usage boxes (rounded) with measured content-driven sizing; «part def»/«requirement def» square; fold footers; collapsed <code>battery</code> context element</td><td>RG-9.2 / RG-1 / RG-9.7</td></tr>
+<tr><td>Badge slots: motor ⚠1 from <code>@concerns</code> (demagnetization risk), verification states</td><td>RG-9.8</td></tr>
+<tr><td>Ports with rotated flow glyphs (E/W horizontal, S/N vertical) at connection points</td><td>RG-9.9</td></tr>
+<tr><td>Connectors: «connect» associations along the power path, definedBy usage→definition, «satisfy» motor→REQ_MOT_001 with slidable inline label</td><td>RG-10.x / RG-10.10 / RG-10.11</td></tr>
+<tr><td>Every element, member, and connector carries its qualified-name <code>data-ref</code>; explainer cards compose readings from the registry</td><td>RG-7.5 / RG-10.12</td></tr>
+</table>
+<p class="note">Source provenance: attributes and values are verbatim from the showcase files — e.g. <code>TractionMotor</code>'s ⚠ badge comes from its <code>@concerns: "Demagnetization risk above 180°C"</code>, and REQ_MOT_001's text is its actual requirement statement.</p>
+
+<script>
+"use strict";
+
+    "use strict";
+    /* ============================================================================
+     * element-box.js — DEAL Viewer atomic SysML v2 element box
+     * Spec traceability: RG-1.1..1.6 (sizing/text), RG-9.2/9.3/9.5 (notation),
+     * RG-8.1 (determinism: pure function of spec + tokens + pinned font).
+     * ==========================================================================*/
+
+    const FONT_FAMILY = '-apple-system, "Segoe UI", Helvetica, Arial, sans-serif'; // production: bundled woff2 (D8)
+
+    const EB_TOKENS = {
+        fonts: {
+            keyword: '400 11px ' + FONT_FAMILY,        // RG-1.3 stereotype/keyword
+            name: '700 13px ' + FONT_FAMILY,        // RG-1.3 element name
+            title: 'italic 400 10.5px ' + FONT_FAMILY,// RG-9.2 compartment label
+            item: '400 12px ' + FONT_FAMILY         // RG-1.3 compartment entries
+        },
+        ascent: {keyword: 11, name: 13, title: 10, item: 12}, // baseline offsets (production: fontBoundingBoxAscent)
+        lineHeight: {keyword: 15, name: 19, title: 15, item: 17},
+        pad: {x: 12, headerTop: 7, headerGap: 2, headerBottom: 7, compTop: 4, compBottom: 7},
+        rules: {header: 1.5, compartment: 1},        // RG-9.2: header rule = box stroke weight; 1px compartment rules
+        sepInset: 12,                                  // RG-9.6: compartment separators stop short of edges
+        footer: {height: 16, chevron: {w: 10, h: 5}},  // RG-9.7: fold strip + chevron glyph size
+        cornerRadius: {definition: 0, usage: 8},     // RG-9.2: defs square, usages rounded
+        minWidth: 80, minHeight: 40,                   // RG-1.1
+        maxWidth: 240,                                 // RG-1.4
+        nameMaxLines: 3,                               // RG-1.4
+        minTruncChars: 8,                              // RG-1.4
+        // RG-9.8: badge slots — fixed positions in the header keyword line, right-aligned.
+        // Slot order left→right: semantic, diagnostics, verification (outermost = highest urgency
+        // of attention: "is it verified" reads first at the box corner). Content is constrained
+        // to the registry below; free-form glyphs/colors are rejected by validation.
+        badge: {font: '600 10.5px ' + FONT_FAMILY, gap: 4, pad: 6},
+        badgeRegistry: {
+            verification: {  // slot 3 (rightmost): exactly one verification state
+                pass:       {glyph: '✓', tone: 'good', title: 'Verified'},
+                fail:       {glyph: '✗', tone: 'bad',  title: 'Verification failed'},
+                unverified: {glyph: '○', tone: 'dim',  title: 'Unverified'}
+            },
+            semantic: {      // slot 1 (innermost): model-semantic marker, always dim
+                abstract:     {glyph: 'A', tone: 'dim', title: 'Abstract'},
+                variation:    {glyph: 'V', tone: 'dim', title: 'Variation'},
+                redefinition: {glyph: 'R', tone: 'dim', title: 'Redefinition'}
+            }
+            // slot 2 (diagnostics) is computed: worst severity wins (✖ errors over ⚠ warnings),
+            // count capped at "9+" — see resolveBadges()
+        },
+        stroke: 1.5                                    // RG-9.2
+    };
+
+    /* --- measurement (RG-1.2): cached, off-DOM, deterministic with pinned font --- */
+    function createMeasurer() {
+        const ctx = document.createElement('canvas').getContext('2d');
+        const cache = new Map();
+        return function measure(text, font) {
+            const key = font + '\u0000' + text;
+            let w = cache.get(key);
+            if (w === undefined) {
+                ctx.font = font;
+                w = Math.ceil(ctx.measureText(text).width);
+                cache.set(key, w);
+            }
+            return w;
+        };
+    }
+
+    /* --- RG-1.4: tail-truncate with ellipsis, never below minTruncChars --- */
+    function truncate(measure, text, font, maxW) {
+        if (measure(text, font) <= maxW) return {text, full: null};
+        let lo = EB_TOKENS.minTruncChars, hi = text.length;
+        while (lo < hi) {                       // largest prefix that fits with ellipsis
+            const mid = Math.ceil((lo + hi) / 2);
+            if (measure(text.slice(0, mid) + '…', font) <= maxW) lo = mid; else hi = mid - 1;
+        }
+        return {text: text.slice(0, lo) + '…', full: text};
+    }
+
+    /* --- RG-1.4: greedy word-wrap, max N lines, last line truncated if needed --- */
+    function wrapName(measure, text, font, maxW, maxLines) {
+        const words = text.split(/\s+/), lines = [];
+        let line = '';
+        for (const w of words) {
+            const probe = line ? line + ' ' + w : w;
+            if (measure(probe, font) <= maxW || !line) line = probe;
+            else {
+                lines.push(line);
+                line = w;
+            }
+        }
+        if (line) lines.push(line);
+        if (lines.length > maxLines) {
+            const rest = lines.slice(maxLines - 1).join(' ');
+            lines.length = maxLines - 1;
+            lines.push(truncate(measure, rest, font, maxW).text);
+        }
+        // a single unbroken token longer than maxW still needs truncation
+        return lines.map(l => measure(l, font) <= maxW ? {text: l, full: null} : truncate(measure, l, font, maxW));
+    }
+
+    /* --- RG-9.8: badge slot resolution — validates slot content against the registry,
+           computes measured widths. Unknown slots / values are rejected, never drawn. --- */
+    function fmtCount(n) { return n > 9 ? '9+' : String(n); }
+
+    function resolveBadges(badges, measure, T) {
+        const out = {list: [], reserve: 0, invalid: []};
+        if (badges == null) return out;
+        if (typeof badges !== 'object' || Array.isArray(badges)) {
+            out.invalid.push('badges must be a slot object {semantic?, diagnostics?, verification?} (RG-9.8)');
+            return out;
+        }
+        const order = ['semantic', 'diagnostics', 'verification'];   // fixed slot order, left → right
+        for (const slot of order) {
+            const v = badges[slot];
+            if (v == null) continue;                                 // empty slot: collapses, no reserve
+            let b = null;
+            if (slot === 'diagnostics') {
+                const e = (v.errors | 0), w = (v.warnings | 0);
+                if (e > 0)      b = {glyph: '✖' + fmtCount(e), tone: 'bad',  title: e + ' error' + (e > 1 ? 's' : '')};
+                else if (w > 0) b = {glyph: '⚠' + fmtCount(w), tone: 'warn', title: w + ' warning' + (w > 1 ? 's' : '')};
+                else out.invalid.push('diagnostics slot needs errors or warnings > 0 (RG-9.8)');
+            } else {
+                const reg = T.badgeRegistry[slot][v];
+                if (reg) b = {...reg};
+                else out.invalid.push(slot + ': "' + v + '" not in {' + Object.keys(T.badgeRegistry[slot]).join(', ') + '} (RG-9.8)');
+            }
+            if (b) {
+                b.slot = slot;
+                b.w = measure(b.glyph, T.badge.font) + T.badge.gap;
+                out.list.push(b);
+            }
+        }
+        for (const k of Object.keys(badges))
+            if (!order.includes(k)) out.invalid.push('unknown badge slot "' + k + '" — slots are: ' + order.join(', ') + ' (RG-9.8)');
+        if (out.list.length) out.reserve = out.list.reduce((s, b) => s + b.w, 0) + T.badge.pad;
+        return out;
+    }
+
+    /* --- pure layout: spec → geometry (no DOM output; unit-testable; RG-8.1) --- */
+    function layoutElementBox(spec, measure, opts) {
+        const T = EB_TOKENS, o = opts || {};
+        const maxWidth = o.maxWidth || T.maxWidth;
+        const comps = (spec.compartments || []).filter(c => c && c.items && c.items.length); // RG-1.1: empty never renders
+        const kwText = '«' + spec.keyword + '»';
+        // RG-9.2: definition elements (keyword ends in "def") are square-cornered; usages rounded.
+        const kind = spec.kind || (/\bdef$/.test(String(spec.keyword).trim()) ? 'definition' : 'usage');
+        const rx = T.cornerRadius[kind] ?? T.cornerRadius.usage;
+        const family = String(spec.keyword).trim().split(/\s+/)[0];   // RG-9.6: palette key ("part", "requirement", …)
+        const badgeInfo = resolveBadges(spec.badges, measure, T);    // RG-9.8 slot resolution
+        const badges = badgeInfo.list;
+        const badgeReserve = badgeInfo.reserve;                      // measured, not guessed (RG-1.2)
+
+        // RG-7.5: items may be plain strings or {text, ref} — ref is the element's stable
+        // qualified name, used for go-to-definition; never a file/line (those go stale).
+        const itemText = (it) => typeof it === 'string' ? it : String(it.text);
+        const itemRef = (it) => (it && typeof it === 'object' && it.ref) ? String(it.ref) : null;
+
+        // natural content width
+        let natural = Math.max(
+            measure(kwText, T.fonts.keyword) + 2 * badgeReserve,   // keyword stays centered beside reserve
+            measure(spec.name, T.fonts.name),
+            ...comps.map(c => measure(c.title, T.fonts.title)),
+            ...comps.flatMap(c => c.items.map(it => measure(itemText(it), T.fonts.item)))
+        );
+        const width = Math.round(Math.min(Math.max(natural + 2 * T.pad.x, T.minWidth), maxWidth));
+        const contentW = width - 2 * T.pad.x;
+
+        const nameLines = wrapName(measure, spec.name, T.fonts.name, contentW, T.nameMaxLines);
+
+        // vertical layout
+        let y = T.pad.headerTop;
+        const header = {keywordBaseline: y + T.ascent.keyword, nameLines: []};
+        y += T.lineHeight.keyword + T.pad.headerGap;
+        for (const ln of nameLines) {
+            header.nameLines.push({...ln, baseline: y + T.ascent.name});
+            y += T.lineHeight.name;
+        }
+        y += T.pad.headerBottom;
+        // RG-9.2/9.7: if the header alone carries the information (zero compartments), the outer
+        // box closes it — no header rule, no footer. Any compartment content gets both.
+        const hasContent = comps.length > 0;
+        const foldable = hasContent;
+        const collapsed = foldable && !!spec.collapsed;
+        header.ruleY = hasContent ? y : null;
+        if (hasContent) y += T.rules.header;
+
+        const compartments = [];
+        if (!collapsed) comps.forEach((c, i) => {
+            const comp = {ruleY: null, items: []};
+            if (i > 0) {
+                comp.ruleY = y;
+                y += T.rules.compartment;
+            }
+            y += T.pad.compTop;
+            comp.titleBaseline = y + T.ascent.title;
+            comp.title = c.title;
+            y += T.lineHeight.title;
+            for (const it of c.items) {
+                const t = truncate(measure, itemText(it), T.fonts.item, contentW);
+                comp.items.push({...t, ref: itemRef(it), baseline: y + T.ascent.item});
+                y += T.lineHeight.item;
+            }
+            y += T.pad.compBottom;
+            compartments.push(comp);
+        });
+
+        // RG-9.7: fold footer — present whenever compartment content exists, in BOTH states.
+        // Expanded: separated from the last compartment by a 1px rule.
+        // Collapsed: sits directly under the header rule (no double line).
+        let footer = null;
+        if (foldable) {
+            footer = {sepY: collapsed ? null : y};
+            if (!collapsed) y += T.rules.compartment;
+            footer.stripY = y;
+            footer.chevronCy = y + T.footer.height / 2;
+            y += T.footer.height;
+        }
+
+        const height = Math.round(Math.max(y, T.minHeight));   // RG-1.1 minimum, RG-1.6 integers
+        return {width, height, header, compartments, footer, collapsed, kwText, badges,
+                badgeInvalid: badgeInfo.invalid, contentW, kind, rx, family,
+                ref: spec.ref ? String(spec.ref) : null};   // RG-7.5 element identity
+    }
+
+    /* --- render: layout → SVG <g> --- */
+    const SVGNS = 'http://www.w3.org/2000/svg';
+
+    function el(name, attrs, text) {
+        const n = document.createElementNS(SVGNS, name);
+        for (const k in attrs) n.setAttribute(k, attrs[k]);
+        if (text != null) n.textContent = text;
+        return n;
+    }
+
+    function applyFont(node, font) {
+        // canvas font string → SVG presentation attributes
+        const italic = /italic/.test(font);
+        const weight = (font.match(/\b([1-9]00)\b/) || [, '400'])[1];
+        const size = (font.match(/(\d+(?:\.\d+)?)px/) || [, '12'])[1];
+        node.setAttribute('font-size', size);
+        node.setAttribute('font-weight', weight);
+        if (italic) node.setAttribute('font-style', 'italic');
+    }
+
+    function renderElementBox(spec, opts) {
+        const measure = (opts && opts.measure) || (renderElementBox._m || (renderElementBox._m = createMeasurer()));
+        const L = layoutElementBox(spec, measure, opts);
+        const T = EB_TOKENS, cx = Math.round(L.width / 2);
+        const g = el('g', {
+            'font-family': FONT_FAMILY, 'data-eb': spec.name,
+            'data-kind': L.kind, 'data-family': L.family, 'data-collapsed': L.collapsed
+        });   // RG-9.6/9.7: theme + state hooks, paint only
+        if (L.ref) g.setAttribute('data-ref', L.ref);   // RG-7.5: element identity for go-to-definition
+
+        // Painter's order: background fill first, header band, content — border stroke LAST
+        // (bottom of this function), so no fill can ever cover the outline.
+        g.appendChild(el('rect', {
+            x: 0, y: 0, width: L.width, height: L.height,
+            rx: L.rx, /* RG-9.2: 0 for definitions, 8 for usages */
+            fill: 'var(--eb-fill, #fff)', stroke: 'none'
+        }));
+
+        // RG-9.6: header tint band (transparent unless themed), clipped to the box shape so it
+        // can never bleed past rounded corners; header-only boxes are ALL header — band fills the box
+        const hh = L.header.ruleY !== null ? L.header.ruleY : L.height;
+        const clipId = 'eb-clip-' + (renderElementBox._id = (renderElementBox._id || 0) + 1);
+        const defs = el('defs', {});
+        const clip = el('clipPath', {id: clipId});
+        clip.appendChild(el('rect', {x: 0, y: 0, width: L.width, height: L.height, rx: L.rx}));
+        defs.appendChild(clip);
+        g.appendChild(defs);
+        g.appendChild(el('rect', {
+            x: 0, y: 0, width: L.width, height: hh,
+            fill: 'var(--eb-header-fill, transparent)', 'clip-path': 'url(#' + clipId + ')'
+        }));
+
+        const kw = el('text', {
+            x: cx, y: L.header.keywordBaseline, 'text-anchor': 'middle',
+            fill: 'var(--eb-kw, var(--eb-dim, #555))'
+        }, L.kwText);
+        applyFont(kw, T.fonts.keyword);
+        g.appendChild(kw);
+
+        // RG-9.8: badge slots — placed right→left from the padding edge so the verification
+        // slot is always outermost at the corner; widths are measured per glyph; every badge
+        // carries a tooltip naming its meaning.
+        const toneFill = {
+            good: 'var(--good, #1a7a3c)', warn: 'var(--warn, #a05a00)',
+            bad: 'var(--bad, #a32020)', dim: 'var(--eb-dim, #555)'
+        };
+        let bx = L.width - T.pad.x;
+        for (let i = L.badges.length - 1; i >= 0; i--) {
+            const b = L.badges[i];
+            bx -= b.w;
+            const bt = el('text', {
+                x: Math.round(bx + (b.w - T.badge.gap) / 2), y: L.header.keywordBaseline,
+                'text-anchor': 'middle', 'data-slot': b.slot, fill: toneFill[b.tone] || toneFill.dim
+            }, b.glyph);
+            applyFont(bt, T.badge.font);
+            bt.appendChild(el('title', {}, b.title));
+            g.appendChild(bt);
+        }
+
+        for (const ln of L.header.nameLines) {
+            const nameAttrs = {
+                x: cx,
+                y: ln.baseline,
+                'text-anchor': 'middle',
+                fill: 'var(--eb-text, #1a1a18)'
+            };
+            if (L.ref) { nameAttrs['data-ref'] = L.ref; nameAttrs['class'] = 'eb-ref'; }   // RG-7.5
+            const t = el('text', nameAttrs, ln.text);
+            applyFont(t, T.fonts.name);
+            if (ln.full) t.appendChild(el('title', {}, ln.full));                  // RG-1.4 full text on hover
+            g.appendChild(t);
+        }
+        // RG-9.2: header rule = box stroke weight, centered on an INTEGER y like the rect border,
+        // so both hit the same sub-pixel phase and render with identical apparent weight at any zoom.
+        // Rendered only when compartment content follows (RG-9.7) — header-only boxes have no rule.
+        if (L.header.ruleY !== null) g.appendChild(el('line', {
+            x1: 0, y1: L.header.ruleY, x2: L.width, y2: L.header.ruleY,
+            stroke: 'var(--eb-rule, var(--eb-stroke, #1a1a18))', 'stroke-width': T.rules.header
+        }));
+
+        for (const c of L.compartments) {
+            if (c.ruleY !== null) g.appendChild(el('line', {   // RG-9.6: separators inset from edges
+                x1: T.sepInset, y1: c.ruleY + 0.5, x2: L.width - T.sepInset, y2: c.ruleY + 0.5,
+                stroke: 'var(--eb-sep, var(--eb-stroke, #1a1a18))', 'stroke-width': T.rules.compartment
+            }));
+            const tt = el('text', {
+                x: cx,
+                y: c.titleBaseline,
+                'text-anchor': 'middle',
+                fill: 'var(--eb-dim, #555)'
+            }, c.title);
+            applyFont(tt, T.fonts.title);
+            g.appendChild(tt);
+            for (const it of c.items) {
+                const attrs = {x: T.pad.x, y: it.baseline, fill: 'var(--eb-text, #1a1a18)'};
+                if (it.ref) { attrs['data-ref'] = it.ref; attrs['class'] = 'eb-ref'; }   // RG-7.5
+                const t = el('text', attrs, it.text);
+                applyFont(t, T.fonts.item);
+                if (it.full) t.appendChild(el('title', {}, it.full));                // RG-1.4 tooltip
+                g.appendChild(t);
+            }
+        }
+        // RG-9.7: fold footer — separator (expanded only; collapsed reuses the header rule),
+        // tinted strip (clipped like the header band), chevron, and a full-width hit target.
+        if (L.footer) {
+            g.appendChild(el('rect', {
+                x: 0, y: L.footer.stripY, width: L.width, height: L.height - L.footer.stripY,
+                fill: 'var(--eb-footer-fill, var(--eb-header-fill, transparent))', 'clip-path': 'url(#' + clipId + ')'
+            }));
+            if (L.footer.sepY !== null) g.appendChild(el('line', {
+                x1: 0, y1: L.footer.sepY + 0.5, x2: L.width, y2: L.footer.sepY + 0.5,
+                stroke: 'var(--eb-sep, var(--eb-stroke, #1a1a18))', 'stroke-width': T.rules.compartment
+            }));
+            const ch = T.footer.chevron, cy = L.footer.chevronCy;
+            const pts = L.collapsed
+                ? (cx - ch.w / 2) + ',' + (cy - ch.h / 2) + ' ' + cx + ',' + (cy + ch.h / 2) + ' ' + (cx + ch.w / 2) + ',' + (cy - ch.h / 2)
+                : (cx - ch.w / 2) + ',' + (cy + ch.h / 2) + ' ' + cx + ',' + (cy - ch.h / 2) + ' ' + (cx + ch.w / 2) + ',' + (cy + ch.h / 2);
+            g.appendChild(el('polyline', {
+                points: pts, fill: 'none', stroke: 'var(--eb-dim, #555)',
+                'stroke-width': 1.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+            }));
+            const hitY = L.footer.sepY !== null ? L.footer.sepY : L.footer.stripY;
+            const hit = el('rect', {
+                x: 0, y: hitY, width: L.width, height: L.height - hitY,
+                fill: 'transparent', 'class': 'eb-fold-hit', role: 'button',
+                'aria-label': L.collapsed ? 'Expand compartments' : 'Collapse compartments'
+            });
+            hit.appendChild(el('title', {}, L.collapsed ? 'Expand' : 'Collapse'));
+            if (opts && opts.onToggle && hit.addEventListener) hit.addEventListener('click', () => opts.onToggle(!L.collapsed));
+            g.appendChild(hit);
+        }
+
+        // Border stroke drawn last — always on top of the band and any fill (painter's order).
+        g.appendChild(el('rect', {
+            x: 0, y: 0, width: L.width, height: L.height, rx: L.rx,
+            fill: 'none', 'pointer-events': 'none',
+            stroke: 'var(--eb-outline, var(--eb-stroke, #1a1a18))', 'stroke-width': T.stroke
+        }));
+
+        // RG-7.5: go-to-definition — Cmd/Ctrl+click or double-click on anything carrying a
+        // data-ref emits onNavigate(ref). The component emits identity only; resolving
+        // ref → source span (and opening the editor) is the viewer shell's job.
+        // In production the shell uses ONE delegated listener on the canvas, not per-box wiring.
+        if (opts && opts.onNavigate && g.addEventListener) {
+            const fire = (e, requireModifier) => {
+                if (requireModifier && !(e.metaKey || e.ctrlKey)) return;
+                const t = e.target.closest && e.target.closest('[data-ref]');
+                if (t) { e.preventDefault(); opts.onNavigate(t.getAttribute('data-ref')); }
+            };
+            g.addEventListener('click', (e) => fire(e, true));
+            g.addEventListener('dblclick', (e) => fire(e, false));
+        }
+        return {node: g, layout: {width: L.width, height: L.height, badgeInvalid: L.badgeInvalid, ref: L.ref}};
+    }
+
+
+    /* helper: mount one box into its own <svg> sized to content */
+    function mountBox(spec, opts) {
+        const {node, layout} = renderElementBox(spec, opts);
+        const m = 4;
+        const svg = el('svg', {
+            xmlns: SVGNS, viewBox: (-m) + ' ' + (-m) + ' ' + (layout.width + 2 * m) + ' ' + (layout.height + 2 * m),
+            width: layout.width + 2 * m, height: layout.height + 2 * m
+        });
+        svg.appendChild(node);
+        return {svg, layout};
+    }
+
+    
+const {renderConnector, renderPort, renderConnectorBundle, connectorExplanation, CONNECTOR_REGISTRY, CN_TOKENS, computeCrossingHops} = (() => {
+
+
+/* ============================================================================
+ * connector.js — DEAL Viewer atomic SysML v2 connector
+ * Spec traceability: RG-10.1..10.5 (registry, geometry, shortening, traceability,
+ * neutral color), RG-3.1 (orthogonal + rounded bends), RG-7.5 (navigate contract),
+ * RG-8.1 (determinism: pure function of spec + tokens).
+ * ==========================================================================*/
+
+const FONT_FAMILY = '-apple-system, "Segoe UI", Helvetica, Arial, sans-serif'; // production: bundled woff2 (D8)
+
+const CN_TOKENS = {
+    stroke: 1.5,                 // = element box stroke (RG-9.2): one line weight everywhere
+    bendRadius: 6,               // RG-3.1 rounded corners
+    tri: {len: 12, halfH: 6},    // hollow triangle head (subclassification family)
+    diamond: {len: 14, halfH: 5},// membership diamonds
+    barb: {len: 14, halfH: 5.5, notch: 4},  // RG-10.10 association: filled barbed head, concave rear
+    circlePlus: {r: 6.5},        // variation membership: hollow circle + cross, straddles the boundary
+    timeslice: {r: 6.5, mouthDeg: 70},      // «timeslice»: filled circle, mouth opens toward the line
+    port: {size: 18, rx: 4},     // RG-9.9 port boxes: rounded square straddling the boundary
+    // RG-10.10 inline keyword label: italic 11px (RG-1.3), ALWAYS horizontal (never rotated),
+    // set INTO a break in the tail — gap = label width on horizontal hosts, label HEIGHT on
+    // vertical hosts (text straddles the line, perpendicular to it)
+    // «keyword» labels render italic in guillemets; NAME labels (cable/interface element
+    // names, e.g. HVDCCable) render plain upright — names are model elements, not stereotypes
+    label: {font: 'italic 400 11px ' + FONT_FAMILY, nameFont: '400 11px ' + FONT_FAMILY,
+            height: 12, pad: 6, edgeMargin: 8},
+    dot: {r: 1.6, gap: 4.5},     // adornment dots (defined-by ⠅, references ⠭)
+    bar: {len: 8, gap: 3},       // redefines single perpendicular bar
+    // RG-10.6: curved routing — handle length clamped so the curve never deviates from the
+    // obstacle-avoiding polyline by more than the 12px routing buffer (RG-3.4) ⇒ INV-1 holds.
+    curve: {maxHandle: 18},
+    // RG-10.7: approach discipline — straight, perpendicular run-out at both ends before
+    // any bend; anchors keep clear of corners (enforced by Route per RG-3.3, validated here).
+    approach: {minRunout: 12, cornerClearance: 8},
+    // RG-10.8: crossing hops — Visio-style bump on the HORIZONTAL segment at every 90°
+    // crossing; hops closer than 2r+mergeGap merge into one wider hop.
+    hop: {r: 4, mergeGap: 2},
+    // RG-10.9: same-source same-kind bundling — corridors within this proximity merge
+    // into a shared trunk; splits are plain T-junctions (the filled dot is reserved as
+    // proxy-label notation; crossings are disambiguated by hops, RG-10.8).
+    bundle: {proximity: 24}
+};
+
+/* RG-10.1: the closed registry. end:'target' = glyph at the LAST point (pointing at the
+   general/definition/redefined/referenced element); end:'source' = glyph at the FIRST
+   point (the owning end — membership diamonds sit on the owner). */
+const CONNECTOR_REGISTRY = {
+    subclassification: {end: 'target', head: 'triangle', adorn: null,    title: 'Subclassification — points at the general definition', declaredIn: '.deal  (def X :> General)'},
+    definedBy:         {end: 'target', head: 'triangle', adorn: 'dots2', title: '"Defined by" — links usage to its definition',          declaredIn: '.deal/.dealx  (usage : Definition)'},
+    compositeOf:       {end: 'source', head: 'diamondFilled', adorn: null, title: '"Composite of" — composite feature membership, owner end', declaredIn: '.dealx  (nested / composed part)'},
+    memberOf:          {end: 'source', head: 'diamondHollow', adorn: null, title: '"Member of" — non-composite feature membership, owner end', declaredIn: '.dealx  (membership)'},
+    redefines:         {end: 'target', head: 'triangle', adorn: 'bar1', title: 'Redefines — replaces an inherited feature',              declaredIn: '.deal  (:>> redefinition)'},
+    references:        {end: 'target', head: 'triangle', adorn: 'dots4', title: 'References — pointer to a related element',             declaredIn: '.deal/.dealx  (ref)'},
+    association:       {end: 'target', head: 'arrowBarbed', adorn: null, title: 'Association — «keyword»-qualified (e.g. «satisfy», «import», «type») or bare action succession (then)', declaredIn: '.dealx  (association) · .deal  (then)'},
+    variation:         {end: 'source', head: 'circlePlus', adorn: null, title: 'Variation membership — variation-point end («variation part» to its variants)', declaredIn: '.dealx  (variation / variant)'},
+    timeslice:         {end: 'source', head: 'pacman', adorn: null, title: '«timeslice» — time slices, snapshots, Portion membership (owner end)', declaredIn: '.dealx  (timeslice / snapshot / portion)'},
+    connect:           {end: 'target', head: 'none', adorn: null, title: 'Connection — port-to-port binding/flow; NO arrowhead: the port terminates the line, flow direction lives in the port glyphs (RG-9.9)', declaredIn: '.dealx  (connect via/carrying)'}
+};
+
+/* RG-10.12: explainer content — registry-owned, deterministic, never free text.
+   reading: natural-language sentence template ({s}/{t} = "name classifier" of each end);
+   meaning: what the relationship denotes; dirNote: what the glyph's position tells you. */
+const CONNECTOR_EXPLAIN = {
+    subclassification: {reading: 'The {s} specializes the {t}.',
+        meaning: 'Subclassification: the specific definition inherits all features of the general definition and may add to or refine them.',
+        dirNote: 'The hollow triangle sits at the general (inherited-from) end.'},
+    definedBy: {reading: 'The {s} is defined by the {t}.',
+        meaning: '"Defined by" links a usage to the definition that types it — the usage instantiates the definition’s structure.',
+        dirNote: 'The dotted triangle points at the definition.'},
+    compositeOf: {reading: 'The {s} is composed of the {t}.',
+        meaning: 'Composite feature membership: the part is an integral piece of the whole and cannot outlive its owner.',
+        dirNote: 'The filled diamond sits at the owning (whole) end.'},
+    memberOf: {reading: 'The {s} contains the {t} as a non-composite member.',
+        meaning: 'Non-composite membership: the member is held by the owner but exists independently of it.',
+        dirNote: 'The hollow diamond sits at the owning end.'},
+    redefines: {reading: 'The {s} redefines the {t}.',
+        meaning: 'Redefinition replaces a feature inherited from a general definition with a more specific one.',
+        dirNote: 'The barred triangle points at the redefined (inherited) feature.'},
+    references: {reading: 'The {s} references the {t}.',
+        meaning: 'A reference points to a related element without owning it.',
+        dirNote: 'The four-dot triangle points at the referenced element.'},
+    association: {reading: null,   // built from the «keyword» — see associationVerb()
+        meaning: 'An association relates two elements; the «keyword» names the semantic (satisfy, import, type, …). Unlabeled, it denotes action succession (then).',
+        dirNote: 'The filled barbed arrow points at the related (target) element.'},
+    variation: {reading: 'The {s} offers the {t} as a variant.',
+        meaning: 'Variation membership: a variation point offers alternative variants — one is selected per configuration.',
+        dirNote: 'The circled cross sits at the variation-point end.'},
+    connect: {reading: 'The {s} connects to the {t}.',
+        meaning: 'A connection binds two ports for flow or interaction (declared with connect…via…carrying in the composition). The line itself is undirected — flow direction is shown by the port glyphs at each end.',
+        dirNote: 'No arrowhead: the port is the termination of the line (RG-9.9).'},
+    timeslice: {reading: 'The {t} is a time slice / portion of the {s}.',
+        meaning: '«timeslice» denotes time slices, snapshots, and Portion membership — a temporal or portion subset of the owner.',
+        dirNote: 'The notched disc sits at the owning end.'}
+};
+
+const ASSOCIATION_VERBS = {
+    satisfy: 'satisfies', verify: 'verifies', refine: 'refines', import: 'imports',
+    allocate: 'is allocated to', type: 'is typed by', expose: 'exposes', trace: 'traces to'
+};
+
+/* pure: spec → explainer card content (null for unknown kinds).
+   Endpoint format: spec.source / spec.target = {name, kind} (e.g. {name:'SteeringWheel',
+   kind:'part'}); falls back to the ref's last segment, then to a generic noun. */
+function connectorExplanation(spec) {
+    const reg = CONNECTOR_REGISTRY[spec.kind], ex = CONNECTOR_EXPLAIN[spec.kind];
+    if (!reg || !ex) return null;
+    const fmt = (e, fallback) => e && e.name
+        ? e.name + (e.kind ? ' ' + e.kind : '')
+        : fallback;
+    const S = fmt(spec.source, 'source element'), Tt = fmt(spec.target, 'target element');
+    let reading;
+    if (spec.kind === 'association') {
+        if (spec.label != null) {
+            const kw = String(spec.label).replace(/[«»]/g, '').trim();
+            const verb = ASSOCIATION_VERBS[kw] || ('is associated («' + kw + '») with');
+            reading = 'The ' + S + ' ' + verb + ' the ' + Tt + '.';
+        } else reading = 'The ' + S + ' is followed by the ' + Tt + ' (succession).';
+    } else {
+        reading = ex.reading.replace('{s}', S).replace('{t}', Tt);
+        if (spec.kind === 'connect' && spec.label != null)
+            reading = reading.slice(0, -1) + ' via ' + String(spec.label).replace(/[«»]/g, '') + '.';
+    }
+    return {kind: spec.kind, reading, meaning: ex.meaning, dirNote: ex.dirNote,
+            ref: spec.ref || null, declaredIn: reg.declaredIn};
+}
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(name, attrs, text) {
+    const n = document.createElementNS(SVGNS, name);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+}
+
+/* --- pure geometry helpers (unit-testable) --- */
+
+/* total length the line must give up at the glyph end (head + adornment row).
+   The barbed head is concave: the line runs INTO the notch, so it gives up len − notch. */
+function glyphLength(reg, T) {
+    const head = reg.head === 'none' ? 0                            // connect: port terminates the line
+               : reg.head === 'triangle' ? T.tri.len
+               : reg.head === 'arrowBarbed' ? T.barb.len - T.barb.notch
+               : reg.head === 'circlePlus' ? 2 * T.circlePlus.r     // tangent circle: line starts at its far edge
+               : reg.head === 'pacman' ? T.timeslice.r              // tangent circle: line reaches the mouth vertex
+               : T.diamond.len;
+    const adorn = reg.adorn === 'dots2' ? T.dot.gap + 2 * T.dot.r
+                : reg.adorn === 'dots4' ? T.dot.gap + 4 * T.dot.r + 1.5
+                : reg.adorn === 'bar1' ? T.bar.gap + T.stroke
+                : 0;
+    return head + adorn;
+}
+
+/* --- pure label-plan helpers (RG-10.10/10.11) --- */
+function polylineLength(pts) {
+    let L = 0;
+    for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+    return L;
+}
+function pointAtDist(pts, d) {
+    let acc = 0;
+    for (let i = 1; i < pts.length; i++) {
+        const seg = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+        if (acc + seg >= d || i === pts.length - 1) {
+            const t = seg ? Math.max(0, Math.min(1, (d - acc) / seg)) : 0;
+            return {x: pts[i - 1].x + (pts[i].x - pts[i - 1].x) * t, y: pts[i - 1].y + (pts[i].y - pts[i - 1].y) * t};
+        }
+        acc += seg;
+    }
+    return pts[pts.length - 1];
+}
+function hostSpans(pts) {   // label hosts — horizontal AND vertical segments, path-distance coords
+    const spans = [];
+    let acc = 0;
+    for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1], b = pts[i], len = Math.hypot(b.x - a.x, b.y - a.y);
+        if (len > 0 && (a.x === b.x || a.y === b.y))
+            spans.push({d0: acc, d1: acc + len, orient: a.y === b.y ? 'h' : 'v'});
+        acc += len;
+    }
+    return spans;
+}
+/* RG-10.10: the label is ALWAYS horizontal. Hosting gap depends on the segment's
+   orientation: horizontal host → gap = label width; vertical host → gap = label HEIGHT
+   (the text straddles the line, perpendicular to it). Initial placement: center of the
+   longest usable span (horizontal preferred on ties); explicit labelAt (the user-slid,
+   persisted position) clamps into the nearest usable span. Returns null when nothing
+   can host → RG-3.7 halo fallback. */
+function planInlineLabel(pts, labelW, T, labelAt) {
+    const total = polylineLength(pts);
+    const gapFor = (s) => (s.orient === 'h' ? labelW : T.label.height) + 2 * T.label.pad;
+    const usable = hostSpans(pts).filter(s => s.d1 - s.d0 >= gapFor(s) + 2 * T.label.edgeMargin);
+    if (!usable.length || !total) return null;
+    let chosen, center;
+    if (labelAt != null) {
+        const target = Math.max(0, Math.min(1, labelAt)) * total;
+        let best = null;
+        for (const s of usable) {
+            const gap = gapFor(s);
+            const lo = s.d0 + gap / 2 + T.label.edgeMargin, hi = s.d1 - gap / 2 - T.label.edgeMargin;
+            const c = Math.max(lo, Math.min(hi, target)), dd = Math.abs(c - target);
+            if (!best || dd < best.dd) best = {c, dd, s};
+        }
+        chosen = best.s; center = best.c;
+    } else {
+        chosen = usable.reduce((m, x) =>
+            (x.d1 - x.d0) > (m.d1 - m.d0) || ((x.d1 - x.d0) === (m.d1 - m.d0) && x.orient === 'h' && m.orient === 'v') ? x : m);
+        center = (chosen.d0 + chosen.d1) / 2;
+    }
+    const gap = gapFor(chosen);
+    return {d1: center - gap / 2, d2: center + gap / 2, mid: pointAtDist(pts, center),
+            t: center / total, gap, total, orient: chosen.orient, usable};
+}
+/* split a polyline at path distances d1 < d2 (the label gap) into two sub-polylines */
+function cutPolyline(pts, d1, d2) {
+    const before = [pts[0]], after = [];
+    let acc = 0;
+    for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1], b = pts[i], len = Math.hypot(b.x - a.x, b.y - a.y);
+        const interp = (d) => ({x: a.x + (b.x - a.x) * ((d - acc) / len), y: a.y + (b.y - a.y) * ((d - acc) / len)});
+        if (acc + len <= d1) before.push(b);
+        else if (acc < d1) before.push(interp(d1));
+        if (acc <= d2 && acc + len > d2) { after.push(interp(d2)); after.push(b); }
+        else if (acc > d2) after.push(b);
+        acc += len;
+    }
+    return {before, after};
+}
+
+/* unit direction of the segment arriving at the glyph end, and the glyph tip point.
+   Normalized (not sign()): works for axis-aligned AND oblique approaches, so glyphs
+   stay correctly oriented under any routing style. */
+function glyphFrame(points, end) {
+    const pts = end === 'source' ? [points[1], points[0]] : [points[points.length - 2], points[points.length - 1]];
+    const dx = pts[1].x - pts[0].x, dy = pts[1].y - pts[0].y;
+    const len = Math.hypot(dx, dy) || 1;
+    const d = {x: dx / len, y: dy / len};
+    return {tip: pts[1], d, p: {x: -d.y, y: d.x}};
+}
+
+/* shorten the glyph-end segment by len, returning a new points array (RG-10.3) */
+function shorten(points, end, len) {
+    const out = points.map(p => ({x: p.x, y: p.y}));
+    if (end === 'source') {
+        const f = glyphFrame(points, 'source');
+        out[0] = {x: f.tip.x - f.d.x * len, y: f.tip.y - f.d.y * len};
+    } else {
+        const f = glyphFrame(points, 'target');
+        out[out.length - 1] = {x: f.tip.x - f.d.x * len, y: f.tip.y - f.d.y * len};
+    }
+    return out;
+}
+
+/* orthogonal polyline → path with rounded bends (radius clamped per RG-3.1) and optional
+   RG-10.8 crossing hops: hops = [{seg, c, r}] where seg indexes the polyline segment
+   (horizontal segments only) and c is the crossing x. The bump always bulges UP. */
+function roundedOrthPath(pts, r, hops) {
+    if (pts.length < 2) return '';
+    const hopsBySeg = {};
+    (hops || []).forEach(h => { (hopsBySeg[h.seg] = hopsBySeg[h.seg] || []).push(h); });
+    const emitHops = (segIdx, from, to) => {
+        let out = '';
+        const list = (hopsBySeg[segIdx] || []).filter(h => from.y === to.y);   // horizontal only
+        const dir = Math.sign(to.x - from.x);
+        list.sort((a, b) => dir * (a.c - b.c));
+        for (const h of list) {
+            if (Math.min(from.x, to.x) + h.r >= h.c || Math.max(from.x, to.x) - h.r <= h.c) continue; // inside bend inset: skip
+            out += ' L' + (h.c - dir * h.r) + ',' + from.y
+                 + ' A' + h.r + ',' + h.r + ' 0 0 ' + (dir > 0 ? 1 : 0) + ' ' + (h.c + dir * h.r) + ',' + from.y;
+        }
+        return out;
+    };
+    let d = 'M' + pts[0].x + ',' + pts[0].y;
+    let cursor = pts[0];
+    for (let i = 1; i < pts.length - 1; i++) {
+        const a = pts[i - 1], b = pts[i], c = pts[i + 1];
+        const inLen = Math.abs(b.x - a.x) + Math.abs(b.y - a.y);
+        const outLen = Math.abs(c.x - b.x) + Math.abs(c.y - b.y);
+        const rr = Math.min(r, inLen / 2, outLen / 2);
+        const din = {x: Math.sign(b.x - a.x), y: Math.sign(b.y - a.y)};
+        const dout = {x: Math.sign(c.x - b.x), y: Math.sign(c.y - b.y)};
+        const segEnd = {x: b.x - din.x * rr, y: b.y - din.y * rr};
+        d += emitHops(i - 1, cursor, segEnd);
+        d += ' L' + segEnd.x + ',' + segEnd.y;
+        d += ' Q' + b.x + ',' + b.y + ' ' + (b.x + dout.x * rr) + ',' + (b.y + dout.y * rr);
+        cursor = {x: b.x + dout.x * rr, y: b.y + dout.y * rr};
+    }
+    d += emitHops(pts.length - 2, cursor, pts[pts.length - 1]);
+    d += ' L' + pts[pts.length - 1].x + ',' + pts[pts.length - 1].y;
+    return d;
+}
+
+/* RG-10.8: crossings across a SET of routed connectors. Orthogonal crossings are always
+   one horizontal × one vertical segment ⇒ perpendicular by construction (INV-6), and the
+   "who hops" rule is deterministic: THE HORIZONTAL SEGMENT HOPS — at most one bump per
+   crossing, never both lines. Close hops merge; collinear overlaps are diagnostics. */
+function computeCrossingHops(polylines, T) {
+    const eps = 0.5;
+    const segsOf = pts => pts.slice(1).map((p, i) => ({a: pts[i], b: p}));
+    const all = polylines.map(segsOf);
+    const hops = polylines.map(() => []);
+    const diagnostics = [];
+    const isH = s => s.a.y === s.b.y;
+    for (let i = 0; i < all.length; i++)
+        for (let j = i + 1; j < all.length; j++)
+            for (let si = 0; si < all[i].length; si++)
+                for (let sj = 0; sj < all[j].length; sj++) {
+                    const A = all[i][si], B = all[j][sj];
+                    if (isH(A) === isH(B)) {
+                        const fx = isH(A) ? 'y' : 'x', rn = isH(A) ? 'x' : 'y';
+                        if (A.a[fx] === B.a[fx]) {
+                            const o = Math.min(Math.max(A.a[rn], A.b[rn]), Math.max(B.a[rn], B.b[rn]))
+                                    - Math.max(Math.min(A.a[rn], A.b[rn]), Math.min(B.a[rn], B.b[rn]));
+                            if (o > eps) diagnostics.push('connectors ' + i + ' and ' + j +
+                                ' have overlapping collinear segments — Route must keep ≥12px edgeEdge spacing (RG-2.4/RG-10.8)');
+                        }
+                        continue;
+                    }
+                    const H = isH(A) ? {s: A, line: i, seg: si} : {s: B, line: j, seg: sj};
+                    const V = isH(A) ? {s: B, line: j, seg: sj} : {s: A, line: i, seg: si};
+                    const cx = V.s.a.x, cy = H.s.a.y;
+                    if (cx > Math.min(H.s.a.x, H.s.b.x) + eps && cx < Math.max(H.s.a.x, H.s.b.x) - eps &&
+                        cy > Math.min(V.s.a.y, V.s.b.y) + eps && cy < Math.max(V.s.a.y, V.s.b.y) - eps)
+                        hops[H.line].push({seg: H.seg, c: cx, r: T.hop.r});
+                }
+    // merge hops closer than 2r+gap on the same segment into one wider hop
+    return {
+        hops: hops.map(list => {
+            list.sort((a, b) => a.seg - b.seg || a.c - b.c);
+            const out = [];
+            for (const h of list) {
+                const last = out[out.length - 1];
+                if (last && last.seg === h.seg && (h.c - h.r) - (last.c + last.r) <= T.hop.mergeGap) {
+                    const left = last.c - last.r, right = h.c + h.r;
+                    last.c = (left + right) / 2;
+                    last.r = (right - left) / 2;
+                } else out.push({...h});
+            }
+            return out;
+        }),
+        diagnostics
+    };
+}
+
+/* RG-10.9: same-source bundling — longest shared corridor (Chebyshev proximity) becomes
+   the trunk; branches take over from the split point. Route emits bundle members with a
+   shared waypoint prefix; this tolerates small jitter and averages the trunk. */
+function mergeBundlePoints(pointArrays, proximity) {
+    if (pointArrays.length < 2) return null;
+    const n = Math.min(...pointArrays.map(p => p.length));
+    let k = 0;
+    while (k < n) {
+        const ref = pointArrays[0][k];
+        if (!pointArrays.every(pts =>
+            Math.max(Math.abs(pts[k].x - ref.x), Math.abs(pts[k].y - ref.y)) <= proximity)) break;
+        k++;
+    }
+    if (k < 2) return null;   // no shared corridor beyond the anchor
+    const trunk = [];
+    for (let i = 0; i < k; i++) trunk.push({
+        x: Math.round(pointArrays.reduce((s, p) => s + p[i].x, 0) / pointArrays.length),
+        y: Math.round(pointArrays.reduce((s, p) => s + p[i].y, 0) / pointArrays.length)
+    });
+    const split = trunk[k - 1];
+    return {trunk, split, branches: pointArrays.map(pts => [{x: split.x, y: split.y}, ...pts.slice(k)])};
+}
+
+/* RG-10.6: curved routing — Catmull-Rom-style cubic chain through the SAME routed
+   waypoints. Endpoint tangents align with the first/last segments (so glyphs sit
+   identically in both styles); interior handle lengths clamp to curve.maxHandle,
+   bounding deviation from the polyline below the routing buffer ⇒ never clips a box. */
+function curvedPath(pts, maxHandle) {
+    if (pts.length < 2) return '';
+    if (pts.length === 2) return 'M' + pts[0].x + ',' + pts[0].y + ' L' + pts[1].x + ',' + pts[1].y;
+    const clampV = (vx, vy) => {
+        const m = Math.hypot(vx, vy);
+        if (m <= maxHandle || m === 0) return {x: vx, y: vy};
+        return {x: vx * maxHandle / m, y: vy * maxHandle / m};
+    };
+    let d = 'M' + pts[0].x + ',' + pts[0].y;
+    for (let i = 0; i < pts.length - 1; i++) {
+        const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+        const h1 = clampV((p2.x - p0.x) / 6, (p2.y - p0.y) / 6);
+        const h2 = clampV((p3.x - p1.x) / 6, (p3.y - p1.y) / 6);
+        d += ' C' + (p1.x + h1.x) + ',' + (p1.y + h1.y)
+           + ' ' + (p2.x - h2.x) + ',' + (p2.y - h2.y)
+           + ' ' + p2.x + ',' + p2.y;
+    }
+    return d;
+}
+
+/* RG-10.7: approach validation — the segment arriving at EITHER end must be axis-aligned
+   (⊥ to the element face) and long enough that the first bend clears the glyph plus the
+   minimum run-out. Optional spec.faces ({source:'N|S|E|W', target:...}) additionally
+   verifies the approach enters through the declared face. Violations are diagnostics:
+   the component renders and flags; FIXING them is the Route stage's job. */
+function validateApproach(points, reg, T, faces) {
+    const probs = [];
+    if (!points || points.length < 2) return probs;
+    const ends = [
+        ['source', points[0], points[1]],
+        ['target', points[points.length - 1], points[points.length - 2]]
+    ];
+    for (const [endName, tip, prev] of ends) {
+        const dx = tip.x - prev.x, dy = tip.y - prev.y;
+        const segLen = Math.hypot(dx, dy);
+        if (dx !== 0 && dy !== 0)
+            probs.push(endName + ' approach is oblique — must be perpendicular to the element face (RG-10.7)');
+        const isGlyphEnd = reg && reg.end === endName;
+        const need = (isGlyphEnd ? glyphLength(reg, T) : 0) + T.approach.minRunout;
+        if (segLen < need)
+            probs.push(endName + ' run-out too short: ' + Math.round(segLen) + 'px < ' + Math.round(need) +
+                'px — the line must stay straight past the ' + (isGlyphEnd ? 'glyph' : 'anchor') + ' before bending (RG-10.7)');
+        if (faces && faces[endName]) {
+            const f = faces[endName];   // face the connector anchors on; approach enters opposite the outward normal
+            const ok = (f === 'E' && dx < 0) || (f === 'W' && dx > 0) || (f === 'S' && dy < 0) || (f === 'N' && dy > 0);
+            if (!ok) probs.push(endName + ' approach does not enter perpendicular through declared face ' + f + ' (RG-10.7)');
+        }
+    }
+    return probs;
+}
+
+/* RG-10.7 (curved): synthetic waypoints pin the curve straight through the run-out zone
+   at both ends, so curved routing bends no earlier than orthogonal routing does. */
+function withRunoutPoints(pts, runout) {
+    const out = pts.map(p => ({x: p.x, y: p.y}));
+    const lerp = (a, b, t) => ({x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t});
+    const segLen = (a, b) => Math.hypot(b.x - a.x, b.y - a.y);
+    if (segLen(out[0], out[1]) > runout * 1.5)
+        out.splice(1, 0, lerp(out[0], out[1], runout / segLen(out[0], out[1])));
+    const n = out.length;
+    if (segLen(out[n - 1], out[n - 2]) > runout * 1.5)
+        out.splice(n - 1, 0, lerp(out[n - 1], out[n - 2], runout / segLen(out[n - 1], out[n - 2])));
+    return out;
+}
+
+/* glyph path builders — local frame: tip at `tip`, d = direction of travel (into the
+   element), p = perpendicular. All hollow shapes fill --cn-fill (canvas bg). */
+function buildGlyph(reg, frame, T) {
+    const {tip, d, p} = frame;
+    const parts = [];
+    const back = (k) => ({x: tip.x - d.x * k, y: tip.y - d.y * k});
+    const off = (pt, k) => ({x: pt.x + p.x * k, y: pt.y + p.y * k});
+    const P = (pt) => pt.x + ',' + pt.y;
+
+    let headLen;
+    if (reg.head === 'none') { return parts; }   // connect: no glyph at all
+    if (reg.head === 'triangle') {
+        headLen = T.tri.len;
+        const b = back(T.tri.len);
+        parts.push(el('path', {
+            d: 'M' + P(tip) + ' L' + P(off(b, T.tri.halfH)) + ' L' + P(off(b, -T.tri.halfH)) + ' Z',
+            fill: 'var(--cn-fill, #fff)', stroke: 'var(--cn-stroke, #1a1a18)',
+            'stroke-width': T.stroke, 'stroke-linejoin': 'round'
+        }));
+    } else if (reg.head === 'arrowBarbed') {     // RG-10.10: filled, swept-back barbs, concave rear
+        headLen = T.barb.len;
+        const b = back(T.barb.len), notch = back(T.barb.len - T.barb.notch);
+        parts.push(el('path', {
+            d: 'M' + P(tip) + ' L' + P(off(b, T.barb.halfH)) + ' L' + P(notch) + ' L' + P(off(b, -T.barb.halfH)) + ' Z',
+            fill: 'var(--cn-solid, #1a1a18)', stroke: 'var(--cn-solid, #1a1a18)',
+            'stroke-width': 1, 'stroke-linejoin': 'round'
+        }));
+    } else if (reg.head === 'circlePlus') {      // variation: hollow circle + cross, TANGENT to the
+        const r = T.circlePlus.r;                // boundary at the anchor — touches, never crosses
+        headLen = 2 * r;                         // (RG-10.3: line starts at the circle's far edge)
+        const c = back(r);
+        parts.push(el('circle', {cx: c.x, cy: c.y, r: r,
+            fill: 'var(--cn-fill, #fff)', stroke: 'var(--cn-stroke, #1a1a18)', 'stroke-width': T.stroke}));
+        parts.push(el('line', {x1: c.x - d.x * r, y1: c.y - d.y * r, x2: c.x + d.x * r, y2: c.y + d.y * r,
+            stroke: 'var(--cn-stroke, #1a1a18)', 'stroke-width': T.stroke}));
+        parts.push(el('line', {x1: c.x - p.x * r, y1: c.y - p.y * r, x2: c.x + p.x * r, y2: c.y + p.y * r,
+            stroke: 'var(--cn-stroke, #1a1a18)', 'stroke-width': T.stroke}));
+    } else if (reg.head === 'pacman') {          // «timeslice»: filled circle TANGENT to the boundary,
+        const r = T.timeslice.r;                 // mouth opens toward the line; line reaches the
+        headLen = r;                             // mouth vertex (= circle center, r from the anchor)
+        const c = back(r);
+        const ha = T.timeslice.mouthDeg * Math.PI / 360;       // half-angle, radians
+        const ang = Math.atan2(-d.y, -d.x);                    // mouth faces away from the element
+        const a1 = ang + ha, a2 = ang - ha;
+        const rd = (v) => Math.round(v * 100) / 100;
+        parts.push(el('path', {
+            d: 'M' + P(c)
+             + ' L' + rd(c.x + r * Math.cos(a1)) + ',' + rd(c.y + r * Math.sin(a1))
+             + ' A' + r + ',' + r + ' 0 1 1 ' + rd(c.x + r * Math.cos(a2)) + ',' + rd(c.y + r * Math.sin(a2))
+             + ' Z',
+            fill: 'var(--cn-solid, #1a1a18)'
+        }));
+    } else {
+        headLen = T.diamond.len;
+        const mid = back(T.diamond.len / 2), b = back(T.diamond.len);
+        parts.push(el('path', {
+            d: 'M' + P(tip) + ' L' + P(off(mid, T.diamond.halfH)) + ' L' + P(b) + ' L' + P(off(mid, -T.diamond.halfH)) + ' Z',
+            fill: reg.head === 'diamondFilled' ? 'var(--cn-solid, #1a1a18)' : 'var(--cn-fill, #fff)',
+            stroke: 'var(--cn-stroke, #1a1a18)', 'stroke-width': T.stroke, 'stroke-linejoin': 'round'
+        }));
+    }
+
+    if (reg.adorn === 'dots2') {
+        const c = back(headLen + T.dot.gap);
+        for (const k of [-2.2, 2.2])
+            parts.push(el('circle', {cx: off(c, k).x, cy: off(c, k).y, r: T.dot.r, fill: 'var(--cn-stroke, #1a1a18)'}));
+    } else if (reg.adorn === 'dots4') {
+        for (const row of [0, 1]) {
+            const c = back(headLen + T.dot.gap + row * (2 * T.dot.r + 1.5));
+            for (const k of [-2.2, 2.2])
+                parts.push(el('circle', {cx: off(c, k).x, cy: off(c, k).y, r: T.dot.r, fill: 'var(--cn-stroke, #1a1a18)'}));
+        }
+    } else if (reg.adorn === 'bar1') {
+        const c = back(headLen + T.bar.gap);
+        parts.push(el('line', {
+            x1: off(c, T.bar.len / 2).x, y1: off(c, T.bar.len / 2).y,
+            x2: off(c, -T.bar.len / 2).x, y2: off(c, -T.bar.len / 2).y,
+            stroke: 'var(--cn-stroke, #1a1a18)', 'stroke-width': T.stroke, 'stroke-linecap': 'round'
+        }));
+    }
+    return parts;
+}
+
+/* --- the component --- */
+function renderConnector(spec, opts) {
+    const T = CN_TOKENS;
+    const invalid = [];
+    const reg = CONNECTOR_REGISTRY[spec.kind];
+    if (!reg) invalid.push('unknown connector kind "' + spec.kind + '" — registry: ' + Object.keys(CONNECTOR_REGISTRY).join(', ') + ' (RG-10.1)');
+    if (!spec.points || spec.points.length < 2) invalid.push('connector needs ≥2 routed points');
+
+    // RG-10.6: routing style — per-view setting (persisted via RG-8.2). Default orthogonal.
+    const routing = spec.routing || 'orthogonal';
+    if (routing !== 'orthogonal' && routing !== 'curved')
+        invalid.push('unknown routing "' + routing + '" — orthogonal | curved (RG-10.6); rendered orthogonal');
+    const buildPath = (pts) => routing === 'curved'
+        ? curvedPath(withRunoutPoints(pts, T.approach.minRunout), T.curve.maxHandle)   // RG-10.7 straight run-out
+        : roundedOrthPath(pts, T.bendRadius, spec.hops);   // RG-10.8 hops (orthogonal mode only)
+
+    if (spec.points && spec.points.length >= 2)
+        invalid.push(...validateApproach(spec.points, reg, T, spec.faces));   // RG-10.7
+
+    const g = el('g', {'data-kind': spec.kind || 'invalid', 'data-routing': routing,
+        'class': spec.ref ? 'cn-ref' : ''});
+    if (spec.ref) g.setAttribute('data-ref', String(spec.ref));   // RG-10.4 relationship identity
+
+    if (spec.points && spec.points.length >= 2) {
+        const linePts = reg ? shorten(spec.points, reg.end, glyphLength(reg, T)) : spec.points;
+
+        // RG-10.10: inline keyword label — set into a break in the tail (orthogonal mode);
+        // halo fallback when no horizontal segment can host it or in curved mode.
+        let plan = null, labelW = 0;
+        if (spec.label != null) {
+            const measure = (opts && opts.measure) ||
+                (renderConnector._m || (renderConnector._m = (() => {
+                    const ctx = document.createElement('canvas').getContext('2d');
+                    const cache = new Map();
+                    return (text, font) => {
+                        const k = font + '|' + text;
+                        if (!cache.has(k)) { ctx.font = font; cache.set(k, Math.ceil(ctx.measureText(text).width)); }
+                        return cache.get(k);
+                    };
+                })()));
+            var lblIsKw = /^«/.test(String(spec.label));
+            var lblFont = lblIsKw ? T.label.font : T.label.nameFont;
+            labelW = measure(String(spec.label), lblFont);
+            if (routing === 'orthogonal') plan = planInlineLabel(linePts, labelW, T, spec.labelAt);
+        }
+
+        // RG-10.13: minimum connector length — endpoints must be far enough apart that
+        // glyphs, run-outs, and any inline label gap all fit. Derived, never a constant:
+        const minLen = (reg ? glyphLength(reg, T) : 0) + 2 * T.approach.minRunout
+                     + (spec.label != null ? labelW + 2 * T.label.pad + 2 * T.label.edgeMargin : 0);
+        const totalLen = polylineLength(spec.points);
+        if (totalLen < minLen)
+            invalid.push('connector too short: ' + Math.round(totalLen) + 'px < ' + Math.round(minLen) +
+                'px minimum (glyph + run-outs' + (spec.label != null ? ' + inline label' : '') + ') — Route must keep endpoints apart (RG-10.13)');
+
+        let dAttr;
+        if (plan) {
+            const cut = cutPolyline(linePts, plan.d1, plan.d2);
+            dAttr = roundedOrthPath(cut.before, T.bendRadius, spec.hops) + ' ' + roundedOrthPath(cut.after, T.bendRadius, spec.hops);
+        } else dAttr = buildPath(linePts);
+
+        const path = el('path', {
+            d: dAttr, 'class': 'cn-line',
+            fill: 'none', stroke: 'var(--cn-stroke, #1a1a18)', 'stroke-width': T.stroke,
+            'stroke-linecap': 'round'
+        });
+        const t = el('title', {}, (reg ? reg.title : 'INVALID: ' + spec.kind) + (spec.ref ? ' — ' + spec.ref : ''));
+        path.appendChild(t);
+        g.appendChild(path);
+        if (reg) for (const part of buildGlyph(reg, glyphFrame(spec.points, reg.end), T)) g.appendChild(part);
+
+        if (spec.label != null) {
+            // halo fallback honors a persisted labelAt too (curved mode keeps the slide value)
+            const at = plan ? plan.mid : pointAtDist(linePts,
+                (spec.labelAt != null ? Math.max(0, Math.min(1, spec.labelAt)) : 0.5) * polylineLength(linePts));
+            // label group: text (pointer-events: none — never competes for the pointer) +
+            // a generous padded hit rect that OWNS all label interaction (RG-10.11)
+            const lg = el('g', {'class': 'cn-labelg', 'data-label-at': plan ? plan.t.toFixed(4) : ''});
+            const lbl = el('text', {
+                x: Math.round(at.x), y: Math.round(plan ? at.y : at.y - 8),
+                'text-anchor': 'middle', 'dominant-baseline': 'middle',
+                'class': 'cn-label', 'pointer-events': 'none',
+                fill: 'var(--cn-stroke, #1a1a18)'
+            }, String(spec.label));
+            if (lblIsKw) lbl.setAttribute('font-style', 'italic');
+            lbl.setAttribute('font-size', '11');
+            lbl.setAttribute('font-family', FONT_FAMILY);
+            if (!plan) {   // RG-3.7 halo fallback (curved mode / no hosting segment)
+                lbl.setAttribute('stroke', 'var(--cn-fill, #fff)');
+                lbl.setAttribute('stroke-width', '4');
+                lbl.setAttribute('paint-order', 'stroke');
+            }
+            lg.appendChild(lbl);
+            const hitW = labelW + 2 * T.label.pad, hitH = T.label.height + 2 * T.label.pad;
+            const lblHit = el('rect', {
+                x: Math.round(at.x - hitW / 2), y: Math.round((plan ? at.y : at.y - 8) - hitH / 2),
+                width: hitW, height: hitH, rx: 3,
+                fill: 'transparent', 'class': 'cn-label-hit', 'pointer-events': 'all'
+            });
+            lblHit.appendChild(el('title', {}, 'drag to slide along the line (RG-10.11)'));
+            lg.appendChild(lblHit);
+            g.appendChild(lg);
+
+            // RG-10.11: label slide — the ONLY user-adjustable geometry in the viewer.
+            // Works in BOTH modes: inline (orthogonal) and halo (curved / no host) — the
+            // drag projects onto the routed polyline generally (any segment orientation;
+            // planInlineLabel snaps inline labels onto hosting spans on re-render).
+            // Commit hands the normalized position to the shell for persistence (RG-8.2).
+            if (opts && opts.onLabelSlide && lblHit.addEventListener) {
+                const total = plan ? plan.total : polylineLength(linePts);
+                const currentT = plan ? plan.t
+                    : (spec.labelAt != null ? Math.max(0, Math.min(1, spec.labelAt)) : 0.5);
+                lblHit.style.cursor = 'grab';
+                lblHit.addEventListener('pointerdown', (e0) => {
+                    const svg = lblHit.ownerSVGElement;
+                    if (!svg) return;
+                    e0.preventDefault();
+                    const toLocal = (ev) => {
+                        const pt = svg.createSVGPoint();
+                        pt.x = ev.clientX; pt.y = ev.clientY;
+                        return pt.matrixTransform(svg.getScreenCTM().inverse());
+                    };
+                    const nearestT = (p) => {   // general projection onto the polyline
+                        let best = null, acc = 0;
+                        for (let i = 1; i < linePts.length; i++) {
+                            const a = linePts[i - 1], b = linePts[i];
+                            const vx = b.x - a.x, vy = b.y - a.y, len2 = vx * vx + vy * vy;
+                            const len = Math.sqrt(len2);
+                            if (len2 > 0) {
+                                const tt = Math.max(0, Math.min(1, ((p.x - a.x) * vx + (p.y - a.y) * vy) / len2));
+                                const cx = a.x + vx * tt, cy = a.y + vy * tt;
+                                const dd = Math.hypot(p.x - cx, p.y - cy);
+                                if (!best || dd < best.dd) best = {dd, t: (acc + len * tt) / total};
+                            }
+                            acc += len;
+                        }
+                        return best ? best.t : currentT;
+                    };
+                    const move = (ev) => opts.onLabelSlide(nearestT(toLocal(ev)), 'drag');
+                    const up = (ev) => {
+                        window.removeEventListener('pointermove', move);
+                        window.removeEventListener('pointerup', up);
+                        opts.onLabelSlide(nearestT(toLocal(ev)), 'commit');
+                    };
+                    window.addEventListener('pointermove', move);
+                    window.addEventListener('pointerup', up);
+                });
+            }
+        }
+        // invisible fat hit path so hover/click doesn't demand pixel accuracy.
+        // Deconflicted with the label (RG-10.11): when an inline label exists, the line's
+        // hit corridor is built from the gap-CUT polylines, so the label's padded hit box
+        // owns its zone exclusively — no finicky pointer fights at the boundary.
+        let hitD;
+        if (plan) {
+            const off = reg && reg.end === 'source' ? glyphLength(reg, T) : 0;
+            const hc = cutPolyline(spec.points, plan.d1 + off, plan.d2 + off);
+            hitD = roundedOrthPath(hc.before, T.bendRadius) + ' ' + roundedOrthPath(hc.after, T.bendRadius);
+        } else hitD = buildPath(spec.points);
+        g.appendChild(el('path', {
+            d: hitD, fill: 'none', 'class': 'cn-line-hit',
+            stroke: 'transparent', 'stroke-width': 12
+        }));
+    }
+
+    if (opts && opts.onNavigate && g.addEventListener) {           // RG-7.5 contract
+        const fire = (e, mod) => {
+            if (mod && !(e.metaKey || e.ctrlKey)) return;
+            const t = e.target.closest && e.target.closest('[data-ref]');
+            if (t) { e.preventDefault(); opts.onNavigate(t.getAttribute('data-ref')); }
+        };
+        g.addEventListener('click', (e) => fire(e, true));
+        g.addEventListener('dblclick', (e) => fire(e, false));
+    }
+    return {node: g, layout: {kind: spec.kind, glyphEnd: reg ? reg.end : null, invalid}};
+}
+
+/* RG-10.9: bundle renderer — same-kind connectors from one source merge into a trunk +
+   branches. Shared-end glyph (e.g., composite diamond at the owner) renders ONCE on the
+   trunk; target-end glyphs render per branch. Every branch keeps its own data-ref. */
+function renderConnectorBundle(specs, opts) {
+    const T = CN_TOKENS, invalid = [];
+    const kinds = [...new Set(specs.map(s => s.kind))];
+    if (kinds.length !== 1) invalid.push('bundle members must share one connector kind (RG-10.9)');
+    const reg = CONNECTOR_REGISTRY[kinds[0]];
+    if (!reg) invalid.push('unknown connector kind "' + kinds[0] + '" (RG-10.1)');
+    const merged = (reg && kinds.length === 1) ? mergeBundlePoints(specs.map(s => s.points), T.bundle.proximity) : null;
+
+    const g = el('g', {'data-kind': kinds[0] || 'invalid', 'data-bundle': specs.length});
+    if (!merged) {   // no shared corridor: render individually, no merging forced
+        for (const s of specs) {
+            const r = renderConnector(s, opts);
+            invalid.push(...r.layout.invalid);
+            g.appendChild(r.node);
+        }
+        return {node: g, layout: {merged: false, invalid}};
+    }
+
+    const line = (pts, hops) => el('path', {
+        d: roundedOrthPath(pts, T.bendRadius, hops), 'class': 'cn-line', fill: 'none',
+        stroke: 'var(--cn-stroke, #1a1a18)', 'stroke-width': T.stroke, 'stroke-linecap': 'round'
+    });
+    const sharedGlyph = reg.end === 'source';
+    const trunkPts = sharedGlyph ? shorten(merged.trunk, 'source', glyphLength(reg, T)) : merged.trunk;
+    const trunk = line(trunkPts);
+    trunk.appendChild(el('title', {}, reg.title + ' — bundle of ' + specs.length));
+    g.appendChild(trunk);
+    if (sharedGlyph) for (const p of buildGlyph(reg, glyphFrame(merged.trunk, 'source'), T)) g.appendChild(p);
+    // RG-10.9: the split is a plain T-junction — no dot (filled circles are proxy-label
+    // notation; crossings carry hops per RG-10.8, so an unhopped meeting reads as a branch)
+
+    specs.forEach((s, i) => {
+        const bg = el('g', {'class': s.ref ? 'cn-ref' : ''});
+        if (s.ref) bg.setAttribute('data-ref', String(s.ref));
+        const bpts = merged.branches[i];
+        bg.appendChild(line(reg.end === 'target' ? shorten(bpts, 'target', glyphLength(reg, T)) : bpts));
+        if (reg.end === 'target') for (const p of buildGlyph(reg, glyphFrame(bpts, 'target'), T)) bg.appendChild(p);
+        bg.appendChild(el('path', {d: roundedOrthPath(bpts, T.bendRadius), fill: 'none',
+            'class': 'cn-line-hit', stroke: 'transparent', 'stroke-width': 12}));
+        g.appendChild(bg);
+    });
+
+    if (opts && opts.onNavigate && g.addEventListener) {
+        const fire = (e, mod) => {
+            if (mod && !(e.metaKey || e.ctrlKey)) return;
+            const t = e.target.closest && e.target.closest('[data-ref]');
+            if (t) { e.preventDefault(); opts.onNavigate(t.getAttribute('data-ref')); }
+        };
+        g.addEventListener('click', (e) => fire(e, true));
+        g.addEventListener('dblclick', (e) => fire(e, false));
+    }
+    return {node: g, layout: {merged: true, split: merged.split, invalid}};
+}
+
+/* RG-9.9: port — a boundary connection point. Rounded square straddling its owner's
+   edge, OPAQUE canvas fill (the boundary line never shows through), optional flow-
+   direction glyph (in | out | inout) along the port's axis, horizontal label outside.
+   Ports nest: a port's own boundary hosts child ports — composition is the caller's
+   (Place stage's) job; this renders ONE port. Carries data-ref per RG-7.5. */
+function renderPort(spec, opts) {
+    const T = CN_TOKENS, s = T.port;
+    const w = spec.w || s.size, h = spec.h || s.size;
+    const cx = spec.cx, cy = spec.cy;
+    const g = el('g', {'data-port': spec.name || '', 'class': spec.ref ? 'cn-ref' : ''});
+    if (spec.ref) g.setAttribute('data-ref', String(spec.ref));
+    g.appendChild(el('rect', {
+        x: cx - w / 2, y: cy - h / 2, width: w, height: h, rx: s.rx,
+        fill: 'var(--cn-fill, #fff)', stroke: 'var(--cn-stroke, #1a1a18)', 'stroke-width': T.stroke
+    }));
+    if (spec.direction) {   // flow glyph: axis follows the port's side (E/W horizontal, N/S vertical)
+        const side = spec.side || 'E';
+        const horiz = side === 'E' || side === 'W';
+        const dcx = cx, dcy = spec.dirCy != null ? spec.dirCy : cy;
+        const L = Math.min(w, h) / 2 - 4;
+        const ux = horiz ? 1 : 0, uy = horiz ? 0 : 1;
+        const A = {x: dcx - ux * L, y: dcy - uy * L}, B = {x: dcx + ux * L, y: dcy + uy * L};
+        g.appendChild(el('line', {x1: A.x, y1: A.y, x2: B.x, y2: B.y,
+            stroke: 'var(--cn-stroke, #1a1a18)', 'stroke-width': 1.2}));
+        const outward = {E: [1, 0], W: [-1, 0], N: [0, -1], S: [0, 1]}[side];
+        const head = (at, dir) => el('path', {
+            d: 'M' + (at.x - dir[0] * 3.5 + dir[1] * 2.5) + ',' + (at.y - dir[1] * 3.5 + dir[0] * 2.5)
+             + ' L' + at.x + ',' + at.y
+             + ' L' + (at.x - dir[0] * 3.5 - dir[1] * 2.5) + ',' + (at.y - dir[1] * 3.5 - dir[0] * 2.5),
+            fill: 'none', stroke: 'var(--cn-stroke, #1a1a18)', 'stroke-width': 1.2,
+            'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+        });
+        const outEnd = outward[0] > 0 || outward[1] > 0 ? B : A;
+        const inEnd = outEnd === B ? A : B;
+        const inward = [-outward[0], -outward[1]];
+        if (spec.direction === 'out' || spec.direction === 'inout') g.appendChild(head(outEnd, outward));
+        if (spec.direction === 'in' || spec.direction === 'inout') g.appendChild(head(inEnd, inward));
+    }
+    if (spec.name) {
+        // RG-9.9 label rule: INSIDE the port when it fits (measured — never guessed);
+        // tall ports rotate the name inside; otherwise a horizontal label FLOATS outside,
+        // above and near the connector, on the connector side (never over the owner).
+        const text = spec.name + (spec.def ? ': ' + spec.def : '');
+        const mctx = renderPort._m || (renderPort._m = document.createElement('canvas').getContext('2d'));
+        mctx.font = '400 11px ' + FONT_FAMILY;
+        const tw = Math.ceil(mctx.measureText(text).width);
+        const side = spec.side || 'E';
+        if (spec.labelRotate || (tw + 10 > w && tw + 10 <= h && w >= 14)) {
+            const t = el('text', {x: cx, y: cy, 'text-anchor': 'middle', 'dominant-baseline': 'middle',
+                transform: 'rotate(-90 ' + cx + ' ' + cy + ')', 'font-size': 12, 'font-family': FONT_FAMILY,
+                fill: 'var(--cn-stroke, #1a1a18)'}, text);
+            g.appendChild(t);
+        } else if (tw + 10 <= w) {   // large enough: label lives inside the port box
+            const t = el('text', {x: cx, y: spec.direction ? cy - h / 2 + 12 : cy,
+                'text-anchor': 'middle', 'dominant-baseline': spec.direction ? 'auto' : 'middle',
+                'font-size': 11, 'font-family': FONT_FAMILY, fill: 'var(--cn-stroke, #1a1a18)'}, text);
+            g.appendChild(t);
+        } else {                     // floating, above + near the connector, side-aware
+            const pos = side === 'W' ? {x: cx - w / 2 - 6, y: cy - h / 2 - 4, a: 'end'}
+                      : side === 'S' ? {x: cx + w / 2 + 6, y: cy + h / 2 + 12, a: 'start'}
+                      :                {x: cx + w / 2 + 6, y: cy - h / 2 - 4, a: 'start'};   // E and N
+            const t = el('text', {x: pos.x, y: pos.y, 'text-anchor': pos.a,
+                'font-size': 11, 'font-family': FONT_FAMILY, fill: 'var(--cn-stroke, #1a1a18)'}, text);
+            g.appendChild(t);
+        }
+    }
+    if (spec.ref) {
+        const titleHost = g.firstChild;
+        if (titleHost && titleHost.appendChild) titleHost.appendChild(el('title', {}, '«port» ' + (spec.name || '') + ' — ' + spec.ref));
+    }
+    if (opts && opts.onNavigate && g.addEventListener) {
+        const fire = (e, mod) => {
+            if (mod && !(e.metaKey || e.ctrlKey)) return;
+            const t = e.target.closest && e.target.closest('[data-ref]');
+            if (t) { e.preventDefault(); opts.onNavigate(t.getAttribute('data-ref')); }
+        };
+        g.addEventListener('click', (e) => fire(e, true));
+        g.addEventListener('dblclick', (e) => fire(e, false));
+    }
+    return {node: g, layout: {cx, cy, w, h}};
+}
+
+
+return {renderConnector, renderPort, renderConnectorBundle, connectorExplanation, CONNECTOR_REGISTRY, CN_TOKENS, computeCrossingHops};
+})();
+
+const {renderPackage} = (() => {
+
+
+/* ============================================================================
+ * package.js — DEAL Viewer atomic SysML v2 package / namespace container
+ * Spec traceability: RG-9.10 (folder notation, OMG §7.5 semantics), RG-9.1
+ * (view-frame unification), RG-9.6 (themes), RG-7.5 (identity/navigation),
+ * RG-1.x (measured sizing), RG-8.1 (determinism).
+ * ==========================================================================*/
+
+const FONT_FAMILY = '-apple-system, "Segoe UI", Helvetica, Arial, sans-serif'; // production: bundled woff2 (D8)
+
+const NS_TOKENS = {
+    fonts: {
+        keyword: '400 11px ' + FONT_FAMILY,
+        name:    '700 13px ' + FONT_FAMILY,
+        title:   'italic 400 10.5px ' + FONT_FAMILY,
+        item:    '400 12px ' + FONT_FAMILY
+    },
+    ascent: {keyword: 11, name: 13, title: 10, item: 12},
+    lineHeight: {keyword: 15, name: 19, title: 15, item: 17},
+    pad: {x: 12, headerTop: 7, headerGap: 2, headerBottom: 7, compTop: 4, compBottom: 7},
+    rules: {compartment: 1},
+    sepInset: 12,
+    minWidth: 80, maxWidth: 240, nameMaxLines: 3, minTruncChars: 8,
+    stroke: 1.5,
+    // RG-9.10: slant-edged tab (owner-drawn reference, 2026-06-12); square-cornered body
+    package: {tabH: 24, tabMinW: 64, tabPadX: 10, slant: 12, bodyMinH: 44,
+              nameFont: '700 14px ' + FONT_FAMILY}
+};
+
+/* --- shared core (production: imported from the common render module) --- */
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(name, attrs, text) {
+    const n = document.createElementNS(SVGNS, name);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+}
+function applyFont(node, font) {
+    const italic = /italic/.test(font);
+    const weight = (font.match(/\b([1-9]00)\b/) || [, '400'])[1];
+    const size = (font.match(/(\d+(?:\.\d+)?)px/) || [, '12'])[1];
+    node.setAttribute('font-size', size);
+    node.setAttribute('font-weight', weight);
+    if (italic) node.setAttribute('font-style', 'italic');
+}
+function createMeasurer() {
+    const ctx = document.createElement('canvas').getContext('2d');
+    const cache = new Map();
+    return (text, font) => {
+        const k = font + '' + text;
+        if (!cache.has(k)) { ctx.font = font; cache.set(k, Math.ceil(ctx.measureText(text).width)); }
+        return cache.get(k);
+    };
+}
+function truncate(measure, text, font, maxW) {          // RG-1.4
+    if (measure(text, font) <= maxW) return {text, full: null};
+    let lo = NS_TOKENS.minTruncChars, hi = text.length;
+    while (lo < hi) {
+        const mid = Math.ceil((lo + hi) / 2);
+        if (measure(text.slice(0, mid) + '…', font) <= maxW) lo = mid; else hi = mid - 1;
+    }
+    return {text: text.slice(0, lo) + '…', full: text};
+}
+function wrapName(measure, text, font, maxW, maxLines) {  // RG-1.4
+    const words = text.split(/\s+/), lines = [];
+    let line = '';
+    for (const w of words) {
+        const probe = line ? line + ' ' + w : w;
+        if (measure(probe, font) <= maxW || !line) line = probe;
+        else { lines.push(line); line = w; }
+    }
+    if (line) lines.push(line);
+    if (lines.length > maxLines) {
+        const rest = lines.slice(maxLines - 1).join(' ');
+        lines.length = maxLines - 1;
+        lines.push(truncate(measure, rest, font, maxW).text);
+    }
+    return lines.map(l => measure(l, font) <= maxW ? {text: l, full: null} : truncate(measure, l, font, maxW));
+}
+
+/* --- pure layout: spec → geometry (RG-8.1) --- */
+function layoutPackage(spec, measure, opts) {
+    const T = NS_TOKENS, P = T.package, o = opts || {};
+    const maxWidth = o.maxWidth || T.maxWidth;
+    const comps = (spec.compartments || []).filter(c => c && c.items && c.items.length);
+    const placement = spec.namePlacement || (comps.length ? 'tab' : 'body');
+    const itemText = (it) => typeof it === 'string' ? it : ((it.kw ? it.kw + ' ' : '') + it.text);
+    const kwLine = spec.keyword ? '«' + spec.keyword + '»' : null;
+    const subLine = spec.forTarget ? 'for ' + spec.forTarget : null;
+
+    let natural = Math.max(
+        measure(spec.name, P.nameFont) + (placement === 'tab' ? 2 * P.tabPadX + P.slant + 16 : 0),
+        kwLine ? measure(kwLine, T.fonts.keyword) : 0,
+        subLine ? measure(subLine, T.fonts.item) : 0,
+        ...comps.map(c => c.title ? measure(c.title, T.fonts.title) : 0),
+        ...comps.flatMap(c => c.items.map(it => measure(itemText(it), T.fonts.item)))
+    );
+    const width = Math.round(Math.min(Math.max(natural + 2 * T.pad.x, spec.minWidth || 0, T.minWidth), maxWidth));
+    const contentW = width - 2 * T.pad.x;
+    const tabW = placement === 'tab'
+        ? Math.min(width - 8, Math.max(P.tabMinW, measure(spec.name, P.nameFont) + 2 * P.tabPadX + P.slant))
+        : Math.max(P.tabMinW, Math.round(width * 0.3));
+
+    let y = P.tabH;
+    let header = null;
+    if (placement === 'body') {
+        y += T.pad.headerTop;
+        header = {};
+        if (kwLine) { header.kwBaseline = y + T.ascent.keyword; y += T.lineHeight.keyword + T.pad.headerGap; }
+        header.nameLines = wrapName(measure, spec.name, T.fonts.name, contentW, T.nameMaxLines)
+            .map(ln => { const b = {...ln, baseline: y + T.ascent.name}; y += T.lineHeight.name; return b; });
+        if (subLine) { header.subBaseline = y + T.ascent.item; header.subText = subLine; y += T.lineHeight.item; }
+        y += T.pad.headerBottom;
+    } else y += 2;
+
+    const compartments = [];
+    comps.forEach((c, i) => {
+        const comp = {ruleY: null, items: []};
+        if (i > 0) { comp.ruleY = y; y += T.rules.compartment; }
+        y += T.pad.compTop;
+        if (c.title) {   // RG-9.10: title optional — owned members may list directly
+            comp.titleBaseline = y + T.ascent.title;
+            comp.title = c.title;
+            y += T.lineHeight.title;
+        }
+        for (const raw of c.items) {
+            const t = truncate(measure, itemText(raw), T.fonts.item, contentW);
+            comp.items.push({...t, kw: (typeof raw === 'object' && raw.kw) || null,
+                ref: (typeof raw === 'object' && raw.ref) || null, baseline: y + T.ascent.item});
+            y += T.lineHeight.item;
+        }
+        y += T.pad.compBottom;
+        compartments.push(comp);
+    });
+
+    const height = Math.round(Math.max(y, P.tabH + P.bodyMinH, spec.minHeight || 0));
+    return {width, height, tabW, placement, header, compartments, kwLine,
+            dashed: !!spec.dashed, ref: spec.ref ? String(spec.ref) : null};
+}
+
+/* --- render: layout → SVG --- */
+function renderPackage(spec, opts) {
+    const measure = (opts && opts.measure) || (renderPackage._m || (renderPackage._m = createMeasurer()));
+    const L = layoutPackage(spec, measure, opts);
+    const T = NS_TOKENS, P = T.package, cx = Math.round(L.width / 2);
+    const g = el('g', {'font-family': FONT_FAMILY, 'data-eb': spec.name,
+        'data-kind': 'package', 'data-family': 'package'});
+    if (L.ref) g.setAttribute('data-ref', L.ref);
+    const dash = L.dashed ? {'stroke-dasharray': '5 3'} : {};
+
+    // slant-edged tab: top edge shorter, right edge sweeping down into the body line
+    const tabPath = 'M0,' + P.tabH + ' L0,0 H' + (L.tabW - P.slant) + ' L' + L.tabW + ',' + P.tabH + ' Z';
+
+    // fills first; border strokes LAST (painter's order — nothing paints over the outline)
+    g.appendChild(el('rect', {x: 0, y: P.tabH, width: L.width, height: L.height - P.tabH,
+        fill: 'var(--eb-fill, #fff)', stroke: 'none'}));
+    g.appendChild(el('path', {d: tabPath,
+        fill: 'var(--eb-header-fill, var(--eb-fill, #fff))', stroke: 'none'}));
+
+    if (L.placement === 'tab') {
+        const t = el('text', {x: P.tabPadX, y: P.tabH - 7, fill: 'var(--eb-text, #1a1a18)'}, spec.name);
+        applyFont(t, P.nameFont);
+        if (L.ref) { t.setAttribute('data-ref', L.ref); t.setAttribute('class', 'eb-ref'); }
+        g.appendChild(t);
+    } else {
+        if (L.kwLine) {
+            const k = el('text', {x: cx, y: L.header.kwBaseline, 'text-anchor': 'middle',
+                fill: 'var(--eb-kw, var(--eb-dim, #555))'}, L.kwLine);
+            applyFont(k, T.fonts.keyword);
+            g.appendChild(k);
+        }
+        for (const ln of L.header.nameLines) {
+            const t = el('text', {x: cx, y: ln.baseline, 'text-anchor': 'middle',
+                fill: 'var(--eb-text, #1a1a18)'}, ln.text);
+            applyFont(t, T.fonts.name);
+            if (L.ref) { t.setAttribute('data-ref', L.ref); t.setAttribute('class', 'eb-ref'); }
+            g.appendChild(t);
+        }
+        if (L.header.subText) {   // alias: bold "for" + target (non-owning membership)
+            const s = el('text', {x: cx, y: L.header.subBaseline, 'text-anchor': 'middle',
+                fill: 'var(--eb-text, #1a1a18)'});
+            applyFont(s, T.fonts.item);
+            s.appendChild(el('tspan', {'font-weight': 700}, 'for '));
+            s.appendChild(el('tspan', {}, L.header.subText.slice(4)));
+            g.appendChild(s);
+        }
+    }
+
+    for (const c of L.compartments) {
+        if (c.ruleY !== null) g.appendChild(el('line', {
+            x1: T.sepInset, y1: c.ruleY + 0.5, x2: L.width - T.sepInset, y2: c.ruleY + 0.5,
+            stroke: 'var(--eb-sep, var(--eb-stroke, #1a1a18))', 'stroke-width': T.rules.compartment}));
+        if (c.title) {
+            const tt = el('text', {x: cx, y: c.titleBaseline, 'text-anchor': 'middle',
+                fill: 'var(--eb-dim, #555)'}, c.title);
+            applyFont(tt, T.fonts.title);
+            g.appendChild(tt);
+        }
+        for (const it of c.items) {
+            const attrs = {x: T.pad.x, y: it.baseline, fill: 'var(--eb-text, #1a1a18)'};
+            if (it.ref) { attrs['data-ref'] = it.ref; attrs['class'] = 'eb-ref'; }
+            const t = el('text', attrs);
+            applyFont(t, T.fonts.item);
+            if (it.kw && !it.full) {   // bold leading keyword: "part def" PartDef1
+                t.appendChild(el('tspan', {'font-weight': 700}, it.kw + ' '));
+                t.appendChild(el('tspan', {}, it.text.slice(it.kw.length + 1)));
+            } else t.textContent = it.text;
+            if (it.full) t.appendChild(el('title', {}, it.full));
+            g.appendChild(t);
+        }
+    }
+
+    // folder outline LAST — tab path then body rect
+    const stroke = {fill: 'none', 'pointer-events': 'none',
+        stroke: 'var(--eb-outline, var(--eb-stroke, #1a1a18))', 'stroke-width': T.stroke, ...dash};
+    g.appendChild(el('path', {d: tabPath, ...stroke}));
+    g.appendChild(el('rect', {x: 0, y: P.tabH, width: L.width, height: L.height - P.tabH, ...stroke}));
+
+    if (opts && opts.onNavigate && g.addEventListener) {   // RG-7.5
+        const fire = (e, mod) => {
+            if (mod && !(e.metaKey || e.ctrlKey)) return;
+            const t = e.target.closest && e.target.closest('[data-ref]');
+            if (t) { e.preventDefault(); opts.onNavigate(t.getAttribute('data-ref')); }
+        };
+        g.addEventListener('click', (e) => fire(e, true));
+        g.addEventListener('dblclick', (e) => fire(e, false));
+    }
+    return {node: g, layout: {width: L.width, height: L.height}};
+}
+
+
+return {renderPackage};
+})();
+
+/* ===================== composition: the Propulsion view ===================== */
+const view = document.getElementById('view');
+
+/* explainer card (shell-owned, RG-10.12) */
+const cnCard = document.createElement('div');
+cnCard.id = 'cn-card';
+document.body.appendChild(cnCard);
+function attachExplainer(node, spec) {
+    let timer = null;
+    const show = (ev) => {
+        const x = connectorExplanation(spec);
+        if (!x) return;
+        cnCard.innerHTML = '';
+        const add = (cls, text) => { const d = document.createElement('div'); d.className = cls; d.textContent = text; cnCard.appendChild(d); };
+        add('ck', '«' + x.kind + '»'); add('cr', x.reading); add('cm', x.meaning); add('cd', x.dirNote);
+        add('cf', (x.ref ? x.ref + '  ·  ' : '') + 'declares in ' + x.declaredIn + '  ·  ⌘-click to open');
+        cnCard.style.display = 'block';
+        let cx = ev.pageX + 14;
+        const r = cnCard.getBoundingClientRect();
+        if (cx + r.width > window.scrollX + document.documentElement.clientWidth - 8) cx = ev.pageX - r.width - 14;
+        cnCard.style.left = cx + 'px'; cnCard.style.top = (ev.pageY + 14) + 'px';
+    };
+    node.addEventListener('pointerenter', (ev) => { clearTimeout(timer); timer = setTimeout(() => show(ev), 500); });
+    node.addEventListener('pointerleave', () => { clearTimeout(timer); cnCard.style.display = 'none'; });
+    node.addEventListener('pointerdown', () => { clearTimeout(timer); cnCard.style.display = 'none'; });
+}
+const NAV = (ref) => { document.getElementById('nav-out').textContent =
+    '→ goto: ' + ref + '   (viewer resolves via model index and opens the editor — RG-7.5)'; };
+
+/* persistent representation state — what the .dealview tool-managed block holds (RG-8.2):
+   per-element fold states + the slid label position. Survives every redraw. */
+const state = {
+    collapsed: {battery: true, inverter: false, motor: false, gearbox: false, req: false, idef: false},
+    satisfyAt: null
+};
+
+const valOut = document.createElement('div');
+valOut.className = 'dims';
+document.getElementById('view-wrap').after(valOut);
+
+const _mctx = document.createElement('canvas').getContext('2d');
+_mctx.font = '400 11px ' + FONT_FAMILY;   // name labels are plain upright (RG-10.10)
+const gapHV = Math.ceil(_mctx.measureText('HVDCCable').width + 24 + 28 + 18 + 16);
+
+/* full relayout on every state change — fold = geometry, so the view recomputes
+   (RG-9.7/RG-7.1; at diagram scale the shell relayouts the affected chain) */
+function redraw() {
+    view.replaceChildren();
+    const VC = [];
+
+    const frame = renderPackage({name: 'EVPlatform::Propulsion — Interconnection View', namePlacement: 'tab',
+        minWidth: 1080, minHeight: 660, ref: 'model::EVPlatform::Propulsion'}, {maxWidth: 1080, onNavigate: NAV});
+    {
+        const w = el('g', {transform: 'translate(10, 10)'});
+        w.appendChild(frame.node);
+        view.appendChild(w);
+    }
+
+    function place(key, spec, x, y) {
+        spec.collapsed = state.collapsed[key];
+        const r = renderElementBox(spec, {onNavigate: NAV,
+            onToggle: (c) => { state.collapsed[key] = c; redraw(); }});   // RG-9.7 → relayout
+        const w = el('g', {transform: 'translate(' + x + ',' + y + ')'});
+        w.appendChild(r.node);
+        view.appendChild(w);
+        return {x, y, w: r.layout.width, h: r.layout.height};
+    }
+
+    const Y0 = 110;
+    const bat = place('battery', {keyword: 'part', name: 'battery : BatteryPack',
+        badges: {diagnostics: {warnings: 1}}, ref: 'model::EVPlatform::EnergyStorage::battery',
+        compartments: [{title: 'attributes', items: [
+            {text: 'totalCapacity = kWh(89)', ref: 'model::…::battery::totalCapacity'},
+            'nominalVoltage = V(800)', 'packMass = kg(550)']}]}, 56, Y0);
+    const inv = place('inverter', {keyword: 'part', name: 'inverter : Inverter',
+        badges: {verification: 'pass'}, ref: 'model::EVPlatform::Propulsion::inverter',
+        compartments: [{title: 'attributes', items: [
+            {text: 'peakPower = kW(270)', ref: 'vehicle.components::Inverter::peakPower'},
+            'efficiency = 0.97', 'mass = kg(12)']}]}, bat.x + bat.w + gapHV, Y0);
+    const mot = place('motor', {keyword: 'part', name: 'motor : TractionMotor',
+        badges: {verification: 'pass', diagnostics: {warnings: 1}},
+        ref: 'model::EVPlatform::Propulsion::motor',
+        compartments: [{title: 'attributes', items: [
+            {text: 'peakPower = kW(250)', ref: 'vehicle.motor::TractionMotor::peakPower'},
+            'peakTorque = Nm(430)', 'maxSpeed = rpm(16000)']}]}, inv.x + inv.w + gapHV + 14, Y0);
+    const req = place('req', {keyword: 'requirement def', name: 'REQ_MOT_001',
+        badges: {verification: 'unverified'}, ref: 'requirements.system::REQ_MOT_001',
+        compartments: [
+            {title: 'doc', items: ['"…minimum peak power of 250 kW."']},
+            {title: 'verification', items: ['accepts: [simulation, test]', 'minPeakPower >= kW(250)']}]}, 92, 430);
+    const idef = place('idef', {keyword: 'part def', name: 'Inverter',
+        ref: 'vehicle.components::Inverter',
+        compartments: [{title: 'ports', items: [
+            {text: 'in dcIn : HVDCPort', ref: 'vehicle.components::Inverter::dcIn'},
+            {text: 'out acOut : HVDCPort', ref: 'vehicle.components::Inverter::acOut'}]}]},
+        req.x + req.w + 56, 430);
+    const gearSpec = {keyword: 'part', name: 'gearbox : ReductionGear',
+        badges: {verification: 'pass'}, ref: 'model::EVPlatform::Propulsion::gearbox',
+        compartments: [{title: 'attributes', items: ['ratio = 9.0', 'efficiency = 0.98']}]};
+    const shaftX = mot.x + mot.w - 46;
+    gearSpec.collapsed = state.collapsed.gearbox;
+    const gearR = renderElementBox(gearSpec, {onNavigate: NAV,
+        onToggle: (c) => { state.collapsed.gearbox = c; redraw(); }});
+    const gear = {x: Math.round(shaftX - gearR.layout.width / 2), y: 430,
+                  w: gearR.layout.width, h: gearR.layout.height};
+    {
+        const w = el('g', {transform: 'translate(' + gear.x + ',' + gear.y + ')'});
+        w.appendChild(gearR.node);
+        view.appendChild(w);
+    }
+
+    /* ports — cy clamped ≥17px from corners (RG-3.3), shared per connected pair so
+       port-to-port connects stay zero-bend (RG-3.10) even with one end folded */
+    const cyA = Y0 + Math.min(64, bat.h - 17, inv.h - 17);   // battery ↔ inverter
+    const cyB = Y0 + Math.min(64, inv.h - 17, mot.h - 17);   // inverter ↔ motor
+    function port(cx, cy, side, dir, name, ref) {
+        view.appendChild(renderPort({cx, cy, side, direction: dir, name, ref}, {onNavigate: NAV}).node);
+    }
+    port(bat.x + bat.w, cyA, 'E', 'out', 'hvOut', 'model::…::battery::hvOut');
+    port(inv.x, cyA, 'W', 'in', 'dcIn', 'model::…::inverter::dcIn');
+    port(inv.x + inv.w, cyB, 'E', 'out', 'acOut', 'model::…::inverter::acOut');
+    port(mot.x, cyB, 'W', 'in', 'powerIn', 'model::…::motor::powerIn');
+    port(shaftX, mot.y + mot.h, 'S', 'out', 'shaftOut', 'model::…::motor::shaftOut');
+    port(shaftX, gear.y, 'N', 'in', 'input', 'model::…::gearbox::input');
+
+    function conn(spec, opts) {
+        const r = renderConnector(spec, Object.assign({onNavigate: NAV}, opts || {}));
+        attachExplainer(r.node, spec);
+        view.appendChild(r.node);
+        VC.push({kind: spec.kind, ref: spec.ref, points: spec.points, invalid: r.layout.invalid || []});
+        return r;
+    }
+    conn({kind: 'connect', label: 'HVDCCable',
+        source: {name: 'battery.hvOut', kind: 'port'}, target: {name: 'inverter.dcIn', kind: 'port'},
+        points: [{x: bat.x + bat.w + 9, y: cyA}, {x: inv.x - 9, y: cyA}],
+        ref: 'model~connect[battery.hvOut → inverter.dcIn via HVDCCable]'});
+    conn({kind: 'connect', label: 'HVDCCable',
+        source: {name: 'inverter.acOut', kind: 'port'}, target: {name: 'motor.powerIn', kind: 'port'},
+        points: [{x: inv.x + inv.w + 9, y: cyB}, {x: mot.x - 9, y: cyB}],
+        ref: 'model~connect[inverter.acOut → motor.powerIn via HVDCCable]'});
+    conn({kind: 'connect', label: 'DriveShaft',
+        source: {name: 'motor.shaftOut', kind: 'port'}, target: {name: 'gearbox.input', kind: 'port'},
+        points: [{x: shaftX, y: mot.y + mot.h + 9}, {x: shaftX, y: gear.y - 9}],
+        ref: 'model~connect[motor.shaftOut → gearbox.input via DriveShaft]'});
+    const dbX = Math.max(idef.x + 16, Math.min(idef.x + idef.w - 16,
+                Math.max(inv.x + 16, Math.min(inv.x + inv.w - 16, inv.x + 70))));
+    conn({kind: 'definedBy',
+        source: {name: 'inverter', kind: 'part'}, target: {name: 'Inverter', kind: 'part def'},
+        points: [{x: dbX, y: inv.y + inv.h}, {x: dbX, y: 430}],
+        ref: 'model::…::inverter~definedBy[Inverter]'});
+    let wy = mot.y + mot.h - 24;
+    if (Math.abs(wy - cyB) < 26) wy = mot.y + 20;   // stay clear of the powerIn port when folded (RG-3.3)
+    const xCorr = Math.min(mot.x - 16, Math.max(inv.x + inv.w + 24, idef.x + idef.w + 16));
+    const satY = Math.max(req.y + req.h, idef.y + idef.h, gear.y + gear.h) + 36;   // clears the WHOLE bottom row, any fold state
+    conn({kind: 'association', label: '«satisfy»', labelAt: state.satisfyAt,
+        source: {name: 'motor', kind: 'part'}, target: {name: 'REQ_MOT_001', kind: 'requirement'},
+        points: [{x: mot.x, y: wy}, {x: xCorr, y: wy}, {x: xCorr, y: satY},
+                 {x: req.x + Math.round(req.w / 2), y: satY},
+                 {x: req.x + Math.round(req.w / 2), y: req.y + req.h}],
+        ref: 'traceability~satisfy[motor → REQ_MOT_001]'},
+        {onLabelSlide: (t, phase) => {
+            state.satisfyAt = t;
+            redraw();
+            document.getElementById('slide-out').textContent = '«satisfy» labelAt: ' + t.toFixed(3) +
+                (phase === 'commit' ? '  → persisted to .dealview tool-managed block (RG-10.11)' : '  (dragging…)');
+        }});
+
+    /* runtime Validate pass (S14) — re-runs after every fold/slide, on real metrics */
+    const rects = [bat, inv, mot, req, idef, gear];
+    const probs = [];
+    for (const c of VC) probs.push(...c.invalid);
+    const segHits = (a, b, r) => a.x === b.x
+        ? (a.x > r.x && a.x < r.x + r.w && Math.max(a.y, b.y) > r.y && Math.min(a.y, b.y) < r.y + r.h)
+        : (a.y > r.y && a.y < r.y + r.h && Math.max(a.x, b.x) > r.x && Math.min(a.x, b.x) < r.x + r.w);
+    for (const c of VC)
+        for (let i = 1; i < c.points.length; i++)
+            for (const r of rects)
+                if (segHits(c.points[i - 1], c.points[i], r))
+                    probs.push('INV-1: "' + (c.ref || c.kind) + '" crosses an element box');
+    probs.push(...computeCrossingHops(VC.map(c => c.points), CN_TOKENS).diagnostics);
+    valOut.textContent = probs.length
+        ? '⚠ Validate: ' + probs.join(' · ')
+        : '✓ Validate (runtime, real metrics, re-run on every fold/slide): INV-1 · RG-10.7 approaches · RG-10.13 lengths · no overlaps — all pass';
+}
+redraw();
+
+/* theme toggle — class swap only (RG-9.6: paint, never geometry) */
+const wrap = document.getElementById('view-wrap');
+const bB = document.getElementById('btn-brand'), bP = document.getElementById('btn-plain');
+function setTheme(brand) {
+    wrap.className = brand ? 'eb-brand' : 'eb-plain';
+    bB.classList.toggle('on', brand); bP.classList.toggle('on', !brand);
+}
+bB.addEventListener('click', () => setTheme(true));
+bP.addEventListener('click', () => setTheme(false));
+
+</script>
+</body>
+</html>

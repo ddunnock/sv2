@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEAL Viewer — Wireframe Mockup</title>
+<style>
+  :root {
+    --bg:#fdfdfc; --fg:#1a1a18; --muted:#6b6b66; --accent:#0b5d8a;
+    --card:#f4f3ef; --border:#ddd9d0; --good:#1a7a3c; --warn:#a05a00; --bad:#a32020;
+    --wf-line:#9a9a93; --wf-fill:#fafaf8; --wf-fill2:#efeeea; --wf-text:#444;
+    --mono: ui-monospace,"SF Mono","Cascadia Code",Menlo,monospace;
+  }
+  body { background:var(--bg); color:var(--fg); font:16px/1.55 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+         max-width:1240px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  h1 { font-size:1.7rem; border-bottom:3px solid var(--accent); padding-bottom:.5rem; }
+  h2 { font-size:1.25rem; margin-top:2.6rem; color:var(--accent); }
+  .meta { color:var(--muted); font-size:.9rem; }
+  code { font-family:var(--mono); font-size:.86em; background:var(--card); padding:.1em .35em; border-radius:4px; }
+  .legend { font-size:.88rem; }
+  .legend td { padding:.35rem .5rem; border:1px solid var(--border); vertical-align:top; }
+  .legend table { border-collapse:collapse; width:100%; margin:.8rem 0 2rem; }
+  .note { color:var(--muted); font-size:.85rem; }
+
+  /* ---- wireframe chrome ---- */
+  .frame { width:1160px; border:2px solid var(--wf-line); border-radius:10px; background:var(--wf-fill);
+           margin:1rem 0 .6rem; position:relative; overflow:hidden;
+           font-family:-apple-system,"Segoe UI",sans-serif; color:var(--wf-text); }
+  .topbar { height:48px; border-bottom:1.5px solid var(--wf-line); display:flex; align-items:center;
+            gap:10px; padding:0 14px; background:var(--wf-fill2); font-size:13px; }
+  .brand { font-weight:700; letter-spacing:.02em; color:#333; }
+  .crumb { color:var(--muted); }
+  .wsel, .wbtn, .wtoggle { border:1.5px solid var(--wf-line); border-radius:6px; background:#fff;
+            padding:4px 10px; font-size:12.5px; white-space:nowrap; }
+  .wsel { min-width:210px; display:flex; justify-content:space-between; gap:8px; }
+  .wtoggle { display:flex; gap:0; padding:0; overflow:hidden; }
+  .wtoggle span { padding:4px 10px; }
+  .wtoggle .on { background:#dcdcd6; font-weight:600; }
+  .spacer { flex:1; }
+  .zoomctl { display:flex; gap:0; border:1.5px solid var(--wf-line); border-radius:6px; overflow:hidden; background:#fff; }
+  .zoomctl span { padding:4px 9px; border-right:1px solid var(--wf-line); font-size:12.5px; }
+  .zoomctl span:last-child { border-right:0; }
+  .body { display:flex; align-items:stretch; }
+  .leftbar { width:212px; border-right:1.5px solid var(--wf-line); padding:10px 0; font-size:12.5px; flex:none; }
+  .leftbar h4 { margin:.6rem 12px .2rem; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .vitem { padding:5px 12px 5px 18px; display:flex; justify-content:space-between; gap:6px; }
+  .vitem.sel { background:#e3e9ee; border-left:3px solid var(--accent); padding-left:15px; font-weight:600; color:#222; }
+  .chip { font-size:10px; border:1px solid var(--wf-line); border-radius:99px; padding:0 6px; color:var(--muted); align-self:center; }
+  .canvas { flex:1; position:relative; background:#fff;
+            background-image:radial-gradient(#e6e4de 1px, transparent 1px); background-size:18px 18px; }
+  .rightbar { width:296px; border-left:1.5px solid var(--wf-line); font-size:12.5px; flex:none; background:var(--wf-fill); }
+  .tabs { display:flex; border-bottom:1.5px solid var(--wf-line); }
+  .tabs span { flex:1; text-align:center; padding:7px 0; font-size:12px; color:var(--muted); }
+  .tabs .on { font-weight:700; color:#222; border-bottom:2.5px solid var(--accent); }
+  .rb-section { padding:10px 14px; border-bottom:1px dashed var(--wf-line); }
+  .rb-section h5 { margin:0 0 6px; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .kv { display:flex; justify-content:space-between; font-size:12px; padding:2px 0; }
+  .kv b { font-weight:600; color:#333; }
+  .statusbar { height:28px; border-top:1.5px solid var(--wf-line); background:var(--wf-fill2); display:flex;
+               align-items:center; gap:18px; padding:0 14px; font-size:11.5px; color:var(--muted); }
+  .banner { position:absolute; top:10px; left:50%; transform:translateX(-50%); background:#fff8e8;
+            border:1.5px solid var(--warn); color:#5c3d00; border-radius:8px; padding:5px 12px; font-size:12px;
+            display:flex; gap:10px; align-items:center; z-index:3; }
+  .banner u { text-decoration:underline; cursor:default; }
+  /* annotation callouts */
+  .ann { position:absolute; width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff;
+         font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; z-index:5;
+         box-shadow:0 0 0 2px #fff; }
+  .dim { opacity:.3; }
+  .selglow { outline:2.5px solid var(--accent); outline-offset:1.5px; }
+</style>
+</head>
+<body>
+
+<h1>DEAL Viewer — Wireframe Mockup</h1>
+<p class="meta">v0.1 · 2026-06-11 · Companion to <code>DEAL-Viewer-Layout-Rules-Spec.html</code> — every annotated element traces to a rule ID. Low-fidelity by intent: layout and affordances, not visual design.</p>
+
+<h2>Frame 1 — Default state (view opened, nothing selected)</h2>
+<div class="frame" style="height:700px">
+  <div class="topbar">
+    <span class="brand">⬡ DEAL Viewer</span><span class="crumb">power-system/</span>
+    <span class="wsel">PowerSubsystem-IBD <span>⌄</span></span>
+    <span class="wtoggle"><span class="on">Nested</span><span>Arrows</span></span>
+    <span class="wsel" style="min-width:150px">Structure: Layered <span>⌄</span></span>
+    <span class="wtoggle"><span class="on">Status ✓</span><span>Clean</span></span>
+    <span class="spacer"></span>
+    <span class="zoomctl"><span>−</span><span>100%</span><span>+</span><span>⤢ Fit</span></span>
+    <span class="wbtn">🩺 Doctor</span>
+    <span class="ann" style="position:static; flex:none">1</span>
+  </div>
+  <div class="body" style="height:624px">
+    <div class="leftbar">
+      <h4>Hierarchy</h4>
+      <div class="vitem"><span>SystemBreakdown</span><span class="chip">42</span></div>
+      <h4>Interconnection</h4>
+      <div class="vitem sel"><span>PowerSubsystem-IBD</span><span class="chip">23</span></div>
+      <div class="vitem"><span>AvionicsBus-IBD</span><span class="chip">61</span></div>
+      <h4>Traceability</h4>
+      <div class="vitem"><span>ReqSatisfaction</span><span class="chip">214</span></div>
+      <h4>Behavior</h4>
+      <div class="vitem"><span>StartupSequence</span><span class="chip">18</span></div>
+      <div style="position:relative"><span class="ann" style="left:178px; top:-178px">2</span></div>
+    </div>
+    <div class="canvas">
+      <svg viewBox="0 0 650 624" width="100%" height="100%" font-family="-apple-system,'Segoe UI',sans-serif">
+        <!-- container: PowerSubsystem -->
+        <g>
+          <rect x="40" y="60" width="330" height="404" rx="8" fill="#fcfcfa" stroke="#777" stroke-width="1.5"/>
+          <text x="205" y="76" text-anchor="middle" font-size="10.5" fill="#666">«part»</text>
+          <text x="205" y="93" text-anchor="middle" font-size="13" font-weight="700" fill="#222">powerSubsystem : PowerSubsystem</text>
+          <line x1="40" y1="101" x2="370" y2="101" stroke="#777" stroke-width="1.5"/>
+          <g font-size="11"><text x="330" y="76" fill="#a05a00">⚠2</text><text x="352" y="76" fill="#1a7a3c">✓</text></g>
+          <!-- child: Battery -->
+          <rect x="72" y="130" width="118" height="64" rx="6" fill="#fff" stroke="#888" stroke-width="1.3"/>
+          <text x="131" y="146" text-anchor="middle" font-size="10" fill="#666">«part»</text>
+          <text x="131" y="162" text-anchor="middle" font-size="12" font-weight="700" fill="#222">battery : Battery</text>
+          <line x1="72" y1="170" x2="190" y2="170" stroke="#888" stroke-width="1.3"/>
+          <text x="80" y="185" font-size="9.5" fill="#555">+ dcOut : DCPort</text>
+          <text x="172" y="143" font-size="10" fill="#a05a00">⚠</text>
+          <rect x="186" y="152" width="8" height="8" fill="#fff" stroke="#555"/>
+          <!-- child: PDU -->
+          <rect x="240" y="120" width="104" height="84" rx="6" fill="#fff" stroke="#888" stroke-width="1.3"/>
+          <text x="292" y="136" text-anchor="middle" font-size="10" fill="#666">«part»</text>
+          <text x="292" y="152" text-anchor="middle" font-size="12" font-weight="700" fill="#222">pdu : PDU</text>
+          <line x1="240" y1="160" x2="344" y2="160" stroke="#888" stroke-width="1.3"/>
+          <text x="248" y="175" font-size="9.5" fill="#555">+ in : DCPort [2]</text>
+          <text x="248" y="189" font-size="9.5" fill="#555">− out : DCPort</text>
+          <rect x="236" y="146" width="8" height="8" fill="#fff" stroke="#555"/>
+          <rect x="236" y="170" width="8" height="8" fill="#fff" stroke="#555"/>
+          <rect x="340" y="156" width="8" height="8" fill="#fff" stroke="#555"/>
+          <!-- child: Inverter -->
+          <rect x="72" y="320" width="118" height="64" rx="6" fill="#fff" stroke="#888" stroke-width="1.3"/>
+          <text x="131" y="336" text-anchor="middle" font-size="10" fill="#666">«part»</text>
+          <text x="131" y="352" text-anchor="middle" font-size="12" font-weight="700" fill="#222">inverter : Inverter</text>
+          <line x1="72" y1="360" x2="190" y2="360" stroke="#888" stroke-width="1.3"/>
+          <text x="80" y="375" font-size="9.5" fill="#555">+ acOut : ACPort</text>
+          <rect x="186" y="342" width="8" height="8" fill="#fff" stroke="#555"/>
+          <!-- intra-container orthogonal edges, rounded bends -->
+          <g fill="none" stroke="#555" stroke-width="1.4">
+            <path d="M194,156 H214 Q220,156 220,150 V150 H236" />
+            <path d="M194,346 H220 Q226,346 226,340 V180 Q226,174 232,174 H236"/>
+          </g>
+          <circle cx="226" cy="156" r="0" fill="#555"/>
+          <path d="M220,156 V340" fill="none" stroke="#555" stroke-width="1.4" opacity="0"/>
+          <!-- edge label with halo -->
+          <rect x="196" y="246" width="60" height="16" fill="#fff" opacity="0.95"/>
+          <text x="200" y="258" font-size="10.5" fill="#555">dcBus 28V</text>
+        </g>
+        <!-- container: ThermalSubsystem -->
+        <g>
+          <rect x="452" y="120" width="170" height="200" rx="8" fill="#fcfcfa" stroke="#777" stroke-width="1.5"/>
+          <text x="537" y="136" text-anchor="middle" font-size="10.5" fill="#666">«part»</text>
+          <text x="537" y="153" text-anchor="middle" font-size="13" font-weight="700" fill="#222">thermal : Thermal</text>
+          <line x1="452" y1="161" x2="622" y2="161" stroke="#777" stroke-width="1.5"/>
+          <text x="604" y="136" font-size="11" fill="#1a7a3c">✓</text>
+          <rect x="478" y="180" width="118" height="64" rx="6" fill="#fff" stroke="#888" stroke-width="1.3"/>
+          <text x="537" y="198" text-anchor="middle" font-size="10" fill="#666">«part»</text>
+          <text x="537" y="216" text-anchor="middle" font-size="12" font-weight="700" fill="#222">coldplate : ColdPlate</text>
+          <rect x="474" y="206" width="8" height="8" fill="#fff" stroke="#555"/>
+          <!-- border crossing point on thermal wall -->
+          <rect x="448" y="206" width="8" height="8" fill="#efeeea" stroke="#555"/>
+        </g>
+        <!-- cross-container edge: pdu out-port, around boxes, perpendicular wall crossings -->
+        <g fill="none" stroke="#555" stroke-width="1.4">
+          <path d="M348,160 H398 Q404,160 404,166 V204 Q404,210 410,210 H448"/>
+        </g>
+        <rect x="366" y="46" width="2" height="0" fill="none"/>
+        <!-- wall crossing on PowerSubsystem east wall: perpendicular -->
+        <rect x="366" y="156" width="8" height="8" fill="#efeeea" stroke="#555"/>
+        <rect x="384" y="186" width="64" height="16" fill="#fff" opacity="0.95"/>
+        <text x="388" y="198" font-size="10.5" fill="#555">coolantLoop</text>
+        <!-- disconnected component packed below -->
+        <rect x="452" y="380" width="118" height="56" rx="6" fill="#fff" stroke="#888" stroke-width="1.3"/>
+        <text x="511" y="398" text-anchor="middle" font-size="10" fill="#666">«part»</text>
+        <text x="511" y="416" text-anchor="middle" font-size="12" font-weight="700" fill="#222">gse : GSE</text>
+      </svg>
+      <span class="ann" style="left:300px; top:236px">3</span>
+      <span class="ann" style="left:398px; top:140px">4</span>
+      <span class="ann" style="left:188px; top:128px">5</span>
+      <span class="ann" style="left:556px; top:356px">6</span>
+    </div>
+    <div class="rightbar">
+      <div class="tabs"><span>Element</span><span class="on">Diagram</span></div>
+      <div class="rb-section"><h5>View status</h5>
+        <div class="kv"><span>Elements / visible</span><b>23 / 23</b></div>
+        <div class="kv"><span>Connectors</span><b>14</b></div>
+        <div class="kv"><span>Diagnostics</span><b style="color:var(--warn)">2 warnings</b></div>
+        <div class="kv"><span>Invariants INV-1…7</span><b style="color:var(--good)">pass ✓</b></div>
+      </div>
+      <div class="rb-section"><h5>Model diagnostics</h5>
+        <div class="kv"><span>⚠ battery: unverified req R-014</span></div>
+        <div class="kv"><span>⚠ pdu.out2: unconnected port</span></div>
+      </div>
+      <div class="rb-section"><h5>Layout report</h5>
+        <div class="kv"><span>Engine</span><b>elk-layered + libavoid</b></div>
+        <div class="kv"><span>Settings</span><b>.dealview · stamp valid</b></div>
+        <div class="kv"><span>Layout time</span><b>142 ms</b></div>
+      </div>
+      <span class="ann" style="right:262px; top:8px; left:auto">7</span>
+    </div>
+  </div>
+  <div class="statusbar">
+    <span>PowerSubsystem-IBD · interconnection · nested</span><span>zoom 100% (fit)</span>
+    <span>INV ✓</span><span>deal v0.9.2 · layout deterministic</span>
+    <span style="flex:1"></span><span>localhost:7788</span>
+  </div>
+</div>
+<div class="legend"><table>
+<tr><td><b>1</b> Top bar</td><td>View selector, representation toggle <b>Nested | Arrows</b> (D4), organizational structure selector, status overlay toggle (RG-7.4), zoom controls + Fit (RG-5), <code>deal view doctor</code> entry (S14). No edit affordances exist anywhere (D1).</td></tr>
+<tr><td><b>2</b> Views rail</td><td>All <code>.dealview</code> views grouped by diagram family, with element-count chips — counts over the legibility budget (e.g. 214) will open with auto-collapse (RG-6.1).</td></tr>
+<tr><td><b>3</b> Canvas</td><td>Nested containers (RG-4.5), content-driven box sizes (RG-1.1), ports on boundaries (RG-3.2), orthogonal connectors with rounded bends (RG-3.1), plain T-junction = branch, hop = crossing (RG-3.6/10.8), edge labels with opaque halo (RG-3.7). No connector ever crosses a box (INV-1).</td></tr>
+<tr><td><b>4</b> Cross-container edge</td><td>Leaves through a perpendicular border-crossing point on each container wall (RG-3.5), routed by libavoid around all boxes (RG-3.4).</td></tr>
+<tr><td><b>5</b> Status badges</td><td>Per-element badges in the reserved header strip (RG-1.5) — toggling status never moves anything (INV-5).</td></tr>
+<tr><td><b>6</b> Unconnected component</td><td>Disconnected elements packed row-wise with component spacing (RG-4.6 / RG-2.7).</td></tr>
+<tr><td><b>7</b> Diagram panel</td><td>Diagram-level status (D10): view stats, model diagnostics, invariant results, and the layout report incl. <code>.dealview</code> stamp state (RG-8.2).</td></tr>
+</table></div>
+
+<h2>Frame 2 — Element selected + hover trace (battery selected)</h2>
+<div class="frame" style="height:560px">
+  <div class="topbar">
+    <span class="brand">⬡ DEAL Viewer</span><span class="crumb">power-system/</span>
+    <span class="wsel">PowerSubsystem-IBD <span>⌄</span></span>
+    <span class="spacer"></span>
+    <span class="zoomctl"><span>−</span><span>100%</span><span>+</span><span>⤢ Fit</span></span>
+  </div>
+  <div class="body" style="height:484px">
+    <div class="leftbar" style="opacity:.55">
+      <h4>Interconnection</h4>
+      <div class="vitem sel"><span>PowerSubsystem-IBD</span><span class="chip">23</span></div>
+      <div class="vitem"><span>AvionicsBus-IBD</span><span class="chip">61</span></div>
+    </div>
+    <div class="canvas">
+      <svg viewBox="0 0 650 484" width="100%" height="100%" font-family="-apple-system,'Segoe UI',sans-serif">
+        <!-- container dimmed except highlight path -->
+        <g>
+          <rect x="40" y="40" width="330" height="380" rx="8" fill="#fcfcfa" stroke="#777" stroke-width="1.5" opacity=".45"/>
+          <g opacity=".45">
+            <text x="205" y="56" text-anchor="middle" font-size="10.5" fill="#666">«part»</text>
+            <text x="205" y="73" text-anchor="middle" font-size="13" font-weight="700" fill="#222">powerSubsystem : PowerSubsystem</text>
+            <line x1="40" y1="81" x2="370" y2="81" stroke="#777" stroke-width="1.5"/>
+          </g>
+          <!-- battery: SELECTED -->
+          <rect x="72" y="110" width="118" height="64" rx="6" fill="#fff" stroke="#0b5d8a" stroke-width="2.5"/>
+          <text x="131" y="126" text-anchor="middle" font-size="10" fill="#666">«part»</text>
+          <text x="131" y="142" text-anchor="middle" font-size="12" font-weight="700" fill="#222">battery : Battery</text>
+          <line x1="72" y1="150" x2="190" y2="150" stroke="#0b5d8a" stroke-width="1.3"/>
+          <text x="80" y="165" font-size="9.5" fill="#555">+ dcOut : DCPort</text>
+          <text x="172" y="123" font-size="10" fill="#a05a00">⚠</text>
+          <rect x="186" y="132" width="8" height="8" fill="#fff" stroke="#0b5d8a" stroke-width="1.5"/>
+          <!-- pdu: neighbor, highlighted -->
+          <rect x="240" y="100" width="104" height="84" rx="6" fill="#fff" stroke="#444" stroke-width="1.6"/>
+          <text x="292" y="116" text-anchor="middle" font-size="10" fill="#666">«part»</text>
+          <text x="292" y="132" text-anchor="middle" font-size="12" font-weight="700" fill="#222">pdu : PDU</text>
+          <line x1="240" y1="140" x2="344" y2="140" stroke="#444" stroke-width="1.6"/>
+          <text x="248" y="155" font-size="9.5" fill="#555">+ in : DCPort [2]</text>
+          <rect x="236" y="126" width="8" height="8" fill="#fff" stroke="#333"/>
+          <!-- inverter: dimmed -->
+          <g opacity=".3">
+            <rect x="72" y="300" width="118" height="64" rx="6" fill="#fff" stroke="#888" stroke-width="1.3"/>
+            <text x="131" y="316" text-anchor="middle" font-size="10" fill="#666">«part»</text>
+            <text x="131" y="332" text-anchor="middle" font-size="12" font-weight="700" fill="#222">inverter : Inverter</text>
+          </g>
+          <!-- highlighted edge battery->pdu -->
+          <path d="M194,136 H214 Q220,136 220,130 V130 H236" fill="none" stroke="#0b5d8a" stroke-width="2.2"/>
+          <!-- dimmed other edges -->
+          <path d="M194,326 H220 V160 H236" fill="none" stroke="#555" stroke-width="1.4" opacity=".25"/>
+        </g>
+        <g opacity=".3">
+          <rect x="452" y="100" width="170" height="200" rx="8" fill="#fcfcfa" stroke="#777" stroke-width="1.5"/>
+          <text x="537" y="116" text-anchor="middle" font-size="10.5" fill="#666">«part»</text>
+          <text x="537" y="133" text-anchor="middle" font-size="13" font-weight="700" fill="#222">thermal : Thermal</text>
+          <line x1="452" y1="141" x2="622" y2="141" stroke="#777" stroke-width="1.5"/>
+          <path d="M348,140 H398 Q404,140 404,146 V184 Q404,190 410,190 H448" fill="none" stroke="#555" stroke-width="1.4"/>
+        </g>
+      </svg>
+      <span class="ann" style="left:120px; top:84px">8</span>
+      <span class="ann" style="left:110px; top:290px">9</span>
+    </div>
+    <div class="rightbar">
+      <div class="tabs"><span class="on">Element</span><span>Diagram</span></div>
+      <div class="rb-section"><h5>Selected</h5>
+        <div style="font-weight:700; font-size:14px; color:#222">battery</div>
+        <div style="font-size:11px; color:#888">«part» Battery · powerSubsystem.battery</div>
+      </div>
+      <div class="rb-section"><h5>Properties</h5>
+        <div class="kv"><span>type</span><b>Battery</b></div>
+        <div class="kv"><span>capacity</span><b>120 Ah ± 5</b></div>
+        <div class="kv"><span>mass</span><b>14.2 kg</b></div>
+        <div class="kv"><span>ports</span><b>dcOut : DCPort</b></div>
+      </div>
+      <div class="rb-section"><h5>Element diagnostics</h5>
+        <div class="kv"><span style="color:var(--warn)">⚠ unverified requirement R-014</span></div>
+      </div>
+      <div class="rb-section"><h5>Full text</h5>
+        <div class="note" style="font-family:var(--mono); font-size:10.5px">part battery : Battery {<br>&nbsp;&nbsp;port dcOut : DCPort;<br>&nbsp;&nbsp;…<br>}</div>
+      </div>
+      <span class="ann" style="right:262px; top:8px; left:auto">10</span>
+    </div>
+  </div>
+  <div class="statusbar"><span>battery selected</span><span>1 element · 1 connector highlighted</span></div>
+</div>
+<div class="legend"><table>
+<tr><td><b>8</b> Selection</td><td>2px accent outline (RG-7.3); connected edges + direct neighbors stay at full opacity (hover/selection trace, RG-7.2). Zero layout change.</td></tr>
+<tr><td><b>9</b> Dimming</td><td>Everything outside the trace dims to 30% opacity (RG-7.2) — clutter control without moving a single box.</td></tr>
+<tr><td><b>10</b> Element panel</td><td>Properties, ports, element-level diagnostics, and the full untruncated source text (RG-1.4's escape hatch: truncation never hides information, the panel and tooltips always carry full text).</td></tr>
+</table></div>
+
+<h2>Frame 3 — Large view: auto-collapse + zoomed-out LOD</h2>
+<div class="frame" style="height:520px">
+  <div class="topbar">
+    <span class="brand">⬡ DEAL Viewer</span><span class="crumb">power-system/</span>
+    <span class="wsel">ReqSatisfaction <span>⌄</span></span>
+    <span class="wsel" style="min-width:150px">Structure: Layered <span>⌄</span></span>
+    <span class="spacer"></span>
+    <span class="zoomctl"><span>−</span><span>34%</span><span>+</span><span>⤢ Fit</span></span>
+  </div>
+  <div class="body" style="height:444px">
+    <div class="leftbar" style="opacity:.55">
+      <h4>Traceability</h4>
+      <div class="vitem sel"><span>ReqSatisfaction</span><span class="chip">214</span></div>
+    </div>
+    <div class="canvas">
+      <div class="banner">⚠ 9 containers collapsed for legibility (214 → 48 visible) <u>Expand all</u> <u>Budget…</u></div>
+      <svg viewBox="0 0 650 444" width="100%" height="100%" font-family="-apple-system,'Segoe UI',sans-serif">
+        <!-- LOD band <0.3: titled boxes only, no ports/compartments -->
+        <g font-size="11" font-weight="600" fill="#333">
+          <g>
+            <rect x="50" y="80" width="96" height="40" rx="4" fill="#efeeea" stroke="#777" stroke-width="1.4"/>
+            <text x="60" y="104">Requirements ⊞</text>
+          </g>
+          <rect x="50" y="150" width="96" height="40" rx="4" fill="#efeeea" stroke="#777" stroke-width="1.4"/><text x="60" y="174">Power ⊞</text>
+          <rect x="50" y="220" width="96" height="40" rx="4" fill="#efeeea" stroke="#777" stroke-width="1.4"/><text x="60" y="244">Thermal ⊞</text>
+          <rect x="250" y="110" width="96" height="40" rx="4" fill="#fff" stroke="#888" stroke-width="1.3"/><text x="260" y="134">R-014</text>
+          <rect x="250" y="180" width="96" height="40" rx="4" fill="#fff" stroke="#888" stroke-width="1.3"/><text x="260" y="204">R-022</text>
+          <rect x="450" y="140" width="110" height="40" rx="4" fill="#efeeea" stroke="#777" stroke-width="1.4"/><text x="460" y="164">Verification ⊞</text>
+        </g>
+        <g fill="none" stroke="#555" stroke-width="1.3">
+          <path d="M146,100 H200 Q206,100 206,106 V124 Q206,130 212,130 H250"/>
+          <path d="M146,170 H200 Q206,170 206,176 V194 Q206,200 212,200 H250"/>
+          <path d="M146,240 H220 Q226,240 226,234 V206 Q226,200 232,200 H250"/>
+          <path d="M346,130 H400 Q406,130 406,136 V154 Q406,160 412,160 H450"/>
+          <path d="M346,200 H400 Q406,200 406,194 V166 Q406,160 412,160 H450"/>
+        </g>
+        <text x="180" y="320" font-size="11" fill="#999">… 42 more visible elements (of 48 budget) …</text>
+      </svg>
+      <span class="ann" style="left:430px; top:12px">11</span>
+      <span class="ann" style="left:106px; top:64px">12</span>
+      <span class="ann" style="left:300px; top:96px">13</span>
+    </div>
+    <div class="rightbar">
+      <div class="tabs"><span>Element</span><span class="on">Diagram</span></div>
+      <div class="rb-section"><h5>View status</h5>
+        <div class="kv"><span>Elements / visible</span><b>214 / 48</b></div>
+        <div class="kv"><span>Auto-collapsed</span><b>9 containers</b></div>
+        <div class="kv"><span>Legibility budget</span><b>50 (default)</b></div>
+        <div class="kv"><span>Invariants</span><b style="color:var(--good)">pass ✓</b></div>
+      </div>
+      <div class="rb-section"><h5>Collapsed containers</h5>
+        <div class="kv"><span>Requirements.thermal</span><b>31 ⊞</b></div>
+        <div class="kv"><span>Requirements.power</span><b>27 ⊞</b></div>
+        <div class="kv"><span>Verification.bench</span><b>22 ⊞</b></div>
+      </div>
+    </div>
+  </div>
+  <div class="statusbar"><span>ReqSatisfaction · traceability · layered LR</span><span>zoom 34% · LOD: titles only</span><span>layout 1.8 s (worker)</span></div>
+</div>
+<div class="legend"><table>
+<tr><td><b>11</b> Collapse banner</td><td>The S16 mitigation: view exceeded the 50-element legibility budget (RG-6.1), deepest containers auto-collapsed; one-click expand-all and a per-view budget override that persists to the <code>.dealview</code> tool-managed block (RG-8.2).</td></tr>
+<tr><td><b>12</b> Collapsed container</td><td>Renders as a titled box with ⊞ affordance; expanding relayouts only its ancestor chain, viewport-anchored on the toggled box (RG-7.1).</td></tr>
+<tr><td><b>13</b> LOD band</td><td>At 34% zoom (&lt; 0.6 band): titles only, no ports/port labels/compartments (RG-6.2); zooming in only ever adds detail (RG-6.3). Crossings remain 90°-only with hops; branches are plain T-junctions (INV-6).</td></tr>
+</table></div>
+
+<h2>Frame 4 — Containment-arrow mode (SysML v2 decomposition notation)</h2>
+<p class="note">Reproduces the SysML v2 reference notation: diagram frame with name tab, «keyword» + bold name header closed by a 2px rule, italic compartment labels with left-aligned entries (visibility <code>+/−</code>, multiplicity <code>[n..m]</code>), and composition diamonds at the parent end.</p>
+<div class="frame" style="height:640px">
+  <div class="topbar">
+    <span class="brand">⬡ DEAL Viewer</span><span class="crumb">vehicle-demo/</span>
+    <span class="wsel">VehicleDecomposition <span>⌄</span></span>
+    <span class="wtoggle"><span>Nested</span><span class="on">Arrows</span></span>
+    <span class="wsel" style="min-width:150px">Structure: Tree <span>⌄</span></span>
+    <span class="spacer"></span>
+    <span class="zoomctl"><span>−</span><span>100%</span><span>+</span><span>⤢ Fit</span></span>
+  </div>
+  <div class="body" style="height:564px">
+    <div class="leftbar" style="opacity:.55">
+      <h4>Hierarchy</h4>
+      <div class="vitem sel"><span>VehicleDecomposition</span><span class="chip">4</span></div>
+    </div>
+    <div class="canvas">
+      <svg viewBox="0 0 650 564" width="100%" height="100%" font-family="-apple-system,'Segoe UI',sans-serif">
+        <!-- diagram frame with name tab -->
+        <rect x="24" y="18" width="600" height="520" fill="none" stroke="#555" stroke-width="1.6"/>
+        <path d="M24,18 H264 V36 L252,48 H24 Z" fill="#fff" stroke="#555" stroke-width="1.6"/>
+        <text x="36" y="38" font-size="12" font-weight="600" fill="#333">Decomposition View of vehicle</text>
+        <!-- vehicle -->
+        <g>
+          <rect x="255" y="60" width="200" height="120" rx="8" fill="#fff" stroke="#555" stroke-width="1.6"/>
+          <text x="355" y="78" text-anchor="middle" font-size="11" fill="#555">«part»</text>
+          <text x="355" y="96" text-anchor="middle" font-size="13" font-weight="700" fill="#222">vehicle</text>
+          <line x1="255" y1="104" x2="455" y2="104" stroke="#555" stroke-width="1.6"/>
+          <text x="355" y="118" text-anchor="middle" font-size="10" font-style="italic" fill="#666">attributes</text>
+          <text x="267" y="134" font-size="11.5" fill="#333">+ mass [1]</text>
+          <line x1="255" y1="142" x2="455" y2="142" stroke="#555" stroke-width="1"/>
+          <text x="355" y="156" text-anchor="middle" font-size="10" font-style="italic" fill="#666">actions</text>
+          <text x="267" y="172" font-size="11.5" fill="#333">perform providePower</text>
+        </g>
+        <!-- transmission -->
+        <g>
+          <rect x="60" y="260" width="210" height="120" rx="8" fill="#fff" stroke="#555" stroke-width="1.6"/>
+          <text x="165" y="278" text-anchor="middle" font-size="11" fill="#555">«part»</text>
+          <text x="165" y="296" text-anchor="middle" font-size="13" font-weight="700" fill="#222">transmission</text>
+          <line x1="60" y1="304" x2="270" y2="304" stroke="#555" stroke-width="1.6"/>
+          <text x="165" y="318" text-anchor="middle" font-size="10" font-style="italic" fill="#666">attributes</text>
+          <text x="72" y="334" font-size="11.5" fill="#333">+ mass [1]</text>
+          <line x1="60" y1="342" x2="270" y2="342" stroke="#555" stroke-width="1"/>
+          <text x="165" y="356" text-anchor="middle" font-size="10" font-style="italic" fill="#666">actions</text>
+          <text x="72" y="372" font-size="11.5" fill="#333">perform amplifyTorque</text>
+        </g>
+        <!-- engine -->
+        <g>
+          <rect x="330" y="260" width="220" height="120" rx="8" fill="#fff" stroke="#555" stroke-width="1.6"/>
+          <text x="440" y="278" text-anchor="middle" font-size="11" fill="#555">«part»</text>
+          <text x="440" y="296" text-anchor="middle" font-size="13" font-weight="700" fill="#222">engine</text>
+          <line x1="330" y1="304" x2="550" y2="304" stroke="#555" stroke-width="1.6"/>
+          <text x="440" y="318" text-anchor="middle" font-size="10" font-style="italic" fill="#666">attributes</text>
+          <text x="342" y="334" font-size="11.5" fill="#333">+ mass [1]</text>
+          <line x1="330" y1="342" x2="550" y2="342" stroke="#555" stroke-width="1"/>
+          <text x="440" y="356" text-anchor="middle" font-size="10" font-style="italic" fill="#666">actions</text>
+          <text x="342" y="372" font-size="11.5" fill="#333">perform generateTorque</text>
+        </g>
+        <!-- cylinders -->
+        <g>
+          <rect x="375" y="440" width="130" height="54" rx="8" fill="#fff" stroke="#555" stroke-width="1.6"/>
+          <text x="440" y="458" text-anchor="middle" font-size="11" fill="#555">«part»</text>
+          <text x="440" y="478" text-anchor="middle" font-size="13" font-weight="700" fill="#222">cylinders[6]</text>
+        </g>
+        <!-- composition connectors: diamond at parent end -->
+        <g stroke="#222" stroke-width="1.8" fill="none">
+          <path d="M290,194 V224 H165 V260"/>
+          <path d="M440,194 V260"/>
+          <path d="M440,394 V440"/>
+        </g>
+        <g fill="#111">
+          <polygon points="290,180 296,187 290,194 284,187"/>
+          <polygon points="440,180 446,187 440,194 434,187"/>
+          <polygon points="440,380 446,387 440,394 434,387"/>
+        </g>
+      </svg>
+      <span class="ann" style="left:240px; top:20px">14</span>
+      <span class="ann" style="left:445px; top:120px">15</span>
+      <span class="ann" style="left:300px; top:190px">16</span>
+    </div>
+    <div class="rightbar">
+      <div class="tabs"><span>Element</span><span class="on">Diagram</span></div>
+      <div class="rb-section"><h5>View status</h5>
+        <div class="kv"><span>Elements / visible</span><b>4 / 4</b></div>
+        <div class="kv"><span>Containments</span><b>3</b></div>
+        <div class="kv"><span>Invariants INV-1…7</span><b style="color:var(--good)">pass ✓</b></div>
+      </div>
+      <div class="rb-section"><h5>Layout report</h5>
+        <div class="kv"><span>Engine</span><b>flextree (tree, TD)</b></div>
+        <div class="kv"><span>Mode</span><b>containment-arrow</b></div>
+        <div class="kv"><span>Layout time</span><b>4 ms</b></div>
+      </div>
+    </div>
+  </div>
+  <div class="statusbar"><span>VehicleDecomposition · hierarchy · containment-arrow</span><span>zoom 100% (fit)</span><span>INV ✓</span></div>
+</div>
+<div class="legend"><table>
+<tr><td><b>14</b> Diagram frame</td><td>Rectangular frame with cut-corner name tab — view kind + subject (RG-9.1).</td></tr>
+<tr><td><b>15</b> Box anatomy</td><td>«keyword» over centered bold name (multiplicity suffix allowed, e.g. <code>cylinders[6]</code>), 2px header rule, italic compartment labels (<em>attributes</em>, <em>actions</em>), left-aligned entries with visibility <code>+/−</code> and multiplicity <code>[n..m]</code> rendered verbatim (RG-9.2/9.3). Box height is content-driven — empty compartments never render (RG-1.1).</td></tr>
+<tr><td><b>16</b> Composition connector</td><td>Solid orthogonal line, filled diamond at the parent end, one per relationship, anchored on the child-facing side; parent above children, crossing-free by tree construction (RG-9.4 / RG-4.5).</td></tr>
+</table></div>
+
+<p class="note">Out of frame by design (D1/YAGNI): node dragging, connector editing, context menus with edit verbs, property editing, export buttons, minimap. The only mutations the app ever performs are collapse-state/budget writes to the <code>.dealview</code> tool-managed block.</p>
+
+</body>
+</html>

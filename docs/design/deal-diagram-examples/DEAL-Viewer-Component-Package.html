@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEAL Viewer — Package Component (SysML v2 namespace notation)</title>
+<style>
+  :root {
+    --bg:#fdfdfc; --fg:#1a1a18; --muted:#6b6b66; --accent:#0b5d8a;
+    --card:#f4f3ef; --border:#ddd9d0; --good:#1a7a3c; --warn:#a05a00; --bad:#a32020;
+    --mono: ui-monospace,"SF Mono","Cascadia Code",Menlo,monospace;
+    --eb-stroke:#1a1a18; --eb-fill:#ffffff; --eb-text:#1a1a18; --eb-dim:#555550;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#16181a; --fg:#e8e6e1; --muted:#9a9a93; --accent:#5db3e0;
+            --card:#1f2225; --border:#34383c; --good:#5fc788; --warn:#e0a458; --bad:#e07070;
+            --eb-stroke:#d8d6d1; --eb-fill:#1c1f22; --eb-text:#e8e6e1; --eb-dim:#b0aea8; }
+  }
+  body { background:var(--bg); color:var(--fg); font:16px/1.55 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+         max-width:1100px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  h1 { font-size:1.7rem; border-bottom:3px solid var(--accent); padding-bottom:.5rem; }
+  h2 { font-size:1.25rem; margin-top:2.4rem; color:var(--accent); }
+  .meta { color:var(--muted); font-size:.9rem; }
+  code { font-family:var(--mono); font-size:.86em; background:var(--card); padding:.1em .35em; border-radius:4px; }
+  pre { font-family:var(--mono); font-size:.8rem; background:var(--card); border:1px solid var(--border);
+        border-radius:8px; padding:.9rem 1rem; overflow-x:auto; line-height:1.45; }
+  table { border-collapse:collapse; width:100%; margin:1rem 0; font-size:.85rem; }
+  th, td { border:1px solid var(--border); padding:.45rem .6rem; text-align:left; vertical-align:top; }
+  th { background:var(--card); }
+  .gallery { display:flex; flex-wrap:wrap; gap:28px; align-items:flex-start; margin:1.2rem 0; }
+  .demo { text-align:center; }
+  .demo figcaption { font-size:.78rem; color:var(--muted); margin-top:.5rem; max-width:280px; }
+  figure { margin:0; }
+  .note { color:var(--muted); font-size:.85rem; }
+  .eb-ref:hover { text-decoration:underline; cursor:pointer; }
+
+  /* themes — same contract as eb-theme.css (RG-9.6): paint only */
+  .eb-plain g[data-eb] {
+    --eb-outline: var(--eb-stroke); --eb-rule: var(--eb-stroke);
+    --eb-sep: var(--eb-stroke); --eb-kw: var(--eb-dim); --eb-header-fill: transparent;
+  }
+  .eb-brand g[data-family="package"] {
+    --eb-accent:#8a6f2f;          /* manila — folders read as folders */
+    --eb-header-fill:#f5edd8;
+    --eb-outline: var(--eb-accent); --eb-rule: var(--eb-accent);
+    --eb-kw: var(--eb-accent); --eb-sep:#d4d5d0; --eb-dim:#5d6166;
+  }
+  @media (prefers-color-scheme: dark) {
+    .eb-brand g[data-family="package"] { --eb-accent:#cfae5e; --eb-header-fill:#33290f; --eb-sep:#3c4045; --eb-dim:#a3a7ab; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Package — the «package» / namespace container</h1>
+<p class="meta">v0.1 · 2026-06-12 · Reference implementation for spec rule RG-9.10 (+ RG-9.1 frame unification, RG-7.5 identity) · Companion to <code>DEAL-Viewer-Layout-Rules-Spec.html</code>, <code>DEAL-Viewer-Component-ElementBox.html</code>, <code>DEAL-Viewer-Component-Connector.html</code></p>
+
+<p>The third atomic component: the namespace container everything else lives in. <strong>Framework-free JS producing SVG</strong>, folder silhouette with the slant-edged tab (owner-drawn reference), content-driven sizing, both themes, refs and navigation per RG-7.5. The <code>&lt;script&gt;</code> below lifts into the viewer codebase as <code>package.js</code>.</p>
+
+<h2>1. Namespace semantics (OMG SysML v2 §7.5) — what the component must respect</h2>
+<table>
+<tr><th>Semantic</th><th>Consequence for rendering</th></tr>
+<tr><td>A <strong>namespace</strong> contains elements and <em>provides names for them</em>; members relate via <strong>Membership</strong>, which can carry a member name and a <strong>visibility</strong> (visible outside the namespace or not).</td><td>Member entries may carry visibility decorations; «private» marks members/imports hidden outside the namespace.</td></tr>
+<tr><td><strong>Owned membership:</strong> deleting the namespace deletes owned members. An element has <strong>at most one owning membership</strong> across all namespaces, but may additionally hold non-owning memberships — including in the <em>same</em> namespace.</td><td>Owned members render solid; the ⊕ membership connector marks the owning end. One owner ever — duplicate solid renderings of one element in two packages would be a model error (Validate diagnostic).</td></tr>
+<tr><td><strong>Non-owning membership</strong> may introduce an <strong>alias</strong> name relative to the namespace.</td><td>«alias» folder variant with the bold-<code>for</code> target line; ○ connector glyph for unowned membership.</td></tr>
+<tr><td><strong>Import</strong> brings memberships in from another namespace — imported members become <strong>unowned</strong> members of the importer. Star notation: no star = single element, <code>*</code> = package contents, <code>**</code> = recursive including owned sub-namespaces.</td><td>Imported packages render <strong>dashed</strong> (nested notation); the «import» dashed-arrow connector carries the star suffix verbatim.</td></tr>
+<tr><td>A <strong>package</strong> is a namespace used <em>solely to organize the model</em>, and may <strong>filter</strong> imported elements by metadata conditions — recursive import + filtering = automatic content selection across the model.</td><td>Filter conditions are model semantics (Normalize resolves actual membership); the rendered member list always shows the <em>resolved</em> members, never the filter expression as members.</td></tr>
+<tr><td><strong>All definitions and usages are also namespaces.</strong> Namespace rules apply generically.</td><td>This is why ports nest, parts own parts, and the member-list anatomy is shared — the package is just the purest container case.</td></tr>
+<tr><td><strong>Qualified names</strong> (<code>A::B::c</code>) are <em>notation only</em> — the abstract syntax holds actual element references, resolved by name resolution.</td><td>Grounds RG-7.5 exactly: <code>data-ref</code> carries identity; the shell/model index resolves it at click time. Display strings use qualified names; navigation never parses them.</td></tr>
+</table>
+
+<h2>2. Variants — standard notation and DEAL brand theme</h2>
+<p>Name <strong>in the body</strong> (simple, empty tab) or <strong>in the tab</strong> — both valid per OMG; members force the name into the tab. Member lists may open with an italic title or list directly with <strong>bold leading keywords</strong>. Brand theme tints the tab manila (RG-9.6 palette):</p>
+<div class="gallery eb-plain" id="g-pkg"></div>
+<div class="gallery eb-brand" id="g-pkg-brand"></div>
+
+<h2>3. The outermost containment — package as the view frame</h2>
+<p>When a view's subject is a package, the package folder <em>is</em> the diagram frame (RG-9.1 = RG-9.10): every member element lives inside its body. The member box below is a stand-in — real composition places <code>ElementBox</code>/<code>Connector</code> components inside via the Place stage:</p>
+<div class="gallery eb-brand" id="g-pkg-frame"></div>
+
+<h2>4. Component contract</h2>
+<pre>renderPackage(spec, opts?) → { node: SVGGElement, layout: {width, height} }
+
+spec = {
+  name,
+  namePlacement?: 'body' | 'tab',  // default: 'body' when simple, 'tab' when members shown (OMG: both valid)
+  keyword?,                        // «alias», «private», … — keyword line above a body-placed name
+  forTarget?,                      // alias target → bold "for Package2" line (non-owning membership)
+  dashed?,                         // imported package, nested notation (unowned membership via import)
+  compartments?: [{ title?,        // title OPTIONAL — owned members may list directly
+                    items: (string | {kw?, text, ref?})[] }],  // kw renders bold: "part def" PartDef1;
+                                   // visibility (+/−) and star suffixes (* / **) render verbatim (RG-9.3)
+  minWidth?, minHeight?,           // frame-scale sizing for outermost containment (pass opts.maxWidth too)
+  ref?                             // qualified name as display identity — navigation per RG-7.5
+}
+opts = { maxWidth?, onNavigate?: (ref) => void, theme via CSS vars --eb-* }</pre>
+<table>
+<tr><th>Token</th><th>Value</th><th>Rule</th></tr>
+<tr><td>tab: 24px tall, slant 12, min 64, name bold 14px left-aligned · body: square corners, min 38</td><td><code>NS_TOKENS.package</code></td><td>RG-9.10</td></tr>
+<tr><td>name-in-body centered bold; «keyword» line above; bold-<code>for</code> alias line below</td><td><code>layoutPackage()</code></td><td>RG-9.10</td></tr>
+<tr><td>member entries: optional italic title, bold leading keyword, per-entry refs, tail-truncation + tooltip</td><td>(shared anatomy with ElementBox)</td><td>RG-1.4, RG-9.10</td></tr>
+<tr><td>dashed outline (5 3) for imported packages; «private» = private import/member</td><td><code>spec.dashed</code></td><td>RG-9.10</td></tr>
+<tr><td>themes paint-only; brand tints the tab manila; standard = conformance black</td><td>CSS vars <code>--eb-*</code></td><td>RG-9.6</td></tr>
+<tr><td>membership (⊕ owned / ○ alias) and «import» dashed-arrow connectors</td><td>deferred to the relational connector document</td><td>RG-9.10</td></tr>
+</table>
+
+<script>
+"use strict";
+/* ============================================================================
+ * package.js — DEAL Viewer atomic SysML v2 package / namespace container
+ * Spec traceability: RG-9.10 (folder notation, OMG §7.5 semantics), RG-9.1
+ * (view-frame unification), RG-9.6 (themes), RG-7.5 (identity/navigation),
+ * RG-1.x (measured sizing), RG-8.1 (determinism).
+ * ==========================================================================*/
+
+const FONT_FAMILY = '-apple-system, "Segoe UI", Helvetica, Arial, sans-serif'; // production: bundled woff2 (D8)
+
+const NS_TOKENS = {
+    fonts: {
+        keyword: '400 11px ' + FONT_FAMILY,
+        name:    '700 13px ' + FONT_FAMILY,
+        title:   'italic 400 10.5px ' + FONT_FAMILY,
+        item:    '400 12px ' + FONT_FAMILY
+    },
+    ascent: {keyword: 11, name: 13, title: 10, item: 12},
+    lineHeight: {keyword: 15, name: 19, title: 15, item: 17},
+    pad: {x: 12, headerTop: 7, headerGap: 2, headerBottom: 7, compTop: 4, compBottom: 7},
+    rules: {compartment: 1},
+    sepInset: 12,
+    minWidth: 80, maxWidth: 240, nameMaxLines: 3, minTruncChars: 8,
+    stroke: 1.5,
+    // RG-9.10: slant-edged tab (owner-drawn reference, 2026-06-12); square-cornered body
+    package: {tabH: 24, tabMinW: 64, tabPadX: 10, slant: 12, bodyMinH: 44,
+              nameFont: '700 14px ' + FONT_FAMILY}
+};
+
+/* --- shared core (production: imported from the common render module) --- */
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(name, attrs, text) {
+    const n = document.createElementNS(SVGNS, name);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+}
+function applyFont(node, font) {
+    const italic = /italic/.test(font);
+    const weight = (font.match(/\b([1-9]00)\b/) || [, '400'])[1];
+    const size = (font.match(/(\d+(?:\.\d+)?)px/) || [, '12'])[1];
+    node.setAttribute('font-size', size);
+    node.setAttribute('font-weight', weight);
+    if (italic) node.setAttribute('font-style', 'italic');
+}
+function createMeasurer() {
+    const ctx = document.createElement('canvas').getContext('2d');
+    const cache = new Map();
+    return (text, font) => {
+        const k = font + '' + text;
+        if (!cache.has(k)) { ctx.font = font; cache.set(k, Math.ceil(ctx.measureText(text).width)); }
+        return cache.get(k);
+    };
+}
+function truncate(measure, text, font, maxW) {          // RG-1.4
+    if (measure(text, font) <= maxW) return {text, full: null};
+    let lo = NS_TOKENS.minTruncChars, hi = text.length;
+    while (lo < hi) {
+        const mid = Math.ceil((lo + hi) / 2);
+        if (measure(text.slice(0, mid) + '…', font) <= maxW) lo = mid; else hi = mid - 1;
+    }
+    return {text: text.slice(0, lo) + '…', full: text};
+}
+function wrapName(measure, text, font, maxW, maxLines) {  // RG-1.4
+    const words = text.split(/\s+/), lines = [];
+    let line = '';
+    for (const w of words) {
+        const probe = line ? line + ' ' + w : w;
+        if (measure(probe, font) <= maxW || !line) line = probe;
+        else { lines.push(line); line = w; }
+    }
+    if (line) lines.push(line);
+    if (lines.length > maxLines) {
+        const rest = lines.slice(maxLines - 1).join(' ');
+        lines.length = maxLines - 1;
+        lines.push(truncate(measure, rest, font, maxW).text);
+    }
+    return lines.map(l => measure(l, font) <= maxW ? {text: l, full: null} : truncate(measure, l, font, maxW));
+}
+
+/* --- pure layout: spec → geometry (RG-8.1) --- */
+function layoutPackage(spec, measure, opts) {
+    const T = NS_TOKENS, P = T.package, o = opts || {};
+    const maxWidth = o.maxWidth || T.maxWidth;
+    const comps = (spec.compartments || []).filter(c => c && c.items && c.items.length);
+    const placement = spec.namePlacement || (comps.length ? 'tab' : 'body');
+    const itemText = (it) => typeof it === 'string' ? it : ((it.kw ? it.kw + ' ' : '') + it.text);
+    const kwLine = spec.keyword ? '«' + spec.keyword + '»' : null;
+    const subLine = spec.forTarget ? 'for ' + spec.forTarget : null;
+
+    let natural = Math.max(
+        measure(spec.name, P.nameFont) + (placement === 'tab' ? 2 * P.tabPadX + P.slant + 16 : 0),
+        kwLine ? measure(kwLine, T.fonts.keyword) : 0,
+        subLine ? measure(subLine, T.fonts.item) : 0,
+        ...comps.map(c => c.title ? measure(c.title, T.fonts.title) : 0),
+        ...comps.flatMap(c => c.items.map(it => measure(itemText(it), T.fonts.item)))
+    );
+    const width = Math.round(Math.min(Math.max(natural + 2 * T.pad.x, spec.minWidth || 0, T.minWidth), maxWidth));
+    const contentW = width - 2 * T.pad.x;
+    const tabW = placement === 'tab'
+        ? Math.min(width - 8, Math.max(P.tabMinW, measure(spec.name, P.nameFont) + 2 * P.tabPadX + P.slant))
+        : Math.max(P.tabMinW, Math.round(width * 0.3));
+
+    let y = P.tabH;
+    let header = null;
+    if (placement === 'body') {
+        y += T.pad.headerTop;
+        header = {};
+        if (kwLine) { header.kwBaseline = y + T.ascent.keyword; y += T.lineHeight.keyword + T.pad.headerGap; }
+        header.nameLines = wrapName(measure, spec.name, T.fonts.name, contentW, T.nameMaxLines)
+            .map(ln => { const b = {...ln, baseline: y + T.ascent.name}; y += T.lineHeight.name; return b; });
+        if (subLine) { header.subBaseline = y + T.ascent.item; header.subText = subLine; y += T.lineHeight.item; }
+        y += T.pad.headerBottom;
+    } else y += 2;
+
+    const compartments = [];
+    comps.forEach((c, i) => {
+        const comp = {ruleY: null, items: []};
+        if (i > 0) { comp.ruleY = y; y += T.rules.compartment; }
+        y += T.pad.compTop;
+        if (c.title) {   // RG-9.10: title optional — owned members may list directly
+            comp.titleBaseline = y + T.ascent.title;
+            comp.title = c.title;
+            y += T.lineHeight.title;
+        }
+        for (const raw of c.items) {
+            const t = truncate(measure, itemText(raw), T.fonts.item, contentW);
+            comp.items.push({...t, kw: (typeof raw === 'object' && raw.kw) || null,
+                ref: (typeof raw === 'object' && raw.ref) || null, baseline: y + T.ascent.item});
+            y += T.lineHeight.item;
+        }
+        y += T.pad.compBottom;
+        compartments.push(comp);
+    });
+
+    const height = Math.round(Math.max(y, P.tabH + P.bodyMinH, spec.minHeight || 0));
+    return {width, height, tabW, placement, header, compartments, kwLine,
+            dashed: !!spec.dashed, ref: spec.ref ? String(spec.ref) : null};
+}
+
+/* --- render: layout → SVG --- */
+function renderPackage(spec, opts) {
+    const measure = (opts && opts.measure) || (renderPackage._m || (renderPackage._m = createMeasurer()));
+    const L = layoutPackage(spec, measure, opts);
+    const T = NS_TOKENS, P = T.package, cx = Math.round(L.width / 2);
+    const g = el('g', {'font-family': FONT_FAMILY, 'data-eb': spec.name,
+        'data-kind': 'package', 'data-family': 'package'});
+    if (L.ref) g.setAttribute('data-ref', L.ref);
+    const dash = L.dashed ? {'stroke-dasharray': '5 3'} : {};
+
+    // slant-edged tab: top edge shorter, right edge sweeping down into the body line
+    const tabPath = 'M0,' + P.tabH + ' L0,0 H' + (L.tabW - P.slant) + ' L' + L.tabW + ',' + P.tabH + ' Z';
+
+    // fills first; border strokes LAST (painter's order — nothing paints over the outline)
+    g.appendChild(el('rect', {x: 0, y: P.tabH, width: L.width, height: L.height - P.tabH,
+        fill: 'var(--eb-fill, #fff)', stroke: 'none'}));
+    g.appendChild(el('path', {d: tabPath,
+        fill: 'var(--eb-header-fill, var(--eb-fill, #fff))', stroke: 'none'}));
+
+    if (L.placement === 'tab') {
+        const t = el('text', {x: P.tabPadX, y: P.tabH - 7, fill: 'var(--eb-text, #1a1a18)'}, spec.name);
+        applyFont(t, P.nameFont);
+        if (L.ref) { t.setAttribute('data-ref', L.ref); t.setAttribute('class', 'eb-ref'); }
+        g.appendChild(t);
+    } else {
+        if (L.kwLine) {
+            const k = el('text', {x: cx, y: L.header.kwBaseline, 'text-anchor': 'middle',
+                fill: 'var(--eb-kw, var(--eb-dim, #555))'}, L.kwLine);
+            applyFont(k, T.fonts.keyword);
+            g.appendChild(k);
+        }
+        for (const ln of L.header.nameLines) {
+            const t = el('text', {x: cx, y: ln.baseline, 'text-anchor': 'middle',
+                fill: 'var(--eb-text, #1a1a18)'}, ln.text);
+            applyFont(t, T.fonts.name);
+            if (L.ref) { t.setAttribute('data-ref', L.ref); t.setAttribute('class', 'eb-ref'); }
+            g.appendChild(t);
+        }
+        if (L.header.subText) {   // alias: bold "for" + target (non-owning membership)
+            const s = el('text', {x: cx, y: L.header.subBaseline, 'text-anchor': 'middle',
+                fill: 'var(--eb-text, #1a1a18)'});
+            applyFont(s, T.fonts.item);
+            s.appendChild(el('tspan', {'font-weight': 700}, 'for '));
+            s.appendChild(el('tspan', {}, L.header.subText.slice(4)));
+            g.appendChild(s);
+        }
+    }
+
+    for (const c of L.compartments) {
+        if (c.ruleY !== null) g.appendChild(el('line', {
+            x1: T.sepInset, y1: c.ruleY + 0.5, x2: L.width - T.sepInset, y2: c.ruleY + 0.5,
+            stroke: 'var(--eb-sep, var(--eb-stroke, #1a1a18))', 'stroke-width': T.rules.compartment}));
+        if (c.title) {
+            const tt = el('text', {x: cx, y: c.titleBaseline, 'text-anchor': 'middle',
+                fill: 'var(--eb-dim, #555)'}, c.title);
+            applyFont(tt, T.fonts.title);
+            g.appendChild(tt);
+        }
+        for (const it of c.items) {
+            const attrs = {x: T.pad.x, y: it.baseline, fill: 'var(--eb-text, #1a1a18)'};
+            if (it.ref) { attrs['data-ref'] = it.ref; attrs['class'] = 'eb-ref'; }
+            const t = el('text', attrs);
+            applyFont(t, T.fonts.item);
+            if (it.kw && !it.full) {   // bold leading keyword: "part def" PartDef1
+                t.appendChild(el('tspan', {'font-weight': 700}, it.kw + ' '));
+                t.appendChild(el('tspan', {}, it.text.slice(it.kw.length + 1)));
+            } else t.textContent = it.text;
+            if (it.full) t.appendChild(el('title', {}, it.full));
+            g.appendChild(t);
+        }
+    }
+
+    // folder outline LAST — tab path then body rect
+    const stroke = {fill: 'none', 'pointer-events': 'none',
+        stroke: 'var(--eb-outline, var(--eb-stroke, #1a1a18))', 'stroke-width': T.stroke, ...dash};
+    g.appendChild(el('path', {d: tabPath, ...stroke}));
+    g.appendChild(el('rect', {x: 0, y: P.tabH, width: L.width, height: L.height - P.tabH, ...stroke}));
+
+    if (opts && opts.onNavigate && g.addEventListener) {   // RG-7.5
+        const fire = (e, mod) => {
+            if (mod && !(e.metaKey || e.ctrlKey)) return;
+            const t = e.target.closest && e.target.closest('[data-ref]');
+            if (t) { e.preventDefault(); opts.onNavigate(t.getAttribute('data-ref')); }
+        };
+        g.addEventListener('click', (e) => fire(e, true));
+        g.addEventListener('dblclick', (e) => fire(e, false));
+    }
+    return {node: g, layout: {width: L.width, height: L.height}};
+}
+
+/* ============================== demo page ================================ */
+const PACKAGES = [
+    {caption: 'Simple — name in body, empty tab',
+     spec: {name: 'Package1', namePlacement: 'body', ref: 'Package1'}},
+    {caption: 'Simple — name in tab (equally valid per OMG)',
+     spec: {name: 'Package1', namePlacement: 'tab', ref: 'Package1'}},
+    {caption: 'Owned members — bold keywords, direct list (no title); deleting the package deletes these',
+     spec: {name: 'Package1', ref: 'Package1', compartments: [{title: null, items: [
+         {kw: 'package', text: 'Package2', ref: 'Package1::Package2'},
+         {kw: 'part def', text: 'Part2', ref: 'Package1::Part2'},
+         {kw: 'part', text: 'part2 : Part2', ref: 'Package1::part2'}]}]}},
+    {caption: 'Members compartment — italic title form',
+     spec: {name: 'Package1', ref: 'Package1', compartments: [{title: 'members', items: [
+         {kw: 'part def', text: 'PartDef1'}, {kw: 'part def', text: 'PartDef2'},
+         {kw: 'part', text: 'part1 : PartDef1'}, {kw: 'part', text: 'part2 : PartDef2'}]}]}},
+    {caption: '«alias» — non-owning membership introducing an alias name; bold for target',
+     spec: {name: 'Package2Alias', keyword: 'alias', forTarget: 'Package2',
+            namePlacement: 'body', ref: 'Package1::Package2Alias'}},
+    {caption: 'Imported (nested notation) — dashed = unowned membership via import; «private» = not visible outside',
+     spec: {name: 'Package3', keyword: 'private', dashed: true,
+            namePlacement: 'body', ref: 'Package1~import[Package3::**]'}},
+    {caption: 'Import members listed — star notation verbatim: * contents, ** recursive',
+     spec: {name: 'Package1', ref: 'Package1', compartments: [{title: null, items: [
+         {kw: 'public import', text: 'Package2::*', ref: 'Package1~import[Package2::*]'},
+         {kw: 'private import', text: 'Package3::**', ref: 'Package1~import[Package3::**]'}]}]}}
+];
+
+const NAV = (ref) => { document.getElementById('nav-out').textContent = '→ goto declaration: ' + ref; };
+
+function addPkgDemo(container, spec, captionText) {
+    const fig = document.createElement('figure');
+    fig.className = 'demo';
+    const {node, layout} = renderPackage(spec, {onNavigate: NAV});
+    const m = 4;
+    const svg = el('svg', {xmlns: SVGNS,
+        viewBox: (-m) + ' ' + (-m) + ' ' + (layout.width + 2 * m) + ' ' + (layout.height + 2 * m),
+        width: layout.width + 2 * m, height: layout.height + 2 * m});
+    svg.appendChild(node);
+    fig.appendChild(svg);
+    const c = document.createElement('figcaption');
+    c.textContent = captionText;
+    fig.appendChild(c);
+    container.appendChild(fig);
+}
+
+for (const d of PACKAGES) addPkgDemo(document.getElementById('g-pkg'), d.spec, d.caption);
+for (const d of PACKAGES) addPkgDemo(document.getElementById('g-pkg-brand'), d.spec, d.caption);
+
+/* outermost containment: the package as the diagram frame (RG-9.1/9.10) */
+{
+    const fig = document.createElement('figure');
+    fig.className = 'demo';
+    const pkg = renderPackage({name: 'VehiclePkg', namePlacement: 'tab',
+        minWidth: 430, minHeight: 280, ref: 'VehiclePkg'}, {maxWidth: 450, onNavigate: NAV});
+    const svg = el('svg', {xmlns: SVGNS, viewBox: '-4 -4 458 296', width: 458, height: 296});
+    svg.appendChild(pkg.node);
+    // stand-in member element (real composition: ElementBox inside the body, placed by Place)
+    const member = el('g', {transform: 'translate(40, 60)', 'data-family': 'part', 'data-eb': 'Vehicle'});
+    member.appendChild(el('rect', {x: 0, y: 0, width: 170, height: 96,
+        fill: 'var(--eb-fill, #fff)', stroke: 'var(--eb-stroke, #1a1a18)', 'stroke-width': 1.5}));
+    member.appendChild(el('text', {x: 85, y: 18, 'text-anchor': 'middle', 'font-size': 10.5,
+        'font-family': FONT_FAMILY, fill: 'var(--eb-dim, #555)'}, '«part def»'));
+    member.appendChild(el('text', {x: 85, y: 36, 'text-anchor': 'middle', 'font-size': 13,
+        'font-weight': 700, 'font-family': FONT_FAMILY, fill: 'var(--eb-text, #1a1a18)'}, 'Vehicle'));
+    member.appendChild(el('line', {x1: 0, y1: 44, x2: 170, y2: 44,
+        stroke: 'var(--eb-stroke, #1a1a18)', 'stroke-width': 1.5}));
+    member.appendChild(el('text', {x: 85, y: 58, 'text-anchor': 'middle', 'font-size': 10.5,
+        'font-style': 'italic', 'font-family': FONT_FAMILY, fill: 'var(--eb-dim, #555)'}, 'attributes'));
+    member.appendChild(el('text', {x: 12, y: 74, 'font-size': 12, 'font-family': FONT_FAMILY,
+        fill: 'var(--eb-text, #1a1a18)'}, 'mass :> ISQ::mass'));
+    member.appendChild(el('text', {x: 12, y: 90, 'font-size': 12, 'font-family': FONT_FAMILY,
+        fill: 'var(--eb-text, #1a1a18)'}, 'dryMass'));
+    svg.appendChild(member);
+    fig.appendChild(svg);
+    const c = document.createElement('figcaption');
+    c.textContent = 'Outermost containment — VehiclePkg as the view frame, owned member inside (RG-9.1/9.10)';
+    fig.appendChild(c);
+    document.getElementById('g-pkg-frame').appendChild(fig);
+}
+</script>
+<div class="note" id="nav-out" style="font-family:var(--mono); font-size:.8rem"></div>
+</body>
+</html>
+</body>
+</html>
