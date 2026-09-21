@@ -1683,91 +1683,111 @@ impl<'a> Parser<'a> {
     /// that vanishes on one bad token blanks the diagram on every keystroke.
     fn body_elements(&mut self, until: Option<SyntaxKind>, body: Body) {
         while !self.at_end() && !until.is_some_and(|kind| self.at(kind)) {
-            if self.depth >= MAX_DEPTH {
-                // Too deeply nested to recurse into another body. Recover one token
-                // at a time, exactly as unrecognised text is recovered: every byte
-                // still reaches the tree, and the stack does not grow (invariant 3).
-                self.report_too_deep();
-                self.error_token();
-            } else if self.at_import() {
-                self.import();
-            } else if self.at_element_keyword("alias") {
-                self.alias_member();
-            } else if body.admits_filter(self.language) && self.at_element_keyword("filter") {
-                // Where a filter is admitted is not the same question as which member
-                // a body owns; see `Body`. A `filter` in a SysML definition body
-                // (8.2.2.5.1 against 8.2.2.6.1) or at a KerML root (8.2.3.4.1) is
-                // reported rather than accepted, and
-                // tests/rejection/element-filter-member-is-not-a-definition-body-item.sysml
-                // and element-filter-member-is-not-a-kerml-root-element.kerml hold those.
-                self.element_filter_member();
-            } else if self.language == Language::KerMl
-                && self.at_feature(usize::from(self.at_visibility()))
-            {
-                // NamespaceMember = NonFeatureMember | NamespaceFeatureMember
-                // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
-                // its own membership node rather than the one `membership` builds.
-                self.namespace_feature_member();
-            } else if body.admits_action_body_item() && self.at_guarded_succession_member() {
-                // ActionBodyItem's fourth alternative (SysML 8.2.2.17.1). An item of its
-                // own with no suffix, so it is not `initial_node_item`'s shape: nothing
-                // follows it here, and tests/rejection/guarded-succession-takes-no-target-succession.sysml
-                // holds that. Disjoint from the initial node below on the token after the
-                // source name, so the order of the two arms decides nothing.
-                self.guarded_succession_member();
-            } else if body.admits_action_body_item() && self.at_initial_node_member() {
-                // ActionBodyItem's second alternative (SysML 8.2.2.17.1), reached from an
-                // action body and, through CalculationBodyItem (8.2.2.19), a calculation
-                // body. Owns its membership as ReturnParameterMember below does, so it
-                // cannot go through `membership`. Before the result-expression test for
-                // the same reason `return` is: it continues the item run.
-                self.initial_node_item();
-            } else if body.admits_return_parameter() && self.at_return_parameter_member() {
-                // CalculationBodyItem's second alternative (SysML 8.2.2.19). Before the
-                // result-expression test below, because `return` is where the item run
-                // continues rather than where it ends; `at_result_expression` says so
-                // too, so neither position depends on the other being right.
-                self.return_parameter_member();
-            } else if body.ends_in_result_expression() && self.at_result_expression() {
-                // The item run is over and what is left is the body's trailing
-                // expression, which is not a member. `calculation_body_part` reads it;
-                // the loop must not recover over it one token at a time.
+            let start = self.pos;
+            if !self.body_element(body) {
                 return;
-            } else if body.admits_requirement_constraint()
-                && (self.at_element_keyword("require") || self.at_element_keyword("assume"))
-            {
-                // RequirementBodyItem's third alternative (SysML 8.2.2.21.1). Owns its
-                // element through RequirementConstraintMembership, so like SubjectMember
-                // below it cannot go through `membership`.
-                self.requirement_constraint_member();
-            } else if body.admits_subject() && self.at_element_keyword("subject") {
-                // RequirementBodyItem's second alternative (SysML 8.2.2.21.1). Like
-                // NamespaceFeatureMember above, it owns its element through a membership
-                // of its own — SubjectMembership — so it cannot go through `membership`,
-                // which builds the body's ordinary member node.
-                self.subject_member();
-            } else if body.admits_source_succession() && self.at_source_succession_member(body) {
-                // `SourceSuccessionMember? <occurrence usage member>`, in whichever of
-                // three item productions this body has; see `source_succession_item`.
-                self.source_succession_item(body);
-            } else if self.at_member_element(usize::from(self.at_visibility()))
-                || (body.admits_action_body_item()
-                    && self
-                        .at_control_node(usize::from(self.at_visibility()))
-                        .is_some())
-            {
-                // A control node is an ActionNodeMember, ActionBehaviorMember's second
-                // alternative (8.2.2.17.1), and so an item of the action-body family only:
-                // no other body's item production reaches ActionNode, which
-                // validateControlNodeOwningType states of the metaclass too (8.3.17.6,
-                // receipt 695df335). Hence here, with the body in hand, and not in the
-                // body-agnostic `at_member_element`.
-                let element = self.membership(body);
-                self.behaviour_targets(body, element);
-            } else {
-                self.recover_statement();
+            }
+            if self.pos == start {
+                // No arm consumed a token. Every recogniser in `body_element` must agree
+                // with the production it dispatches to, and when one does not — it
+                // accepts, the production reads nothing and `expect_*` records an error
+                // without consuming — the loop asks the same question at the same token
+                // for ever, and each pass adds a diagnostic until the process runs out of
+                // memory. Taking one token turns such a disagreement into one diagnostic
+                // (invariant 3); the disagreement itself is still the defect to fix.
+                self.error_token();
             }
         }
+    }
+
+    /// One element of `body`, as `body_elements` describes them. Returns `false` when
+    /// what is left is the body's trailing result expression, which ends the item run.
+    fn body_element(&mut self, body: Body) -> bool {
+        if self.depth >= MAX_DEPTH {
+            // Too deeply nested to recurse into another body. Recover one token
+            // at a time, exactly as unrecognised text is recovered: every byte
+            // still reaches the tree, and the stack does not grow (invariant 3).
+            self.report_too_deep();
+            self.error_token();
+        } else if self.at_import() {
+            self.import();
+        } else if self.at_element_keyword("alias") {
+            self.alias_member();
+        } else if body.admits_filter(self.language) && self.at_element_keyword("filter") {
+            // Where a filter is admitted is not the same question as which member
+            // a body owns; see `Body`. A `filter` in a SysML definition body
+            // (8.2.2.5.1 against 8.2.2.6.1) or at a KerML root (8.2.3.4.1) is
+            // reported rather than accepted, and
+            // tests/rejection/element-filter-member-is-not-a-definition-body-item.sysml
+            // and element-filter-member-is-not-a-kerml-root-element.kerml hold those.
+            self.element_filter_member();
+        } else if self.language == Language::KerMl
+            && self.at_feature(usize::from(self.at_visibility()))
+        {
+            // NamespaceMember = NonFeatureMember | NamespaceFeatureMember
+            // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
+            // its own membership node rather than the one `membership` builds.
+            self.namespace_feature_member();
+        } else if body.admits_action_body_item() && self.at_guarded_succession_member() {
+            // ActionBodyItem's fourth alternative (SysML 8.2.2.17.1). An item of its
+            // own with no suffix, so it is not `initial_node_item`'s shape: nothing
+            // follows it here, and tests/rejection/guarded-succession-takes-no-target-succession.sysml
+            // holds that. Disjoint from the initial node below on the token after the
+            // source name, so the order of the two arms decides nothing.
+            self.guarded_succession_member();
+        } else if body.admits_action_body_item() && self.at_initial_node_member() {
+            // ActionBodyItem's second alternative (SysML 8.2.2.17.1), reached from an
+            // action body and, through CalculationBodyItem (8.2.2.19), a calculation
+            // body. Owns its membership as ReturnParameterMember below does, so it
+            // cannot go through `membership`. Before the result-expression test for
+            // the same reason `return` is: it continues the item run.
+            self.initial_node_item();
+        } else if body.admits_return_parameter() && self.at_return_parameter_member() {
+            // CalculationBodyItem's second alternative (SysML 8.2.2.19). Before the
+            // result-expression test below, because `return` is where the item run
+            // continues rather than where it ends; `at_result_expression` says so
+            // too, so neither position depends on the other being right.
+            self.return_parameter_member();
+        } else if body.ends_in_result_expression() && self.at_result_expression() {
+            // The item run is over and what is left is the body's trailing
+            // expression, which is not a member. `calculation_body_part` reads it;
+            // the loop must not recover over it one token at a time.
+            return false;
+        } else if body.admits_requirement_constraint()
+            && (self.at_element_keyword("require") || self.at_element_keyword("assume"))
+        {
+            // RequirementBodyItem's third alternative (SysML 8.2.2.21.1). Owns its
+            // element through RequirementConstraintMembership, so like SubjectMember
+            // below it cannot go through `membership`.
+            self.requirement_constraint_member();
+        } else if body.admits_subject() && self.at_element_keyword("subject") {
+            // RequirementBodyItem's second alternative (SysML 8.2.2.21.1). Like
+            // NamespaceFeatureMember above, it owns its element through a membership
+            // of its own — SubjectMembership — so it cannot go through `membership`,
+            // which builds the body's ordinary member node.
+            self.subject_member();
+        } else if body.admits_source_succession() && self.at_source_succession_member(body) {
+            // `SourceSuccessionMember? <occurrence usage member>`, in whichever of
+            // three item productions this body has; see `source_succession_item`.
+            self.source_succession_item(body);
+        } else if self.at_member_element(usize::from(self.at_visibility()))
+            || (body.admits_action_body_item()
+                && self
+                    .at_control_node(usize::from(self.at_visibility()))
+                    .is_some())
+        {
+            // A control node is an ActionNodeMember, ActionBehaviorMember's second
+            // alternative (8.2.2.17.1), and so an item of the action-body family only:
+            // no other body's item production reaches ActionNode, which
+            // validateControlNodeOwningType states of the metaclass too (8.3.17.6,
+            // receipt 695df335). Hence here, with the body in hand, and not in the
+            // body-agnostic `at_member_element`.
+            let element = self.membership(body);
+            self.behaviour_targets(body, element);
+        } else {
+            self.recover_statement();
+        }
+        true
     }
 
     /// Recover over text no item production accepts, as far as the statement goes.
