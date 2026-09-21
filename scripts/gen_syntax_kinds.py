@@ -200,6 +200,21 @@ NODES = [
             "whose parts are both optional. A feature declaration must name something."
         ),
     ),
+    # KerML's Succession, the second FeatureElement implemented. The SysML succession is
+    # SuccessionAsUsage, a different production over a different prefix and declaration;
+    # the two share only ConnectorEndMember.
+    (
+        "Succession",
+        "`FeaturePrefix 'succession' SuccessionDeclaration TypeBody`. `KerML` 8.2.5.5.3.",
+    ),
+    (
+        "SuccessionDeclaration",
+        (
+            "`FeatureDeclaration ( 'first' ConnectorEndMember 'then' ConnectorEndMember )? "
+            "| 'all'? ( 'first'? ConnectorEndMember 'then' ConnectorEndMember )?`. "
+            "`KerML` 8.2.5.5.3."
+        ),
+    ),
     (
         "NamespaceFeatureMember",
         "`MemberPrefix FeatureElement`. `KerML` 8.2.3.4.1.",
@@ -523,6 +538,17 @@ NODES = [
             "`( 'succession' UsageDeclaration )? 'first' FeatureChainMember "
             "GuardExpressionMember 'then' TransitionSuccessionMember UsageBody`. "
             "`SysML` 8.2.2.17.8 — the metaclass is `TransitionUsage`."
+        ),
+    ),
+    # The succession written as a usage, with both ends named: `first a then b;`. A
+    # NonOccurrenceUsageElement, so owned as an attribute is, not through a succession
+    # membership of its own.
+    (
+        "SuccessionAsUsage",
+        (
+            "`UsagePrefix ( 'succession' UsageDeclaration )? 'first' ConnectorEndMember "
+            "'then' ConnectorEndMember UsageBody`. `SysML` 8.2.2.13.3 — the metaclass is "
+            "`SuccessionAsUsage`."
         ),
     ),
     # `SysML` 8.2.2.17.5's membership, NOT `KerML` 8.2.5.8.2's production of the same name:

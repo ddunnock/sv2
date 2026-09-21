@@ -4,6 +4,7 @@
 # This set may grow and must never shrink. See the module docstring of
 # scripts/corpus_sweep.py for why both directions fail the gate.
 vendor/corpus/kerml/src/examples/Address Book Example/AddressBookModel.kerml
+vendor/corpus/kerml/src/examples/Behavior Examples/Camera.kerml
 vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-Atoms.kerml
 vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_1.kerml
 vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_2.kerml
@@ -63,6 +64,7 @@ vendor/corpus/sysml/src/training/17. Control/Fork Join Example.sysml
 vendor/corpus/sysml/src/training/17. Control/Merge Example.sysml
 vendor/corpus/sysml/src/training/18. Action Performance/Action Performance Example.sysml
 vendor/corpus/sysml/src/training/22. Opaque Actions/Opaque Action Example.sysml
+vendor/corpus/sysml/src/training/28. Individuals/Individuals and Snapshots Example.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 1.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 2.sysml
 vendor/corpus/sysml/src/training/29. Expressions/MassRollup1.sysml

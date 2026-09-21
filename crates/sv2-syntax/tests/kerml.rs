@@ -18,9 +18,10 @@
 //!
 //! Of `NonFeatureElement`'s alternatives, `Package` and the eight classifiers of
 //! `KerML` 8.2.4.2 are implemented. `Package` is a shared unit — the same production in
-//! both grammars — and the classifiers are `KerML`'s alone. `FeatureElement`'s ten
-//! alternatives are unimplemented, as are `Type`, `Function` and `Predicate`, and the
-//! cases below say so rather than pretending they parse.
+//! both grammars — and the classifiers are `KerML`'s alone. Of `FeatureElement`'s ten
+//! alternatives, `Feature` and `Succession` are implemented; the other eight are not,
+//! nor are `Type`, `Function` and `Predicate`, and the cases below say so rather than
+//! pretending they parse.
 
 use std::fmt::Write as _;
 
@@ -116,11 +117,12 @@ fn a_filter_is_admitted_in_a_kerml_package_body_and_not_at_a_kerml_root() {
 
 #[test]
 fn the_other_feature_elements_are_unimplemented_rather_than_accepted() {
-    // NamespaceFeatureMember reaches FeatureElement's ten alternatives. Feature is
-    // implemented; the other nine are not, and reporting them is the honest state.
+    // NamespaceFeatureMember reaches FeatureElement's ten alternatives. Feature and
+    // Succession are implemented; the other eight are not, and reporting them is the
+    // honest state. `succession flow` is SuccessionFlow, one of the eight.
     for source in [
         "connector c from a to b;",
-        "succession s;",
+        "succession flow f from a to b;",
         "step s;",
         "inv { true }",
     ] {
@@ -393,6 +395,118 @@ fn has_node(rendered: &str, kind: &str) -> bool {
 fn the_unimplemented_halves_of_a_feature_declaration_are_reported() {
     kerml_rejected("feature f conjugates g;");
     kerml_rejected("feature f chains a.b;");
+}
+
+// -- Succession, KerML 8.2.5.5.3 -------------------------------------------------
+//
+// Succession = FeaturePrefix 'succession' SuccessionDeclaration TypeBody
+//
+// SuccessionDeclaration =
+//     FeatureDeclaration ( 'first' ConnectorEndMember 'then' ConnectorEndMember )?
+//   | 'all'? ( 'first'? ConnectorEndMember 'then' ConnectorEndMember )?
+
+#[test]
+fn a_succession_reads_the_corpus_forms() {
+    // "Behavior Examples/Camera.kerml" line 7: the second alternative, no `first`.
+    kerml_accepted("class Camera { succession focusedState then shotState; }");
+    // "Simple Tests/Connectors.kerml" lines 22-28: all four shapes the file writes —
+    // ends alone, a name and ends, the EMPTY declaration with a body, and a typed name.
+    kerml_accepted("succession a then b;");
+    kerml_accepted("succession s first a then b;");
+    kerml_accepted("succession {\n\tend feature references a;\n\tend feature references b;\n}");
+    kerml_accepted("succession s1 : AS first a then b;");
+    // "KerML Spec Annex A Examples/A-3-7-DecisionsAndMerges.kerml" line 112, less the
+    // cross multiplicity on the ends that line does not write: a declaration that is a
+    // bare FeatureSpecializationPart with a multiplicity.
+    kerml_accepted("succession redefines a_before_i : Link [1] first admit then inspect;");
+}
+
+#[test]
+fn a_succession_declaration_takes_either_alternative_by_what_follows_all() {
+    // The second alternative: `first` there, or an end and then `then`, or nothing.
+    for source in [
+        "succession first a then b;",
+        "succession a::b.c then d;",
+        "succession x references a then b;",
+        "succession all first a then b;",
+        "succession all a then b;",
+        "succession all;",
+        "succession;",
+    ] {
+        let tree = render(&kerml_accepted(source).syntax());
+        assert!(has_node(&tree, "SuccessionDeclaration"), "{tree}");
+        assert!(!has_node(&tree, "FeatureDeclaration"), "{source}: {tree}");
+    }
+    // The first: anything else after `all` is a FeatureDeclaration.
+    for source in [
+        "succession s;",
+        "succession s first a then b;",
+        "succession all s first a then b;",
+        "succession : T;",
+        "succession <s> first a then b;",
+    ] {
+        let tree = render(&kerml_accepted(source).syntax());
+        assert!(has_node(&tree, "FeatureDeclaration"), "{source}: {tree}");
+    }
+}
+
+#[test]
+fn a_succession_owns_what_its_production_writes() {
+    let tree = render(&kerml_accepted("abstract succession s first a then b { }").syntax());
+    assert!(has_node(&tree, "NamespaceFeatureMember"), "{tree}");
+    assert!(has_node(&tree, "Succession"), "{tree}");
+    assert!(has_node(&tree, "FeaturePrefix"), "{tree}");
+    assert!(
+        !has_node(&tree, "Feature"),
+        "a succession is not read as a Feature: {tree}"
+    );
+    assert_eq!(
+        tree.lines()
+            .filter(|line| line.trim().split(' ').next() == Some("ConnectorEndMember"))
+            .count(),
+        2,
+        "{tree}"
+    );
+}
+
+#[test]
+fn a_succession_is_bounded_by_its_rules() {
+    // The ends are a pair: no source without `then` and a target.
+    kerml_rejected("succession first a;");
+    kerml_rejected("succession a then;");
+    kerml_rejected("succession s first a;");
+    // `first` belongs to the ends, not to the declaration: no second one.
+    kerml_rejected("succession s first first a then b;");
+    // TypeBody is not optional.
+    kerml_rejected("succession a then b");
+    // No keywordless form in KerML; that is SysML's SuccessionAsUsage (ADR-0014).
+    kerml_rejected("first a then b;");
+    // OwnedCrossMultiplicityMember, ConnectorEnd's first part, is unimplemented — rejected
+    // BY ABSENCE, and tests/rejection/kerml-connector-end-cross-multiplicity-is-not-implemented.kerml
+    // holds it.
+    kerml_rejected("succession first [1] a then b;");
+}
+
+#[test]
+fn a_kerml_succession_is_not_reachable_from_the_sysml_start_symbol() {
+    // The SysML succession needs `first`, so the second alternative's `succession a then
+    // b;` is KerML's alone.
+    let sysml = parse("part def P { succession a then b; }", Language::SysMl);
+    assert!(
+        !sysml.errors().is_empty(),
+        "SysML states no such succession"
+    );
+}
+
+#[test]
+fn parsing_a_succession_never_hangs_or_loses_bytes_on_truncated_input() {
+    let source = "class C { abstract succession s : T first a.b then x references c { } \
+                  succession all d then e; succession; }";
+    for end in 0..=source.len() {
+        if let Some(prefix) = source.get(..end) {
+            assert_eq!(parse(prefix, Language::KerMl).text(), prefix);
+        }
+    }
 }
 
 // -- the invariants, under this grammar too ---------------------------------------

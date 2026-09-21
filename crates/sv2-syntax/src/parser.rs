@@ -1179,7 +1179,7 @@ impl<'a> Parser<'a> {
     ///
     /// A `DefinitionPrefix` and the one keyword only an occurrence may carry:
     /// `( 'individual' EmptyMultiplicityMember )?` (`SysML` 8.2.2.9.1). The same pair
-    /// `skip_basic_usage_prefix` and `skip_usage_prefix` make one level down.
+    /// `skip_basic_usage_prefix` and `skip_occurrence_usage_prefix` make one level down.
     fn skip_occurrence_definition_prefix(&self, n: usize) -> usize {
         let n = self.skip_definition_prefix(n);
         n + usize::from(self.nth_is_keyword(n, "individual"))
@@ -1361,11 +1361,11 @@ impl<'a> Parser<'a> {
     /// NamespaceFeatureMember = MemberPrefix FeatureElement
     /// ```
     ///
-    /// `Package` is the one `NonFeatureElement` implemented, and it is a shared unit —
-    /// the same production in both grammars. Nothing else is: `FeatureElement`'s ten
-    /// alternatives (`feature`, `connector`, `succession`, `flow` and the rest) and the
-    /// remaining `NonFeatureElement`s (`class`, `struct`, `assoc`, `behavior`, …) are
-    /// unimplemented, so they are reported rather than read.
+    /// Of `NonFeatureElement`, `Package` — a shared unit, the same production in both
+    /// grammars — and the eight classifiers of 8.2.4.2 are implemented. Of
+    /// `FeatureElement`'s ten alternatives, `Feature` and `Succession` are. The rest
+    /// (`step`, `connector`, `binding`, `flow`, `succession flow`, …) are reported
+    /// rather than read.
     ///
     /// This is the check that stops a `SysML` construct being read out of a `KerML`
     /// file. `part def` is not reachable from `NamespaceBodyElement`, so a `.kerml` file
@@ -1384,12 +1384,14 @@ impl<'a> Parser<'a> {
                 self.nth_is_keyword(n, "package")
                     || self.at_classifier(n).is_some()
                     || self.at_feature(n)
+                    || self.at_kerml_succession(n)
             }
             Language::SysMl => {
                 self.at_definition_element(n)
                     || self.at_action_usage(n)
                     || self.at_perform_action_usage(n)
                     || self.at_flow_usage(n)
+                    || self.at_succession_as_usage(n)
                     || self.at_simple_usage(n).is_some()
                     // Only when no keyword usage starts here; see `membership`.
                     || self.at_reference_usage(n)
@@ -1433,7 +1435,7 @@ impl<'a> Parser<'a> {
     /// `OccurrenceUsagePrefix = ( EndUsagePrefix | BasicUsagePrefix 'individual'?
     /// PortionKind? ) UsageExtensionKeyword*` (`SysML` 8.2.2.9.2) — a
     /// `BasicUsagePrefix` and the two keywords only an occurrence may carry.
-    fn skip_usage_prefix(&self, n: usize) -> usize {
+    fn skip_occurrence_usage_prefix(&self, n: usize) -> usize {
         let mut n = self.skip_basic_usage_prefix(n);
         for words in [&["individual"][..], &["snapshot", "timeslice"]] {
             if words.iter().any(|word| self.nth_is_keyword(n, word)) {
@@ -1722,7 +1724,8 @@ impl<'a> Parser<'a> {
             // and element-filter-member-is-not-a-kerml-root-element.kerml hold those.
             self.element_filter_member();
         } else if self.language == Language::KerMl
-            && self.at_feature(usize::from(self.at_visibility()))
+            && (self.at_feature(usize::from(self.at_visibility()))
+                || self.at_kerml_succession(usize::from(self.at_visibility())))
         {
             // NamespaceMember = NonFeatureMember | NamespaceFeatureMember
             // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
@@ -1861,13 +1864,18 @@ impl<'a> Parser<'a> {
             || self.at_element_keyword("filter")
             || self.at_annotating_member(0)
             || match self.language {
-                Language::KerMl => self.at_keyword("package") || self.at_classifier(0).is_some(),
+                Language::KerMl => {
+                    self.at_keyword("package")
+                        || self.at_classifier(0).is_some()
+                        || self.at_kerml_succession(0)
+                }
                 Language::SysMl => {
                     self.at_definition_element(0)
                         || self.at_simple_usage(0).is_some()
                         || self.at_action_usage(0)
                         || self.at_perform_action_usage(0)
                         || self.at_flow_usage(0)
+                        || self.at_succession_as_usage(0)
                         || self.at_control_node(0).is_some()
                 }
             }
@@ -2220,14 +2228,111 @@ impl<'a> Parser<'a> {
     //
     // FeatureElement's ten alternatives are Feature, Step, Expression,
     // BooleanExpression, Invariant, Connector, BindingConnector, Succession, Flow and
-    // SuccessionFlow. One is implemented; the member itself is, which is what this
-    // marks, exactly as NonFeatureMember marks its own shape rather than MemberElement's
-    // alternatives.
+    // SuccessionFlow. Two are implemented, Feature and Succession; the member itself is,
+    // which is what this marks, exactly as NonFeatureMember marks its own shape rather
+    // than MemberElement's alternatives.
     fn namespace_feature_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::NamespaceFeatureMember);
         self.member_prefix();
-        self.feature();
+        if self.at_kerml_succession(0) {
+            self.kerml_succession();
+        } else {
+            self.feature();
+        }
+        self.finish_node();
+    }
+
+    /// Whether a `KerML` `Succession` starts at the `n`th meaningful token.
+    ///
+    /// A `FeaturePrefix`, then `succession`. The keyword is reserved (`KerML` 8.2.2.6),
+    /// so it decides on its own, and `at_feature` never claims it as a name. The one
+    /// other production that opens the same way is `SuccessionFlow`, `succession flow`
+    /// (8.2.5.9.2): unimplemented, and declined here so that it is reported rather than
+    /// read as a succession whose declaration names `flow`.
+    fn at_kerml_succession(&self, n: usize) -> bool {
+        let n = self.skip_feature_prefix(n);
+        self.nth_is_keyword(n, "succession") && !self.nth_is_keyword(n + 1, "flow")
+    }
+
+    // production: Succession@kerml
+    //
+    // Succession : Succession =
+    //     FeaturePrefix 'succession' SuccessionDeclaration TypeBody   (KerML 8.2.5.5.3)
+    //
+    // Scoped `kerml`: SysML writes its succession as SuccessionAsUsage (8.2.2.13.3), over
+    // UsagePrefix and UsageDeclaration, and a .sysml file never reaches this (ADR-0014).
+    // The two share ConnectorEndMember and nothing else, so the Rust name is scoped too.
+    //
+    // Marked although FeaturePrefix is not: this production's own four parts are read,
+    // and FeaturePrefix's two gaps (OwnedCrossFeatureMember, PrefixMetadataMember) are
+    // Feature's as much as this one's.
+    //
+    // implied specialization: Occurrences::happensBeforeLinks
+    // constraint: Succession::checkSuccessionSpecialization
+    //     `specializesFromLibrary('Occurrences::happensBeforeLinks')` (KerML 8.3.4.5.4).
+    //     An injection, so sv2-hir's; this layer builds the tree only (ADR-0002).
+    fn kerml_succession(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Succession);
+        self.feature_prefix();
+        self.expect_keyword("succession");
+        self.succession_declaration();
+        self.type_body();
+        self.finish_node();
+    }
+
+    // production: SuccessionDeclaration@kerml
+    //
+    // SuccessionDeclaration : Succession =
+    //     FeatureDeclaration
+    //       ( 'first' ownedRelationship += ConnectorEndMember
+    //         'then' ownedRelationship += ConnectorEndMember )?
+    //   | ( isSufficient ?= 'all' )?
+    //       ( 'first'? ownedRelationship += ConnectorEndMember
+    //         'then' ownedRelationship += ConnectorEndMember )?      (KerML 8.2.5.5.3)
+    //
+    // The clause writes `s.isSufficient`; the stray `s.` names a property and consumes
+    // no token, so the rule is the Xtext fragment's (recorded on the unit).
+    //
+    // The two alternatives are told apart before either commits, on what follows an
+    // optional `all`. The second is taken when a `first` is written there, when nothing
+    // is (the empty declaration: `succession;`, `succession { }`), or when a ConnectorEnd
+    // is written there and a `then` directly after it (`succession a then b;`). Anything
+    // else is a FeatureDeclaration: `succession s first a then b;`, `succession : T;`.
+    // The cases are disjoint — `first` and `then` are reserved, so no FeatureDeclaration
+    // opens on `first`, and a FeatureDeclaration followed by `then` is no succession.
+    // `all` is left to FeatureDeclaration's own slot in the first alternative.
+    //
+    // The node is built even when empty, as FeaturePrefix's is.
+    fn succession_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SuccessionDeclaration);
+        let after_all = usize::from(self.at_keyword("all"));
+        let empty = self.nth_is(after_all, SyntaxKind::Semicolon)
+            || self.nth_is(after_all, SyntaxKind::LBrace)
+            || self.peek_nth(after_all).is_none();
+        let ends = self.nth_is_keyword(after_all, "first")
+            || self
+                .skip_connector_end(after_all)
+                .is_some_and(|after| self.nth_is_keyword(after, "then"));
+        if empty || ends {
+            self.eat_optional_keyword("all");
+            if ends {
+                self.eat_optional_keyword("first");
+                self.connector_end_member();
+                self.expect_keyword("then");
+                self.connector_end_member();
+            }
+        } else {
+            self.feature_declaration();
+            if self.at_keyword("first") {
+                self.bump_as(keyword("first").unwrap_or(SyntaxKind::BasicName));
+                self.connector_end_member();
+                self.expect_keyword("then");
+                self.connector_end_member();
+            }
+        }
         self.finish_node();
     }
 
@@ -2374,8 +2479,8 @@ impl<'a> Parser<'a> {
     ///
     /// `ActionUsage` and `PerformActionUsage` are `BehaviorUsageElement`s, `FlowUsage` a
     /// `StructureUsageElement`;
-    /// `ReferenceUsage` and `DefaultReferenceUsage` are `NonOccurrenceUsageElement`s;
-    /// the seven `SIMPLE_USAGES` carry their own.
+    /// `SuccessionAsUsage`, `ReferenceUsage` and `DefaultReferenceUsage` are
+    /// `NonOccurrenceUsageElement`s; the seven `SIMPLE_USAGES` carry their own.
     fn usage_element_of_class(&mut self) -> Option<UsageClass> {
         if self.at_perform_action_usage(0) {
             self.perform_action_usage();
@@ -2387,6 +2492,11 @@ impl<'a> Parser<'a> {
             // A StructureUsageElement (8.2.2.6.4), though its metaclass is an ActionUsage.
             self.flow_usage();
             Some(UsageClass::Structure)
+        } else if self.at_succession_as_usage(0) {
+            // A NonOccurrenceUsageElement (8.2.2.6.4): "a succession is not a kind of
+            // occurrence usage" (7.13.5, receipt 2abd302c).
+            self.succession_as_usage();
+            Some(UsageClass::NonOccurrence)
         } else if let Some(usage) = self.at_simple_usage(0) {
             self.simple_usage(usage);
             Some(usage.class)
@@ -2543,7 +2653,7 @@ impl<'a> Parser<'a> {
     /// `def` is what separates it from an `ActionDefinition`, exactly as it separates
     /// each of `SIMPLE_USAGES` from the definition spelled the same way.
     fn at_action_usage(&self, n: usize) -> bool {
-        let after = self.skip_usage_prefix(n);
+        let after = self.skip_occurrence_usage_prefix(n);
         self.nth_is_keyword(after, "action") && !self.nth_is_keyword(after + 1, "def")
     }
 
@@ -2552,13 +2662,13 @@ impl<'a> Parser<'a> {
     /// `OccurrenceUsagePrefix 'perform'` (`SysML` 8.2.2.17.2). No `def` test, because
     /// there is no `perform def`: the keyword names a usage and nothing else.
     fn at_perform_action_usage(&self, n: usize) -> bool {
-        self.nth_is_keyword(self.skip_usage_prefix(n), "perform")
+        self.nth_is_keyword(self.skip_occurrence_usage_prefix(n), "perform")
     }
 
     fn at_simple_usage(&self, n: usize) -> Option<SimpleUsage> {
         SIMPLE_USAGES.iter().copied().find(|usage| {
             let after = if usage.is_occurrence {
-                self.skip_usage_prefix(n)
+                self.skip_occurrence_usage_prefix(n)
             } else {
                 self.skip_basic_usage_prefix(n)
             };
@@ -4875,7 +4985,7 @@ impl<'a> Parser<'a> {
     /// `OccurrenceUsagePrefix 'flow'` with no `def` after it (`SysML` 8.2.2.16): the
     /// `def` is what makes it the `FlowDefinition` beside it, as for every usage.
     fn at_flow_usage(&self, n: usize) -> bool {
-        let after = self.skip_usage_prefix(n);
+        let after = self.skip_occurrence_usage_prefix(n);
         self.nth_is_keyword(after, "flow") && !self.nth_is_keyword(after + 1, "def")
     }
 
@@ -5658,26 +5768,32 @@ impl<'a> Parser<'a> {
         if !self.nth_is_keyword(first, "then") {
             return false;
         }
-        let mut n = first + 1;
-        // ( NAME REFERENCES )?, REFERENCES = '::>' | 'references' (8.2.2.1.2).
+        self.skip_connector_end(first + 1).is_some_and(|n| {
+            self.nth_is(n, SyntaxKind::Semicolon) || self.nth_is(n, SyntaxKind::LBrace)
+        })
+    }
+
+    /// The index just past a `ConnectorEnd` written at the `n`th meaningful token, walked
+    /// as `connector_end` reads it, or `None` if one is not written there.
+    ///
+    /// `( NAME REFERENCES )? OwnedReferenceSubsetting` (`SysML` 8.2.2.13.1), where
+    /// `REFERENCES = '::>' | 'references'` (8.2.2.1.2) and the subsetting is a
+    /// `QualifiedName` followed by `OwnedFeatureChain`'s further links (8.2.2.6.5). The
+    /// leading `OwnedCrossMultiplicityMember` is unimplemented and not looked past, so an
+    /// end that writes one is declined here and reported by the caller's recovery.
+    fn skip_connector_end(&self, n: usize) -> Option<usize> {
+        let mut n = n;
         if self.nth_is_name(n)
             && (self.nth_is(n + 1, SyntaxKind::ColonColonGt)
                 || self.nth_is_keyword(n + 1, "references"))
         {
             n += 2;
         }
-        // OwnedReferenceSubsetting: a QualifiedName, then OwnedFeatureChain's further
-        // links, each as `owned_feature_chain` takes it (8.2.2.6.5).
-        let Some(mut n) = self.skip_qualified_name(n) else {
-            return false;
-        };
+        let mut n = self.skip_qualified_name(n)?;
         while self.nth_is(n, SyntaxKind::Dot) && self.nth_is_name(n + 1) {
-            let Some(next) = self.skip_qualified_name(n + 1) else {
-                return false;
-            };
-            n = next;
+            n = self.skip_qualified_name(n + 1)?;
         }
-        self.nth_is(n, SyntaxKind::Semicolon) || self.nth_is(n, SyntaxKind::LBrace)
+        Some(n)
     }
 
     // production: ActionTargetSuccessionMember
@@ -6044,6 +6160,83 @@ impl<'a> Parser<'a> {
             );
         }
         self.owned_reference_subsetting();
+        self.finish_node();
+    }
+
+    /// Whether a `SuccessionAsUsage` starts at the `n`th meaningful token.
+    ///
+    /// `UsagePrefix`, then either `first` or `succession` and a `UsageDeclaration` up to
+    /// the `first`; then the source `ConnectorEnd`, and a `then` directly after it. The
+    /// `then` is what decides: two other productions reachable from an action body open
+    /// on `first` — `InitialNodeMember`, whose name is followed by `;` or `{`, and
+    /// `GuardedSuccession`, whose source is followed by `if` (`SysML` 8.2.2.17.1,
+    /// 8.2.2.17.8) — and all three are disjoint on that one token, so none commits before
+    /// reaching it. `GuardedSuccession` shares the `succession` declaration as well, and
+    /// is declined here for the same reason.
+    ///
+    /// The declaration is scanned rather than parsed, by `scan_for_keyword`, because
+    /// `first` is reserved (8.2.2.1.2) and a `UsageDeclaration` writes no `;` or brace.
+    /// `succession flow`, a `SuccessionFlowUsage` (8.2.2.16), writes no `first` at all, so
+    /// the scan declines it at its `;`.
+    ///
+    /// The prefix skipped is `UsagePrefix`, which is what `succession_as_usage` reads, and
+    /// NOT `OccurrenceUsagePrefix`: a recogniser that looked past `snapshot` would accept
+    /// a member the parser then cannot consume, and the body loop would ask again for
+    /// ever (invariant 3).
+    fn at_succession_as_usage(&self, n: usize) -> bool {
+        let mut n = self.skip_basic_usage_prefix(n);
+        if self.nth_is_keyword(n, "succession") {
+            match self.scan_for_keyword(n + 1, "first") {
+                Some(first) => n = first,
+                None => return false,
+            }
+        }
+        self.nth_is_keyword(n, "first")
+            && self
+                .skip_connector_end(n + 1)
+                .is_some_and(|after| self.nth_is_keyword(after, "then"))
+    }
+
+    // production: SuccessionAsUsage@sysml
+    //
+    // SuccessionAsUsage =
+    //     UsagePrefix ( 'succession' UsageDeclaration )?
+    //     'first' ownedRelationship += ConnectorEndMember
+    //     'then' ownedRelationship += ConnectorEndMember
+    //     UsageBody                                                 (SysML 8.2.2.13.3)
+    //
+    // A succession declared as a usage, naming both of its ends (receipt b9e0de2c). The
+    // metaclass is SuccessionAsUsage (8.3.13.6, receipt 2d6e6f52), both a ConnectorAsUsage
+    // and a KerML Succession. "A succession is not a kind of occurrence usage", so it
+    // takes UsagePrefix and not OccurrenceUsagePrefix, and "if the declaration part is
+    // empty, then the keyword succession may be omitted" (7.13.5, receipt 2abd302c) —
+    // which is what the corpus's `first a then b;` is. The corpus also writes the keyword
+    // over an EMPTY declaration, `succession first a then b;` (AHFSequences.sysml), which
+    // the production admits because Identification is fully optional.
+    //
+    // Marked although ConnectorEnd is not: this production's own body is read in full,
+    // as ActionTargetSuccessionMember is marked over the same ConnectorEndMember. What
+    // ConnectorEnd lacks — its OwnedCrossMultiplicityMember, `first [1] a then b;` — is
+    // held by tests/rejection/connector-end-cross-multiplicity-is-not-implemented.sysml.
+    //
+    // implied specialization: Occurrences::happensBeforeLinks
+    // constraint: Succession::checkSuccessionSpecialization, which "requires that a
+    //     SuccessionAsUsage specialize the KerML Feature Occurrences::happensBeforeLinks"
+    //     (SysML 8.4.9.4, receipt 86e83273). An injection, so sv2-hir's; this layer builds
+    //     the tree only (ADR-0002).
+    fn succession_as_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SuccessionAsUsage);
+        self.usage_prefix();
+        if self.at_keyword("succession") {
+            self.bump_as(keyword("succession").unwrap_or(SyntaxKind::BasicName));
+            self.usage_declaration();
+        }
+        self.expect_keyword("first");
+        self.connector_end_member();
+        self.expect_keyword("then");
+        self.connector_end_member();
+        self.usage_body();
         self.finish_node();
     }
 

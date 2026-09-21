@@ -535,6 +535,10 @@ pub enum SyntaxKind {
     FeatureDeclaration,
     /// `'<' NAME '>' NAME? | NAME`. `KerML` 8.2.4.3.1 — NOT `Identification`, whose parts are both optional. A feature declaration must name something.
     FeatureIdentification,
+    /// `FeaturePrefix 'succession' SuccessionDeclaration TypeBody`. `KerML` 8.2.5.5.3.
+    Succession,
+    /// `FeatureDeclaration ( 'first' ConnectorEndMember 'then' ConnectorEndMember )? | 'all'? ( 'first'? ConnectorEndMember 'then' ConnectorEndMember )?`. `KerML` 8.2.5.5.3.
+    SuccessionDeclaration,
     /// `MemberPrefix FeatureElement`. `KerML` 8.2.3.4.1.
     NamespaceFeatureMember,
     /// `MemberPrefix MemberElement`. `KerML` 8.2.3.4.1 — what a `PackageMember` is in a `KerML` file, where the members are `MemberElement` and `FeatureElement` rather than `DefinitionElement` and `UsageElement`.
@@ -667,6 +671,8 @@ pub enum SyntaxKind {
     GuardedSuccessionMember,
     /// `( 'succession' UsageDeclaration )? 'first' FeatureChainMember GuardExpressionMember 'then' TransitionSuccessionMember UsageBody`. `SysML` 8.2.2.17.8 — the metaclass is `TransitionUsage`.
     GuardedSuccession,
+    /// `UsagePrefix ( 'succession' UsageDeclaration )? 'first' ConnectorEndMember 'then' ConnectorEndMember UsageBody`. `SysML` 8.2.2.13.3 — the metaclass is `SuccessionAsUsage`.
+    SuccessionAsUsage,
     /// `memberElement = [QualifiedName] | OwnedFeatureChainMember`. `SysML` 8.2.2.17.5 — the metaclass is `Membership`.
     FeatureChainMember,
     /// `ownedRelatedElement += OwnedFeatureChain`. `SysML` 8.2.2.17.5 — the metaclass is `OwningMembership`.
@@ -1192,6 +1198,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::EndFeaturePrefix,
     SyntaxKind::FeatureDeclaration,
     SyntaxKind::FeatureIdentification,
+    SyntaxKind::Succession,
+    SyntaxKind::SuccessionDeclaration,
     SyntaxKind::NamespaceFeatureMember,
     SyntaxKind::NonFeatureMember,
     SyntaxKind::MemberPrefix,
@@ -1258,6 +1266,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::GuardedTargetSuccession,
     SyntaxKind::GuardedSuccessionMember,
     SyntaxKind::GuardedSuccession,
+    SyntaxKind::SuccessionAsUsage,
     SyntaxKind::FeatureChainMember,
     SyntaxKind::OwnedFeatureChainMember,
     SyntaxKind::DefaultTargetSuccession,

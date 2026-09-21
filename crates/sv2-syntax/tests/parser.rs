@@ -2333,6 +2333,165 @@ fn a_guarded_succession_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- SuccessionAsUsage, SysML 8.2.2.13.3 ----------------------------------------------
+//
+// SuccessionAsUsage =
+//     UsagePrefix ( 'succession' UsageDeclaration )?
+//     'first' ownedRelationship += ConnectorEndMember
+//     'then' ownedRelationship += ConnectorEndMember
+//     UsageBody                                                           (8.2.2.13.3)
+// NonOccurrenceUsageElement = ... | SuccessionAsUsage | ...               (8.2.2.6.4)
+//
+// A NON-occurrence usage (7.13.5), so it is owned wherever an attribute is: a
+// NonOccurrenceUsageMember in a definition body, a PackageMember in a package, and in an
+// action body the NonBehaviorBodyItem alternative, which takes no target-succession
+// suffix. It is the third production reachable from an action body that opens on
+// `first`, and the only one whose source end is followed directly by `then`.
+
+#[test]
+fn a_succession_as_usage_reads_the_corpus_forms() {
+    // vendor/corpus/sysml/src/training/28. Individuals/Individuals and Snapshots
+    // Example.sysml:22, in the individual part def that holds the two snapshots.
+    let in_part = render(
+        &parse_accepted(
+            "individual part def V :> Vehicle { snapshot part t0; snapshot part t1; \
+             first t0 then t1; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&in_part, "SuccessionAsUsage"), 1, "{in_part}");
+    // training/14. Action Definitions/Action Succession Example-1.sysml:19, in the
+    // action def TakePicture — `first` in an action body is not an initial node here.
+    let in_action = render(
+        &parse_accepted(
+            "action def TakePicture { action focus; action shoot; first focus then shoot; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&in_action, "SuccessionAsUsage"),
+        1,
+        "{in_action}"
+    );
+    assert_eq!(
+        nodes_named(&in_action, "InitialNodeMember"),
+        0,
+        "{in_action}"
+    );
+    // vendor/corpus/omg/SimpleVehicleModel.sysml:780 — feature chains at both ends.
+    let chained = render(
+        &parse_accepted("part def P { first vehicle.doorClosed then driver.driverReady; }")
+            .syntax(),
+    );
+    assert_eq!(nodes_named(&chained, "SuccessionAsUsage"), 1, "{chained}");
+    assert_eq!(nodes_named(&chained, "OwnedFeatureChain"), 2, "{chained}");
+    // examples/Arrowhead Framework Example/AHFSequences.sysml:100-101 — the `succession`
+    // keyword with an EMPTY UsageDeclaration, and the `then` on the next line.
+    let keyword = render(
+        &parse_accepted(
+            "part def P {\n\tsuccession first call_getItems.start\n\tthen returnack.done;\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&keyword, "SuccessionAsUsage"), 1, "{keyword}");
+    assert_eq!(nodes_named(&keyword, "UsageDeclaration"), 1, "{keyword}");
+}
+
+#[test]
+fn a_succession_as_usage_owns_what_its_production_writes() {
+    let tree = render(&parse_accepted("part def P { first a then b; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "NonOccurrenceUsageMember"),
+        ["MemberPrefix", "SuccessionAsUsage"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "SuccessionAsUsage"),
+        [
+            "UsagePrefix",
+            "KwFirst",
+            "ConnectorEndMember",
+            "KwThen",
+            "ConnectorEndMember",
+            "UsageBody"
+        ],
+        "{tree}"
+    );
+    // With the declaration, and a UsagePrefix that is not empty.
+    let declared = render(
+        &parse_accepted("part def P { abstract succession s : HappensBefore first a then b { } }")
+            .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&declared, "SuccessionAsUsage"),
+        [
+            "UsagePrefix",
+            "KwSuccession",
+            "UsageDeclaration",
+            "KwFirst",
+            "ConnectorEndMember",
+            "KwThen",
+            "ConnectorEndMember",
+            "UsageBody"
+        ],
+        "{declared}"
+    );
+    // A UsageElement, so a package owns one through PackageMember (8.2.2.5.1). Written
+    // at the root, which reaches PackageMember the same way, so that the member asked
+    // about is the only one in the tree.
+    let package = render(&parse_accepted("first a then b;").syntax());
+    assert_eq!(
+        child_kinds(&package, "PackageMember"),
+        ["MemberPrefix", "SuccessionAsUsage"],
+        "{package}"
+    );
+    // ConnectorEnd's `NAME REFERENCES` form names the end (8.2.2.13.1).
+    let named =
+        render(&parse_accepted("part def P { first e ::> a then f references b; }").syntax());
+    assert_eq!(nodes_named(&named, "ConnectorEnd"), 2, "{named}");
+}
+
+#[test]
+fn first_is_three_productions_told_apart_after_the_source() {
+    // InitialNodeMember ends its name in `;` or `{`, GuardedSuccession writes `if`, and
+    // SuccessionAsUsage writes `then` (8.2.2.17.1, 8.2.2.17.8, 8.2.2.13.3). All three in
+    // one action body, and none becomes another.
+    let tree = render(
+        &parse_accepted("action def A { first start; first a if x then b; first c then d; }")
+            .syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "InitialNodeMember"), 1, "{tree}");
+    assert_eq!(nodes_named(&tree, "GuardedSuccession"), 1, "{tree}");
+    assert_eq!(nodes_named(&tree, "SuccessionAsUsage"), 1, "{tree}");
+}
+
+#[test]
+fn a_succession_as_usage_is_bounded_by_its_rules() {
+    // UsageBody is not optional.
+    parse_rejected("part def P { first a then b }");
+    // Both ends are required, and so is `first`: the declaration alone is no succession.
+    parse_rejected("part def P { first a then; }");
+    parse_rejected("part def P { succession s; }");
+    // UsagePrefix, not OccurrenceUsagePrefix: "the notations for time slices, snapshots
+    // and individuals ... do not apply to it" (7.13.5, receipt 2abd302c).
+    parse_rejected("part def P { snapshot first a then b; }");
+    // NonBehaviorBodyItem, so no ActionTargetSuccessionMember* after it in an action body.
+    parse_rejected("action def A { first a then b; then c; }");
+    // No SourceSuccessionMember before it either: that prefixes occurrence usages only
+    // (8.2.2.6.1, 8.2.2.17.1).
+    parse_rejected("part def P { part p; then first a then b; }");
+    // OwnedCrossMultiplicityMember, ConnectorEnd's first part, is unimplemented, so a
+    // multiplicity on an end is rejected BY ABSENCE — 7.13.5's own example writes it.
+    parse_rejected("part def P { first [1] a then b; }");
+}
+
+#[test]
+fn a_succession_as_usage_keeps_every_byte() {
+    let source =
+        "part def P {\n\tsuccession /* d */ s // n\n\t\tfirst a.b\n\t\tthen x ::> c { }\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
 //
 // DefaultTargetSuccession : TransitionUsage =
