@@ -551,6 +551,16 @@ NODES = [
             "`SuccessionAsUsage`."
         ),
     ),
+    # Its sibling in 8.2.2.13: the binding written as a usage, `bind a = b;`. Also a
+    # NonOccurrenceUsageElement, and owned the same way.
+    (
+        "BindingConnectorAsUsage",
+        (
+            "`UsagePrefix ( 'binding' UsageDeclaration )? 'bind' ConnectorEndMember "
+            "'=' ConnectorEndMember UsageBody`. `SysML` 8.2.2.13.2 — the metaclass is "
+            "`BindingConnectorAsUsage`."
+        ),
+    ),
     # `SysML` 8.2.2.17.5's membership, NOT `KerML` 8.2.5.8.2's production of the same name:
     # that one is `FeatureReferenceMember | OwnedFeatureChainMember` and its first
     # alternative is read as a `FeatureReferenceMember` in the expression layer. Two

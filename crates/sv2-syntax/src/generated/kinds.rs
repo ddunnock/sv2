@@ -673,6 +673,8 @@ pub enum SyntaxKind {
     GuardedSuccession,
     /// `UsagePrefix ( 'succession' UsageDeclaration )? 'first' ConnectorEndMember 'then' ConnectorEndMember UsageBody`. `SysML` 8.2.2.13.3 — the metaclass is `SuccessionAsUsage`.
     SuccessionAsUsage,
+    /// `UsagePrefix ( 'binding' UsageDeclaration )? 'bind' ConnectorEndMember '=' ConnectorEndMember UsageBody`. `SysML` 8.2.2.13.2 — the metaclass is `BindingConnectorAsUsage`.
+    BindingConnectorAsUsage,
     /// `memberElement = [QualifiedName] | OwnedFeatureChainMember`. `SysML` 8.2.2.17.5 — the metaclass is `Membership`.
     FeatureChainMember,
     /// `ownedRelatedElement += OwnedFeatureChain`. `SysML` 8.2.2.17.5 — the metaclass is `OwningMembership`.
@@ -1267,6 +1269,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::GuardedSuccessionMember,
     SyntaxKind::GuardedSuccession,
     SyntaxKind::SuccessionAsUsage,
+    SyntaxKind::BindingConnectorAsUsage,
     SyntaxKind::FeatureChainMember,
     SyntaxKind::OwnedFeatureChainMember,
     SyntaxKind::DefaultTargetSuccession,

@@ -1392,6 +1392,7 @@ impl<'a> Parser<'a> {
                     || self.at_perform_action_usage(n)
                     || self.at_flow_usage(n)
                     || self.at_succession_as_usage(n)
+                    || self.at_binding_connector_as_usage(n)
                     || self.at_simple_usage(n).is_some()
                     // Only when no keyword usage starts here; see `membership`.
                     || self.at_reference_usage(n)
@@ -1876,6 +1877,7 @@ impl<'a> Parser<'a> {
                         || self.at_perform_action_usage(0)
                         || self.at_flow_usage(0)
                         || self.at_succession_as_usage(0)
+                        || self.at_binding_connector_as_usage(0)
                         || self.at_control_node(0).is_some()
                 }
             }
@@ -2479,8 +2481,9 @@ impl<'a> Parser<'a> {
     ///
     /// `ActionUsage` and `PerformActionUsage` are `BehaviorUsageElement`s, `FlowUsage` a
     /// `StructureUsageElement`;
-    /// `SuccessionAsUsage`, `ReferenceUsage` and `DefaultReferenceUsage` are
-    /// `NonOccurrenceUsageElement`s; the seven `SIMPLE_USAGES` carry their own.
+    /// `SuccessionAsUsage`, `BindingConnectorAsUsage`, `ReferenceUsage` and
+    /// `DefaultReferenceUsage` are `NonOccurrenceUsageElement`s; the seven `SIMPLE_USAGES`
+    /// carry their own.
     fn usage_element_of_class(&mut self) -> Option<UsageClass> {
         if self.at_perform_action_usage(0) {
             self.perform_action_usage();
@@ -2496,6 +2499,11 @@ impl<'a> Parser<'a> {
             // A NonOccurrenceUsageElement (8.2.2.6.4): "a succession is not a kind of
             // occurrence usage" (7.13.5, receipt 2abd302c).
             self.succession_as_usage();
+            Some(UsageClass::NonOccurrence)
+        } else if self.at_binding_connector_as_usage(0) {
+            // A NonOccurrenceUsageElement (8.2.2.6.4): "a binding is not a kind of
+            // occurrence usage" (7.13.3, receipt 6db87b41).
+            self.binding_connector_as_usage();
             Some(UsageClass::NonOccurrence)
         } else if let Some(usage) = self.at_simple_usage(0) {
             self.simple_usage(usage);
@@ -6235,6 +6243,66 @@ impl<'a> Parser<'a> {
         self.expect_keyword("first");
         self.connector_end_member();
         self.expect_keyword("then");
+        self.connector_end_member();
+        self.usage_body();
+        self.finish_node();
+    }
+
+    /// Whether a `BindingConnectorAsUsage` starts at the `n`th meaningful token.
+    ///
+    /// `UsagePrefix`, then `binding` or `bind`. Both are reserved (`SysML` 8.2.2.1.2) and
+    /// open no other production, so the keyword decides on its own, with none of the
+    /// lookahead `at_succession_as_usage` needs to tell `first` apart: a binding missing
+    /// its `=` or an end is read, and reported where the part is missing.
+    ///
+    /// The prefix skipped is `UsagePrefix`, which is what `binding_connector_as_usage`
+    /// reads, and NOT `OccurrenceUsagePrefix`, for the reason `at_succession_as_usage`
+    /// gives: a recogniser that looked past `snapshot` would accept a member the parser
+    /// then cannot consume.
+    fn at_binding_connector_as_usage(&self, n: usize) -> bool {
+        let n = self.skip_basic_usage_prefix(n);
+        self.nth_is_keyword(n, "binding") || self.nth_is_keyword(n, "bind")
+    }
+
+    // production: BindingConnectorAsUsage@sysml
+    //
+    // BindingConnectorAsUsage =
+    //     UsagePrefix ( 'binding' UsageDeclaration )?
+    //     'bind' ownedRelationship += ConnectorEndMember
+    //     '=' ownedRelationship += ConnectorEndMember
+    //     UsageBody                                                 (SysML 8.2.2.13.2)
+    //
+    // A binding declared as a usage, naming its two related features (receipt
+    // 6c24121f). The metaclass is BindingConnectorAsUsage (8.3.13.2, receipt 9cf9f357),
+    // both a ConnectorAsUsage and a KerML BindingConnector. "A binding is not a kind of
+    // occurrence usage", so it takes UsagePrefix and not OccurrenceUsagePrefix, and "if
+    // the declaration part is empty, then the keyword binding may be omitted" (7.13.3,
+    // receipt 6db87b41) — which is what the corpus's `bind a = b;` is.
+    //
+    // Marked although ConnectorEnd is not, as SuccessionAsUsage is: this production's own
+    // body is read in full, and ConnectorEnd's missing OwnedCrossMultiplicityMember is held
+    // by tests/rejection/connector-end-cross-multiplicity-is-not-implemented.sysml.
+    //
+    // implied specialization: Links::selfLinks
+    // constraint: BindingConnector::checkBindingConnectorSpecialization,
+    //     `specializesFromLibrary('Links::selfLinks')` (KerML 8.3.4.5.2), which "requires
+    //     that BindingConnectorAsUsages specialize the kernel Feature Links:selfLink"
+    //     (SysML 8.4.9.3, receipt 6b0fb7c5). An injection, so sv2-hir's; this layer builds
+    //     the tree only (ADR-0002).
+    // constraint: BindingConnector::validateBindingConnectorIsBinary,
+    //     `relatedFeature->size() = 2` (KerML 8.3.4.5.2). Holds by construction here: the
+    //     production writes exactly two ends.
+    fn binding_connector_as_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::BindingConnectorAsUsage);
+        self.usage_prefix();
+        if self.at_keyword("binding") {
+            self.bump_as(keyword("binding").unwrap_or(SyntaxKind::BasicName));
+            self.usage_declaration();
+        }
+        self.expect_keyword("bind");
+        self.connector_end_member();
+        self.expect(SyntaxKind::Eq, "`=`");
         self.connector_end_member();
         self.usage_body();
         self.finish_node();

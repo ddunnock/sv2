@@ -2492,6 +2492,162 @@ fn a_succession_as_usage_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- BindingConnectorAsUsage, SysML 8.2.2.13.2 ----------------------------------------
+//
+// BindingConnectorAsUsage =
+//     UsagePrefix ( 'binding' UsageDeclaration )?
+//     'bind' ownedRelationship += ConnectorEndMember
+//     '=' ownedRelationship += ConnectorEndMember
+//     UsageBody                                                           (8.2.2.13.2)
+// NonOccurrenceUsageElement = ... | BindingConnectorAsUsage | ...         (8.2.2.6.4)
+//
+// SuccessionAsUsage's sibling in 8.2.2.13, and owned the same way: "a binding is not a
+// kind of occurrence usage" (7.13.3, receipt 6db87b41). Unlike `first`, `bind` and
+// `binding` are reserved (8.2.2.1.2) and open no other production, so the keyword alone
+// decides and a malformed binding is read and reported rather than skipped.
+
+#[test]
+fn a_binding_connector_as_usage_reads_the_corpus_forms() {
+    // training/12. Binding Connectors/Binding Connectors Example-1.sysml:15-16, in a part
+    // usage's body, both ends feature chains.
+    let in_part = render(
+        &parse_accepted(
+            "part tank : FuelTankAssembly { bind fuelTankPort.fuelSupply = pump.pumpOut; \
+             bind fuelTankPort.fuelReturn = tank.fuelIn; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&in_part, "BindingConnectorAsUsage"),
+        2,
+        "{in_part}"
+    );
+    // training/14. Action Definitions/Action Definition Example.sysml:10, in an action
+    // def's body, one end a bare name.
+    let in_action =
+        render(&parse_accepted("action def TakePicture { bind focus.scene = scene; }").syntax());
+    assert_eq!(
+        nodes_named(&in_action, "BindingConnectorAsUsage"),
+        1,
+        "{in_action}"
+    );
+    // validation/03-Function-based Behavior/3e-Function-based Behavior-item.sysml:49 —
+    // quoted names, three links.
+    let quoted = render(
+        &parse_accepted(
+            "part def P { bind 'assemble vehicle'.'assemble engine into vehicle'.assembledVehicle \
+             = vehicle; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&quoted, "BindingConnectorAsUsage"),
+        1,
+        "{quoted}"
+    );
+    // validation/01-Parts Tree/1d-Parts Tree with Reference.sysml:27-32 — a body holding
+    // only a comment.
+    let bodied = render(
+        &parse_accepted(
+            "part def P { bind vehicle1_c1.hitchBall = trailerHitch.hitchBall {\n\
+             /* a binding connector */\n} }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&bodied, "BindingConnectorAsUsage"),
+        1,
+        "{bodied}"
+    );
+    // 7.13.3's own example (receipt 6db87b41): the `binding` keyword with a name, and
+    // examples/Simple Tests/ConnectionTest.sysml:24 with a typed declaration.
+    let named = render(
+        &parse_accepted(
+            "part def Vehicle { binding fuelFlowBinding \
+             bind fuelTank.fuelFlowOut = engine.fuelFlowIn; binding ab1 : AB bind a = b; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&named, "BindingConnectorAsUsage"), 2, "{named}");
+    assert_eq!(nodes_named(&named, "UsageDeclaration"), 2, "{named}");
+}
+
+#[test]
+fn a_binding_connector_as_usage_owns_what_its_production_writes() {
+    let tree = render(&parse_accepted("part def P { bind a = b; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "NonOccurrenceUsageMember"),
+        ["MemberPrefix", "BindingConnectorAsUsage"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "BindingConnectorAsUsage"),
+        [
+            "UsagePrefix",
+            "KwBind",
+            "ConnectorEndMember",
+            "Eq",
+            "ConnectorEndMember",
+            "UsageBody"
+        ],
+        "{tree}"
+    );
+    // With the declaration, and a UsagePrefix that is not empty.
+    let declared =
+        render(&parse_accepted("part def P { derived binding b : B bind a = c { } }").syntax());
+    assert_eq!(
+        child_kinds(&declared, "BindingConnectorAsUsage"),
+        [
+            "UsagePrefix",
+            "KwBinding",
+            "UsageDeclaration",
+            "KwBind",
+            "ConnectorEndMember",
+            "Eq",
+            "ConnectorEndMember",
+            "UsageBody"
+        ],
+        "{declared}"
+    );
+    // A UsageElement, so a package owns one through PackageMember (8.2.2.5.1).
+    let package = render(&parse_accepted("bind a = b;").syntax());
+    assert_eq!(
+        child_kinds(&package, "PackageMember"),
+        ["MemberPrefix", "BindingConnectorAsUsage"],
+        "{package}"
+    );
+    // ConnectorEnd's `NAME REFERENCES` form names the end (8.2.2.13.1).
+    let ends = render(&parse_accepted("part def P { bind e ::> a = f references b; }").syntax());
+    assert_eq!(nodes_named(&ends, "ConnectorEnd"), 2, "{ends}");
+}
+
+#[test]
+fn a_binding_connector_as_usage_is_bounded_by_its_rules() {
+    // UsageBody is not optional.
+    parse_rejected("part def P { bind a = b }");
+    // Both ends and the `=` are required.
+    parse_rejected("part def P { bind a; }");
+    parse_rejected("part def P { bind a = ; }");
+    // `bind` is required: the declaration alone is no binding.
+    parse_rejected("part def P { binding b; }");
+    // UsagePrefix, not OccurrenceUsagePrefix: "the notations for time slices, snapshots
+    // and individuals ... do not apply to it" (7.13.3, receipt 6db87b41).
+    parse_rejected("part def P { snapshot bind a = b; }");
+    parse_rejected("part def P { individual bind a = b; }");
+    // NonBehaviorBodyItem, so no ActionTargetSuccessionMember* after it in an action body
+    // (8.2.2.17.1).
+    parse_rejected("action def A { bind a = b; then c; }");
+    // OwnedCrossMultiplicityMember, ConnectorEnd's first part, is unimplemented, so a
+    // multiplicity on an end is rejected BY ABSENCE.
+    parse_rejected("part def P { bind [1] a = b; }");
+}
+
+#[test]
+fn a_binding_connector_as_usage_keeps_every_byte() {
+    let source = "part def P {\n\tbinding /* d */ b // n\n\t\tbind a.b\n\t\t= x ::> c { }\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
 //
 // DefaultTargetSuccession : TransitionUsage =

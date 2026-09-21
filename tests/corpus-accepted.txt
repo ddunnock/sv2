@@ -52,9 +52,12 @@ vendor/corpus/sysml/src/training/07. Parts/Parts Example-1.sysml
 vendor/corpus/sysml/src/training/07. Parts/Parts Example-2.sysml
 vendor/corpus/sysml/src/training/08. Items/Items Example.sysml
 vendor/corpus/sysml/src/training/10. Ports/Port Example.sysml
+vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-1.sysml
 vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-2.sysml
 vendor/corpus/sysml/src/training/13. Flows/Flow Usage Example.sysml
+vendor/corpus/sysml/src/training/14. Action Definitions/Action Definition Example.sysml
 vendor/corpus/sysml/src/training/14. Action Definitions/Action Shorthand Example.sysml
+vendor/corpus/sysml/src/training/14. Action Definitions/Action Succession Example-1.sysml
 vendor/corpus/sysml/src/training/15. Actions/Action Decomposition.sysml
 vendor/corpus/sysml/src/training/16. Conditional Succession/Conditional Succession Example-1.sysml
 vendor/corpus/sysml/src/training/16. Conditional Succession/Conditional Succession Example-2.sysml
@@ -71,6 +74,8 @@ vendor/corpus/sysml/src/training/29. Expressions/MassRollup1.sysml
 vendor/corpus/sysml/src/training/30. Calculations/Calculation Definitions.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Definitions.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml
+vendor/corpus/sysml/src/validation/01-Parts Tree/1d-Parts Tree with Reference.sysml
+vendor/corpus/sysml/src/validation/03-Function-based Behavior/3e-Function-based Behavior-item.sysml
 vendor/corpus/sysml/src/validation/04-Functional Allocation/4a-Functional Allocation.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_02-Basic Value Properties.sysml
