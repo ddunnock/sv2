@@ -6464,6 +6464,46 @@
       ]
     },
     {
+      "production": "TransitionUsage",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/SysML.xtext agrees with the BNF on both points: TransitionUsage (line 1854) and TargetTransitionUsage (line 1866) order TriggerActionMember before GuardExpressionMember before EffectBehaviorMember before 'then', and EffectBehaviorUsage (line 1917) is EmptyActionUsage | PerformedActionUsage ( '{' ActionBodyItem* '}' )? with no ';' alternative.",
+      "problem": "SysML 7.18.3's examples disagree with 8.2.2.18.3 in two ways. (1) Order: OnOff4 writes `if isEnabled` before `accept TurnOn via commPort` (and before `accept after 5[min]`), while the BNF writes ( EmptyParameterMember TriggerActionMember )? GuardExpressionMember? EffectBehaviorMember? 'then', 7.18.3's own prose places the guard 'after the accepter (if any)', and OnOff3 and OnOff5 write the accepter first. (2) Terminator: OnOff4 writes `do action powerUp : PowerUp;` and OnOff5 writes `do action powerUp : PowerUp;` and `do send new TimeoutSignal() via commPort;`, each followed by `then …;`, while EffectBehaviorMember = 'do' EffectBehaviorUsage and TransitionPerformActionUsage / TransitionSendActionUsage end in an optional '{' ActionBodyItem* '}' with no ';'. OnOff4's own send effect is written without ';'. TargetTransitionUsage shares the same trigger, guard and effect part and is covered by this entry.",
+      "decision": "follow_spec",
+      "rationale": "The BNF, the 7.18.3 prose, the Pilot grammar and the corpus all agree; only three example lines disagree. The terminator is filed as SYSML21-450 (open, SysML 2.0, reported 2025-11-12), which quotes exactly the three ';'-terminated effects. The order is unfiled as far as the visible part of the open SysML issue list shows (read 2026-09-22; the listing was truncated), but OnOff4 contradicts the sentence immediately preceding OnOff3 and its sibling examples. Corpus (253 files): 9 transitions put the accepter before the guard and none the reverse; 24 put 'do' effects directly before 'then' and none terminate the effect with ';'. tests/rejection/transition-trigger-precedes-its-guard.sysml and tests/rejection/transition-perform-effect-takes-no-semicolon.sysml reject the example forms by rule. Adjudicated by the grammar-adjudicator on 2026-09-22.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.18.3 TransitionUsages (region_sha256 2da333dc19880d39)",
+          "note": "TransitionUsage and TargetTransitionUsage: ( EmptyParameterMember TriggerActionMember )? GuardExpressionMember? EffectBehaviorMember? 'then'; TransitionPerformActionUsage = PerformActionUsageDeclaration ( '{' ActionBodyItem* '}' )?"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 7.18.3 Transition-Usages (region_sha256 6e6e9493504c24a0)",
+          "note": "prose: guard 'after the accepter (if any)', effect 'after the guard and accepter'; OnOff4 writes `if isEnabled` before `accept`; OnOff4 and OnOff5 write `do action powerUp : PowerUp;` / `do send new TimeoutSignal() via commPort;` before `then`"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/examples/Simple Tests/StateTest.sysml",
+          "note": "lines 16-18: `accept s : Sig` / `do action D` / `then S2;` (perform effect, no ';'); lines 34-35: `accept s : Sig via p` / `if true` (accepter before guard)"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/sysml/src/training/25. Transitions/Transition Actions.sysml",
+          "note": "lines 29-32: `accept VehicleOnSignal` / `if operatingVehicle.brakePedalDepressed` / `do send new ControllerStartSignal() to controller` / `then on;`"
+        },
+        {
+          "kind": "omg_issue",
+          "ref": "SYSML21-450",
+          "note": "'should have no semi-colon (3 places)': `do action powerUp : PowerUp;` (x2), `do send new TimeoutSignal() via commPort;`; the order defect is not filed"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
       "production": "TransitionUsageKeyword",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `TransitionUsageKeyword: 'transition';`.",

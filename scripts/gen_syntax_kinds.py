@@ -1003,6 +1003,57 @@ NODES = [
     ("NodeParameterMember", "`NodeParameter`. `SysML` 8.2.2.17.4."),
     ("NodeParameter", "`FeatureBinding`, a `ReferenceUsage`. `SysML` 8.2.2.17.4."),
     ("FeatureBinding", "`OwnedExpression`, a `FeatureValue`. `SysML` 8.2.2.17.4."),
+    # The rest of the state layer: entry, do and exit actions, the transition out of an
+    # entry action, a transition's effect, the time and change triggers, and the
+    # exhibited state. StateActionUsage and EffectBehaviorUsage are alternations and get
+    # no node; the alternative taken is the node.
+    ("EntryActionMember", "`MemberPrefix 'entry' StateActionUsage`. `SysML` 8.2.2.18.1."),
+    ("DoActionMember", "`MemberPrefix 'do' StateActionUsage`. `SysML` 8.2.2.18.1."),
+    ("ExitActionMember", "`MemberPrefix 'exit' StateActionUsage`. `SysML` 8.2.2.18.1."),
+    (
+        "EntryTransitionMember",
+        (
+            "`MemberPrefix ( GuardedTargetSuccession | 'then' TransitionSuccession ) ';'`. "
+            "`SysML` 8.2.2.18.1, with the `EntryTransitionMember` deviation."
+        ),
+    ),
+    ("EmptyActionUsage", "`{}`. `SysML` 8.2.2.18.1."),
+    (
+        "StatePerformActionUsage",
+        "`PerformActionUsageDeclaration ActionBody`. `SysML` 8.2.2.18.1.",
+    ),
+    ("StateAcceptActionUsage", "`AcceptNodeDeclaration ActionBody`. `SysML` 8.2.2.18.1."),
+    ("EffectBehaviorMember", "`'do' EffectBehaviorUsage`. `SysML` 8.2.2.18.3."),
+    (
+        "TransitionPerformActionUsage",
+        "`PerformActionUsageDeclaration ( '{' ActionBodyItem* '}' )?`. `SysML` 8.2.2.18.3.",
+    ),
+    (
+        "TransitionAcceptActionUsage",
+        "`AcceptNodeDeclaration ( '{' ActionBodyItem* '}' )?`. `SysML` 8.2.2.18.3.",
+    ),
+    (
+        "AcceptNodeDeclaration",
+        "`ActionNodeUsageDeclaration? 'accept' AcceptParameterPart`. `SysML` 8.2.2.17.4.",
+    ),
+    ("ActionNodeUsageDeclaration", "`'action' UsageDeclaration?`. `SysML` 8.2.2.17.2."),
+    ("TriggerValuePart", "`TriggerFeatureValue`. `SysML` 8.2.2.17.4."),
+    ("TriggerFeatureValue", "`TriggerExpression`, a `FeatureValue`. `SysML` 8.2.2.17.4."),
+    (
+        "TriggerExpression",
+        (
+            "`( 'at' | 'after' ) ArgumentMember | 'when' ArgumentExpressionMember`. "
+            "`SysML` 8.2.2.17.4."
+        ),
+    ),
+    (
+        "ExhibitStateUsage",
+        (
+            "`OccurrenceUsagePrefix 'exhibit' ( OwnedReferenceSubsetting "
+            "FeatureSpecializationPart? | 'state' UsageDeclaration ) ValuePart? "
+            "StateUsageBody`. `SysML` 8.2.2.18.2."
+        ),
+    ),
     # Built from no tokens: a parameter the text never writes.
     ("EmptyParameterMember", "`EmptyUsage`. `SysML` 8.2.2.17.4."),
     ("EmptyUsage", "`{}`. `SysML` 8.2.2.17.4."),

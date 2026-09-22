@@ -879,6 +879,38 @@ pub enum SyntaxKind {
     NodeParameter,
     /// `OwnedExpression`, a `FeatureValue`. `SysML` 8.2.2.17.4.
     FeatureBinding,
+    /// `MemberPrefix 'entry' StateActionUsage`. `SysML` 8.2.2.18.1.
+    EntryActionMember,
+    /// `MemberPrefix 'do' StateActionUsage`. `SysML` 8.2.2.18.1.
+    DoActionMember,
+    /// `MemberPrefix 'exit' StateActionUsage`. `SysML` 8.2.2.18.1.
+    ExitActionMember,
+    /// `MemberPrefix ( GuardedTargetSuccession | 'then' TransitionSuccession ) ';'`. `SysML` 8.2.2.18.1, with the `EntryTransitionMember` deviation.
+    EntryTransitionMember,
+    /// `{}`. `SysML` 8.2.2.18.1.
+    EmptyActionUsage,
+    /// `PerformActionUsageDeclaration ActionBody`. `SysML` 8.2.2.18.1.
+    StatePerformActionUsage,
+    /// `AcceptNodeDeclaration ActionBody`. `SysML` 8.2.2.18.1.
+    StateAcceptActionUsage,
+    /// `'do' EffectBehaviorUsage`. `SysML` 8.2.2.18.3.
+    EffectBehaviorMember,
+    /// `PerformActionUsageDeclaration ( '{' ActionBodyItem* '}' )?`. `SysML` 8.2.2.18.3.
+    TransitionPerformActionUsage,
+    /// `AcceptNodeDeclaration ( '{' ActionBodyItem* '}' )?`. `SysML` 8.2.2.18.3.
+    TransitionAcceptActionUsage,
+    /// `ActionNodeUsageDeclaration? 'accept' AcceptParameterPart`. `SysML` 8.2.2.17.4.
+    AcceptNodeDeclaration,
+    /// `'action' UsageDeclaration?`. `SysML` 8.2.2.17.2.
+    ActionNodeUsageDeclaration,
+    /// `TriggerFeatureValue`. `SysML` 8.2.2.17.4.
+    TriggerValuePart,
+    /// `TriggerExpression`, a `FeatureValue`. `SysML` 8.2.2.17.4.
+    TriggerFeatureValue,
+    /// `( 'at' | 'after' ) ArgumentMember | 'when' ArgumentExpressionMember`. `SysML` 8.2.2.17.4.
+    TriggerExpression,
+    /// `OccurrenceUsagePrefix 'exhibit' ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'state' UsageDeclaration ) ValuePart? StateUsageBody`. `SysML` 8.2.2.18.2.
+    ExhibitStateUsage,
     /// `EmptyUsage`. `SysML` 8.2.2.17.4.
     EmptyParameterMember,
     /// `{}`. `SysML` 8.2.2.17.4.
@@ -1440,6 +1472,22 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::NodeParameterMember,
     SyntaxKind::NodeParameter,
     SyntaxKind::FeatureBinding,
+    SyntaxKind::EntryActionMember,
+    SyntaxKind::DoActionMember,
+    SyntaxKind::ExitActionMember,
+    SyntaxKind::EntryTransitionMember,
+    SyntaxKind::EmptyActionUsage,
+    SyntaxKind::StatePerformActionUsage,
+    SyntaxKind::StateAcceptActionUsage,
+    SyntaxKind::EffectBehaviorMember,
+    SyntaxKind::TransitionPerformActionUsage,
+    SyntaxKind::TransitionAcceptActionUsage,
+    SyntaxKind::AcceptNodeDeclaration,
+    SyntaxKind::ActionNodeUsageDeclaration,
+    SyntaxKind::TriggerValuePart,
+    SyntaxKind::TriggerFeatureValue,
+    SyntaxKind::TriggerExpression,
+    SyntaxKind::ExhibitStateUsage,
     SyntaxKind::EmptyParameterMember,
     SyntaxKind::EmptyUsage,
     SyntaxKind::ConjugatedPortTyping,

@@ -3948,6 +3948,266 @@ fn a_state_definition_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- State actions, effects, triggers and exhibited states, SysML 8.2.2.17-18 ---------
+//
+// EntryActionMember     = MemberPrefix 'entry' StateActionUsage             (8.2.2.18.1)
+// DoActionMember        = MemberPrefix 'do' StateActionUsage
+// ExitActionMember      = MemberPrefix 'exit' StateActionUsage
+// EntryTransitionMember = MemberPrefix ( GuardedTargetSuccession
+//                                      | 'then' TransitionSuccession ) ';'
+//                         (deviation EntryTransitionMember, follow_xtext)
+// StateActionUsage      = EmptyActionUsage ';' | StatePerformActionUsage
+//                       | StateAcceptActionUsage | StateSendActionUsage
+//                       | StateAssignmentActionUsage
+// EffectBehaviorMember  = 'do' EffectBehaviorUsage                          (8.2.2.18.3)
+// EffectBehaviorUsage   = EmptyActionUsage | TransitionPerformActionUsage
+//                       | TransitionAcceptActionUsage | TransitionSendActionUsage
+//                       | TransitionAssignmentActionUsage
+// PayloadParameter      = PayloadFeature
+//                       | Identification PayloadFeatureSpecializationPart?
+//                         TriggerValuePart                                  (8.2.2.17.4)
+// TriggerExpression     = ( 'at' | 'after' ) ArgumentMember
+//                       | 'when' ArgumentExpressionMember
+// ExhibitStateUsage     = OccurrenceUsagePrefix 'exhibit'
+//                         ( OwnedReferenceSubsetting FeatureSpecializationPart?
+//                         | 'state' UsageDeclaration ) ValuePart? StateUsageBody (8.2.2.18.2)
+//
+// The send and assignment forms are action nodes (8.2.2.17.4, 8.2.2.17.5), unimplemented,
+// and reported wherever they are written.
+
+#[test]
+fn a_state_action_reads_the_corpus_forms() {
+    // training/24. States/State Actions.sysml:26-30 — entry, do and exit, by reference
+    // with a body, and by declaration.
+    let tree = render(
+        &parse_accepted(
+            "state def VehicleStates {\n\
+             \tstate on {\n\
+             \t\tentry performSelfTest{ in vehicle = operatingVehicle; }\n\
+             \t\tdo action providePower { /* ... */ }\n\
+             \t\texit action applyParkingBrake { /* ... */ }\n\
+             \t}\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "EntryActionMember"), 1, "{tree}");
+    assert_eq!(nodes_named(&tree, "DoActionMember"), 1, "{tree}");
+    assert_eq!(nodes_named(&tree, "ExitActionMember"), 1, "{tree}");
+    assert_eq!(nodes_named(&tree, "StatePerformActionUsage"), 3, "{tree}");
+    // training/31. Constraints/Time Constraints.sysml:21-25 and examples/Simple
+    // Tests/StateTest.sysml:13 — the empty entry action, an entry transition after it,
+    // and a time trigger.
+    let entry = render(
+        &parse_accepted(
+            "state def S {\n\
+             \tentry; then normal;\n\
+             \tstate normal;\n\
+             \taccept at vehicle.maintenanceTime\n\
+             \t\tthen maintenance;\n\
+             \tstate maintenance;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&entry, "EmptyActionUsage"), 1, "{entry}");
+    assert_eq!(nodes_named(&entry, "EntryTransitionMember"), 1, "{entry}");
+    assert_eq!(nodes_named(&entry, "TriggerExpression"), 1, "{entry}");
+}
+
+#[test]
+fn a_trigger_and_an_effect_read_the_corpus_forms() {
+    // training/25. Transitions/Local Clock Example.sysml:17-29, less its `new`
+    // instantiation (unimplemented): a receiver, a named payload, and a relative time.
+    parse_accepted(
+        "state def S {\n\
+         \tstate off;\n\
+         \taccept Start via requestPort\n\
+         \t\tthen waiting;\n\
+         \tstate waiting;\n\
+         \taccept request : Request via requestPort\n\
+         \t\tthen responding;\n\
+         \tstate responding;\n\
+         \taccept after 5 [SI::min]\n\
+         \t\tthen waiting;\n\
+         }",
+    );
+    // training/25. Transitions/Change and Time Triggers.sysml:24, 29, 36 — a do action by
+    // reference, a change trigger, and a relative time in hours.
+    parse_accepted(
+        "state def S {\n\
+         \tdo senseTemperature;\n\
+         \tstate normal;\n\
+         \taccept when senseTemperature.temp > vehicle.maxTemperature\n\
+         \t\tthen degraded;\n\
+         \tstate degraded;\n\
+         \taccept after 48 [h]\n\
+         \t\tthen normal;\n\
+         }",
+    );
+    // examples/Simple Tests/StateTest.sysml:16-18, 39, 45 — an effect, an exit action by
+    // reference, and a transition out of a nested state.
+    parse_accepted(
+        "state def S {\n\
+         \tstate S1;\n\
+         \taccept s : Sig\n\
+         \t\tdo action D\n\
+         \t\tthen S2;\n\
+         \tstate S2;\n\
+         \texit act;\n\
+         \ttransition first S3.S3a then S1;\n\
+         }",
+    );
+}
+
+#[test]
+fn a_state_action_reads_the_clause_examples() {
+    // 7.18.2 (receipt 42b13f63): entry, do and exit by declaration, a do action with a
+    // body of successions, the empty entry action, and `then` from an entry action.
+    parse_accepted(
+        "state def Exercising {\n\
+         \tentry action warmup : WarmUp;\n\
+         \tdo action exercise : Exercise {\n\
+         \t\taction strengthTraining;\n\
+         \t\tthen action cardioTraining;\n\
+         \t}\n\
+         \texit action cooldown : Cooldown;\n\
+         }\n\
+         state def TurnedOn {\n\
+         \tentry;\n\
+         \tdo monitorTemperature;\n\
+         }\n\
+         state def OperationalStates {\n\
+         \tentry action initial;\n\
+         \tthen off;\n\
+         \tstate off;\n\
+         }",
+    );
+    // 7.18.2's conditional entry transitions (GuardedTargetSuccession after the entry).
+    parse_accepted(
+        "state def OperationalStates {\n\
+         \tentry action initial { out attribute isStarting : Boolean; }\n\
+         \tif not initial.isStarting then off;\n\
+         \tif initial.isStarting then starting;\n\
+         \tstate off;\n\
+         \tstate starting;\n\
+         }",
+    );
+    // 7.18.3 (receipt 6e6e9493), OnOff4 and OnOff5 as the grammar writes them: the
+    // accepter before the guard, where OnOff4 writes `if isEnabled accept …`, and no `;`
+    // after the effect, where both write `do action powerUp : PowerUp;` (SYSML21-450).
+    // deviations.json records both, TransitionUsage, follow_spec.
+    parse_accepted(
+        "state def OnOff {\n\
+         \tentry action init;\n\
+         \ttransition first init if isInitOff then off;\n\
+         \tstate off;\n\
+         \tstate on;\n\
+         \ttransition off_on\n\
+         \t\tfirst off\n\
+         \t\taccept TurnOn via commPort\n\
+         \t\tif isEnabled\n\
+         \t\tdo action powerUp : PowerUp\n\
+         \t\tthen on;\n\
+         }",
+    );
+    // An accept action as a state action (StateAcceptActionUsage), with and without the
+    // `action` declaration 7.17.8 (receipt bb0d6dc7) says may be omitted.
+    parse_accepted("state def S { do accept Sig via p; entry action a accept Sig; }");
+    // 7.18.4 (receipt dbedb2cc): the two exhibit forms.
+    parse_accepted(
+        "part def Vehicle {\n\
+         \texhibit state operatingState references VehicleStates::operating;\n\
+         \tabstract exhibit state monitoringState;\n\
+         }\n\
+         part vehicle : Vehicle {\n\
+         \texhibit VehicleStates::monitoring :> Vehicle::monitoringState;\n\
+         }",
+    );
+}
+
+#[test]
+fn a_state_action_owns_what_its_production_writes() {
+    let tree = render(&parse_accepted("state def D { entry; then a; do b; state a; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "EntryActionMember"),
+        ["MemberPrefix", "KwEntry", "EmptyActionUsage", "Semicolon"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "EntryTransitionMember"),
+        [
+            "MemberPrefix",
+            "KwThen",
+            "TransitionSuccession",
+            "Semicolon"
+        ],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "StatePerformActionUsage"),
+        ["PerformActionUsageDeclaration", "ActionBody"],
+        "{tree}"
+    );
+    let effect = render(
+        &parse_accepted("state def D { state a; accept at t do action e then b; }").syntax(),
+    );
+    assert_eq!(
+        child_kinds(&effect, "PayloadParameter"),
+        ["Identification", "TriggerValuePart"],
+        "{effect}"
+    );
+    assert_eq!(
+        child_kinds(&effect, "TriggerExpression"),
+        ["KwAt", "ArgumentMember"],
+        "{effect}"
+    );
+    assert_eq!(
+        child_kinds(&effect, "EffectBehaviorMember"),
+        ["KwDo", "TransitionPerformActionUsage"],
+        "{effect}"
+    );
+    // A `when` trigger's expression is referenced, not evaluated (8.2.2.17.4).
+    let when = render(&parse_accepted("state def D { state a; accept when c then b; }").syntax());
+    assert_eq!(
+        child_kinds(&when, "TriggerExpression"),
+        ["KwWhen", "ArgumentExpressionMember"],
+        "{when}"
+    );
+    let exhibit = render(&parse_accepted("part def P { exhibit state s; }").syntax());
+    assert_eq!(nodes_named(&exhibit, "ExhibitStateUsage"), 1, "{exhibit}");
+    assert_eq!(nodes_named(&exhibit, "StateUsageBody"), 1, "{exhibit}");
+}
+
+#[test]
+fn a_state_action_is_bounded_by_its_rules() {
+    // Entry, do and exit actions are StateBodyItems, not ActionBodyItems (8.2.2.18.1).
+    parse_rejected("action def A { entry; }");
+    parse_rejected("part def P { exit a; }");
+    // An entry transition follows an entry action and nothing else.
+    parse_rejected("state def D { do a; then b; }");
+    parse_rejected("state def D { state s; exit x; if g then b; }");
+    // A transition's perform effect takes a braced body or none: never `;`.
+    parse_rejected("state def D { transition t first a do action x; then b; }");
+    // The effect comes after the guard (8.2.2.18.3).
+    parse_rejected("state def D { transition t first a do action x if g then b; }");
+    // A trigger kind takes its expression.
+    parse_rejected("state def D { state a; accept after then b; }");
+    // The empty state action writes its `;` (StateActionUsage's `EmptyActionUsage ';'`).
+    parse_rejected("state def D { entry }");
+    // `exhibit` takes `state` or a reference, and nothing else.
+    parse_rejected("part def P { exhibit part p; }");
+    // Unimplemented, and reported: the send and assignment action nodes.
+    parse_rejected("state def D { entry send s to p; }");
+    parse_rejected("state def D { entry assign x := 1; }");
+}
+
+#[test]
+fn a_state_action_keeps_every_byte() {
+    let source = "state def D {\n\tentry /* e */ ; then a;\n\tdo action d { }\n\tstate a;\n\taccept after 5 [s] do e then a;\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
 //
 // DefaultTargetSuccession : TransitionUsage =

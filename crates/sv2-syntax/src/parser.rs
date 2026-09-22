@@ -719,8 +719,8 @@ enum Body {
     /// `ActionBehaviorMember` admits an `ActionNodeMember` too, and a TARGET TRANSITION after
     /// it, where an action body takes a target succession. It has no `InitialNodeMember`, no
     /// `ActionNodeMember` and no `GuardedSuccessionMember`, so it is not `Action`, and it
-    /// has `TransitionUsageMember`, which nothing else has. The entry, do and exit members
-    /// are unimplemented.
+    /// has `TransitionUsageMember`, which nothing else has, and the entry, do and exit
+    /// members, which `Body::admits_state_action` answers for.
     State,
     /// The braced form of `TypeBody`. `KerML` only — what a classifier holds.
     Type,
@@ -859,6 +859,17 @@ impl Body {
     /// `validateStateUsageParallelSubactions` (8.3.18.5, 8.3.18.6), constraints on the
     /// owner and not grammar, so `parallel` bodies read the same items.
     fn admits_transition(self) -> bool {
+        matches!(self, Self::State)
+    }
+
+    /// Whether `EntryActionMember`, `DoActionMember` and `ExitActionMember` are this
+    /// body's alternatives.
+    ///
+    /// `StateBodyItem` alone names them (`SysML` 8.2.2.18.1). A `do` inside a transition
+    /// is its `EffectBehaviorMember` instead, read within the transition, so it never
+    /// reaches an item position. "At most one of each" (7.18.2, receipt 42b13f63) is
+    /// `validateStateDefinitionStateSubactionKind` and its usage twin, not grammar.
+    fn admits_state_action(self) -> bool {
         matches!(self, Self::State)
     }
 
@@ -1483,6 +1494,7 @@ impl<'a> Parser<'a> {
         self.at_definition_element(n)
             || self.at_action_usage(n)
             || self.at_state_usage(n)
+            || self.at_exhibit_state_usage(n)
             || self.at_perform_action_usage(n)
             || self.at_flow_usage(n)
             || self.at_succession_as_usage(n)
@@ -1910,6 +1922,15 @@ impl<'a> Parser<'a> {
             // of its own — SubjectMembership — so it cannot go through `membership`,
             // which builds the body's ordinary member node.
             self.subject_member();
+        } else if body.admits_state_action()
+            && ["entry", "do", "exit"]
+                .iter()
+                .any(|word| self.at_element_keyword(word))
+        {
+            // StateBodyItem's fourth, fifth and sixth alternatives (SysML 8.2.2.18.1),
+            // each owning a StateActionUsage through a StateSubactionMembership of its
+            // own; an entry action takes its EntryTransitionMembers after it.
+            self.state_action_item();
         } else if body.admits_transition() && self.at_element_keyword("transition") {
             // StateBodyItem's third alternative (SysML 8.2.2.18.1). An item of its own,
             // owning its element through a membership of its own. A `transition` that
@@ -2009,8 +2030,11 @@ impl<'a> Parser<'a> {
                         || self.at_simple_usage(0).is_some()
                         || self.at_action_usage(0)
                         || self.at_state_usage(0)
-                        // A StateBodyItem rather than a member `membership` reads.
-                        || self.at_element_keyword("transition")
+                        || self.at_exhibit_state_usage(0)
+                        // StateBodyItems rather than members `membership` reads.
+                        || ["transition", "entry", "do", "exit"]
+                            .iter()
+                            .any(|word| self.at_element_keyword(word))
                         || self.at_perform_action_usage(0)
                         || self.at_flow_usage(0)
                         || self.at_succession_as_usage(0)
@@ -3105,6 +3129,10 @@ impl<'a> Parser<'a> {
         } else if self.at_state_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
             self.state_usage();
+            Some(UsageClass::Behavior)
+        } else if self.at_exhibit_state_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as PerformActionUsage is.
+            self.exhibit_state_usage();
             Some(UsageClass::Behavior)
         } else if self.at_calculation_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
@@ -5679,8 +5707,8 @@ impl<'a> Parser<'a> {
     /// Whether a `StateUsage` starts at the `n`th meaningful token.
     ///
     /// `OccurrenceUsagePrefix 'state'` with no `def` after it (`SysML` 8.2.2.18.2).
-    /// `exhibit state`, an `ExhibitStateUsage`, is unimplemented, and `exhibit` is not
-    /// looked past, so it is reported.
+    /// `exhibit state` is an `ExhibitStateUsage`, and `exhibit` is not looked past here:
+    /// `at_exhibit_state_usage` answers for it.
     fn at_state_usage(&self, n: usize) -> bool {
         let after = self.skip_occurrence_usage_prefix(n);
         self.nth_is_keyword(after, "state") && !self.nth_is_keyword(after + 1, "def")
@@ -5725,9 +5753,9 @@ impl<'a> Parser<'a> {
     // node. `parallel` stands "just before the body part" (7.18.2, receipt 42b13f63) and
     // only before braces: `state def D parallel;` is reported.
     //
-    // Marked although StateBodyItem is not: its entry, do and exit alternatives are
-    // unimplemented. The items are read by `body_elements` under `Body::State`, which says
-    // what the rest are.
+    // Marked although StateBodyItem is not: its first alternative, NonBehaviorBodyItem, is
+    // read only in part, as it is for an action body. The items are read by
+    // `body_elements` under `Body::State`, which says what the rest are.
     fn state_body_part(&mut self, node: SyntaxKind) {
         self.eat_trivia();
         self.start_node(node);
@@ -5781,8 +5809,7 @@ impl<'a> Parser<'a> {
     // TransitionUsageMember : FeatureMembership =
     //     MemberPrefix ownedRelatedElement += TransitionUsage        (SysML 8.2.2.18.1)
     //
-    // StateBodyItem's third alternative. Marked although TransitionUsage is not, as other
-    // members are over a production with a gap of its own.
+    // StateBodyItem's third alternative.
     fn transition_usage_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::TransitionUsageMember);
@@ -5802,8 +5829,11 @@ impl<'a> Parser<'a> {
     //     'then' ownedRelationship += TransitionSuccessionMember
     //     ActionBody                                                 (SysML 8.2.2.18.3)
     //
-    // NOT marked for coverage: EffectBehaviorMember, the `do` effect, is unimplemented,
-    // and a transition writing one is reported. Everything else is read.
+    // production: TransitionUsage@sysml
+    //
+    // Marked although EffectBehaviorUsage is not: every part of this production is read,
+    // the `do` effect through EffectBehaviorMember, whose send and assignment forms are
+    // the action nodes that are still reported.
     //
     // "The source and target states are identified using the same keywords as for a
     // succession, first and then" (7.18.3, receipt 6e6e9493). The source is the
@@ -5814,7 +5844,10 @@ impl<'a> Parser<'a> {
     // The order is the grammar's: the accepter, then the guard, then the effect. 7.18.3's
     // OnOff4 writes `if isEnabled accept TurnOn via commPort`, against its own prose (the
     // guard is "placed between the source and target parts, after the accepter (if any)")
-    // and its OnOff3; the grammar is followed and that text is reported.
+    // and its OnOff3 and OnOff5; the grammar is followed and that text is reported. Its
+    // OnOff4 and OnOff5 also end an effect with `;` before `then`, which no effect
+    // production writes (SYSML21-450). deviations.json records both, TransitionUsage,
+    // follow_spec.
     //
     // The metaclass is TransitionUsage (8.3.18.9, receipt a6f32577), an ActionUsage.
     //
@@ -5836,17 +5869,17 @@ impl<'a> Parser<'a> {
         }
         self.sysml_feature_chain_member();
         self.empty_parameter_member();
-        self.transition_trigger_and_guard();
+        self.transition_trigger_guard_and_effect();
         self.expect_keyword("then");
         self.transition_succession_member();
         self.action_body();
         self.finish_node();
     }
 
-    /// `( EmptyParameterMember TriggerActionMember )? GuardExpressionMember?`, the part of
-    /// a transition between its source and its `then` that both transition productions
-    /// write the same way (`SysML` 8.2.2.18.3).
-    fn transition_trigger_and_guard(&mut self) {
+    /// `( EmptyParameterMember TriggerActionMember )? GuardExpressionMember?
+    /// EffectBehaviorMember?`, the part of a transition between its source and its `then`
+    /// that both transition productions write the same way (`SysML` 8.2.2.18.3).
+    fn transition_trigger_guard_and_effect(&mut self) {
         if self.at_keyword("accept") {
             self.empty_parameter_member();
             self.trigger_action_member();
@@ -5854,13 +5887,17 @@ impl<'a> Parser<'a> {
         if self.at_keyword("if") {
             self.guard_expression_member();
         }
+        if self.at_keyword("do") {
+            self.effect_behavior_member();
+        }
     }
 
     /// Whether a `TargetTransitionUsageMember` starts here.
     ///
     /// Asked only after a behaviour usage in a state body, where it is the suffix. The
     /// production opens on an optional prefix, so it begins with one of four things:
-    /// `transition` followed by an accepter, a guard or the `then`; `accept`; `if` with a
+    /// `transition` followed by an accepter, a guard, an effect or the `then`; `accept`;
+    /// `if` with a
     /// `then` after it; or a bare `then`. A bare `then` is a target transition only when
     /// a `ConnectorEnd` and a body follow it, as `at_target_succession` asks: `then state
     /// s;` is the NEXT item's `SourceSuccessionMember` instead, and `transition a then
@@ -5868,7 +5905,7 @@ impl<'a> Parser<'a> {
     fn at_target_transition_usage_member(&self) -> bool {
         let n = usize::from(self.at_visibility());
         if self.nth_is_keyword(n, "transition") {
-            return ["accept", "if", "then"]
+            return ["accept", "if", "do", "then"]
                 .iter()
                 .any(|word| self.nth_is_keyword(n + 1, word));
         }
@@ -5885,8 +5922,6 @@ impl<'a> Parser<'a> {
     //
     // TargetTransitionUsageMember : FeatureMembership =
     //     MemberPrefix ownedRelatedElement += TargetTransitionUsage  (SysML 8.2.2.18.1)
-    //
-    // Marked although TargetTransitionUsage is not, as TransitionUsageMember is.
     fn target_transition_usage_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::TargetTransitionUsageMember);
@@ -5912,7 +5947,9 @@ impl<'a> Parser<'a> {
     //     'then' ownedRelationship += TransitionSuccessionMember
     //     ActionBody                                                 (SysML 8.2.2.18.3)
     //
-    // NOT marked for coverage, for TransitionUsage's reason: EffectBehaviorMember.
+    // production: TargetTransitionUsage@sysml
+    //
+    // Marked, as TransitionUsage is: every part is read, the effect included.
     //
     // "A transition usage without a declaration part, in which both the transition
     // keyword and the source part can be omitted. In this case, the source is taken to be
@@ -5926,7 +5963,7 @@ impl<'a> Parser<'a> {
         self.start_node(SyntaxKind::TargetTransitionUsage);
         self.empty_parameter_member();
         self.eat_optional_keyword("transition");
-        self.transition_trigger_and_guard();
+        self.transition_trigger_guard_and_effect();
         self.expect_keyword("then");
         self.transition_succession_member();
         self.action_body();
@@ -6001,24 +6038,448 @@ impl<'a> Parser<'a> {
     // PayloadParameterMember : ParameterMembership =
     //     ownedRelatedElement += PayloadParameter                    (SysML 8.2.2.17.4)
     //
-    // Marked although PayloadParameter is not.
+    // production: PayloadParameter@sysml
     //
     // PayloadParameter : ReferenceUsage =
     //       PayloadFeature
     //     | Identification PayloadFeatureSpecializationPart?
     //       TriggerValuePart                                         (SysML 8.2.2.17.4)
     //
-    // NOT marked: its second alternative, TriggerValuePart (`at`, `after`, `when`, the
-    // time and change triggers), is unimplemented, and `accept after 5[min]` is reported.
-    // The first is PayloadFeature's own production, read under PayloadParameter's node as
-    // FlowPayloadFeature reads it under its own.
+    // The first alternative is PayloadFeature's own production, read under this node as
+    // FlowPayloadFeature reads it under its own. The second is the change and time
+    // triggers, `when`, `at` and `after` (7.17.8, receipt bb0d6dc7), whose payload is a
+    // feature valued by the trigger. The two share their opening, and what separates them
+    // is whether a trigger keyword stands before the parameter ends; see
+    // `at_trigger_payload`.
     fn payload_parameter_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::PayloadParameterMember);
         self.eat_trivia();
         self.start_node(SyntaxKind::PayloadParameter);
-        self.payload_feature();
+        if self.at_trigger_payload() {
+            self.identification();
+            if self.at_feature_specialization() || self.at_multiplicity_part() {
+                self.payload_feature_specialization_part();
+            }
+            self.trigger_value_part();
+        } else {
+            self.payload_feature();
+        }
         self.finish_node();
+        self.finish_node();
+    }
+
+    /// Whether the payload here is `PayloadParameter`'s trigger alternative.
+    ///
+    /// It is when `at`, `after` or `when` is written before the parameter ends. All three
+    /// are reserved (`SysML` 8.2.2.1.2), so none can be a name or appear inside a
+    /// declaration, and what ends the parameter is reserved too: the `via` of the
+    /// receiver, a transition's `if`, `do` or `then`, or a `;`, `{` or `}`.
+    fn at_trigger_payload(&self) -> bool {
+        let mut n = 0;
+        loop {
+            if ["at", "after", "when"]
+                .iter()
+                .any(|word| self.nth_is_keyword(n, word))
+            {
+                return true;
+            }
+            if self.peek_nth(n).is_none()
+                || ["via", "if", "do", "then"]
+                    .iter()
+                    .any(|word| self.nth_is_keyword(n, word))
+                || self.nth_is(n, SyntaxKind::Semicolon)
+                || self.nth_is(n, SyntaxKind::LBrace)
+                || self.nth_is(n, SyntaxKind::RBrace)
+            {
+                return false;
+            }
+            n += 1;
+        }
+    }
+
+    // production: TriggerValuePart@sysml
+    //
+    // TriggerValuePart : Feature =
+    //     ownedRelationship += TriggerFeatureValue                   (SysML 8.2.2.17.4)
+    //
+    // production: TriggerFeatureValue@sysml
+    //
+    // TriggerFeatureValue : FeatureValue =
+    //     ownedRelatedElement += TriggerExpression                   (SysML 8.2.2.17.4)
+    //
+    // production: TriggerExpression@sysml
+    //
+    // TriggerExpression : TriggerInvocationExpression =
+    //       kind = ( 'at' | 'after' ) ownedRelationship += ArgumentMember
+    //     | kind = 'when' ownedRelationship += ArgumentExpressionMember
+    //                                                                (SysML 8.2.2.17.4)
+    //
+    // "A change trigger is notated using the keyword when followed by an expression whose
+    // result must be a Boolean value"; an absolute time trigger, `at`, and a relative one,
+    // `after`, take a TimeInstantValue and a DurationValue (7.17.8, receipt bb0d6dc7).
+    // `when` takes its expression as an ArgumentExpressionMember, REFERENCED rather than
+    // evaluated once, because a change trigger re-evaluates it; `at` and `after` take an
+    // ArgumentMember. The result types are sv2-resolve's to check.
+    //
+    // The clause prints `kind = ( 'at | 'after' )`, a quote left open; deviations.json
+    // records the repair, TriggerExpression, follow_spec: the literals are 'at' and 'after'
+    // (SYSML21-401).
+    fn trigger_value_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TriggerValuePart);
+        self.start_node(SyntaxKind::TriggerFeatureValue);
+        self.start_node(SyntaxKind::TriggerExpression);
+        if self.at_keyword("when") {
+            self.expect_keyword("when");
+            self.argument_expression_member(TIER_LOOSEST);
+        } else if self.at_keyword("at") {
+            self.expect_keyword("at");
+            self.argument_member(TIER_LOOSEST);
+        } else {
+            self.expect_keyword("after");
+            self.argument_member(TIER_LOOSEST);
+        }
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
+    }
+
+    /// A state action member, with the entry transitions an entry action takes after it.
+    ///
+    /// `EntryActionMember EntryTransitionMember* | DoActionMember | ExitActionMember`, three
+    /// of `StateBodyItem`'s alternatives (`SysML` 8.2.2.18.1). Only the first has a suffix:
+    /// "a succession from the entry action to that state usage, representing that this is
+    /// the state that is entered on completion of the entry action" (7.18.2, receipt
+    /// 42b13f63), so `do a; then b;` leaves its `then` reported.
+    fn state_action_item(&mut self) {
+        let n = usize::from(self.at_visibility());
+        let (word, node) = if self.nth_is_keyword(n, "entry") {
+            ("entry", SyntaxKind::EntryActionMember)
+        } else if self.nth_is_keyword(n, "do") {
+            ("do", SyntaxKind::DoActionMember)
+        } else {
+            ("exit", SyntaxKind::ExitActionMember)
+        };
+        self.state_action_member(word, node);
+        if word == "entry" {
+            while self.at_entry_transition_member() {
+                self.entry_transition_member();
+            }
+        }
+    }
+
+    // production: EntryActionMember@sysml
+    //
+    // EntryActionMember : StateSubactionMembership =
+    //     MemberPrefix kind = 'entry'
+    //     ownedRelatedElement += StateActionUsage                    (SysML 8.2.2.18.1)
+    //
+    // production: DoActionMember@sysml
+    //
+    // DoActionMember : StateSubactionMembership =
+    //     MemberPrefix kind = 'do' ownedRelatedElement += StateActionUsage
+    //
+    // production: ExitActionMember@sysml
+    //
+    // ExitActionMember : StateSubactionMembership =
+    //     MemberPrefix kind = 'exit' ownedRelatedElement += StateActionUsage
+    //
+    // One shape, three keywords, each the StateSubactionMembership's kind (8.3.18.4,
+    // receipt 75fd3273). Marked although StateActionUsage is not: this production's own
+    // parts are read.
+    fn state_action_member(&mut self, word: &str, node: SyntaxKind) {
+        self.eat_trivia();
+        self.start_node(node);
+        self.member_prefix();
+        self.expect_keyword(word);
+        self.state_action_usage();
+        self.finish_node();
+    }
+
+    // StateActionUsage : ActionUsage =
+    //       EmptyActionUsage ';'
+    //     | StatePerformActionUsage
+    //     | StateAcceptActionUsage
+    //     | StateSendActionUsage
+    //     | StateAssignmentActionUsage                               (SysML 8.2.2.18.1)
+    //
+    // NOT marked for coverage: the send and assignment forms are action nodes
+    // (8.2.2.17.4, 8.2.2.17.5), unimplemented, and reported where they stand. No node of
+    // its own: the alternative taken is the node.
+    //
+    // "If the keyword is immediately followed by a semicolon ;, then they are empty
+    // actions. If they are followed by a qualified name or feature chain for an action
+    // usage, then this is a shorthand for relating the entry, do, or exit action to the
+    // identified action usage via reference subsetting" (7.18.2, receipt 42b13f63) —
+    // PerformActionUsageDeclaration's first alternative.
+    //
+    // production: EmptyActionUsage@sysml
+    //
+    // EmptyActionUsage : ActionUsage = {}                            (SysML 8.2.2.18.1)
+    //
+    // production: StatePerformActionUsage@sysml
+    //
+    // StatePerformActionUsage : PerformActionUsage =
+    //     PerformActionUsageDeclaration ActionBody                   (SysML 8.2.2.18.1)
+    //
+    // production: StateAcceptActionUsage@sysml
+    //
+    // StateAcceptActionUsage : AcceptActionUsage =
+    //     AcceptNodeDeclaration ActionBody                           (SysML 8.2.2.18.1)
+    fn state_action_usage(&mut self) {
+        if self.at(SyntaxKind::Semicolon) {
+            self.empty_action_usage();
+            self.bump();
+            return;
+        }
+        match self.action_node_keyword() {
+            Some("accept") => {
+                self.eat_trivia();
+                self.start_node(SyntaxKind::StateAcceptActionUsage);
+                self.accept_node_declaration();
+                self.action_body();
+                self.finish_node();
+            }
+            Some(_) => {
+                self.error_expected("an action; send and assignment actions are not implemented");
+            }
+            None => {
+                self.eat_trivia();
+                self.start_node(SyntaxKind::StatePerformActionUsage);
+                self.perform_action_usage_declaration();
+                self.action_body();
+                self.finish_node();
+            }
+        }
+    }
+
+    /// An `EmptyActionUsage`, built from no tokens.
+    fn empty_action_usage(&mut self) {
+        self.start_node(SyntaxKind::EmptyActionUsage);
+        self.finish_node();
+    }
+
+    /// Which action node the declaration here is, when it is one: `accept`, `send` or
+    /// `assign`, written first or after an `action` declaration.
+    ///
+    /// Every such node opens on `ActionNodeUsageDeclaration? KEYWORD` (`SysML` 8.2.2.17.4,
+    /// 8.2.2.17.5), where `ActionNodeUsageDeclaration = 'action' UsageDeclaration?`. A
+    /// perform declaration opens on `action` too, so the keyword has to be looked for past
+    /// the declaration, which contains no reserved word and ends before a `;` or a body.
+    fn action_node_keyword(&self) -> Option<&'static str> {
+        const NODES: [&str; 3] = ["accept", "send", "assign"];
+        let found = |n: usize| {
+            NODES
+                .iter()
+                .copied()
+                .find(|word| self.nth_is_keyword(n, word))
+        };
+        if let Some(word) = found(0) {
+            return Some(word);
+        }
+        if !self.nth_is_keyword(0, "action") {
+            return None;
+        }
+        let mut n = 1;
+        loop {
+            if let Some(word) = found(n) {
+                return Some(word);
+            }
+            if self.peek_nth(n).is_none()
+                || ["then", "if", "do"]
+                    .iter()
+                    .any(|word| self.nth_is_keyword(n, word))
+                || self.nth_is(n, SyntaxKind::Semicolon)
+                || self.nth_is(n, SyntaxKind::LBrace)
+                || self.nth_is(n, SyntaxKind::RBrace)
+            {
+                return None;
+            }
+            n += 1;
+        }
+    }
+
+    // production: AcceptNodeDeclaration@sysml
+    //
+    // AcceptNodeDeclaration : AcceptActionUsage =
+    //     ActionNodeUsageDeclaration? 'accept' AcceptParameterPart   (SysML 8.2.2.17.4)
+    //
+    // production: ActionNodeUsageDeclaration@sysml
+    //
+    // ActionNodeUsageDeclaration : ActionUsage =
+    //     'action' UsageDeclaration?                                 (SysML 8.2.2.17.2)
+    //
+    // "If the action declaration part is empty, then the action keyword may be omitted"
+    // (7.17.8, receipt bb0d6dc7). Read here for the state and effect forms; AcceptNode,
+    // the action-body form with its ActionNodePrefix, is unimplemented.
+    fn accept_node_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::AcceptNodeDeclaration);
+        if self.at_keyword("action") {
+            self.eat_trivia();
+            self.start_node(SyntaxKind::ActionNodeUsageDeclaration);
+            self.expect_keyword("action");
+            if !self.at_keyword("accept") {
+                self.usage_declaration();
+            }
+            self.finish_node();
+        }
+        self.expect_keyword("accept");
+        self.accept_parameter_part();
+        self.finish_node();
+    }
+
+    /// Whether an `EntryTransitionMember` starts here.
+    ///
+    /// `GuardedTargetSuccession` — `if`, an expression, `then` — or `'then'
+    /// TransitionSuccession`, each ending in `;` (`SysML` 8.2.2.18.1, with the
+    /// `EntryTransitionMember` deviation). A bare `then` is one only when a `ConnectorEnd` and
+    /// the `;` follow it: `then state s;` is the next item's `SourceSuccessionMember`.
+    fn at_entry_transition_member(&self) -> bool {
+        let n = usize::from(self.at_visibility());
+        (self.nth_is_keyword(n, "if") && self.scan_for_keyword(n + 1, "then").is_some())
+            || (self.nth_is_keyword(n, "then")
+                && self
+                    .skip_connector_end(n + 1)
+                    .is_some_and(|after| self.nth_is(after, SyntaxKind::Semicolon)))
+    }
+
+    // production: EntryTransitionMember@sysml
+    //
+    // EntryTransitionMember : FeatureMembership =
+    //     MemberPrefix
+    //     ( ownedRelatedElement += GuardedTargetSuccession
+    //     | 'then' ownedRelatedElement += TransitionSuccession
+    //     ) ';'                                  (SysML 8.2.2.18.1, as the deviation reads it)
+    //
+    // The specification writes `'then' TargetSuccession`, and TargetSuccession writes its
+    // own `then`, so the printed form doubles it. deviations.json records follow_xtext:
+    // TransitionSuccession is meant, the corpus writes one `then` (`entry; then S1;`,
+    // examples/Simple Tests/StateTest.sysml:13), and no doubled `then` occurs anywhere.
+    fn entry_transition_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::EntryTransitionMember);
+        self.member_prefix();
+        if self.at_keyword("if") {
+            self.guarded_target_succession();
+        } else {
+            self.expect_keyword("then");
+            self.transition_succession();
+        }
+        self.expect(SyntaxKind::Semicolon, "`;`");
+        self.finish_node();
+    }
+
+    // production: EffectBehaviorMember@sysml
+    //
+    // EffectBehaviorMember : TransitionFeatureMembership =
+    //     'do' { kind = 'effect' }
+    //     ownedRelatedElement += EffectBehaviorUsage                 (SysML 8.2.2.18.3)
+    //
+    // Marked although EffectBehaviorUsage is not. The `do` sets the
+    // TransitionFeatureMembership's kind (8.3.18.8, receipt 7818cc5c), as `accept` and
+    // `if` set theirs.
+    //
+    // EffectBehaviorUsage : ActionUsage =
+    //       EmptyActionUsage | TransitionPerformActionUsage | TransitionAcceptActionUsage
+    //     | TransitionSendActionUsage | TransitionAssignmentActionUsage
+    //                                                                (SysML 8.2.2.18.3)
+    //
+    // NOT marked, for StateActionUsage's reason: send and assign. Its empty form writes no
+    // `;`, unlike StateActionUsage's, so `do then b;` is an effect that does nothing.
+    //
+    // production: TransitionPerformActionUsage@sysml
+    //
+    // TransitionPerformActionUsage : PerformActionUsage =
+    //     PerformActionUsageDeclaration ( '{' ActionBodyItem* '}' )? (SysML 8.2.2.18.3)
+    //
+    // production: TransitionAcceptActionUsage@sysml
+    //
+    // TransitionAcceptActionUsage : AcceptActionUsage =
+    //     AcceptNodeDeclaration ( '{' ActionBodyItem* '}' )?         (SysML 8.2.2.18.3)
+    //
+    // Not ActionBody: the braced form or nothing, never `;`, because the `then` after the
+    // effect is what ends it.
+    fn effect_behavior_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::EffectBehaviorMember);
+        self.expect_keyword("do");
+        if self.at_keyword("then") {
+            self.empty_action_usage();
+        } else {
+            match self.action_node_keyword() {
+                Some("accept") => {
+                    self.eat_trivia();
+                    self.start_node(SyntaxKind::TransitionAcceptActionUsage);
+                    self.accept_node_declaration();
+                    self.optional_action_body_items();
+                    self.finish_node();
+                }
+                Some(_) => self
+                    .error_expected("an action; send and assignment actions are not implemented"),
+                None => {
+                    self.eat_trivia();
+                    self.start_node(SyntaxKind::TransitionPerformActionUsage);
+                    self.perform_action_usage_declaration();
+                    self.optional_action_body_items();
+                    self.finish_node();
+                }
+            }
+        }
+        self.finish_node();
+    }
+
+    /// `( '{' ActionBodyItem* '}' )?`, an effect's body: braces or nothing.
+    fn optional_action_body_items(&mut self) {
+        if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.body_elements(Some(SyntaxKind::RBrace), Body::Action);
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        }
+    }
+
+    /// Whether an `ExhibitStateUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'exhibit'` (`SysML` 8.2.2.18.2). The keyword names this usage
+    /// and nothing else, as `perform` does.
+    fn at_exhibit_state_usage(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_occurrence_usage_prefix(n), "exhibit")
+    }
+
+    // production: ExhibitStateUsage@sysml
+    //
+    // ExhibitStateUsage =
+    //     OccurrenceUsagePrefix 'exhibit'
+    //     ( ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?
+    //     | 'state' UsageDeclaration )
+    //     ValuePart? StateUsageBody                                  (SysML 8.2.2.18.2)
+    //
+    // "An exhibit state usage is a kind of perform action usage ... for which the action
+    // usage is a state usage" (7.18.4, receipt dbedb2cc): PerformActionUsageDeclaration's
+    // two alternatives with `state` for `action`, and a state body. The metaclass is
+    // ExhibitStateUsage (8.3.18.2, receipt 72f51928). Marked although
+    // OccurrenceUsagePrefix is not, as StateUsage is.
+    fn exhibit_state_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ExhibitStateUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("exhibit");
+        if self.at_keyword("state") {
+            self.expect_keyword("state");
+            self.usage_declaration();
+        } else {
+            self.owned_reference_subsetting();
+            if self.at_feature_specialization() {
+                self.feature_specialization_part();
+            }
+        }
+        if self.at_value_part() {
+            self.value_part();
+        }
+        self.state_body_part(SyntaxKind::StateUsageBody);
         self.finish_node();
     }
 
@@ -7034,13 +7495,19 @@ impl<'a> Parser<'a> {
     fn transition_succession_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::TransitionSuccessionMember);
+        self.transition_succession();
+        self.finish_node();
+    }
+
+    /// The `TransitionSuccession` alone, which `EntryTransitionMember` owns with no
+    /// `TransitionSuccessionMember` around it (the `EntryTransitionMember` deviation).
+    fn transition_succession(&mut self) {
         self.start_node(SyntaxKind::TransitionSuccession);
         self.start_node(SyntaxKind::EmptyEndMember);
         self.start_node(SyntaxKind::EmptyFeature);
         self.finish_node();
         self.finish_node();
         self.connector_end_member();
-        self.finish_node();
         self.finish_node();
     }
 
@@ -7120,6 +7587,7 @@ impl<'a> Parser<'a> {
         n += usize::from(VISIBILITY.iter().any(|word| self.nth_is_keyword(n, word)));
         self.at_action_usage(n)
             || self.at_state_usage(n)
+            || self.at_exhibit_state_usage(n)
             || self.at_perform_action_usage(n)
             || self.at_assert_constraint_usage(n)
             || self.at_constraint_usage(n)
