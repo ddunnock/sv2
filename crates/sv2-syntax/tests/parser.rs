@@ -3687,6 +3687,270 @@ fn a_conjugated_port_typing_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- States and transitions, SysML 8.2.2.18 -------------------------------------------
+//
+// StateDefinition  = OccurrenceDefinitionPrefix 'state' 'def'
+//                    DefinitionDeclaration StateDefBody                     (8.2.2.18.1)
+// StateDefBody     = ';' | 'parallel'? '{' StateBodyItem* '}'
+// StateBodyItem    = NonBehaviorBodyItem
+//                  | SourceSuccessionMember? BehaviorUsageMember
+//                    TargetTransitionUsageMember*
+//                  | TransitionUsageMember
+//                  | EntryActionMember EntryTransitionMember*
+//                  | DoActionMember | ExitActionMember
+// StateUsage       = OccurrenceUsagePrefix 'state' ActionUsageDeclaration
+//                    StateUsageBody                                         (8.2.2.18.2)
+// TransitionUsage  = 'transition' ( UsageDeclaration 'first' )?
+//                    FeatureChainMember EmptyParameterMember
+//                    ( EmptyParameterMember TriggerActionMember )?
+//                    GuardExpressionMember? EffectBehaviorMember?
+//                    'then' TransitionSuccessionMember ActionBody           (8.2.2.18.3)
+// TargetTransitionUsage = EmptyParameterMember ( … trigger, guard, effect … )?
+//                    'then' TransitionSuccessionMember ActionBody
+// TriggerActionMember = 'accept' TriggerAction; TriggerAction = AcceptParameterPart
+// AcceptParameterPart = PayloadParameterMember ( 'via' NodeParameterMember )? (8.2.2.17.4)
+//
+// Entry, do and exit actions (EntryActionMember, DoActionMember, ExitActionMember,
+// EntryTransitionMember), a transition's `do` effect, and the time and change triggers
+// (`at`, `after`, `when`) are NOT implemented, and are reported.
+
+#[test]
+fn a_state_definition_reads_the_corpus_forms() {
+    // training/23. State Definitions/State Definition Example-1.sysml:7-30 — transition
+    // usages with a declaration, a source and an accepter.
+    let one = render(
+        &parse_accepted(
+            "state def VehicleStates {\n\
+             \tfirst start then off;\n\
+             \tstate off;\n\
+             \ttransition off_to_starting\n\
+             \t\tfirst off\n\
+             \t\taccept VehicleStartSignal\n\
+             \t\tthen starting;\n\
+             \tstate starting;\n\
+             \ttransition starting_to_on\n\
+             \t\tfirst starting\n\
+             \t\taccept VehicleOnSignal\n\
+             \t\tthen on;\n\
+             \tstate on;\n\
+             \ttransition on_to_off\n\
+             \t\tfirst on\n\
+             \t\taccept VehicleOffSignal\n\
+             \t\tthen off;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&one, "StateUsage"), 3, "{one}");
+    assert_eq!(nodes_named(&one, "TransitionUsageMember"), 3, "{one}");
+    assert_eq!(nodes_named(&one, "TargetTransitionUsageMember"), 0, "{one}");
+    // training/23. State Definitions/State Definition Example-2.sysml:7-21 — the same
+    // transitions as target transitions, each after the state that is its source.
+    let two = render(
+        &parse_accepted(
+            "state def VehicleStates {\n\
+             \tfirst start then off;\n\
+             \tstate off;\n\
+             \taccept VehicleStartSignal\n\
+             \t\tthen starting;\n\
+             \tstate starting;\n\
+             \taccept VehicleOnSignal\n\
+             \t\tthen on;\n\
+             \tstate on;\n\
+             \taccept VehicleOffSignal\n\
+             \t\tthen off;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&two, "TargetTransitionUsageMember"), 3, "{two}");
+    assert_eq!(nodes_named(&two, "TransitionUsageMember"), 0, "{two}");
+}
+
+#[test]
+fn a_state_definition_reads_the_clause_examples() {
+    // 7.18.2 (receipt 42b13f63): a parallel state and its substates.
+    parse_accepted(
+        "state def VehicleStates parallel {\n\
+         \tstate OperationalStates;\n\
+         \tstate HealthStates;\n\
+         }",
+    );
+    // 7.18.3 (receipt 6e6e9493), OnOff1-OnOff3, less their entry actions: a transition
+    // with only a source and a target, an accepter with a receiver, and a guard after
+    // the accepter.
+    parse_accepted(
+        "state def OnOff {\n\
+         \tport commPort;\n\
+         \tstate off;\n\
+         \tstate on;\n\
+         \ttransition off_on first off then on;\n\
+         \ttransition on_off\n\
+         \t\tfirst on\n\
+         \t\taccept TurnOn via commPort\n\
+         \t\tif isEnabled\n\
+         \t\tthen off;\n\
+         }",
+    );
+    // Adapted from OnOff5 and OnOff6: their entry actions, effects, time triggers
+    // (`accept after 5[min]`) and `terminate` are unimplemented and dropped, and `then
+    // done;` stands in for OnOff6's timed transition to `done`. What is left is target
+    // transitions with an accepter, a receiver and a guard.
+    parse_accepted(
+        "state def OnOff {\n\
+         \tstate off;\n\
+         \taccept TurnOn via commPort\n\
+         \t\tif isEnabled\n\
+         \t\tthen on;\n\
+         \taccept Abort via commPort then stop;\n\
+         \tstate on;\n\
+         \tthen done;\n\
+         \taction stop;\n\
+         }",
+    );
+    // A state usage is a BehaviorUsageElement (8.2.2.6.4), so an action body holds one,
+    // and so does a part; and it nests, with its own body.
+    parse_accepted("action def A { state s; }");
+    parse_accepted("part def P { state s : S { state inner; } }");
+    parse_accepted("state s parallel { state a; state b; }");
+}
+
+#[test]
+fn a_state_definition_owns_what_its_production_writes() {
+    let tree = render(
+        &parse_accepted(
+            "state def D { state a; transition t first a accept S via p if g then b; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "StateDefinition"),
+        [
+            "OccurrenceDefinitionPrefix",
+            "KwState",
+            "KwDef",
+            "DefinitionDeclaration",
+            "StateDefBody"
+        ],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "TransitionUsage"),
+        [
+            "KwTransition",
+            "UsageDeclaration",
+            "KwFirst",
+            "FeatureChainMember",
+            "EmptyParameterMember",
+            "EmptyParameterMember",
+            "TriggerActionMember",
+            "GuardExpressionMember",
+            "KwThen",
+            "TransitionSuccessionMember",
+            "ActionBody"
+        ],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "TriggerActionMember"),
+        ["KwAccept", "TriggerAction"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "AcceptParameterPart"),
+        ["PayloadParameterMember", "KwVia", "NodeParameterMember"],
+        "{tree}"
+    );
+    // The input the absence assertion held until the commit before this one.
+    let empty = render(&parse_accepted("state def S;").syntax());
+    assert_eq!(
+        child_kinds(&empty, "StateDefBody"),
+        ["Semicolon"],
+        "{empty}"
+    );
+    // A transition with no declaration names its source directly.
+    let plain = render(&parse_accepted("state def D { transition a then b; }").syntax());
+    assert_eq!(nodes_named(&plain, "UsageDeclaration"), 0, "{plain}");
+}
+
+#[test]
+fn a_target_transition_owns_what_its_production_writes() {
+    // A state in a state body is a BehaviorUsageMember (StateBodyItem's second
+    // alternative), and a target transition after it is its own member.
+    let target = render(&parse_accepted("state def D { state a; accept S then b; }").syntax());
+    assert_eq!(nodes_named(&target, "BehaviorUsageMember"), 1, "{target}");
+    assert_eq!(
+        child_kinds(&target, "TargetTransitionUsage"),
+        [
+            "EmptyParameterMember",
+            "EmptyParameterMember",
+            "TriggerActionMember",
+            "KwThen",
+            "TransitionSuccessionMember",
+            "ActionBody"
+        ],
+        "{target}"
+    );
+    // A `then` before a usage keyword is the NEXT item's SourceSuccessionMember, not a
+    // target transition of the state before it (8.2.2.18.1).
+    let source = render(&parse_accepted("state def D { state a; then state s; }").syntax());
+    assert_eq!(
+        nodes_named(&source, "TargetTransitionUsageMember"),
+        0,
+        "{source}"
+    );
+    assert_eq!(
+        nodes_named(&source, "SourceSuccessionMember"),
+        1,
+        "{source}"
+    );
+    assert_eq!(nodes_named(&source, "BehaviorUsageMember"), 2, "{source}");
+    let bare = render(&parse_accepted("state def D { state a; then b; }").syntax());
+    assert_eq!(
+        child_kinds(&bare, "TargetTransitionUsage"),
+        [
+            "EmptyParameterMember",
+            "KwThen",
+            "TransitionSuccessionMember",
+            "ActionBody"
+        ],
+        "{bare}"
+    );
+}
+
+#[test]
+fn a_state_definition_is_bounded_by_its_rules() {
+    // StateDefBody is not optional, and `parallel` stands only before braces.
+    parse_rejected("state def D");
+    parse_rejected("state def D parallel;");
+    // TransitionUsageMember is a StateBodyItem and no ActionBodyItem or
+    // DefinitionBodyItem (8.2.2.17.1, 8.2.2.6.1).
+    parse_rejected("action def A { transition first a then b; }");
+    parse_rejected("part def P { transition first a then b; }");
+    // A target transition follows a behaviour usage member, and nothing else.
+    parse_rejected("state def D { accept S then b; }");
+    parse_rejected("state def D { attribute x; accept S then b; }");
+    // StateBodyItem has no InitialNodeMember and no ControlNode (8.2.2.18.1).
+    parse_rejected("state def D { first start; }");
+    parse_rejected("state def D { merge m; }");
+    // The trigger comes before the guard in TransitionUsage (8.2.2.18.3), although
+    // 7.18.3's OnOff4 writes `if isEnabled accept TurnOn …`; the grammar is followed.
+    parse_rejected("state def D { transition t first a if g accept S then b; }");
+    // A transition names its target.
+    parse_rejected("state def D { transition t first a then; }");
+    // Unimplemented, and reported: entry, do and exit actions, and effects.
+    parse_rejected("state def D { entry; }");
+    parse_rejected("state def D { transition t first a do action x; then b; }");
+    // Unclosed.
+    parse_rejected("state def D { state s;");
+}
+
+#[test]
+fn a_state_definition_keeps_every_byte() {
+    let source = "state /* s */ def D parallel {\n\tstate a; // x\n\taccept S via p\n\t\tif g then b;\n\ttransition t first a then b { }\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
 //
 // DefaultTargetSuccession : TransitionUsage =

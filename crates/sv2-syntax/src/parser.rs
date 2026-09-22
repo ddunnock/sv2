@@ -703,6 +703,25 @@ enum Body {
     /// It is a variant of its own because the loop must STOP before the trailing
     /// `ResultExpressionMember`, and no other body has one. See `at_result_expression`.
     Calculation,
+    /// The braced form of `StateDefBody` and `StateUsageBody`. `SysML` only.
+    ///
+    /// ```text
+    /// StateBodyItem = NonBehaviorBodyItem
+    ///               | SourceSuccessionMember? BehaviorUsageMember
+    ///                 TargetTransitionUsageMember*
+    ///               | TransitionUsageMember
+    ///               | EntryActionMember EntryTransitionMember*
+    ///               | DoActionMember | ExitActionMember           SysML 8.2.2.18.1
+    /// ```
+    ///
+    /// Its first alternative is `Action`'s. Its second differs from `ActionBodyItem`'s third
+    /// in the member and the suffix: a `BehaviorUsageMember` alone, where
+    /// `ActionBehaviorMember` admits an `ActionNodeMember` too, and a TARGET TRANSITION after
+    /// it, where an action body takes a target succession. It has no `InitialNodeMember`, no
+    /// `ActionNodeMember` and no `GuardedSuccessionMember`, so it is not `Action`, and it
+    /// has `TransitionUsageMember`, which nothing else has. The entry, do and exit members
+    /// are unimplemented.
+    State,
     /// The braced form of `TypeBody`. `KerML` only — what a classifier holds.
     Type,
 }
@@ -723,14 +742,22 @@ impl Body {
             // other road: CalculationBodyItem to ActionBodyItem to NonBehaviorBodyItem,
             // whose third alternative it is (8.2.2.17.1).
             (
-                Self::Definition | Self::Requirement | Self::Calculation | Self::Action,
+                Self::Definition
+                | Self::Requirement
+                | Self::Calculation
+                | Self::Action
+                | Self::State,
                 _,
                 MemberElement::Other,
             ) => SyntaxKind::DefinitionMember,
             // Both DefinitionBodyItem (8.2.2.6.1) and NonBehaviorBodyItem (8.2.2.17.1)
             // name NonOccurrenceUsageMember.
             (
-                Self::Definition | Self::Requirement | Self::Calculation | Self::Action,
+                Self::Definition
+                | Self::Requirement
+                | Self::Calculation
+                | Self::Action
+                | Self::State,
                 _,
                 MemberElement::Usage(UsageClass::NonOccurrence),
             ) => SyntaxKind::NonOccurrenceUsageMember,
@@ -740,18 +767,25 @@ impl Body {
                 SyntaxKind::OccurrenceUsageMember
             }
             // NonBehaviorBodyItem: `SourceSuccessionMember? StructureUsageMember`
-            // (8.2.2.17.1).
-            (Self::Calculation | Self::Action, _, MemberElement::Usage(UsageClass::Structure)) => {
-                SyntaxKind::StructureUsageMember
-            }
+            // (8.2.2.17.1), which StateBodyItem reaches as its first alternative
+            // (8.2.2.18.1).
+            (
+                Self::Calculation | Self::Action | Self::State,
+                _,
+                MemberElement::Usage(UsageClass::Structure),
+            ) => SyntaxKind::StructureUsageMember,
             // ActionBodyItem's third alternative: `SourceSuccessionMember?
             // ActionBehaviorMember ActionTargetSuccessionMember*`, and
             // ActionBehaviorMember = BehaviorUsageMember | ActionNodeMember (8.2.2.17.1).
             // Only the member is read here; `source_succession_item` reads the `then`
             // before it and `behaviour_targets` the target successions after it.
-            (Self::Calculation | Self::Action, _, MemberElement::Usage(UsageClass::Behavior)) => {
-                SyntaxKind::BehaviorUsageMember
-            }
+            // StateBodyItem's second alternative names the same member, with target
+            // transitions after it rather than target successions (8.2.2.18.1).
+            (
+                Self::Calculation | Self::Action | Self::State,
+                _,
+                MemberElement::Usage(UsageClass::Behavior),
+            ) => SyntaxKind::BehaviorUsageMember,
             (Self::Calculation | Self::Action, _, MemberElement::ActionNode) => {
                 SyntaxKind::ActionNodeMember
             }
@@ -776,6 +810,7 @@ impl Body {
             | Self::Requirement
             | Self::Calculation
             | Self::Action
+            | Self::State
             | Self::Type => false,
         }
     }
@@ -798,10 +833,11 @@ impl Body {
     /// It is an alternative of `DefinitionBodyItem` (`SysML` 8.2.2.6.1), which a
     /// definition or usage body and a requirement body reach (8.2.2.21.1), and of
     /// `NonBehaviorBodyItem` (8.2.2.17.1), which an action or calculation body reaches
-    /// through `ActionBodyItem`. `InterfaceBodyItem` (8.2.2.14.1) names it directly, and
-    /// `StateBodyItem` (8.2.2.18.1), `CaseBodyItem` (8.2.2.22) and the view bodies
-    /// (8.2.2.26) reach it through those two; each joins this when its body lands. NOT `PackageBodyElement` (8.2.2.5.1), nor any
-    /// `KerML` body: `KerML` has no variants.
+    /// through `ActionBodyItem`, and a state body reaches through `StateBodyItem`
+    /// (8.2.2.18.1). `InterfaceBodyItem` (8.2.2.14.1) names it directly, and `CaseBodyItem`
+    /// (8.2.2.22) and the view bodies (8.2.2.26) reach it too; each joins this when its
+    /// body lands. NOT `PackageBodyElement` (8.2.2.5.1), nor any `KerML` body: `KerML` has
+    /// no variants.
     ///
     /// NOT only a variation's body, although "variant usages may only be declared within
     /// a variation" (7.6.7, receipt 5a7843af). That is
@@ -811,8 +847,19 @@ impl Body {
     fn admits_variant(self) -> bool {
         matches!(
             self,
-            Self::Definition | Self::Requirement | Self::Action | Self::Calculation
+            Self::Definition | Self::Requirement | Self::Action | Self::Calculation | Self::State
         )
+    }
+
+    /// Whether `TransitionUsageMember` is one of this body's alternatives.
+    ///
+    /// `StateBodyItem` alone names it (`SysML` 8.2.2.18.1). A transition "can be used within
+    /// non-parallel states" (7.18.3, receipt 6e6e9493); that a parallel state holds none
+    /// is `validateStateDefinitionParallelSubactions` and
+    /// `validateStateUsageParallelSubactions` (8.3.18.5, 8.3.18.6), constraints on the
+    /// owner and not grammar, so `parallel` bodies read the same items.
+    fn admits_transition(self) -> bool {
+        matches!(self, Self::State)
     }
 
     /// Whether `RequirementConstraintMember` is one of this body's alternatives.
@@ -876,7 +923,9 @@ impl Body {
     /// requirement body reaches `DefinitionBodyItem` (8.2.2.21.1); `NonBehaviorBodyItem`
     /// puts it before `StructureUsageMember` and `ActionBodyItem` before
     /// `ActionBehaviorMember` (8.2.2.17.1), both reached from action and calculation
-    /// bodies. `PackageBodyElement` (8.2.2.5.1) has no such alternative, nor has `KerML`.
+    /// bodies; `StateBodyItem` puts it before `BehaviorUsageMember` and reaches
+    /// `NonBehaviorBodyItem` (8.2.2.18.1). `PackageBodyElement` (8.2.2.5.1) has no such
+    /// alternative, nor has `KerML`.
     ///
     /// NOT only action bodies, although 7.17.4 says its shorthands "may be used only
     /// within the body of an action definition or usage" (receipt 339ef468). That
@@ -888,7 +937,7 @@ impl Body {
     fn admits_source_succession(self) -> bool {
         matches!(
             self,
-            Self::Definition | Self::Requirement | Self::Action | Self::Calculation
+            Self::Definition | Self::Requirement | Self::Action | Self::Calculation | Self::State
         )
     }
 }
@@ -1216,6 +1265,7 @@ impl<'a> Parser<'a> {
             || self.at_constraint_definition(n)
             || self.at_calculation_definition(n)
             || self.at_action_definition(n)
+            || self.at_state_definition(n)
             || self.at_enumeration_definition(n)
             || self.at_simple_definition(n).is_some()
     }
@@ -1432,6 +1482,7 @@ impl<'a> Parser<'a> {
     fn at_sysml_keyword_member(&self, n: usize) -> bool {
         self.at_definition_element(n)
             || self.at_action_usage(n)
+            || self.at_state_usage(n)
             || self.at_perform_action_usage(n)
             || self.at_flow_usage(n)
             || self.at_succession_as_usage(n)
@@ -1776,7 +1827,50 @@ impl<'a> Parser<'a> {
             // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
             // its own membership node rather than the one `membership` builds.
             self.namespace_feature_member();
-        } else if body.admits_action_body_item() && self.at_guarded_succession_member() {
+        } else if self.body_specific_item(body) {
+            // GuardedSuccessionMember, InitialNodeMember, ReturnParameterMember,
+            // VariantUsageMember, RequirementConstraintMember, SubjectMember and
+            // TransitionUsageMember: see `body_specific_item`.
+        } else if body.ends_in_result_expression() && self.at_result_expression() {
+            // The item run is over and what is left is the body's trailing
+            // expression, which is not a member. `calculation_body_part` reads it;
+            // the loop must not recover over it one token at a time.
+            return false;
+        } else if body.admits_source_succession() && self.at_source_succession_member(body) {
+            // `SourceSuccessionMember? <occurrence usage member>`, in whichever of
+            // three item productions this body has; see `source_succession_item`.
+            self.source_succession_item(body);
+        } else if self.at_member_element(usize::from(self.at_visibility()))
+            || (body.admits_action_body_item()
+                && self
+                    .at_control_node(usize::from(self.at_visibility()))
+                    .is_some())
+        {
+            // A control node is an ActionNodeMember, ActionBehaviorMember's second
+            // alternative (8.2.2.17.1), and so an item of the action-body family only:
+            // no other body's item production reaches ActionNode, which
+            // validateControlNodeOwningType states of the metaclass too (8.3.17.6,
+            // receipt 695df335). Hence here, with the body in hand, and not in the
+            // body-agnostic `at_member_element`.
+            let element = self.membership(body);
+            self.behaviour_targets(body, element);
+        } else {
+            self.recover_statement();
+        }
+        true
+    }
+
+    /// The items that own their element through a membership of their own, each told by a
+    /// reserved keyword and admitted by the body's item production alone. Returns whether
+    /// one was read.
+    ///
+    /// Split out of `body_element`, which asks it before the result-expression test: every
+    /// one of these continues an item run, and none is admitted by a calculation body
+    /// except the four that are (the guarded succession, `first`, `return`, `variant`), so
+    /// the others' position relative to that test decides nothing. The arms are disjoint on their keywords, so
+    /// their order decides nothing either.
+    fn body_specific_item(&mut self, body: Body) -> bool {
+        if body.admits_action_body_item() && self.at_guarded_succession_member() {
             // ActionBodyItem's fourth alternative (SysML 8.2.2.17.1). An item of its
             // own with no suffix, so it is not `initial_node_item`'s shape: nothing
             // follows it here, and tests/rejection/guarded-succession-takes-no-target-succession.sysml
@@ -1803,11 +1897,6 @@ impl<'a> Parser<'a> {
             // so it decides; before the result-expression test, as `return` is, because
             // it continues the item run.
             self.variant_usage_member();
-        } else if body.ends_in_result_expression() && self.at_result_expression() {
-            // The item run is over and what is left is the body's trailing
-            // expression, which is not a member. `calculation_body_part` reads it;
-            // the loop must not recover over it one token at a time.
-            return false;
         } else if body.admits_requirement_constraint()
             && (self.at_element_keyword("require") || self.at_element_keyword("assume"))
         {
@@ -1821,26 +1910,15 @@ impl<'a> Parser<'a> {
             // of its own — SubjectMembership — so it cannot go through `membership`,
             // which builds the body's ordinary member node.
             self.subject_member();
-        } else if body.admits_source_succession() && self.at_source_succession_member(body) {
-            // `SourceSuccessionMember? <occurrence usage member>`, in whichever of
-            // three item productions this body has; see `source_succession_item`.
-            self.source_succession_item(body);
-        } else if self.at_member_element(usize::from(self.at_visibility()))
-            || (body.admits_action_body_item()
-                && self
-                    .at_control_node(usize::from(self.at_visibility()))
-                    .is_some())
-        {
-            // A control node is an ActionNodeMember, ActionBehaviorMember's second
-            // alternative (8.2.2.17.1), and so an item of the action-body family only:
-            // no other body's item production reaches ActionNode, which
-            // validateControlNodeOwningType states of the metaclass too (8.3.17.6,
-            // receipt 695df335). Hence here, with the body in hand, and not in the
-            // body-agnostic `at_member_element`.
-            let element = self.membership(body);
-            self.behaviour_targets(body, element);
+        } else if body.admits_transition() && self.at_element_keyword("transition") {
+            // StateBodyItem's third alternative (SysML 8.2.2.18.1). An item of its own,
+            // owning its element through a membership of its own. A `transition` that
+            // opens a TARGET transition is read as a suffix by `behaviour_targets` and
+            // never reaches here unless nothing precedes it, where it is no item and
+            // `transition_usage` reports the missing source.
+            self.transition_usage_member();
         } else {
-            self.recover_statement();
+            return false;
         }
         true
     }
@@ -1930,6 +2008,9 @@ impl<'a> Parser<'a> {
                         || self.at_element_keyword("variant")
                         || self.at_simple_usage(0).is_some()
                         || self.at_action_usage(0)
+                        || self.at_state_usage(0)
+                        // A StateBodyItem rather than a member `membership` reads.
+                        || self.at_element_keyword("transition")
                         || self.at_perform_action_usage(0)
                         || self.at_flow_usage(0)
                         || self.at_succession_as_usage(0)
@@ -1955,7 +2036,8 @@ impl<'a> Parser<'a> {
         self.behaviour_targets(body, element);
     }
 
-    /// The `ActionTargetSuccessionMember*` after a behaviour usage in an action body.
+    /// The suffix after a behaviour usage: `ActionTargetSuccessionMember*` in an action
+    /// body, `TargetTransitionUsageMember*` in a state body.
     ///
     /// `ActionBodyItem`'s third alternative is `SourceSuccessionMember?
     /// ActionBehaviorMember ActionTargetSuccessionMember*` (8.2.2.17.1), so the `then X;`
@@ -1964,6 +2046,16 @@ impl<'a> Parser<'a> {
     /// `NonBehaviorBodyItem` alternative that reads structure usages takes no such
     /// suffix, so `part p; then b;` leaves the `then` reported.
     fn behaviour_targets(&mut self, body: Body, element: MemberElement) {
+        if body == Body::State && matches!(element, MemberElement::Usage(UsageClass::Behavior)) {
+            // StateBodyItem: `SourceSuccessionMember? BehaviorUsageMember
+            // TargetTransitionUsageMember*` (8.2.2.18.1). A target transition's source is
+            // "the closest lexically previous state usage" (7.18.3, receipt 6e6e9493),
+            // connected in resolution.
+            while self.at_target_transition_usage_member() {
+                self.target_transition_usage_member();
+            }
+            return;
+        }
         if body.admits_action_body_item()
             && matches!(
                 element,
@@ -2617,6 +2709,8 @@ impl<'a> Parser<'a> {
             self.calculation_definition();
         } else if self.at_action_definition(0) {
             self.action_definition();
+        } else if self.at_state_definition(0) {
+            self.state_definition();
         } else if let Some(definition) = self.at_simple_definition(0) {
             self.simple_definition(definition);
         } else {
@@ -3007,6 +3101,10 @@ impl<'a> Parser<'a> {
             Some(UsageClass::Behavior)
         } else if self.at_action_usage(0) {
             self.action_usage();
+            Some(UsageClass::Behavior)
+        } else if self.at_state_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
+            self.state_usage();
             Some(UsageClass::Behavior)
         } else if self.at_calculation_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
@@ -5569,6 +5667,389 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    /// Whether a `StateDefinition` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceDefinitionPrefix 'state' 'def'` (`SysML` 8.2.2.18.1): the `def` is what
+    /// separates it from a `StateUsage`, as for `at_action_definition`.
+    fn at_state_definition(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_definition_prefix(n);
+        self.nth_is_keyword(after, "state") && self.nth_is_keyword(after + 1, "def")
+    }
+
+    /// Whether a `StateUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'state'` with no `def` after it (`SysML` 8.2.2.18.2).
+    /// `exhibit state`, an `ExhibitStateUsage`, is unimplemented, and `exhibit` is not
+    /// looked past, so it is reported.
+    fn at_state_usage(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_usage_prefix(n);
+        self.nth_is_keyword(after, "state") && !self.nth_is_keyword(after + 1, "def")
+    }
+
+    // production: StateDefinition@sysml
+    //
+    // StateDefinition =
+    //     OccurrenceDefinitionPrefix 'state' 'def'
+    //     DefinitionDeclaration StateDefBody                         (SysML 8.2.2.18.1)
+    //
+    // "A state definition or usage is declared as an action definition or usage ..., but
+    // using the keyword state instead of action" (7.18.2, receipt 42b13f63): the
+    // declaration is ActionDefinition's, and the body is a state body. The metaclass is
+    // StateDefinition (8.3.18.5, receipt 249b423d), an ActionDefinition.
+    //
+    // implied specialization: States::StateAction
+    // constraint: StateDefinition::checkStateDefinitionSpecialization — an injection, so
+    //     sv2-hir's (ADR-0002). deriveStateDefinitionDoAction is sv2-resolve's.
+    fn state_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::StateDefinition);
+        self.occurrence_definition_prefix();
+        self.expect_keyword("state");
+        self.expect_keyword("def");
+        self.definition_declaration();
+        self.state_body_part(SyntaxKind::StateDefBody);
+        self.finish_node();
+    }
+
+    // production: StateDefBody@sysml
+    //
+    // StateDefBody : StateDefinition =
+    //     ';' | ( isParallel ?= 'parallel' )? '{' StateBodyItem* '}' (SysML 8.2.2.18.1)
+    //
+    // production: StateUsageBody@sysml
+    //
+    // StateUsageBody : StateUsage =
+    //     ';' | ( isParallel ?= 'parallel' )? '{' StateBodyItem* '}' (SysML 8.2.2.18.2)
+    //
+    // Two productions with one body, over two metaclasses, so one method builds either
+    // node. `parallel` stands "just before the body part" (7.18.2, receipt 42b13f63) and
+    // only before braces: `state def D parallel;` is reported.
+    //
+    // Marked although StateBodyItem is not: its entry, do and exit alternatives are
+    // unimplemented. The items are read by `body_elements` under `Body::State`, which says
+    // what the rest are.
+    fn state_body_part(&mut self, node: SyntaxKind) {
+        self.eat_trivia();
+        self.start_node(node);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else {
+            self.eat_optional_keyword("parallel");
+            if self.at(SyntaxKind::LBrace) {
+                self.bump();
+                self.depth += 1;
+                self.body_elements(Some(SyntaxKind::RBrace), Body::State);
+                self.depth -= 1;
+                self.expect(SyntaxKind::RBrace, "`}`");
+            } else {
+                self.error_expected("`;` or `{` after a state declaration");
+            }
+        }
+        self.finish_node();
+    }
+
+    // production: StateUsage@sysml
+    //
+    // StateUsage =
+    //     OccurrenceUsagePrefix 'state'
+    //     ActionUsageDeclaration StateUsageBody                      (SysML 8.2.2.18.2)
+    //
+    // ActionUsage's declaration, read under its own name as CalculationUsage reads it, and
+    // a state body. A BehaviorUsageElement (8.2.2.6.4). The metaclass is StateUsage
+    // (8.3.18.6, receipt 57e61560), an ActionUsage. Marked although OccurrenceUsagePrefix
+    // is not, as ActionUsage is.
+    //
+    // implied specialization: States::stateActions; States::StateAction::substates when
+    //     owned by a state; States::StateAction::exclusiveStates when that state is not
+    //     parallel; Parts::Part::ownedStates when owned by a part
+    // constraint: StateUsage::checkStateUsageSpecialization,
+    //     checkStateUsageSubstateSpecialization, checkStateUsageExclusiveStateSpecialization
+    //     and checkStateUsageOwnedStateSpecialization (8.3.18.6, receipt 57e61560) —
+    //     injections, so sv2-hir's.
+    fn state_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::StateUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("state");
+        self.action_usage_declaration();
+        self.state_body_part(SyntaxKind::StateUsageBody);
+        self.finish_node();
+    }
+
+    // production: TransitionUsageMember@sysml
+    //
+    // TransitionUsageMember : FeatureMembership =
+    //     MemberPrefix ownedRelatedElement += TransitionUsage        (SysML 8.2.2.18.1)
+    //
+    // StateBodyItem's third alternative. Marked although TransitionUsage is not, as other
+    // members are over a production with a gap of its own.
+    fn transition_usage_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TransitionUsageMember);
+        self.member_prefix();
+        self.transition_usage();
+        self.finish_node();
+    }
+
+    // TransitionUsage : TransitionUsage =
+    //     'transition' ( UsageDeclaration 'first' )?
+    //     ownedRelationship += FeatureChainMember
+    //     ownedRelationship += EmptyParameterMember
+    //     ( ownedRelationship += EmptyParameterMember
+    //       ownedRelationship += TriggerActionMember )?
+    //     ( ownedRelationship += GuardExpressionMember )?
+    //     ( ownedRelationship += EffectBehaviorMember )?
+    //     'then' ownedRelationship += TransitionSuccessionMember
+    //     ActionBody                                                 (SysML 8.2.2.18.3)
+    //
+    // NOT marked for coverage: EffectBehaviorMember, the `do` effect, is unimplemented,
+    // and a transition writing one is reported. Everything else is read.
+    //
+    // "The source and target states are identified using the same keywords as for a
+    // succession, first and then" (7.18.3, receipt 6e6e9493). The source is the
+    // FeatureChainMember; `first` introduces it only after a declaration, so `transition
+    // a then b;` names its source with no `first` at all. The group is taken when a
+    // `first` stands before the statement ends, which no other part can write.
+    //
+    // The order is the grammar's: the accepter, then the guard, then the effect. 7.18.3's
+    // OnOff4 writes `if isEnabled accept TurnOn via commPort`, against its own prose (the
+    // guard is "placed between the source and target parts, after the accepter (if any)")
+    // and its OnOff3; the grammar is followed and that text is reported.
+    //
+    // The metaclass is TransitionUsage (8.3.18.9, receipt a6f32577), an ActionUsage.
+    //
+    // implied specialization: Actions::transitionActions, and, owned by a state with a
+    //     state usage as its source, States::StateAction::stateTransitions
+    // constraint: TransitionUsage::checkTransitionUsageSpecialization and
+    //     checkTransitionUsageStateSpecialization (8.3.18.9, receipt a6f32577) — injections,
+    //     so sv2-hir's, as are checkTransitionUsageTransitionFeatureSpecialization,
+    //     checkTransitionUsagePayloadSpecialization and the two binding connectors.
+    //     checkTransitionUsageActionSpecialization (Actions::Action::decisionTransitions)
+    //     governs a transition owned by an action, which this grammar position is not.
+    fn transition_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TransitionUsage);
+        self.expect_keyword("transition");
+        if self.scan_for_keyword(0, "first").is_some() {
+            self.usage_declaration();
+            self.expect_keyword("first");
+        }
+        self.sysml_feature_chain_member();
+        self.empty_parameter_member();
+        self.transition_trigger_and_guard();
+        self.expect_keyword("then");
+        self.transition_succession_member();
+        self.action_body();
+        self.finish_node();
+    }
+
+    /// `( EmptyParameterMember TriggerActionMember )? GuardExpressionMember?`, the part of
+    /// a transition between its source and its `then` that both transition productions
+    /// write the same way (`SysML` 8.2.2.18.3).
+    fn transition_trigger_and_guard(&mut self) {
+        if self.at_keyword("accept") {
+            self.empty_parameter_member();
+            self.trigger_action_member();
+        }
+        if self.at_keyword("if") {
+            self.guard_expression_member();
+        }
+    }
+
+    /// Whether a `TargetTransitionUsageMember` starts here.
+    ///
+    /// Asked only after a behaviour usage in a state body, where it is the suffix. The
+    /// production opens on an optional prefix, so it begins with one of four things:
+    /// `transition` followed by an accepter, a guard or the `then`; `accept`; `if` with a
+    /// `then` after it; or a bare `then`. A bare `then` is a target transition only when
+    /// a `ConnectorEnd` and a body follow it, as `at_target_succession` asks: `then state
+    /// s;` is the NEXT item's `SourceSuccessionMember` instead, and `transition a then
+    /// b;` is a `TransitionUsageMember`, which names its source.
+    fn at_target_transition_usage_member(&self) -> bool {
+        let n = usize::from(self.at_visibility());
+        if self.nth_is_keyword(n, "transition") {
+            return ["accept", "if", "then"]
+                .iter()
+                .any(|word| self.nth_is_keyword(n + 1, word));
+        }
+        self.nth_is_keyword(n, "accept")
+            || (self.nth_is_keyword(n, "if") && self.scan_for_keyword(n + 1, "then").is_some())
+            || (self.nth_is_keyword(n, "then")
+                && self.skip_connector_end(n + 1).is_some_and(|after| {
+                    self.nth_is(after, SyntaxKind::Semicolon)
+                        || self.nth_is(after, SyntaxKind::LBrace)
+                }))
+    }
+
+    // production: TargetTransitionUsageMember@sysml
+    //
+    // TargetTransitionUsageMember : FeatureMembership =
+    //     MemberPrefix ownedRelatedElement += TargetTransitionUsage  (SysML 8.2.2.18.1)
+    //
+    // Marked although TargetTransitionUsage is not, as TransitionUsageMember is.
+    fn target_transition_usage_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TargetTransitionUsageMember);
+        self.member_prefix();
+        self.target_transition_usage();
+        self.finish_node();
+    }
+
+    // TargetTransitionUsage : TransitionUsage =
+    //     ownedRelationship += EmptyParameterMember
+    //     ( 'transition'
+    //       ( ownedRelationship += EmptyParameterMember
+    //         ownedRelationship += TriggerActionMember )?
+    //       ( ownedRelationship += GuardExpressionMember )?
+    //       ( ownedRelationship += EffectBehaviorMember )?
+    //     | ownedRelationship += EmptyParameterMember
+    //       ownedRelationship += TriggerActionMember
+    //       ( ownedRelationship += GuardExpressionMember )?
+    //       ( ownedRelationship += EffectBehaviorMember )?
+    //     | ownedRelationship += GuardExpressionMember
+    //       ( ownedRelationship += EffectBehaviorMember )?
+    //     )?
+    //     'then' ownedRelationship += TransitionSuccessionMember
+    //     ActionBody                                                 (SysML 8.2.2.18.3)
+    //
+    // NOT marked for coverage, for TransitionUsage's reason: EffectBehaviorMember.
+    //
+    // "A transition usage without a declaration part, in which both the transition
+    // keyword and the source part can be omitted. In this case, the source is taken to be
+    // the closest lexically previous state usage" (7.18.3, receipt 6e6e9493). So the
+    // source is written nowhere, and the first EmptyParameterMember stands where
+    // TransitionUsage's FeatureChainMember and EmptyParameterMember do. The three
+    // alternatives of the group write their parts in one order, so after the optional
+    // `transition` they are read as TransitionUsage reads them.
+    fn target_transition_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TargetTransitionUsage);
+        self.empty_parameter_member();
+        self.eat_optional_keyword("transition");
+        self.transition_trigger_and_guard();
+        self.expect_keyword("then");
+        self.transition_succession_member();
+        self.action_body();
+        self.finish_node();
+    }
+
+    // production: EmptyParameterMember@sysml
+    //
+    // EmptyParameterMember : ParameterMembership =
+    //     ownedRelatedElement += EmptyUsage                          (SysML 8.2.2.17.4)
+    //
+    // production: EmptyUsage@sysml
+    //
+    // EmptyUsage : ReferenceUsage = {}                               (SysML 8.2.2.17.4)
+    //
+    // A parameter the text never writes, built from no tokens, as EmptyEndMember is.
+    // Trivia is not eaten first, or it would land inside a node the author never wrote.
+    fn empty_parameter_member(&mut self) {
+        self.start_node(SyntaxKind::EmptyParameterMember);
+        self.start_node(SyntaxKind::EmptyUsage);
+        self.finish_node();
+        self.finish_node();
+    }
+
+    // production: TriggerActionMember@sysml
+    //
+    // TriggerActionMember : TransitionFeatureMembership =
+    //     'accept' { kind = 'trigger' }
+    //     ownedRelatedElement += TriggerAction                       (SysML 8.2.2.18.3)
+    //
+    // `{ kind = 'trigger' }` sets the TransitionFeatureMembership's kind, as
+    // GuardExpressionMember's `{ kind = 'guard' }` does, and contributes no token.
+    //
+    // production: TriggerAction@sysml
+    //
+    // TriggerAction : AcceptActionUsage = AcceptParameterPart        (SysML 8.2.2.18.3)
+    //
+    // An AcceptActionUsage written with no `accept` of its own: the member's is the one.
+    fn trigger_action_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TriggerActionMember);
+        self.expect_keyword("accept");
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TriggerAction);
+        self.accept_parameter_part();
+        self.finish_node();
+        self.finish_node();
+    }
+
+    // production: AcceptParameterPart@sysml
+    //
+    // AcceptParameterPart : AcceptActionUsage =
+    //     ownedRelationship += PayloadParameterMember
+    //     ( 'via' ownedRelationship += NodeParameterMember )?        (SysML 8.2.2.17.4)
+    //
+    // "The accepter action for a transition usage is ... notated using the accept keyword,
+    // with its payload and receiver parameters" (7.18.3, receipt 6e6e9493): `via` names
+    // the receiver. AcceptNode reads this part too, and is unimplemented.
+    fn accept_parameter_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::AcceptParameterPart);
+        self.payload_parameter_member();
+        if self.at_keyword("via") {
+            self.bump_as(keyword("via").unwrap_or(SyntaxKind::BasicName));
+            self.node_parameter_member();
+        }
+        self.finish_node();
+    }
+
+    // production: PayloadParameterMember@sysml
+    //
+    // PayloadParameterMember : ParameterMembership =
+    //     ownedRelatedElement += PayloadParameter                    (SysML 8.2.2.17.4)
+    //
+    // Marked although PayloadParameter is not.
+    //
+    // PayloadParameter : ReferenceUsage =
+    //       PayloadFeature
+    //     | Identification PayloadFeatureSpecializationPart?
+    //       TriggerValuePart                                         (SysML 8.2.2.17.4)
+    //
+    // NOT marked: its second alternative, TriggerValuePart (`at`, `after`, `when`, the
+    // time and change triggers), is unimplemented, and `accept after 5[min]` is reported.
+    // The first is PayloadFeature's own production, read under PayloadParameter's node as
+    // FlowPayloadFeature reads it under its own.
+    fn payload_parameter_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PayloadParameterMember);
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PayloadParameter);
+        self.payload_feature();
+        self.finish_node();
+        self.finish_node();
+    }
+
+    // production: NodeParameterMember@sysml
+    //
+    // NodeParameterMember : ParameterMembership =
+    //     ownedRelatedElement += NodeParameter                       (SysML 8.2.2.17.4)
+    //
+    // production: NodeParameter@sysml
+    //
+    // NodeParameter : ReferenceUsage =
+    //     ownedRelationship += FeatureBinding                        (SysML 8.2.2.17.4)
+    //
+    // production: FeatureBinding@sysml
+    //
+    // FeatureBinding : FeatureValue =
+    //     ownedRelatedElement += OwnedExpression                     (SysML 8.2.2.17.4)
+    //
+    // Three nodes over one expression: a parameter whose value is bound to what `via`
+    // names. `via commPort` binds the receiver to the port.
+    fn node_parameter_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::NodeParameterMember);
+        self.start_node(SyntaxKind::NodeParameter);
+        self.start_node(SyntaxKind::FeatureBinding);
+        self.owned_expression();
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
+    }
+
     // production: CalculationUsage@sysml
     //
     // CalculationUsage : CalculationUsage =
@@ -6638,6 +7119,7 @@ impl<'a> Parser<'a> {
         }
         n += usize::from(VISIBILITY.iter().any(|word| self.nth_is_keyword(n, word)));
         self.at_action_usage(n)
+            || self.at_state_usage(n)
             || self.at_perform_action_usage(n)
             || self.at_assert_constraint_usage(n)
             || self.at_constraint_usage(n)

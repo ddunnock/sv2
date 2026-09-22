@@ -847,6 +847,42 @@ pub enum SyntaxKind {
     FeatureTyping,
     /// `QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5.
     OwnedFeatureTyping,
+    /// `OccurrenceDefinitionPrefix 'state' 'def' DefinitionDeclaration StateDefBody`. `SysML` 8.2.2.18.1.
+    StateDefinition,
+    /// `';' | 'parallel'? '{' StateBodyItem* '}'`. `SysML` 8.2.2.18.1.
+    StateDefBody,
+    /// `OccurrenceUsagePrefix 'state' ActionUsageDeclaration StateUsageBody`. `SysML` 8.2.2.18.2.
+    StateUsage,
+    /// `';' | 'parallel'? '{' StateBodyItem* '}'`. `SysML` 8.2.2.18.2.
+    StateUsageBody,
+    /// `MemberPrefix TransitionUsage`. `SysML` 8.2.2.18.1.
+    TransitionUsageMember,
+    /// `'transition' ( UsageDeclaration 'first' )? FeatureChainMember EmptyParameterMember ( EmptyParameterMember TriggerActionMember )? GuardExpressionMember? EffectBehaviorMember? 'then' TransitionSuccessionMember ActionBody`. `SysML` 8.2.2.18.3.
+    TransitionUsage,
+    /// `MemberPrefix TargetTransitionUsage`. `SysML` 8.2.2.18.1.
+    TargetTransitionUsageMember,
+    /// `EmptyParameterMember ( trigger, guard, effect )? 'then' TransitionSuccessionMember ActionBody`. `SysML` 8.2.2.18.3.
+    TargetTransitionUsage,
+    /// `'accept' TriggerAction`. `SysML` 8.2.2.18.3.
+    TriggerActionMember,
+    /// `AcceptParameterPart`, an `AcceptActionUsage`. `SysML` 8.2.2.18.3.
+    TriggerAction,
+    /// `PayloadParameterMember ( 'via' NodeParameterMember )?`. `SysML` 8.2.2.17.4.
+    AcceptParameterPart,
+    /// `PayloadParameter`. `SysML` 8.2.2.17.4.
+    PayloadParameterMember,
+    /// `PayloadFeature | Identification PayloadFeatureSpecializationPart? TriggerValuePart`. `SysML` 8.2.2.17.4.
+    PayloadParameter,
+    /// `NodeParameter`. `SysML` 8.2.2.17.4.
+    NodeParameterMember,
+    /// `FeatureBinding`, a `ReferenceUsage`. `SysML` 8.2.2.17.4.
+    NodeParameter,
+    /// `OwnedExpression`, a `FeatureValue`. `SysML` 8.2.2.17.4.
+    FeatureBinding,
+    /// `EmptyUsage`. `SysML` 8.2.2.17.4.
+    EmptyParameterMember,
+    /// `{}`. `SysML` 8.2.2.17.4.
+    EmptyUsage,
     /// `'~' originalPortDefinition = ~[QualifiedName]`. `SysML` 8.2.2.12.
     ConjugatedPortTyping,
     /// `OwnedMultiplicity | OwnedMultiplicity? ( 'ordered' 'nonunique'? | 'nonunique' 'ordered'? )`. `SysML` 8.2.2.6.6.
@@ -1388,6 +1424,24 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::TypedBy,
     SyntaxKind::FeatureTyping,
     SyntaxKind::OwnedFeatureTyping,
+    SyntaxKind::StateDefinition,
+    SyntaxKind::StateDefBody,
+    SyntaxKind::StateUsage,
+    SyntaxKind::StateUsageBody,
+    SyntaxKind::TransitionUsageMember,
+    SyntaxKind::TransitionUsage,
+    SyntaxKind::TargetTransitionUsageMember,
+    SyntaxKind::TargetTransitionUsage,
+    SyntaxKind::TriggerActionMember,
+    SyntaxKind::TriggerAction,
+    SyntaxKind::AcceptParameterPart,
+    SyntaxKind::PayloadParameterMember,
+    SyntaxKind::PayloadParameter,
+    SyntaxKind::NodeParameterMember,
+    SyntaxKind::NodeParameter,
+    SyntaxKind::FeatureBinding,
+    SyntaxKind::EmptyParameterMember,
+    SyntaxKind::EmptyUsage,
     SyntaxKind::ConjugatedPortTyping,
     SyntaxKind::MultiplicityPart,
     SyntaxKind::OwnedMultiplicity,

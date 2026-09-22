@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T13:15:09Z",
+    "regenerated_utc": "2026-09-22T13:39:32Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 229,
-      "unimplemented": 325,
+      "implemented": 244,
+      "unimplemented": 310,
       "absent": 0,
-      "percent": 41.3
+      "percent": 44.0
     },
     "tests": {
-      "unit": 443,
+      "unit": 449,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 182,
+      "negative_cases": 187,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "e793207 Stop rejecting `state def S;` by absence: the next commit reads it",
+      "45aa4d8 Read the conjugated port typing, and buy the three files that typed a port by its conjugate",
       "0282090 Read KerML's relationship body, and buy the file whose dependency owned a feature",
       "d8b2cde Propose ADR-0020 and ADR-0021: sysand manages packages, markings live in the model",
       "0d77643 Read the dependency in both grammars, and buy the three files that declared one",
       "c4875cb Read the variant usage member, and buy the four files that declared one",
       "f2f32a0 Close the session: the variant step written to start cold, and two decisions recorded",
-      "39b0eef Read the enumeration definition, and buy the four files that declared one",
-      "5c4ca6f Stop rejecting `enum def Color;` by absence: the next commit reads it",
-      "3446ff3 Read RequirementUsage, and buy four of the six files predicted"
+      "39b0eef Read the enumeration definition, and buy the four files that declared one"
     ]
   },
   "authored": {

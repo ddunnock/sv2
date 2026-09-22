@@ -946,6 +946,66 @@ NODES = [
     ("TypedBy", "`( ':' | 'defined' 'by' ) FeatureTyping`. `SysML` 8.2.2.6.5."),
     ("FeatureTyping", "`OwnedFeatureTyping | ConjugatedPortTyping`. `SysML` 8.2.2.6.5."),
     ("OwnedFeatureTyping", "`QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5."),
+    # The state layer, SysML 8.2.2.18: states, transitions, and the accepter a transition
+    # is triggered by. One construct: a state definition that cannot read its body's
+    # transitions reads nothing the corpus writes.
+    (
+        "StateDefinition",
+        (
+            "`OccurrenceDefinitionPrefix 'state' 'def' DefinitionDeclaration "
+            "StateDefBody`. `SysML` 8.2.2.18.1."
+        ),
+    ),
+    ("StateDefBody", "`';' | 'parallel'? '{' StateBodyItem* '}'`. `SysML` 8.2.2.18.1."),
+    (
+        "StateUsage",
+        (
+            "`OccurrenceUsagePrefix 'state' ActionUsageDeclaration StateUsageBody`. "
+            "`SysML` 8.2.2.18.2."
+        ),
+    ),
+    ("StateUsageBody", "`';' | 'parallel'? '{' StateBodyItem* '}'`. `SysML` 8.2.2.18.2."),
+    ("TransitionUsageMember", "`MemberPrefix TransitionUsage`. `SysML` 8.2.2.18.1."),
+    (
+        "TransitionUsage",
+        (
+            "`'transition' ( UsageDeclaration 'first' )? FeatureChainMember "
+            "EmptyParameterMember ( EmptyParameterMember TriggerActionMember )? "
+            "GuardExpressionMember? EffectBehaviorMember? 'then' "
+            "TransitionSuccessionMember ActionBody`. `SysML` 8.2.2.18.3."
+        ),
+    ),
+    (
+        "TargetTransitionUsageMember",
+        "`MemberPrefix TargetTransitionUsage`. `SysML` 8.2.2.18.1.",
+    ),
+    (
+        "TargetTransitionUsage",
+        (
+            "`EmptyParameterMember ( trigger, guard, effect )? 'then' "
+            "TransitionSuccessionMember ActionBody`. `SysML` 8.2.2.18.3."
+        ),
+    ),
+    ("TriggerActionMember", "`'accept' TriggerAction`. `SysML` 8.2.2.18.3."),
+    ("TriggerAction", "`AcceptParameterPart`, an `AcceptActionUsage`. `SysML` 8.2.2.18.3."),
+    (
+        "AcceptParameterPart",
+        "`PayloadParameterMember ( 'via' NodeParameterMember )?`. `SysML` 8.2.2.17.4.",
+    ),
+    ("PayloadParameterMember", "`PayloadParameter`. `SysML` 8.2.2.17.4."),
+    (
+        "PayloadParameter",
+        (
+            "`PayloadFeature | Identification PayloadFeatureSpecializationPart? "
+            "TriggerValuePart`. `SysML` 8.2.2.17.4."
+        ),
+    ),
+    ("NodeParameterMember", "`NodeParameter`. `SysML` 8.2.2.17.4."),
+    ("NodeParameter", "`FeatureBinding`, a `ReferenceUsage`. `SysML` 8.2.2.17.4."),
+    ("FeatureBinding", "`OwnedExpression`, a `FeatureValue`. `SysML` 8.2.2.17.4."),
+    # Built from no tokens: a parameter the text never writes.
+    ("EmptyParameterMember", "`EmptyUsage`. `SysML` 8.2.2.17.4."),
+    ("EmptyUsage", "`{}`. `SysML` 8.2.2.17.4."),
     # The Pilot's ConjugatedQualifiedName is xtext_only and follow_spec: its `'~'
     # QualifiedName` is built here, in the production that uses it, and gets no node.
     (
