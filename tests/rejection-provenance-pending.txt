@@ -92,7 +92,6 @@ tests/rejection/requirement-constraint-by-reference-takes-a-requirement-body.sys
 tests/rejection/requirement-constraint-member-is-not-a-definition-body-item.sysml
 tests/rejection/requirement-constraint-usage-prefix-metadata-is-not-implemented.sysml
 tests/rejection/requirement-definition-missing-requirement-body.sysml
-tests/rejection/requirement-usage-is-not-a-requirement-definition.sysml
 tests/rejection/reserved-word-as-name.sysml
 tests/rejection/reserved-word-as-short-name.sysml
 tests/rejection/return-parameter-member-is-not-a-definition-body-item.sysml

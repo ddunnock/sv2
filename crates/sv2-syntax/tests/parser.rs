@@ -3512,10 +3512,6 @@ fn a_requirement_definition_needs_a_body_and_a_def() {
     // RequirementBody is not optional. Held as a file by
     // tests/rejection/requirement-definition-missing-requirement-body.sysml.
     parse_rejected("requirement def R");
-    // Without `def` it is a RequirementUsage, which is a different production and
-    // unimplemented. Held as a file by
-    // tests/rejection/requirement-usage-is-not-a-requirement-definition.sysml.
-    parse_rejected("requirement r;");
 }
 
 #[test]
