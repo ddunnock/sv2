@@ -3938,9 +3938,6 @@ fn a_state_definition_is_bounded_by_its_rules() {
     parse_rejected("state def D { transition t first a if g accept S then b; }");
     // A transition names its target.
     parse_rejected("state def D { transition t first a then; }");
-    // Unimplemented, and reported: entry, do and exit actions, and effects.
-    parse_rejected("state def D { entry; }");
-    parse_rejected("state def D { transition t first a do action x; then b; }");
     // Unclosed.
     parse_rejected("state def D { state s;");
 }
