@@ -180,20 +180,21 @@ fn an_unclosed_brace_is_reported_and_the_contents_are_kept() {
 #[test]
 fn text_no_implemented_production_accepts_becomes_an_error_node() {
     // This case has now been `part def Engine;`, `part engine : Engine;`,
-    // `attribute mass : Real;` and `item wheel : Wheel;`. Each stopped being a
-    // rejection when its production landed, and the positive cases below hold all
-    // four. The property the test protects never changes: text this parser cannot
+    // `attribute mass : Real;`, `item wheel : Wheel;` and `connection fuelLine connect a
+    // to b;`. Each stopped being a rejection when its production landed, and the
+    // positive cases hold all five. The property the test protects never changes: text this parser cannot
     // read is reported, not silently accepted. Only the example moves.
     //
     // It is deliberately no longer a usage of the `<prefix> KEYWORD Usage` shape.
     // Those now arrive in batches — seven of them are one table — so any of them
-    // would be a placeholder with a short life. A ConnectionUsage has a shape of its
-    // own, a BinaryConnectorPart naming two ends, so it will not land incidentally
-    // alongside something else.
+    // would be a placeholder with a short life. A SatisfyRequirementUsage has a shape of
+    // its own, a reference and a `by` subject, so it will not land incidentally alongside
+    // something else.
     //
-    // SysML 8.2.2.13 — ConnectionUsage = OccurrenceUsagePrefix 'connection'
-    //                    ConnectionUsageDeclaration ...
-    let parsed = parse_rejected("connection fuelLine connect a to b;");
+    // SysML 8.2.2.21.2 — SatisfyRequirementUsage = OccurrenceUsagePrefix 'assert'? 'not'?
+    //                    'satisfy' ( OwnedReferenceSubsetting ... ) ValuePart?
+    //                    ( 'by' SatisfactionSubjectMember )? RequirementBody
+    let parsed = parse_rejected("satisfy vehicleSpecification by vehicle_design;");
     assert!(render(&parsed.syntax()).contains("Error"));
 }
 
@@ -6157,10 +6158,10 @@ fn unimplemented_definition_body_items_are_reported_at_the_body() {
     // The unimplemented item here moves for the same reason as the case above, and
     // to the same construct: the usages it previously held are all read now, and each
     // is exercised inside a definition body as a positive case below. A
-    // ConnectionUsage (SysML 8.2.2.13) is not. It must be reported, and the
-    // definition after it must still parse — recovery happens at the enclosing body.
-    let parsed =
-        parse_rejected("part def Vehicle { connection c connect a to b; part def Wheel; }");
+    // SatisfyRequirementUsage (SysML 8.2.2.21.2) is not; it replaced a ConnectionUsage
+    // when that landed. It must be reported, and the definition after it must still
+    // parse — recovery happens at the enclosing body.
+    let parsed = parse_rejected("part def Vehicle { satisfy r by v; part def Wheel; }");
     let rendered = render(&parsed.syntax());
     assert_eq!(nodes_named(&rendered, "PartDefinition"), 2, "{rendered}");
 }
