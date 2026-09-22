@@ -840,6 +840,25 @@ NODES = [
     ("PortUsage", "`OccurrenceUsagePrefix 'port' Usage`. `SysML` 8.2.2.12."),
     ("RenderingUsage", "`OccurrenceUsagePrefix 'rendering' Usage`. `SysML` 8.2.2.26.3."),
     ("EnumerationUsage", "`UsagePrefix 'enum' Usage`. `SysML` 8.2.2.8."),
+    # The enumeration definition and its body, which admits enumerated values and
+    # annotations and nothing else (7.8.2). One construct in five nodes.
+    (
+        "EnumerationDefinition",
+        (
+            "`DefinitionExtensionKeyword* 'enum' 'def' DefinitionDeclaration "
+            "EnumerationBody`. `SysML` 8.2.2.8."
+        ),
+    ),
+    (
+        "EnumerationBody",
+        ("`';' | '{' ( AnnotatingMember | EnumerationUsageMember )* '}'`. `SysML` 8.2.2.8."),
+    ),
+    ("EnumerationUsageMember", "`MemberPrefix EnumeratedValue`. `SysML` 8.2.2.8."),
+    (
+        "EnumeratedValue",
+        "`'enum'? Usage`, the metaclass `EnumerationUsage`. `SysML` 8.2.2.8.",
+    ),
+    ("AnnotatingMember", "`MemberPrefix AnnotatingElement`. `SysML` 8.2.2.4.1."),
     ("UsagePrefix", "`UnextendedUsagePrefix UsageExtensionKeyword*`. `SysML` 8.2.2.6.2."),
     (
         "OccurrenceUsagePrefix",

@@ -1193,6 +1193,7 @@ impl<'a> Parser<'a> {
             || self.at_constraint_definition(n)
             || self.at_calculation_definition(n)
             || self.at_action_definition(n)
+            || self.at_enumeration_definition(n)
             || self.at_simple_definition(n).is_some()
     }
 
@@ -2562,6 +2563,8 @@ impl<'a> Parser<'a> {
     fn definition_element(&mut self) -> bool {
         if self.at_port_definition(0) {
             self.port_definition();
+        } else if self.at_enumeration_definition(0) {
+            self.enumeration_definition();
         } else if self.at_requirement_definition(0) {
             self.requirement_definition();
         } else if self.at_constraint_definition(0) {
@@ -2576,6 +2579,168 @@ impl<'a> Parser<'a> {
             return false;
         }
         true
+    }
+
+    /// Whether an `EnumerationDefinition` starts at the `n`th meaningful token.
+    ///
+    /// `enum def`, with nothing looked past before it. The production opens on
+    /// `DefinitionExtensionKeyword*`, not a `DefinitionPrefix` (`SysML` 8.2.2.8), so
+    /// `abstract enum def` is no enumeration definition -- "the keywords abstract and
+    /// variation may not be used with an enumeration definition" (7.8.2) -- and prefix
+    /// metadata is unimplemented, as it is for every definition.
+    fn at_enumeration_definition(&self, n: usize) -> bool {
+        self.nth_is_keyword(n, "enum") && self.nth_is_keyword(n + 1, "def")
+    }
+
+    // EnumerationDefinition =
+    //     DefinitionExtensionKeyword* 'enum' 'def'
+    //     DefinitionDeclaration EnumerationBody                     (SysML 8.2.2.8)
+    //
+    // NOT marked for coverage, for the reason DefinitionPrefix is not: its own first part,
+    // DefinitionExtensionKeyword* (`#` prefix metadata), is unimplemented, and
+    // examples/Simple Tests/MetadataTest.sysml writes `#Security enum def ...`. Everything
+    // after it is read.
+    //
+    // The metaclass is EnumerationDefinition (8.3.8.2, receipt 224a4a2e), an
+    // AttributeDefinition "all of whose instances are given by an explicit list of
+    // enumeratedValues".
+    //
+    // constraint: EnumerationDefinition::validateEnumerationDefinitionIsVariation,
+    //     `isVariation` (8.3.8.2): "an EnumerationDefinition is also required to have
+    //     isVariation = true, and its enumeratedValues are then just its variants" (8.4.4,
+    //     receipt ca82a1f5). An attribute of the element, set by sv2-hir; the grammar
+    //     already gives no place to write `variation`, which is the textual half of it.
+    fn enumeration_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::EnumerationDefinition);
+        self.expect_keyword("enum");
+        self.expect_keyword("def");
+        self.definition_declaration();
+        self.enumeration_body();
+        self.finish_node();
+    }
+
+    // production: EnumerationBody@sysml
+    //
+    // EnumerationBody : EnumerationDefinition =
+    //     ';'
+    //   | '{' ( ownedRelationship += AnnotatingMember
+    //         | ownedRelationship += EnumerationUsageMember )*
+    //     '}'                                                        (SysML 8.2.2.8)
+    //
+    // Its own item loop, not `body_elements`: "any owned members declared in the body of
+    // an enumeration definition must be enumeration usages" (7.8.2, receipt a2406cd5), so
+    // a part or an attribute is no item here, where every other definition body admits
+    // one. Anything else is recovered over and reported, and a pass that consumes nothing
+    // takes one token, as `body_elements` does (invariant 3).
+    fn enumeration_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::EnumerationBody);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.enumeration_body_items();
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.error_expected("`;` or `{` after an enumeration definition declaration");
+        }
+        self.finish_node();
+    }
+
+    /// The items of an `EnumerationBody`, up to its `}` or end of input.
+    fn enumeration_body_items(&mut self) {
+        while !self.at_end() && !self.at(SyntaxKind::RBrace) {
+            let start = self.pos;
+            let n = usize::from(self.at_visibility());
+            if self.at_annotating_member(n) {
+                self.annotating_member();
+            } else if self.at_enumerated_value(n) {
+                self.enumeration_usage_member();
+            } else {
+                self.recover_statement();
+            }
+            if self.pos == start {
+                self.error_token();
+            }
+        }
+    }
+
+    /// Whether an `EnumeratedValue` starts at the `n`th meaningful token.
+    ///
+    /// `'enum'? Usage`, where `Usage = UsageDeclaration UsageCompletion` and every part of
+    /// the declaration is optional (`SysML` 8.2.2.6.2). So a value opens on a name, a short
+    /// name's `<` or a feature specialization -- or, with no declaration at all, on its
+    /// completion: a `ValuePart`'s `=`, `:=` or `default`, or the `UsageBody`'s `;` or `{`.
+    /// examples/Simple Tests/EnumerationTest.sysml:48-50 writes `= 60.0;` as a value.
+    /// With the keyword, anything may follow that `Usage` may -- except `def`, which makes
+    /// it a nested enumeration definition, and that is no item of an enumeration body.
+    /// Without it, a keyword other than `default` is not claimed, so `in a;` and `part p;`
+    /// are reported.
+    fn at_enumerated_value(&self, n: usize) -> bool {
+        if self.nth_is_keyword(n, "enum") {
+            return !self.nth_is_keyword(n + 1, "def");
+        }
+        self.nth_is_name(n)
+            || self.nth_is(n, SyntaxKind::Lt)
+            || self.nth_at_feature_specialization(n)
+            || self.nth_is(n, SyntaxKind::Eq)
+            || self.nth_is(n, SyntaxKind::ColonEq)
+            || self.nth_is_keyword(n, "default")
+            || self.nth_is(n, SyntaxKind::Semicolon)
+            || self.nth_is(n, SyntaxKind::LBrace)
+    }
+
+    // production: EnumerationUsageMember@sysml
+    //
+    // EnumerationUsageMember : VariantMembership =
+    //     MemberPrefix ownedRelatedElement += EnumeratedValue           (SysML 8.2.2.8)
+    //
+    // A VariantMembership: the enumerated values are the definition's variants (8.4.4).
+    // Marked although EnumeratedValue is not, as other members are over a production with
+    // a gap of its own: this production's two parts are read.
+    fn enumeration_usage_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::EnumerationUsageMember);
+        self.member_prefix();
+        self.enumerated_value();
+        self.finish_node();
+    }
+
+    // EnumeratedValue : EnumerationUsage =
+    //     UsageExtensionKeyword* 'enum'? Usage       (SysML 8.2.2.8, with the deviation)
+    //
+    // NOT marked for coverage. The clause writes `'enum'? Usage`; deviations.json records
+    // follow_xtext for EnumeratedValue, adding the leading UsageExtensionKeyword* every
+    // other usage carries, on the corpus's own `#Security enum secret ...`
+    // (examples/Simple Tests/MetadataTest.sysml:9). Prefix metadata is unimplemented, so
+    // this production is read less its first part.
+    //
+    // "The declaration of an enumerated value may omit the enum keyword" (7.8.2).
+    fn enumerated_value(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::EnumeratedValue);
+        self.eat_optional_keyword("enum");
+        self.usage();
+        self.finish_node();
+    }
+
+    // production: AnnotatingMember@sysml
+    //
+    // AnnotatingMember : OwningMembership =
+    //     MemberPrefix ownedRelatedElement += AnnotatingElement       (SysML 8.2.2.4.1)
+    //
+    // Referenced by EnumerationBody alone, which is why it had no caller until now.
+    // Marked although AnnotatingElement is not -- its MetadataUsage alternative is
+    // unimplemented -- because this production's own two parts are read.
+    fn annotating_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::AnnotatingMember);
+        self.member_prefix();
+        self.with_significant_comments(Self::annotating_element);
+        self.finish_node();
     }
 
     /// `SysML`'s `UsageElement`. Returns whether one was read.

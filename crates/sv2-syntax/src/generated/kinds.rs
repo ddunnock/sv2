@@ -779,6 +779,16 @@ pub enum SyntaxKind {
     RenderingUsage,
     /// `UsagePrefix 'enum' Usage`. `SysML` 8.2.2.8.
     EnumerationUsage,
+    /// `DefinitionExtensionKeyword* 'enum' 'def' DefinitionDeclaration EnumerationBody`. `SysML` 8.2.2.8.
+    EnumerationDefinition,
+    /// `';' | '{' ( AnnotatingMember | EnumerationUsageMember )* '}'`. `SysML` 8.2.2.8.
+    EnumerationBody,
+    /// `MemberPrefix EnumeratedValue`. `SysML` 8.2.2.8.
+    EnumerationUsageMember,
+    /// `'enum'? Usage`, the metaclass `EnumerationUsage`. `SysML` 8.2.2.8.
+    EnumeratedValue,
+    /// `MemberPrefix AnnotatingElement`. `SysML` 8.2.2.4.1.
+    AnnotatingMember,
     /// `UnextendedUsagePrefix UsageExtensionKeyword*`. `SysML` 8.2.2.6.2.
     UsagePrefix,
     /// `( EndUsagePrefix | BasicUsagePrefix 'individual'? PortionKind? ) UsageExtensionKeyword*`. `SysML` 8.2.2.9.2.
@@ -1334,6 +1344,11 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::PortUsage,
     SyntaxKind::RenderingUsage,
     SyntaxKind::EnumerationUsage,
+    SyntaxKind::EnumerationDefinition,
+    SyntaxKind::EnumerationBody,
+    SyntaxKind::EnumerationUsageMember,
+    SyntaxKind::EnumeratedValue,
+    SyntaxKind::AnnotatingMember,
     SyntaxKind::UsagePrefix,
     SyntaxKind::OccurrenceUsagePrefix,
     SyntaxKind::BasicUsagePrefix,

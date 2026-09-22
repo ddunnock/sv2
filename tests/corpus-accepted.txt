@@ -41,6 +41,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ConstraintTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/EnumerationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ImportTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ItemTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/MultiplicityTest.sysml
@@ -55,6 +56,8 @@ vendor/corpus/sysml/src/training/02. Part Definitions/Part Definition Example.sy
 vendor/corpus/sysml/src/training/03. Generalization/Generalization Example.sysml
 vendor/corpus/sysml/src/training/04. Subsetting/Subsetting Example.sysml
 vendor/corpus/sysml/src/training/05. Redefinition/Redefinition Example.sysml
+vendor/corpus/sysml/src/training/06. Enumeration Definitions/Enumeration Definitions-1.sysml
+vendor/corpus/sysml/src/training/06. Enumeration Definitions/Enumeration Definitions-2.sysml
 vendor/corpus/sysml/src/training/07. Parts/Parts Example-1.sysml
 vendor/corpus/sysml/src/training/07. Parts/Parts Example-2.sysml
 vendor/corpus/sysml/src/training/08. Items/Items Example.sysml
@@ -103,6 +106,7 @@ vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_04-Logica
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_06-System of Quantities.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_07-System of Units and Scales.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_08-Range Restriction.sysml
+vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_10-Primitive Data Types.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_11-Variable Length Collection Types.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_12-Compound Value Type.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_13-Discretely Sampled Function Value.sysml

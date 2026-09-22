@@ -3211,6 +3211,132 @@ fn a_requirement_usage_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- EnumerationDefinition, SysML 8.2.2.8 ---------------------------------------------
+//
+// EnumerationDefinition  = DefinitionExtensionKeyword* 'enum' 'def'
+//                          DefinitionDeclaration EnumerationBody
+// EnumerationBody        = ';' | '{' ( AnnotatingMember | EnumerationUsageMember )* '}'
+// EnumerationUsageMember = MemberPrefix EnumeratedValue
+// EnumeratedValue        = 'enum'? Usage                                  (8.2.2.8)
+// AnnotatingMember       = MemberPrefix AnnotatingElement                 (8.2.2.4.1)
+//
+// "Any owned members declared in the body of an enumeration definition must be
+// enumeration usages ... the declaration of an enumerated value may omit the enum
+// keyword" (7.8.2, receipt a2406cd5).
+
+#[test]
+fn an_enumeration_definition_reads_the_corpus_forms() {
+    // training/06. Enumeration Definitions/Enumeration Definitions-1.sysml:4-8.
+    let keyworded = render(
+        &parse_accepted(
+            "enum def TrafficLightColor {\n\tenum green;\n\tenum yellow;\n\tenum red;\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&keyworded, "EnumeratedValue"), 3, "{keyworded}");
+    // examples/Simple Tests/EnumerationTest.sysml:30-36 — keywordless values, then a doc
+    // comment, which is an AnnotatingMember.
+    let bare = render(
+        &parse_accepted(
+            "enum def E1 { a; b; c;\n\tdoc\n\t/*\n\t * The \"enum\" keyword is optional.\n\t */\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&bare, "EnumeratedValue"), 3, "{bare}");
+    assert_eq!(nodes_named(&bare, "AnnotatingMember"), 1, "{bare}");
+    // examples/Simple Tests/EnumerationTest.sysml:38 — the empty body.
+    parse_accepted("enum def E2;");
+    // training/06. Enumeration Definitions/Enumeration Definitions-2.sysml:10-14 and
+    // 25-31 — a value with a body of redefinitions, and values bound to numbers, each
+    // definition specializing an attribute definition.
+    parse_accepted(
+        "enum def ClassificationKind specializes ClassificationLevel {\n\
+         unclassified {\n\
+         :>> code = \"uncl\";\n\
+         :>> color = TrafficLightColor::green;\n\
+         }\n}",
+    );
+    parse_accepted("enum def GradePoints :> Real { A = 4.0; B = 3.0; C = 2.0; D = 1.0; F = 0.0; }");
+    // validation/15-Properties-Values-Expressions/15_10-Primitive Data Types.sysml:82-86 —
+    // values bound to quantities.
+    parse_accepted(
+        "enum def DiameterChoice :> Diameter { small = 60 [SI::mm]; medium = 70 [SI::mm]; }",
+    );
+    // examples/Simple Tests/EnumerationTest.sysml:47-51 — values with NO declaration,
+    // only a ValuePart: Usage's declaration is optional in full (8.2.2.6.2).
+    let valued = render(
+        &parse_accepted("enum def SizeChoice :> Size {\n\t= 60.0;\n\t= 70.0;\n\t= 80.0;\n}")
+            .syntax(),
+    );
+    assert_eq!(nodes_named(&valued, "EnumeratedValue"), 3, "{valued}");
+    // And with no completion but the UsageBody, which the grammar admits as well.
+    parse_accepted("enum def E { ; { } }");
+    // 7.8.2's own example (receipt a2406cd5).
+    parse_accepted(
+        "enum def ConditionColor { red; green; yellow; } \
+         enum def RiskLevel :> ConditionLevel { enum low { :>> color = ConditionColor::green; } }",
+    );
+}
+
+#[test]
+fn an_enumeration_definition_owns_what_its_production_writes() {
+    let tree = render(&parse_accepted("enum def E :> A { doc /* d */ enum a = 1; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "EnumerationDefinition"),
+        [
+            "KwEnum",
+            "KwDef",
+            "DefinitionDeclaration",
+            "EnumerationBody"
+        ],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "EnumerationUsageMember"),
+        ["MemberPrefix", "EnumeratedValue"],
+        "{tree}"
+    );
+    assert_eq!(nodes_named(&tree, "AnnotatingMember"), 1, "{tree}");
+    // The input the absence rejection held until the commit before this one.
+    let empty = render(&parse_accepted("enum def Color;").syntax());
+    assert_eq!(nodes_named(&empty, "EnumerationDefinition"), 1, "{empty}");
+    // A DefinitionElement, so it nests where one may, and is an item of a calculation
+    // body through the one list.
+    parse_accepted("part def P { enum def E { a; } }");
+    parse_accepted("constraint def C { enum def E { a; } x }");
+    // An EnumerationUsage outside an enumeration body is still the SIMPLE_USAGE it was.
+    let usage = render(&parse_accepted("part def P { enum e : E; }").syntax());
+    assert_eq!(nodes_named(&usage, "EnumerationUsage"), 1, "{usage}");
+    assert_eq!(nodes_named(&usage, "EnumeratedValue"), 0, "{usage}");
+}
+
+#[test]
+fn an_enumeration_definition_is_bounded_by_its_rules() {
+    // EnumerationBody is not optional.
+    parse_rejected("enum def E");
+    // No DefinitionPrefix: "The keywords abstract and variation may not be used with an
+    // enumeration definition" (7.8.2).
+    parse_rejected("abstract enum def E;");
+    parse_rejected("variation enum def E;");
+    // EnumeratedValue is `'enum'? Usage`, with no UsagePrefix: an enumerated value "may
+    // not include ... any direction keywords, abstract, derived, etc." (7.8.2).
+    parse_rejected("enum def E { in a; }");
+    parse_rejected("enum def E { derived a; }");
+    // "Any owned members declared in the body of an enumeration definition must be
+    // enumeration usages" (7.8.2): no other member is an item of EnumerationBody.
+    parse_rejected("enum def E { part p; }");
+    parse_rejected("enum def E { attribute a; }");
+    parse_rejected("enum def E { enum def F; }");
+    // Unclosed.
+    parse_rejected("enum def E { a;");
+}
+
+#[test]
+fn an_enumeration_definition_keeps_every_byte() {
+    let source = "enum /* n */ def E // d\n\t:> A {\n\tdoc /* v */\n\tenum a = 1;\n\tb { }\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
 //
 // DefaultTargetSuccession : TransitionUsage =
