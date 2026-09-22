@@ -86,7 +86,6 @@ tests/rejection/references-takes-one-target.sysml
 tests/rejection/relationship-body-holds-only-owned-annotations.sysml
 tests/rejection/requirement-constraint-by-reference-takes-a-requirement-body.sysml
 tests/rejection/requirement-constraint-member-is-not-a-definition-body-item.sysml
-tests/rejection/requirement-constraint-usage-prefix-metadata-is-not-implemented.sysml
 tests/rejection/requirement-definition-missing-requirement-body.sysml
 tests/rejection/reserved-word-as-name.sysml
 tests/rejection/reserved-word-as-short-name.sysml
@@ -102,7 +101,6 @@ tests/rejection/stray-semicolon.sysml
 tests/rejection/subclassification-list-trailing-separator.sysml
 tests/rejection/subclassification-part-without-a-superclassifier.sysml
 tests/rejection/subject-member-is-not-a-definition-body-item.sysml
-tests/rejection/subject-usage-carries-no-prefix-metadata.sysml
 tests/rejection/subsets-requires-a-target.sysml
 tests/rejection/target-succession-member-does-not-follow-a-structure-usage.sysml
 tests/rejection/target-succession-member-does-not-skip-a-non-behavior-item.sysml

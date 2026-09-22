@@ -5500,9 +5500,6 @@ fn a_requirement_constraint_is_only_a_member_where_the_grammar_reaches_one() {
     parse_rejected("require constraint { a <= b }");
     // A `require` with nothing after it is neither alternative.
     parse_rejected("requirement def R { require; }");
-    // Prefix metadata standing in for the keyword is the unimplemented half. Held by
-    // tests/rejection/requirement-constraint-usage-prefix-metadata-is-not-implemented.sysml.
-    parse_rejected("requirement def R { require #approved { a <= b } }");
 }
 
 #[test]
@@ -5566,17 +5563,6 @@ fn a_subject_is_only_a_subject_member_where_the_grammar_reaches_one() {
     parse_rejected("subject vehicle : Vehicle;");
     // The requirement body does reach it.
     parse_accepted("requirement def R { subject vehicle : Vehicle; }");
-}
-
-#[test]
-fn a_subject_member_carries_no_prefix_metadata() {
-    // SubjectUsage = 'subject' UsageExtensionKeyword* Usage, and UsageExtensionKeyword
-    // is a PrefixMetadataMember (SysML 8.2.2.6.2), unimplemented everywhere in this
-    // parser. Zero of them is the common case, which is why SubjectUsage is useful
-    // without it — and why SubjectUsage is NOT marked for coverage while SubjectMember
-    // is. Held as a file by
-    // tests/rejection/subject-usage-carries-no-prefix-metadata.sysml.
-    parse_rejected("requirement def R { subject #approved v : Vehicle; }");
 }
 
 #[test]
@@ -6654,14 +6640,6 @@ fn unimplemented_definition_body_items_are_reported_at_the_body() {
     let parsed = parse_rejected("part def Vehicle { satisfy r by v; part def Wheel; }");
     let rendered = render(&parsed.syntax());
     assert_eq!(nodes_named(&rendered, "PartDefinition"), 2, "{rendered}");
-}
-
-#[test]
-fn prefix_metadata_on_a_definition_is_reported_not_accepted() {
-    // DefinitionExtensionKeyword (`#` PrefixMetadataMember) is valid SysML and not
-    // implemented: a rejection by absence. The definition after it still parses.
-    let parsed = parse_rejected("#Safety part def Brake;");
-    assert!(render(&parsed.syntax()).contains("PartDefinition"));
 }
 
 #[test]
@@ -8500,8 +8478,6 @@ fn a_case_is_bounded_by_its_rules() {
     // or an action's.
     parse_rejected("part def P { actor a; }");
     parse_rejected("action def A { actor a; }");
-    // ActorUsage's UsageExtensionKeyword* is unimplemented, as SubjectUsage's is.
-    parse_rejected("case def C { actor #m a; }");
     // A case's own keywords are reserved and never an expression (8.2.2.1.2), so in a
     // calculation body, which admits none of them, they are recovered over as items.
     for word in ["subject", "actor", "objective"] {
@@ -8513,8 +8489,6 @@ fn a_case_is_bounded_by_its_rules() {
             "{word}"
         );
     }
-    // ObjectiveRequirementUsage's UsageExtensionKeyword* is unimplemented (8.2.2.22).
-    parse_rejected("case def C { objective #m o; }");
     // Unclosed.
     parse_rejected("analysis def A { subject s;");
 }
@@ -9063,8 +9037,6 @@ fn a_requirement_verification_member_is_bounded_by_its_rules() {
     parse_rejected("requirement def R { verify r }");
     // Nor after a specialization.
     parse_rejected("requirement def R { verify r :> s [1]; }");
-    // UsageExtensionKeyword is unimplemented, so prefix metadata is reported.
-    parse_rejected("requirement def R { verify #m requirement r; }");
 }
 
 #[test]
