@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T12:46:46Z",
+    "regenerated_utc": "2026-09-22T12:58:01Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 226,
-      "unimplemented": 328,
+      "implemented": 227,
+      "unimplemented": 327,
       "absent": 0,
-      "percent": 40.8
+      "percent": 41.0
     },
     "tests": {
-      "unit": 431,
+      "unit": 436,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 172,
+      "negative_cases": 177,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "c4875cb Read the variant usage member, and buy the four files that declared one",
       "f2f32a0 Close the session: the variant step written to start cold, and two decisions recorded",
       "39b0eef Read the enumeration definition, and buy the four files that declared one",
       "5c4ca6f Stop rejecting `enum def Color;` by absence: the next commit reads it",
       "3446ff3 Read RequirementUsage, and buy four of the six files predicted",
       "df81503 Stop rejecting `requirement r;` by absence: the next commit reads it",
       "6d5abd9 Read ConstraintUsage, and buy the seven files that declared a constraint",
-      "5a5a82e Stop rejecting `constraint c { a <= b }` by absence: the next commit reads it",
-      "a8cb979 Ask one list what starts a SysML member, so a calculation body reads what a member does"
+      "5a5a82e Stop rejecting `constraint c { a <= b }` by absence: the next commit reads it"
     ]
   },
   "authored": {

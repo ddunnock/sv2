@@ -873,6 +873,24 @@ NODES = [
             "`ReferenceUsage`. `SysML` 8.2.2.6.3."
         ),
     ),
+    # A Relationship declared as an element. KerML writes its declaration inline; SysML
+    # states DependencyDeclaration as a production of its own, so only a .sysml tree has
+    # the second node.
+    (
+        "Dependency",
+        (
+            "`PrefixMetadataAnnotation* 'dependency' DependencyDeclaration "
+            "RelationshipBody`. `SysML` 8.2.2.3; `KerML` 8.2.3.2 writes the declaration "
+            "inline, with no `DependencyDeclaration` child."
+        ),
+    ),
+    (
+        "DependencyDeclaration",
+        (
+            "`( Identification 'from' )? client ( ',' client )* 'to' "
+            "supplier ( ',' supplier )*`. `SysML` 8.2.2.3."
+        ),
+    ),
     ("UsagePrefix", "`UnextendedUsagePrefix UsageExtensionKeyword*`. `SysML` 8.2.2.6.2."),
     (
         "OccurrenceUsagePrefix",

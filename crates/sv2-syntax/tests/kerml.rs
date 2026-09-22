@@ -16,9 +16,10 @@
 //! text is read against a different grammar, and constructs one language has are not
 //! silently borrowed by the other.
 //!
-//! Of `NonFeatureElement`'s alternatives, `Package` and the eight classifiers of
-//! `KerML` 8.2.4.2 are implemented. `Package` is a shared unit — the same production in
-//! both grammars — and the classifiers are `KerML`'s alone. Of `FeatureElement`'s ten
+//! Of `NonFeatureElement`'s alternatives, `Package`, `Dependency` and the eight
+//! classifiers of `KerML` 8.2.4.2 are implemented. `Package` is a shared unit — the same
+//! production in both grammars — `Dependency` is stated in each, and the classifiers are
+//! `KerML`'s alone. Of `FeatureElement`'s ten
 //! alternatives, `Feature` and `Succession` are implemented; the other eight are not,
 //! nor are `Type`, `Function` and `Predicate`, and the cases below say so rather than
 //! pretending they parse.
@@ -105,6 +106,40 @@ fn a_variant_is_not_reachable_from_a_kerml_body() {
     kerml_rejected("classifier C { variant feature f; }");
     let sysml = parse("part def C { variant x; }", Language::SysMl);
     assert!(sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
+// -- Dependency, KerML 8.2.3.2 ----------------------------------------------------
+//
+// Dependency = PrefixMetadataAnnotation* 'dependency' ( Identification? 'from' )?
+//     client += [QualifiedName] ( ',' client += [QualifiedName] )* 'to'
+//     supplier += [QualifiedName] ( ',' supplier += [QualifiedName] )*
+//     RelationshipBody                                                     (8.2.3.2)
+//
+// A NonFeatureElement (8.2.3.4.3). The declaration is written inline, with no
+// DependencyDeclaration of its own: that production is SysML's (8.2.2.3).
+
+#[test]
+fn a_kerml_dependency_reads_the_corpus_forms() {
+    // examples/Simple Tests/Dependencies.kerml:11-12.
+    let tree = render(
+        &kerml_accepted(
+            "package D {\n\
+             \tdependency Use from 'Application Layer' to 'Service Layer';\n\
+             \tdependency from 'Service Layer' to 'Data Layer';\n\
+             \tdependency z to x, y;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        tree.lines().filter(|l| l.trim() == "Dependency").count(),
+        3,
+        "{tree}"
+    );
+    assert!(!tree.contains("DependencyDeclaration"), "{tree}");
+    kerml_accepted("classifier C { dependency a to b; }");
+    kerml_rejected("dependency Use a to b;");
+    kerml_rejected("dependency a to b.c;");
 }
 
 #[test]

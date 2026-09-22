@@ -1210,6 +1210,7 @@ impl<'a> Parser<'a> {
     /// Whether an implemented `DefinitionElement` starts at the `n`th meaningful token.
     fn at_definition_element(&self, n: usize) -> bool {
         self.nth_is_keyword(n, "package")
+            || self.at_dependency(n)
             || self.at_port_definition(n)
             || self.at_requirement_definition(n)
             || self.at_constraint_definition(n)
@@ -1403,6 +1404,7 @@ impl<'a> Parser<'a> {
         match self.language {
             Language::KerMl => {
                 self.nth_is_keyword(n, "package")
+                    || self.at_dependency(n)
                     || self.at_classifier(n).is_some()
                     || self.at_feature(n)
                     || self.at_kerml_succession(n)
@@ -1916,6 +1918,7 @@ impl<'a> Parser<'a> {
             || match self.language {
                 Language::KerMl => {
                     self.at_keyword("package")
+                        || self.at_dependency(0)
                         || self.at_classifier(0).is_some()
                         || self.at_kerml_succession(0)
                         || self.at_kerml_binding_connector(0)
@@ -2558,8 +2561,12 @@ impl<'a> Parser<'a> {
             self.language == Language::KerMl
         }) {
             self.classifier(classifier);
+        } else if self.language == Language::KerMl && self.at_dependency(0) {
+            // A NonFeatureElement (KerML 8.2.3.4.3). SysML reaches the same production
+            // as a DefinitionElement, through `definition_element` below.
+            self.dependency();
         } else if self.language == Language::KerMl {
-            self.error_expected("a package or a classifier");
+            self.error_expected("a package, a classifier or a dependency");
         } else if let Some((word, node)) = self
             .at_control_node(0)
             .filter(|_| body.admits_action_body_item())
@@ -2596,7 +2603,9 @@ impl<'a> Parser<'a> {
     /// keyword pair, and a keyword is not a name (`SysML` 8.2.2.1.2). It is in
     /// `usage_element`, which says why there.
     fn definition_element(&mut self) -> bool {
-        if self.at_port_definition(0) {
+        if self.at_dependency(0) {
+            self.dependency();
+        } else if self.at_port_definition(0) {
             self.port_definition();
         } else if self.at_enumeration_definition(0) {
             self.enumeration_definition();
@@ -2614,6 +2623,105 @@ impl<'a> Parser<'a> {
             return false;
         }
         true
+    }
+
+    /// Whether a `Dependency` starts at the `n`th meaningful token.
+    ///
+    /// `dependency`, reserved in both grammars, with nothing looked past before it:
+    /// `PrefixMetadataAnnotation*` is unimplemented, so `#refinement dependency ...` is
+    /// reported, as prefix metadata is on every other element.
+    fn at_dependency(&self, n: usize) -> bool {
+        self.nth_is_keyword(n, "dependency")
+    }
+
+    // Dependency =
+    //     ( ownedRelationship += PrefixMetadataAnnotation )*
+    //     'dependency' DependencyDeclaration RelationshipBody       (SysML 8.2.2.3)
+    //
+    // Dependency =
+    //     ( ownedRelationship += PrefixMetadataAnnotation )*
+    //     'dependency' ( Identification? 'from' )?
+    //     client += [QualifiedName] ( ',' client += [QualifiedName] )* 'to'
+    //     supplier += [QualifiedName] ( ',' supplier += [QualifiedName] )*
+    //     RelationshipBody                                          (KerML 8.2.3.2)
+    //
+    // NOT marked for coverage in either language: PrefixMetadataAnnotation*, the first
+    // part of both, is unimplemented, and the corpus writes it (`#refinement dependency`,
+    // SimpleVehicleModel.sysml:937). Everything after it is read.
+    //
+    // The two languages state the same text: `Identification?` and `Identification`
+    // accept the same strings, since every part of an Identification is optional. What
+    // differs is the tree. SysML names the declaration as a production and KerML writes it
+    // inline, so a .sysml dependency has a DependencyDeclaration child and a .kerml one
+    // owns the same tokens directly (ADR-0015).
+    //
+    // The metaclass is Dependency, a Relationship whose client and supplier are each
+    // 1..* (KerML 8.3.2.2.2, receipt ec1e3424) — which the grammar's two non-empty lists
+    // already say. The references are [QualifiedName], resolved by sv2-resolve.
+    //
+    // The body is RelationshipBody, read by `relationship_body`, which is SysML's
+    // (8.2.2.2): annotations only. KerML's RelationshipBody (8.2.3.1) admits owned related
+    // elements too and is unimplemented, as it is for a KerML import, so a KerML body
+    // holding one is reported.
+    fn dependency(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Dependency);
+        self.expect_keyword("dependency");
+        match self.language {
+            Language::SysMl => self.dependency_declaration(),
+            Language::KerMl => self.dependency_declaration_parts(),
+        }
+        self.relationship_body();
+        self.finish_node();
+    }
+
+    // production: DependencyDeclaration@sysml
+    //
+    // DependencyDeclaration =
+    //     ( Identification 'from' )?
+    //     client += [QualifiedName] ( ',' client += [QualifiedName] )* 'to'
+    //     supplier += [QualifiedName] ( ',' supplier += [QualifiedName] )*
+    //                                                               (SysML 8.2.2.3)
+    //
+    // Specification-only: the Pilot inlines it into Dependency, and deviations.json
+    // records follow_spec for it.
+    fn dependency_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::DependencyDeclaration);
+        self.dependency_declaration_parts();
+        self.finish_node();
+    }
+
+    /// The parts of a dependency's declaration, which `SysML` wraps in a
+    /// `DependencyDeclaration` and `KerML` writes inline.
+    ///
+    /// Whether the `( Identification 'from' )?` group is taken is decided before it: a
+    /// short name's `<`, a `from` with no name before it, or a NAME followed by `from`.
+    /// Otherwise the first name is a client — "if no short name or name is given for the
+    /// dependency, then the keyword from may be omitted" (7.3.2, receipt 65989bd2), so
+    /// `dependency z to x;` names nothing and `z` is what depends. A NAME followed by
+    /// anything else is not an Identification, which is what reports `dependency Use a
+    /// to b;` rather than reading `Use` as a name whose `from` was forgotten.
+    fn dependency_declaration_parts(&mut self) {
+        if self.at(SyntaxKind::Lt)
+            || self.at_keyword("from")
+            || (self.at_name() && self.nth_is_keyword(1, "from"))
+        {
+            self.identification();
+            self.expect_keyword("from");
+        }
+        self.qualified_name_list();
+        self.expect_keyword("to");
+        self.qualified_name_list();
+    }
+
+    /// `[QualifiedName] ( ',' [QualifiedName] )*`, a dependency's clients or suppliers.
+    fn qualified_name_list(&mut self) {
+        self.qualified_name();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.qualified_name();
+        }
     }
 
     /// Whether an `EnumerationDefinition` starts at the `n`th meaningful token.
@@ -7598,7 +7706,7 @@ impl<'a> Parser<'a> {
             self.bump();
             self.with_significant_comments(Self::owned_annotations);
         } else {
-            self.error_expected("`;` or `{` after an import declaration");
+            self.error_expected("`;` or `{` to close the relationship");
         }
         self.finish_node();
     }

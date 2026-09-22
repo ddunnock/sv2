@@ -793,6 +793,10 @@ pub enum SyntaxKind {
     VariantUsageMember,
     /// `OwnedReferenceSubsetting FeatureSpecialization* UsageBody`, the metaclass `ReferenceUsage`. `SysML` 8.2.2.6.3.
     VariantReference,
+    /// `PrefixMetadataAnnotation* 'dependency' DependencyDeclaration RelationshipBody`. `SysML` 8.2.2.3; `KerML` 8.2.3.2 writes the declaration inline, with no `DependencyDeclaration` child.
+    Dependency,
+    /// `( Identification 'from' )? client ( ',' client )* 'to' supplier ( ',' supplier )*`. `SysML` 8.2.2.3.
+    DependencyDeclaration,
     /// `UnextendedUsagePrefix UsageExtensionKeyword*`. `SysML` 8.2.2.6.2.
     UsagePrefix,
     /// `( EndUsagePrefix | BasicUsagePrefix 'individual'? PortionKind? ) UsageExtensionKeyword*`. `SysML` 8.2.2.9.2.
@@ -1355,6 +1359,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::AnnotatingMember,
     SyntaxKind::VariantUsageMember,
     SyntaxKind::VariantReference,
+    SyntaxKind::Dependency,
+    SyntaxKind::DependencyDeclaration,
     SyntaxKind::UsagePrefix,
     SyntaxKind::OccurrenceUsagePrefix,
     SyntaxKind::BasicUsagePrefix,

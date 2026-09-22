@@ -3506,6 +3506,122 @@ fn a_variant_usage_member_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- Dependency, SysML 8.2.2.3 --------------------------------------------------------
+//
+// Dependency = PrefixMetadataAnnotation* 'dependency' DependencyDeclaration
+//              RelationshipBody
+// DependencyDeclaration = ( Identification 'from' )?
+//     client += [QualifiedName] ( ',' client += [QualifiedName] )* 'to'
+//     supplier += [QualifiedName] ( ',' supplier += [QualifiedName] )*       (8.2.2.3)
+// RelationshipBody = ';' | '{' OwnedAnnotation* '}'                          (8.2.2.2)
+//
+// A DefinitionElement (8.2.2.5.2), so a package member and a definition member alike.
+// "If no short name or name is given for the dependency, then the keyword from may be
+// omitted" (7.3.2, receipt 65989bd2): without `from`, the first name is a client.
+
+#[test]
+fn a_dependency_reads_the_corpus_forms() {
+    // examples/Simple Tests/DependencyTest.sysml:11-18 — named with `from`, unnamed with
+    // `from`, and with no `from`, where `z` is the client and not the name.
+    let tree = render(
+        &parse_accepted(
+            "package P {\n\
+             \tdependency Use from 'Application Layer' to 'Service Layer';\n\
+             \tdependency from 'Service Layer' to 'Data Layer';\n\
+             \tdependency z to x, y;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "Dependency"), 3, "{tree}");
+    assert_eq!(nodes_named(&tree, "DependencyDeclaration"), 3, "{tree}");
+    // Two of the three take the `( Identification 'from' )?` group.
+    let froms = tree
+        .lines()
+        .filter(|l| l.trim_start().starts_with("KwFrom "))
+        .count();
+    assert_eq!(froms, 2, "{tree}");
+    // training/37. Dependencies/Dependency Example.sysml:22-26 — qualified clients and
+    // suppliers, and a declaration over three lines.
+    parse_accepted(
+        "dependency from 'System Assembly'::'Computer Subsystem' to 'Software Design';\n\
+         dependency Schemata \n\
+         \tfrom 'System Assembly'::'Storage Subsystem' \n\
+         \tto 'Software Design'::MessageSchema, 'Software Design'::DataSchema;",
+    );
+    // 7.3.2's own examples (receipt 65989bd2): a body of annotating elements.
+    parse_accepted(
+        "dependency 'Service Layer'\n\
+         to 'Data Layer', 'External Interface Layer' {\n\
+         /* 'Service Layer' is the client of this dependency,\n\
+         * not its name. */\n\
+         }",
+    );
+    // A DefinitionElement, so a member of a definition body (8.2.2.6.1) and, through
+    // NonBehaviorBodyItem's DefinitionMember, of an action body (8.2.2.17.1).
+    parse_accepted("part def D { dependency a to b; }");
+    parse_accepted("action def A { dependency a to b; }");
+}
+
+#[test]
+fn a_dependency_owns_what_its_production_writes() {
+    let tree = render(&parse_accepted("dependency <u> Use from a, b to c::d;").syntax());
+    assert_eq!(
+        child_kinds(&tree, "Dependency"),
+        ["KwDependency", "DependencyDeclaration", "RelationshipBody"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "DependencyDeclaration"),
+        [
+            "Identification",
+            "KwFrom",
+            "QualifiedName",
+            "Comma",
+            "QualifiedName",
+            "KwTo",
+            "QualifiedName"
+        ],
+        "{tree}"
+    );
+    // Without `from` there is no Identification: the `( Identification 'from' )?` group
+    // was not taken.
+    let bare = render(&parse_accepted("dependency a to b;").syntax());
+    assert_eq!(
+        child_kinds(&bare, "DependencyDeclaration"),
+        ["QualifiedName", "KwTo", "QualifiedName"],
+        "{bare}"
+    );
+    let member = render(&parse_accepted("part def D { dependency a to b; }").syntax());
+    assert_eq!(nodes_named(&member, "DefinitionMember"), 1, "{member}");
+}
+
+#[test]
+fn a_dependency_is_bounded_by_its_rules() {
+    // A name needs its `from` (7.3.2): here `a` could only be a second name.
+    parse_rejected("dependency Use a to b;");
+    parse_rejected("dependency <u> a to b;");
+    // client and supplier are each 1..* (KerML 8.3.2.2.2, receipt ec1e3424), and `to` is
+    // not optional.
+    parse_rejected("dependency from to b;");
+    parse_rejected("dependency to b;");
+    parse_rejected("dependency a to;");
+    parse_rejected("dependency a;");
+    parse_rejected("dependency a to b, ;");
+    // [QualifiedName], not a feature chain.
+    parse_rejected("dependency a to b.c;");
+    // SysML's RelationshipBody owns annotations only (8.2.2.2).
+    parse_rejected("dependency a to b { part p; }");
+    // RelationshipBody is not optional.
+    parse_rejected("dependency a to b");
+}
+
+#[test]
+fn a_dependency_keeps_every_byte() {
+    let source = "dependency /* n */ Use // d\n\tfrom a ,b\n\tto c::d {\n\t/* why */\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
 //
 // DefaultTargetSuccession : TransitionUsage =

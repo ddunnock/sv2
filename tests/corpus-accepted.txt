@@ -41,6 +41,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ConstraintTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/DependencyTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/EnumerationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ImportTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ItemTest.sysml
@@ -97,10 +98,12 @@ vendor/corpus/sysml/src/training/32. Requirements/Requirement Usages.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Definitions.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Usages.sysml
+vendor/corpus/sysml/src/training/37. Dependencies/Dependency Example.sysml
 vendor/corpus/sysml/src/validation/01-Parts Tree/1d-Parts Tree with Reference.sysml
 vendor/corpus/sysml/src/validation/03-Function-based Behavior/3e-Function-based Behavior-item.sysml
 vendor/corpus/sysml/src/validation/04-Functional Allocation/4a-Functional Allocation.sysml
 vendor/corpus/sysml/src/validation/07-Variant Configuration/7a-Variant Configuration - General Concept.sysml
+vendor/corpus/sysml/src/validation/12-Dependency Relationships/12a-Dependency.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13a-Model Containment.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_01-Constants.sysml
