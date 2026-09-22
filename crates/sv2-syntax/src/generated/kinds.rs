@@ -785,6 +785,8 @@ pub enum SyntaxKind {
     UseCaseDefinition,
     /// `OccurrenceUsagePrefix 'use' 'case' ConstraintUsageDeclaration CaseBody`. `SysML` 8.2.2.25.
     UseCaseUsage,
+    /// `OccurrenceUsagePrefix 'include' ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'use' 'case' UsageDeclaration ) ValuePart? CaseBody`. `SysML` 8.2.2.25.
+    IncludeUseCaseUsage,
     /// `NonFeatureChainPrimaryArgumentMember '.' FeatureChainMember`. `KerML` 8.2.5.8.2 — the metaclass is an `OperatorExpression`, 8.3.4.8.4.
     FeatureChainExpression,
     /// `ownedMemberParameter = PrimaryArgument`. `KerML` 8.2.5.8.2.
@@ -1495,6 +1497,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::AnalysisCaseUsage,
     SyntaxKind::UseCaseDefinition,
     SyntaxKind::UseCaseUsage,
+    SyntaxKind::IncludeUseCaseUsage,
     SyntaxKind::FeatureChainExpression,
     SyntaxKind::NonFeatureChainPrimaryArgumentMember,
     SyntaxKind::BracketExpression,

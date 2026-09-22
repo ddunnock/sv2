@@ -8501,19 +8501,28 @@ fn a_use_case_is_not_read_as_a_case() {
     assert_eq!(nodes_named(&tree, "UseCaseUsage"), 1, "{tree}");
     assert_eq!(nodes_named(&tree, "CaseDefinition"), 0, "{tree}");
     assert_eq!(nodes_named(&tree, "CaseUsage"), 0, "{tree}");
-    // IncludeUseCaseUsage is unimplemented. Recovery must take the whole statement: once
-    // `use case` began a member, the `use` after the reported `include` restarted there
-    // and an included use case was read as a declared one.
-    let parsed = parse_rejected("use case def U { include use case i : I { subject s; } }");
-    let included = render(&parsed.syntax());
+    // Nor does an included use case's `use case` begin a declared one inside it: the
+    // `include` claims the run (8.2.2.25).
+    let included = render(
+        &parse_accepted("use case def U { include use case i : I { subject s; } }").syntax(),
+    );
+    assert_eq!(
+        nodes_named(&included, "IncludeUseCaseUsage"),
+        1,
+        "{included}"
+    );
     assert_eq!(nodes_named(&included, "UseCaseUsage"), 0, "{included}");
-    assert!(
-        parsed
-            .errors()
-            .iter()
-            .all(|error| error.message() == "unexpected `include`"),
+    // A stray `use` is reported alone and the member after it is still read, because
+    // recovery restarts on a member keyword. Recovery once refused to restart directly
+    // after `use` (and later `include`), while those productions were unimplemented; that
+    // guard would swallow `part p;` here, and was removed when IncludeUseCaseUsage landed.
+    let stray = parse_rejected("part def P { use part p; }");
+    assert_eq!(stray.errors().len(), 1, "{:?}", stray.errors());
+    assert_eq!(
+        nodes_named(&render(&stray.syntax()), "PartUsage"),
+        1,
         "{:?}",
-        parsed.errors()
+        stray.errors()
     );
 }
 
@@ -8601,7 +8610,7 @@ fn an_actor_member_keeps_every_byte() {
 
 #[test]
 fn a_use_case_reads_the_corpus_forms() {
-    // training/35. Use Cases/Use Case Definition Example.sysml:7-17 — a subject, actors
+    // training/35. Use Cases/Use Case Definition Example.sysml:8-21 — a subject, actors
     // with and without a multiplicity, and a keywordless objective.
     let tree = render(
         &parse_accepted(
@@ -8619,7 +8628,7 @@ fn a_use_case_reads_the_corpus_forms() {
     );
     assert_eq!(nodes_named(&tree, "UseCaseDefinition"), 1, "{tree}");
     assert_eq!(nodes_named(&tree, "ActorMember"), 3, "{tree}");
-    // examples/Simple Tests/UseCaseTest.sysml:16-27 — a body-less definition, a usage
+    // examples/Simple Tests/UseCaseTest.sysml:21-35 — a body-less definition, a usage
     // with a bare subject and a redefining actor, a typed usage, and one nested in a part.
     let usages = render(
         &parse_accepted(
@@ -8698,4 +8707,145 @@ fn a_use_case_is_bounded_by_its_rules() {
 fn a_use_case_keeps_every_byte() {
     let source = "use /* n */ case\n\tdef U // d\n{\n\tsubject s;\n\tactor a [0..1];\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
+}
+
+// -- IncludeUseCaseUsage, SysML 8.2.2.25 ----------------------------------------------
+//
+// IncludeUseCaseUsage = OccurrenceUsagePrefix 'include'
+//     ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'use' 'case' UsageDeclaration )
+//     ValuePart? CaseBody
+//
+// "declared as a use case usage ... using the kind keyword include use case", or "using
+// just the keyword include" with "a qualified name or feature chain immediately after the
+// include keyword" (7.25.3, receipt 6f1b9dfd).
+
+#[test]
+fn an_include_use_case_usage_reads_the_corpus_forms() {
+    // training/35. Use Cases/Use Case Usage Example.sysml:7-26 — `then include use case`
+    // with a declaration, and inside a use case usage `include` by reference with a
+    // multiplicity and a body.
+    let tree = render(
+        &parse_accepted(
+            "use case 'provide transportation' : 'Provide Transportation' {\n\
+             subject vehicle;\n\
+             first start;\n\
+             then include use case 'enter vehicle' : 'Enter Vehicle' {\n\
+             subject vehicle;\n\
+             actor driver = 'provide transportation'::driver;\n\
+             }\n\
+             then use case 'drive vehicle' {\n\
+             include 'add fuel'[0..*] {\n\
+             subject vehicle;\n\
+             actor fueler = driver;\n\
+             }\n\
+             }\n\
+             then done;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "IncludeUseCaseUsage"), 2, "{tree}");
+    // examples/Simple Tests/UseCaseTest.sysml:14-40 — a typed declaration with an empty
+    // body, a reference by name, and a reference by feature chain; in a part body too.
+    let test = render(
+        &parse_accepted(
+            "package UseCaseTest {\n\
+             use case def UseSystem {\n\
+             include use case uc1 : UC1;\n\
+             }\n\
+             part system : System {\n\
+             include uc2;\n\
+             }\n\
+             use case uc3 {\n\
+             include u;\n\
+             include system.uc1;\n\
+             }\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&test, "IncludeUseCaseUsage"), 4, "{test}");
+    // 7.25.3's example (receipt 6f1b9dfd): `then include` by reference, redefining actors.
+    parse_accepted(
+        "use case 'provide transportation' : 'Provide Transportation' {\n\
+         first start;\n\
+         then include 'enter vehicle' {\n\
+         actor :>> driver = 'provide transportation'::driver;\n\
+         }\n\
+         then done;\n\
+         }",
+    );
+}
+
+#[test]
+fn an_include_use_case_usage_owns_what_its_production_writes() {
+    let declared =
+        render(&parse_accepted("use case def U { include use case i : I = x; }").syntax());
+    assert_eq!(
+        child_kinds(&declared, "IncludeUseCaseUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwInclude",
+            "KwUse",
+            "KwCase",
+            "UsageDeclaration",
+            "ValuePart",
+            "CaseBody"
+        ],
+        "{declared}"
+    );
+    let referenced = render(&parse_accepted("use case def U { include a.b[1] { } }").syntax());
+    assert_eq!(
+        child_kinds(&referenced, "IncludeUseCaseUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwInclude",
+            "OwnedReferenceSubsetting",
+            "FeatureSpecializationPart",
+            "CaseBody"
+        ],
+        "{referenced}"
+    );
+    // An item, not the start of a calculation's result expression: `include` is a keyword
+    // member, asked before the expression is.
+    let calc = render(&parse_accepted("calc def C { include u; x }").syntax());
+    assert_eq!(nodes_named(&calc, "IncludeUseCaseUsage"), 1, "{calc}");
+    assert_eq!(nodes_named(&calc, "ResultExpressionMember"), 1, "{calc}");
+    // A BehaviorUsageElement (8.2.2.6.4): after a `then`, before target successions.
+    let action =
+        render(&parse_accepted("action def A { action a; then include u; then b; }").syntax());
+    assert_eq!(nodes_named(&action, "BehaviorUsageMember"), 2, "{action}");
+    assert_eq!(
+        nodes_named(&action, "ActionTargetSuccessionMember"),
+        1,
+        "{action}"
+    );
+}
+
+#[test]
+fn an_include_use_case_usage_is_bounded_by_its_rules() {
+    // Both kind keywords, or a reference; never `use` alone.
+    parse_rejected("use case def U { include use i; }");
+    // A reference or a declaration is required.
+    parse_rejected("use case def U { include; }");
+    // CaseBody is not optional.
+    parse_rejected("use case def U { include u }");
+    // The reference alternative takes no declared name after it.
+    parse_rejected("use case def U { include u v; }");
+}
+
+#[test]
+fn an_include_use_case_usage_keeps_every_byte() {
+    let source = "use case def U {\n\tinclude /* n */ 'a b' // d\n\t\t[0..*] { subject; }\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
+#[test]
+fn an_actor_member_is_read_wherever_a_requirement_body_is() {
+    // A referenced requirement constraint takes a RequirementBody (8.2.2.21.1), so the
+    // grammar admits an actor whose owner is a ConstraintUsage. That
+    // validateActorMembershipOwningType (8.3.21.2) refuses it is sv2-resolve's to raise;
+    // this layer reads it (ADR-0002).
+    let tree = render(&parse_accepted("requirement def R { require c { actor a; } }").syntax());
+    assert_eq!(nodes_named(&tree, "ActorMember"), 1, "{tree}");
 }

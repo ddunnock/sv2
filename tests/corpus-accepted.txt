@@ -63,6 +63,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/RootPackageTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/StateTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/TextualRepresentationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/TradeStudyTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/UseCaseTest.sysml
 vendor/corpus/sysml/src/examples/State Space Representation Examples/CartSample.sysml
 vendor/corpus/sysml/src/examples/State Space Representation Examples/EVSample.sysml
 vendor/corpus/sysml/src/examples/Variability Examples/VehicleVariabilityModel.sysml
@@ -131,6 +132,7 @@ vendor/corpus/sysml/src/training/32. Requirements/Requirement Groups.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Usages.sysml
 vendor/corpus/sysml/src/training/33. Analysis/Trade Study Analysis Example.sysml
 vendor/corpus/sysml/src/training/35. Use Cases/Use Case Definition Example.sysml
+vendor/corpus/sysml/src/training/35. Use Cases/Use Case Usage Example.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Definitions.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Usages.sysml
@@ -168,3 +170,4 @@ vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_11-Variab
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_12-Compound Value Type.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_13-Discretely Sampled Function Value.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_19a-Materials with Properties.sysml
+vendor/corpus/sysml/src/validation/18-Use Case/18-Use Case.sysml

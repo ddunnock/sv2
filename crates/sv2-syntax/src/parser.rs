@@ -951,8 +951,11 @@ impl Body {
     /// The same two item productions as `admits_subject`: `RequirementBodyItem`
     /// (`SysML` 8.2.2.21.1) and `CaseBodyItem` (8.2.2.22). Asked separately because
     /// `StakeholderMember`, the next of the six, is `RequirementBodyItem`'s alone.
-    /// `validateActorMembershipOwningType` (8.3.21.2, receipt e2ea19a6) states the same
-    /// owners of the metaclass, with `oclIsKindOf`, so analysis and use cases qualify.
+    /// `validateActorMembershipOwningType` (8.3.21.2, receipt e2ea19a6) names requirement
+    /// and case owners, with `oclIsKindOf`, so analysis and use cases qualify. The grammar
+    /// is WIDER than that: `RequirementConstraintUsage`'s reference alternative takes a
+    /// `RequirementBody` (8.2.2.21.1), so `require c { actor a; }` gives an actor to a
+    /// `ConstraintUsage`. It parses, and the constraint is `sv2-resolve`'s to raise.
     fn admits_actor(self) -> bool {
         matches!(self, Self::Requirement | Self::Case)
     }
@@ -1545,15 +1548,13 @@ impl<'a> Parser<'a> {
             return false;
         }
         if self.at_return_parameter_member()
-            || ["variant", "subject", "actor", "objective", "include"]
+            || ["variant", "subject", "actor", "objective"]
                 .iter()
                 .any(|word| self.at_element_keyword(word))
         {
             // `return` and `variant` continue the item run rather than ending it: both
             // are items of a calculation body (8.2.2.19, 8.2.2.17.1), and `subject`,
-            // `actor` and `objective` are items of a case body (8.2.2.22), and `include`
-            // opens IncludeUseCaseUsage, a BehaviorUsageElement (8.2.2.6.4) and so an item
-            // of both through ActionBodyItem, unimplemented and recovered over. None is in
+            // `actor` and `objective` are items of a case body (8.2.2.22). None is in
             // `at_sysml_keyword_member`, because none is a member `membership` reads,
             // and a reserved keyword is never an expression (8.2.2.1.2). Where a body
             // admits one, the loop asks about it first and never reaches here with it in
@@ -1713,6 +1714,7 @@ impl<'a> Parser<'a> {
             || self.at_requirement_usage(n)
             || self.at_calculation_usage(n)
             || self.at_case_usage(n).is_some()
+            || self.at_include_use_case_usage(n)
             || self.at_simple_usage(n).is_some()
             || self.at_reference_usage(n)
     }
@@ -2332,18 +2334,8 @@ impl<'a> Parser<'a> {
         self.start_node(SyntaxKind::Error);
         let mut depth: usize = 0;
         let mut taken = false;
-        // Whether the last token taken continues into the next one, so that a member
-        // keyword after it is not a new statement. `include` opens IncludeUseCaseUsage
-        // (SysML 8.2.2.25), which is unimplemented and writes `use case` after it:
-        // ending there read an included use case as a declared one. `use` begins the
-        // two-keyword `use case`, whose `case` would otherwise restart as a
-        // CaseDefinition or CaseUsage, which is how Annex A's use case bodies were once
-        // read as case bodies.
-        let mut continued = false;
         while let Some(token) = self.tokens.get(self.pos).copied() {
-            if taken
-                && depth == 0
-                && (token.kind == SyntaxKind::RBrace || (!continued && self.at_member_keyword()))
+            if taken && depth == 0 && (token.kind == SyntaxKind::RBrace || self.at_member_keyword())
             {
                 break;
             }
@@ -2355,7 +2347,6 @@ impl<'a> Parser<'a> {
             if !self.skippable(token.kind) {
                 end = Self::range_of(token).end();
                 taken = true;
-                continued = matches!(self.text_of(token), "use" | "include");
             }
             self.push(token, token.kind);
             if depth == 0 && token.kind == SyntaxKind::Semicolon {
@@ -2414,6 +2405,7 @@ impl<'a> Parser<'a> {
                         || self.at_requirement_usage(0)
                         || self.at_calculation_usage(0)
                         || self.at_case_usage(0).is_some()
+                        || self.at_include_use_case_usage(0)
                         // CaseBodyItems rather than members `membership` reads.
                         || self.at_element_keyword("actor")
                         || self.at_element_keyword("objective")
@@ -3573,8 +3565,13 @@ impl<'a> Parser<'a> {
             self.calculation_usage();
             true
         } else if let Some(case) = self.at_case_usage(0) {
-            // CaseUsage and AnalysisCaseUsage are BehaviorUsageElements (8.2.2.6.4).
+            // CaseUsage, AnalysisCaseUsage and UseCaseUsage are BehaviorUsageElements
+            // (8.2.2.6.4).
             self.case_usage(case);
+            true
+        } else if self.at_include_use_case_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as PerformActionUsage is.
+            self.include_use_case_usage();
             true
         } else if self.at_requirement_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ConstraintUsage is.
@@ -3768,6 +3765,15 @@ impl<'a> Parser<'a> {
     /// there is no `perform def`: the keyword names a usage and nothing else.
     fn at_perform_action_usage(&self, n: usize) -> bool {
         self.nth_is_keyword(self.skip_occurrence_usage_prefix(n), "perform")
+    }
+
+    /// Whether an `IncludeUseCaseUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'include'` (`SysML` 8.2.2.25). Like `perform`, the keyword
+    /// names a usage and nothing else, so there is no `def` to test. The prefix skipped is
+    /// the one `include_use_case_usage` reads with `occurrence_usage_prefix`.
+    fn at_include_use_case_usage(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_occurrence_usage_prefix(n), "include")
     }
 
     fn at_simple_usage(&self, n: usize) -> Option<SimpleUsage> {
@@ -7896,6 +7902,56 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: IncludeUseCaseUsage
+    //
+    // IncludeUseCaseUsage = OccurrenceUsagePrefix 'include'
+    //     ( ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?
+    //     | 'use' 'case' UsageDeclaration )
+    //     ValuePart? CaseBody                                    (SysML 8.2.2.25)
+    //
+    // PerformActionUsageDeclaration's two alternatives over a use case: "declared as a
+    // use case usage ... using the kind keyword include use case", or "using just the
+    // keyword include ... the included use case ... identified by giving a qualified name
+    // or feature chain immediately after the include keyword" (7.25.3, receipt 6f1b9dfd).
+    // Told apart on one token, as there: `use` is reserved and a reference opens on a
+    // name. The body is a CaseBody because 8.2.2.25 writes one. The metaclass is
+    // IncludeUseCaseUsage (8.3.25.2, receipt 40fbe5a7), both a UseCaseUsage and a
+    // PerformActionUsage.
+    //
+    // The reference alternative's FeatureSpecializationPart may open on a multiplicity
+    // (`include 'add fuel'[0..*] { }`, training/35. Use Cases/Use Case Usage Example.sysml
+    // and validation/18-Use Case), so `[` is asked for as `usage_declaration` asks for it.
+    //
+    // Marked although OccurrenceUsagePrefix is not, as ActionUsage is.
+    //
+    // implied specialization: UseCases::UseCase::includedUseCases, when owned by a use case
+    // constraint: IncludeUseCaseUsage::checkIncludeUseCaseSpecialization (8.3.25.2). An
+    //     injection, so sv2-hir's (ADR-0002).
+    // constraint: IncludeUseCaseUsage::validateIncludeUseCaseUsageReference (8.3.25.2):
+    //     the reference's target must be a UseCaseUsage. A question of resolution, so
+    //     sv2-resolve's.
+    fn include_use_case_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::IncludeUseCaseUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("include");
+        if self.at_keyword("use") {
+            self.bump_as(keyword("use").unwrap_or(SyntaxKind::BasicName));
+            self.expect_keyword("case");
+            self.usage_declaration();
+        } else {
+            self.owned_reference_subsetting();
+            if self.at_feature_specialization() || self.at_multiplicity_part() {
+                self.feature_specialization_part();
+            }
+        }
+        if self.at_value_part() {
+            self.value_part();
+        }
+        self.case_body();
+        self.finish_node();
+    }
+
     // production: ConstraintDefinition
     //
     // ConstraintDefinition = OccurrenceDefinitionPrefix 'constraint' 'def'
@@ -8561,6 +8617,7 @@ impl<'a> Parser<'a> {
             || self.at_requirement_usage(n)
             || self.at_calculation_usage(n)
             || self.at_case_usage(n).is_some()
+            || self.at_include_use_case_usage(n)
             || self.at_flow_usage(n)
             || self.at_connection_usage(n)
             || self
@@ -9327,8 +9384,9 @@ impl<'a> Parser<'a> {
     // metaclass is ActorMembership (8.3.21.2, receipt e2ea19a6), a ParameterMembership.
     //
     // constraint: ActorMembership::validateActorMembershipOwningType (8.3.21.2): a
-    //     requirement or case owner, which the grammar already gives, since only
-    //     RequirementBodyItem and CaseBodyItem reach this. sv2-resolve's either way.
+    //     requirement or case owner. The grammar does NOT guarantee it: a referenced
+    //     requirement constraint (`require c { actor a; }`) takes a RequirementBody
+    //     (8.2.2.21.1), whose owner is a ConstraintUsage. sv2-resolve must check it.
     fn actor_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ActorMember);
