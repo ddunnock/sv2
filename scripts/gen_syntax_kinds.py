@@ -470,6 +470,24 @@ NODES = [
         ),
     ),
     ("RequirementKind", "`'assume' | 'require'`. `SysML` 8.2.2.21.1."),
+    # The fourth of RequirementBodyItem's six extra members, the only one 8.2.2.24 states:
+    # RequirementConstraintMember's shape over `verify`, whose usage takes a
+    # RequirementBody in both alternatives.
+    (
+        "RequirementVerificationMember",
+        (
+            "`MemberPrefix 'verify' ownedRelatedElement += RequirementVerificationUsage`. "
+            "`SysML` 8.2.2.24."
+        ),
+    ),
+    (
+        "RequirementVerificationUsage",
+        (
+            "`OwnedReferenceSubsetting FeatureSpecialization* RequirementBody` or "
+            "`'requirement' ConstraintUsageDeclaration RequirementBody`. `SysML` 8.2.2.24 "
+            "— the metaclass is `RequirementUsage`."
+        ),
+    ),
     (
         "RequirementConstraintUsage",
         (

@@ -649,7 +649,9 @@ enum ActionNode {
 /// using the kind keyword analysis" (7.23.2, receipt 2aa2d6ce), a verification case "using
 /// the kind keyword verification" (7.24.2, receipt d518fc8c), and a use case "using the
 /// kind keyword use case" (7.25.2, receipt 9be3712a), so the pairs differ in the keywords
-/// and the metaclass alone. These four are every case production 8.2.2 states.
+/// and the metaclass alone. These four are every case definition and usage pair 8.2.2
+/// states; `IncludeUseCaseUsage` (8.2.2.25) is a case usage too, but has no definition and
+/// a declaration of its own, so it is read by `include_use_case_usage`.
 #[derive(Clone, Copy)]
 struct Case {
     /// The kind keywords in order, before the `def` of a definition: one, or `use case`'s
@@ -1036,6 +1038,17 @@ impl Body {
     /// `RequirementConstraintMember` (`SysML` 8.2.2.21.1 against 8.2.2.22). A
     /// `require` belongs in a case's objective, which is a `RequirementBody`.
     fn admits_requirement_constraint(self) -> bool {
+        matches!(self, Self::Requirement)
+    }
+
+    /// Whether `RequirementVerificationMember` is one of this body's alternatives.
+    ///
+    /// `RequirementBodyItem` alone names it (`SysML` 8.2.2.21.1), and a case's objective
+    /// is a `RequirementBody` (8.2.2.22), which is where the corpus writes `verify`. That
+    /// its owner must be an objective is `validateRequirementVerificationMembershipOwningType`
+    /// (8.3.24.2, receipt 213c087b), a constraint: `verify` in a plain requirement
+    /// definition parses and is `sv2-resolve`'s to refuse.
+    fn admits_requirement_verification(self) -> bool {
         matches!(self, Self::Requirement)
     }
 
@@ -2194,8 +2207,9 @@ impl<'a> Parser<'a> {
             self.namespace_feature_member();
         } else if self.body_specific_item(body) {
             // GuardedSuccessionMember, InitialNodeMember, ReturnParameterMember,
-            // VariantUsageMember, RequirementConstraintMember, SubjectMember,
-            // ActorMember, ObjectiveMember and TransitionUsageMember: see
+            // VariantUsageMember, RequirementConstraintMember,
+            // RequirementVerificationMember, SubjectMember, ActorMember, ObjectiveMember
+            // and TransitionUsageMember: see
             // `body_specific_item`.
         } else if body.ends_in_result_expression() && self.at_result_expression() {
             // The item run is over and what is left is the body's trailing
@@ -2277,6 +2291,10 @@ impl<'a> Parser<'a> {
             // element through RequirementConstraintMembership, so like SubjectMember
             // below it cannot go through `membership`.
             self.requirement_constraint_member();
+        } else if body.admits_requirement_verification() && self.at_element_keyword("verify") {
+            // RequirementBodyItem's fifth alternative (SysML 8.2.2.21.1), owning its
+            // requirement through a RequirementVerificationMembership of its own.
+            self.requirement_verification_member();
         } else if body.admits_subject() && self.at_element_keyword("subject") {
             // RequirementBodyItem's second alternative (SysML 8.2.2.21.1). Like
             // NamespaceFeatureMember above, it owns its element through a membership
@@ -2415,7 +2433,8 @@ impl<'a> Parser<'a> {
                         || self.at_calculation_usage(0)
                         || self.at_case_usage(0).is_some()
                         || self.at_include_use_case_usage(0)
-                        // CaseBodyItems rather than members `membership` reads.
+                        // Body items rather than members `membership` reads.
+                        || self.at_element_keyword("verify")
                         || self.at_element_keyword("actor")
                         || self.at_element_keyword("objective")
                         || self.at_action_node(0).is_some()
@@ -6074,8 +6093,8 @@ impl<'a> Parser<'a> {
     //
     // — a SUPERSET of DefinitionBodyItem, and that is the whole reason this body is
     // reachable at the cost of one method. Of the six extra members, SubjectMember,
-    // RequirementConstraintMember and ActorMember are read; `frame`, `verify` and
-    // `stakeholder` at member position are reported by the body's recovery like any
+    // RequirementConstraintMember, RequirementVerificationMember and ActorMember are read;
+    // `frame` and `stakeholder` at member position are reported by the body's recovery like any
     // other text the parser does not yet read. (This comment once named two rejection
     // files for `subject` and `require`; both were retired when those members landed.)
     //
@@ -9421,6 +9440,66 @@ impl<'a> Parser<'a> {
         self.start_node(SyntaxKind::ActorUsage);
         self.expect_keyword("actor");
         self.usage();
+        self.finish_node();
+    }
+
+    // production: RequirementVerificationMember
+    //
+    // RequirementVerificationMember : RequirementVerificationMembership =
+    //     MemberPrefix 'verify' { kind = 'requirement' }
+    //     ownedRelatedElement += RequirementVerificationUsage    (SysML 8.2.2.24)
+    //
+    // "A requirement verification usage is a subrequirement of the objective that is
+    // indicated by prefixing a requirement usage declaration with the keyword verify. As
+    // for an assumed or required constraint, the keyword verify can be used rather than
+    // verify requirement to declare a verified requirement using reference subsetting"
+    // (7.24.2, receipt d518fc8c). The metaclass is RequirementVerificationMembership
+    // (8.3.24.2, receipt 213c087b), a RequirementConstraintMembership.
+    //
+    // The `kind = 'requirement'` is set by the keyword itself, so unlike
+    // RequirementConstraintMember there is no RequirementKind to read: `verify` is the
+    // only spelling. validateRequirementVerificationMembershipKind (8.3.24.2) says the
+    // same of the metaclass.
+    //
+    // constraint: RequirementVerificationMembership::
+    //     validateRequirementVerificationMembershipOwningType (8.3.24.2): the owner is a
+    //     RequirementUsage owned through an ObjectiveMembership. The grammar reaches this
+    //     from every RequirementBody, so it does not guarantee it; sv2-resolve's.
+    fn requirement_verification_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::RequirementVerificationMember);
+        self.member_prefix();
+        self.expect_keyword("verify");
+        self.requirement_verification_usage();
+        self.finish_node();
+    }
+
+    // RequirementVerificationUsage : RequirementUsage =
+    //     ownedRelationship += OwnedReferenceSubsetting FeatureSpecialization*
+    //     RequirementBody
+    //   | ( UsageExtensionKeyword* 'requirement' | UsageExtensionKeyword+ )
+    //     ConstraintUsageDeclaration RequirementBody             (SysML 8.2.2.24)
+    //
+    // NOT marked for coverage, for RequirementConstraintUsage's reason: the second
+    // alternative's `UsageExtensionKeyword+`, prefix metadata standing in for the keyword,
+    // is unimplemented. The `*` form with zero of them is read, and so is every corpus
+    // form. Unlike RequirementConstraintUsage both alternatives take a RequirementBody, and
+    // the reference alternative takes `FeatureSpecialization*`, not a
+    // FeatureSpecializationPart: no multiplicity (`verify r[1];` is reported), as
+    // VariantReference has none. Told apart on one token: `requirement` is reserved.
+    fn requirement_verification_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::RequirementVerificationUsage);
+        if self.at_keyword("requirement") {
+            self.bump_as(keyword("requirement").unwrap_or(SyntaxKind::BasicName));
+            self.constraint_usage_declaration();
+        } else {
+            self.owned_reference_subsetting();
+            while self.at_feature_specialization() {
+                self.feature_specialization();
+            }
+        }
+        self.requirement_body();
         self.finish_node();
     }
 

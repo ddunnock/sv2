@@ -65,6 +65,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/TextualRepresentationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/TradeStudyTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/UseCaseTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/VariabilityTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/VerificationTest.sysml
 vendor/corpus/sysml/src/examples/State Space Representation Examples/CartSample.sysml
 vendor/corpus/sysml/src/examples/State Space Representation Examples/EVSample.sysml
 vendor/corpus/sysml/src/examples/Variability Examples/VehicleVariabilityModel.sysml
@@ -132,6 +133,7 @@ vendor/corpus/sysml/src/training/32. Requirements/Requirement Definitions.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Groups.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Usages.sysml
 vendor/corpus/sysml/src/training/33. Analysis/Trade Study Analysis Example.sysml
+vendor/corpus/sysml/src/training/34. Verification/Verification Case Definition Example.sysml
 vendor/corpus/sysml/src/training/35. Use Cases/Use Case Definition Example.sysml
 vendor/corpus/sysml/src/training/35. Use Cases/Use Case Usage Example.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml

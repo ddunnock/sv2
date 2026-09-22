@@ -657,6 +657,10 @@ pub enum SyntaxKind {
     RequirementConstraintMember,
     /// `'assume' | 'require'`. `SysML` 8.2.2.21.1.
     RequirementKind,
+    /// `MemberPrefix 'verify' ownedRelatedElement += RequirementVerificationUsage`. `SysML` 8.2.2.24.
+    RequirementVerificationMember,
+    /// `OwnedReferenceSubsetting FeatureSpecialization* RequirementBody` or `'requirement' ConstraintUsageDeclaration RequirementBody`. `SysML` 8.2.2.24 — the metaclass is `RequirementUsage`.
+    RequirementVerificationUsage,
     /// `OwnedReferenceSubsetting FeatureSpecializationPart? RequirementBody` or `'constraint' ConstraintUsageDeclaration CalculationBody`. `SysML` 8.2.2.21.1 — the metaclass is `ConstraintUsage`.
     RequirementConstraintUsage,
     /// `UsageDeclaration ValuePart?`. `SysML` 8.2.2.20.
@@ -1437,6 +1441,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ActorUsage,
     SyntaxKind::RequirementConstraintMember,
     SyntaxKind::RequirementKind,
+    SyntaxKind::RequirementVerificationMember,
+    SyntaxKind::RequirementVerificationUsage,
     SyntaxKind::RequirementConstraintUsage,
     SyntaxKind::ConstraintUsageDeclaration,
     SyntaxKind::RequirementUsage,

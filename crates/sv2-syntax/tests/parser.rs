@@ -5332,20 +5332,21 @@ fn a_requirement_body_admits_what_a_definition_body_admits() {
 }
 
 #[test]
-fn a_requirement_body_does_not_admit_the_three_members_it_has_not_got() {
-    // The part of RequirementBodyItem that is NOT DefinitionBodyItem, less the three now
-    // implemented: SubjectMember, RequirementConstraintMember and ActorMember. Rejected by
-    // absence, not by rule — each is well-formed SysML.
+fn a_requirement_body_does_not_admit_the_two_members_it_has_not_got() {
+    // The part of RequirementBodyItem that is NOT DefinitionBodyItem, less the four now
+    // implemented: SubjectMember, RequirementConstraintMember, ActorMember and
+    // RequirementVerificationMember. Rejected by absence, not by rule — each is
+    // well-formed SysML.
     //
     // The count in this test's name is the honest running total of what is left of
-    // 8.2.2.21.1, and it has gone six, five, four, three as the members landed.
+    // 8.2.2.21.1, and it has gone six, five, four, three, two as the members landed.
     parse_rejected("requirement def R { frame concern c; }");
-    parse_rejected("requirement def R { verify requirement r; }");
     parse_rejected("requirement def R { stakeholder owner; }");
-    // The three that left the list, here so it cannot quietly grow back.
+    // The four that left the list, here so it cannot quietly grow back.
     parse_accepted("requirement def R { subject vehicle : Vehicle; }");
     parse_accepted("requirement def R { require constraint { a <= b } }");
     parse_accepted("requirement def R { actor operator; }");
+    parse_accepted("requirement def R { verify requirement r; }");
 }
 
 #[test]
@@ -8879,9 +8880,12 @@ fn a_verification_case_reads_the_corpus_forms() {
         "{tree}"
     );
     assert_eq!(nodes_named(&tree, "VerificationCaseUsage"), 1, "{tree}");
-    // 7.24.2's VehicleMassTest (receipt d518fc8c), less the `verify` in its objective and
-    // the `metadata` usage, both unimplemented: an import, a subject, actions, and the
-    // `return` that deviation CaseBodyItem admits.
+    // 7.24.2's VehicleMassTest (receipt d518fc8c), cut down: its `verify` is tested with
+    // RequirementVerificationMember below, its `metadata` usage is unimplemented, and of
+    // its three actions only collectData is kept. `import` becomes `private import`,
+    // since a bare `import` is not a member (tests/rejection/import-without-visibility.sysml).
+    // What remains: an import, a subject, an objective, an action, and the `return` that
+    // deviation CaseBodyItem admits.
     let example = parse_accepted(
         "verification def VehicleMassTest {\n\
          private import VerificationCases::*;\n\
@@ -8931,4 +8935,132 @@ fn a_verification_case_is_bounded_by_its_rules() {
     parse_rejected("part def P { verification v }");
     // The keyword is `verification`; `verify` opens a requirement body's member.
     parse_rejected("verify def V;");
+}
+
+// -- RequirementVerificationMember, SysML 8.2.2.24 -------------------------------------
+//
+// RequirementVerificationMember = MemberPrefix 'verify' RequirementVerificationUsage
+// RequirementVerificationUsage  = OwnedReferenceSubsetting FeatureSpecialization*
+//                                 RequirementBody
+//                               | ( UsageExtensionKeyword* 'requirement'
+//                                 | UsageExtensionKeyword+ )
+//                                 ConstraintUsageDeclaration RequirementBody
+//
+// "prefixing a requirement usage declaration with the keyword verify", or "verify ...
+// rather than verify requirement ... using reference subsetting" (7.24.2, receipt
+// d518fc8c).
+
+#[test]
+fn a_requirement_verification_member_reads_the_corpus_forms() {
+    // Every `verify` form the corpus writes, each in a verification case's objective: by
+    // reference, by reference with a redefinition, by feature chain with a body, and
+    // declared behind `requirement`, named or not. (training/34. Verification/Verification
+    // Case Definition Example.sysml:24, examples/Simple Tests/VerificationTest.sysml:18 and
+    // 28, validation/09-Verification/9-Verification-simplified.sysml:31 and 55, and the
+    // feature chain from Annex A SimpleVehicleModel.sysml:1219, whose body is given a
+    // subject here in place of its `redefines`.)
+    let tree = render(
+        &parse_accepted(
+            "verification def V {\n\
+             subject s : S;\n\
+             objective {\n\
+             verify r;\n\
+             verify vehicleMassRequirement :>> massRequirement;\n\
+             verify vehicleSpecification.vehicleMassRequirement{ subject vehicle = s; }\n\
+             verify requirement massRequirement : MassRequirement;\n\
+             verify requirement : R;\n\
+             }\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&tree, "RequirementVerificationMember"),
+        5,
+        "{tree}"
+    );
+    // 7.24.2's VehicleMassTest objective (receipt d518fc8c).
+    parse_accepted(
+        "verification def VehicleMassTest {\n\
+         subject testVehicle : Vehicle;\n\
+         objective vehicleMassVerificationObjective {\n\
+         // The subject of the verify is automatically bound to \"testVehicle\".\n\
+         verify vehicleMassRequirement;\n\
+         }\n\
+         }",
+    );
+}
+
+#[test]
+fn a_requirement_verification_member_owns_what_its_production_writes() {
+    let referenced = render(&parse_accepted("requirement def R { verify a.b :>> c { } }").syntax());
+    assert_eq!(
+        child_kinds(&referenced, "RequirementVerificationMember"),
+        ["MemberPrefix", "KwVerify", "RequirementVerificationUsage"],
+        "{referenced}"
+    );
+    assert_eq!(
+        child_kinds(&referenced, "RequirementVerificationUsage"),
+        [
+            "OwnedReferenceSubsetting",
+            "Redefinitions",
+            "RequirementBody"
+        ],
+        "{referenced}"
+    );
+    let declared =
+        render(&parse_accepted("requirement def R { verify requirement r : T = x; }").syntax());
+    assert_eq!(
+        child_kinds(&declared, "RequirementVerificationUsage"),
+        [
+            "KwRequirement",
+            "ConstraintUsageDeclaration",
+            "RequirementBody"
+        ],
+        "{declared}"
+    );
+}
+
+#[test]
+fn a_requirement_verification_member_is_bounded_by_its_rules() {
+    // A requirement body's item alone (8.2.2.21.1): not a case's, a definition's or an
+    // action's. The objective INSIDE a case is where it belongs.
+    parse_rejected("verification def V { verify r; }");
+    parse_rejected("part def P { verify r; }");
+    parse_rejected("action def A { verify r; }");
+    // The reference alternative takes FeatureSpecialization*, not a
+    // FeatureSpecializationPart: no multiplicity (8.2.2.24).
+    parse_rejected("requirement def R { verify r[1]; }");
+    // RequirementBody is not optional.
+    parse_rejected("requirement def R { verify r }");
+    // Nor after a specialization.
+    parse_rejected("requirement def R { verify r :> s [1]; }");
+    // UsageExtensionKeyword is unimplemented, so prefix metadata is reported.
+    parse_rejected("requirement def R { verify #m requirement r; }");
+}
+
+#[test]
+fn a_requirement_verification_member_is_read_wherever_a_requirement_body_is() {
+    // A visibility, as every MemberPrefix may carry; the objective of a verification case
+    // USAGE; and nested requirement bodies, which the grammar reaches though
+    // validateRequirementVerificationMembershipOwningType (8.3.24.2) confines the owner
+    // to an objective. That is sv2-resolve's; this layer reads them (ADR-0002).
+    for source in [
+        "requirement def R { private verify r; }",
+        "part def P { verification v { objective { verify r; } } }",
+        "part def P { requirement r { verify q; } }",
+        "requirement def R { verify r { verify q; } }",
+    ] {
+        let tree = render(&parse_accepted(source).syntax());
+        assert!(
+            nodes_named(&tree, "RequirementVerificationMember") >= 1,
+            "{tree}"
+        );
+    }
+}
+
+#[test]
+fn a_requirement_verification_member_keeps_every_byte() {
+    let source = "requirement def R {\n\tverify /* n */ requirement r // d\n\t\t: T;\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
 }
