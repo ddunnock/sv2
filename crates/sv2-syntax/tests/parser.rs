@@ -747,17 +747,6 @@ fn a_constraint_definition_owns_no_definition_node() {
 }
 
 #[test]
-fn a_calculation_body_does_not_admit_the_control_flow_layer() {
-    // CalculationBodyItem = ActionBodyItem | ReturnParameterMember. The second is now
-    // implemented — `constraint def C { return x; }` is asserted accepted by
-    // a_return_parameter_member_is_admitted_by_the_body_and_not_the_definition, and it
-    // left this test because the production is read, not because the claim was relaxed.
-    // Three of ActionBodyItem's four alternatives are still absent: the initial nodes,
-    // successions and guards that are the control-flow layer.
-    parse_rejected("constraint def C { first a then b; }");
-}
-
-#[test]
 fn a_constraint_definition_needs_a_body_and_a_def() {
     // CalculationBody is not optional. Held as a file by
     // tests/rejection/constraint-definition-missing-calculation-body.sysml.

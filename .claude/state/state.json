@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T11:16:14Z",
+    "regenerated_utc": "2026-09-22T11:23:23Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -23,7 +23,7 @@
       "percent": 39.5
     },
     "tests": {
-      "unit": 413,
+      "unit": 412,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 158,
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "9d3fd4f Read CalculationUsage, and buy the four files whose calc bodies were readable",
       "be11cfc Stop rejecting `calc c { a + b }` by absence: the next commit reads it",
       "bec454c Read AssertConstraintUsage, and buy the seven files that asserted a constraint",
       "7934612 Read KerML's BindingConnector, completing the binding pair and buying nothing",
       "a871caf Read BindingConnectorAsUsage, and buy the five files that wrote only `bind`",
       "634da25 Validate state under the project .venv, where jsonschema is",
       "69e21b4 Read the succession pair: SuccessionAsUsage in SysML, Succession in KerML",
-      "ac031cf Stop a body loop that reads nothing from spinning until the process dies",
-      "9386a05 Stop asserting `first a then b;` is rejected by absence, and correct a package-body claim"
+      "ac031cf Stop a body loop that reads nothing from spinning until the process dies"
     ]
   },
   "authored": {
