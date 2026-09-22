@@ -5740,6 +5740,12 @@ fn each_deviation_site_fires_on_the_text_it_admits_and_no_other() {
             "part def P { connect [1] a to b; }",
             "ConnectorEnd-trailing-multiplicity",
         ),
+        // DefinitionElement, follow_xtext: 8.2.2.5.2 omits AllocationDefinition.
+        (
+            "package P { allocation def A; }",
+            "package P { connection def A; }",
+            "DefinitionElement",
+        ),
         // AnnotatingMember, follow_xtext: a visibility on an enum body's annotation.
         (
             "enum def E { private doc /* d */ enum a; }",

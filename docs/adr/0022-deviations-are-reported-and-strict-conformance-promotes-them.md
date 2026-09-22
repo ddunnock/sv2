@@ -61,7 +61,10 @@ Option 1.
 - Each site is marked `// deviation: <entry>`, and `scripts/check_deviation_sites.py`
   enforces two things in the gate. Every name a site uses must be an entry that departs
   from the specification (`follow_xtext`, `follow_corpus` or `follow_spec_example`). And
-  every such entry whose production is marked implemented must have a site.
+  every such entry must either have a site or be listed, with a reason, in
+  `.claude/state/deviation-sites-pending.txt` -- not both. The script does NOT check
+  that a listed reason is true (that the parser really does not read what the deviation
+  adds); the conformance review does, and the first review found one that was false.
 - `follow_spec_example` joins the register's decisions. It covers a choice that follows a
   normative example in the specification's prose against the same specification's BNF,
   when the corpus does not decide the point.

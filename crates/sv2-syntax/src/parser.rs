@@ -2919,6 +2919,15 @@ impl<'a> Parser<'a> {
         } else if self.at_state_definition(0) {
             self.state_definition();
         } else if let Some(definition) = self.at_simple_definition(0) {
+            if definition.keyword == "allocation" {
+                // 8.2.2.5.2's DefinitionElement lists 29 alternatives and not
+                // AllocationDefinition, which 8.2.2.15 defines.
+                // deviation: DefinitionElement
+                self.note_deviation(
+                    "DefinitionElement",
+                    "an allocation definition as a DefinitionElement",
+                );
+            }
             self.simple_definition(definition);
         } else {
             return false;
@@ -8092,9 +8101,11 @@ impl<'a> Parser<'a> {
     ///
     /// `( NAME REFERENCES )? OwnedReferenceSubsetting` (`SysML` 8.2.2.13.1), where
     /// `REFERENCES = '::>' | 'references'` (8.2.2.1.2) and the subsetting is a
-    /// `QualifiedName` followed by `OwnedFeatureChain`'s further links (8.2.2.6.5). The
-    /// leading `OwnedCrossMultiplicityMember` is unimplemented and not looked past, so an
-    /// end that writes one is declined here and reported by the caller's recovery.
+    /// `QualifiedName` followed by `OwnedFeatureChain`'s further links (8.2.2.6.5). In
+    /// `SysML` it also looks past a leading `OwnedCrossMultiplicityMember` and, by deviation
+    /// ConnectorEnd-trailing-multiplicity, a trailing multiplicity, as `connector_end`
+    /// reads both; `KerML`'s multiplicity is unimplemented, so there neither is looked past
+    /// and an end that writes one is declined here and reported by the caller's recovery.
     fn skip_connector_end(&self, n: usize) -> Option<usize> {
         let mut n = n;
         if self.language == Language::SysMl && self.nth_is(n, SyntaxKind::LBracket) {

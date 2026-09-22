@@ -6,7 +6,6 @@
 AnnotatingElement  # adds SysML's MetadataUsage alternative, which is unimplemented
 BooleanExpression  # KerML's BooleanExpression is unimplemented
 CaseBodyItem  # case bodies are unimplemented
-DefinitionElement  # adds AllocationDefinition, which is unimplemented
 EnumeratedValue  # adds UsageExtensionKeyword* (`#` prefix metadata), which is unimplemented
 Expression  # KerML's Expression is unimplemented
 ExpressionBody  # BodyExpression, the only route to it, is unimplemented
