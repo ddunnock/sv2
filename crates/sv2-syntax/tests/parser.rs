@@ -5258,9 +5258,6 @@ fn each_remaining_usage_is_not_its_definition() {
     // so it reads as its own node.
     let port = render(&parse_accepted("port def FuelPort;").syntax());
     assert!(port.contains("PortDefinition"), "{port}");
-    // Still rejection by absence: EnumerationDefinition takes an EnumerationBody rather
-    // than a DefinitionBody, and tests/rejection/ names the clause.
-    parse_rejected("enum def Color;");
 }
 
 #[test]

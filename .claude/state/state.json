@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T11:57:38Z",
+    "regenerated_utc": "2026-09-22T12:08:33Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -26,7 +26,7 @@
       "unit": 421,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 161,
+      "negative_cases": 160,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "3446ff3 Read RequirementUsage, and buy four of the six files predicted",
       "df81503 Stop rejecting `requirement r;` by absence: the next commit reads it",
       "6d5abd9 Read ConstraintUsage, and buy the seven files that declared a constraint",
       "5a5a82e Stop rejecting `constraint c { a <= b }` by absence: the next commit reads it",
       "a8cb979 Ask one list what starts a SysML member, so a calculation body reads what a member does",
       "3ac64b9 Drop a test whose reason stopped being true: a calculation body admits successions",
       "9d3fd4f Read CalculationUsage, and buy the four files whose calc bodies were readable",
-      "be11cfc Stop rejecting `calc c { a + b }` by absence: the next commit reads it",
-      "bec454c Read AssertConstraintUsage, and buy the seven files that asserted a constraint"
+      "be11cfc Stop rejecting `calc c { a + b }` by absence: the next commit reads it"
     ]
   },
   "authored": {
