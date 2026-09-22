@@ -470,6 +470,15 @@ NODES = [
         "ConstraintUsageDeclaration",
         "`UsageDeclaration ValuePart?`. `SysML` 8.2.2.20.",
     ),
+    # The requirement usage, `requirement <'1.1'> r : R { ... }`: a constraint usage by
+    # kind (7.21.2), over ConstraintUsageDeclaration, with a RequirementBody.
+    (
+        "RequirementUsage",
+        (
+            "`OccurrenceUsagePrefix 'requirement' ConstraintUsageDeclaration RequirementBody`. "
+            "`SysML` 8.2.2.21.2."
+        ),
+    ),
     # The constraint usage, `constraint c : C { a <= b }`: AssertConstraintUsage's second
     # alternative less the `assert`, over the same declaration and body.
     (

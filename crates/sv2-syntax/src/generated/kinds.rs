@@ -657,6 +657,8 @@ pub enum SyntaxKind {
     RequirementConstraintUsage,
     /// `UsageDeclaration ValuePart?`. `SysML` 8.2.2.20.
     ConstraintUsageDeclaration,
+    /// `OccurrenceUsagePrefix 'requirement' ConstraintUsageDeclaration RequirementBody`. `SysML` 8.2.2.21.2.
+    RequirementUsage,
     /// `OccurrenceUsagePrefix 'constraint' ConstraintUsageDeclaration CalculationBody`. `SysML` 8.2.2.20.
     ConstraintUsage,
     /// `OccurrenceUsagePrefix 'assert' 'not'? ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'constraint' ConstraintUsageDeclaration ) CalculationBody`. `SysML` 8.2.2.20.
@@ -1271,6 +1273,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::RequirementKind,
     SyntaxKind::RequirementConstraintUsage,
     SyntaxKind::ConstraintUsageDeclaration,
+    SyntaxKind::RequirementUsage,
     SyntaxKind::ConstraintUsage,
     SyntaxKind::AssertConstraintUsage,
     SyntaxKind::ConstraintDefinition,

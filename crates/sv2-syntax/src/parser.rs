@@ -1410,6 +1410,7 @@ impl<'a> Parser<'a> {
             || self.at_binding_connector_as_usage(n)
             || self.at_assert_constraint_usage(n)
             || self.at_constraint_usage(n)
+            || self.at_requirement_usage(n)
             || self.at_calculation_usage(n)
             || self.at_simple_usage(n).is_some()
             || self.at_reference_usage(n)
@@ -1896,6 +1897,7 @@ impl<'a> Parser<'a> {
                         || self.at_binding_connector_as_usage(0)
                         || self.at_assert_constraint_usage(0)
                         || self.at_constraint_usage(0)
+                        || self.at_requirement_usage(0)
                         || self.at_calculation_usage(0)
                         || self.at_control_node(0).is_some()
                 }
@@ -2612,6 +2614,10 @@ impl<'a> Parser<'a> {
         } else if self.at_calculation_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
             self.calculation_usage();
+            Some(UsageClass::Behavior)
+        } else if self.at_requirement_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as ConstraintUsage is.
+            self.requirement_usage();
             Some(UsageClass::Behavior)
         } else if self.at_constraint_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as AssertConstraintUsage is.
@@ -6201,6 +6207,7 @@ impl<'a> Parser<'a> {
             || self.at_perform_action_usage(n)
             || self.at_assert_constraint_usage(n)
             || self.at_constraint_usage(n)
+            || self.at_requirement_usage(n)
             || self.at_calculation_usage(n)
             || self.at_flow_usage(n)
             || self
@@ -6697,9 +6704,9 @@ impl<'a> Parser<'a> {
     // ConstraintUsageDeclaration : ConstraintUsage =
     //     UsageDeclaration ValuePart?                            (SysML 8.2.2.20)
     //
-    // Shared by three productions: RequirementConstraintUsage behind `require` or
-    // `assume`, AssertConstraintUsage behind `assert constraint`, and ConstraintUsage, the
-    // bare `constraint c { }` at member position.
+    // Shared by four productions: RequirementConstraintUsage behind `require` or
+    // `assume`, AssertConstraintUsage behind `assert constraint`, ConstraintUsage, the bare
+    // `constraint c { }` at member position, and RequirementUsage.
     fn constraint_usage_declaration(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ConstraintUsageDeclaration);
@@ -6707,6 +6714,51 @@ impl<'a> Parser<'a> {
         if self.at_value_part() {
             self.value_part();
         }
+        self.finish_node();
+    }
+
+    /// Whether a `RequirementUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'requirement'` with no `def` after it (`SysML` 8.2.2.21.2):
+    /// the `def` is what makes it the `RequirementDefinition` beside it. The prefix skipped
+    /// is the one `requirement_usage` reads with `occurrence_usage_prefix`.
+    fn at_requirement_usage(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_usage_prefix(n);
+        self.nth_is_keyword(after, "requirement") && !self.nth_is_keyword(after + 1, "def")
+    }
+
+    // production: RequirementUsage@sysml
+    //
+    // RequirementUsage =
+    //     OccurrenceUsagePrefix 'requirement'
+    //     ConstraintUsageDeclaration RequirementBody               (SysML 8.2.2.21.2)
+    //
+    // "A requirement definition or usage is declared as a kind of constraint definition
+    // or usage ... using the kind keyword requirement" (7.21.2, receipt 021b9219): hence
+    // ConstraintUsageDeclaration, read by `constraint_usage_declaration`, and the
+    // RequirementBody that RequirementDefinition reads, which ends in no result
+    // expression. "If a requirement definition or usage is declared with a short name ...
+    // then this is also considered to be its requirement ID" -- the `<'1.1'>` the corpus
+    // writes, read by the declaration's Identification. The metaclass is RequirementUsage
+    // (8.3.21.9, receipt 8a719041), a ConstraintUsage.
+    //
+    // Marked although OccurrenceUsagePrefix is not, as ActionUsage is.
+    //
+    // implied specialization: Requirements::requirementChecks
+    // constraint: RequirementUsage::checkRequirementUsageSpecialization,
+    //     `specializesFromLibrary('Requirements::requirementChecks')` (8.3.21.9; 8.4.17.2,
+    //     receipt da666b19). An injection, so sv2-hir's; this layer builds the tree only
+    //     (ADR-0002).
+    // constraint: RequirementUsage::checkRequirementUsageSubrequirementSpecialization
+    //     (8.3.21.9): composite, and owned by a RequirementDefinition or RequirementUsage,
+    //     it specializes `Requirements::RequirementCheck::subrequirements`. sv2-hir's too.
+    fn requirement_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::RequirementUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("requirement");
+        self.constraint_usage_declaration();
+        self.requirement_body();
         self.finish_node();
     }
 

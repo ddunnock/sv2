@@ -35,6 +35,7 @@ vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassConstraintExample.sysm
 vendor/corpus/sysml/src/examples/Mass Roll-up Example/Vehicles.sysml
 vendor/corpus/sysml/src/examples/Packet Example/PacketUsage.sysml
 vendor/corpus/sysml/src/examples/Packet Example/Packets.sysml
+vendor/corpus/sysml/src/examples/Requirements Examples/HSUVRequirements.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CalculationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ConstraintTest.sysml
@@ -87,10 +88,13 @@ vendor/corpus/sysml/src/training/31. Constraints/Constraints Example-1.sysml
 vendor/corpus/sysml/src/training/31. Constraints/Constraints Example-2.sysml
 vendor/corpus/sysml/src/training/31. Constraints/Derivation Constraints.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Definitions.sysml
+vendor/corpus/sysml/src/training/32. Requirements/Requirement Groups.sysml
+vendor/corpus/sysml/src/training/32. Requirements/Requirement Usages.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml
 vendor/corpus/sysml/src/validation/01-Parts Tree/1d-Parts Tree with Reference.sysml
 vendor/corpus/sysml/src/validation/03-Function-based Behavior/3e-Function-based Behavior-item.sysml
 vendor/corpus/sysml/src/validation/04-Functional Allocation/4a-Functional Allocation.sysml
+vendor/corpus/sysml/src/validation/13-Model Containment/13a-Model Containment.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_01-Constants.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_02-Basic Value Properties.sysml

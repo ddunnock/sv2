@@ -3081,6 +3081,136 @@ fn a_constraint_usage_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- RequirementUsage, SysML 8.2.2.21.2 -----------------------------------------------
+//
+// RequirementUsage =
+//     OccurrenceUsagePrefix 'requirement' ConstraintUsageDeclaration RequirementBody
+//                                                                       (8.2.2.21.2)
+// BehaviorUsageElement = ... | RequirementUsage | ...                     (8.2.2.6.4)
+//
+// "declared as a kind of constraint definition or usage ... using the kind keyword
+// requirement" (7.21.2, receipt 021b9219), so it takes ConstraintUsageDeclaration, and the
+// RequirementBody RequirementDefinition reads. Told from RequirementDefinition by the `def`.
+
+#[test]
+fn a_requirement_usage_reads_the_corpus_forms() {
+    // training/32. Requirements/Requirement Usages.sysml:5-13 — a short name, which "is
+    // also considered to be its requirement ID" (7.21.2), a subject, a redefined attribute
+    // and an assumed constraint.
+    let usage = render(
+        &parse_accepted(
+            "package 'Requirement Usages' {\n\
+             requirement <'1.1'> fullVehicleMassLimit : VehicleMassLimitationRequirement {\n\
+             subject vehicle : Vehicle;\n\
+             attribute :>> massReqd = 2000[kg];\n\
+             assume constraint {\n\
+             doc /* Full tank is full. */\n\
+             vehicle.fuelMass == vehicle.fuelFullMass\n\
+             }\n} }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&usage, "RequirementUsage"), 1, "{usage}");
+    assert_eq!(nodes_named(&usage, "SubjectMember"), 1, "{usage}");
+    // examples/Requirements Examples/HSUVRequirements.sysml:4-9 — composite
+    // sub-requirements, requirement usages nested in a requirement usage's body.
+    let nested = render(
+        &parse_accepted(
+            "requirement <'UR1.1'> Load: FunctionalRequirementCheck {\n\
+             // The following requirements are composite sub-requirements.\n\
+             requirement Passengers;\n\
+             requirement FuelCapacity;\n\
+             requirement Cargo;\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&nested, "RequirementUsage"), 4, "{nested}");
+    // training/32. Requirements/Requirement Groups.sysml:19-31 — a group whose subject
+    // each nested requirement binds by value.
+    let group = render(
+        &parse_accepted(
+            "requirement engineSpecification {\n\
+             doc /* Engine power requirements group */\n\
+             subject engine : Engine;\n\
+             requirement drivePowerInterface : DrivePowerInterface {\n\
+             subject = engine.clutchPort;\n\
+             }\n\
+             requirement torqueGeneration : TorqueGeneration {\n\
+             subject = engine.generateTorque;\n\
+             }\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&group, "RequirementUsage"), 3, "{group}");
+    assert_eq!(nodes_named(&group, "SubjectMember"), 3, "{group}");
+}
+
+#[test]
+fn a_requirement_usage_owns_what_its_production_writes() {
+    let tree = render(
+        &parse_accepted("part def P { requirement r : R { require constraint { x } } }").syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "OccurrenceUsageMember"),
+        ["MemberPrefix", "RequirementUsage"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "RequirementUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwRequirement",
+            "ConstraintUsageDeclaration",
+            "RequirementBody"
+        ],
+        "{tree}"
+    );
+    // The input the absence rejection held until the commit before this one: a usage, and
+    // NOT read as the definition it shares every token with before the `def`.
+    let usage = render(&parse_accepted("requirement r;").syntax());
+    assert_eq!(nodes_named(&usage, "RequirementUsage"), 1, "{usage}");
+    assert_eq!(nodes_named(&usage, "RequirementDefinition"), 0, "{usage}");
+    let definition = render(&parse_accepted("requirement def R;").syntax());
+    assert_eq!(
+        nodes_named(&definition, "RequirementUsage"),
+        0,
+        "{definition}"
+    );
+    // Nor as a `require`d constraint in a requirement body, which is its own member.
+    let required = render(&parse_accepted("requirement def R { require c; }").syntax());
+    assert_eq!(nodes_named(&required, "RequirementUsage"), 0, "{required}");
+    // OccurrenceUsagePrefix, and a BehaviorUsageElement in an action body (8.2.2.17.1)
+    // and a calculation body, through the one list.
+    parse_accepted("part def P { individual requirement r; snapshot requirement s; }");
+    let action =
+        render(&parse_accepted("action def A { action a; then requirement r; then b; }").syntax());
+    assert_eq!(
+        nodes_named(&action, "SourceSuccessionMember"),
+        1,
+        "{action}"
+    );
+    let nested = render(&parse_accepted("constraint def C { requirement r; x }").syntax());
+    assert_eq!(nodes_named(&nested, "RequirementUsage"), 1, "{nested}");
+}
+
+#[test]
+fn a_requirement_usage_is_bounded_by_its_rules() {
+    // RequirementBody is not optional.
+    parse_rejected("part def P { requirement r }");
+    // A RequirementBody is not a CalculationBody: it ends in no result expression
+    // (8.2.2.21.1), which is the difference `requirement` makes over `constraint`.
+    parse_rejected("part def P { requirement r { a <= b } }");
+    // Unclosed.
+    parse_rejected("part def P { requirement r { subject s;");
+}
+
+#[test]
+fn a_requirement_usage_keeps_every_byte() {
+    let source =
+        "part def P {\n\trequirement /* n */ <'1'> r // d\n\t\t: R {\n\t\tsubject s;\n\t}\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
 //
 // DefaultTargetSuccession : TransitionUsage =
