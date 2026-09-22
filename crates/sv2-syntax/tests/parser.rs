@@ -843,10 +843,6 @@ fn a_calculation_definition_needs_a_body_and_a_def() {
     // supply. Held as a file by
     // tests/rejection/calculation-definition-missing-calculation-body.sysml.
     parse_rejected("calc def C");
-    // Without `def` it is a CalculationUsage, a different production (SysML 8.2.2.19),
-    // and it is unimplemented. Held as a file by
-    // tests/rejection/calculation-usage-is-not-a-calculation-definition.sysml.
-    parse_rejected("calc c { a + b }");
     // An unclosed body is still an error, as it is for the sibling.
     parse_rejected("calc def C { a + b");
 }

@@ -28,7 +28,6 @@ tests/rejection/bracket-expression-needs-a-sequence.sysml
 tests/rejection/bracket-expression-needs-an-operand.sysml
 tests/rejection/bracket-expression-unclosed.sysml
 tests/rejection/calculation-definition-missing-calculation-body.sysml
-tests/rejection/calculation-usage-is-not-a-calculation-definition.sysml
 tests/rejection/classification-expression-takes-a-type-not-a-literal.sysml
 tests/rejection/collect-expression-is-not-implemented.sysml
 tests/rejection/comment-about-requires-an-annotated-element.sysml

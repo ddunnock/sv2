@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-21T23:23:15Z",
+    "regenerated_utc": "2026-09-22T11:12:05Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -26,7 +26,7 @@
       "unit": 409,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 156,
+      "negative_cases": 155,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "bec454c Read AssertConstraintUsage, and buy the seven files that asserted a constraint",
       "7934612 Read KerML's BindingConnector, completing the binding pair and buying nothing",
       "a871caf Read BindingConnectorAsUsage, and buy the five files that wrote only `bind`",
       "634da25 Validate state under the project .venv, where jsonschema is",
       "69e21b4 Read the succession pair: SuccessionAsUsage in SysML, Succession in KerML",
       "ac031cf Stop a body loop that reads nothing from spinning until the process dies",
       "9386a05 Stop asserting `first a then b;` is rejected by absence, and correct a package-body claim",
-      "1de0f65 Ignore .codegraph/, a per-machine derived index",
-      "160db8b ADR-0012: the core is built, not adopted"
+      "1de0f65 Ignore .codegraph/, a per-machine derived index"
     ]
   },
   "authored": {
