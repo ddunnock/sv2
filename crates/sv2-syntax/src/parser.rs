@@ -2659,10 +2659,9 @@ impl<'a> Parser<'a> {
     // 1..* (KerML 8.3.2.2.2, receipt ec1e3424) — which the grammar's two non-empty lists
     // already say. The references are [QualifiedName], resolved by sv2-resolve.
     //
-    // The body is RelationshipBody, read by `relationship_body`, which is SysML's
-    // (8.2.2.2): annotations only. KerML's RelationshipBody (8.2.3.1) admits owned related
-    // elements too and is unimplemented, as it is for a KerML import, so a KerML body
-    // holding one is reported.
+    // The body is RelationshipBody, which `relationship_body` reads as the file's language
+    // states it: annotations only in SysML (8.2.2.2), and owned related elements as well
+    // in KerML (8.2.3.1).
     fn dependency(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::Dependency);
@@ -7686,6 +7685,20 @@ impl<'a> Parser<'a> {
         self.peek_nth(1).is_some_and(|token| self.is_name(token))
     }
 
+    /// The `RelationshipBody` that closes an import, an alias, a dependency or `SysML`'s
+    /// `InitialNodeMember` — which is two productions, one per language, and the one
+    /// reached is the file's.
+    ///
+    /// `SysML`'s owns annotations only (8.2.2.2); `KerML`'s owns related elements as
+    /// well (8.2.3.1). Every caller ends in the production its own language states, so
+    /// the choice is made here once rather than at each of them.
+    fn relationship_body(&mut self) {
+        match self.language {
+            Language::SysMl => self.sysml_relationship_body(),
+            Language::KerMl => self.kerml_relationship_body(),
+        }
+    }
+
     // production: RelationshipBody@sysml
     //
     // RelationshipBody = ';' | '{' ( ownedRelationship += OwnedAnnotation )* '}'
@@ -7697,7 +7710,7 @@ impl<'a> Parser<'a> {
     // not an implemented AnnotatingElement, MetadataUsage included, is recovered over
     // one token at a time and reported: accepting it silently would report an
     // annotation this parser cannot read as one it understood.
-    fn relationship_body(&mut self) {
+    fn sysml_relationship_body(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::RelationshipBody);
         if self.at(SyntaxKind::Semicolon) {
@@ -7709,6 +7722,100 @@ impl<'a> Parser<'a> {
             self.error_expected("`;` or `{` to close the relationship");
         }
         self.finish_node();
+    }
+
+    // production: RelationshipBody@kerml
+    //
+    // RelationshipBody : Relationship =
+    //     ';' | '{' RelationshipOwnedElement* '}'                    (KerML 8.2.3.1)
+    //
+    // RelationshipOwnedElement : Relationship =
+    //       ownedRelatedElement += OwnedRelatedElement
+    //     | ownedRelationship += OwnedAnnotation                     (KerML 8.2.3.1)
+    //
+    // OwnedRelatedElement : Element = NonFeatureElement | FeatureElement
+    //
+    // Marked although RelationshipOwnedElement and OwnedRelatedElement are not: this
+    // production's own parts are read, and the two alternations below it are read as far
+    // as NonFeatureElement and FeatureElement are — Package, Dependency and the eight
+    // classifiers; Feature, Succession and BindingConnector. Neither alternation has a
+    // node, as FeatureSpecialization has none: the element read says which was taken.
+    //
+    // An owned related element is the relationship's ownedRelatedElement, with no
+    // Membership between them, so no MemberPrefix is read: `private feature e;` is
+    // reported. AliasMember and Import are NamespaceBodyElements and are no items here.
+    //
+    // A regular comment is a token only while deciding whether an annotation starts, and
+    // `owned_annotation` makes it one while reading it. A nested element's own body reads
+    // comments as it does anywhere else, which it could not if the whole run were read
+    // under `with_significant_comments`, as SysML's is.
+    fn kerml_relationship_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::RelationshipBody);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.relationship_owned_elements();
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.error_expected("`;` or `{` to close the relationship");
+        }
+        self.finish_node();
+    }
+
+    /// `RelationshipOwnedElement*` in a `KerML` `RelationshipBody`, up to its `}`.
+    fn relationship_owned_elements(&mut self) {
+        loop {
+            let outer = self.comments_significant;
+            self.comments_significant = true;
+            let annotating = self.at_annotating_element();
+            self.comments_significant = outer;
+            if self.at_end() || (!annotating && self.at(SyntaxKind::RBrace)) {
+                return;
+            }
+            let start = self.pos;
+            if self.depth >= MAX_DEPTH {
+                // As `body_element` does: recover a token at a time rather than recurse
+                // into another body (invariant 3).
+                self.report_too_deep();
+                self.error_token();
+            } else if annotating {
+                self.owned_annotation();
+            } else if !self.owned_related_element() {
+                self.recover_statement();
+            }
+            if self.pos == start {
+                self.error_token();
+            }
+        }
+    }
+
+    /// An `OwnedRelatedElement` of `KerML`, with no `MemberPrefix`. Returns whether one
+    /// was read.
+    ///
+    /// `NonFeatureElement | FeatureElement` (`KerML` 8.2.3.1), dispatched over what each
+    /// implements, in the order `membership` and `namespace_feature_member` ask: a
+    /// succession and a binding connector before the keywordless-capable `Feature`.
+    fn owned_related_element(&mut self) -> bool {
+        if self.at_keyword("package") {
+            self.package();
+        } else if self.at_dependency(0) {
+            self.dependency();
+        } else if let Some(classifier) = self.at_classifier(0) {
+            self.classifier(classifier);
+        } else if self.at_kerml_succession(0) {
+            self.kerml_succession();
+        } else if self.at_kerml_binding_connector(0) {
+            self.kerml_binding_connector();
+        } else if self.at_feature(0) {
+            self.feature();
+        } else {
+            return false;
+        }
+        true
     }
 
     /// `OwnedAnnotation* '}'`, the rest of a braced `RelationshipBody`.

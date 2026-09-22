@@ -19,10 +19,10 @@
 //! Of `NonFeatureElement`'s alternatives, `Package`, `Dependency` and the eight
 //! classifiers of `KerML` 8.2.4.2 are implemented. `Package` is a shared unit — the same
 //! production in both grammars — `Dependency` is stated in each, and the classifiers are
-//! `KerML`'s alone. Of `FeatureElement`'s ten
-//! alternatives, `Feature` and `Succession` are implemented; the other eight are not,
-//! nor are `Type`, `Function` and `Predicate`, and the cases below say so rather than
-//! pretending they parse.
+//! `KerML`'s alone. Of `FeatureElement`'s ten alternatives, `Feature`, `Succession` and
+//! `BindingConnector` are implemented; the other seven are not, nor are `Type`,
+//! `Function` and `Predicate`, and the cases below say so rather than pretending they
+//! parse.
 
 use std::fmt::Write as _;
 
@@ -142,6 +142,57 @@ fn a_kerml_dependency_reads_the_corpus_forms() {
     kerml_rejected("dependency a to b.c;");
 }
 
+// -- RelationshipBody, KerML 8.2.3.1 ----------------------------------------------
+//
+// RelationshipBody         = ';' | '{' RelationshipOwnedElement* '}'
+// RelationshipOwnedElement = ownedRelatedElement += OwnedRelatedElement
+//                          | ownedRelationship += OwnedAnnotation
+// OwnedRelatedElement      = NonFeatureElement | FeatureElement            (8.2.3.1)
+//
+// NOT SysML's RelationshipBody, which owns annotations only (SysML 8.2.2.2). An owned
+// related element is owned by the relationship directly, with no Membership, so no
+// MemberPrefix is written before it.
+
+#[test]
+fn a_kerml_relationship_body_owns_related_elements() {
+    // examples/Simple Tests/Dependencies.kerml:18-20.
+    let tree = render(&kerml_accepted("dependency z to x, y {\n\tfeature e;\n}").syntax());
+    assert_eq!(
+        child_kinds(&tree, "RelationshipBody"),
+        ["LBrace", "Feature", "RBrace"],
+        "{tree}"
+    );
+    // The other two implemented relationships that end in the body, an import
+    // (8.2.3.4.2) and an alias (8.2.3.4.1), holding NonFeatureElements, FeatureElements
+    // and an annotation.
+    kerml_accepted("public import A::* { class C; succession s first a then b; }");
+    kerml_accepted("alias X for Y { doc /* d */ classifier K; package P; }");
+    // A comment is an annotation in the body, and trivia again inside a nested one.
+    let nested =
+        render(&kerml_accepted("dependency a to b { /* c */ class C { /* n */ } }").syntax());
+    assert_eq!(
+        child_kinds(&nested, "RelationshipBody"),
+        ["LBrace", "OwnedAnnotation", "Class", "RBrace"],
+        "{nested}"
+    );
+}
+
+#[test]
+fn a_kerml_relationship_body_is_bounded_by_its_rules() {
+    // No Membership, so no MemberPrefix.
+    kerml_rejected("dependency a to b { private feature e; }");
+    // AliasMember and Import are NamespaceBodyElements, not OwnedRelatedElements.
+    kerml_rejected("dependency a to b { alias X for Y; }");
+    kerml_rejected("dependency a to b { public import A; }");
+    // SysML elements are not KerML's.
+    kerml_rejected("dependency a to b { part p; }");
+    // Unclosed.
+    kerml_rejected("dependency a to b { feature e;");
+    // SysML's body is unchanged: annotations only (SysML 8.2.2.2).
+    let sysml = parse("dependency a to b { attribute e; }", Language::SysMl);
+    assert!(!sysml.errors().is_empty());
+}
+
 #[test]
 fn a_filter_is_admitted_in_a_kerml_package_body_and_not_at_a_kerml_root() {
     // The asymmetry that keeps "which member" and "admits a filter" separate
@@ -162,9 +213,10 @@ fn a_filter_is_admitted_in_a_kerml_package_body_and_not_at_a_kerml_root() {
 
 #[test]
 fn the_other_feature_elements_are_unimplemented_rather_than_accepted() {
-    // NamespaceFeatureMember reaches FeatureElement's ten alternatives. Feature and
-    // Succession are implemented; the other eight are not, and reporting them is the
-    // honest state. `succession flow` is SuccessionFlow, one of the eight.
+    // NamespaceFeatureMember reaches FeatureElement's ten alternatives. Feature,
+    // Succession and BindingConnector are implemented; the other seven are not, and
+    // reporting them is the honest state. `succession flow` is SuccessionFlow, one of
+    // the seven.
     for source in [
         "connector c from a to b;",
         "succession flow f from a to b;",
@@ -694,6 +746,26 @@ fn render(node: &SyntaxNode) -> String {
     let mut out = String::new();
     write_element(&mut out, node.clone().into(), 0);
     out
+}
+
+/// The DIRECT children of the first `kind` node in `rendered`, trivia skipped.
+///
+/// The helper tests/parser.rs states at length: a production says what it OWNS, which
+/// is one level down, and the author's spacing is no part of it. `RegularComment` is
+/// kept, because in an annotating position it is a token.
+fn child_kinds(rendered: &str, kind: &str) -> Vec<String> {
+    const TRIVIA: [&str; 3] = ["Whitespace", "SingleLineNote", "MultilineNote"];
+    let mut lines = rendered.lines().skip_while(|l| l.trim_start() != kind);
+    let Some(head) = lines.next() else {
+        return Vec::new();
+    };
+    let depth = head.len() - head.trim_start().len();
+    lines
+        .take_while(|l| l.len() - l.trim_start().len() > depth)
+        .filter(|l| l.len() - l.trim_start().len() == depth + 2)
+        .map(|l| l.split_whitespace().next().unwrap_or_default().to_owned())
+        .filter(|name| !TRIVIA.contains(&name.as_str()))
+        .collect()
 }
 
 fn write_element(out: &mut String, element: SyntaxElement, depth: usize) {

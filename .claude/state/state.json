@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T12:58:01Z",
+    "regenerated_utc": "2026-09-22T13:04:47Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 227,
-      "unimplemented": 327,
+      "implemented": 228,
+      "unimplemented": 326,
       "absent": 0,
-      "percent": 41.0
+      "percent": 41.2
     },
     "tests": {
-      "unit": 436,
+      "unit": 438,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 177,
+      "negative_cases": 179,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "d8b2cde Propose ADR-0020 and ADR-0021: sysand manages packages, markings live in the model",
+      "0d77643 Read the dependency in both grammars, and buy the three files that declared one",
       "c4875cb Read the variant usage member, and buy the four files that declared one",
       "f2f32a0 Close the session: the variant step written to start cold, and two decisions recorded",
       "39b0eef Read the enumeration definition, and buy the four files that declared one",
       "5c4ca6f Stop rejecting `enum def Color;` by absence: the next commit reads it",
       "3446ff3 Read RequirementUsage, and buy four of the six files predicted",
-      "df81503 Stop rejecting `requirement r;` by absence: the next commit reads it",
-      "6d5abd9 Read ConstraintUsage, and buy the seven files that declared a constraint",
-      "5a5a82e Stop rejecting `constraint c { a <= b }` by absence: the next commit reads it"
+      "df81503 Stop rejecting `requirement r;` by absence: the next commit reads it"
     ]
   },
   "authored": {

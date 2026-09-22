@@ -15,6 +15,7 @@ vendor/corpus/kerml/src/examples/Packet Example/Packets.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Circular.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml
+vendor/corpus/kerml/src/examples/Simple Tests/Dependencies.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Imports.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Inheritance.kerml
