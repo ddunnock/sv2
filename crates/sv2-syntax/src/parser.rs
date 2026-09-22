@@ -3222,8 +3222,8 @@ impl<'a> Parser<'a> {
     //     ( EndUsagePrefix | RefPrefix ) 'ref' Usage             (SysML 8.2.2.6.2)
     //
     // NOT marked for coverage: EndUsagePrefix, the first of the two alternatives, is
-    // unimplemented — the same gap OccurrenceUsagePrefix has, held by
-    // tests/rejection/end-usage-prefix-is-not-implemented.sysml.
+    // unimplemented — the same gap OccurrenceUsagePrefix has. The next commit reads it;
+    // its absence rejection is retired ahead of that.
     //
     // The `ref` here is the production's own keyword, not BasicUsagePrefix's optional
     // one. `ref attribute y;` is an AttributeUsage whose prefix carries `ref`, and
@@ -3428,7 +3428,7 @@ impl<'a> Parser<'a> {
     //
     //   - EndUsagePrefix (`'end' OwnedCrossFeatureMember?`), the whole first
     //     alternative. The corpus writes no `end part`, but the clause admits it, and
-    //     tests/rejection/end-usage-prefix-is-not-implemented.sysml holds the absence.
+    //     The next commit reads it; its absence rejection is retired ahead of that.
     //   - UsageExtensionKeyword (`#` prefix metadata, a PrefixMetadataMember), as on
     //     OccurrenceDefinitionPrefix. `at_part_usage` does not look past a `#`, so a
     //     usage carrying one never reaches here.

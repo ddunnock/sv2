@@ -44,7 +44,6 @@ tests/rejection/element-filter-member-is-not-a-definition-body-item.sysml
 tests/rejection/element-filter-member-is-not-a-kerml-root-element.kerml
 tests/rejection/element-filter-member-requires-a-semicolon.sysml
 tests/rejection/end-feature-requires-a-declaration.kerml
-tests/rejection/end-usage-prefix-is-not-implemented.sysml
 tests/rejection/enumeration-usage-is-not-an-occurrence.sysml
 tests/rejection/feature-chain-needs-a-link-after-every-dot.sysml
 tests/rejection/feature-relationship-part-is-not-implemented.kerml

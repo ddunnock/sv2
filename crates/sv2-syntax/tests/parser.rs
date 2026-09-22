@@ -6538,15 +6538,6 @@ fn a_part_usage_holds_members_in_its_body() {
 // `a_usage_may_carry_a_value` in the expression section below.
 
 #[test]
-fn an_end_usage_prefix_is_reported_not_accepted() {
-    // OccurrenceUsagePrefix's other alternative, EndUsagePrefix = 'end'
-    // OwnedCrossFeatureMember? (SysML 8.2.2.9.2, 8.2.2.6.2), is not implemented:
-    // a rejection by absence. The corpus writes no `end part`, but the clause admits
-    // it. Replace this when EndUsagePrefix lands.
-    parse_rejected("end part p;");
-}
-
-#[test]
 fn parsing_a_part_usage_never_panics_on_truncated_input() {
     let source = "in derived abstract constant ref individual snapshot part <e> engine : Engine, Base::Motor { part inner; }";
     for end in 0..=source.len() {
