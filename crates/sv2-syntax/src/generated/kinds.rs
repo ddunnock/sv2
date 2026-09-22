@@ -713,6 +713,12 @@ pub enum SyntaxKind {
     ConnectorEnd,
     /// `OwnedCrossMultiplicity`. `SysML` 8.2.2.13.1.
     OwnedCrossMultiplicityMember,
+    /// `'end' OwnedCrossFeatureMember?`. `SysML` 8.2.2.6.2.
+    EndUsagePrefix,
+    /// `OwnedCrossFeature`. `SysML` 8.2.2.6.2, `KerML` 8.2.4.3.1.
+    OwnedCrossFeatureMember,
+    /// `BasicUsagePrefix UsageDeclaration`, a `ReferenceUsage`. `SysML` 8.2.2.6.2.
+    OwnedCrossFeature,
     /// `OwnedMultiplicity`, a `Feature`. `SysML` 8.2.2.13.1, `KerML` 8.2.5.5.1.
     OwnedCrossMultiplicity,
     /// `OccurrenceUsagePrefix ( 'connection' UsageDeclaration ValuePart? ( 'connect' ConnectorPart )? | 'connect' ConnectorPart ) UsageBody`. `SysML` 8.2.2.13.1.
@@ -1431,6 +1437,9 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ConnectorEndMember,
     SyntaxKind::ConnectorEnd,
     SyntaxKind::OwnedCrossMultiplicityMember,
+    SyntaxKind::EndUsagePrefix,
+    SyntaxKind::OwnedCrossFeatureMember,
+    SyntaxKind::OwnedCrossFeature,
     SyntaxKind::OwnedCrossMultiplicity,
     SyntaxKind::ConnectionUsage,
     SyntaxKind::BinaryConnectorPart,

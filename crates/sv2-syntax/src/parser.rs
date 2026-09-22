@@ -1536,11 +1536,11 @@ impl<'a> Parser<'a> {
     /// The keywords are counted in the clause's order and each at most once, which is
     /// what makes `abstract in part p;` two errors rather than a longer prefix.
     ///
-    /// This is also the whole of a `UsagePrefix` as implemented: `UsagePrefix =
-    /// UnextendedUsagePrefix UsageExtensionKeyword*` and `UnextendedUsagePrefix =
-    /// EndUsagePrefix | BasicUsagePrefix`, and neither `EndUsagePrefix` nor
-    /// `UsageExtensionKeyword` is implemented, so neither is looked past — a usage
-    /// carrying one is reported rather than silently accepted.
+    /// NOT a whole `UsagePrefix`: `UsagePrefix = UnextendedUsagePrefix
+    /// UsageExtensionKeyword*` and `UnextendedUsagePrefix = EndUsagePrefix |
+    /// BasicUsagePrefix`, and `skip_usage_prefix` is the one that also looks past an
+    /// `EndUsagePrefix`. `UsageExtensionKeyword` is unimplemented and looked past by
+    /// neither, so a usage carrying one is reported rather than silently accepted.
     fn skip_basic_usage_prefix(&self, n: usize) -> usize {
         let mut n = n;
         for words in [
@@ -1563,6 +1563,11 @@ impl<'a> Parser<'a> {
     /// PortionKind? ) UsageExtensionKeyword*` (`SysML` 8.2.2.9.2) — a
     /// `BasicUsagePrefix` and the two keywords only an occurrence may carry.
     fn skip_occurrence_usage_prefix(&self, n: usize) -> usize {
+        // EndUsagePrefix, the first alternative by deviation OccurrenceUsagePrefix
+        // (follow_xtext), excludes the rest: an end is not also individual.
+        if let Some(kind) = self.skip_end_usage_prefix(n) {
+            return kind;
+        }
         let mut n = self.skip_basic_usage_prefix(n);
         for words in [&["individual"][..], &["snapshot", "timeslice"]] {
             if words.iter().any(|word| self.nth_is_keyword(n, word)) {
@@ -1570,6 +1575,117 @@ impl<'a> Parser<'a> {
             }
         }
         n
+    }
+
+    /// The index just past a `UsagePrefix` written from the `n`th token, as implemented:
+    /// `UnextendedUsagePrefix = EndUsagePrefix | BasicUsagePrefix` (`SysML` 8.2.2.6.2).
+    /// `UsageExtensionKeyword*` is unimplemented and not looked past.
+    fn skip_usage_prefix(&self, n: usize) -> usize {
+        self.skip_end_usage_prefix(n)
+            .unwrap_or_else(|| self.skip_basic_usage_prefix(n))
+    }
+
+    /// The index of the usage's kind keyword after an `EndUsagePrefix` at the `n`th token,
+    /// or `None` when no `end` is there or no kind keyword follows it.
+    ///
+    /// `EndUsagePrefix = 'end' OwnedCrossFeatureMember?` (`SysML` 8.2.2.6.2), and an owned
+    /// cross feature is "declared between the end and kind keywords" (7.13.2, receipt
+    /// 5a3a8867): everything from the `end` to the first kind keyword is the cross
+    /// feature, a `BasicUsagePrefix UsageDeclaration`, which writes no `;`, brace or `=`.
+    /// With no kind keyword before one of those, the `end` is `DefaultReferenceUsage`'s
+    /// bare one (deviation `DefaultReferenceUsage`), which owns no cross feature.
+    fn skip_end_usage_prefix(&self, n: usize) -> Option<usize> {
+        if !self.nth_is_keyword(n, "end") {
+            return None;
+        }
+        let mut k = n + 1;
+        loop {
+            let token = self.peek_nth(k)?;
+            if matches!(
+                token.kind,
+                SyntaxKind::Semicolon | SyntaxKind::LBrace | SyntaxKind::RBrace | SyntaxKind::Eq
+            ) {
+                return None;
+            }
+            if self.at_end_kind(k) {
+                return Some(k);
+            }
+            k += 1;
+        }
+    }
+
+    /// Whether the `k`th token is the kind keyword an `EndUsagePrefix` is followed by.
+    ///
+    /// A keyword a member opens on, not counting the prefix keywords a cross feature's
+    /// own `BasicUsagePrefix` may write. `ref` is both: it is `ReferenceUsage`'s kind
+    /// keyword unless a kind keyword stands LATER in the same end declaration, because
+    /// that production's `Usage` is a declaration and a completion, and a declaration
+    /// never contains a kind keyword. So in `end ref part p;` and in `end ref x : T part
+    /// p;` the `ref` opens the cross feature and `part` is the kind, while in `end ref x;`
+    /// the `ref` is the kind.
+    fn at_end_kind(&self, k: usize) -> bool {
+        if self.nth_is_keyword(k, "ref") {
+            return !self.kind_follows(k + 1);
+        }
+        let prefix = self.skip_basic_usage_prefix(k) != k
+            || ["individual", "snapshot", "timeslice"]
+                .iter()
+                .any(|word| self.nth_is_keyword(k, word));
+        !prefix && self.at_sysml_keyword_member(k)
+    }
+
+    /// Whether an `EndUsagePrefix`'s kind keyword stands at or after the `k`th token,
+    /// before the end declaration's `;`, brace or `=`.
+    fn kind_follows(&self, k: usize) -> bool {
+        let mut k = k;
+        while let Some(token) = self.peek_nth(k) {
+            if matches!(
+                token.kind,
+                SyntaxKind::Semicolon | SyntaxKind::LBrace | SyntaxKind::RBrace | SyntaxKind::Eq
+            ) {
+                return false;
+            }
+            if self.at_end_kind(k) {
+                return true;
+            }
+            k += 1;
+        }
+        false
+    }
+
+    // production: EndUsagePrefix@sysml
+    //
+    // EndUsagePrefix : Usage =
+    //     isEnd ?= 'end' ( ownedRelationship += OwnedCrossFeatureMember )?
+    //                                                                (SysML 8.2.2.6.2)
+    //
+    // production: OwnedCrossFeature@sysml
+    //
+    // OwnedCrossFeature : ReferenceUsage = BasicUsagePrefix UsageDeclaration
+    //                                                                (SysML 8.2.2.6.2)
+    //
+    // OwnedCrossFeatureMember is NOT marked: it is a shared unit, and KerML's
+    // OwnedCrossFeature (BasicFeaturePrefix FeatureDeclaration) is unimplemented.
+    //
+    // "End features are declared as usages (see 7.6.3), prefixed by the keyword end"
+    // (7.13.2, receipt 5a3a8867). The cross feature is present when anything stands
+    // between `end` and the kind keyword; see `skip_end_usage_prefix`. Its BasicUsagePrefix
+    // node is built even when empty, as every prefix node here is.
+    fn end_usage_prefix(&mut self) {
+        let cross = self.skip_end_usage_prefix(0).is_some_and(|kind| kind > 1);
+        self.eat_trivia();
+        self.start_node(SyntaxKind::EndUsagePrefix);
+        self.expect_keyword("end");
+        if cross {
+            self.eat_trivia();
+            self.start_node(SyntaxKind::OwnedCrossFeatureMember);
+            self.start_node(SyntaxKind::OwnedCrossFeature);
+            self.basic_usage_prefix();
+            self.usage_declaration();
+            self.finish_node();
+            self.finish_node();
+        }
+        self.finish_node();
     }
 
     /// Whether an implemented `AnnotatingElement` starts here (`SysML` 8.2.2.4.1).
@@ -3218,12 +3334,13 @@ impl<'a> Parser<'a> {
         }
     }
 
-    // ReferenceUsage : ReferenceUsage =
-    //     ( EndUsagePrefix | RefPrefix ) 'ref' Usage             (SysML 8.2.2.6.2)
+    // production: ReferenceUsage@sysml
     //
-    // NOT marked for coverage: EndUsagePrefix, the first of the two alternatives, is
-    // unimplemented — the same gap OccurrenceUsagePrefix has. The next commit reads it;
-    // its absence rejection is retired ahead of that.
+    // ReferenceUsage : ReferenceUsage =
+    //     ( EndUsagePrefix | RefPrefix ) 'ref' Usage             (SysML 8.2.2.6.3)
+    //
+    // Both alternatives are read: `end [*] ref cause: Situation;` (validation/14-Language
+    // Extensions/14c-Language Extensions.sysml:39) takes the first.
     //
     // The `ref` here is the production's own keyword, not BasicUsagePrefix's optional
     // one. `ref attribute y;` is an AttributeUsage whose prefix carries `ref`, and
@@ -3232,7 +3349,11 @@ impl<'a> Parser<'a> {
     fn reference_usage(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ReferenceUsage);
-        self.ref_prefix();
+        if self.at_keyword("end") {
+            self.end_usage_prefix();
+        } else {
+            self.ref_prefix();
+        }
         self.expect_keyword("ref");
         self.usage();
         self.finish_node();
@@ -3240,7 +3361,10 @@ impl<'a> Parser<'a> {
 
     /// Whether a `ReferenceUsage` starts at the `n`th meaningful token.
     fn at_reference_usage(&self, n: usize) -> bool {
-        self.nth_is_keyword(self.skip_ref_prefix(n), "ref")
+        let after = self
+            .skip_end_usage_prefix(n)
+            .unwrap_or_else(|| self.skip_ref_prefix(n));
+        self.nth_is_keyword(after, "ref")
     }
 
     /// The index just past a `RefPrefix` written from the `n`th token.
@@ -3388,7 +3512,7 @@ impl<'a> Parser<'a> {
             let after = if usage.is_occurrence {
                 self.skip_occurrence_usage_prefix(n)
             } else {
-                self.skip_basic_usage_prefix(n)
+                self.skip_usage_prefix(n)
             };
             self.nth_is_keyword(after, usage.keyword) && !self.nth_is_keyword(after + 1, "def")
         })
@@ -3397,21 +3521,22 @@ impl<'a> Parser<'a> {
     // UsagePrefix : Usage = UnextendedUsagePrefix UsageExtensionKeyword*
     //                                                            (SysML 8.2.2.6.2)
     //
+    // production: UnextendedUsagePrefix@sysml
+    //
     // UnextendedUsagePrefix = EndUsagePrefix | BasicUsagePrefix
     //
-    // NOT marked for coverage, and neither is UnextendedUsagePrefix. EndUsagePrefix,
-    // one of the two alternatives, is unimplemented, and so is UsageExtensionKeyword
-    // (`#` prefix metadata) — the same two gaps OccurrenceUsagePrefix has, and held
-    // by the same rejection case.
-    //
-    // UnextendedUsagePrefix gets no node: it is an alternation, and the alternative
-    // that matched says which was taken.
+    // UsagePrefix is NOT marked: UsageExtensionKeyword (`#` prefix metadata) is
+    // unimplemented, the gap OccurrenceUsagePrefix has too. UnextendedUsagePrefix IS,
+    // both of its alternatives being read; it gets no node, being an alternation whose
+    // taken alternative says which it was.
     //
     // The node is built even when empty, as MemberPrefix's is.
     fn usage_prefix(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::UsagePrefix);
-        if self.at_basic_usage_prefix() {
+        if self.at_keyword("end") {
+            self.end_usage_prefix();
+        } else if self.at_basic_usage_prefix() {
             self.basic_usage_prefix();
         }
         self.finish_node();
@@ -3421,22 +3546,27 @@ impl<'a> Parser<'a> {
     //     ( EndUsagePrefix
     //     | BasicUsagePrefix ( isIndividual ?= 'individual' )?
     //       ( portionKind = PortionKind )?
-    //     ) UsageExtensionKeyword*                               (SysML 8.2.2.9.2)
+    //     ) UsageExtensionKeyword*        (SysML 8.2.2.9.2, as deviation OccurrenceUsagePrefix
+    //                                      reads it: follow_xtext adds the first alternative)
     //
-    // NOT marked for coverage. Two parts are unimplemented, and each is a construct
-    // the language has rather than an optional slot left empty:
-    //
-    //   - EndUsagePrefix (`'end' OwnedCrossFeatureMember?`), the whole first
-    //     alternative. The corpus writes no `end part`, but the clause admits it, and
-    //     The next commit reads it; its absence rejection is retired ahead of that.
-    //   - UsageExtensionKeyword (`#` prefix metadata, a PrefixMetadataMember), as on
-    //     OccurrenceDefinitionPrefix. `at_part_usage` does not look past a `#`, so a
-    //     usage carrying one never reaches here.
+    // NOT marked for coverage: UsageExtensionKeyword (`#` prefix metadata, a
+    // PrefixMetadataMember) is unimplemented, as on OccurrenceDefinitionPrefix, and
+    // `at_part_usage` does not look past a `#`, so a usage carrying one never reaches
+    // here. The EndUsagePrefix alternative is read: `end port supplierPort :
+    // FuelOutPort;` (training/13. Flows/Flow Definition Example.sysml:8), the deviation's
+    // own evidence.
     //
     // The node is built even when every slot is empty, as MemberPrefix's is.
     fn occurrence_usage_prefix(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::OccurrenceUsagePrefix);
+        if self.at_keyword("end") {
+            // The first alternative, by deviation OccurrenceUsagePrefix (follow_xtext):
+            // it excludes `individual` and the portion kind.
+            self.end_usage_prefix();
+            self.finish_node();
+            return;
+        }
         if self.at_basic_usage_prefix() {
             self.basic_usage_prefix();
         }
@@ -8364,7 +8494,7 @@ impl<'a> Parser<'a> {
     /// a member the parser then cannot consume, and the body loop would ask again for
     /// ever (invariant 3).
     fn at_succession_as_usage(&self, n: usize) -> bool {
-        let mut n = self.skip_basic_usage_prefix(n);
+        let mut n = self.skip_usage_prefix(n);
         if self.nth_is_keyword(n, "succession") {
             match self.scan_for_keyword(n + 1, "first") {
                 Some(first) => n = first,
@@ -8433,7 +8563,7 @@ impl<'a> Parser<'a> {
     /// gives: a recogniser that looked past `snapshot` would accept a member the parser
     /// then cannot consume.
     fn at_binding_connector_as_usage(&self, n: usize) -> bool {
-        let n = self.skip_basic_usage_prefix(n);
+        let n = self.skip_usage_prefix(n);
         self.nth_is_keyword(n, "binding") || self.nth_is_keyword(n, "bind")
     }
 

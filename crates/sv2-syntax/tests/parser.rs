@@ -2710,6 +2710,144 @@ fn a_connection_usage_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- EndUsagePrefix, SysML 8.2.2.6.2 ---------------------------------------------------
+//
+// EndUsagePrefix        = 'end' OwnedCrossFeatureMember?                    (8.2.2.6.2)
+// OwnedCrossFeatureMember = OwnedCrossFeature
+// OwnedCrossFeature     = BasicUsagePrefix UsageDeclaration
+// UnextendedUsagePrefix = EndUsagePrefix | BasicUsagePrefix
+// ReferenceUsage        = ( EndUsagePrefix | RefPrefix ) 'ref' Usage        (8.2.2.6.3)
+// OccurrenceUsagePrefix = ( EndUsagePrefix | BasicUsagePrefix 'individual'? PortionKind? )
+//                         UsageExtensionKeyword*  (8.2.2.9.2, deviation OccurrenceUsagePrefix)
+//
+// "Such owned cross features are declared between the end and kind keywords of the
+// association end declarations (and, in this case, the kind keyword is required)"
+// (7.13.2, receipt 5a3a8867).
+
+#[test]
+fn an_end_usage_prefix_reads_the_corpus_forms() {
+    // training/13. Flows/Flow Definition Example.sysml:8 — the deviation's own evidence.
+    let port =
+        render(&parse_accepted("flow def F { end port supplierPort : FuelOutPort; }").syntax());
+    assert_eq!(
+        child_kinds(&port, "OccurrenceUsagePrefix"),
+        ["EndUsagePrefix"],
+        "{port}"
+    );
+    assert_eq!(child_kinds(&port, "EndUsagePrefix"), ["KwEnd"], "{port}");
+    // training/09. Connections/Connections Example.sysml:14-17 — a cross multiplicity,
+    // which is an OwnedCrossFeature whose declaration is its multiplicity alone.
+    let crossed = render(
+        &parse_accepted(
+            "connection def PressureSeat {\n\
+             \tend [1] part bead : TireBead;\n\
+             \tend [1] part mountingRim : TireMountingRim;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&crossed, "EndUsagePrefix"), 2, "{crossed}");
+    assert_eq!(
+        child_kinds(&crossed, "EndUsagePrefix"),
+        ["KwEnd", "OwnedCrossFeatureMember"],
+        "{crossed}"
+    );
+    assert_eq!(
+        child_kinds(&crossed, "OwnedCrossFeature"),
+        ["BasicUsagePrefix", "UsageDeclaration"],
+        "{crossed}"
+    );
+    // validation/14-Language Extensions/14c-Language Extensions.sysml:39 — a
+    // ReferenceUsage whose EndUsagePrefix carries a cross multiplicity; `( EndUsagePrefix |
+    // RefPrefix ) 'ref' Usage`, part for part.
+    let reference =
+        render(&parse_accepted("connection def C { end [*] ref cause: Situation; }").syntax());
+    assert_eq!(
+        child_kinds(&reference, "ReferenceUsage"),
+        ["EndUsagePrefix", "KwRef", "Usage"],
+        "{reference}"
+    );
+    // examples/Simple Tests/ConnectionTest.sysml:68 — the deviation's other evidence,
+    // with a body.
+    parse_accepted("connection def AB { end [1] item a : A { } }");
+}
+
+#[test]
+fn an_end_usage_prefix_reads_the_clause_forms() {
+    // 7.13.2 (receipt 5a3a8867): owned cross features with a name, a multiplicity and
+    // `ordered`, and the ternary form.
+    let named = render(
+        &parse_accepted(
+            "connection def HubDeviceConnection {\n\
+             \tend connectingHub [0..1] ordered part hub : Hub;\n\
+             \tend connectedDevices [1..*] part device : Device;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&named, "OwnedCrossFeature"), 2, "{named}");
+    parse_accepted(
+        "connection def ProtocolDeviceConnection {\n\
+         \tend [*] part hub : Hub;\n\
+         \tend [*] ordered part device : Device;\n\
+         \tend [0..1] item protocol : Protocol;\n\
+         }",
+    );
+    // No cross feature: the clause's `end part hub : Hub;`.
+    let plain = render(&parse_accepted("connection def D { end part hub : Hub; }").syntax());
+    assert_eq!(nodes_named(&plain, "OwnedCrossFeatureMember"), 0, "{plain}");
+    // UnextendedUsagePrefix's first alternative on a non-occurrence usage, and a
+    // ReferenceUsage with no cross feature: both straight from the productions.
+    let attribute = render(&parse_accepted("connection def D { end attribute a; }").syntax());
+    assert_eq!(
+        child_kinds(&attribute, "UsagePrefix"),
+        ["EndUsagePrefix"],
+        "{attribute}"
+    );
+    parse_accepted("connection def D { end ref r : R; }");
+    // A cross feature made of a BasicUsagePrefix alone, `ref`, before a kind keyword:
+    // not a ReferenceUsage, whose Usage never opens on a keyword.
+    let prefix_only = render(&parse_accepted("connection def D { end ref part p; }").syntax());
+    assert_eq!(nodes_named(&prefix_only, "PartUsage"), 1, "{prefix_only}");
+    assert_eq!(
+        nodes_named(&prefix_only, "OwnedCrossFeature"),
+        1,
+        "{prefix_only}"
+    );
+    // And a cross feature that opens on `ref` and goes on with a declaration: the kind is
+    // the LATER keyword, however far along the declaration it stands.
+    for source in [
+        "connection def D { end ref x part p; }",
+        "connection def D { end ref [1] part p; }",
+        "connection def D { end ref x : T part p; }",
+    ] {
+        let tree = render(&parse_accepted(source).syntax());
+        assert_eq!(nodes_named(&tree, "PartUsage"), 1, "{source}\n{tree}");
+        assert_eq!(nodes_named(&tree, "ReferenceUsage"), 0, "{source}\n{tree}");
+    }
+    // `end ref ref x;` is a ReferenceUsage whose cross feature is the first `ref`.
+    let twice = render(&parse_accepted("connection def D { end ref ref x; }").syntax());
+    assert_eq!(nodes_named(&twice, "OwnedCrossFeature"), 1, "{twice}");
+}
+
+#[test]
+fn an_end_usage_prefix_is_bounded_by_its_rules() {
+    // EndUsagePrefix and `BasicUsagePrefix 'individual'? PortionKind?` are ALTERNATIVES of
+    // OccurrenceUsagePrefix: an end is not also individual. Held as a file by
+    // tests/rejection/end-usage-takes-no-individual.sysml.
+    parse_rejected("connection def D { end individual part p; }");
+    // A cross feature needs the kind keyword after it (7.13.2): without one the line is a
+    // DefaultReferenceUsage, whose `end` owns no cross feature. Held as a file by
+    // tests/rejection/owned-cross-feature-needs-a-kind-keyword.sysml.
+    parse_rejected("connection def D { end [1] hub ::> x; }");
+}
+
+#[test]
+fn an_end_usage_prefix_keeps_every_byte() {
+    let source = "connection def D {\n\tend /* e */ n [ 0 .. 1 ] ordered part p : P;\n\tend [*] ref r : R;\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- BindingConnectorAsUsage, SysML 8.2.2.13.2 ----------------------------------------
 //
 // BindingConnectorAsUsage =

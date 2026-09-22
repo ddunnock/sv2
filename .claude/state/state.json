@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T16:33:37Z",
+    "regenerated_utc": "2026-09-22T16:45:46Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 285,
-      "unimplemented": 269,
+      "implemented": 289,
+      "unimplemented": 265,
       "absent": 0,
-      "percent": 51.4
+      "percent": 52.2
     },
     "tests": {
-      "unit": 473,
+      "unit": 477,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 202,
+      "negative_cases": 204,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "29b560e Stop rejecting `end part p;` by absence: the next commit reads the end usage prefix",
       "4fd3c91 Read the connection usage and a SysML end's cross multiplicity, and buy the nine files it predicted",
       "25a9862 Stop rejecting a SysML cross multiplicity by absence: the next commit reads it",
       "2603807 Stop standing a ConnectionUsage in for unread text: the next commit reads it",
       "ffae11b Close the session: the connection layer measured and written to start cold, one decision recorded",
       "aabb2e0 Read the send, accept and assignment action nodes and the `new` expression, and buy nineteen files",
       "64b05bf Stop rejecting send, assign, accept and `new` by absence: the next commit reads them",
-      "8775eea Close the session: the send/assign/new step written to start cold, and one decision recorded",
-      "c9fa442 Read the rest of the state layer: state actions, entry transitions, effects and triggers"
+      "8775eea Close the session: the send/assign/new step written to start cold, and one decision recorded"
     ]
   },
   "authored": {

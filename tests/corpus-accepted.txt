@@ -24,6 +24,9 @@ vendor/corpus/kerml/src/examples/Simple Tests/Scoping.kerml
 vendor/corpus/kerml/src/examples/Vehicle Example/VehicleDefinitions.kerml
 vendor/corpus/sysml/src/examples/Analysis Examples/Dynamics.sysml
 vendor/corpus/sysml/src/examples/Analysis Examples/Turbojet Stage Analysis.sysml
+vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_N_ary.sysml
+vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_OwnedEnds.sysml
+vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_UnownedEnds.sysml
 vendor/corpus/sysml/src/examples/Camera Example/Camera.sysml
 vendor/corpus/sysml/src/examples/Camera Example/PictureTaking.sysml
 vendor/corpus/sysml/src/examples/Comment Examples/Comments.sysml
@@ -76,10 +79,12 @@ vendor/corpus/sysml/src/training/06. Enumeration Definitions/Enumeration Definit
 vendor/corpus/sysml/src/training/07. Parts/Parts Example-1.sysml
 vendor/corpus/sysml/src/training/07. Parts/Parts Example-2.sysml
 vendor/corpus/sysml/src/training/08. Items/Items Example.sysml
+vendor/corpus/sysml/src/training/09. Connections/Connections Example.sysml
 vendor/corpus/sysml/src/training/10. Ports/Port Conjugation Example.sysml
 vendor/corpus/sysml/src/training/10. Ports/Port Example.sysml
 vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-1.sysml
 vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-2.sysml
+vendor/corpus/sysml/src/training/13. Flows/Flow Definition Example.sysml
 vendor/corpus/sysml/src/training/13. Flows/Flow Usage Example.sysml
 vendor/corpus/sysml/src/training/14. Action Definitions/Action Definition Example.sysml
 vendor/corpus/sysml/src/training/14. Action Definitions/Action Shorthand Example.sysml

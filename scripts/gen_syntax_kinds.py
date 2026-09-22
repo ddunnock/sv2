@@ -699,6 +699,15 @@ NODES = [
     ),
     ("OwnedCrossMultiplicityMember", "`OwnedCrossMultiplicity`. `SysML` 8.2.2.13.1."),
     (
+        "EndUsagePrefix",
+        "`'end' OwnedCrossFeatureMember?`. `SysML` 8.2.2.6.2.",
+    ),
+    ("OwnedCrossFeatureMember", "`OwnedCrossFeature`. `SysML` 8.2.2.6.2, `KerML` 8.2.4.3.1."),
+    (
+        "OwnedCrossFeature",
+        "`BasicUsagePrefix UsageDeclaration`, a `ReferenceUsage`. `SysML` 8.2.2.6.2.",
+    ),
+    (
         "OwnedCrossMultiplicity",
         "`OwnedMultiplicity`, a `Feature`. `SysML` 8.2.2.13.1, `KerML` 8.2.5.5.1.",
     ),
