@@ -8241,8 +8241,9 @@ impl<'a> Parser<'a> {
     //
     // Marked although ConnectorEnd is not: this production's own body is read in full,
     // as ActionTargetSuccessionMember is marked over the same ConnectorEndMember. What
-    // ConnectorEnd lacks — its OwnedCrossMultiplicityMember, `first [1] a then b;` — is
-    // held by tests/rejection/connector-end-cross-multiplicity-is-not-implemented.sysml.
+    // ConnectorEnd lacks is its OwnedCrossMultiplicityMember in KerML, held by
+    // tests/rejection/kerml-connector-end-cross-multiplicity-is-not-implemented.kerml; in
+    // SysML, `first [1] a then b;` is read from the next commit.
     //
     // implied specialization: Occurrences::happensBeforeLinks
     // constraint: Succession::checkSuccessionSpecialization, which "requires that a
@@ -8297,8 +8298,8 @@ impl<'a> Parser<'a> {
     // receipt 6db87b41) — which is what the corpus's `bind a = b;` is.
     //
     // Marked although ConnectorEnd is not, as SuccessionAsUsage is: this production's own
-    // body is read in full, and ConnectorEnd's missing OwnedCrossMultiplicityMember is held
-    // by tests/rejection/connector-end-cross-multiplicity-is-not-implemented.sysml.
+    // body is read in full. ConnectorEnd's OwnedCrossMultiplicityMember, `bind [1] a = b;`,
+    // is read in SysML from the next commit and is still missing in KerML.
     //
     // implied specialization: Links::selfLinks
     // constraint: BindingConnector::checkBindingConnectorSpecialization,

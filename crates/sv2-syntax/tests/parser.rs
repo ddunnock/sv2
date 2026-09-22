@@ -2502,9 +2502,6 @@ fn a_succession_as_usage_is_bounded_by_its_rules() {
     // No SourceSuccessionMember before it either: that prefixes occurrence usages only
     // (8.2.2.6.1, 8.2.2.17.1).
     parse_rejected("part def P { part p; then first a then b; }");
-    // OwnedCrossMultiplicityMember, ConnectorEnd's first part, is unimplemented, so a
-    // multiplicity on an end is rejected BY ABSENCE — 7.13.5's own example writes it.
-    parse_rejected("part def P { first [1] a then b; }");
 }
 
 #[test]
@@ -2659,9 +2656,6 @@ fn a_binding_connector_as_usage_is_bounded_by_its_rules() {
     // NonBehaviorBodyItem, so no ActionTargetSuccessionMember* after it in an action body
     // (8.2.2.17.1).
     parse_rejected("action def A { bind a = b; then c; }");
-    // OwnedCrossMultiplicityMember, ConnectorEnd's first part, is unimplemented, so a
-    // multiplicity on an end is rejected BY ABSENCE.
-    parse_rejected("part def P { bind [1] a = b; }");
 }
 
 #[test]
