@@ -362,10 +362,12 @@ fn an_action_body_does_not_admit_the_control_flow_layer() {
     // second alternative (SysML 8.2.2.17.1) — well-formed, and rejected only while that
     // production was absent. Asserting it rejected is asserting the absence, which is
     // the one thing this case must not outlive.
+    //
+    // `accept Signal;`, `send Sig to target;` and `assign x := 1;` were here and are not:
+    // they are AcceptNode, SendNode and AssignmentNode (8.2.2.17.4, 8.2.2.17.5), ActionNodes
+    // reached through ActionBehaviorMember -- well-formed, and rejected only while those
+    // productions were absent. The next commit implements them.
     parse_rejected("action def B { then stop; }");
-    parse_rejected("action def B { accept Signal; }");
-    parse_rejected("action def B { send Sig to target; }");
-    parse_rejected("action def B { assign x := 1; }");
 }
 
 #[test]
@@ -2129,15 +2131,17 @@ fn a_guarded_target_succession_is_a_suffix_and_nothing_else() {
 //
 // Not a grammar rule: a reporting rule, and the reason it belongs beside them is that a
 // reader cannot act on four reports about one token. The expectation comes from what the
-// text contains, not from what the parser printed: `new` is ONE construct this parser does
-// not read (an InstantiationExpression, KerML 8.2.5.8.3), so it is one defect at one
-// position, however many nested productions each raise their own failure there.
+// text contains, not from what the parser printed: `{ 1 }` is ONE construct this parser
+// does not read (a BodyExpression, KerML 8.2.5.8.3), so it is one defect at one position,
+// however many nested productions each raise their own failure there. The input wrote
+// `new T()` until ConstructorExpression landed; the rule is unchanged, only the construct
+// standing in for "not read".
 
 #[test]
 fn one_token_is_reported_once_however_many_productions_fail_on_it() {
     // The expression, the parenthesis around it and the enclosing definition each fail at
-    // `new`. Before this rule they reported four times at that offset.
-    let parsed = parse_rejected("part def P {\n\t:>> x = (new T());\n}\n");
+    // the `{`. Before this rule they reported four times at one offset.
+    let parsed = parse_rejected("part def P {\n\t:>> x = ({ 1 });\n}\n");
     let starts: Vec<usize> = parsed
         .errors()
         .iter()
@@ -4197,9 +4201,6 @@ fn a_state_action_is_bounded_by_its_rules() {
     parse_rejected("state def D { entry }");
     // `exhibit` takes `state` or a reference, and nothing else.
     parse_rejected("part def P { exhibit part p; }");
-    // Unimplemented, and reported: the send and assignment action nodes.
-    parse_rejected("state def D { entry send s to p; }");
-    parse_rejected("state def D { entry assign x := 1; }");
 }
 
 #[test]
@@ -7045,16 +7046,6 @@ fn an_argument_list_is_one_alternative_or_the_other_and_never_both() {
     parse_rejected("calc def C { f(a,) }");
     // An unclosed list is still an error.
     parse_rejected("calc def C { f(a }");
-}
-
-#[test]
-fn a_constructor_expression_is_still_absent() {
-    // BaseExpression's other ArgumentList-bearing alternative is ConstructorExpression
-    // (KerML 8.2.5.8.3), `new A(y = a)`, and implementing ArgumentList does NOT
-    // implement it: `new` is a keyword this parser does not read. ParameterTest writes
-    // it, which is why that file still does not parse. Held as a file by
-    // tests/rejection/constructor-expression-is-not-implemented.sysml.
-    parse_rejected("calc def C { new A(y = a) }");
 }
 
 // -- multiplicity, SysML 8.2.2.6.6 -------------------------------------------------

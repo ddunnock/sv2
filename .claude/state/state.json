@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T15:28:53Z",
+    "regenerated_utc": "2026-09-22T15:38:46Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -23,10 +23,10 @@
       "percent": 47.5
     },
     "tests": {
-      "unit": 455,
+      "unit": 454,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 193,
+      "negative_cases": 192,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "8775eea Close the session: the send/assign/new step written to start cold, and one decision recorded",
       "c9fa442 Read the rest of the state layer: state actions, entry transitions, effects and triggers",
       "4fc015e Stop rejecting entry actions and transition effects by absence: the next commit reads them",
       "3f84a6c Read the state layer as one construct, and buy the four files that declared states",
       "e793207 Stop rejecting `state def S;` by absence: the next commit reads it",
       "45aa4d8 Read the conjugated port typing, and buy the three files that typed a port by its conjugate",
       "0282090 Read KerML's relationship body, and buy the file whose dependency owned a feature",
-      "d8b2cde Propose ADR-0020 and ADR-0021: sysand manages packages, markings live in the model",
-      "0d77643 Read the dependency in both grammars, and buy the three files that declared one"
+      "d8b2cde Propose ADR-0020 and ADR-0021: sysand manages packages, markings live in the model"
     ]
   },
   "authored": {
