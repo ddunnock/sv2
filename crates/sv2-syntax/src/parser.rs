@@ -935,6 +935,17 @@ impl Body {
         matches!(self, Self::Requirement | Self::Case)
     }
 
+    /// Whether `ActorMember` is one of this body's alternatives.
+    ///
+    /// The same two item productions as `admits_subject`: `RequirementBodyItem`
+    /// (`SysML` 8.2.2.21.1) and `CaseBodyItem` (8.2.2.22). Asked separately because
+    /// `StakeholderMember`, the next of the six, is `RequirementBodyItem`'s alone.
+    /// `validateActorMembershipOwningType` (8.3.21.2, receipt e2ea19a6) states the same
+    /// owners of the metaclass, with `oclIsKindOf`, so analysis and use cases qualify.
+    fn admits_actor(self) -> bool {
+        matches!(self, Self::Requirement | Self::Case)
+    }
+
     /// Whether `ObjectiveMember` is one of this body's alternatives.
     ///
     /// `CaseBodyItem` alone names it (`SysML` 8.2.2.22). That its owner is a case is also
@@ -1514,8 +1525,7 @@ impl<'a> Parser<'a> {
         {
             // `return` and `variant` continue the item run rather than ending it: both
             // are items of a calculation body (8.2.2.19, 8.2.2.17.1), and `subject`,
-            // `actor` and `objective` are items of a case body (8.2.2.22), `actor`'s
-            // ActorMember unimplemented and so recovered over as an item. None is in
+            // `actor` and `objective` are items of a case body (8.2.2.22). None is in
             // `at_sysml_keyword_member`, because none is a member `membership` reads,
             // and a reserved keyword is never an expression (8.2.2.1.2). Where a body
             // admits one, the loop asks about it first and never reaches here with it in
@@ -2146,7 +2156,8 @@ impl<'a> Parser<'a> {
         } else if self.body_specific_item(body) {
             // GuardedSuccessionMember, InitialNodeMember, ReturnParameterMember,
             // VariantUsageMember, RequirementConstraintMember, SubjectMember,
-            // ObjectiveMember and TransitionUsageMember: see `body_specific_item`.
+            // ActorMember, ObjectiveMember and TransitionUsageMember: see
+            // `body_specific_item`.
         } else if body.ends_in_result_expression() && self.at_result_expression() {
             // The item run is over and what is left is the body's trailing
             // expression, which is not a member. `calculation_body_part` reads it;
@@ -2183,7 +2194,7 @@ impl<'a> Parser<'a> {
     /// Split out of `body_element`, which asks it before the result-expression test: every
     /// one of these continues an item run, and none is admitted by a calculation body
     /// except the four that are (the guarded succession, `first`, `return`, `variant`),
-    /// nor by a case body except those four and `subject` and `objective`, so the others'
+    /// nor by a case body except those four and `subject`, `actor` and `objective`, so the others'
     /// position relative to that test decides nothing. The arms are disjoint on their keywords, so
     /// their order decides nothing either.
     fn body_specific_item(&mut self, body: Body) -> bool {
@@ -2233,6 +2244,10 @@ impl<'a> Parser<'a> {
             // of its own — SubjectMembership — so it cannot go through `membership`,
             // which builds the body's ordinary member node.
             self.subject_member();
+        } else if body.admits_actor() && self.at_element_keyword("actor") {
+            // RequirementBodyItem's sixth alternative (SysML 8.2.2.21.1) and CaseBodyItem's
+            // third (8.2.2.22): an ActorMembership of its own, as SubjectMember is.
+            self.actor_member();
         } else if body.admits_objective() && self.at_element_keyword("objective") {
             // CaseBodyItem's fourth alternative (SysML 8.2.2.22), owning its requirement
             // through an ObjectiveMembership of its own, as SubjectMember does.
@@ -2368,7 +2383,8 @@ impl<'a> Parser<'a> {
                         || self.at_requirement_usage(0)
                         || self.at_calculation_usage(0)
                         || self.at_case_usage(0).is_some()
-                        // A CaseBodyItem rather than a member `membership` reads.
+                        // CaseBodyItems rather than members `membership` reads.
+                        || self.at_element_keyword("actor")
                         || self.at_element_keyword("objective")
                         || self.at_action_node(0).is_some()
                 }
@@ -6011,12 +6027,11 @@ impl<'a> Parser<'a> {
     //     | StakeholderMember
     //
     // — a SUPERSET of DefinitionBodyItem, and that is the whole reason this body is
-    // reachable at the cost of one method. The six extra members are unimplemented, so
-    // `subject`, `require`, `assume`, `frame`, `verify`, `actor` and `stakeholder` at
-    // member position are reported by the body's recovery like any other text the
-    // parser does not yet read. Held as files by
-    // tests/rejection/requirement-body-subject-member-is-not-implemented.sysml and
-    // tests/rejection/requirement-body-constraint-member-is-not-implemented.sysml.
+    // reachable at the cost of one method. Of the six extra members, SubjectMember,
+    // RequirementConstraintMember and ActorMember are read; `frame`, `verify` and
+    // `stakeholder` at member position are reported by the body's recovery like any
+    // other text the parser does not yet read. (This comment once named two rejection
+    // files for `subject` and `require`; both were retired when those members landed.)
     //
     // `Body::Requirement`, which when this production landed was `Body::Definition` on
     // the argument that the two would differ in nothing. They differ in one thing, and
@@ -9269,6 +9284,48 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: ActorMember
+    //
+    // ActorMember : ActorMembership =
+    //     MemberPrefix ownedRelatedElement += ActorUsage         (SysML 8.2.2.21.1)
+    //
+    // SubjectMember's sibling, in the same two bodies. "A requirement definition or usage
+    // may also have one or more actor or stakeholder parameters ... declared using the
+    // keywords actor and stakeholder rather than explicitly declaring their direction"
+    // (7.21.2, receipt 021b9219), and a case likewise (7.22.2, receipt eb25a69f). The
+    // metaclass is ActorMembership (8.3.21.2, receipt e2ea19a6), a ParameterMembership.
+    //
+    // constraint: ActorMembership::validateActorMembershipOwningType (8.3.21.2): a
+    //     requirement or case owner, which the grammar already gives, since only
+    //     RequirementBodyItem and CaseBodyItem reach this. sv2-resolve's either way.
+    fn actor_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ActorMember);
+        self.member_prefix();
+        self.actor_usage();
+        self.finish_node();
+    }
+
+    // ActorUsage : PartUsage =
+    //     'actor' UsageExtensionKeyword* Usage                  (SysML 8.2.2.21.1)
+    //
+    // NOT marked for coverage, for SubjectUsage's reason: UsageExtensionKeyword (`#`
+    // prefix metadata) is unimplemented, so `actor #m a;` is reported. The metaclass is
+    // PartUsage: "Actor and stakeholder parameters are part usages, so they must be
+    // (explicitly or implicitly) defined by part definitions" (7.21.2, receipt 021b9219).
+    //
+    // implied specialization: Requirements::RequirementCheck::actors in a requirement,
+    //     Cases::Case::actors otherwise
+    // constraint: PartUsage::checkPartUsageActorSpecialization (8.3.11.3). An injection
+    //     that depends on the owner, so sv2-hir's (ADR-0002).
+    fn actor_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ActorUsage);
+        self.expect_keyword("actor");
+        self.usage();
+        self.finish_node();
+    }
+
     // SubjectUsage : ReferenceUsage =
     //     'subject' UsageExtensionKeyword* Usage                (SysML 8.2.2.21.1)
     //
@@ -9372,8 +9429,8 @@ impl<'a> Parser<'a> {
     //
     //     CaseBodyItem = ActionBodyItem | SubjectMember | ActorMember | ObjectiveMember
     //
-    // ActorMember (8.2.2.21.1) is unimplemented, so `actor` in a case body is reported,
-    // and ActionBodyItem carries the action layer's own gaps. `return` IS read, by
+    // ActionBodyItem carries the action layer's own gaps (`if`, loops, `terminate`), which
+    // is what keeps this unmarked now that all three of the case's own members are read. `return` IS read, by
     // deviation CaseBodyItem; see `Body::admits_return_parameter`.
     fn case_body(&mut self) {
         self.eat_trivia();

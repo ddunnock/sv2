@@ -446,6 +446,18 @@ NODES = [
         "`MemberPrefix ownedRelatedElement += SubjectUsage`. `SysML` 8.2.2.21.1.",
     ),
     ("SubjectUsage", "`'subject' UsageExtensionKeyword* Usage`. `SysML` 8.2.2.21.1."),
+    # SubjectMember's sibling, reached from both RequirementBodyItem and CaseBodyItem.
+    (
+        "ActorMember",
+        "`MemberPrefix ownedRelatedElement += ActorUsage`. `SysML` 8.2.2.21.1.",
+    ),
+    (
+        "ActorUsage",
+        (
+            "`'actor' UsageExtensionKeyword* Usage`. `SysML` 8.2.2.21.1 — the metaclass is "
+            "`PartUsage`."
+        ),
+    ),
     # The second of RequirementBodyItem's six extra members, and the one that needed the
     # calculation body. Its two alternatives take DIFFERENT bodies — a RequirementBody by
     # reference and a CalculationBody by construction — which is the whole of the

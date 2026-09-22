@@ -5332,20 +5332,20 @@ fn a_requirement_body_admits_what_a_definition_body_admits() {
 }
 
 #[test]
-fn a_requirement_body_does_not_admit_the_four_members_it_has_not_got() {
-    // The part of RequirementBodyItem that is NOT DefinitionBodyItem, less the two now
-    // implemented: SubjectMember and RequirementConstraintMember. Rejected by absence,
-    // not by rule — each is well-formed SysML.
+fn a_requirement_body_does_not_admit_the_three_members_it_has_not_got() {
+    // The part of RequirementBodyItem that is NOT DefinitionBodyItem, less the three now
+    // implemented: SubjectMember, RequirementConstraintMember and ActorMember. Rejected by
+    // absence, not by rule — each is well-formed SysML.
     //
     // The count in this test's name is the honest running total of what is left of
-    // 8.2.2.21.1, and it has gone six, five, four as the members landed.
+    // 8.2.2.21.1, and it has gone six, five, four, three as the members landed.
     parse_rejected("requirement def R { frame concern c; }");
     parse_rejected("requirement def R { verify requirement r; }");
-    parse_rejected("requirement def R { actor operator; }");
     parse_rejected("requirement def R { stakeholder owner; }");
-    // The two that left the list, here so it cannot quietly grow back.
+    // The three that left the list, here so it cannot quietly grow back.
     parse_accepted("requirement def R { subject vehicle : Vehicle; }");
     parse_accepted("requirement def R { require constraint { a <= b } }");
+    parse_accepted("requirement def R { actor operator; }");
 }
 
 #[test]
@@ -8292,12 +8292,12 @@ fn a_case_reads_the_training_and_specification_examples() {
          return fuelEconomyResult : DistancePerVolumeValue = solveForFuelConsumption.fuelEconomy;\n\
          }",
     );
-    // 7.22.2's FaultRecovery example (receipt eb25a69f) less its `actor`, which is
-    // unimplemented: tests/rejection/case-body-actor-member-is-not-implemented.sysml.
+    // 7.22.2's FaultRecovery example (receipt eb25a69f), whole.
     let case = render(
         &parse_accepted(
             "case def FaultRecovery {\n\
              subject system : AutomationSystem;\n\
+             actor engineer : Person;\n\
              objective {\n\
              doc /* The engineer determines the cause of the system fault. */\n\
              }\n\
@@ -8467,6 +8467,12 @@ fn a_case_is_bounded_by_its_rules() {
     parse_rejected("part def P { objective o; }");
     // And a RequirementConstraintMember is a requirement's, not a case's (8.2.2.21.1).
     parse_rejected("case def C { require constraint { x } }");
+    // An actor is a requirement's or a case's (8.2.2.21.1, 8.2.2.22), not a definition's
+    // or an action's.
+    parse_rejected("part def P { actor a; }");
+    parse_rejected("action def A { actor a; }");
+    // ActorUsage's UsageExtensionKeyword* is unimplemented, as SubjectUsage's is.
+    parse_rejected("case def C { actor #m a; }");
     // A case's own keywords are reserved and never an expression (8.2.2.1.2), so in a
     // calculation body, which admits none of them, they are recovered over as items.
     for word in ["subject", "actor", "objective"] {
@@ -8507,5 +8513,72 @@ fn a_use_case_is_not_read_as_a_case() {
 #[test]
 fn a_case_keeps_every_byte() {
     let source = "analysis def /* n */ A // d\n{\n\tsubject v : V;\n\tobjective {\n\t\trequire constraint { v > 0 }\n\t}\n\treturn r;\n\tr\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
+// -- ActorMember, SysML 8.2.2.21.1 ----------------------------------------------------
+//
+// ActorMember = MemberPrefix ActorUsage
+// ActorUsage  = 'actor' UsageExtensionKeyword* Usage
+//
+// Reached from RequirementBodyItem (8.2.2.21.1) and CaseBodyItem (8.2.2.22). "Actor and
+// stakeholder parameters are part usages" (7.21.2, receipt 021b9219).
+
+#[test]
+fn an_actor_member_reads_the_corpus_forms() {
+    // The corpus's actor forms, from Annex A's use cases and the training use case and
+    // verification examples: typed with a multiplicity, a bare multiplicity, a bound
+    // value, a redefinition bound to a qualified name, a quoted name, and a bare name.
+    let tree = render(
+        &parse_accepted(
+            "case def C {\n\
+             actor passengers : Person[0..4];\n\
+             actor passenger [0..1];\n\
+             actor fueler = driver;\n\
+             actor :>> driver = 'provide transportation'::driver;\n\
+             actor 'fuel station' : 'Fuel Station';\n\
+             actor road;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "ActorMember"), 6, "{tree}");
+    // 7.21.2's BrakingRequirement (receipt 021b9219), less its `stakeholder`, which is
+    // unimplemented: an actor in a requirement body.
+    let requirement = render(
+        &parse_accepted(
+            "requirement def BrakingRequirement {\n\
+             subject vehicle : Vehicle;\n\
+             actor environment : 'Driving Environment';\n\
+             attribute speedLimit : SpeedValue;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&requirement, "ActorMember"), 1, "{requirement}");
+}
+
+#[test]
+fn an_actor_member_owns_what_its_production_writes() {
+    let tree = render(&parse_accepted("case def C { private actor a : P; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "ActorMember"),
+        ["MemberPrefix", "ActorUsage"],
+        "{tree}"
+    );
+    // The keyword is the USAGE's here, as `subject` is SubjectUsage's, and unlike
+    // `objective`, which is ObjectiveMember's.
+    assert_eq!(
+        child_kinds(&tree, "ActorUsage"),
+        ["KwActor", "Usage"],
+        "{tree}"
+    );
+    // An item, not a trailing result expression: nothing is left for one.
+    assert_eq!(nodes_named(&tree, "ResultExpressionMember"), 0, "{tree}");
+}
+
+#[test]
+fn an_actor_member_keeps_every_byte() {
+    let source = "requirement def R {\n\tactor /* n */ e // d\n\t\t: E[0..1];\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }

@@ -649,6 +649,10 @@ pub enum SyntaxKind {
     SubjectMember,
     /// `'subject' UsageExtensionKeyword* Usage`. `SysML` 8.2.2.21.1.
     SubjectUsage,
+    /// `MemberPrefix ownedRelatedElement += ActorUsage`. `SysML` 8.2.2.21.1.
+    ActorMember,
+    /// `'actor' UsageExtensionKeyword* Usage`. `SysML` 8.2.2.21.1 — the metaclass is `PartUsage`.
+    ActorUsage,
     /// `MemberPrefix? RequirementKind ownedRelatedElement += RequirementConstraintUsage`. `SysML` 8.2.2.21.1.
     RequirementConstraintMember,
     /// `'assume' | 'require'`. `SysML` 8.2.2.21.1.
@@ -1419,6 +1423,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::RequirementBody,
     SyntaxKind::SubjectMember,
     SyntaxKind::SubjectUsage,
+    SyntaxKind::ActorMember,
+    SyntaxKind::ActorUsage,
     SyntaxKind::RequirementConstraintMember,
     SyntaxKind::RequirementKind,
     SyntaxKind::RequirementConstraintUsage,
