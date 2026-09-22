@@ -789,6 +789,10 @@ pub enum SyntaxKind {
     EnumeratedValue,
     /// `MemberPrefix AnnotatingElement`. `SysML` 8.2.2.4.1.
     AnnotatingMember,
+    /// `MemberPrefix 'variant' ownedVariantUsage = VariantUsageElement`. `SysML` 8.2.2.6.1.
+    VariantUsageMember,
+    /// `OwnedReferenceSubsetting FeatureSpecialization* UsageBody`, the metaclass `ReferenceUsage`. `SysML` 8.2.2.6.3.
+    VariantReference,
     /// `UnextendedUsagePrefix UsageExtensionKeyword*`. `SysML` 8.2.2.6.2.
     UsagePrefix,
     /// `( EndUsagePrefix | BasicUsagePrefix 'individual'? PortionKind? ) UsageExtensionKeyword*`. `SysML` 8.2.2.9.2.
@@ -1349,6 +1353,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::EnumerationUsageMember,
     SyntaxKind::EnumeratedValue,
     SyntaxKind::AnnotatingMember,
+    SyntaxKind::VariantUsageMember,
+    SyntaxKind::VariantReference,
     SyntaxKind::UsagePrefix,
     SyntaxKind::OccurrenceUsagePrefix,
     SyntaxKind::BasicUsagePrefix,

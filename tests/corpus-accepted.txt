@@ -47,6 +47,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/ItemTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/MultiplicityTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/RootPackageTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/TextualRepresentationTest.sysml
+vendor/corpus/sysml/src/examples/Variability Examples/VehicleVariabilityModel.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition - Updated.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition.sysml
 vendor/corpus/sysml/src/training/01. Packages/Comment Example.sysml
@@ -94,9 +95,12 @@ vendor/corpus/sysml/src/training/32. Requirements/Requirement Definitions.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Groups.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Usages.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml
+vendor/corpus/sysml/src/training/36. Variability/Variation Definitions.sysml
+vendor/corpus/sysml/src/training/36. Variability/Variation Usages.sysml
 vendor/corpus/sysml/src/validation/01-Parts Tree/1d-Parts Tree with Reference.sysml
 vendor/corpus/sysml/src/validation/03-Function-based Behavior/3e-Function-based Behavior-item.sysml
 vendor/corpus/sysml/src/validation/04-Functional Allocation/4a-Functional Allocation.sysml
+vendor/corpus/sysml/src/validation/07-Variant Configuration/7a-Variant Configuration - General Concept.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13a-Model Containment.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_01-Constants.sysml

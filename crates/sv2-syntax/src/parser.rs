@@ -793,6 +793,28 @@ impl Body {
         matches!(self, Self::Requirement)
     }
 
+    /// Whether `VariantUsageMember` is one of this body's alternatives.
+    ///
+    /// It is an alternative of `DefinitionBodyItem` (`SysML` 8.2.2.6.1), which a
+    /// definition or usage body and a requirement body reach (8.2.2.21.1), and of
+    /// `NonBehaviorBodyItem` (8.2.2.17.1), which an action or calculation body reaches
+    /// through `ActionBodyItem`. `InterfaceBodyItem` (8.2.2.14.1) names it directly, and
+    /// `StateBodyItem` (8.2.2.18.1), `CaseBodyItem` (8.2.2.22) and the view bodies
+    /// (8.2.2.26) reach it through those two; each joins this when its body lands. NOT `PackageBodyElement` (8.2.2.5.1), nor any
+    /// `KerML` body: `KerML` has no variants.
+    ///
+    /// NOT only a variation's body, although "variant usages may only be declared within
+    /// a variation" (7.6.7, receipt 5a7843af). That is
+    /// `validateVariantMembershipOwningNamespace` (8.3.6.5, receipt 49805baa), a
+    /// constraint on the membership's owner, which is `sv2-resolve`'s to raise; the
+    /// element still enters the IR (ADR-0002).
+    fn admits_variant(self) -> bool {
+        matches!(
+            self,
+            Self::Definition | Self::Requirement | Self::Action | Self::Calculation
+        )
+    }
+
     /// Whether `RequirementConstraintMember` is one of this body's alternatives.
     ///
     /// Asked separately from `admits_subject` although both answer `Requirement` today,
@@ -1261,10 +1283,13 @@ impl<'a> Parser<'a> {
         {
             return false;
         }
-        if self.at_return_parameter_member() {
-            // `return` continues the item run rather than ending it. The body loop asks
-            // this question first and so never reaches here with a `return` in front of
-            // it, but a recogniser that is only right because of where it is called is
+        if self.at_return_parameter_member() || self.at_element_keyword("variant") {
+            // `return` and `variant` continue the item run rather than ending it: both
+            // are items of a calculation body (8.2.2.19, 8.2.2.17.1), neither is in
+            // `at_sysml_keyword_member`, because neither is a member `membership` reads,
+            // and a reserved keyword is never an expression (8.2.2.1.2). The body loop asks
+            // about both first and so never reaches here with either in front of it, but
+            // a recogniser that is only right because of where it is called is
             // the trap `membership`'s classifier guard is written against.
             return false;
         }
@@ -1769,6 +1794,13 @@ impl<'a> Parser<'a> {
             // continues rather than where it ends; `at_result_expression` says so
             // too, so neither position depends on the other being right.
             self.return_parameter_member();
+        } else if body.admits_variant() && self.at_element_keyword("variant") {
+            // DefinitionBodyItem's and NonBehaviorBodyItem's VariantUsageMember
+            // (SysML 8.2.2.6.1, 8.2.2.17.1). Owns its element through a VariantMembership
+            // of its own, so it cannot go through `membership`. `variant` is reserved,
+            // so it decides; before the result-expression test, as `return` is, because
+            // it continues the item run.
+            self.variant_usage_member();
         } else if body.ends_in_result_expression() && self.at_result_expression() {
             // The item run is over and what is left is the body's trailing
             // expression, which is not a member. `calculation_body_part` reads it;
@@ -1890,6 +1922,9 @@ impl<'a> Parser<'a> {
                 }
                 Language::SysMl => {
                     self.at_definition_element(0)
+                        // A body item rather than a member `membership` reads, and SysML's
+                        // alone: KerML has no variants.
+                        || self.at_element_keyword("variant")
                         || self.at_simple_usage(0).is_some()
                         || self.at_action_usage(0)
                         || self.at_perform_action_usage(0)
@@ -2740,6 +2775,96 @@ impl<'a> Parser<'a> {
         self.start_node(SyntaxKind::AnnotatingMember);
         self.member_prefix();
         self.with_significant_comments(Self::annotating_element);
+        self.finish_node();
+    }
+
+    // production: VariantUsageMember@sysml
+    //
+    // VariantUsageMember : VariantMembership =
+    //     MemberPrefix 'variant'
+    //     ownedVariantUsage = VariantUsageElement                  (SysML 8.2.2.6.1)
+    //
+    // A VariantMembership, which is an OwningMembership and NOT a FeatureMembership, so a
+    // variant is an ownedMember but not an ownedFeature of its owner (8.4.2.3, receipt
+    // 4ad35baf) — which is why it has a node of its own rather than the body's usage
+    // member. Marked although VariantUsageElement is not: this production's own three
+    // parts are read. The element takes no MemberPrefix of its own, and the usage inside
+    // keeps its own prefix: `variant part p;`, `variant attribute a = 70[mm];`.
+    //
+    // constraint: VariantMembership::validateVariantMembershipOwningNamespace (8.3.6.5,
+    //     receipt 49805baa) — the owner must be a variation. sv2-resolve's, not the
+    //     parser's (ADR-0002); `Body::admits_variant` says why.
+    fn variant_usage_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::VariantUsageMember);
+        self.member_prefix();
+        self.expect_keyword("variant");
+        self.variant_usage_element();
+        self.finish_node();
+    }
+
+    // VariantUsageElement : Usage =
+    //       VariantReference | ReferenceUsage | AttributeUsage | BindingConnectorAsUsage
+    //     | SuccessionAsUsage | OccurrenceUsage | IndividualUsage | PortionUsage
+    //     | EventOccurrenceUsage | ItemUsage | PartUsage | ViewUsage | RenderingUsage
+    //     | PortUsage | ConnectionUsage | InterfaceUsage | AllocationUsage | Message
+    //     | FlowUsage | SuccessionFlowUsage | BehaviorUsageElement   (SysML 8.2.2.6.4)
+    //
+    // NOT marked for coverage: IndividualUsage, PortionUsage, EventOccurrenceUsage,
+    // ViewUsage, ConnectionUsage, InterfaceUsage, AllocationUsage, Message and
+    // SuccessionFlowUsage are unimplemented, and so is most of BehaviorUsageElement.
+    //
+    // It is UsageElement less three of NonOccurrenceUsageElement's alternatives (8.2.2.6.4):
+    // DefaultReferenceUsage, replaced by VariantReference; EnumerationUsage; and
+    // ExtendedUsage. The exclusions are the grammar's, stated by the two alternations and
+    // nothing else. 8.4.2.3 (receipt 4ad35baf) excludes enumerations from being VARIATIONS,
+    // which is consistent but is not this rule. A NAME is where the two usage alternations
+    // part: VariantReference opens on one, and no keyword usage does.
+    //
+    // ExtendedUsage (`UnextendedUsagePrefix UsageExtensionKeyword+ Usage`, 8.2.2.6.4) is
+    // unimplemented, so `usage_element_of_class` does not read it and nothing leaks today.
+    // WHEN IT LANDS THERE, it must be refused here as EnumerationUsage is; the test
+    // a_variant_usage_member_is_bounded_by_its_rules fails until it is.
+    fn variant_usage_element(&mut self) {
+        if self.at_name() {
+            self.variant_reference();
+        } else if self.at_default_reference_usage(0)
+            || self
+                .at_simple_usage(0)
+                .is_some_and(|usage| usage.node == SyntaxKind::EnumerationUsage)
+        {
+            // Read by `usage_element_of_class`, and no alternative of this production.
+            // Nothing is consumed: the body loop reads what follows as the member it is,
+            // so the one diagnostic is the `variant` before it.
+            self.error_expected("a variant usage or the name of a usage after `variant`");
+        } else if self.usage_element_of_class().is_none() {
+            self.error_expected("a variant usage or the name of a usage after `variant`");
+        }
+    }
+
+    // production: VariantReference@sysml
+    //
+    // VariantReference : ReferenceUsage =
+    //     ownedRelationship += OwnedReferenceSubsetting
+    //     FeatureSpecialization* UsageBody                         (SysML 8.2.2.6.3)
+    //
+    // "A non-variant usage can also be declared to act as a variant of a variation by not
+    // including a kind keyword in the variant declaration and, instead, following the
+    // variant keyword with the identification of a separately declared usage" (7.6.7,
+    // receipt 5a7843af). NOT a DefaultReferenceUsage: it declares no name, its first part
+    // is the reference to the usage it varies, and it has no ValuePart.
+    //
+    // 7.6.7 goes on to say such a declaration "may also optionally further constrain the
+    // variant usage by including a multiplicity", and the production writes no
+    // MultiplicityPart. The grammar is followed; `variant x[1];` is reported.
+    fn variant_reference(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::VariantReference);
+        self.owned_reference_subsetting();
+        while self.at_feature_specialization() {
+            self.feature_specialization();
+        }
+        self.usage_body();
         self.finish_node();
     }
 

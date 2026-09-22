@@ -98,6 +98,16 @@ fn a_usage_is_not_reachable_from_the_kerml_start_symbol() {
 }
 
 #[test]
+fn a_variant_is_not_reachable_from_a_kerml_body() {
+    // VariantUsageMember is an item of SysML's definition and action bodies (SysML
+    // 8.2.2.6.1, 8.2.2.17.1), and TypeBodyElement has no such alternative (KerML 8.2.4.1.1).
+    kerml_rejected("classifier C { variant x; }");
+    kerml_rejected("classifier C { variant feature f; }");
+    let sysml = parse("part def C { variant x; }", Language::SysMl);
+    assert!(sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
+#[test]
 fn a_filter_is_admitted_in_a_kerml_package_body_and_not_at_a_kerml_root() {
     // The asymmetry that keeps "which member" and "admits a filter" separate
     // questions. PackageBody@kerml adds ElementFilterMember; NamespaceBodyElement

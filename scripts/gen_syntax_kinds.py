@@ -859,6 +859,20 @@ NODES = [
         "`'enum'? Usage`, the metaclass `EnumerationUsage`. `SysML` 8.2.2.8.",
     ),
     ("AnnotatingMember", "`MemberPrefix AnnotatingElement`. `SysML` 8.2.2.4.1."),
+    # A variant, owned through a VariantMembership rather than a FeatureMembership, so it
+    # is an item of the body in its own right beside the usage members. VariantUsageElement
+    # has no node, being an alternation, as UsageElement has none.
+    (
+        "VariantUsageMember",
+        ("`MemberPrefix 'variant' ownedVariantUsage = VariantUsageElement`. `SysML` 8.2.2.6.1."),
+    ),
+    (
+        "VariantReference",
+        (
+            "`OwnedReferenceSubsetting FeatureSpecialization* UsageBody`, the metaclass "
+            "`ReferenceUsage`. `SysML` 8.2.2.6.3."
+        ),
+    ),
     ("UsagePrefix", "`UnextendedUsagePrefix UsageExtensionKeyword*`. `SysML` 8.2.2.6.2."),
     (
         "OccurrenceUsagePrefix",

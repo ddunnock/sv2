@@ -3337,6 +3337,175 @@ fn an_enumeration_definition_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- VariantUsageMember, SysML 8.2.2.6.1 ----------------------------------------------
+//
+// VariantUsageMember : VariantMembership =
+//     MemberPrefix 'variant' ownedVariantUsage = VariantUsageElement      (8.2.2.6.1)
+// VariantUsageElement = VariantReference | ReferenceUsage | AttributeUsage
+//                     | BindingConnectorAsUsage | SuccessionAsUsage | OccurrenceUsage
+//                     | ... | PartUsage | PortUsage | FlowUsage | BehaviorUsageElement
+//                                                                         (8.2.2.6.4)
+// VariantReference : ReferenceUsage =
+//     ownedRelationship += OwnedReferenceSubsetting
+//     FeatureSpecialization* UsageBody                                    (8.2.2.6.3)
+//
+// An alternative of DefinitionBodyItem (8.2.2.6.1) and NonBehaviorBodyItem (8.2.2.17.1),
+// and so of every definition, usage, requirement, action and calculation body; NOT of
+// PackageBodyElement (8.2.2.5.1). "Variant usages may only be declared within a
+// variation" (7.6.7, receipt 5a7843af) is validateVariantMembershipOwningNamespace
+// (8.3.6.5, receipt 49805baa), a constraint on the membership's owner and not grammar,
+// so a `variant` in a non-variation body parses (ADR-0002).
+
+#[test]
+fn a_variant_usage_member_reads_the_clause_examples() {
+    // 7.6.7 (receipt 5a7843af): variant usages with a kind keyword in a variation
+    // definition, and bare references to separately declared usages in a variation usage.
+    let tree = render(
+        &parse_accepted(
+            "variation part def TransmissionChoices :> Transmission {\n\
+             \tvariant part manual : ManualTransmission;\n\
+             \tvariant part automatic : AutomaticTransmission;\n\
+             }\n\
+             part smallEngine : FourCylinderEngine;\n\
+             part bigEngine : SixCylinderEngine;\n\
+             part def Vehicle {\n\
+             \tvariation part engine : Engine {\n\
+             \t\tvariant smallEngine;\n\
+             \t\tvariant bigEngine;\n\
+             \t}\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "VariantUsageMember"), 4, "{tree}");
+    assert_eq!(nodes_named(&tree, "VariantReference"), 2, "{tree}");
+}
+
+#[test]
+fn a_variant_usage_member_reads_the_corpus_forms() {
+    // training/36. Variability/Variation Definitions.sysml:25-33 — attribute variants
+    // bound to values, and quoted-name references.
+    let defs = render(
+        &parse_accepted(
+            "variation attribute def DiameterChoices :> Diameter {\n\
+             \tvariant attribute diameterSmall = 70[mm];\n\
+             \tvariant attribute diameterLarge = 100[mm];\n\
+             }\n\
+             variation part def EngineChoices :> Engine {\n\
+             \tvariant '4cylEngine';\n\
+             \tvariant '6cylEngine';\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&defs, "VariantUsageMember"), 4, "{defs}");
+    assert_eq!(nodes_named(&defs, "AttributeUsage"), 2, "{defs}");
+    assert_eq!(nodes_named(&defs, "VariantReference"), 2, "{defs}");
+    // examples/Variability Examples/VehicleVariabilityModel.sysml:78-82 — a reference
+    // with a UsageBody, and variants nested in it; :114-115, variants with a multiplicity.
+    parse_accepted(
+        "variation part def EngineChoices :> Engine {\n\
+         \tvariant '6cylEngine' {\n\
+         \t\tvariation port :>> autoPort {\n\
+         \t\t\tvariant port autoPort1;\n\
+         \t\t\tvariant port autoPort2;\n\
+         \t\t}\n\
+         \t}\n\
+         }\n\
+         part def V { variation part :>> sunroof {\n\
+         \tvariant part withSunroof[1];\n\
+         \tvariant part withoutSunroof[0];\n\
+         } }",
+    );
+    // VehicleVariabilityModel.sysml:125-129 — in an action body, which reaches the
+    // member through NonBehaviorBodyItem (8.2.2.17.1).
+    parse_accepted(
+        "action providePowerFamily : ProvidePower {\n\
+         \tvariation action generateTorque : GenerateTorque {\n\
+         \t\tvariant generateTorque4Cyl;\n\
+         \t\tvariant generateTorque6Cyl;\n\
+         \t}\n\
+         }",
+    );
+    // validation/07-Variant Configuration/7a1-Variant Configuration - General Concept-a
+    // .sysml:14-17 and examples/Simple Tests/VariabilityTest.sysml:23-26 — behaviour
+    // usages as variants.
+    parse_accepted(
+        "part part5 { variation perform action doXorY { variant perform doX; variant perform doY; } }",
+    );
+    parse_accepted("variation action def A { variant action a1; variant action a2; }");
+}
+
+#[test]
+fn a_variant_usage_member_owns_what_its_production_writes() {
+    let tree = render(&parse_accepted("part def P { private variant part p : Q; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "VariantUsageMember"),
+        ["MemberPrefix", "KwVariant", "PartUsage"],
+        "{tree}"
+    );
+    let reference = render(&parse_accepted("part def P { variant a::b :> c { } }").syntax());
+    assert_eq!(
+        child_kinds(&reference, "VariantUsageMember"),
+        ["MemberPrefix", "KwVariant", "VariantReference"],
+        "{reference}"
+    );
+    assert_eq!(
+        child_kinds(&reference, "VariantReference"),
+        ["OwnedReferenceSubsetting", "Subsettings", "UsageBody"],
+        "{reference}"
+    );
+    // A VariantMembership is not a FeatureMembership (8.4.2.3, receipt 4ad35baf): the
+    // variant is owned through this node alone, not through the body's usage member.
+    assert_eq!(nodes_named(&tree, "OccurrenceUsageMember"), 0, "{tree}");
+    // Every body family that reaches DefinitionBodyItem or NonBehaviorBodyItem: a
+    // requirement body (8.2.2.21.1) and a calculation body, where the member must be
+    // read as an item and not as the start of the result expression (8.2.2.19).
+    parse_accepted("requirement def R { variant r1; }");
+    let calc = render(&parse_accepted("constraint def C { variant a; a }").syntax());
+    assert_eq!(nodes_named(&calc, "VariantUsageMember"), 1, "{calc}");
+    assert_eq!(nodes_named(&calc, "ResultExpressionMember"), 1, "{calc}");
+}
+
+#[test]
+fn a_variant_usage_member_is_bounded_by_its_rules() {
+    // Not a PackageBodyElement (8.2.2.5.1): not at the root, not in a package body.
+    parse_rejected("variant part p;");
+    parse_rejected("package P { variant part p; }");
+    // EnumerationUsage is not a VariantUsageElement (8.2.2.6.4), nor is
+    // DefaultReferenceUsage: `variant x;` is a VariantReference, which has no ValuePart,
+    // no Identification and no bare specialization (8.2.2.6.3).
+    parse_rejected("variation attribute def A { variant enum e; }");
+    parse_rejected("part def P { variant x = 1; }");
+    parse_rejected("part def P { variant :>> x; }");
+    parse_rejected("part def P { variant <s> x; }");
+    // ExtendedUsage is not a VariantUsageElement either. Rejected today because it is
+    // unimplemented; this holds the rule for the day `usage_element_of_class` reads it.
+    parse_rejected("part def P { variant #M x; }");
+    // VariantReference writes no MultiplicityPart, though 7.6.7 (receipt 5a7843af) says a
+    // variant reference "may also optionally further constrain the variant usage by
+    // including a multiplicity". The grammar is followed; the prose conflict is recorded
+    // at `variant_reference`.
+    parse_rejected("part def P { variant x[1]; }");
+    // The element is not optional, and there is one `variant`.
+    parse_rejected("part def P { variant; }");
+    parse_rejected("part def P { variant variant part p; }");
+    // SourceSuccessionMember prefixes an occurrence usage member, never this one
+    // (8.2.2.6.1).
+    parse_rejected("part def P { then variant part p; }");
+    // An enumerated value "may not include the keyword variant" (7.8.2).
+    parse_rejected("enum def E { variant a; }");
+    // Unclosed.
+    parse_rejected("part def P { variant x {");
+}
+
+#[test]
+fn a_variant_usage_member_keeps_every_byte() {
+    let source =
+        "part def P {\n\tprivate /* v */ variant // d\n\t\tpart p : Q;\n\tvariant a . b { }\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
 //
 // DefaultTargetSuccession : TransitionUsage =
