@@ -479,6 +479,8 @@ pub enum SyntaxKind {
     Package,
     /// `'package' Identification`. `SysML` 8.2.2.5.1.
     PackageDeclaration,
+    /// `'standard'? 'library' PrefixMetadataMember* PackageDeclaration PackageBody`. `SysML` 8.2.2.5.1, `KerML` 8.2.5.13, as deviation `LibraryPackage` reads it.
+    LibraryPackage,
     /// `';' | '{' PackageBodyElement* '}'` in `SysML` 8.2.2.5.1; `';' | '{' ( NamespaceBodyElement | ElementFilterMember )* '}'` in `KerML` 8.2.3.4.1.
     PackageBody,
     /// `( '<' NAME '>' )? ( NAME )?`. `SysML` 8.2.2.2.
@@ -1400,6 +1402,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::RootNamespace,
     SyntaxKind::Package,
     SyntaxKind::PackageDeclaration,
+    SyntaxKind::LibraryPackage,
     SyntaxKind::PackageBody,
     SyntaxKind::Identification,
     SyntaxKind::QualifiedName,

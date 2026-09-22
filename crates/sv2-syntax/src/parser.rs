@@ -1581,6 +1581,7 @@ impl<'a> Parser<'a> {
     /// Whether an implemented `DefinitionElement` starts at the `n`th meaningful token.
     fn at_definition_element(&self, n: usize) -> bool {
         self.at_package(n)
+            || self.at_library_package(n)
             || self.at_dependency(n)
             || self.at_port_definition(n)
             || self.at_requirement_definition(n)
@@ -1600,6 +1601,15 @@ impl<'a> Parser<'a> {
     /// `PrefixMetadataMember*` (`SysML` 8.2.2.5.1) looked past, then `package`.
     fn at_package(&self, n: usize) -> bool {
         self.nth_is_keyword(self.skip_prefix_metadata(n), "package")
+    }
+
+    /// Whether a `LibraryPackage` starts at the `n`th meaningful token: `'standard'?
+    /// 'library'`, its `PrefixMetadataMember*` looked past in `SysML` as `at_package` looks
+    /// past them, then `package` (`SysML` 8.2.2.5.1, `KerML` 8.2.5.13). The `standard` is
+    /// optional by deviation `LibraryPackage` (`follow_xtext`).
+    fn at_library_package(&self, n: usize) -> bool {
+        let k = n + usize::from(self.nth_is_keyword(n, "standard"));
+        self.nth_is_keyword(k, "library") && self.at_package(k + 1)
     }
 
     /// Whether an `ExtendedDefinition` starts at the `n`th meaningful token.
@@ -1844,8 +1854,8 @@ impl<'a> Parser<'a> {
     /// NamespaceFeatureMember = MemberPrefix FeatureElement
     /// ```
     ///
-    /// Of `NonFeatureElement`, `Package` — a shared unit, the same production in both
-    /// grammars — and the eight classifiers of 8.2.4.2 are implemented. Of
+    /// Of `NonFeatureElement`, `Package` and `LibraryPackage` — shared units, the same
+    /// productions in both grammars — and the eight classifiers of 8.2.4.2 are implemented. Of
     /// `FeatureElement`'s ten alternatives, `Feature`, `BindingConnector` and `Succession`
     /// are. The rest (`step`, `connector`, `flow`, `succession flow`, …) are reported
     /// rather than read.
@@ -1865,6 +1875,7 @@ impl<'a> Parser<'a> {
         match self.language {
             Language::KerMl => {
                 self.nth_is_keyword(n, "package")
+                    || self.at_library_package(n)
                     || self.at_dependency(n)
                     || self.at_classifier(n).is_some()
                     || self.at_feature(n)
@@ -2605,6 +2616,7 @@ impl<'a> Parser<'a> {
             || match self.language {
                 Language::KerMl => {
                     self.at_keyword("package")
+                        || self.at_library_package(0)
                         || self.at_dependency(0)
                         || self.at_classifier(0).is_some()
                         || self.at_kerml_succession(0)
@@ -3262,6 +3274,8 @@ impl<'a> Parser<'a> {
             self.annotating_element_at_member();
         } else if self.at_package(0) {
             self.package();
+        } else if self.at_library_package(0) {
+            self.library_package();
         } else if let Some(classifier) = self.at_classifier(0).filter(|_| {
             // Every classifier unit is scoped `kerml`. SysML reaches DefinitionElement
             // instead, so `class Foo;` in a .sysml file is text SysML does not state.
@@ -10605,6 +10619,45 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: LibraryPackage
+    //
+    // LibraryPackage =
+    //     ( isStandard ?= 'standard' ) 'library'
+    //     ( ownedRelationship += PrefixMetadataMember )*
+    //     PackageDeclaration PackageBody          (SysML 8.2.2.5.1, KerML 8.2.5.13)
+    //
+    // Read as deviation LibraryPackage (follow_xtext) writes it: `'standard'?`. The printed
+    // group has no `?`, which would make every library package standard, where KerML 7.4.14
+    // writes `library package AddressBooks {` and the LibraryPackage metaclass says
+    // isStandard "should only be set to true" for recognised standard libraries
+    // (8.3.4.13.3). So `library package` without `standard` is the text the deviation adds,
+    // and it carries the note; the corpus writes nothing else.
+    //
+    // One unit in both grammars, whose texts are the same (ADR-0015). Marked as Package is:
+    // the PrefixMetadataMember* is read in SysML, where it is PrefixMetadataMember@sysml,
+    // and left unread in KerML, where it is PrefixMetadataMember@kerml over
+    // PrefixMetadataFeature (8.2.5.12), a unit of its own tracked as unimplemented, so a
+    // `.kerml` `library #X package` is reported.
+    fn library_package(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::LibraryPackage);
+        if self.at_keyword("standard") {
+            self.bump_as(keyword("standard").unwrap_or(SyntaxKind::BasicName));
+        } else {
+            // deviation: LibraryPackage
+            self.note_deviation("LibraryPackage", "a library package that is not `standard`");
+        }
+        self.expect_keyword("library");
+        if self.language == Language::SysMl {
+            while self.at(SyntaxKind::Hash) {
+                self.prefix_metadata_member();
+            }
+        }
+        self.package_declaration();
+        self.package_body();
+        self.finish_node();
+    }
+
     // production: PackageDeclaration
     fn package_declaration(&mut self) {
         self.eat_trivia();
@@ -11105,6 +11158,8 @@ impl<'a> Parser<'a> {
     fn owned_related_element(&mut self) -> bool {
         if self.at_keyword("package") {
             self.package();
+        } else if self.at_library_package(0) {
+            self.library_package();
         } else if self.at_dependency(0) {
             self.dependency();
         } else if let Some(classifier) = self.at_classifier(0) {

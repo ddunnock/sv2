@@ -5754,6 +5754,14 @@ const DEVIATION_SITES: &[(&str, &str, &str)] = &[
         "package P { metadata m : M; }",
         "MetadataUsageDeclaration",
     ),
+    // LibraryPackage, follow_xtext: `standard` optional, as KerML 7.4.14 writes it and as
+    // every corpus library package does (training/41. Language Extension/Model Library
+    // Example.sysml:1).
+    (
+        "library package L;",
+        "standard library package L;",
+        "LibraryPackage",
+    ),
     // EnumeratedValue, follow_xtext: prefix metadata on an enumerated value, as
     // examples/Simple Tests/MetadataTest.sysml:9 writes it.
     (
@@ -9792,6 +9800,85 @@ fn an_interface_is_bounded_by_its_rules() {
     // SysML only.
     assert!(
         !parse("interface def I;", Language::KerMl)
+            .errors()
+            .is_empty()
+    );
+}
+
+// -- LibraryPackage, SysML 8.2.2.5.1 and KerML 8.2.5.13 --------------------------------
+//
+//   LibraryPackage = ( isStandard ?= 'standard' ) 'library'
+//                    ( ownedRelationship += PrefixMetadataMember )*
+//                    PackageDeclaration PackageBody
+//
+// with `standard` optional by deviation LibraryPackage (follow_xtext).
+
+#[test]
+fn a_library_package_is_read_in_both_languages() {
+    for language in [Language::SysMl, Language::KerMl] {
+        for source in [
+            "standard library package L;",
+            "library package L { }",
+            "package P { library package L; }",
+        ] {
+            let parsed = parse(source, language);
+            assert!(
+                parsed.errors().is_empty(),
+                "{source}: {:?}",
+                parsed.errors()
+            );
+            let rendered = render(&parsed.syntax());
+            assert_eq!(
+                nodes_named(&rendered, "LibraryPackage"),
+                1,
+                "{source}\n{rendered}"
+            );
+        }
+    }
+    // The corpus form, prefix metadata between `library` and `package` in SysML, and a
+    // library package as a DefinitionElement in a definition body (8.2.2.5.2).
+    for source in [
+        "library package 'Model Library Example' { part def A; }",
+        "standard library #X #Y package L;",
+        "part def P { library package L; }",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            nodes_named(&rendered, "LibraryPackage"),
+            1,
+            "{source}\n{rendered}"
+        );
+    }
+    assert_eq!(
+        child_kinds(
+            &render(&parse_accepted("standard library #X package L;").syntax()),
+            "LibraryPackage"
+        ),
+        [
+            "KwStandard",
+            "KwLibrary",
+            "PrefixMetadataMember",
+            "PackageDeclaration",
+            "PackageBody"
+        ]
+    );
+}
+
+#[test]
+fn a_library_package_is_bounded_by_its_rules() {
+    // `library` is followed by a PackageDeclaration, whose `package` is not optional.
+    // Held by tests/rejection/library-package-needs-package.sysml.
+    parse_rejected("library L;");
+    // `standard` qualifies `library` and comes before it; it is no Package prefix.
+    parse_rejected("standard package L;");
+    parse_rejected("library standard package L;");
+    // Prefix metadata follows `library` (8.2.2.5.1). Held by
+    // tests/rejection/library-package-prefix-metadata-follows-library.sysml.
+    parse_rejected("#X library package L;");
+    // KerML's PrefixMetadataMember is over PrefixMetadataFeature (8.2.5.12), unimplemented:
+    // REJECTED BY ABSENCE, removed when PrefixMetadataFeature@kerml lands.
+    assert!(
+        !parse("library #X package L;", Language::KerMl)
             .errors()
             .is_empty()
     );

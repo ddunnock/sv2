@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T21:37:46Z",
+    "regenerated_utc": "2026-09-22T21:59:19Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 341,
-      "unimplemented": 213,
+      "implemented": 342,
+      "unimplemented": 212,
       "absent": 0,
-      "percent": 61.6
+      "percent": 61.7
     },
     "tests": {
-      "unit": 528,
+      "unit": 530,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 216,
+      "negative_cases": 218,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "95d9148 Read interface definitions and usages, and the port ends they declare",
       "4d7af66 Read `#` prefix metadata, and the definitions and usages it declares alone",
       "23e3406 Stop rejecting `#` prefix metadata by absence: the next commit reads it",
       "a7e573e Close the session: the case and metadata layers recorded, the `#` prefix written to start cold",
       "aa81590 Read the metadata definition, usage and body, and buy ten files",
       "6448723 Read the requirement verification member, and buy the two verification files it held",
       "875edec Read the verification case definition and usage, the fourth and last case row",
-      "2296540 Read the include use case usage, buy the three use case files it held, and drop the guard it made useless",
-      "4e30f08 Read the use case definition and usage, and buy the file only they held back"
+      "2296540 Read the include use case usage, buy the three use case files it held, and drop the guard it made useless"
     ]
   },
   "authored": {

@@ -108,6 +108,13 @@ NODES = [
     ("Package", "`PrefixMetadataMember* PackageDeclaration PackageBody`. `SysML` 8.2.2.5.1."),
     ("PackageDeclaration", "`'package' Identification`. `SysML` 8.2.2.5.1."),
     (
+        "LibraryPackage",
+        (
+            "`'standard'? 'library' PrefixMetadataMember* PackageDeclaration PackageBody`. "
+            "`SysML` 8.2.2.5.1, `KerML` 8.2.5.13, as deviation `LibraryPackage` reads it."
+        ),
+    ),
+    (
         "PackageBody",
         (
             "`';' | '{' PackageBodyElement* '}'` in `SysML` 8.2.2.5.1; "

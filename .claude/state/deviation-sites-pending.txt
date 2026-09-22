@@ -11,6 +11,5 @@ FlowDeclaration  # a KerML clause's missing '?'; FlowDeclaration@kerml is unimpl
 ForVariableDeclarationMember  # ForLoopNode is unimplemented
 FramedConcernUsage  # concern usages are unimplemented
 Invariant  # KerML's Invariant is unimplemented
-LibraryPackage  # library packages are unimplemented
 SatisfyRequirementUsage  # SatisfyRequirementUsage is unimplemented
 Step  # KerML's Step is unimplemented
