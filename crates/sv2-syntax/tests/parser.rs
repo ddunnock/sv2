@@ -9573,3 +9573,226 @@ fn kerml_prefix_metadata_is_still_absent() {
         );
     }
 }
+
+// -- Interfaces, SysML 8.2.2.14 -------------------------------------------------------
+//
+//   InterfaceDefinition = OccurrenceDefinitionPrefix 'interface' 'def'
+//                         DefinitionDeclaration InterfaceBody
+//   InterfaceBodyItem   = DefinitionMember | VariantUsageMember
+//                       | InterfaceNonOccurrenceUsageMember
+//                       | SourceSuccessionMember? InterfaceOccurrenceUsageMember
+//                       | AliasMember | Import
+//   DefaultInterfaceEnd = isEnd ?= 'end' Usage
+//   InterfaceUsage      = OccurrenceUsagePrefix 'interface'
+//                         InterfaceUsageDeclaration InterfaceBody
+//   InterfaceUsageDeclaration = UsageDeclaration ValuePart? ( 'connect' InterfacePart )?
+//                             | InterfacePart
+//
+// "An interface definition or usage is declared like a connection definition or usage
+// (see 7.13.2), but using the kind keyword interface" (7.14.2, receipt a994b0e7).
+
+#[test]
+fn the_interface_examples_of_7_14_2_parse() {
+    // Both of 7.14.2's examples (receipt a994b0e7), whole, in one package.
+    let parsed = parse_accepted(
+        "package P {\n\
+         port def FuelingPort { out fuel : Fuel; }\n\
+         interface def FuelingInterface {\n\
+         end fuelOutPort : FuelingPort;\n\
+         end fuelInPort : ~FuelingPort;\n\
+         }\n\
+         interface fuelLine : FuelingInterface\n\
+         connect fuelTank.fuelingPort to engine.fuelingPort;\n\
+         interface fuelTank.fuelingPort to engine.fuelingPort;\n\
+         part def DistributedSystem {\n\
+         item def Request;\n\
+         item def Response;\n\
+         part client { port clientPort; action clientBehavior {\n\
+         send new Request() via clientPort; then accept Response via clientPort; } }\n\
+         part server { port serverPort; action serverBehavior {\n\
+         accept Request via serverPort; then send new Response() via serverPort; } }\n\
+         interface client.clientPort to server.serverPort;\n\
+         }\n\
+         }",
+    );
+    assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
+    let rendered = render(&parsed.syntax());
+    assert_eq!(
+        nodes_named(&rendered, "InterfaceDefinition"),
+        1,
+        "{rendered}"
+    );
+    // The two keywordless ends are port ends, each owned as an occurrence usage.
+    assert_eq!(
+        nodes_named(&rendered, "DefaultInterfaceEnd"),
+        2,
+        "{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "InterfaceOccurrenceUsageMember"),
+        2,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "InterfaceUsage"), 3, "{rendered}");
+    // Three binary parts, so six ends, all InterfaceEnds and none a ConnectorEnd.
+    assert_eq!(
+        nodes_named(&rendered, "BinaryInterfacePart"),
+        3,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "InterfaceEnd"), 6, "{rendered}");
+    assert_eq!(nodes_named(&rendered, "ConnectorEnd"), 0, "{rendered}");
+}
+
+#[test]
+fn an_interface_usage_declaration_is_one_of_two_alternatives() {
+    // The first alternative: a declaration, a value, and `connect` with its part.
+    let rendered =
+        render(&parse_accepted("part v { interface i : I = j connect a to b; }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "InterfaceUsageDeclaration"),
+        [
+            "UsageDeclaration",
+            "ValuePart",
+            "KwConnect",
+            "BinaryInterfacePart"
+        ],
+        "{rendered}"
+    );
+    // The second: the part alone, with no UsageDeclaration and no `connect` (7.14.2).
+    let rendered = render(&parse_accepted("part v { interface a.b to c.d; }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "InterfaceUsageDeclaration"),
+        ["BinaryInterfacePart"],
+        "{rendered}"
+    );
+    // Both alternatives may open on `[`: a multiplicity, or an end's cross multiplicity.
+    // The `to` after a whole end is what decides.
+    for (source, first) in [
+        (
+            "part v { interface w : W [5] connect a to b; }",
+            "UsageDeclaration",
+        ),
+        (
+            "part v { interface [1] a to [2] b; }",
+            "BinaryInterfacePart",
+        ),
+        (
+            "part v { interface x : I connect (a ::> p.q, b ::> r.s, c); }",
+            "UsageDeclaration",
+        ),
+        ("part v { interface (a, b); }", "NaryInterfacePart"),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        let kinds = child_kinds(&rendered, "InterfaceUsageDeclaration");
+        assert_eq!(
+            kinds.first().map(String::as_str),
+            Some(first),
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn a_keywordless_end_is_a_port_end_in_an_interface_and_a_reference_end_elsewhere() {
+    // DefaultInterfaceEnd is a PortUsage (8.2.2.14.1): "the use of the port keyword is
+    // optional on such end features" (7.14.2, receipt a994b0e7).
+    let rendered =
+        render(&parse_accepted("interface def I { end p : P; end port q : Q; }").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "DefaultInterfaceEnd"),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "PortUsage"), 1, "{rendered}");
+    assert_eq!(
+        nodes_named(&rendered, "DefaultReferenceUsage"),
+        0,
+        "{rendered}"
+    );
+    // The same text in a connection definition's DefinitionBody is DefaultReferenceUsage,
+    // by deviation DefaultReferenceUsage.
+    let rendered = render(&parse_accepted("connection def C { end p : P; }").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "DefaultReferenceUsage"),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "DefaultInterfaceEnd"),
+        0,
+        "{rendered}"
+    );
+}
+
+#[test]
+fn an_interface_body_reads_each_of_its_items() {
+    // One per InterfaceBodyItem alternative (8.2.2.14.1), and the member each is owned by.
+    for (item, member) in [
+        ("part def D;", "DefinitionMember"),
+        ("variant part q;", "VariantUsageMember"),
+        ("ref d : D;", "InterfaceNonOccurrenceUsageMember"),
+        ("attribute a : A;", "InterfaceNonOccurrenceUsageMember"),
+        ("enum e : E;", "InterfaceNonOccurrenceUsageMember"),
+        ("bind a = b;", "InterfaceNonOccurrenceUsageMember"),
+        ("first a then b;", "InterfaceNonOccurrenceUsageMember"),
+        ("then part p;", "InterfaceOccurrenceUsageMember"),
+        (
+            "connect shaftPort_a to driveshaft.shaftPort_b;",
+            "InterfaceOccurrenceUsageMember",
+        ),
+        ("action a;", "InterfaceOccurrenceUsageMember"),
+        ("alias A for B;", "AliasMember"),
+        ("private import X::*;", "Import"),
+    ] {
+        let source = format!("interface def I {{ {item} }}");
+        let rendered = render(&parse_accepted(&source).syntax());
+        assert_eq!(
+            child_kinds(&rendered, "InterfaceBody")
+                .iter()
+                .filter(|kind| kind.as_str() == member)
+                .count(),
+            1,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn an_interface_is_bounded_by_its_rules() {
+    // InterfaceNonOccurrenceUsageElement leaves out DefaultReferenceUsage and
+    // ExtendedUsage (8.2.2.14.1). Held by
+    // tests/rejection/interface-body-admits-no-default-reference-usage.sysml.
+    parse_rejected("interface def I { x : T; }");
+    parse_rejected("interface def I { in x : T; }");
+    parse_rejected("interface def I { #X y; }");
+    // No ActionNodeMember, SubjectMember or ElementFilterMember is an InterfaceBodyItem.
+    parse_rejected("interface def I { accept s; }");
+    parse_rejected("interface def I { subject s; }");
+    parse_rejected("interface def I { filter @X; }");
+    // InterfaceBody is not optional.
+    parse_rejected("part v { interface a to b }");
+    parse_rejected("interface def I");
+    // A binary part has exactly two ends and an n-ary one at least two, with no trailing
+    // comma (8.2.2.14.2). Held by tests/rejection/nary-interface-part-needs-two-ends.sysml.
+    parse_rejected("part v { interface x connect (a); }");
+    parse_rejected("part v { interface x connect (a, b,); }");
+    parse_rejected("part v { interface x : I connect a to b to c; }");
+    parse_rejected("part v { interface a to; }");
+    // InterfaceEnd takes no multiplicity after its reference: deviation
+    // ConnectorEnd-trailing-multiplicity is ConnectorEnd's alone. Held by
+    // tests/rejection/interface-end-takes-no-trailing-multiplicity.sysml. Both
+    // alternatives: the bare part, told by the recogniser, and the part after `connect`,
+    // read by `interface_end` itself.
+    parse_rejected("part v { interface a[1] to b; }");
+    parse_rejected("part v { interface x connect a[1] to b; }");
+    parse_rejected("part v { interface x connect (a, b[1]); }");
+    // A `def` makes it a definition, which takes no InterfacePart.
+    parse_rejected("interface def I connect a to b;");
+    // SysML only.
+    assert!(
+        !parse("interface def I;", Language::KerMl)
+            .errors()
+            .is_empty()
+    );
+}

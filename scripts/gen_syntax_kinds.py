@@ -1509,6 +1509,65 @@ NODES = [
         "ExtendedUsage",
         "`UnextendedUsagePrefix UsageExtensionKeyword+ Usage`. `SysML` 8.2.2.27.",
     ),
+    (
+        "InterfaceDefinition",
+        (
+            "`OccurrenceDefinitionPrefix 'interface' 'def' DefinitionDeclaration "
+            "InterfaceBody`. `SysML` 8.2.2.14.1."
+        ),
+    ),
+    ("InterfaceBody", "`';' | '{' InterfaceBodyItem* '}'`. `SysML` 8.2.2.14.1."),
+    (
+        "InterfaceNonOccurrenceUsageMember",
+        (
+            "`MemberPrefix ownedRelatedElement += InterfaceNonOccurrenceUsageElement`. "
+            "`SysML` 8.2.2.14.1."
+        ),
+    ),
+    (
+        "InterfaceOccurrenceUsageMember",
+        (
+            "`MemberPrefix ownedRelatedElement += InterfaceOccurrenceUsageElement`. "
+            "`SysML` 8.2.2.14.1."
+        ),
+    ),
+    (
+        "DefaultInterfaceEnd",
+        "`isEnd ?= 'end' Usage`. `SysML` 8.2.2.14.1 — the metaclass is `PortUsage`.",
+    ),
+    (
+        "InterfaceUsage",
+        (
+            "`OccurrenceUsagePrefix 'interface' InterfaceUsageDeclaration InterfaceBody`. "
+            "`SysML` 8.2.2.14.2."
+        ),
+    ),
+    (
+        "InterfaceUsageDeclaration",
+        (
+            "`UsageDeclaration ValuePart? ( 'connect' InterfacePart )? | InterfacePart`. "
+            "`SysML` 8.2.2.14.2."
+        ),
+    ),
+    (
+        "BinaryInterfacePart",
+        "`InterfaceEndMember 'to' InterfaceEndMember`. `SysML` 8.2.2.14.2.",
+    ),
+    (
+        "NaryInterfacePart",
+        (
+            "`'(' InterfaceEndMember ',' InterfaceEndMember ( ',' InterfaceEndMember )* ')'`. "
+            "`SysML` 8.2.2.14.2."
+        ),
+    ),
+    ("InterfaceEndMember", "`ownedRelatedElement += InterfaceEnd`. `SysML` 8.2.2.14.2."),
+    (
+        "InterfaceEnd",
+        (
+            "`OwnedCrossMultiplicityMember? ( NAME REFERENCES )? OwnedReferenceSubsetting`. "
+            "`SysML` 8.2.2.14.2 — the metaclass is `PortUsage`."
+        ),
+    ),
     ("Error", "recovered-over text; carries its bytes so the tree stays lossless"),
 ]
 

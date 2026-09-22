@@ -1133,6 +1133,28 @@ pub enum SyntaxKind {
     ExtendedDefinition,
     /// `UnextendedUsagePrefix UsageExtensionKeyword+ Usage`. `SysML` 8.2.2.27.
     ExtendedUsage,
+    /// `OccurrenceDefinitionPrefix 'interface' 'def' DefinitionDeclaration InterfaceBody`. `SysML` 8.2.2.14.1.
+    InterfaceDefinition,
+    /// `';' | '{' InterfaceBodyItem* '}'`. `SysML` 8.2.2.14.1.
+    InterfaceBody,
+    /// `MemberPrefix ownedRelatedElement += InterfaceNonOccurrenceUsageElement`. `SysML` 8.2.2.14.1.
+    InterfaceNonOccurrenceUsageMember,
+    /// `MemberPrefix ownedRelatedElement += InterfaceOccurrenceUsageElement`. `SysML` 8.2.2.14.1.
+    InterfaceOccurrenceUsageMember,
+    /// `isEnd ?= 'end' Usage`. `SysML` 8.2.2.14.1 — the metaclass is `PortUsage`.
+    DefaultInterfaceEnd,
+    /// `OccurrenceUsagePrefix 'interface' InterfaceUsageDeclaration InterfaceBody`. `SysML` 8.2.2.14.2.
+    InterfaceUsage,
+    /// `UsageDeclaration ValuePart? ( 'connect' InterfacePart )? | InterfacePart`. `SysML` 8.2.2.14.2.
+    InterfaceUsageDeclaration,
+    /// `InterfaceEndMember 'to' InterfaceEndMember`. `SysML` 8.2.2.14.2.
+    BinaryInterfacePart,
+    /// `'(' InterfaceEndMember ',' InterfaceEndMember ( ',' InterfaceEndMember )* ')'`. `SysML` 8.2.2.14.2.
+    NaryInterfacePart,
+    /// `ownedRelatedElement += InterfaceEnd`. `SysML` 8.2.2.14.2.
+    InterfaceEndMember,
+    /// `OwnedCrossMultiplicityMember? ( NAME REFERENCES )? OwnedReferenceSubsetting`. `SysML` 8.2.2.14.2 — the metaclass is `PortUsage`.
+    InterfaceEnd,
     /// recovered-over text; carries its bytes so the tree stays lossless
     Error,
 
@@ -1705,6 +1727,17 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::DefinitionExtensionKeyword,
     SyntaxKind::ExtendedDefinition,
     SyntaxKind::ExtendedUsage,
+    SyntaxKind::InterfaceDefinition,
+    SyntaxKind::InterfaceBody,
+    SyntaxKind::InterfaceNonOccurrenceUsageMember,
+    SyntaxKind::InterfaceOccurrenceUsageMember,
+    SyntaxKind::DefaultInterfaceEnd,
+    SyntaxKind::InterfaceUsage,
+    SyntaxKind::InterfaceUsageDeclaration,
+    SyntaxKind::BinaryInterfacePart,
+    SyntaxKind::NaryInterfacePart,
+    SyntaxKind::InterfaceEndMember,
+    SyntaxKind::InterfaceEnd,
     SyntaxKind::Error,
     SyntaxKind::Tombstone,
 ];

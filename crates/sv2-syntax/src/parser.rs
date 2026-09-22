@@ -847,6 +847,23 @@ enum Body {
     /// has `TransitionUsageMember`, which nothing else has, and the entry, do and exit
     /// members, which `Body::admits_state_action` answers for.
     State,
+    /// The braced form of `InterfaceBody`. `SysML` only.
+    ///
+    /// ```text
+    /// InterfaceBodyItem = DefinitionMember | VariantUsageMember
+    ///                   | InterfaceNonOccurrenceUsageMember
+    ///                   | SourceSuccessionMember? InterfaceOccurrenceUsageMember
+    ///                   | AliasMember | Import                     SysML 8.2.2.14.1
+    /// ```
+    ///
+    /// `DefinitionBodyItem`'s shape with two differences, each of which makes it a
+    /// variant: the usage members are its own (`Interface*UsageMember`), and their element
+    /// sets are not `NonOccurrenceUsageElement` and `OccurrenceUsageElement`.
+    /// `InterfaceNonOccurrenceUsageElement` leaves out `DefaultReferenceUsage` and
+    /// `ExtendedUsage`, and `InterfaceOccurrenceUsageElement` adds `DefaultInterfaceEnd`,
+    /// so a keywordless `end p : P;` is a port end here and a reference end elsewhere.
+    /// See `interface_body_item`.
+    Interface,
     /// The braced form of `TypeBody`. `KerML` only — what a classifier holds.
     Type,
 }
@@ -872,10 +889,20 @@ impl Body {
                 | Self::Calculation
                 | Self::Case
                 | Self::Action
-                | Self::State,
+                | Self::State
+                | Self::Interface,
                 _,
                 MemberElement::Other,
             ) => SyntaxKind::DefinitionMember,
+            // InterfaceBodyItem names its own two usage members (8.2.2.14.1), and a
+            // StructureUsageElement or BehaviorUsageElement is an
+            // InterfaceOccurrenceUsageElement.
+            (Self::Interface, _, MemberElement::Usage(UsageClass::NonOccurrence)) => {
+                SyntaxKind::InterfaceNonOccurrenceUsageMember
+            }
+            (Self::Interface, _, MemberElement::Usage(_)) => {
+                SyntaxKind::InterfaceOccurrenceUsageMember
+            }
             // Both DefinitionBodyItem (8.2.2.6.1) and NonBehaviorBodyItem (8.2.2.17.1)
             // name NonOccurrenceUsageMember.
             (
@@ -940,6 +967,7 @@ impl Body {
             | Self::Case
             | Self::Action
             | Self::State
+            | Self::Interface
             | Self::Type => false,
         }
     }
@@ -988,8 +1016,8 @@ impl Body {
     /// `NonBehaviorBodyItem` (8.2.2.17.1), which an action or calculation body reaches
     /// through `ActionBodyItem`, as a case body does through `CaseBodyItem` (8.2.2.22),
     /// and a state body reaches through `StateBodyItem` (8.2.2.18.1).
-    /// `InterfaceBodyItem` (8.2.2.14.1) names it directly, and the view bodies (8.2.2.26)
-    /// reach it too; each joins this when its body lands. NOT `PackageBodyElement` (8.2.2.5.1), nor any `KerML` body: `KerML` has
+    /// `InterfaceBodyItem` (8.2.2.14.1) names it directly. The view bodies (8.2.2.26)
+    /// reach it too, and join this when they land. NOT `PackageBodyElement` (8.2.2.5.1), nor any `KerML` body: `KerML` has
     /// no variants.
     ///
     /// NOT only a variation's body, although "variant usages may only be declared within
@@ -1006,6 +1034,7 @@ impl Body {
                 | Self::Calculation
                 | Self::Case
                 | Self::State
+                | Self::Interface
         )
     }
 
@@ -1111,8 +1140,9 @@ impl Body {
     /// puts it before `StructureUsageMember` and `ActionBodyItem` before
     /// `ActionBehaviorMember` (8.2.2.17.1), both reached from action and calculation
     /// bodies; `StateBodyItem` puts it before `BehaviorUsageMember` and reaches
-    /// `NonBehaviorBodyItem` (8.2.2.18.1). `PackageBodyElement` (8.2.2.5.1) has no such
-    /// alternative, nor has `KerML`.
+    /// `NonBehaviorBodyItem` (8.2.2.18.1); `InterfaceBodyItem` puts it before
+    /// `InterfaceOccurrenceUsageMember` (8.2.2.14.1). `PackageBodyElement` (8.2.2.5.1) has
+    /// no such alternative, nor has `KerML`.
     ///
     /// NOT only action bodies, although 7.17.4 says its shorthands "may be used only
     /// within the body of an action definition or usage" (receipt 339ef468). That
@@ -1130,6 +1160,7 @@ impl Body {
                 | Self::Calculation
                 | Self::Case
                 | Self::State
+                | Self::Interface
         )
     }
 }
@@ -1561,6 +1592,7 @@ impl<'a> Parser<'a> {
             || self.at_state_definition(n)
             || self.at_enumeration_definition(n)
             || self.at_simple_definition(n).is_some()
+            || self.at_interface_definition(n)
             || self.at_extended_definition(n)
     }
 
@@ -1866,6 +1898,7 @@ impl<'a> Parser<'a> {
             || self.at_perform_action_usage(n)
             || self.at_flow_usage(n)
             || self.at_connection_usage(n)
+            || self.at_interface_usage(n)
             || self.at_succession_as_usage(n)
             || self.at_binding_connector_as_usage(n)
             || self.at_assert_constraint_usage(n)
@@ -2367,6 +2400,12 @@ impl<'a> Parser<'a> {
             // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
             // its own membership node rather than the one `membership` builds.
             self.namespace_feature_member();
+        } else if body == Body::Interface && self.at_usage_no_interface_body_admits() {
+            // InterfaceNonOccurrenceUsageElement lists ReferenceUsage, AttributeUsage,
+            // EnumerationUsage, BindingConnectorAsUsage and SuccessionAsUsage and no
+            // other (8.2.2.14.1): a keywordless usage, or one declared by `#` alone, is no
+            // item of an interface body. Reported and recovered over as a whole.
+            self.recover_statement();
         } else if self.body_specific_item(body) {
             // GuardedSuccessionMember, InitialNodeMember, ReturnParameterMember,
             // VariantUsageMember, RequirementConstraintMember,
@@ -3249,6 +3288,13 @@ impl<'a> Parser<'a> {
             // declaration is what makes it a SendNode.
             self.action_node(node);
             element = MemberElement::ActionNode;
+        } else if body == Body::Interface && self.at_default_interface_end(0) {
+            // InterfaceOccurrenceUsageElement's first alternative (8.2.2.14.1). Its class
+            // is neither Structure nor Behavior, and `Body::member` owns every
+            // occurrence class through InterfaceOccurrenceUsageMember alike; Structure is
+            // the one that takes no target successions after it, as an end takes none.
+            self.default_interface_end();
+            element = MemberElement::Usage(UsageClass::Structure);
         } else if self.definition_element() {
             // A definition: `MemberElement::Other`, which `element` already is.
         } else if let Some(class) = self.usage_element_of_class() {
@@ -3306,6 +3352,8 @@ impl<'a> Parser<'a> {
                 );
             }
             self.simple_definition(definition);
+        } else if self.at_interface_definition(0) {
+            self.interface_definition();
         } else if self.at_extended_definition(0) {
             self.extended_definition();
         } else {
@@ -3814,6 +3862,10 @@ impl<'a> Parser<'a> {
         } else if self.at_connection_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
             self.connection_usage();
+            Some(UsageClass::Structure)
+        } else if self.at_interface_usage(0) {
+            // A StructureUsageElement (8.2.2.6.4), as ConnectionUsage is.
+            self.interface_usage();
             Some(UsageClass::Structure)
         } else if self.at_succession_as_usage(0) {
             // A NonOccurrenceUsageElement (8.2.2.6.4): "a succession is not a kind of
@@ -7805,6 +7857,297 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    /// Whether an `InterfaceDefinition` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceDefinitionPrefix 'interface' 'def'` (`SysML` 8.2.2.14.1). Only the `def`
+    /// separates it from an `InterfaceUsage`.
+    fn at_interface_definition(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_definition_prefix(n);
+        self.nth_is_keyword(after, "interface") && self.nth_is_keyword(after + 1, "def")
+    }
+
+    // production: InterfaceDefinition@sysml
+    //
+    // InterfaceDefinition =
+    //     OccurrenceDefinitionPrefix 'interface' 'def'
+    //     DefinitionDeclaration InterfaceBody                     (SysML 8.2.2.14.1)
+    //
+    // "An interface definition or usage is declared like a connection definition or usage
+    // (see 7.13.2), but using the kind keyword interface" (7.14.2, receipt a994b0e7). Not
+    // on the SIMPLE_DEFINITIONS spine, which takes a Definition: this takes a declaration
+    // and an InterfaceBody of its own. The metaclass is InterfaceDefinition, "a
+    // ConnectionDefinition all of whose ends are PortUsages" (8.3.14.2, receipt bc244764);
+    // that its ends are ports is the metaclass's, and `interface_body` reads `end p : P;`
+    // as a DefaultInterfaceEnd, a PortUsage, for that reason.
+    //
+    // implied specialization: Interfaces::Interface, Interfaces::BinaryInterface
+    // constraint: InterfaceDefinition::checkInterfaceDefinitionSpecialization and
+    //     checkInterfaceDefinitionBinarySpecialization (8.3.14.2), the second for
+    //     `ownedEndFeature->size() = 2`. Injections, so sv2-hir's (ADR-0002).
+    fn interface_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::InterfaceDefinition);
+        self.occurrence_definition_prefix();
+        self.expect_keyword("interface");
+        self.expect_keyword("def");
+        self.definition_declaration();
+        self.interface_body();
+        self.finish_node();
+    }
+
+    // production: InterfaceBody@sysml
+    //
+    // InterfaceBody : Type = ';' | '{' InterfaceBodyItem* '}'   (SysML 8.2.2.14.1)
+    //
+    // production: InterfaceBodyItem@sysml
+    //
+    // InterfaceBodyItem : Type =
+    //       ownedRelationship += DefinitionMember
+    //     | ownedRelationship += VariantUsageMember
+    //     | ownedRelationship += InterfaceNonOccurrenceUsageMember
+    //     | ( ownedRelationship += SourceSuccessionMember )?
+    //       ownedRelationship += InterfaceOccurrenceUsageMember
+    //     | ownedRelationship += AliasMember
+    //     | ownedRelationship += Import                            (SysML 8.2.2.14.1)
+    //
+    // InterfaceBodyItem gets no node, as DefinitionBodyItem gets none: the member is the
+    // item. `body_elements` reads it over Body::Interface, which answers each of the six.
+    fn interface_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::InterfaceBody);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.body_elements(Some(SyntaxKind::RBrace), Body::Interface);
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.error_expected("`;` or `{` after an interface declaration");
+        }
+        self.finish_node();
+    }
+
+    // production: InterfaceNonOccurrenceUsageMember@sysml
+    //
+    // InterfaceNonOccurrenceUsageMember : FeatureMembership =
+    //     MemberPrefix ownedRelatedElement += InterfaceNonOccurrenceUsageElement
+    //
+    // production: InterfaceNonOccurrenceUsageElement@sysml
+    //
+    // InterfaceNonOccurrenceUsageElement : Usage =
+    //     ReferenceUsage | AttributeUsage | EnumerationUsage
+    //   | BindingConnectorAsUsage | SuccessionAsUsage
+    //
+    // production: InterfaceOccurrenceUsageMember@sysml
+    //
+    // InterfaceOccurrenceUsageMember : FeatureMembership =
+    //     MemberPrefix ownedRelatedElement += InterfaceOccurrenceUsageElement
+    //
+    // InterfaceOccurrenceUsageElement : Usage =
+    //     DefaultInterfaceEnd | StructureUsageElement | BehaviorUsageElement
+    //                                                            (SysML 8.2.2.14.1)
+    //
+    // None has a method: `membership` builds the member node from `Body::member`, and the
+    // element is read by `usage_element_of_class` or `default_interface_end`.
+    // InterfaceNonOccurrenceUsageElement is marked because all five alternatives are read
+    // and `at_usage_no_interface_body_admits` refuses the two NonOccurrenceUsageElements
+    // it leaves out. InterfaceOccurrenceUsageElement is NOT: StructureUsageElement and
+    // BehaviorUsageElement are unmarked, several of their alternatives unimplemented.
+
+    /// Whether a usage `InterfaceNonOccurrenceUsageElement` leaves out starts here.
+    ///
+    /// `DefaultReferenceUsage` and `ExtendedUsage` are the two `NonOccurrenceUsageElement`s
+    /// it does not list (`SysML` 8.2.2.14.1, 8.2.2.6.4). A keywordless `end` is neither
+    /// here: it is `DefaultInterfaceEnd`, asked first.
+    fn at_usage_no_interface_body_admits(&self) -> bool {
+        let n = usize::from(self.at_visibility());
+        !self.at_default_interface_end(n)
+            && (self.at_default_reference_usage(n) || self.at_extended_usage(n))
+    }
+
+    /// Whether a `DefaultInterfaceEnd` starts at the `n`th meaningful token: an `end` with
+    /// no kind keyword after it before the declaration's `;`, brace or `=`, which is what
+    /// `skip_end_usage_prefix` answers `None` for. With one, the `end` is that usage's
+    /// `EndUsagePrefix` (`end port p : P;`).
+    fn at_default_interface_end(&self, n: usize) -> bool {
+        self.nth_is_keyword(n, "end") && self.skip_end_usage_prefix(n).is_none()
+    }
+
+    // production: DefaultInterfaceEnd@sysml
+    //
+    // DefaultInterfaceEnd : PortUsage = isEnd ?= 'end' Usage    (SysML 8.2.2.14.1)
+    //
+    // "All the end features of an interface definition or usage must be port usages, so
+    // the use of the port keyword is optional on such end features if no owned cross
+    // feature is declared on the end" (7.14.2, receipt a994b0e7). So `end supplierPort :
+    // FuelOutPort;` (training/11. Interfaces/Interface Example.sysml:7) is a PortUsage in an
+    // interface body, where the same text is a ReferenceUsage, by deviation
+    // DefaultReferenceUsage, in a connection definition's DefinitionBody.
+    //
+    // implied specialization: Ports::ports
+    // constraint: PortUsage::checkPortUsageSpecialization (8.3.12.6, receipt 542cf245),
+    //     as for any PortUsage. An injection, so sv2-hir's (ADR-0002).
+    fn default_interface_end(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::DefaultInterfaceEnd);
+        self.expect_keyword("end");
+        self.usage();
+        self.finish_node();
+    }
+
+    /// Whether an `InterfaceUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'interface'` with no `def` after it (`SysML` 8.2.2.14.2).
+    fn at_interface_usage(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_usage_prefix(n);
+        self.nth_is_keyword(after, "interface") && !self.nth_is_keyword(after + 1, "def")
+    }
+
+    // production: InterfaceUsage@sysml
+    //
+    // InterfaceUsage =
+    //     OccurrenceUsagePrefix 'interface'
+    //     InterfaceUsageDeclaration InterfaceBody                  (SysML 8.2.2.14.2)
+    //
+    // A StructureUsageElement (8.2.2.6.4), owned as ConnectionUsage is. The metaclass is
+    // InterfaceUsage, a ConnectionUsage (8.3.14.3, receipt 63f04edc). "An interface usage
+    // must only be defined by interface definitions" (7.14.2) is typing, resolution's.
+    //
+    // implied specialization: Interfaces::interfaces, Interfaces::binaryInterfaces
+    // constraint: InterfaceUsage::checkInterfaceUsageSpecialization and
+    //     checkInterfaceUsageBinarySpecialization (8.3.14.3), the second for
+    //     `ownedEndFeature->size() = 2`. Injections, so sv2-hir's (ADR-0002).
+    fn interface_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::InterfaceUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("interface");
+        self.interface_usage_declaration();
+        self.interface_body();
+        self.finish_node();
+    }
+
+    // production: InterfaceUsageDeclaration@sysml
+    //
+    // InterfaceUsageDeclaration : InterfaceUsage =
+    //       UsageDeclaration ValuePart? ( 'connect' InterfacePart )?
+    //     | InterfacePart                                          (SysML 8.2.2.14.2)
+    //
+    // "if the declaration part of an interface usage is empty, then the interface keyword
+    // is still included, but the connect keyword may be omitted" (7.14.2, receipt
+    // a994b0e7): `interface fuelTank.fuelingPort to engine.fuelingPort;` is the second
+    // alternative. Both may open on a name, and on a `[` (a multiplicity or an end's cross
+    // multiplicity), so a whole InterfaceEnd is looked past and a `to` after it decides,
+    // as `flow_declaration` decides between its two; a `(` can open only an
+    // NaryInterfacePart.
+    fn interface_usage_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::InterfaceUsageDeclaration);
+        let part_first = self.at(SyntaxKind::LParen)
+            || self
+                .skip_interface_end(0)
+                .is_some_and(|n| self.nth_is_keyword(n, "to"));
+        if part_first {
+            self.interface_part();
+        } else {
+            self.usage_declaration();
+            if self.at_value_part() {
+                self.value_part();
+            }
+            if self.at_keyword("connect") {
+                self.expect_keyword("connect");
+                self.interface_part();
+            }
+        }
+        self.finish_node();
+    }
+
+    // production: InterfacePart@sysml
+    //
+    // InterfacePart : InterfaceUsage =
+    //     BinaryInterfacePart | NaryInterfacePart                  (SysML 8.2.2.14.2)
+    //
+    // An alternation with no node, as ConnectorPart has none, told by the `(` as that is.
+    fn interface_part(&mut self) {
+        if self.at(SyntaxKind::LParen) {
+            self.nary_interface_part();
+        } else {
+            self.binary_interface_part();
+        }
+    }
+
+    // production: BinaryInterfacePart@sysml
+    //
+    // BinaryInterfacePart : InterfaceUsage =
+    //     ownedRelationship += InterfaceEndMember 'to'
+    //     ownedRelationship += InterfaceEndMember                  (SysML 8.2.2.14.2)
+    fn binary_interface_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::BinaryInterfacePart);
+        self.interface_end_member();
+        self.expect_keyword("to");
+        self.interface_end_member();
+        self.finish_node();
+    }
+
+    // production: NaryInterfacePart@sysml
+    //
+    // NaryInterfacePart : InterfaceUsage =
+    //     '(' ownedRelationship += InterfaceEndMember ','
+    //         ownedRelationship += InterfaceEndMember
+    //         ( ',' ownedRelationship += InterfaceEndMember )* ')' (SysML 8.2.2.14.2)
+    //
+    // At least TWO ends, and no trailing comma, as NaryConnectorPart.
+    fn nary_interface_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::NaryInterfacePart);
+        self.expect(SyntaxKind::LParen, "`(`");
+        self.interface_end_member();
+        self.expect(SyntaxKind::Comma, "`,` and a second end");
+        self.interface_end_member();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.interface_end_member();
+        }
+        self.expect(SyntaxKind::RParen, "`)`");
+        self.finish_node();
+    }
+
+    // production: InterfaceEndMember@sysml
+    //
+    // InterfaceEndMember : EndFeatureMembership =
+    //     ownedRelatedElement += InterfaceEnd                      (SysML 8.2.2.14.2)
+    fn interface_end_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::InterfaceEndMember);
+        self.interface_end();
+        self.finish_node();
+    }
+
+    // production: InterfaceEnd@sysml
+    //
+    // InterfaceEnd : PortUsage =
+    //     ( ownedRelationship += OwnedCrossMultiplicityMember )?
+    //     ( declaredName = NAME REFERENCES )?
+    //     ownedRelationship += OwnedReferenceSubsetting            (SysML 8.2.2.14.2)
+    //
+    // ConnectorEnd's text with a PortUsage for its metaclass, read by the same
+    // `end_reference` -- and WITHOUT the multiplicity after the reference that deviation
+    // ConnectorEnd-trailing-multiplicity adds to ConnectorEnd alone, so `interface a[1] to
+    // b;` is reported. `skip_interface_end` walks the same parts.
+    //
+    // implied specialization: Ports::ports
+    // constraint: PortUsage::checkPortUsageSpecialization (8.3.12.6, receipt 542cf245),
+    //     as for DefaultInterfaceEnd, the other PortUsage an interface declares. sv2-hir's.
+    fn interface_end(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::InterfaceEnd);
+        self.end_reference();
+        self.finish_node();
+    }
+
     // production: ConnectorPart@sysml
     //
     // ConnectorPart : ConnectionUsage =
@@ -8675,6 +9018,19 @@ impl<'a> Parser<'a> {
     /// reads both; `KerML`'s multiplicity is unimplemented, so there neither is looked past
     /// and an end that writes one is declined here and reported by the caller's recovery.
     fn skip_connector_end(&self, n: usize) -> Option<usize> {
+        let n = self.skip_interface_end(n)?;
+        // The trailing multiplicity `connector_end` reads by deviation
+        // ConnectorEnd-trailing-multiplicity, so every recogniser sees the same end.
+        if self.language == Language::SysMl && self.nth_is(n, SyntaxKind::LBracket) {
+            return self.skip_bracketed(n);
+        }
+        Some(n)
+    }
+
+    /// The index just past an `InterfaceEnd` written at the `n`th token, walked as
+    /// `end_reference` reads it: `ConnectorEnd`'s walk less the trailing multiplicity only
+    /// `ConnectorEnd` takes (`SysML` 8.2.2.14.2).
+    fn skip_interface_end(&self, n: usize) -> Option<usize> {
         let mut n = n;
         if self.language == Language::SysMl && self.nth_is(n, SyntaxKind::LBracket) {
             n = self.skip_bracketed(n)?;
@@ -8688,11 +9044,6 @@ impl<'a> Parser<'a> {
         let mut n = self.skip_qualified_name(n)?;
         while self.nth_is(n, SyntaxKind::Dot) && self.nth_is_name(n + 1) {
             n = self.skip_qualified_name(n + 1)?;
-        }
-        // The trailing multiplicity `connector_end` reads by deviation
-        // ConnectorEnd-trailing-multiplicity, so every recogniser sees the same end.
-        if self.language == Language::SysMl && self.nth_is(n, SyntaxKind::LBracket) {
-            n = self.skip_bracketed(n)?;
         }
         Some(n)
     }
@@ -8934,10 +9285,12 @@ impl<'a> Parser<'a> {
             || self.at_include_use_case_usage(n)
             || self.at_flow_usage(n)
             || self.at_connection_usage(n)
+            || self.at_interface_usage(n)
             || self
                 .at_simple_usage(n)
                 .is_some_and(|usage| usage.class != UsageClass::NonOccurrence)
             || (body.admits_action_body_item() && self.at_action_node(n).is_some())
+            || (body == Body::Interface && self.at_default_interface_end(n))
     }
 
     /// Which `ActionNode` starts at the `n`th meaningful token, of those this parser reads.
@@ -9114,6 +9467,22 @@ impl<'a> Parser<'a> {
     fn connector_end(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ConnectorEnd);
+        self.end_reference();
+        if self.language == Language::SysMl && self.at(SyntaxKind::LBracket) {
+            // deviation: ConnectorEnd-trailing-multiplicity
+            self.note_deviation(
+                "ConnectorEnd-trailing-multiplicity",
+                "a multiplicity after a connector end's reference",
+            );
+            self.owned_multiplicity();
+        }
+        self.finish_node();
+    }
+
+    /// The parts `ConnectorEnd` and `InterfaceEnd` share, `OwnedCrossMultiplicityMember?
+    /// ( NAME REFERENCES )? OwnedReferenceSubsetting` (`SysML` 8.2.2.13.1, 8.2.2.14.2),
+    /// into the caller's node.
+    fn end_reference(&mut self) {
         if self.language == Language::SysMl && self.at(SyntaxKind::LBracket) {
             self.start_node(SyntaxKind::OwnedCrossMultiplicityMember);
             self.start_node(SyntaxKind::OwnedCrossMultiplicity);
@@ -9132,15 +9501,6 @@ impl<'a> Parser<'a> {
             );
         }
         self.owned_reference_subsetting();
-        if self.language == Language::SysMl && self.at(SyntaxKind::LBracket) {
-            // deviation: ConnectorEnd-trailing-multiplicity
-            self.note_deviation(
-                "ConnectorEnd-trailing-multiplicity",
-                "a multiplicity after a connector end's reference",
-            );
-            self.owned_multiplicity();
-        }
-        self.finish_node();
     }
 
     /// Whether a `SuccessionAsUsage` starts at the `n`th meaningful token.

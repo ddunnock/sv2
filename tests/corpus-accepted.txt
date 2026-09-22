@@ -41,8 +41,10 @@ vendor/corpus/sysml/src/examples/Import Tests/AliasImport.sysml
 vendor/corpus/sysml/src/examples/Import Tests/CircularImport.sysml
 vendor/corpus/sysml/src/examples/Import Tests/PrivateImportTest.sysml
 vendor/corpus/sysml/src/examples/Import Tests/QualifiedNameImportTest.sysml
+vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-2.sysml
 vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassConstraintExample.sysml
 vendor/corpus/sysml/src/examples/Mass Roll-up Example/Vehicles.sysml
+vendor/corpus/sysml/src/examples/Metadata Examples/IssueMetadataExample.sysml
 vendor/corpus/sysml/src/examples/Metadata Examples/RationaleMetadataExample.sysml
 vendor/corpus/sysml/src/examples/Metadata Examples/RequirementMetadataExample.sysml
 vendor/corpus/sysml/src/examples/Metadata Examples/RiskMetadataExample.sysml
@@ -57,6 +59,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/AnalysisTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CalculationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/ConjugationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ConstraintTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml
@@ -65,6 +68,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/DependencyTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/EnumerationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/FeaturePathTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ImportTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/InterfaceTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ItemTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/MultiplicityTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ParameterTest.sysml
@@ -78,6 +82,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/VerificationTest.sysml
 vendor/corpus/sysml/src/examples/State Space Representation Examples/CartSample.sysml
 vendor/corpus/sysml/src/examples/State Space Representation Examples/EVSample.sysml
 vendor/corpus/sysml/src/examples/Variability Examples/VehicleVariabilityModel.sysml
+vendor/corpus/sysml/src/examples/Vehicle Example/VehicleDefinitions.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package - Updated.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition - Updated.sysml
@@ -97,9 +102,12 @@ vendor/corpus/sysml/src/training/08. Items/Items Example.sysml
 vendor/corpus/sysml/src/training/09. Connections/Connections Example.sysml
 vendor/corpus/sysml/src/training/10. Ports/Port Conjugation Example.sysml
 vendor/corpus/sysml/src/training/10. Ports/Port Example.sysml
+vendor/corpus/sysml/src/training/11. Interfaces/Interface Decomposition Example.sysml
+vendor/corpus/sysml/src/training/11. Interfaces/Interface Example.sysml
 vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-1.sysml
 vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-2.sysml
 vendor/corpus/sysml/src/training/13. Flows/Flow Definition Example.sysml
+vendor/corpus/sysml/src/training/13. Flows/Flow Interface Example.sysml
 vendor/corpus/sysml/src/training/13. Flows/Flow Usage Example.sysml
 vendor/corpus/sysml/src/training/14. Action Definitions/Action Definition Example.sysml
 vendor/corpus/sysml/src/training/14. Action Definitions/Action Shorthand Example.sysml

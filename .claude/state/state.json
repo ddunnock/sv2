@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T20:17:45Z",
+    "regenerated_utc": "2026-09-22T21:37:46Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 327,
-      "unimplemented": 227,
+      "implemented": 341,
+      "unimplemented": 213,
       "absent": 0,
-      "percent": 59.0
+      "percent": 61.6
     },
     "tests": {
-      "unit": 523,
+      "unit": 528,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 213,
+      "negative_cases": 216,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "4d7af66 Read `#` prefix metadata, and the definitions and usages it declares alone",
       "23e3406 Stop rejecting `#` prefix metadata by absence: the next commit reads it",
       "a7e573e Close the session: the case and metadata layers recorded, the `#` prefix written to start cold",
       "aa81590 Read the metadata definition, usage and body, and buy ten files",
       "6448723 Read the requirement verification member, and buy the two verification files it held",
       "875edec Read the verification case definition and usage, the fourth and last case row",
       "2296540 Read the include use case usage, buy the three use case files it held, and drop the guard it made useless",
-      "4e30f08 Read the use case definition and usage, and buy the file only they held back",
-      "bff74cc Read the actor member, in requirement and case bodies alike"
+      "4e30f08 Read the use case definition and usage, and buy the file only they held back"
     ]
   },
   "authored": {
