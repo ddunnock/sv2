@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T11:25:40Z",
+    "regenerated_utc": "2026-09-22T11:34:26Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -26,7 +26,7 @@
       "unit": 413,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 158,
+      "negative_cases": 157,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "a8cb979 Ask one list what starts a SysML member, so a calculation body reads what a member does",
       "3ac64b9 Drop a test whose reason stopped being true: a calculation body admits successions",
       "9d3fd4f Read CalculationUsage, and buy the four files whose calc bodies were readable",
       "be11cfc Stop rejecting `calc c { a + b }` by absence: the next commit reads it",
       "bec454c Read AssertConstraintUsage, and buy the seven files that asserted a constraint",
       "7934612 Read KerML's BindingConnector, completing the binding pair and buying nothing",
       "a871caf Read BindingConnectorAsUsage, and buy the five files that wrote only `bind`",
-      "634da25 Validate state under the project .venv, where jsonschema is",
-      "69e21b4 Read the succession pair: SuccessionAsUsage in SysML, Succession in KerML"
+      "634da25 Validate state under the project .venv, where jsonschema is"
     ]
   },
   "authored": {

@@ -6690,10 +6690,9 @@ impl<'a> Parser<'a> {
     // ConstraintUsageDeclaration : ConstraintUsage =
     //     UsageDeclaration ValuePart?                            (SysML 8.2.2.20)
     //
-    // Shared with ConstraintUsage, which is NOT implemented: a bare `constraint c { }` at
-    // member position is a different production reached from DefinitionBodyItem, and
-    // tests/rejection/constraint-usage-is-not-a-constraint-definition.sysml still holds
-    // it. This declaration is reachable only behind a `require` or `assume`.
+    // Shared by three productions: RequirementConstraintUsage behind `require` or
+    // `assume`, AssertConstraintUsage behind `assert constraint`, and ConstraintUsage, the
+    // bare `constraint c { }` at member position, which is not implemented.
     fn constraint_usage_declaration(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ConstraintUsageDeclaration);

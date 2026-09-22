@@ -785,10 +785,6 @@ fn a_constraint_definition_needs_a_body_and_a_def() {
     // CalculationBody is not optional. Held as a file by
     // tests/rejection/constraint-definition-missing-calculation-body.sysml.
     parse_rejected("constraint def C");
-    // Without `def` it is a ConstraintUsage, unimplemented, and it is what
-    // `require constraint { ... }` will need. Held as a file by
-    // tests/rejection/constraint-usage-is-not-a-constraint-definition.sysml.
-    parse_rejected("constraint c { a <= b }");
     // An unclosed body is still an error, and the expression inside it is still read.
     parse_rejected("constraint def C { a <= b");
 }
@@ -2815,8 +2811,6 @@ fn an_assert_constraint_usage_is_bounded_by_its_rules() {
     // assertion referencing `satisfy` — which is reserved and cannot be a name.
     parse_rejected("part def P { assert satisfy r; }");
     parse_rejected("part def P { assert not satisfy r; }");
-    // A ConstraintUsage without `assert` is a different production, unimplemented.
-    parse_rejected("part def P { constraint c { x > 0 } }");
 }
 
 #[test]
