@@ -27,7 +27,7 @@
           "bucket": { "enum": ["xtext_only", "spec_only", "conflict"] },
           "upstream": { "type": "string", "description": "What the Xtext does as shipped" },
           "problem": { "type": "string", "description": "The input it gets wrong, concretely" },
-          "decision": { "enum": ["follow_spec", "follow_corpus", "follow_xtext", "defer"] },
+          "decision": { "enum": ["follow_spec", "follow_corpus", "follow_xtext", "follow_spec_example", "defer"] },
           "rationale": { "type": "string" },
           "evidence": {
             "type": "array",

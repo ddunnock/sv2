@@ -352,6 +352,7 @@
     "ConnectionDefKeyword",
     "ConnectionKeyword",
     "ConnectionUsageKeyword",
+    "ConnectorEnd-trailing-multiplicity",
     "ConnectorKeyword",
     "ConstraintDefKeyword",
     "ConstraintKeyword",

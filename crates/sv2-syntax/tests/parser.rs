@@ -2641,15 +2641,29 @@ fn a_connection_usage_reads_the_clause_forms() {
         ],
         "{full}"
     );
-    // The clause's n-ary example writes `[1] hub ::> mainSwitch[1], ...`, a multiplicity
-    // AFTER the reference, which OwnedReferenceSubsetting (`QualifiedName |
-    // OwnedFeatureChain`, 8.2.2.6.5) does not admit; nor does the Pilot's ConnectorEnd. The
-    // trailing `[1]` is left out here, and the example-versus-production conflict is
-    // unadjudicated (state.json next_step says so).
-    parse_accepted(
-        "part def P { connection connection1 : DeviceConnection connect (\n\
-         \t[1] hub ::> mainSwitch, [1] device ::> sensorFeed\n\
-         ); }",
+    // The clause's n-ary example, verbatim: `mainSwitch[1]` writes a multiplicity AFTER
+    // the reference, which no production admits (OwnedReferenceSubsetting is `QualifiedName
+    // | OwnedFeatureChain`, 8.2.2.6.5). It parses by deviation
+    // ConnectorEnd-trailing-multiplicity (follow_spec_example) and carries that note, and
+    // only that one (ADR-0022).
+    let example = "part def P { connection connection1 : DeviceConnection connect (\n\
+         \t[1] hub ::> mainSwitch[1], [1] device ::> sensorFeed\n\
+         ); }";
+    assert_eq!(
+        deviations_named(example),
+        ["ConnectorEnd-trailing-multiplicity"]
+    );
+    let trailing = render(&parse_accepted(example).syntax());
+    assert_eq!(
+        child_kinds(&trailing, "ConnectorEnd"),
+        [
+            "OwnedCrossMultiplicityMember",
+            "BasicName",
+            "ColonColonGt",
+            "OwnedReferenceSubsetting",
+            "OwnedMultiplicity"
+        ],
+        "{trailing}"
     );
     parse_accepted(
         "part def P { connection c : DeviceConnection { attribute bandwidth : Real; } }",
@@ -5719,6 +5733,12 @@ fn each_deviation_site_fires_on_the_text_it_admits_and_no_other() {
             "part def P { flow p1.torque to a.b.c; }",
             "part def P { flow a.b.c to d.e.f; }",
             "FlowEndSubsetting",
+        ),
+        // ConnectorEnd-trailing-multiplicity, follow_spec_example: 7.13.2's `mainSwitch[1]`.
+        (
+            "part def P { connect a[1] to b; }",
+            "part def P { connect [1] a to b; }",
+            "ConnectorEnd-trailing-multiplicity",
         ),
         // AnnotatingMember, follow_xtext: a visibility on an enum body's annotation.
         (

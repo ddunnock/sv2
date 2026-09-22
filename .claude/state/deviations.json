@@ -1519,6 +1519,36 @@
       ]
     },
     {
+      "production": "ConnectorEnd-trailing-multiplicity",
+      "bucket": "conflict",
+      "upstream": "SysML.xtext ConnectorEnd ends at OwnedReferenceSubsetting, exactly as the clause's production does: `( ownedRelationship += OwnedCrossingMultiplicityMember )? ( declaredName = Name ReferencesKeyword )? ownedRelationship += OwnedReferenceSubsetting`. Neither admits a multiplicity after the reference.",
+      "problem": "SysML 7.13.2's own example of the parenthesised connector part writes `connection connection1 : DeviceConnection connect ( [1] hub ::> mainSwitch[1], [1] device ::> sensorFeed );` -- a multiplicity AFTER the end's reference. ConnectorEnd (8.2.2.13.1) is OwnedCrossMultiplicityMember? ( NAME REFERENCES )? OwnedReferenceSubsetting, and OwnedReferenceSubsetting (8.2.2.6.5) is a QualifiedName or an OwnedFeatureChain, so no production admits the trailing `[1]`: the specification's example is rejected by the specification's BNF. The pinned corpus writes no such end, so it does not decide the point.",
+      "decision": "follow_spec_example",
+      "rationale": "Decided by the project owner on 2026-09-22: accept the example's form as a deviation and flag it. The example is normative text in the same clause that states the production, it reads plainly as the end feature's own multiplicity -- the body form beside it writes `end part hub ::> mainSwitch[1];` with the same `[1]` -- and accepting it rejects nothing the BNF admits, because nothing can follow an OwnedReferenceSubsetting inside a ConnectorEnd. The parser reads it in SysML only (KerML's multiplicity is unimplemented), as an OwnedMultiplicity after the OwnedReferenceSubsetting, and reports every use with a PARSE-DEVIATION note naming this entry, so `sv2 parse --strict` rejects it as the BNF does (ADR-0022). No open OMG issue on this example was searched for; the entry should be reconsidered if one is found or the example is corrected.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 7.13.2 Connection Definitions and Usages (region_sha256 5a3a8867bf5b3e40)",
+          "note": "The example `connect ( [1] hub ::> mainSwitch[1], [1] device ::> sensorFeed );`, and in the body form `end part hub ::> mainSwitch[1];`."
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.13.1 ConnectionDefinitionandUsage (region_sha256 614b54fa6eb5405a)",
+          "note": "ConnectorEnd = OwnedCrossMultiplicityMember? ( NAME REFERENCES )? OwnedReferenceSubsetting, with nothing after the reference."
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.6.5 Specialization (region_sha256 d0d5a04805076a67)",
+          "note": "OwnedReferenceSubsetting = QualifiedName | OwnedFeatureChain: no multiplicity."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-02-15",
+          "note": "The SysML Tier A pin the governing clauses belong to."
+        }
+      ]
+    },
+    {
       "production": "ConstraintDefKeyword",
       "bucket": "xtext_only",
       "upstream": "Xtext defines `ConstraintDefKeyword: ConstraintKeyword 'def';`.",

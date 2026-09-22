@@ -8110,6 +8110,11 @@ impl<'a> Parser<'a> {
         while self.nth_is(n, SyntaxKind::Dot) && self.nth_is_name(n + 1) {
             n = self.skip_qualified_name(n + 1)?;
         }
+        // The trailing multiplicity `connector_end` reads by deviation
+        // ConnectorEnd-trailing-multiplicity, so every recogniser sees the same end.
+        if self.language == Language::SysMl && self.nth_is(n, SyntaxKind::LBracket) {
+            n = self.skip_bracketed(n)?;
+        }
         Some(n)
     }
 
@@ -8517,6 +8522,12 @@ impl<'a> Parser<'a> {
     // "The identification of a related feature may optionally be preceded by a cross
     // multiplicity and/or an end feature name followed by the keyword references or the
     // symbol ::>" (7.13.2, receipt 5a3a8867).
+    //
+    // BY DEVIATION ConnectorEnd-trailing-multiplicity (follow_spec_example), a SysML end
+    // may also be FOLLOWED by a multiplicity, the end feature's own, as 7.13.2's example
+    // writes `[1] hub ::> mainSwitch[1]`: no production admits it and nothing else can
+    // stand there, so it is read as an OwnedMultiplicity after the reference and every
+    // use is reported (ADR-0022). The corpus writes none.
     fn connector_end(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ConnectorEnd);
@@ -8538,6 +8549,14 @@ impl<'a> Parser<'a> {
             );
         }
         self.owned_reference_subsetting();
+        if self.language == Language::SysMl && self.at(SyntaxKind::LBracket) {
+            // deviation: ConnectorEnd-trailing-multiplicity
+            self.note_deviation(
+                "ConnectorEnd-trailing-multiplicity",
+                "a multiplicity after a connector end's reference",
+            );
+            self.owned_multiplicity();
+        }
         self.finish_node();
     }
 
