@@ -1440,6 +1440,41 @@ NODES = [
         ),
     ),
     ("LiteralInfinity", "`'*'`. `KerML` 8.2.5.8.4."),
+    # The metadata layer, SysML 8.2.2.27. A MetadataUsage is reached only as an
+    # AnnotatingElement, by deviation AnnotatingElement (follow_xtext).
+    (
+        "MetadataDefinition",
+        "`'abstract'? DefinitionExtensionKeyword* 'metadata' 'def' Definition`. `SysML` 8.2.2.27.",
+    ),
+    (
+        "MetadataUsage",
+        (
+            "`UsageExtensionKeyword* ( '@' | 'metadata' ) MetadataUsageDeclaration "
+            "( 'about' Annotation ( ',' Annotation )* )? MetadataBody`. `SysML` 8.2.2.27."
+        ),
+    ),
+    (
+        "MetadataUsageDeclaration",
+        (
+            "`( Identification ( ':' | 'defined' 'by' ) )? OwnedFeatureTyping`. `SysML` "
+            "8.2.2.27, as deviation `MetadataUsageDeclaration` reads it."
+        ),
+    ),
+    (
+        "MetadataBody",
+        (
+            "`';' | '{' ( DefinitionMember | MetadataBodyUsageMember | AliasMember "
+            "| Import )* '}'`. `SysML` 8.2.2.27."
+        ),
+    ),
+    ("MetadataBodyUsageMember", "`ownedMemberFeature = MetadataBodyUsage`. `SysML` 8.2.2.27."),
+    (
+        "MetadataBodyUsage",
+        (
+            "`'ref'? ( ':>>' | 'redefines' )? OwnedRedefinition FeatureSpecializationPart? "
+            "ValuePart? MetadataBody`. `SysML` 8.2.2.27 — the metaclass is `ReferenceUsage`."
+        ),
+    ),
     ("Error", "recovered-over text; carries its bytes so the tree stays lossless"),
 ]
 

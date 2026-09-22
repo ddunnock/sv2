@@ -22,6 +22,7 @@ vendor/corpus/kerml/src/examples/Simple Tests/Inheritance.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Redefinition.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Scoping.kerml
 vendor/corpus/kerml/src/examples/Vehicle Example/VehicleDefinitions.kerml
+vendor/corpus/sysml/src/examples/Analysis Examples/AnalysisAnnotation.sysml
 vendor/corpus/sysml/src/examples/Analysis Examples/Dynamics.sysml
 vendor/corpus/sysml/src/examples/Analysis Examples/Turbojet Stage Analysis.sysml
 vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_N_ary.sysml
@@ -32,6 +33,7 @@ vendor/corpus/sysml/src/examples/Camera Example/PictureTaking.sysml
 vendor/corpus/sysml/src/examples/Comment Examples/Comments.sysml
 vendor/corpus/sysml/src/examples/Geometry Examples/CarWithEnvelopingShape.sysml
 vendor/corpus/sysml/src/examples/Geometry Examples/CarWithShapeAndCSG.sysml
+vendor/corpus/sysml/src/examples/Geometry Examples/ExternalShapeRefExample.sysml
 vendor/corpus/sysml/src/examples/Geometry Examples/SimpleQuadcopter.sysml
 vendor/corpus/sysml/src/examples/Import Tests/AliasImport.sysml
 vendor/corpus/sysml/src/examples/Import Tests/CircularImport.sysml
@@ -39,6 +41,9 @@ vendor/corpus/sysml/src/examples/Import Tests/PrivateImportTest.sysml
 vendor/corpus/sysml/src/examples/Import Tests/QualifiedNameImportTest.sysml
 vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassConstraintExample.sysml
 vendor/corpus/sysml/src/examples/Mass Roll-up Example/Vehicles.sysml
+vendor/corpus/sysml/src/examples/Metadata Examples/RationaleMetadataExample.sysml
+vendor/corpus/sysml/src/examples/Metadata Examples/RiskMetadataExample.sysml
+vendor/corpus/sysml/src/examples/Metadata Examples/VerificationMetadataExample.sysml
 vendor/corpus/sysml/src/examples/Packet Example/PacketUsage.sysml
 vendor/corpus/sysml/src/examples/Packet Example/Packets.sysml
 vendor/corpus/sysml/src/examples/Requirements Examples/HSUVRequirements.sysml
@@ -140,6 +145,9 @@ vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Definitions.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Usages.sysml
 vendor/corpus/sysml/src/training/37. Dependencies/Dependency Example.sysml
+vendor/corpus/sysml/src/training/39. Metadata/Metadata Example-1.sysml
+vendor/corpus/sysml/src/training/39. Metadata/Metadata Example-2.sysml
+vendor/corpus/sysml/src/training/40. Filtering/Filtering Example-1.sysml
 vendor/corpus/sysml/src/validation/01-Parts Tree/1d-Parts Tree with Reference.sysml
 vendor/corpus/sysml/src/validation/02-Parts Interconnection/2c-Parts Interconnection-Multiple Decompositions.sysml
 vendor/corpus/sysml/src/validation/03-Function-based Behavior/3a-Function-based Behavior-1.sysml
@@ -159,7 +167,9 @@ vendor/corpus/sysml/src/validation/10-Analysis and Trades/10a-Analysis.sysml
 vendor/corpus/sysml/src/validation/10-Analysis and Trades/10b-Trade-off Among Alternative Configurations.sysml
 vendor/corpus/sysml/src/validation/12-Dependency Relationships/12a-Dependency.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13a-Model Containment.sysml
+vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group-1.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml
+vendor/corpus/sysml/src/validation/14-Language Extensions/14a-Language Extensions.sysml
 vendor/corpus/sysml/src/validation/14-Language Extensions/14b-Language Extensions.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_01-Constants.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_02-Basic Value Properties.sysml

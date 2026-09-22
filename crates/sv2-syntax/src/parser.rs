@@ -1460,6 +1460,7 @@ impl<'a> Parser<'a> {
             || self.at_constraint_definition(n)
             || self.at_calculation_definition(n)
             || self.at_case_definition(n).is_some()
+            || self.at_metadata_definition(n)
             || self.at_action_definition(n)
             || self.at_state_definition(n)
             || self.at_enumeration_definition(n)
@@ -1492,6 +1493,16 @@ impl<'a> Parser<'a> {
     fn at_calculation_definition(&self, n: usize) -> bool {
         let after = self.skip_occurrence_definition_prefix(n);
         self.nth_is_keyword(after, "calc") && self.nth_is_keyword(after + 1, "def")
+    }
+
+    /// Whether a `MetadataDefinition` starts at the `n`th meaningful token.
+    ///
+    /// `'abstract'? DefinitionExtensionKeyword* 'metadata' 'def'` (`SysML` 8.2.2.27): its
+    /// own prefix, `abstract` alone and not `DefinitionPrefix`'s `variation`, so it is not
+    /// on the `SIMPLE_DEFINITIONS` spine. The extension keywords are unimplemented.
+    fn at_metadata_definition(&self, n: usize) -> bool {
+        let after = n + usize::from(self.nth_is_keyword(n, "abstract"));
+        self.nth_is_keyword(after, "metadata") && self.nth_is_keyword(after + 1, "def")
     }
 
     /// Which case definition starts at the `n`th meaningful token, if one does.
@@ -1553,6 +1564,15 @@ impl<'a> Parser<'a> {
     /// `usage_completion_follows` resolves.
     fn at_result_expression(&self) -> bool {
         let n = usize::from(self.at_visibility());
+        if self.nth_is(n, SyntaxKind::At) {
+            // `@T` is both a MetadataUsage (8.2.2.27) and a ClassificationExpression with
+            // no left operand (KerML 8.2.5.8.1). A metadata usage ends in a MetadataBody,
+            // `;` or braced, before the enclosing body closes; the expression reaches the
+            // `}`. The same test the bare-name collision below makes, with the same limit:
+            // an expression holding a BodyExpression reaches a `{` first and is misread
+            // (`@T and x->forAll { ... }`), which `usage_completion_follows` records.
+            return !self.usage_completion_follows(n);
+        }
         if self.at_import()
             || self.at_element_keyword("alias")
             || self.at_annotating_member(n)
@@ -1905,14 +1925,33 @@ impl<'a> Parser<'a> {
     /// Whether an implemented `AnnotatingElement` starts here (`SysML` 8.2.2.4.1).
     ///
     /// `Comment` may open with `comment`, `locale` or its bare `REGULAR_COMMENT` body;
-    /// `Documentation` with `doc`; `TextualRepresentation` with `rep` or `language`.
-    /// `MetadataUsage` (`@`, `metadata`, or a `#` extension keyword) is not
-    /// implemented, so it is not recognised and its tokens are reported.
+    /// `Documentation` with `doc`; `TextualRepresentation` with `rep` or `language`;
+    /// `MetadataUsage` with `@` or `metadata`, `SysML` only (see `at_metadata_usage`). Its
+    /// third opening, a `#` extension keyword, is unimplemented and reported.
     fn at_annotating_element(&self) -> bool {
         self.at(SyntaxKind::RegularComment)
             || ["comment", "locale", "doc", "rep", "language"]
                 .iter()
                 .any(|word| self.at_keyword(word))
+            || self.at_metadata_usage(0)
+    }
+
+    /// Whether a `MetadataUsage` starts at the `n`th meaningful token.
+    ///
+    /// `UsageExtensionKeyword* ( '@' | 'metadata' )` (`SysML` 8.2.2.27), less the extension
+    /// keywords, which are unimplemented. `metadata def` is the `MetadataDefinition` beside
+    /// it. `SysML` only: `KerML`'s fourth `AnnotatingElement` is `MetadataFeature`
+    /// (8.2.5.12), a different production, unimplemented, and this one is reached in
+    /// `SysML` only by deviation `AnnotatingElement`.
+    ///
+    /// `@` also opens an expression: a `ClassificationExpression` with no left operand
+    /// (`KerML` 8.2.5.8.1). The two never meet at member position, but they do where a
+    /// calculation body's items end in its result expression; `at_result_expression`
+    /// settles that one.
+    fn at_metadata_usage(&self, n: usize) -> bool {
+        self.language == Language::SysMl
+            && (self.nth_is(n, SyntaxKind::At)
+                || (self.nth_is_keyword(n, "metadata") && !self.nth_is_keyword(n + 1, "def")))
     }
 
     fn at_end(&self) -> bool {
@@ -3058,9 +3097,7 @@ impl<'a> Parser<'a> {
         self.member_prefix();
         let mut element = MemberElement::Other;
         if self.at_annotating_member(0) {
-            // The body is a REGULAR_COMMENT, so it has to be a token here rather than
-            // trivia for the production to be able to read it.
-            self.with_significant_comments(Self::annotating_element);
+            self.annotating_element_at_member();
         } else if self.at_keyword("package") {
             self.package();
         } else if let Some(classifier) = self.at_classifier(0).filter(|_| {
@@ -3129,6 +3166,8 @@ impl<'a> Parser<'a> {
             self.calculation_definition();
         } else if let Some(case) = self.at_case_definition(0) {
             self.case_definition(case);
+        } else if self.at_metadata_definition(0) {
+            self.metadata_definition();
         } else if self.at_action_definition(0) {
             self.action_definition();
         } else if self.at_state_definition(0) {
@@ -3400,8 +3439,8 @@ impl<'a> Parser<'a> {
     //     MemberPrefix ownedRelatedElement += AnnotatingElement       (SysML 8.2.2.4.1)
     //
     // Referenced by EnumerationBody alone, which is why it had no caller until now.
-    // Marked although AnnotatingElement is not -- its MetadataUsage alternative is
-    // unimplemented -- because this production's own two parts are read.
+    // Marked although AnnotatingElement is not -- its MetadataUsage alternative is read
+    // less the `#` extension keywords -- because this production's own two parts are.
     fn annotating_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::AnnotatingMember);
@@ -3413,7 +3452,7 @@ impl<'a> Parser<'a> {
             );
         }
         self.member_prefix();
-        self.with_significant_comments(Self::annotating_element);
+        self.annotating_element_at_member();
         self.finish_node();
     }
 
@@ -9965,6 +10004,239 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // MetadataDefinition = ( isAbstract ?= 'abstract' )? DefinitionExtensionKeyword*
+    //                      'metadata' 'def' Definition                (SysML 8.2.2.27)
+    //
+    // "A metadata definition is declared like an item definition ..., but using the keyword
+    // metadata def" (7.27.2, receipt 66e5d6b3). The prefix is its own and narrower than
+    // DefinitionPrefix: `abstract` only, never `variation`, so `variation metadata def M;`
+    // is reported. `abstract` is a keyword token of this node, as the clause writes it
+    // inline, and there is no DefinitionPrefix node. The metaclass is MetadataDefinition
+    // (8.3.27.2, receipt 29a5d69e), an ItemDefinition that is also a KerML Metaclass.
+    //
+    // NOT marked for coverage: DefinitionExtensionKeyword* is written in this production's
+    // own body, not in a separate prefix production, and it is unimplemented --
+    // EnumerationDefinition's shape and precedent, not the definitions whose gap sits in
+    // an unmarked DefinitionPrefix. `#` prefix metadata is the next piece of this layer.
+    //
+    // implied specialization: Metadata::MetadataItem
+    // constraint: MetadataDefinition::checkMetadataDefinitionSpecialization
+    //     (8.3.27.2). An injection, so sv2-hir's (ADR-0002).
+    fn metadata_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MetadataDefinition);
+        self.eat_optional_keyword("abstract");
+        self.expect_keyword("metadata");
+        self.expect_keyword("def");
+        self.definition();
+        self.finish_node();
+    }
+
+    // MetadataUsage : MetadataUsage =
+    //     UsageExtensionKeyword* ( '@' | 'metadata' ) MetadataUsageDeclaration
+    //     ( 'about' ownedRelationship += Annotation
+    //       ( ',' ownedRelationship += Annotation )* )?
+    //     MetadataBody                                           (SysML 8.2.2.27)
+    //
+    // NOT marked for coverage: UsageExtensionKeyword (`#` prefix metadata) is
+    // unimplemented, as on SubjectUsage. Reached only as AnnotatingElement's fourth
+    // alternative, by deviation AnnotatingElement, which adds no text and so
+    // carries no note (see `metadata_annotating_element`). "A metadata usage
+    // is declared like an item usage ... using the keyword metadata (or the symbol @)"
+    // (7.27.2, receipt 66e5d6b3). The metaclass is MetadataUsage (8.3.27.3, receipt
+    // 45313c9a), an ItemUsage that is also a KerML MetadataFeature.
+    //
+    // "If there is no declared name or short name, then the keyword defined by (or the
+    // symbol :) may also be omitted" (7.27.2), and a usage with no `about` annotates "the
+    // containing namespace" -- a derivation over the owner, not text.
+    //
+    // implied specialization: Metadata::metadataItems
+    // constraint: MetadataUsage::checkMetadataUsageSpecialization (8.3.27.3). sv2-hir's.
+    fn metadata_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MetadataUsage);
+        if self.at(SyntaxKind::At) {
+            self.bump();
+        } else {
+            self.expect_keyword("metadata");
+        }
+        self.metadata_usage_declaration();
+        if self.at_keyword("about") {
+            self.bump_as(keyword("about").unwrap_or(SyntaxKind::BasicName));
+            self.annotation();
+            while self.at(SyntaxKind::Comma) {
+                self.bump();
+                self.annotation();
+            }
+        }
+        self.metadata_body();
+        self.finish_node();
+    }
+
+    // production: MetadataUsageDeclaration
+    //
+    // MetadataUsageDeclaration : MetadataUsage =
+    //     ( Identification ( ':' | 'typed' 'by' ) )?
+    //     ownedRelationship += OwnedFeatureTyping                (SysML 8.2.2.27)
+    //
+    // Read as deviation MetadataUsageDeclaration (follow_xtext) writes it: `defined by`,
+    // SysML's spelling, in place of KerML's unadapted `typed by`, as 7.27.2 itself says
+    // ("followed by the keyword defined by (or the symbol :)", receipt 66e5d6b3). `typed`
+    // is no SysML keyword, so `metadata m typed by T;` is reported. The typing is the
+    // whole OwnedFeatureTyping, chain included, per deviation PrefixMetadataTyping-chain
+    // (follow_spec); that it names a metaclass is validateMetadataFeatureMetaclass, not
+    // grammar.
+    //
+    // The optional group is decided by looking past an Identification for the `:` or
+    // `defined` after it; without one, what is here is the typing alone. Identification
+    // may be empty, so `metadata : T;` takes the group with nothing before the `:`.
+    fn metadata_usage_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MetadataUsageDeclaration);
+        if self.at_metadata_identification() {
+            self.identification();
+            if self.at_keyword("defined") {
+                // deviation: MetadataUsageDeclaration
+                self.note_deviation(
+                    "MetadataUsageDeclaration",
+                    "`defined by` in a metadata usage declaration",
+                );
+                self.bump_as(keyword("defined").unwrap_or(SyntaxKind::BasicName));
+                self.expect_keyword("by");
+            } else {
+                self.expect(SyntaxKind::Colon, "`:` or `defined by`");
+            }
+        }
+        self.owned_feature_typing();
+        self.finish_node();
+    }
+
+    /// Whether `MetadataUsageDeclaration`'s optional `Identification ( ':' | 'defined'
+    /// 'by' )` group is written here: an optional `<short name>` and name, then `:` or
+    /// `defined by`.
+    fn at_metadata_identification(&self) -> bool {
+        let mut n = 0;
+        if self.nth_is(n, SyntaxKind::Lt) {
+            n += 3;
+        }
+        if self.peek_nth(n).is_some_and(|token| self.is_name(token)) {
+            n += 1;
+        }
+        self.nth_is(n, SyntaxKind::Colon)
+            || (self.nth_is_keyword(n, "defined") && self.nth_is_keyword(n + 1, "by"))
+    }
+
+    // production: MetadataBody@sysml
+    //
+    // MetadataBody : Type =
+    //     ';'
+    //   | '{' ( ownedRelationship += DefinitionMember
+    //         | ownedRelationship += MetadataBodyUsageMember
+    //         | ownedRelationship += AliasMember
+    //         | ownedRelationship += Import )*
+    //     '}'                                                    (SysML 8.2.2.27)
+    //
+    // Its own loop rather than `body_elements`, because its item set is its own: a
+    // DefinitionMember but NO usage member, and a keywordless redefinition that no other
+    // body has. A DefinitionElement includes AnnotatingElement, so a `doc` or a nested
+    // `@M;` is a DefinitionMember here; `attribute a;` is reported. Keywordless
+    // redefinitions are asked last, since a definition opens on a keyword and a
+    // keyword is not a name (8.2.2.1.2).
+    fn metadata_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MetadataBody);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.metadata_body_items();
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.error_expected("`;` or `{` after a metadata usage declaration");
+        }
+        self.finish_node();
+    }
+
+    /// The items of a braced `MetadataBody`, up to its `}` or end of input.
+    fn metadata_body_items(&mut self) {
+        while !self.at_end() && !self.at(SyntaxKind::RBrace) {
+            let start = self.pos;
+            let n = usize::from(self.at_visibility());
+            if self.depth >= MAX_DEPTH {
+                self.report_too_deep();
+                self.error_token();
+            } else if self.at_import() {
+                self.import();
+            } else if self.at_element_keyword("alias") {
+                self.alias_member();
+            } else if self.at_annotating_member(n)
+                || self.nth_is_keyword(n, "package")
+                || self.at_definition_element(n)
+            {
+                // Body::Definition builds a DefinitionMember for what is not a usage,
+                // and the recogniser above admits no usage.
+                self.membership(Body::Definition);
+            } else if self.at_metadata_body_usage() {
+                self.metadata_body_usage_member();
+            } else {
+                self.recover_statement();
+            }
+            if self.pos == start {
+                self.error_token();
+            }
+        }
+    }
+
+    /// Whether a `MetadataBodyUsage` starts here: `'ref'? ( ':>>' | 'redefines' )?` and
+    /// then the name its `OwnedRedefinition` opens on (`SysML` 8.2.2.27).
+    fn at_metadata_body_usage(&self) -> bool {
+        let mut n = usize::from(self.nth_is_keyword(0, "ref"));
+        if self.nth_is(n, SyntaxKind::ColonGtGt) || self.nth_is_keyword(n, "redefines") {
+            n += 1;
+        }
+        self.peek_nth(n).is_some_and(|token| self.is_name(token))
+            || (self.nth_is(n, SyntaxKind::Dollar) && self.nth_is(n + 1, SyntaxKind::ColonColon))
+    }
+
+    // production: MetadataBodyUsageMember
+    //
+    // MetadataBodyUsageMember : FeatureMembership =
+    //     ownedMemberFeature = MetadataBodyUsage                 (SysML 8.2.2.27)
+    //
+    // production: MetadataBodyUsage
+    //
+    // MetadataBodyUsage : ReferenceUsage =
+    //     'ref'? ( ':>>' | 'redefines' )? ownedRelationship += OwnedRedefinition
+    //     FeatureSpecializationPart? ValuePart? MetadataBody      (SysML 8.2.2.27)
+    //
+    // "The keyword ref and/or redefines (or the equivalent symbol :>>) may be omitted in
+    // the declaration of a feature of a metadata usage" (7.27.2, receipt 66e5d6b3), so
+    // `approved = true;` redefines `approved`. The redefinition is always there; the
+    // keywords before it are optional spellings.
+    fn metadata_body_usage_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MetadataBodyUsageMember);
+        self.start_node(SyntaxKind::MetadataBodyUsage);
+        self.eat_optional_keyword("ref");
+        if self.at(SyntaxKind::ColonGtGt) {
+            self.bump();
+        } else {
+            self.eat_optional_keyword("redefines");
+        }
+        self.owned_redefinition();
+        if self.at_feature_specialization() || self.at_multiplicity_part() {
+            self.feature_specialization_part();
+        }
+        if self.at_value_part() {
+            self.value_part();
+        }
+        self.metadata_body();
+        self.finish_node();
+        self.finish_node();
+    }
+
     // production: Import
     //
     // Import = visibility = VisibilityIndicator 'import' ( isImportAll ?= 'all' )?
@@ -10099,12 +10371,19 @@ impl<'a> Parser<'a> {
     // RelationshipBody = ';' | '{' ( ownedRelationship += OwnedAnnotation )* '}'
     //                                                            (SysML 8.2.2.2)
     //
-    // Inside the braces a regular comment is a token (see comments_significant), so
-    // `{ /* text */ }` owns a Comment rather than skipping one — the corpus's
-    // `private import Definitions::* { /* ... */ }` is exactly that. Anything that is
-    // not an implemented AnnotatingElement, MetadataUsage included, is recovered over
-    // one token at a time and reported: accepting it silently would report an
-    // annotation this parser cannot read as one it understood.
+    // Inside the braces a regular comment is a token at item position (see
+    // comments_significant), so `{ /* text */ }` owns a Comment rather than skipping one
+    // — the corpus's `private import Definitions::* { /* ... */ }` is exactly that.
+    // Anything that is not an implemented AnnotatingElement is recovered over one token
+    // at a time and reported: accepting it silently would report an annotation this
+    // parser cannot read as one it understood.
+    //
+    // A comment is a token only while deciding whether an annotation starts, and each
+    // annotation scopes the mode itself, as `kerml_relationship_body` does. The whole run
+    // was once read with comments significant, which was harmless while every annotation
+    // here ended in a comment body; a MetadataUsage does not, and its own MetadataBody
+    // holds ordinary comments between tokens and Comment members that must be read as
+    // they are anywhere else.
     fn sysml_relationship_body(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::RelationshipBody);
@@ -10112,7 +10391,9 @@ impl<'a> Parser<'a> {
             self.bump();
         } else if self.at(SyntaxKind::LBrace) {
             self.bump();
-            self.with_significant_comments(Self::owned_annotations);
+            self.depth += 1;
+            self.owned_annotations();
+            self.depth -= 1;
         } else {
             self.error_expected("`;` or `{` to close the relationship");
         }
@@ -10215,10 +10496,25 @@ impl<'a> Parser<'a> {
 
     /// `OwnedAnnotation* '}'`, the rest of a braced `RelationshipBody`.
     fn owned_annotations(&mut self) {
-        while !self.at_end() && !self.at(SyntaxKind::RBrace) {
-            if self.at_annotating_element() {
+        loop {
+            let outer = self.comments_significant;
+            self.comments_significant = true;
+            let annotating = self.at_annotating_element();
+            self.comments_significant = outer;
+            if self.at_end() || (!annotating && self.at(SyntaxKind::RBrace)) {
+                break;
+            }
+            let start = self.pos;
+            if self.depth >= MAX_DEPTH {
+                // As `body_element` does (invariant 3).
+                self.report_too_deep();
+                self.error_token();
+            } else if annotating {
                 self.owned_annotation();
             } else {
+                self.error_token();
+            }
+            if self.pos == start {
                 self.error_token();
             }
         }
@@ -10234,12 +10530,19 @@ impl<'a> Parser<'a> {
     //                   | MetadataUsage
     //
     // The fourth alternative is MetadataUsage by deviation AnnotatingElement
-    // (follow_xtext); the clause prints MetadataFeature. It is not implemented, so
-    // AnnotatingElement gets no marker and no node — like DefinitionElement it is an
-    // alternation whose matched element already says which alternative was taken.
-    // The caller only enters on at_annotating_element, so the dispatch below never
-    // sees a MetadataUsage.
+    // (follow_xtext); the clause prints MetadataFeature. MetadataUsage is read less its
+    // `#` extension keywords, so AnnotatingElement gets no marker, and it gets no node —
+    // like DefinitionElement it is an alternation whose matched element already says
+    // which alternative was taken. A MetadataUsage is dispatched before the
+    // comment-significant mode the other three need; see `annotating_element_at_member`.
     fn owned_annotation(&mut self) {
+        if self.at_metadata_usage(0) {
+            self.eat_trivia();
+            self.start_node(SyntaxKind::OwnedAnnotation);
+            self.metadata_annotating_element();
+            self.finish_node();
+            return;
+        }
         self.with_significant_comments(|p| {
             p.eat_trivia();
             p.start_node(SyntaxKind::OwnedAnnotation);
@@ -10248,20 +10551,54 @@ impl<'a> Parser<'a> {
         });
     }
 
+    /// An `AnnotatingElement` at member position: a `MetadataUsage`, or one of the three
+    /// whose body is a `REGULAR_COMMENT`.
+    ///
+    /// Those three read their body as a TOKEN, so they run with comments significant. A
+    /// metadata usage has no such body, and inside that mode an ordinary `/* */` between
+    /// its tokens would be read as a stray token, so it is dispatched before the mode is
+    /// entered rather than inside `annotating_element`.
+    fn annotating_element_at_member(&mut self) {
+        if self.at_metadata_usage(0) {
+            self.metadata_annotating_element();
+        } else {
+            self.with_significant_comments(Self::annotating_element);
+        }
+    }
+
+    /// `AnnotatingElement`'s fourth alternative, as deviation `AnnotatingElement` reads it.
+    ///
+    /// No `PARSE-DEVIATION` note, because the deviation adds no TEXT. `SysML` 8.2.2.4.1
+    /// prints `KerML`'s `MetadataFeature` here, but under ADR-0015's resolution — `SysML`
+    /// reads its own productions and `KerML`'s only for what it does not state — that
+    /// literal alternative reaches `SysML`'s own `PrefixMetadataMember`, `MetadataBody`
+    /// and `OwnedFeatureTyping`, and its one `KerML`-only production,
+    /// `MetadataFeatureDeclaration`, prints the same text as `MetadataUsageDeclaration`.
+    /// What the deviation changes is the element built, a `MetadataUsage` rather than a
+    /// bare `MetadataFeature`, and ADR-0022 notes text, not element kinds. `defined by` in
+    /// the declaration IS a textual departure, deviation `MetadataUsageDeclaration`'s,
+    /// noted where it is read. Adjudicated 2026-09-22; the entry is listed as needing no
+    /// site.
+    fn metadata_annotating_element(&mut self) {
+        self.metadata_usage();
+    }
+
     /// The `AnnotatingElement` alternation, shared by every place one may appear.
     ///
     /// `AnnotatingElement = Comment | Documentation | TextualRepresentation |
     /// MetadataUsage` in `SysML` 8.2.2.4.1, and the same with `MetadataFeature` in
-    /// `KerML` 8.2.3.3.1 — the one difference is the fourth alternative, and neither
-    /// spelling of it is implemented.
+    /// `KerML` 8.2.3.3.1 — the one difference is the fourth alternative. `SysML`'s is
+    /// read, by `metadata_annotating_element` and not here (see
+    /// `annotating_element_at_member`); `KerML`'s is unimplemented.
     ///
     /// An annotating element is reached three ways, and this is the one dispatch for all
     /// of them: `OwnedAnnotation` in a relationship body, `MemberElement` in `KerML`
     /// (8.2.3.4.1), and `DefinitionElement` in `SysML` (8.2.2.6.1). Writing the
     /// alternation twice is how the three would drift apart.
     ///
-    /// The caller enters only on `at_annotating_element` or `at_annotating_member`, so
-    /// the `else` never sees a metadata element.
+    /// The caller enters only on `at_annotating_element` or `at_annotating_member`, less
+    /// the metadata usages it dispatched first, so the `else` never sees a metadata
+    /// element.
     ///
     /// The caller is also responsible for `with_significant_comments`: every one of
     /// these productions ends in a `REGULAR_COMMENT` body, which is trivia unless the
@@ -10293,6 +10630,7 @@ impl<'a> Parser<'a> {
         ["comment", "locale", "doc", "rep", "language"]
             .iter()
             .any(|word| self.nth_is_keyword(n, word))
+            || self.at_metadata_usage(n)
     }
 
     // production: Comment

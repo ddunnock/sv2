@@ -1107,6 +1107,18 @@ pub enum SyntaxKind {
     LiteralReal,
     /// `'*'`. `KerML` 8.2.5.8.4.
     LiteralInfinity,
+    /// `'abstract'? DefinitionExtensionKeyword* 'metadata' 'def' Definition`. `SysML` 8.2.2.27.
+    MetadataDefinition,
+    /// `UsageExtensionKeyword* ( '@' | 'metadata' ) MetadataUsageDeclaration ( 'about' Annotation ( ',' Annotation )* )? MetadataBody`. `SysML` 8.2.2.27.
+    MetadataUsage,
+    /// `( Identification ( ':' | 'defined' 'by' ) )? OwnedFeatureTyping`. `SysML` 8.2.2.27, as deviation `MetadataUsageDeclaration` reads it.
+    MetadataUsageDeclaration,
+    /// `';' | '{' ( DefinitionMember | MetadataBodyUsageMember | AliasMember | Import )* '}'`. `SysML` 8.2.2.27.
+    MetadataBody,
+    /// `ownedMemberFeature = MetadataBodyUsage`. `SysML` 8.2.2.27.
+    MetadataBodyUsageMember,
+    /// `'ref'? ( ':>>' | 'redefines' )? OwnedRedefinition FeatureSpecializationPart? ValuePart? MetadataBody`. `SysML` 8.2.2.27 — the metaclass is `ReferenceUsage`.
+    MetadataBodyUsage,
     /// recovered-over text; carries its bytes so the tree stays lossless
     Error,
 
@@ -1666,6 +1678,12 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::LiteralInteger,
     SyntaxKind::LiteralReal,
     SyntaxKind::LiteralInfinity,
+    SyntaxKind::MetadataDefinition,
+    SyntaxKind::MetadataUsage,
+    SyntaxKind::MetadataUsageDeclaration,
+    SyntaxKind::MetadataBody,
+    SyntaxKind::MetadataBodyUsageMember,
+    SyntaxKind::MetadataBodyUsage,
     SyntaxKind::Error,
     SyntaxKind::Tombstone,
 ];

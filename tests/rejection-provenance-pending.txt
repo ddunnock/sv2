@@ -67,7 +67,6 @@ tests/rejection/initial-node-member-names-a-qualified-name-not-a-feature-chain.s
 tests/rejection/locale-requires-a-string-value.sysml
 tests/rejection/metaclassification-does-not-chain.sysml
 tests/rejection/metadata-access-expression-is-not-implemented.sysml
-tests/rejection/metadata-annotating-element-is-not-implemented.sysml
 tests/rejection/multiplicity-bound-is-not-an-operator-expression.sysml
 tests/rejection/multiplicity-part-appears-once.sysml
 tests/rejection/multiplicity-range-unclosed.sysml

@@ -245,9 +245,13 @@ fn an_annotating_member_may_carry_a_visibility() {
 }
 
 #[test]
-fn a_metadata_annotating_element_is_not_implemented() {
-    // The fourth alternative, MetadataUsage in SysML by the recorded deviation.
-    parse_rejected("package P { metadata Safety about Q; }");
+fn a_metadata_annotating_element_is_the_fourth_alternative() {
+    // MetadataUsage in SysML by the recorded deviation AnnotatingElement. Held by absence
+    // until the metadata layer landed. It carries NO note: the deviation changes the
+    // element kind and adds no text (adjudicated 2026-09-22), so the spec's own metadata
+    // annotations are spec-conformant.
+    let parsed = parse_accepted("package P { metadata Safety about Q; }");
+    assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
 }
 
 // -- the definitions, SysML 8.2.2 -------------------------------------------------
@@ -5759,12 +5763,35 @@ fn each_deviation_site_fires_on_the_text_it_admits_and_no_other() {
             "analysis def A { subject v : V; r }",
             "CaseBodyItem",
         ),
+        // MetadataUsageDeclaration, follow_xtext: `defined by` for KerML's `typed by`.
+        (
+            "package P { metadata m defined by M; }",
+            "package P { metadata m : M; }",
+            "MetadataUsageDeclaration",
+        ),
     ] {
         assert_eq!(deviations_named(admitted), [entry], "{admitted}");
         assert_eq!(
             deviations_named(conformant),
             Vec::<String>::new(),
             "{conformant}"
+        );
+    }
+}
+
+#[test]
+fn annotating_element_needs_no_site() {
+    // Deviation AnnotatingElement is listed in deviation-sites-pending.txt as adding no
+    // text: SysML's literal MetadataFeature reads SysML's own metadata body, so no
+    // metadata usage parses only because of it. The spec's Annex A form, and a body.
+    for source in [
+        "package P { @Risk about vehicle_b_engine4cyl { totalRisk = 1; } }",
+        "package P { @Safety; metadata m : M about a, b; }",
+    ] {
+        assert!(
+            parse_accepted(source).is_spec_conformant(),
+            "{source}: {:?}",
+            deviations_named(source)
         );
     }
 }
@@ -6432,15 +6459,16 @@ fn a_relationship_body_holds_only_annotations() {
 }
 
 #[test]
-fn metadata_in_a_relationship_body_is_reported_not_accepted() {
+fn metadata_in_a_relationship_body_is_an_owned_annotation() {
     // MetadataUsage is AnnotatingElement's fourth alternative (deviation
-    // AnnotatingElement) and valid SysML here, but it is not implemented. It must be
-    // reported rather than silently accepted: a rejection by absence, not by rule.
-    parse_rejected("public import A::* { @Rationale; }");
-    parse_rejected("public import A::* { metadata Rationale; }");
-    // Recovery is at the body: an implemented annotation after it still parses.
-    let parsed = parse_rejected("public import A::* { @Rationale; doc /* kept */ }");
-    assert!(render(&parsed.syntax()).contains("Documentation"));
+    // AnnotatingElement), so a relationship body holds one as it holds a doc. Held by
+    // absence until the metadata layer landed.
+    parse_accepted("public import A::* { @Rationale; }");
+    parse_accepted("public import A::* { metadata Rationale; }");
+    let tree =
+        render(&parse_accepted("public import A::* { @Rationale; doc /* kept */ }").syntax());
+    assert_eq!(nodes_named(&tree, "OwnedAnnotation"), 2, "{tree}");
+    assert_eq!(nodes_named(&tree, "MetadataUsage"), 1, "{tree}");
 }
 
 #[test]
@@ -9063,4 +9091,278 @@ fn a_requirement_verification_member_is_read_wherever_a_requirement_body_is() {
 fn a_requirement_verification_member_keeps_every_byte() {
     let source = "requirement def R {\n\tverify /* n */ requirement r // d\n\t\t: T;\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
+}
+
+// -- The metadata layer, SysML 8.2.2.27 -----------------------------------------------
+//
+// MetadataDefinition       = 'abstract'? DefinitionExtensionKeyword* 'metadata' 'def'
+//                            Definition
+// MetadataUsage            = UsageExtensionKeyword* ( '@' | 'metadata' )
+//                            MetadataUsageDeclaration
+//                            ( 'about' Annotation ( ',' Annotation )* )? MetadataBody
+// MetadataUsageDeclaration = ( Identification ( ':' | 'defined' 'by' ) )?
+//                            OwnedFeatureTyping      (as deviation MetadataUsageDeclaration)
+// MetadataBody             = ';' | '{' ( DefinitionMember | MetadataBodyUsageMember
+//                                      | AliasMember | Import )* '}'
+// MetadataBodyUsage        = 'ref'? ( ':>>' | 'redefines' )? OwnedRedefinition
+//                            FeatureSpecializationPart? ValuePart? MetadataBody
+//
+// 7.27.2, receipt 66e5d6b3, whose examples the first test reads.
+
+#[test]
+fn the_metadata_layer_reads_the_specification_examples() {
+    let tree = render(
+        &parse_accepted(
+            "package P {\n\
+             metadata def SecurityRelated;\n\
+             metadata def ApprovalAnnotation {\n\
+             attribute approved : Boolean;\n\
+             attribute approver : String;\n\
+             }\n\
+             metadata securityDesignAnnotation : SecurityRelated\n\
+             about SecurityRequirements, SecurityDesign;\n\
+             metadata ApprovalAnnotation about Design {\n\
+             ref :>> approved = true;\n\
+             ref :>> approver = \"John Smith\";\n\
+             }\n\
+             metadata ApprovalAnnotation about Design {\n\
+             approved = true;\n\
+             approver = \"John Smith\";\n\
+             }\n\
+             part def Design {\n\
+             @ApprovalAnnotation {\n\
+             approved = true;\n\
+             approver = \"John Smith\";\n\
+             }\n\
+             }\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "MetadataDefinition"), 2, "{tree}");
+    assert_eq!(nodes_named(&tree, "MetadataUsage"), 4, "{tree}");
+    assert_eq!(nodes_named(&tree, "MetadataBodyUsageMember"), 6, "{tree}");
+}
+
+#[test]
+fn the_metadata_layer_reads_the_corpus_forms() {
+    // examples/Metadata Examples/VerificationMetadataExample.sysml:6-12 — `@` in a case
+    // body and an action body, a value given as a sequence.
+    let tree = render(
+        &parse_accepted(
+            "verification massTests:MassTest {\n\
+             @VerificationMethod{ kind = (test,demo); }\n\
+             objective {\n\
+             }\n\
+             action weighVehicle {\n\
+             @VerificationMethod{ kind = analyze; }\n\
+             }\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "MetadataUsage"), 2, "{tree}");
+    // examples/Metadata Examples/RationaleMetadataExample.sysml's form: a named, typed
+    // usage about another element, with a body.
+    parse_accepted(
+        "part def P { metadata engineSelectionRationale : Rationale about engine4cyl {\n\
+         explanation = \"x\";\n\
+         } }",
+    );
+}
+
+#[test]
+fn a_metadata_usage_owns_what_its_production_writes() {
+    let tree =
+        render(&parse_accepted("part def P { metadata m : M about a, b { x = 1; } }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "MetadataUsage"),
+        [
+            "KwMetadata",
+            "MetadataUsageDeclaration",
+            "KwAbout",
+            "Annotation",
+            "Comma",
+            "Annotation",
+            "MetadataBody"
+        ],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "MetadataUsageDeclaration"),
+        ["Identification", "Colon", "OwnedFeatureTyping"],
+        "{tree}"
+    );
+    // An annotating element, so a DefinitionMember in a definition body (8.2.2.6.1).
+    assert_eq!(
+        child_kinds(&tree, "DefinitionMember"),
+        ["MemberPrefix", "MetadataUsage"],
+        "{tree}"
+    );
+    // With no Identification, the typing alone; a chain is an OwnedFeatureTyping too
+    // (deviation PrefixMetadataTyping-chain).
+    let bare = render(&parse_accepted("part def P { @a.b; }").syntax());
+    assert_eq!(
+        child_kinds(&bare, "MetadataUsageDeclaration"),
+        ["OwnedFeatureTyping"],
+        "{bare}"
+    );
+    let definition = render(&parse_accepted("abstract metadata def M { attribute a; }").syntax());
+    assert_eq!(
+        child_kinds(&definition, "MetadataDefinition"),
+        ["KwAbstract", "KwMetadata", "KwDef", "Definition"],
+        "{definition}"
+    );
+    let body = render(&parse_accepted("@M { ref redefines a : T [1] = 2 { b = 3; } }").syntax());
+    assert_eq!(
+        child_kinds(&body, "MetadataBodyUsage"),
+        [
+            "KwRef",
+            "KwRedefines",
+            "OwnedRedefinition",
+            "FeatureSpecializationPart",
+            "ValuePart",
+            "MetadataBody"
+        ],
+        "{body}"
+    );
+}
+
+#[test]
+fn a_metadata_body_holds_definitions_and_redefinitions_but_no_usages() {
+    // DefinitionMember, AliasMember and Import are its other three items (8.2.2.27).
+    parse_accepted("@M { doc /* d */ private import X::*; alias a for b; part def D; @N; }");
+    // A usage is not a MetadataBody item: not a DefinitionMember, and a keyword is not
+    // the name a MetadataBodyUsage opens on.
+    parse_rejected("@M { attribute a; }");
+    parse_rejected("@M { part p; }");
+}
+
+#[test]
+fn a_metadata_usage_is_bounded_by_its_rules() {
+    // MetadataBody is not optional.
+    parse_rejected("part def P { @M }");
+    // `typed by` is KerML's spelling; SysML's is `defined by` (deviation
+    // MetadataUsageDeclaration), and `typed` is not a SysML keyword.
+    parse_rejected("part def P { metadata m typed by M; }");
+    // The declaration needs its typing: an Identification alone is not one.
+    parse_rejected("part def P { metadata m :; }");
+    // The prefix is `abstract` alone, not DefinitionPrefix's `variation` (8.2.2.27).
+    parse_rejected("variation metadata def M;");
+    // KerML's fourth AnnotatingElement is MetadataFeature (8.2.5.12), a different
+    // production and unimplemented: valid KerML, rejected by absence. SysML's MetadataUsage
+    // must not stand in for it in a .kerml file (ADR-0014).
+    assert!(
+        !parse("package P { @M; }", Language::KerMl)
+            .errors()
+            .is_empty()
+    );
+}
+
+#[test]
+fn a_metadata_usage_and_a_classification_expression_share_the_at() {
+    // In a calculation body `@T` before the `}` is the result expression, a
+    // ClassificationExpression with no left operand (KerML 8.2.5.8.1); followed by `;` or
+    // a body it is a metadata usage item (8.2.2.27).
+    let expression = render(&parse_accepted("calc def C { @T }").syntax());
+    assert_eq!(nodes_named(&expression, "MetadataUsage"), 0, "{expression}");
+    assert_eq!(
+        nodes_named(&expression, "ResultExpressionMember"),
+        1,
+        "{expression}"
+    );
+    let item = render(&parse_accepted("calc def C { @T; x }").syntax());
+    assert_eq!(nodes_named(&item, "MetadataUsage"), 1, "{item}");
+    assert_eq!(nodes_named(&item, "ResultExpressionMember"), 1, "{item}");
+}
+
+#[test]
+fn a_metadata_usage_keeps_every_byte() {
+    let source =
+        "part def P {\n\t@M /* c */ { x = 1; } // d\n\tmetadata m defined by M about a;\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
+#[test]
+fn a_metadata_usage_is_read_wherever_an_annotating_element_is() {
+    // A relationship body scopes comment significance per annotation, so a metadata
+    // usage there reads ordinary comments between its tokens and Comment members in its
+    // body, as it does at member position.
+    for source in [
+        "public import A::* { @R { /* c */ x = 1; } }",
+        "public import A::* { @R /* c */ ; }",
+        "public import A::* { metadata /* c */ R; }",
+        "public import A::* { @R; /* a comment annotation after it */ }",
+    ] {
+        parse_accepted(source);
+    }
+    // An enumeration body, through AnnotatingMember (8.2.2.4.1), with a visibility.
+    let enumeration = render(&parse_accepted("enum def E { @M; private @N; enum a; }").syntax());
+    assert_eq!(
+        nodes_named(&enumeration, "MetadataUsage"),
+        2,
+        "{enumeration}"
+    );
+    // A constraint body ends in a result expression too, and a visibility is looked past.
+    let constraint = render(&parse_accepted("constraint def C { private @T; x }").syntax());
+    assert_eq!(nodes_named(&constraint, "MetadataUsage"), 1, "{constraint}");
+    assert_eq!(
+        nodes_named(&constraint, "ResultExpressionMember"),
+        1,
+        "{constraint}"
+    );
+}
+
+#[test]
+fn a_metadata_usage_declaration_takes_a_short_name_or_none() {
+    // Identification's short name, and an empty Identification before the `:`.
+    for source in [
+        "part def P { @<s> m : M; }",
+        "part def P { metadata <s> : M; }",
+        "part def P { metadata : M; }",
+        "metadata def <m> M;",
+    ] {
+        parse_accepted(source);
+    }
+    let short = render(&parse_accepted("part def P { @<s> m : M; }").syntax());
+    assert_eq!(
+        child_kinds(&short, "MetadataUsageDeclaration"),
+        ["Identification", "Colon", "OwnedFeatureTyping"],
+        "{short}"
+    );
+}
+
+#[test]
+fn the_metadata_layer_reads_the_last_specification_examples() {
+    // 7.27.2 (receipt 66e5d6b3): a metadata definition restricting annotatedElement, and
+    // its use on an item definition -- which parses, being invalid only by validation
+    // ("This is INVALID." is a constraint on the annotated element, not grammar).
+    parse_accepted(
+        "metadata def CommandMetadata {\n\
+         :> annotatedElement : SysML::ActionDefinition;\n\
+         :> annotatedElement : SysML::ActionUsage;\n\
+         }\n\
+         item def Options {\n\
+         @CommandMetadata;\n\
+         }",
+    );
+}
+
+#[test]
+fn metadata_bodies_nested_too_deeply_are_reported_not_overflowed() {
+    // MAX_DEPTH guards both nestings a metadata usage has (invariant 3): metadata bodies,
+    // and a body usage's own MetadataBody.
+    for open in ["@M { ", "a { "] {
+        let depth = 5000;
+        let source = format!("part def P {{ @M {{ {}}}}}", open.repeat(depth));
+        let parsed = parse(&source, Language::SysMl);
+        assert_eq!(parsed.text(), source);
+        assert!(
+            parsed
+                .errors()
+                .iter()
+                .any(|e| e.code() == DiagnosticCode::TooDeeplyNested),
+            "{open}"
+        );
+    }
 }

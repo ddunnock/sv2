@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T18:42:58Z",
+    "regenerated_utc": "2026-09-22T19:22:04Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,13 +17,13 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 302,
-      "unimplemented": 252,
+      "implemented": 306,
+      "unimplemented": 248,
       "absent": 0,
-      "percent": 54.5
+      "percent": 55.2
     },
     "tests": {
-      "unit": 508,
+      "unit": 520,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 210,
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "6448723 Read the requirement verification member, and buy the two verification files it held",
       "875edec Read the verification case definition and usage, the fourth and last case row",
       "2296540 Read the include use case usage, buy the three use case files it held, and drop the guard it made useless",
       "4e30f08 Read the use case definition and usage, and buy the file only they held back",
       "bff74cc Read the actor member, in requirement and case bodies alike",
       "bb69266 Read the case and analysis case layer, and buy the six files it predicted",
       "4e95087 Close the session: deviation diagnostics recorded, next_step current",
-      "ffefd20 Site the DefinitionElement deviation: `allocation def` was read but reported conformant",
-      "42d730f Read a connector end's trailing multiplicity by deviation, as 7.13.2's example writes it, and flag it"
+      "ffefd20 Site the DefinitionElement deviation: `allocation def` was read but reported conformant"
     ]
   },
   "authored": {
