@@ -31,3 +31,5 @@ silently is not.
 | [0016](0016-element-identity-via-petname-notes.md) | Stable element identity via petname IDs in inline notes | accepted |
 | [0017](0017-view-scoped-json-lines-sidecar-for-diagram-layout-and-styling.md) | View-scoped JSON Lines sidecar for layout and styling | **proposed** |
 | [0018](0018-a-binary-per-process-shape.md) | A binary per process shape, and every binary a shim | accepted |
+| [0020](0020-sysand-is-the-package-manager-and-sv2-toml-configures-the-tool.md) | sysand is the package manager; sv2.toml configures only the tool | **proposed** |
+| [0021](0021-security-markings-are-model-metadata.md) | Security markings are model metadata; diagrams derive their banners | **proposed** |
