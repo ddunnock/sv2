@@ -580,6 +580,7 @@
     "TransitionPerformActionUsage",
     "TransitionSendActionUsage",
     "TransitionSourceMember",
+    "TransitionUsage",
     "TransitionUsageKeyword",
     "TriggerExpression",
     "TriggerFeatureKind",
