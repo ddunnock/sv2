@@ -711,6 +711,16 @@ pub enum SyntaxKind {
     ConnectorEndMember,
     /// `OwnedCrossMultiplicityMember? ( NAME REFERENCES )? OwnedReferenceSubsetting`. `SysML` 8.2.2.13.1 — the metaclass is `ReferenceUsage`.
     ConnectorEnd,
+    /// `OwnedCrossMultiplicity`. `SysML` 8.2.2.13.1.
+    OwnedCrossMultiplicityMember,
+    /// `OwnedMultiplicity`, a `Feature`. `SysML` 8.2.2.13.1, `KerML` 8.2.5.5.1.
+    OwnedCrossMultiplicity,
+    /// `OccurrenceUsagePrefix ( 'connection' UsageDeclaration ValuePart? ( 'connect' ConnectorPart )? | 'connect' ConnectorPart ) UsageBody`. `SysML` 8.2.2.13.1.
+    ConnectionUsage,
+    /// `ConnectorEndMember 'to' ConnectorEndMember`. `SysML` 8.2.2.13.1.
+    BinaryConnectorPart,
+    /// `'(' ConnectorEndMember ',' ConnectorEndMember ( ',' ConnectorEndMember )* ')'`. `SysML` 8.2.2.13.1.
+    NaryConnectorPart,
     /// `OccurrenceDefinitionPrefix 'calc' 'def' DefinitionDeclaration CalculationBody`. `SysML` 8.2.2.19.
     CalculationDefinition,
     /// `OccurrenceDefinitionPrefix 'action' 'def' DefinitionDeclaration ActionBody`. `SysML` 8.2.2.17.1.
@@ -1420,6 +1430,11 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::SourceSuccession,
     SyntaxKind::ConnectorEndMember,
     SyntaxKind::ConnectorEnd,
+    SyntaxKind::OwnedCrossMultiplicityMember,
+    SyntaxKind::OwnedCrossMultiplicity,
+    SyntaxKind::ConnectionUsage,
+    SyntaxKind::BinaryConnectorPart,
+    SyntaxKind::NaryConnectorPart,
     SyntaxKind::CalculationDefinition,
     SyntaxKind::ActionDefinition,
     SyntaxKind::ActionBody,

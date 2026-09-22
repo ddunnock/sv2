@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T16:22:27Z",
+    "regenerated_utc": "2026-09-22T16:30:58Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 281,
-      "unimplemented": 273,
+      "implemented": 285,
+      "unimplemented": 269,
       "absent": 0,
-      "percent": 50.7
+      "percent": 51.4
     },
     "tests": {
-      "unit": 466,
+      "unit": 474,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 199,
+      "negative_cases": 203,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "25a9862 Stop rejecting a SysML cross multiplicity by absence: the next commit reads it",
       "2603807 Stop standing a ConnectionUsage in for unread text: the next commit reads it",
       "ffae11b Close the session: the connection layer measured and written to start cold, one decision recorded",
       "aabb2e0 Read the send, accept and assignment action nodes and the `new` expression, and buy nineteen files",
       "64b05bf Stop rejecting send, assign, accept and `new` by absence: the next commit reads them",
       "8775eea Close the session: the send/assign/new step written to start cold, and one decision recorded",
       "c9fa442 Read the rest of the state layer: state actions, entry transitions, effects and triggers",
-      "4fc015e Stop rejecting entry actions and transition effects by absence: the next commit reads them",
-      "3f84a6c Read the state layer as one construct, and buy the four files that declared states"
+      "4fc015e Stop rejecting entry actions and transition effects by absence: the next commit reads them"
     ]
   },
   "authored": {

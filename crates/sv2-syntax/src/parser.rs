@@ -1516,6 +1516,7 @@ impl<'a> Parser<'a> {
             || self.at_exhibit_state_usage(n)
             || self.at_perform_action_usage(n)
             || self.at_flow_usage(n)
+            || self.at_connection_usage(n)
             || self.at_succession_as_usage(n)
             || self.at_binding_connector_as_usage(n)
             || self.at_assert_constraint_usage(n)
@@ -2056,6 +2057,7 @@ impl<'a> Parser<'a> {
                             .any(|word| self.at_element_keyword(word))
                         || self.at_perform_action_usage(0)
                         || self.at_flow_usage(0)
+                        || self.at_connection_usage(0)
                         || self.at_succession_as_usage(0)
                         || self.at_binding_connector_as_usage(0)
                         || self.at_assert_constraint_usage(0)
@@ -3141,39 +3143,17 @@ impl<'a> Parser<'a> {
     /// `DefaultReferenceUsage` are `NonOccurrenceUsageElement`s; the seven `SIMPLE_USAGES`
     /// carry their own.
     fn usage_element_of_class(&mut self) -> Option<UsageClass> {
-        if self.at_perform_action_usage(0) {
-            self.perform_action_usage();
-            Some(UsageClass::Behavior)
-        } else if self.at_action_usage(0) {
-            self.action_usage();
-            Some(UsageClass::Behavior)
-        } else if self.at_state_usage(0) {
-            // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
-            self.state_usage();
-            Some(UsageClass::Behavior)
-        } else if self.at_exhibit_state_usage(0) {
-            // A BehaviorUsageElement (8.2.2.6.4), as PerformActionUsage is.
-            self.exhibit_state_usage();
-            Some(UsageClass::Behavior)
-        } else if self.at_calculation_usage(0) {
-            // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
-            self.calculation_usage();
-            Some(UsageClass::Behavior)
-        } else if self.at_requirement_usage(0) {
-            // A BehaviorUsageElement (8.2.2.6.4), as ConstraintUsage is.
-            self.requirement_usage();
-            Some(UsageClass::Behavior)
-        } else if self.at_constraint_usage(0) {
-            // A BehaviorUsageElement (8.2.2.6.4), as AssertConstraintUsage is.
-            self.constraint_usage();
-            Some(UsageClass::Behavior)
-        } else if self.at_assert_constraint_usage(0) {
-            // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
-            self.assert_constraint_usage();
+        if self.behavior_usage_element() {
+            // Every usage `behavior_usage_element` reads is a BehaviorUsageElement
+            // (8.2.2.6.4).
             Some(UsageClass::Behavior)
         } else if self.at_flow_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), though its metaclass is an ActionUsage.
             self.flow_usage();
+            Some(UsageClass::Structure)
+        } else if self.at_connection_usage(0) {
+            // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
+            self.connection_usage();
             Some(UsageClass::Structure)
         } else if self.at_succession_as_usage(0) {
             // A NonOccurrenceUsageElement (8.2.2.6.4): "a succession is not a kind of
@@ -3196,6 +3176,45 @@ impl<'a> Parser<'a> {
             Some(UsageClass::NonOccurrence)
         } else {
             None
+        }
+    }
+
+    /// The `BehaviorUsageElement`s of `usage_element_of_class`, returning whether one was
+    /// read. Split out so each function stays within clippy's complexity budget; the order
+    /// is the one the dispatch always had.
+    fn behavior_usage_element(&mut self) -> bool {
+        if self.at_perform_action_usage(0) {
+            self.perform_action_usage();
+            true
+        } else if self.at_action_usage(0) {
+            self.action_usage();
+            true
+        } else if self.at_state_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
+            self.state_usage();
+            true
+        } else if self.at_exhibit_state_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as PerformActionUsage is.
+            self.exhibit_state_usage();
+            true
+        } else if self.at_calculation_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
+            self.calculation_usage();
+            true
+        } else if self.at_requirement_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as ConstraintUsage is.
+            self.requirement_usage();
+            true
+        } else if self.at_constraint_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as AssertConstraintUsage is.
+            self.constraint_usage();
+            true
+        } else if self.at_assert_constraint_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
+            self.assert_constraint_usage();
+            true
+        } else {
+            false
         }
     }
 
@@ -7004,6 +7023,117 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    /// Whether a `ConnectionUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix`, then `connection` with no `def` after it — the `def` makes
+    /// it the `ConnectionDefinition` — or `connect`, the shorthand with no declaration
+    /// (`SysML` 8.2.2.13.1). `connect` also opens an `InterfaceUsage`'s connector part
+    /// (8.2.2.14), but only after `interface` and its declaration, never at the start of a
+    /// member, so asking at `n` cannot find it.
+    fn at_connection_usage(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_usage_prefix(n);
+        (self.nth_is_keyword(after, "connection") && !self.nth_is_keyword(after + 1, "def"))
+            || self.nth_is_keyword(after, "connect")
+    }
+
+    // production: ConnectionUsage@sysml
+    //
+    // ConnectionUsage : ConnectionUsage =
+    //     OccurrenceUsagePrefix
+    //     ( 'connection' UsageDeclaration ValuePart?
+    //       ( 'connect' ConnectorPart )?
+    //     | 'connect' ConnectorPart
+    //     ) UsageBody                                                (SysML 8.2.2.13.1)
+    //
+    // "the related features of the connection usage may be identified in a comma-separated
+    // list, between parentheses (...), preceded by the keyword connect, placed after the
+    // connection usage declaration and before its body ... If the declaration part of the
+    // connection usage is empty when using this notation, then the keyword connection may
+    // be omitted" (7.13.2, receipt 5a3a8867). The binary form writes `to` between its two
+    // ends instead.
+    //
+    // A StructureUsageElement (8.2.2.6.4), owned as FlowUsage is. Marked although
+    // OccurrenceUsagePrefix is not, as ActionUsage is.
+    //
+    // implied specialization: Connections::connections, Connections::binaryConnections
+    // constraint: ConnectionUsage::checkConnectionUsageSpecialization and
+    //     checkConnectionUsageBinarySpecialization (8.3.13.4, receipt cf52fa8d), the second
+    //     for `ownedEndFeature->size() = 2`. Injections belong in sv2-hir; this layer
+    //     builds the tree only (ADR-0002).
+    fn connection_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ConnectionUsage);
+        self.occurrence_usage_prefix();
+        if self.at_keyword("connection") {
+            self.expect_keyword("connection");
+            self.usage_declaration();
+            if self.at_value_part() {
+                self.value_part();
+            }
+            if self.at_keyword("connect") {
+                self.expect_keyword("connect");
+                self.connector_part();
+            }
+        } else {
+            self.expect_keyword("connect");
+            self.connector_part();
+        }
+        self.usage_body();
+        self.finish_node();
+    }
+
+    // production: ConnectorPart@sysml
+    //
+    // ConnectorPart : ConnectionUsage =
+    //     BinaryConnectorPart | NaryConnectorPart                    (SysML 8.2.2.13.1)
+    //
+    // An alternation with no node, as ControlNode has none: the part taken is the node.
+    // A `(` decides, since a ConnectorEnd opens on `[` or a name and never on `(`.
+    fn connector_part(&mut self) {
+        if self.at(SyntaxKind::LParen) {
+            self.nary_connector_part();
+        } else {
+            self.binary_connector_part();
+        }
+    }
+
+    // production: BinaryConnectorPart@sysml
+    //
+    // BinaryConnectorPart : ConnectionUsage =
+    //     ownedRelationship += ConnectorEndMember 'to'
+    //     ownedRelationship += ConnectorEndMember                    (SysML 8.2.2.13.1)
+    fn binary_connector_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::BinaryConnectorPart);
+        self.connector_end_member();
+        self.expect_keyword("to");
+        self.connector_end_member();
+        self.finish_node();
+    }
+
+    // production: NaryConnectorPart@sysml
+    //
+    // NaryConnectorPart : ConnectionUsage =
+    //     '(' ownedRelationship += ConnectorEndMember ','
+    //         ownedRelationship += ConnectorEndMember
+    //         ( ',' ownedRelationship += ConnectorEndMember )* ')'   (SysML 8.2.2.13.1)
+    //
+    // At least TWO ends, and no trailing comma.
+    fn nary_connector_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::NaryConnectorPart);
+        self.expect(SyntaxKind::LParen, "`(`");
+        self.connector_end_member();
+        self.expect(SyntaxKind::Comma, "`,` and a second end");
+        self.connector_end_member();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.connector_end_member();
+        }
+        self.expect(SyntaxKind::RParen, "`)`");
+        self.finish_node();
+    }
+
     // production: FlowDeclaration@sysml
     //
     // FlowDeclaration : FlowUsage =
@@ -7769,6 +7899,9 @@ impl<'a> Parser<'a> {
     /// end that writes one is declined here and reported by the caller's recovery.
     fn skip_connector_end(&self, n: usize) -> Option<usize> {
         let mut n = n;
+        if self.language == Language::SysMl && self.nth_is(n, SyntaxKind::LBracket) {
+            n = self.skip_bracketed(n)?;
+        }
         if self.nth_is_name(n)
             && (self.nth_is(n + 1, SyntaxKind::ColonColonGt)
                 || self.nth_is_keyword(n + 1, "references"))
@@ -8016,6 +8149,7 @@ impl<'a> Parser<'a> {
             || self.at_requirement_usage(n)
             || self.at_calculation_usage(n)
             || self.at_flow_usage(n)
+            || self.at_connection_usage(n)
             || self
                 .at_simple_usage(n)
                 .is_some_and(|usage| usage.class != UsageClass::NonOccurrence)
@@ -8168,12 +8302,33 @@ impl<'a> Parser<'a> {
     //     ( declaredName = NAME REFERENCES )?
     //     ownedRelationship += OwnedReferenceSubsetting             (SysML 8.2.2.13.1)
     //
-    // NOT marked: OwnedCrossMultiplicityMember is unimplemented, so a leading `[` is not
-    // read. The other two parts are, and `at_action_target_succession_member` walks them
-    // in this order.
+    // NOT marked, and neither are OwnedCrossMultiplicityMember and OwnedCrossMultiplicity:
+    // all three are shared units, and the cross multiplicity is read in SysML only.
+    // OwnedCrossMultiplicity = OwnedMultiplicity, which is OwnedMultiplicity@sysml =
+    // MultiplicityRange in SysML and OwnedMultiplicity@kerml = OwnedMultiplicityRange in
+    // KerML, and the KerML one is unimplemented, so a leading `[` in a .kerml end is left
+    // unread and reported. `skip_connector_end` walks the parts in this order and asks the
+    // same language question.
+    //
+    // OwnedCrossMultiplicityMember, read in SysML only and so NOT marked (see above):
+    //
+    // OwnedCrossMultiplicityMember : OwningMembership =
+    //     ownedRelatedElement += OwnedCrossMultiplicity   (SysML 8.2.2.13.1, KerML 8.2.5.5.1)
+    // OwnedCrossMultiplicity : Feature = ownedRelationship += OwnedMultiplicity
+    //
+    // "The identification of a related feature may optionally be preceded by a cross
+    // multiplicity and/or an end feature name followed by the keyword references or the
+    // symbol ::>" (7.13.2, receipt 5a3a8867).
     fn connector_end(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ConnectorEnd);
+        if self.language == Language::SysMl && self.at(SyntaxKind::LBracket) {
+            self.start_node(SyntaxKind::OwnedCrossMultiplicityMember);
+            self.start_node(SyntaxKind::OwnedCrossMultiplicity);
+            self.owned_multiplicity();
+            self.finish_node();
+            self.finish_node();
+        }
         if self.at_name()
             && (self.nth_is(1, SyntaxKind::ColonColonGt) || self.nth_is_keyword(1, "references"))
         {

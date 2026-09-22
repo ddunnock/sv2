@@ -40,6 +40,7 @@ vendor/corpus/sysml/src/examples/Packet Example/PacketUsage.sysml
 vendor/corpus/sysml/src/examples/Packet Example/Packets.sysml
 vendor/corpus/sysml/src/examples/Requirements Examples/HSUVRequirements.sysml
 vendor/corpus/sysml/src/examples/Room Model/RoomModel.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/AliasTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CalculationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml
@@ -49,6 +50,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/DefaultValueTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/DependencyTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/EnumerationTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/FeaturePathTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ImportTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ItemTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/MultiplicityTest.sysml
@@ -58,6 +60,8 @@ vendor/corpus/sysml/src/examples/Simple Tests/StateTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/TextualRepresentationTest.sysml
 vendor/corpus/sysml/src/examples/State Space Representation Examples/CartSample.sysml
 vendor/corpus/sysml/src/examples/Variability Examples/VehicleVariabilityModel.sysml
+vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package - Updated.sysml
+vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition - Updated.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition.sysml
 vendor/corpus/sysml/src/training/01. Packages/Comment Example.sysml
@@ -122,8 +126,11 @@ vendor/corpus/sysml/src/training/36. Variability/Variation Definitions.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Usages.sysml
 vendor/corpus/sysml/src/training/37. Dependencies/Dependency Example.sysml
 vendor/corpus/sysml/src/validation/01-Parts Tree/1d-Parts Tree with Reference.sysml
+vendor/corpus/sysml/src/validation/02-Parts Interconnection/2c-Parts Interconnection-Multiple Decompositions.sysml
 vendor/corpus/sysml/src/validation/03-Function-based Behavior/3a-Function-based Behavior-1.sysml
 vendor/corpus/sysml/src/validation/03-Function-based Behavior/3a-Function-based Behavior-2.sysml
+vendor/corpus/sysml/src/validation/03-Function-based Behavior/3c-Function-based Behavior-structure mod-1.sysml
+vendor/corpus/sysml/src/validation/03-Function-based Behavior/3c-Function-based Behavior-structure mod-2.sysml
 vendor/corpus/sysml/src/validation/03-Function-based Behavior/3c-Function-based Behavior-structure mod-3.sysml
 vendor/corpus/sysml/src/validation/03-Function-based Behavior/3d-Function-based Behavior-item.sysml
 vendor/corpus/sysml/src/validation/03-Function-based Behavior/3e-Function-based Behavior-item.sysml
@@ -132,9 +139,11 @@ vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavio
 vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-1a.sysml
 vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-2.sysml
 vendor/corpus/sysml/src/validation/07-Variant Configuration/7a-Variant Configuration - General Concept.sysml
+vendor/corpus/sysml/src/validation/07-Variant Configuration/7a1-Variant Configuration - General Concept-a.sysml
 vendor/corpus/sysml/src/validation/12-Dependency Relationships/12a-Dependency.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13a-Model Containment.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml
+vendor/corpus/sysml/src/validation/14-Language Extensions/14b-Language Extensions.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_01-Constants.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_02-Basic Value Properties.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_03-Value Expression.sysml

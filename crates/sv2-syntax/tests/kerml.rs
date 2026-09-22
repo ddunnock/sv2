@@ -738,6 +738,17 @@ fn parsing_a_binding_connector_never_hangs_or_loses_bytes_on_truncated_input() {
     }
 }
 
+// -- ConnectionUsage is SysML's alone ---------------------------------------------
+
+#[test]
+fn a_connection_usage_is_not_kerml() {
+    // SysML 8.2.2.13.1 states it; KerML's own connector is `connector` (8.2.5.5.1), and no
+    // KerML production writes the terminal `connect` (KerML does not reserve the word, so
+    // there it would be a NAME; see pending decision [keyword-table-per-language]). Held as a file by
+    // tests/rejection/connection-usage-is-not-kerml.kerml.
+    kerml_rejected("package P { connect a to b; }");
+}
+
 // -- ConstructorExpression, KerML 8.2.5.8.3 ----------------------------------------
 
 #[test]

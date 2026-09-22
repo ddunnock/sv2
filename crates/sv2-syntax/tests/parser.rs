@@ -2511,6 +2511,205 @@ fn a_succession_as_usage_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- ConnectionUsage, SysML 8.2.2.13.1 ----------------------------------------------------
+//
+// ConnectionUsage = OccurrenceUsagePrefix
+//                   ( 'connection' UsageDeclaration ValuePart? ( 'connect' ConnectorPart )?
+//                   | 'connect' ConnectorPart ) UsageBody
+// ConnectorPart       = BinaryConnectorPart | NaryConnectorPart
+// BinaryConnectorPart = ConnectorEndMember 'to' ConnectorEndMember
+// NaryConnectorPart   = '(' ConnectorEndMember ',' ConnectorEndMember
+//                       ( ',' ConnectorEndMember )* ')'
+// ConnectorEnd        = OwnedCrossMultiplicityMember? ( NAME REFERENCES )?
+//                       OwnedReferenceSubsetting
+// OwnedCrossMultiplicityMember = OwnedCrossMultiplicity
+// OwnedCrossMultiplicity       = OwnedMultiplicity
+//
+// A StructureUsageElement (8.2.2.6.4), owned as `part` and `flow` are.
+
+#[test]
+fn a_connection_usage_reads_the_corpus_forms() {
+    // validation/02-Parts Interconnection/2c-Parts Interconnection-Multiple
+    // Decompositions.sysml:40 — the shorthand with no declaration, and so no `connection`
+    // (7.13.2, receipt 5a3a8867: "if the declaration part of the connection usage is
+    // empty, then the keyword connection may be omitted").
+    let bare = render(&parse_accepted("part def P { connect c1.pa to c2.pc; }").syntax());
+    assert_eq!(
+        child_kinds(&bare, "ConnectionUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwConnect",
+            "BinaryConnectorPart",
+            "UsageBody"
+        ],
+        "{bare}"
+    );
+    assert_eq!(
+        child_kinds(&bare, "BinaryConnectorPart"),
+        ["ConnectorEndMember", "KwTo", "ConnectorEndMember"],
+        "{bare}"
+    );
+    // training/09. Connections/Connections Example.sysml:29-31 — an anonymous typed
+    // declaration, and ends named with `references`.
+    let named = render(
+        &parse_accepted(
+            "part def P {\n\
+             \tconnection : PressureSeat\n\
+             \t\tconnect bead references t.bead\n\
+             \t\tto mountingRim references w.rim;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&named, "ConnectionUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwConnection",
+            "UsageDeclaration",
+            "KwConnect",
+            "BinaryConnectorPart",
+            "UsageBody"
+        ],
+        "{named}"
+    );
+    // Connections Example.sysml:38 — cross multiplicities on both ends.
+    let crossed = render(
+        &parse_accepted(
+            "part def P { connect [0..1] lugBoltJoints to [1] wheel.w.mountingHoles; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&crossed, "ConnectorEnd"),
+        ["OwnedCrossMultiplicityMember", "OwnedReferenceSubsetting"],
+        "{crossed}"
+    );
+    assert_eq!(
+        child_kinds(&crossed, "OwnedCrossMultiplicityMember"),
+        ["OwnedCrossMultiplicity"],
+        "{crossed}"
+    );
+    assert_eq!(
+        child_kinds(&crossed, "OwnedCrossMultiplicity"),
+        ["OwnedMultiplicity"],
+        "{crossed}"
+    );
+}
+
+#[test]
+fn a_connection_usage_reads_the_corpus_forms_without_a_body() {
+    // training/41. Language Extension/Model Library Example.sysml:26 — a declaration
+    // with no connector part at all.
+    parse_accepted("package P { abstract connection causations : Causation[*] nonunique; }");
+    // examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package.sysml:30.
+    parse_accepted("part def P { connection : PressureSeat connect t.bead to w.rim; }");
+}
+
+#[test]
+fn a_connection_usage_reads_the_clause_forms() {
+    // 7.13.2 (receipt 5a3a8867): the n-ary form, the binary form with every part of an
+    // end written, and a body.
+    let nary = render(&parse_accepted("part def P { connect (axle, wheel1, wheel2); }").syntax());
+    assert_eq!(
+        child_kinds(&nary, "NaryConnectorPart"),
+        [
+            "LParen",
+            "ConnectorEndMember",
+            "Comma",
+            "ConnectorEndMember",
+            "Comma",
+            "ConnectorEndMember",
+            "RParen"
+        ],
+        "{nary}"
+    );
+    let full = render(
+        &parse_accepted(
+            "part def P { connection connection1 : DeviceConnection\n\
+             \tconnect [1] hub ::> mainSwitch to [1] device ::> sensorFeed; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&full, "ConnectorEnd"),
+        [
+            "OwnedCrossMultiplicityMember",
+            "BasicName",
+            "ColonColonGt",
+            "OwnedReferenceSubsetting"
+        ],
+        "{full}"
+    );
+    // The clause's n-ary example writes `[1] hub ::> mainSwitch[1], ...`, a multiplicity
+    // AFTER the reference, which OwnedReferenceSubsetting (`QualifiedName |
+    // OwnedFeatureChain`, 8.2.2.6.5) does not admit; nor does the Pilot's ConnectorEnd. The
+    // trailing `[1]` is left out here, and the example-versus-production conflict is
+    // unadjudicated (state.json next_step says so).
+    parse_accepted(
+        "part def P { connection connection1 : DeviceConnection connect (\n\
+         \t[1] hub ::> mainSwitch, [1] device ::> sensorFeed\n\
+         ); }",
+    );
+    parse_accepted(
+        "part def P { connection c : DeviceConnection { attribute bandwidth : Real; } }",
+    );
+}
+
+#[test]
+fn a_connection_usage_is_a_structure_usage() {
+    // StructureUsageElement (8.2.2.6.4): an OccurrenceUsageMember in a definition body,
+    // a StructureUsageMember in an action body.
+    assert_eq!(
+        member_of("part def P", "connect a to b;"),
+        ["OccurrenceUsageMember"]
+    );
+    assert_eq!(
+        member_of("action def A", "connect a to b;"),
+        ["StructureUsageMember"]
+    );
+    parse_accepted("package P { connect a to b; }");
+}
+
+#[test]
+fn every_sysml_connector_end_reads_a_cross_multiplicity() {
+    // ConnectorEnd is one production wherever it is reached, so the cross multiplicity is
+    // read on a succession's and a binding's ends too. SysML 7.13.5's own example writes
+    // `first [1] focus then [0..1] shoot;` (receipt 2abd302c).
+    let succession =
+        render(&parse_accepted("part def Camera { first [1] focus then [0..1] shoot; }").syntax());
+    assert_eq!(
+        nodes_named(&succession, "OwnedCrossMultiplicityMember"),
+        2,
+        "{succession}"
+    );
+    parse_accepted("part def P { first [1] a then b; }");
+    parse_accepted("part def P { bind [1] a = b; }");
+}
+
+#[test]
+fn a_connection_usage_is_bounded_by_its_rules() {
+    // `connect` takes a ConnectorPart: a bare `connect;` names no ends. Held as a file by
+    // tests/rejection/connect-names-its-ends.sysml.
+    parse_rejected("part def P { connect; }");
+    // An n-ary part has at least two ends: `'(' End ',' End ( ',' End )* ')'`. Held as a
+    // file by tests/rejection/nary-connector-part-has-two-ends.sysml.
+    parse_rejected("part def P { connect (a); }");
+    // A binary part writes `to` between its ends, not `,`.
+    parse_rejected("part def P { connect a, b; }");
+    // `connect` comes after the declaration, not before it: `connection` opens the
+    // declaration alternative. Held as a file by
+    // tests/rejection/connect-follows-the-connection-declaration.sysml.
+    parse_rejected("part def P { connect c : T connection a to b; }");
+    // A connection usage is not KerML: tests/kerml.rs holds the other language.
+}
+
+#[test]
+fn a_connection_usage_keeps_every_byte() {
+    let source = "part def P {\n\tconnection /* c */ c : T connect [ 1 ] a ::> x . y to b references z ;\n\tconnect ( a , b ) { }\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- BindingConnectorAsUsage, SysML 8.2.2.13.2 ----------------------------------------
 //
 // BindingConnectorAsUsage =

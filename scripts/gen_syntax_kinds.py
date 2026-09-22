@@ -697,6 +697,30 @@ NODES = [
             "`ReferenceUsage`."
         ),
     ),
+    ("OwnedCrossMultiplicityMember", "`OwnedCrossMultiplicity`. `SysML` 8.2.2.13.1."),
+    (
+        "OwnedCrossMultiplicity",
+        "`OwnedMultiplicity`, a `Feature`. `SysML` 8.2.2.13.1, `KerML` 8.2.5.5.1.",
+    ),
+    (
+        "ConnectionUsage",
+        (
+            "`OccurrenceUsagePrefix ( 'connection' UsageDeclaration ValuePart? "
+            "( 'connect' ConnectorPart )? | 'connect' ConnectorPart ) UsageBody`. "
+            "`SysML` 8.2.2.13.1."
+        ),
+    ),
+    (
+        "BinaryConnectorPart",
+        "`ConnectorEndMember 'to' ConnectorEndMember`. `SysML` 8.2.2.13.1.",
+    ),
+    (
+        "NaryConnectorPart",
+        (
+            "`'(' ConnectorEndMember ',' ConnectorEndMember ( ',' ConnectorEndMember )* ')'`. "
+            "`SysML` 8.2.2.13.1."
+        ),
+    ),
     # ConstraintDefinition's shape differing in one keyword, over the body the two share.
     # The metaclass is different — an ActionDefinition that is also a Function (8.3.19.2),
     # where a ConstraintDefinition is a Predicate — so the node is its own and not a

@@ -4,7 +4,7 @@
 // examples/KerML Spec Annex A Examples/A-3-6-Sequences.kerml line 10. SysML reads the
 // same member from the ConnectionUsage commit on; KerML's does not, because it reaches
 // OwnedMultiplicity@kerml = OwnedMultiplicityRange, which is unimplemented.
-// Implementing OwnedCrossMultiplicityMember removes this file.
+// Implementing OwnedMultiplicity@kerml (OwnedMultiplicityRange) removes this file.
 // KerML 8.2.5.5.1 — ConnectorEnd = OwnedCrossMultiplicityMember? ( NAME REFERENCES )?
 //                                  OwnedReferenceSubsetting
 // rejects: PARSE-EXPECTED on: succession p_before_d first [1] paint then [1] dry;
