@@ -8849,3 +8849,86 @@ fn an_actor_member_is_read_wherever_a_requirement_body_is() {
     let tree = render(&parse_accepted("requirement def R { require c { actor a; } }").syntax());
     assert_eq!(nodes_named(&tree, "ActorMember"), 1, "{tree}");
 }
+
+// -- VerificationCaseDefinition and VerificationCaseUsage, SysML 8.2.2.24 ---------------
+//
+// VerificationCaseDefinition = OccurrenceDefinitionPrefix 'verification' 'def'
+//                              DefinitionDeclaration CaseBody
+// VerificationCaseUsage      = OccurrenceUsagePrefix 'verification'
+//                              ConstraintUsageDeclaration CaseBody
+//
+// "declared as a case definition or usage ..., using the kind keyword verification"
+// (7.24.2, receipt d518fc8c).
+
+#[test]
+fn a_verification_case_reads_the_corpus_forms() {
+    // examples/Metadata Examples/VerificationMetadataExample.sysml:5 — a body-less
+    // definition; examples/Simple Tests/VariabilityTest.sysml:35 — a variation usage.
+    let tree = render(
+        &parse_accepted(
+            "package P {\n\
+             verification def MassTest;\n\
+             variation verification v1;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&tree, "VerificationCaseDefinition"),
+        1,
+        "{tree}"
+    );
+    assert_eq!(nodes_named(&tree, "VerificationCaseUsage"), 1, "{tree}");
+    // 7.24.2's VehicleMassTest (receipt d518fc8c), less the `verify` in its objective and
+    // the `metadata` usage, both unimplemented: an import, a subject, actions, and the
+    // `return` that deviation CaseBodyItem admits.
+    let example = parse_accepted(
+        "verification def VehicleMassTest {\n\
+         private import VerificationCases::*;\n\
+         subject testVehicle : Vehicle;\n\
+         objective vehicleMassVerificationObjective { }\n\
+         action collectData {\n\
+         in part testVehicle : Vehicle = VehicleMassTest::testVehicle;\n\
+         out massMeasured :> ISQ::mass;\n\
+         }\n\
+         return verdict : VerdictKind = evaluateData.verdict;\n\
+         }",
+    );
+    assert_eq!(example.deviations().len(), 1, "{:?}", example.deviations());
+}
+
+#[test]
+fn a_verification_case_owns_what_its_production_writes() {
+    let tree = render(&parse_accepted("verification def V { subject s; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "VerificationCaseDefinition"),
+        [
+            "OccurrenceDefinitionPrefix",
+            "KwVerification",
+            "KwDef",
+            "DefinitionDeclaration",
+            "CaseBody"
+        ],
+        "{tree}"
+    );
+    let usage = render(&parse_accepted("part def P { verification v : V { } }").syntax());
+    assert_eq!(
+        child_kinds(&usage, "VerificationCaseUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwVerification",
+            "ConstraintUsageDeclaration",
+            "CaseBody"
+        ],
+        "{usage}"
+    );
+}
+
+#[test]
+fn a_verification_case_is_bounded_by_its_rules() {
+    // CaseBody is not optional.
+    parse_rejected("verification def V");
+    parse_rejected("part def P { verification v }");
+    // The keyword is `verification`; `verify` opens a requirement body's member.
+    parse_rejected("verify def V;");
+}

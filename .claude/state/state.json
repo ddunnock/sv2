@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T18:32:01Z",
+    "regenerated_utc": "2026-09-22T18:35:19Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,13 +17,13 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 299,
-      "unimplemented": 255,
+      "implemented": 301,
+      "unimplemented": 253,
       "absent": 0,
-      "percent": 54.0
+      "percent": 54.3
     },
     "tests": {
-      "unit": 500,
+      "unit": 503,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 209,
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "2296540 Read the include use case usage, buy the three use case files it held, and drop the guard it made useless",
       "4e30f08 Read the use case definition and usage, and buy the file only they held back",
       "bff74cc Read the actor member, in requirement and case bodies alike",
       "bb69266 Read the case and analysis case layer, and buy the six files it predicted",
       "4e95087 Close the session: deviation diagnostics recorded, next_step current",
       "ffefd20 Site the DefinitionElement deviation: `allocation def` was read but reported conformant",
       "42d730f Read a connector end's trailing multiplicity by deviation, as 7.13.2's example writes it, and flag it",
-      "5193fb1 Report every departure from the specification where the parser takes it, and let --strict fail it (ADR-0022)",
-      "d263580 Close the session: connections and end features recorded, the analysis case measured and written to start cold"
+      "5193fb1 Report every departure from the specification where the parser takes it, and let --strict fail it (ADR-0022)"
     ]
   },
   "authored": {

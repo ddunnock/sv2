@@ -872,6 +872,20 @@ NODES = [
         ),
     ),
     (
+        "VerificationCaseDefinition",
+        (
+            "`OccurrenceDefinitionPrefix 'verification' 'def' DefinitionDeclaration "
+            "CaseBody`. `SysML` 8.2.2.24."
+        ),
+    ),
+    (
+        "VerificationCaseUsage",
+        (
+            "`OccurrenceUsagePrefix 'verification' ConstraintUsageDeclaration CaseBody`. "
+            "`SysML` 8.2.2.24."
+        ),
+    ),
+    (
         "UseCaseDefinition",
         (
             "`OccurrenceDefinitionPrefix 'use' 'case' 'def' DefinitionDeclaration "

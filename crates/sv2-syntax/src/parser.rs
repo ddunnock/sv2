@@ -635,6 +635,10 @@ enum ActionNode {
 ///                          DefinitionDeclaration CaseBody            SysML 8.2.2.23
 /// AnalysisCaseUsage      = OccurrenceUsagePrefix 'analysis'
 ///                          ConstraintUsageDeclaration CaseBody       SysML 8.2.2.23
+/// VerificationCaseDefinition = OccurrenceDefinitionPrefix 'verification' 'def'
+///                          DefinitionDeclaration CaseBody            SysML 8.2.2.24
+/// VerificationCaseUsage  = OccurrenceUsagePrefix 'verification'
+///                          ConstraintUsageDeclaration CaseBody       SysML 8.2.2.24
 /// UseCaseDefinition      = OccurrenceDefinitionPrefix 'use' 'case' 'def'
 ///                          DefinitionDeclaration CaseBody            SysML 8.2.2.25
 /// UseCaseUsage           = OccurrenceUsagePrefix 'use' 'case'
@@ -642,10 +646,10 @@ enum ActionNode {
 /// ```
 ///
 /// "An analysis case definition or usage is declared as a case definition or usage ...
-/// using the kind keyword analysis" (7.23.2, receipt 2aa2d6ce), and a use case "using the
+/// using the kind keyword analysis" (7.23.2, receipt 2aa2d6ce), a verification case "using
+/// the kind keyword verification" (7.24.2, receipt d518fc8c), and a use case "using the
 /// kind keyword use case" (7.25.2, receipt 9be3712a), so the pairs differ in the keywords
-/// and the metaclass alone. `VerificationCase*` (8.2.2.24) is stated on the same spine and
-/// is not here yet.
+/// and the metaclass alone. These four are every case production 8.2.2 states.
 #[derive(Clone, Copy)]
 struct Case {
     /// The kind keywords in order, before the `def` of a definition: one, or `use case`'s
@@ -660,7 +664,7 @@ struct Case {
 
 /// Every case production pair read. The first keywords are reserved and disjoint, so the
 /// order decides nothing.
-const CASES: [Case; 3] = [
+const CASES: [Case; 4] = [
     Case {
         keywords: &["case"],
         definition: SyntaxKind::CaseDefinition,
@@ -670,6 +674,11 @@ const CASES: [Case; 3] = [
         keywords: &["analysis"],
         definition: SyntaxKind::AnalysisCaseDefinition,
         usage: SyntaxKind::AnalysisCaseUsage,
+    },
+    Case {
+        keywords: &["verification"],
+        definition: SyntaxKind::VerificationCaseDefinition,
+        usage: SyntaxKind::VerificationCaseUsage,
     },
     Case {
         keywords: &["use", "case"],
@@ -9436,30 +9445,36 @@ impl<'a> Parser<'a> {
 
     // production: CaseDefinition
     // production: AnalysisCaseDefinition
+    // production: VerificationCaseDefinition
     // production: UseCaseDefinition
     //
     // CaseDefinition         = OccurrenceDefinitionPrefix 'case' 'def'
     //                          DefinitionDeclaration CaseBody            (SysML 8.2.2.22)
     // AnalysisCaseDefinition = OccurrenceDefinitionPrefix 'analysis' 'def'
     //                          DefinitionDeclaration CaseBody            (SysML 8.2.2.23)
+    // VerificationCaseDefinition = OccurrenceDefinitionPrefix 'verification' 'def'
+    //                          DefinitionDeclaration CaseBody            (SysML 8.2.2.24)
     // UseCaseDefinition      = OccurrenceDefinitionPrefix 'use' 'case' 'def'
     //                          DefinitionDeclaration CaseBody            (SysML 8.2.2.25)
     //
     // One method, the keywords and node from `CASES`. "A case definition or usage is
     // declared as a kind of calculation definition or usage ... using the kind keyword
     // case" (7.22.2, receipt eb25a69f), and an analysis case as a case with the kind
-    // keyword analysis (7.23.2, receipt 2aa2d6ce), a use case with `use case` (7.25.2,
+    // keyword analysis (7.23.2, receipt 2aa2d6ce), a verification case with
+    // `verification` (7.24.2, receipt d518fc8c), a use case with `use case` (7.25.2,
     // receipt 9be3712a): CalculationDefinition's spine over CaseBody. The metaclasses
-    // chain AnalysisCaseDefinition and UseCaseDefinition > CaseDefinition >
-    // CalculationDefinition (8.3.23.2, receipt 188d1035; 8.3.25.3, receipt 32b25e8d;
-    // 8.3.22.2, receipt 692a4982).
+    // chain AnalysisCaseDefinition, VerificationCaseDefinition and UseCaseDefinition >
+    // CaseDefinition > CalculationDefinition (8.3.23.2, receipt 188d1035; 8.3.24.3,
+    // receipt 0cc87426; 8.3.25.3, receipt 32b25e8d; 8.3.22.2, receipt 692a4982).
     //
-    // implied specialization: Cases::Case, AnalysisCases::AnalysisCase or
-    //     UseCases::UseCase
+    // implied specialization: Cases::Case, AnalysisCases::AnalysisCase,
+    //     VerificationCases::VerificationCase or UseCases::UseCase
     // constraint: CaseDefinition::checkCaseDefinitionSpecialization,
     //     `specializesFromLibrary('Cases::Case')` (8.3.22.2), and
     //     AnalysisCaseDefinition::checkAnalysisCaseDefinitionSpecialization,
     //     `specializesFromLibrary('AnalysisCases::AnalysisCase')` (8.3.23.2), and
+    //     VerificationCaseDefinition::checkVerificationCaseSpecialization,
+    //     `specializesFromLibrary('VerificationCases::VerificationCase')` (8.3.24.3), and
     //     UseCaseDefinition::checkUseCaseDefinitionSpecialization,
     //     `specializesFromLibrary('UseCases::UseCase')` (8.3.25.3). Injections, so
     //     sv2-hir's; this layer builds the tree only (ADR-0002).
@@ -9485,12 +9500,15 @@ impl<'a> Parser<'a> {
 
     // production: CaseUsage
     // production: AnalysisCaseUsage
+    // production: VerificationCaseUsage
     // production: UseCaseUsage
     //
     // CaseUsage         = OccurrenceUsagePrefix 'case'
     //                     ConstraintUsageDeclaration CaseBody            (SysML 8.2.2.22)
     // AnalysisCaseUsage = OccurrenceUsagePrefix 'analysis'
     //                     ConstraintUsageDeclaration CaseBody            (SysML 8.2.2.23)
+    // VerificationCaseUsage = OccurrenceUsagePrefix 'verification'
+    //                     ConstraintUsageDeclaration CaseBody            (SysML 8.2.2.24)
     // UseCaseUsage      = OccurrenceUsagePrefix 'use' 'case'
     //                     ConstraintUsageDeclaration CaseBody            (SysML 8.2.2.25)
     //
@@ -9502,13 +9520,16 @@ impl<'a> Parser<'a> {
     //
     // Marked although OccurrenceUsagePrefix is not, as ActionUsage is.
     //
-    // implied specialization: Cases::cases, AnalysisCases::analysisCases or
-    //     UseCases::useCases
+    // implied specialization: Cases::cases, AnalysisCases::analysisCases,
+    //     VerificationCases::verificationCases or UseCases::useCases
     // constraint: CaseUsage::checkCaseUsageSpecialization (8.3.22.3),
     //     AnalysisCaseUsage::checkAnalysisCaseUsageSpecialization (8.3.23.3, receipt
-    //     ac8c6d0a) and UseCaseUsage::checkUseCaseUsageSpecialization (8.3.25.4, receipt
-    //     b7b869b1), and the composite-owned checkCaseUsageSubcaseSpecialization,
-    //     checkAnalysisCaseUsageSubAnalysisCaseSpecialization and
+    //     ac8c6d0a), VerificationCaseUsage::checkVerificationCaseUsageSpecialization
+    //     (8.3.24.4, receipt 980c6c7a) and UseCaseUsage::checkUseCaseUsageSpecialization
+    //     (8.3.25.4, receipt b7b869b1), and the composite-owned
+    //     checkCaseUsageSubcaseSpecialization,
+    //     checkAnalysisCaseUsageSubAnalysisCaseSpecialization,
+    //     checkVerificationCaseUsageSubVerificationCaseSpecialization and
     //     checkUseCaseUsageSubUseCaseSpecialization. sv2-hir's (ADR-0002).
     fn case_usage(&mut self, case: Case) {
         self.eat_trivia();

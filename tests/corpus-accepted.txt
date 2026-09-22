@@ -64,6 +64,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/StateTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/TextualRepresentationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/TradeStudyTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/UseCaseTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/VariabilityTest.sysml
 vendor/corpus/sysml/src/examples/State Space Representation Examples/CartSample.sysml
 vendor/corpus/sysml/src/examples/State Space Representation Examples/EVSample.sysml
 vendor/corpus/sysml/src/examples/Variability Examples/VehicleVariabilityModel.sysml

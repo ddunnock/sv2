@@ -781,6 +781,10 @@ pub enum SyntaxKind {
     AnalysisCaseDefinition,
     /// `OccurrenceUsagePrefix 'analysis' ConstraintUsageDeclaration CaseBody`. `SysML` 8.2.2.23.
     AnalysisCaseUsage,
+    /// `OccurrenceDefinitionPrefix 'verification' 'def' DefinitionDeclaration CaseBody`. `SysML` 8.2.2.24.
+    VerificationCaseDefinition,
+    /// `OccurrenceUsagePrefix 'verification' ConstraintUsageDeclaration CaseBody`. `SysML` 8.2.2.24.
+    VerificationCaseUsage,
     /// `OccurrenceDefinitionPrefix 'use' 'case' 'def' DefinitionDeclaration CaseBody`. `SysML` 8.2.2.25.
     UseCaseDefinition,
     /// `OccurrenceUsagePrefix 'use' 'case' ConstraintUsageDeclaration CaseBody`. `SysML` 8.2.2.25.
@@ -1495,6 +1499,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ObjectiveRequirementUsage,
     SyntaxKind::AnalysisCaseDefinition,
     SyntaxKind::AnalysisCaseUsage,
+    SyntaxKind::VerificationCaseDefinition,
+    SyntaxKind::VerificationCaseUsage,
     SyntaxKind::UseCaseDefinition,
     SyntaxKind::UseCaseUsage,
     SyntaxKind::IncludeUseCaseUsage,
