@@ -3622,6 +3622,70 @@ fn a_dependency_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- ConjugatedPortTyping, SysML 8.2.2.12 ---------------------------------------------
+//
+// FeatureTyping        = OwnedFeatureTyping | ConjugatedPortTyping          (8.2.2.6.5)
+// ConjugatedPortTyping = '~' originalPortDefinition = ~[QualifiedName]      (8.2.2.12)
+//
+// "port p : ~P; is equivalent to port p : P::'~P';" (7.12.3, receipt f0b805cf). The `~`
+// is not part of the name, so it sits outside the quotes of an unrestricted one. Which
+// element `~[QualifiedName]` resolves to is sv2-resolve's (8.2.2.12, Note 2).
+
+#[test]
+fn a_conjugated_port_typing_reads_the_corpus_forms() {
+    // training/10. Ports/Port Conjugation Example.sysml:18.
+    let tree = render(&parse_accepted("part def E { port engineFuelPort : ~FuelPort; }").syntax());
+    assert_eq!(nodes_named(&tree, "ConjugatedPortTyping"), 1, "{tree}");
+    assert_eq!(nodes_named(&tree, "OwnedFeatureTyping"), 0, "{tree}");
+    // examples/Room Model/RoomModel.sysml:16 — no space after the colon.
+    parse_accepted("part def H { port hallExit_to_Classroom: ~EntryWay_to_Classroom; }");
+    // 7.12.3's own examples (receipt f0b805cf): the shorthand, the actual name it stands
+    // for, and an unrestricted name with the `~` outside its quotes.
+    parse_accepted("port p : ~P;");
+    parse_accepted("port p : P::'~P';");
+    parse_accepted("port p1 : ~'P-1';");
+    // A FeatureTyping, so after a comma too (Typings, 8.2.2.6.5), and after `defined by`.
+    parse_accepted("port p : ~P, Q;");
+    parse_accepted("port p defined by ~A::B::C;");
+}
+
+#[test]
+fn a_conjugated_port_typing_owns_what_its_production_writes() {
+    let tree = render(&parse_accepted("port p : ~A::B;").syntax());
+    assert_eq!(
+        child_kinds(&tree, "FeatureTyping"),
+        ["ConjugatedPortTyping"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "ConjugatedPortTyping"),
+        ["Tilde", "QualifiedName"],
+        "{tree}"
+    );
+    // The grammar writes it in FeatureTyping, which every usage typed through Typings or
+    // TypedBy reaches; that the type be a ConjugatedPortDefinition is the metaclass's
+    // (8.3.12.3), not the parser's.
+    parse_accepted("part x : ~P;");
+}
+
+#[test]
+fn a_conjugated_port_typing_is_bounded_by_its_rules() {
+    // ~[QualifiedName]: a name, and no feature chain.
+    parse_rejected("port p : ~a.b;");
+    parse_rejected("port p : ~;");
+    parse_rejected("port p : ~~P;");
+    // Only a typing: no subsetting, redefinition or subclassification is conjugated.
+    parse_rejected("port p :> ~q;");
+    parse_rejected("port p :>> ~q;");
+    parse_rejected("port def Q :> ~P;");
+}
+
+#[test]
+fn a_conjugated_port_typing_keeps_every_byte() {
+    let source = "port p : ~ /* c */ 'P-1' , ~ Q;\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
 //
 // DefaultTargetSuccession : TransitionUsage =

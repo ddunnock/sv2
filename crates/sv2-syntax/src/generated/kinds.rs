@@ -847,6 +847,8 @@ pub enum SyntaxKind {
     FeatureTyping,
     /// `QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5.
     OwnedFeatureTyping,
+    /// `'~' originalPortDefinition = ~[QualifiedName]`. `SysML` 8.2.2.12.
+    ConjugatedPortTyping,
     /// `OwnedMultiplicity | OwnedMultiplicity? ( 'ordered' 'nonunique'? | 'nonunique' 'ordered'? )`. `SysML` 8.2.2.6.6.
     MultiplicityPart,
     /// `ownedRelatedElement += MultiplicityRange`. `SysML` 8.2.2.6.6.
@@ -1386,6 +1388,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::TypedBy,
     SyntaxKind::FeatureTyping,
     SyntaxKind::OwnedFeatureTyping,
+    SyntaxKind::ConjugatedPortTyping,
     SyntaxKind::MultiplicityPart,
     SyntaxKind::OwnedMultiplicity,
     SyntaxKind::MultiplicityRange,

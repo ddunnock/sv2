@@ -108,6 +108,15 @@ fn a_variant_is_not_reachable_from_a_kerml_body() {
     assert!(sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+#[test]
+fn a_conjugated_port_typing_is_not_kerml() {
+    // KerML's TypedBy takes an OwnedFeatureTyping alone (KerML 8.2.4.3.1); the `~` form
+    // is SysML's ConjugatedPortTyping (SysML 8.2.2.12), and KerML has no ports.
+    kerml_rejected("feature f : ~T;");
+    let sysml = parse("port p : ~T;", Language::SysMl);
+    assert!(sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- Dependency, KerML 8.2.3.2 ----------------------------------------------------
 //
 // Dependency = PrefixMetadataAnnotation* 'dependency' ( Identification? 'from' )?

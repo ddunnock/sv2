@@ -946,6 +946,12 @@ NODES = [
     ("TypedBy", "`( ':' | 'defined' 'by' ) FeatureTyping`. `SysML` 8.2.2.6.5."),
     ("FeatureTyping", "`OwnedFeatureTyping | ConjugatedPortTyping`. `SysML` 8.2.2.6.5."),
     ("OwnedFeatureTyping", "`QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5."),
+    # The Pilot's ConjugatedQualifiedName is xtext_only and follow_spec: its `'~'
+    # QualifiedName` is built here, in the production that uses it, and gets no node.
+    (
+        "ConjugatedPortTyping",
+        "`'~' originalPortDefinition = ~[QualifiedName]`. `SysML` 8.2.2.12.",
+    ),
     # The multiplicity a FeatureSpecializationPart may carry. `SysML` 8.2.2.6.6.
     # MultiplicityExpressionMember reaches only LiteralExpression and
     # FeatureReferenceExpression, not OwnedExpression, so a bound is a literal or a

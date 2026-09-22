@@ -37,6 +37,7 @@ vendor/corpus/sysml/src/examples/Mass Roll-up Example/Vehicles.sysml
 vendor/corpus/sysml/src/examples/Packet Example/PacketUsage.sysml
 vendor/corpus/sysml/src/examples/Packet Example/Packets.sysml
 vendor/corpus/sysml/src/examples/Requirements Examples/HSUVRequirements.sysml
+vendor/corpus/sysml/src/examples/Room Model/RoomModel.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CalculationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ConstraintTest.sysml
@@ -64,6 +65,7 @@ vendor/corpus/sysml/src/training/06. Enumeration Definitions/Enumeration Definit
 vendor/corpus/sysml/src/training/07. Parts/Parts Example-1.sysml
 vendor/corpus/sysml/src/training/07. Parts/Parts Example-2.sysml
 vendor/corpus/sysml/src/training/08. Items/Items Example.sysml
+vendor/corpus/sysml/src/training/10. Ports/Port Conjugation Example.sysml
 vendor/corpus/sysml/src/training/10. Ports/Port Example.sysml
 vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-1.sysml
 vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-2.sysml
@@ -101,6 +103,7 @@ vendor/corpus/sysml/src/training/36. Variability/Variation Definitions.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Usages.sysml
 vendor/corpus/sysml/src/training/37. Dependencies/Dependency Example.sysml
 vendor/corpus/sysml/src/validation/01-Parts Tree/1d-Parts Tree with Reference.sysml
+vendor/corpus/sysml/src/validation/03-Function-based Behavior/3d-Function-based Behavior-item.sysml
 vendor/corpus/sysml/src/validation/03-Function-based Behavior/3e-Function-based Behavior-item.sysml
 vendor/corpus/sysml/src/validation/04-Functional Allocation/4a-Functional Allocation.sysml
 vendor/corpus/sysml/src/validation/07-Variant Configuration/7a-Variant Configuration - General Concept.sysml

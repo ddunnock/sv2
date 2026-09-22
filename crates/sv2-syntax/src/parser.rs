@@ -3783,12 +3783,49 @@ impl<'a> Parser<'a> {
     //
     // FeatureTyping = OwnedFeatureTyping | ConjugatedPortTyping  (SysML 8.2.2.6.5)
     //
-    // ConjugatedPortTyping (`~` a port definition) is not implemented; a usage typed
-    // by one is reported rather than accepted.
+    // Both alternatives are read, and the `~` decides between them: an OwnedFeatureTyping
+    // opens on a name. This method serves KerML's typings too, and KerML's TypedBy takes
+    // an OwnedFeatureTyping alone (KerML 8.2.4.3.1), so the `~` arm is SysML's only and a
+    // .kerml `feature f : ~T;` is reported.
     fn feature_typing(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::FeatureTyping);
-        self.owned_feature_typing();
+        if self.language == Language::SysMl && self.at(SyntaxKind::Tilde) {
+            self.conjugated_port_typing();
+        } else {
+            self.owned_feature_typing();
+        }
+        self.finish_node();
+    }
+
+    // production: ConjugatedPortTyping@sysml
+    //
+    // ConjugatedPortTyping : ConjugatedPortTyping =
+    //     '~' originalPortDefinition = ~[QualifiedName]          (SysML 8.2.2.12)
+    //
+    // `port p : ~P;` "is equivalent to port p : P::'~P';" (7.12.3, receipt f0b805cf): the
+    // `~` names the conjugated port definition every port definition implicitly declares,
+    // and is not part of the name, so it stays outside the quotes of `~'P-1'`. The
+    // Pilot writes the same text as `[ConjugatedPortDefinition | ConjugatedQualifiedName]`
+    // over an xtext-only rule that deviations.json resolves follow_spec: no production of
+    // its own, the `~` and the name read here.
+    //
+    // `~[QualifiedName]` is a QualifiedName parsed as written and resolved as its last
+    // segment with `~` prepended, appended to the whole (8.2.2.12, Note 2): sv2-resolve's.
+    // A name only, never a feature chain.
+    //
+    // The BNF assigns the name to `originalPortDefinition`, which the metaclass does not
+    // have: ConjugatedPortTyping (8.3.12.3) has `conjugatedPortDefinition`, redefining
+    // `type`, and a derived `portDefinition`, and the Pilot assigns the first. sv2-resolve
+    // sets `conjugatedPortDefinition` from the resolved `~[QualifiedName]`.
+    //
+    // constraint: ConjugatedPortTyping::deriveConjugatedPortTypingPortDefinition
+    //     (8.3.12.3, receipt 486ec938) — portDefinition is derived, for sv2-resolve.
+    fn conjugated_port_typing(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ConjugatedPortTyping);
+        self.expect(SyntaxKind::Tilde, "`~`");
+        self.qualified_name();
         self.finish_node();
     }
 
