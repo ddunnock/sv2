@@ -2955,6 +2955,132 @@ fn a_calculation_usage_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- ConstraintUsage, SysML 8.2.2.20 --------------------------------------------------
+//
+// ConstraintUsage =
+//     OccurrenceUsagePrefix 'constraint' ConstraintUsageDeclaration CalculationBody
+//                                                                         (8.2.2.20)
+// BehaviorUsageElement = ... | ConstraintUsage | ...                      (8.2.2.6.4)
+//
+// "declared as a kind of occurrence definition or usage ... using the kind keyword
+// constraint", with a body "like the body of a calculation definition or usage" (7.20.2,
+// receipt 0014441c). AssertConstraintUsage's `constraint` alternative less the `assert`,
+// over the same declaration and body; told from ConstraintDefinition by the `def`.
+
+#[test]
+fn a_constraint_usage_reads_the_corpus_forms() {
+    // training/31. Constraints/Constraints Example-1.sysml:17-20 — typed, in a part def,
+    // its parameters bound in the body.
+    let in_part = render(
+        &parse_accepted(
+            "part def Vehicle { constraint massConstraint : MassConstraint {\n\
+             in partMasses = (chassisMass, engine.mass, transmission.mass);\n\
+             in massLimit = 2500[kg];\n} }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&in_part, "ConstraintUsage"), 1, "{in_part}");
+    // validation/15-Properties-Values-Expressions/15_03-Value Expression.sysml:27 — the
+    // body the result expression alone, with a quantity.
+    parse_accepted("part def Tire { constraint hasLegalProfileDepth {profileDepth >= 3.5 [mm]} }");
+    // examples/Simple Tests/ConstraintTest.sysml:88-89 — keywordless parameters then the
+    // result expression, and the assertion that references it by name.
+    let asserted = render(
+        &parse_accepted(
+            "package ConstraintTest { constraint massLimitation { mass : MassValue; \
+             massLimit : MassValue; mass < massLimit } \
+             assert not massLimitation { :>> mass = vehicle3.mass; \
+             :>> massLimit = vehicle4.mass; } }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&asserted, "ConstraintUsage"), 1, "{asserted}");
+    assert_eq!(
+        nodes_named(&asserted, "AssertConstraintUsage"),
+        1,
+        "{asserted}"
+    );
+    // 7.20.2's own example (receipt 0014441c).
+    parse_accepted(
+        "part def Vehicle { part fuelTank : FuelTank; \
+         constraint isFull : IsFull { in tank = fuelTank; } }",
+    );
+}
+
+#[test]
+fn a_constraint_usage_owns_what_its_production_writes() {
+    let tree = render(&parse_accepted("part def P { constraint c : C { a <= b } }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "OccurrenceUsageMember"),
+        ["MemberPrefix", "ConstraintUsage"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "ConstraintUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwConstraint",
+            "ConstraintUsageDeclaration",
+            "CalculationBody"
+        ],
+        "{tree}"
+    );
+    // The two inputs the absence rejections held until the commit before this one: usages,
+    // and NOT read as the definition they share every token with before the `def`.
+    for source in [
+        "constraint c { a <= b }",
+        "part def P { constraint c { x > 0 } }",
+    ] {
+        let usage = render(&parse_accepted(source).syntax());
+        assert_eq!(nodes_named(&usage, "ConstraintUsage"), 1, "{usage}");
+        assert_eq!(nodes_named(&usage, "ConstraintDefinition"), 0, "{usage}");
+    }
+    let definition = render(&parse_accepted("constraint def C { a <= b }").syntax());
+    assert_eq!(
+        nodes_named(&definition, "ConstraintUsage"),
+        0,
+        "{definition}"
+    );
+    // Nor as the assertion: `assert constraint` is the other production.
+    let assertion = render(&parse_accepted("part def P { assert constraint c; }").syntax());
+    assert_eq!(nodes_named(&assertion, "ConstraintUsage"), 0, "{assertion}");
+    // OccurrenceUsagePrefix, and a BehaviorUsageElement in an action body (8.2.2.17.1).
+    parse_accepted("part def P { individual constraint c; snapshot constraint d { x } }");
+    let action = render(
+        &parse_accepted("action def A { action a; then constraint c { x } then b; }").syntax(),
+    );
+    assert_eq!(
+        nodes_named(&action, "SourceSuccessionMember"),
+        1,
+        "{action}"
+    );
+    assert_eq!(
+        nodes_named(&action, "ActionTargetSuccessionMember"),
+        1,
+        "{action}"
+    );
+    // And an item of a calculation body, through the one list at_result_expression asks.
+    let nested = render(&parse_accepted("constraint def C { constraint d { y } x }").syntax());
+    assert_eq!(nodes_named(&nested, "ConstraintUsage"), 1, "{nested}");
+}
+
+#[test]
+fn a_constraint_usage_is_bounded_by_its_rules() {
+    // CalculationBody is not optional.
+    parse_rejected("part def P { constraint c }");
+    // The result expression is last (8.2.2.19).
+    parse_rejected("part def P { constraint c { (a <= b) attribute x; } }");
+    // Unclosed.
+    parse_rejected("part def P { constraint c { a <= b }");
+}
+
+#[test]
+fn a_constraint_usage_keeps_every_byte() {
+    let source =
+        "part def P {\n\tconstraint /* n */ c // d\n\t\t: C {\n\t\tin x;\n\t\tx > 0\n\t}\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
 //
 // DefaultTargetSuccession : TransitionUsage =

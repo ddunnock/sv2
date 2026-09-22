@@ -470,6 +470,15 @@ NODES = [
         "ConstraintUsageDeclaration",
         "`UsageDeclaration ValuePart?`. `SysML` 8.2.2.20.",
     ),
+    # The constraint usage, `constraint c : C { a <= b }`: AssertConstraintUsage's second
+    # alternative less the `assert`, over the same declaration and body.
+    (
+        "ConstraintUsage",
+        (
+            "`OccurrenceUsagePrefix 'constraint' ConstraintUsageDeclaration CalculationBody`. "
+            "`SysML` 8.2.2.20."
+        ),
+    ),
     # A constraint asserted to hold, `assert constraint { a <= b }`, or asserted by
     # reference, `assert not c;`. A BehaviorUsageElement, so owned as an action is.
     (

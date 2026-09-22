@@ -1409,6 +1409,7 @@ impl<'a> Parser<'a> {
             || self.at_succession_as_usage(n)
             || self.at_binding_connector_as_usage(n)
             || self.at_assert_constraint_usage(n)
+            || self.at_constraint_usage(n)
             || self.at_calculation_usage(n)
             || self.at_simple_usage(n).is_some()
             || self.at_reference_usage(n)
@@ -1894,6 +1895,7 @@ impl<'a> Parser<'a> {
                         || self.at_succession_as_usage(0)
                         || self.at_binding_connector_as_usage(0)
                         || self.at_assert_constraint_usage(0)
+                        || self.at_constraint_usage(0)
                         || self.at_calculation_usage(0)
                         || self.at_control_node(0).is_some()
                 }
@@ -2610,6 +2612,10 @@ impl<'a> Parser<'a> {
         } else if self.at_calculation_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
             self.calculation_usage();
+            Some(UsageClass::Behavior)
+        } else if self.at_constraint_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as AssertConstraintUsage is.
+            self.constraint_usage();
             Some(UsageClass::Behavior)
         } else if self.at_assert_constraint_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
@@ -6194,6 +6200,7 @@ impl<'a> Parser<'a> {
         self.at_action_usage(n)
             || self.at_perform_action_usage(n)
             || self.at_assert_constraint_usage(n)
+            || self.at_constraint_usage(n)
             || self.at_calculation_usage(n)
             || self.at_flow_usage(n)
             || self
@@ -6692,7 +6699,7 @@ impl<'a> Parser<'a> {
     //
     // Shared by three productions: RequirementConstraintUsage behind `require` or
     // `assume`, AssertConstraintUsage behind `assert constraint`, and ConstraintUsage, the
-    // bare `constraint c { }` at member position, which is not implemented.
+    // bare `constraint c { }` at member position.
     fn constraint_usage_declaration(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ConstraintUsageDeclaration);
@@ -6700,6 +6707,51 @@ impl<'a> Parser<'a> {
         if self.at_value_part() {
             self.value_part();
         }
+        self.finish_node();
+    }
+
+    /// Whether a `ConstraintUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'constraint'` with no `def` after it (`SysML` 8.2.2.20): the
+    /// `def` is what makes it the `ConstraintDefinition` beside it, as for `calc`. An
+    /// `assert` or `require` before `constraint` is a different production, and neither is
+    /// in the prefix skipped, so neither is claimed here. The prefix skipped is the one
+    /// `constraint_usage` reads with `occurrence_usage_prefix`.
+    fn at_constraint_usage(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_usage_prefix(n);
+        self.nth_is_keyword(after, "constraint") && !self.nth_is_keyword(after + 1, "def")
+    }
+
+    // production: ConstraintUsage@sysml
+    //
+    // ConstraintUsage =
+    //     OccurrenceUsagePrefix 'constraint'
+    //     ConstraintUsageDeclaration CalculationBody                (SysML 8.2.2.20)
+    //
+    // "A constraint definition or usage can be declared as a kind of occurrence
+    // definition or usage ... using the kind keyword constraint", and its body "is also
+    // like the body of a calculation definition or usage ... including the addition of
+    // the declaration of a result expression at the end" (7.20.2, receipt 0014441c). The
+    // metaclass is ConstraintUsage (8.3.20.4, receipt 81ca78cd), an OccurrenceUsage that
+    // is also a KerML BooleanExpression.
+    //
+    // Marked although OccurrenceUsagePrefix is not, as ActionUsage is.
+    //
+    // implied specialization: Constraints::constraintChecks
+    // constraint: ConstraintUsage::checkConstraintUsageSpecialization,
+    //     `specializesFromLibrary('Constraints::constraintChecks')` (8.3.20.4; 8.4.16.2,
+    //     receipt d7eb8ca4). An injection, so sv2-hir's; this layer builds the tree only
+    //     (ADR-0002).
+    // constraint: ConstraintUsage::checkConstraintUsageCheckedConstraintSpecialization
+    //     (8.3.20.4): owned by an ItemDefinition or ItemUsage, it specializes
+    //     `Items::Item::checkedConstraints`. sv2-hir's, for the same reason.
+    fn constraint_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ConstraintUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("constraint");
+        self.constraint_usage_declaration();
+        self.calculation_body();
         self.finish_node();
     }
 
