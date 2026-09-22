@@ -747,6 +747,40 @@ fn a_constraint_definition_owns_no_definition_node() {
 }
 
 #[test]
+fn a_calculation_body_admits_every_item_an_action_body_does() {
+    // CalculationBodyItem = ActionBodyItem | ReturnParameterMember (8.2.2.19), so every
+    // usage an action body reads is an item here too, and the result expression, if
+    // written, still follows them. Each of these opens on a keyword, so none can be the
+    // expression: SuccessionAsUsage and BindingConnectorAsUsage are
+    // NonOccurrenceUsageElements, AssertConstraintUsage and CalculationUsage
+    // BehaviorUsageElements (8.2.2.6.4).
+    for (item, node) in [
+        ("first a then b;", "SuccessionAsUsage"),
+        ("bind a = b;", "BindingConnectorAsUsage"),
+        ("assert constraint c { y }", "AssertConstraintUsage"),
+        ("calc d { y }", "CalculationUsage"),
+    ] {
+        for owner in [
+            "constraint def C",
+            "calc def C",
+            "calc c",
+            "assert constraint",
+        ] {
+            let source = format!("{owner} {{ {item} x }}");
+            let tree = render(&parse_accepted(&source).syntax());
+            assert!(nodes_named(&tree, node) >= 1, "{source}: {tree}");
+            assert_eq!(
+                nodes_named(&tree, "ResultExpressionMember"),
+                1 + usize::from(item.contains("{ y }")),
+                "{source}: {tree}"
+            );
+        }
+    }
+    // With no result expression after it, as the removed absence test wrote it.
+    parse_accepted("constraint def C { first a then b; }");
+}
+
+#[test]
 fn a_constraint_definition_needs_a_body_and_a_def() {
     // CalculationBody is not optional. Held as a file by
     // tests/rejection/constraint-definition-missing-calculation-body.sysml.

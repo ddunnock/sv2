@@ -1247,17 +1247,12 @@ impl<'a> Parser<'a> {
         if self.at_import()
             || self.at_element_keyword("alias")
             || self.at_annotating_member(n)
-            || self.at_definition_element(n)
-            || self.at_simple_usage(n).is_some()
-            || self.at_reference_usage(n)
             // CalculationBodyItem = ActionBodyItem | ... (8.2.2.19), and ActionBodyItem
-            // reads behaviour usages, flows and the `then` prefix. Until these were
-            // listed a calculation body ended its items at `action a;` and tried to read
-            // it as the result expression — a defect since ActionUsage landed, found
-            // when `then action` joined them.
-            || self.at_action_usage(n)
-            || self.at_perform_action_usage(n)
-            || self.at_flow_usage(n)
+            // reads every usage a member does. Asked through the member's own recogniser
+            // so the two cannot drift: kept as a separate list, it missed `action a;`
+            // once and four productions after that.
+            || self.at_sysml_keyword_member(n)
+            // ActionBodyItem's control nodes, which no other body's member reaches.
             || self.at_control_node(n).is_some()
             // Asked only of a body that ends in a result expression, and
             // `ends_in_result_expression` says that is a calculation body alone.
@@ -1388,20 +1383,35 @@ impl<'a> Parser<'a> {
                     || self.at_kerml_binding_connector(n)
             }
             Language::SysMl => {
-                self.at_definition_element(n)
-                    || self.at_action_usage(n)
-                    || self.at_perform_action_usage(n)
-                    || self.at_flow_usage(n)
-                    || self.at_succession_as_usage(n)
-                    || self.at_binding_connector_as_usage(n)
-                    || self.at_assert_constraint_usage(n)
-                    || self.at_calculation_usage(n)
-                    || self.at_simple_usage(n).is_some()
+                self.at_sysml_keyword_member(n)
                     // Only when no keyword usage starts here; see `membership`.
-                    || self.at_reference_usage(n)
                     || self.at_default_reference_usage(n)
             }
         }
+    }
+
+    /// Whether a `SysML` member that opens on a KEYWORD starts at the `n`th token.
+    ///
+    /// Every member `at_member_element` admits in `SysML` except `DefaultReferenceUsage`,
+    /// the one that opens on a bare name. Split out because a calculation body asks the
+    /// same question — "can an item start here, or is this the result expression?" — and
+    /// a keyword is never an expression (8.2.2.1.2), so the keyword members are exactly
+    /// the items it can decide on at once. ONE LIST, so that a production added here is
+    /// an item of a calculation body too. When `at_result_expression` kept a list of its
+    /// own, `SuccessionAsUsage`, `BindingConnectorAsUsage`, `AssertConstraintUsage` and
+    /// `CalculationUsage` were each added here and not there, and `first a then b;` in a
+    /// `constraint def` body was read as the start of its result expression.
+    fn at_sysml_keyword_member(&self, n: usize) -> bool {
+        self.at_definition_element(n)
+            || self.at_action_usage(n)
+            || self.at_perform_action_usage(n)
+            || self.at_flow_usage(n)
+            || self.at_succession_as_usage(n)
+            || self.at_binding_connector_as_usage(n)
+            || self.at_assert_constraint_usage(n)
+            || self.at_calculation_usage(n)
+            || self.at_simple_usage(n).is_some()
+            || self.at_reference_usage(n)
     }
 
     /// The index just past a `BasicUsagePrefix` written from the `n`th token.
