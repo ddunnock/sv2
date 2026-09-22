@@ -1395,6 +1395,7 @@ impl<'a> Parser<'a> {
                     || self.at_succession_as_usage(n)
                     || self.at_binding_connector_as_usage(n)
                     || self.at_assert_constraint_usage(n)
+                    || self.at_calculation_usage(n)
                     || self.at_simple_usage(n).is_some()
                     // Only when no keyword usage starts here; see `membership`.
                     || self.at_reference_usage(n)
@@ -1883,6 +1884,7 @@ impl<'a> Parser<'a> {
                         || self.at_succession_as_usage(0)
                         || self.at_binding_connector_as_usage(0)
                         || self.at_assert_constraint_usage(0)
+                        || self.at_calculation_usage(0)
                         || self.at_control_node(0).is_some()
                 }
             }
@@ -2595,6 +2597,10 @@ impl<'a> Parser<'a> {
         } else if self.at_action_usage(0) {
             self.action_usage();
             Some(UsageClass::Behavior)
+        } else if self.at_calculation_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
+            self.calculation_usage();
+            Some(UsageClass::Behavior)
         } else if self.at_assert_constraint_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
             self.assert_constraint_usage();
@@ -2771,6 +2777,17 @@ impl<'a> Parser<'a> {
     fn at_action_usage(&self, n: usize) -> bool {
         let after = self.skip_occurrence_usage_prefix(n);
         self.nth_is_keyword(after, "action") && !self.nth_is_keyword(after + 1, "def")
+    }
+
+    /// Whether a `CalculationUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'calc'` with no `def` after it (`SysML` 8.2.2.19): the `def`
+    /// is what makes it the `CalculationDefinition` beside it, as for `at_action_usage`.
+    /// The prefix skipped is the one `calculation_usage` reads with
+    /// `occurrence_usage_prefix`.
+    fn at_calculation_usage(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_usage_prefix(n);
+        self.nth_is_keyword(after, "calc") && !self.nth_is_keyword(after + 1, "def")
     }
 
     /// Whether a `PerformActionUsage` starts at the `n`th meaningful token.
@@ -5096,6 +5113,39 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: CalculationUsage@sysml
+    //
+    // CalculationUsage : CalculationUsage =
+    //     OccurrenceUsagePrefix 'calc'
+    //     ActionUsageDeclaration CalculationBody                    (SysML 8.2.2.19)
+    //
+    // "A calculation definition or usage is declared as an action definition or usage ...
+    // but using the keyword calc instead of action" (7.19.2, receipt 14c3c04e) — so the
+    // declaration is ActionUsage's own, read by `action_usage_declaration` under its own
+    // name, and only the body differs: a CalculationBody, whose last part may be the
+    // result expression. The metaclass is CalculationUsage (8.3.19.3, receipt bd2b9f83),
+    // an ActionUsage that is also a KerML Expression.
+    //
+    // Marked although OccurrenceUsagePrefix is not, as ActionUsage is.
+    //
+    // implied specialization: Calculations::calculations
+    // constraint: CalculationUsage::checkCalculationUsageSpecialization,
+    //     `specializesFromLibrary('Calculations::calculations')` (8.3.19.3; 8.4.15.2,
+    //     receipt d62236d7). An injection, so sv2-hir's; this layer builds the tree only
+    //     (ADR-0002).
+    // constraint: CalculationUsage::checkCalculationUsageSubcalculationSpecialization
+    //     (8.3.19.3): owned by a CalculationDefinition or CalculationUsage, it specializes
+    //     `Calculations::Calculation::subcalculations`. sv2-hir's, for the same reason.
+    fn calculation_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::CalculationUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("calc");
+        self.action_usage_declaration();
+        self.calculation_body();
+        self.finish_node();
+    }
+
     /// Whether a `FlowUsage` starts at the `n`th meaningful token.
     ///
     /// `OccurrenceUsagePrefix 'flow'` with no `def` after it (`SysML` 8.2.2.16): the
@@ -6134,6 +6184,7 @@ impl<'a> Parser<'a> {
         self.at_action_usage(n)
             || self.at_perform_action_usage(n)
             || self.at_assert_constraint_usage(n)
+            || self.at_calculation_usage(n)
             || self.at_flow_usage(n)
             || self
                 .at_simple_usage(n)

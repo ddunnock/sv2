@@ -2803,6 +2803,141 @@ fn an_assert_constraint_usage_keeps_every_byte() {
     assert_eq!(parse_accepted(source).text(), source);
 }
 
+// -- CalculationUsage, SysML 8.2.2.19 -------------------------------------------------
+//
+// CalculationUsage =
+//     OccurrenceUsagePrefix 'calc' ActionUsageDeclaration CalculationBody  (8.2.2.19)
+// BehaviorUsageElement = ... | CalculationUsage | ...                       (8.2.2.6.4)
+//
+// "declared as an action definition or usage ... but using the keyword calc instead of
+// action", with a CalculationBody where the action has an ActionBody (7.19.2, receipt
+// 14c3c04e). Told from CalculationDefinition by the `def` after `calc`, exactly as
+// ActionUsage is told from ActionDefinition.
+
+#[test]
+fn a_calculation_usage_reads_the_corpus_forms() {
+    // examples/Simple Tests/CalculationTest.sysml:22-25 — in a package body, an `in`
+    // parameter bound to a sequence and a `return` naming the result.
+    let in_package = render(
+        &parse_accepted(
+            "package CalculationExample { calc ms: MassSum {\n\
+             in partMasses = (vehicle.eng.m, vehicle.trans.m);\n\
+             return totalMass;\n} }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&in_package, "CalculationUsage"),
+        1,
+        "{in_package}"
+    );
+    // training/30. Calculations/Calculation Usages-1.sysml:19-24 — in an action usage's
+    // body, an invocation as an argument.
+    let in_action = render(
+        &parse_accepted(
+            "action straightLineDynamics { calc acc : Acceleration {\n\
+             in tp = Power(wheelPower, C_d, C_f, mass, v_in);\n\
+             in tm = mass;\n\
+             in v = v_in;\n\
+             return a;\n} }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&in_action, "CalculationUsage"),
+        1,
+        "{in_action}"
+    );
+    // training/30. Calculations/Calculation Usages-2.sysml:17-19 — untyped, in a part def,
+    // with typed parameters.
+    parse_accepted(
+        "part def VehicleDynamics { calc updateState {\n\
+         in delta_t : TimeValue;\n\
+         in currState : DynamicState;\n} }",
+    );
+    // 7.19.2's CalculationDefinition example (receipt 14c3c04e), written as a usage —
+    // "declared as an action definition or usage ... but using the keyword calc".
+    parse_accepted(
+        "calc v {\n\
+         in v_i : VelocityValue;\n\
+         in a : AccelerationValue;\n\
+         in dt : TimeValue;\n\
+         return v_f : VelocityValue;\n}",
+    );
+}
+
+#[test]
+fn a_calculation_usage_owns_what_its_production_writes() {
+    let tree = render(&parse_accepted("part def P { calc c : C { a + b } }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "OccurrenceUsageMember"),
+        ["MemberPrefix", "CalculationUsage"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "CalculationUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwCalc",
+            "ActionUsageDeclaration",
+            "CalculationBody"
+        ],
+        "{tree}"
+    );
+    // The input the absence rejection held until the commit before this one: a usage,
+    // and NOT read as the definition it shares every token with before the `def`.
+    let usage = render(&parse_accepted("calc c { a + b }").syntax());
+    assert_eq!(nodes_named(&usage, "CalculationUsage"), 1, "{usage}");
+    assert_eq!(nodes_named(&usage, "CalculationDefinition"), 0, "{usage}");
+    assert_eq!(nodes_named(&usage, "ResultExpressionMember"), 1, "{usage}");
+    let definition = render(&parse_accepted("calc def C { a + b }").syntax());
+    assert_eq!(
+        nodes_named(&definition, "CalculationDefinition"),
+        1,
+        "{definition}"
+    );
+    assert_eq!(
+        nodes_named(&definition, "CalculationUsage"),
+        0,
+        "{definition}"
+    );
+    // OccurrenceUsagePrefix, so the occurrence keywords apply.
+    parse_accepted("part def P { individual calc c; snapshot calc d { x } }");
+    // A BehaviorUsageElement: a BehaviorUsageMember in an action body, after a `then`
+    // and before target successions (8.2.2.17.1).
+    let action =
+        render(&parse_accepted("action def A { action a; then calc c { x } then b; }").syntax());
+    assert_eq!(nodes_named(&action, "BehaviorUsageMember"), 2, "{action}");
+    assert_eq!(
+        nodes_named(&action, "SourceSuccessionMember"),
+        1,
+        "{action}"
+    );
+    assert_eq!(
+        nodes_named(&action, "ActionTargetSuccessionMember"),
+        1,
+        "{action}"
+    );
+}
+
+#[test]
+fn a_calculation_usage_is_bounded_by_its_rules() {
+    // CalculationBody is not optional.
+    parse_rejected("part def P { calc c }");
+    // Its body is a CalculationBody: `CalculationBodyItem* ResultExpressionMember?`, so the
+    // result expression is last and no item follows it (8.2.2.19). Parenthesised, so that
+    // it can only be the expression.
+    parse_rejected("part def P { calc c { (a + b) attribute x; } }");
+    // Unclosed.
+    parse_rejected("part def P { calc c { a + b }");
+}
+
+#[test]
+fn a_calculation_usage_keeps_every_byte() {
+    let source = "part def P {\n\tcalc /* n */ c // d\n\t\t: C {\n\t\tin x;\n\t\tx + 1\n\t}\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
 //
 // DefaultTargetSuccession : TransitionUsage =

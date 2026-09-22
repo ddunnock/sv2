@@ -721,6 +721,8 @@ pub enum SyntaxKind {
     ActionUsage,
     /// `UsageDeclaration ValuePart?`. `SysML` 8.2.2.17.2.
     ActionUsageDeclaration,
+    /// `OccurrenceUsagePrefix 'calc' ActionUsageDeclaration CalculationBody`. `SysML` 8.2.2.19.
+    CalculationUsage,
     /// `OccurrenceUsagePrefix 'perform' PerformActionUsageDeclaration ActionBody`. `SysML` 8.2.2.17.2.
     PerformActionUsage,
     /// `( OwnedReferenceSubsetting FeatureSpecializationPart? | 'action' UsageDeclaration ) ValuePart?`. `SysML` 8.2.2.17.2.
@@ -1299,6 +1301,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::OwnedFeatureChaining,
     SyntaxKind::ActionUsage,
     SyntaxKind::ActionUsageDeclaration,
+    SyntaxKind::CalculationUsage,
     SyntaxKind::PerformActionUsage,
     SyntaxKind::PerformActionUsageDeclaration,
     SyntaxKind::ActionNodeMember,

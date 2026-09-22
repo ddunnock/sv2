@@ -21,6 +21,7 @@ vendor/corpus/kerml/src/examples/Simple Tests/Inheritance.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Redefinition.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Scoping.kerml
 vendor/corpus/kerml/src/examples/Vehicle Example/VehicleDefinitions.kerml
+vendor/corpus/sysml/src/examples/Analysis Examples/Dynamics.sysml
 vendor/corpus/sysml/src/examples/Camera Example/Camera.sysml
 vendor/corpus/sysml/src/examples/Camera Example/PictureTaking.sysml
 vendor/corpus/sysml/src/examples/Comment Examples/Comments.sysml
@@ -32,6 +33,7 @@ vendor/corpus/sysml/src/examples/Import Tests/QualifiedNameImportTest.sysml
 vendor/corpus/sysml/src/examples/Mass Roll-up Example/Vehicles.sysml
 vendor/corpus/sysml/src/examples/Packet Example/PacketUsage.sysml
 vendor/corpus/sysml/src/examples/Packet Example/Packets.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/CalculationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml
@@ -73,6 +75,8 @@ vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 1.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 2.sysml
 vendor/corpus/sysml/src/training/29. Expressions/MassRollup1.sysml
 vendor/corpus/sysml/src/training/30. Calculations/Calculation Definitions.sysml
+vendor/corpus/sysml/src/training/30. Calculations/Calculation Usages-1.sysml
+vendor/corpus/sysml/src/training/30. Calculations/Calculation Usages-2.sysml
 vendor/corpus/sysml/src/training/31. Constraints/Analytical Constraints.sysml
 vendor/corpus/sysml/src/training/31. Constraints/Constraint Assertions-1.sysml
 vendor/corpus/sysml/src/training/31. Constraints/Derivation Constraints.sysml

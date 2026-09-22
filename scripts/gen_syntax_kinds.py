@@ -719,6 +719,12 @@ NODES = [
         ("`OccurrenceUsagePrefix 'action' ActionUsageDeclaration ActionBody`. `SysML` 8.2.2.17.2."),
     ),
     ("ActionUsageDeclaration", "`UsageDeclaration ValuePart?`. `SysML` 8.2.2.17.2."),
+    # The calculation usage: an action usage with `calc` for `action` and a CalculationBody
+    # for its ActionBody, reusing the action's own declaration (7.19.2).
+    (
+        "CalculationUsage",
+        "`OccurrenceUsagePrefix 'calc' ActionUsageDeclaration CalculationBody`. `SysML` 8.2.2.19.",
+    ),
     (
         "PerformActionUsage",
         (
