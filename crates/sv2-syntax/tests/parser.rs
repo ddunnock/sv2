@@ -8492,19 +8492,26 @@ fn a_case_is_bounded_by_its_rules() {
 
 #[test]
 fn a_use_case_is_not_read_as_a_case() {
-    // `use case` (8.2.2.25) is unimplemented. Recovery must take the whole statement: once
-    // `case def` began a member, the `case` after the reported `use` restarted there and
-    // Annex A's use case bodies were read as case bodies.
-    let parsed = parse_rejected("package P { use case def U { actor a; } use case u : U; }");
-    let tree = render(&parsed.syntax());
+    // `use case` is a two-keyword run (8.2.2.25), and its `case` must never begin a
+    // CaseDefinition or CaseUsage of its own.
+    let tree = render(
+        &parse_accepted("package P { use case def U { actor a; } use case u : U; }").syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "UseCaseDefinition"), 1, "{tree}");
+    assert_eq!(nodes_named(&tree, "UseCaseUsage"), 1, "{tree}");
     assert_eq!(nodes_named(&tree, "CaseDefinition"), 0, "{tree}");
     assert_eq!(nodes_named(&tree, "CaseUsage"), 0, "{tree}");
-    // Only the `use` is reported: nothing inside the use case is read as an item.
+    // IncludeUseCaseUsage is unimplemented. Recovery must take the whole statement: once
+    // `use case` began a member, the `use` after the reported `include` restarted there
+    // and an included use case was read as a declared one.
+    let parsed = parse_rejected("use case def U { include use case i : I { subject s; } }");
+    let included = render(&parsed.syntax());
+    assert_eq!(nodes_named(&included, "UseCaseUsage"), 0, "{included}");
     assert!(
         parsed
             .errors()
             .iter()
-            .all(|error| error.message() == "unexpected `use`"),
+            .all(|error| error.message() == "unexpected `include`"),
         "{:?}",
         parsed.errors()
     );
@@ -8580,5 +8587,115 @@ fn an_actor_member_owns_what_its_production_writes() {
 #[test]
 fn an_actor_member_keeps_every_byte() {
     let source = "requirement def R {\n\tactor /* n */ e // d\n\t\t: E[0..1];\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
+// -- UseCaseDefinition and UseCaseUsage, SysML 8.2.2.25 --------------------------------
+//
+// UseCaseDefinition = OccurrenceDefinitionPrefix 'use' 'case' 'def'
+//                     DefinitionDeclaration CaseBody
+// UseCaseUsage      = OccurrenceUsagePrefix 'use' 'case' ConstraintUsageDeclaration CaseBody
+//
+// "declared as a case definition or usage ..., using the kind keyword use case" (7.25.2,
+// receipt 9be3712a).
+
+#[test]
+fn a_use_case_reads_the_corpus_forms() {
+    // training/35. Use Cases/Use Case Definition Example.sysml:7-17 — a subject, actors
+    // with and without a multiplicity, and a keywordless objective.
+    let tree = render(
+        &parse_accepted(
+            "use case def 'Provide Transportation' {\n\
+             subject vehicle : Vehicle;\n\
+             actor driver : Person;\n\
+             actor passengers : Person[0..4];\n\
+             actor environment : Environment;\n\
+             objective {\n\
+             doc /* Transport driver and passengers. */\n\
+             }\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "UseCaseDefinition"), 1, "{tree}");
+    assert_eq!(nodes_named(&tree, "ActorMember"), 3, "{tree}");
+    // examples/Simple Tests/UseCaseTest.sysml:16-27 — a body-less definition, a usage
+    // with a bare subject and a redefining actor, a typed usage, and one nested in a part.
+    let usages = render(
+        &parse_accepted(
+            "package UseCaseTest {\n\
+             use case def UC1;\n\
+             use case uc2 {\n\
+             subject;\n\
+             actor :>> user;\n\
+             }\n\
+             use case u : UseSystem;\n\
+             part system : System {\n\
+             use case uc1 : UC1;\n\
+             }\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&usages, "UseCaseDefinition"), 1, "{usages}");
+    assert_eq!(nodes_named(&usages, "UseCaseUsage"), 3, "{usages}");
+    // examples/Simple Tests/VariabilityTest.sysml:29 — a variant use case.
+    let variant = render(&parse_accepted("action def A { variant use case uc; }").syntax());
+    assert_eq!(nodes_named(&variant, "UseCaseUsage"), 1, "{variant}");
+}
+
+#[test]
+fn a_use_case_owns_what_its_production_writes() {
+    let tree = render(&parse_accepted("use case def U { subject s; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "UseCaseDefinition"),
+        [
+            "OccurrenceDefinitionPrefix",
+            "KwUse",
+            "KwCase",
+            "KwDef",
+            "DefinitionDeclaration",
+            "CaseBody"
+        ],
+        "{tree}"
+    );
+    let usage = render(&parse_accepted("part def P { use case u : U; }").syntax());
+    assert_eq!(
+        child_kinds(&usage, "UseCaseUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwUse",
+            "KwCase",
+            "ConstraintUsageDeclaration",
+            "CaseBody"
+        ],
+        "{usage}"
+    );
+    // A BehaviorUsageElement (8.2.2.6.4): a BehaviorUsageMember in an action body, after
+    // a `then` and before target successions, as training/35's usage example writes
+    // `then use case 'drive vehicle' { ... }`.
+    let action =
+        render(&parse_accepted("action def A { action a; then use case d { } then b; }").syntax());
+    assert_eq!(nodes_named(&action, "BehaviorUsageMember"), 2, "{action}");
+    assert_eq!(
+        nodes_named(&action, "SourceSuccessionMember"),
+        1,
+        "{action}"
+    );
+}
+
+#[test]
+fn a_use_case_is_bounded_by_its_rules() {
+    // Both kind keywords, in order (8.2.2.25).
+    parse_rejected("use def U;");
+    parse_rejected("case use def U;");
+    // CaseBody is not optional.
+    parse_rejected("use case def U");
+    parse_rejected("part def P { use case u }");
+}
+
+#[test]
+fn a_use_case_keeps_every_byte() {
+    let source = "use /* n */ case\n\tdef U // d\n{\n\tsubject s;\n\tactor a [0..1];\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }

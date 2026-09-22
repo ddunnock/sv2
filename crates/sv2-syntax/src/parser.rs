@@ -624,7 +624,7 @@ enum ActionNode {
     Assignment,
 }
 
-/// A case production pair: one kind keyword over the case layer's spine.
+/// A case production pair: one kind keyword run over the case layer's spine.
 ///
 /// ```text
 /// CaseDefinition         = OccurrenceDefinitionPrefix 'case' 'def'
@@ -635,35 +635,46 @@ enum ActionNode {
 ///                          DefinitionDeclaration CaseBody            SysML 8.2.2.23
 /// AnalysisCaseUsage      = OccurrenceUsagePrefix 'analysis'
 ///                          ConstraintUsageDeclaration CaseBody       SysML 8.2.2.23
+/// UseCaseDefinition      = OccurrenceDefinitionPrefix 'use' 'case' 'def'
+///                          DefinitionDeclaration CaseBody            SysML 8.2.2.25
+/// UseCaseUsage           = OccurrenceUsagePrefix 'use' 'case'
+///                          ConstraintUsageDeclaration CaseBody       SysML 8.2.2.25
 /// ```
 ///
 /// "An analysis case definition or usage is declared as a case definition or usage ...
-/// using the kind keyword analysis" (7.23.2, receipt 2aa2d6ce), so the pairs differ in the
-/// keyword and the metaclass alone. `VerificationCase*` (8.2.2.24) and `UseCase*`
-/// (8.2.2.25) are stated on the same spine and are not here yet; `use case` is two
-/// keywords, and the one a row names here must stand first.
+/// using the kind keyword analysis" (7.23.2, receipt 2aa2d6ce), and a use case "using the
+/// kind keyword use case" (7.25.2, receipt 9be3712a), so the pairs differ in the keywords
+/// and the metaclass alone. `VerificationCase*` (8.2.2.24) is stated on the same spine and
+/// is not here yet.
 #[derive(Clone, Copy)]
 struct Case {
-    /// The kind keyword, before the `def` of a definition.
-    keyword: &'static str,
+    /// The kind keywords in order, before the `def` of a definition: one, or `use case`'s
+    /// two. The runs are disjoint on their FIRST word — `case` alone never begins
+    /// `use case` — which is what lets the recognisers match a row from its start.
+    keywords: &'static [&'static str],
     /// The node the definition production builds.
     definition: SyntaxKind,
     /// The node the usage production builds.
     usage: SyntaxKind,
 }
 
-/// Every case production pair read. The keywords are reserved and disjoint, so the order
-/// decides nothing.
-const CASES: [Case; 2] = [
+/// Every case production pair read. The first keywords are reserved and disjoint, so the
+/// order decides nothing.
+const CASES: [Case; 3] = [
     Case {
-        keyword: "case",
+        keywords: &["case"],
         definition: SyntaxKind::CaseDefinition,
         usage: SyntaxKind::CaseUsage,
     },
     Case {
-        keyword: "analysis",
+        keywords: &["analysis"],
         definition: SyntaxKind::AnalysisCaseDefinition,
         usage: SyntaxKind::AnalysisCaseUsage,
+    },
+    Case {
+        keywords: &["use", "case"],
+        definition: SyntaxKind::UseCaseDefinition,
+        usage: SyntaxKind::UseCaseUsage,
     },
 ];
 
@@ -1465,20 +1476,35 @@ impl<'a> Parser<'a> {
     fn at_case_definition(&self, n: usize) -> Option<Case> {
         let after = self.skip_occurrence_definition_prefix(n);
         CASES.into_iter().find(|case| {
-            self.nth_is_keyword(after, case.keyword) && self.nth_is_keyword(after + 1, "def")
+            self.case_keywords_at(after, case)
+                .is_some_and(|k| self.nth_is_keyword(k, "def"))
         })
+    }
+
+    /// The index just past `case`'s kind keywords when all of them are written from the
+    /// `n`th token, in order.
+    fn case_keywords_at(&self, n: usize, case: &Case) -> Option<usize> {
+        let mut k = n;
+        for word in case.keywords {
+            if !self.nth_is_keyword(k, word) {
+                return None;
+            }
+            k += 1;
+        }
+        Some(k)
     }
 
     /// Which case usage starts at the `n`th meaningful token, if one does.
     ///
-    /// `OccurrenceUsagePrefix` and a `CASES` keyword with no `def` after it, which is what
-    /// makes it the definition beside it. The prefix skipped is the one `case_usage` reads
-    /// with `occurrence_usage_prefix`. `use case u;` is not claimed: `use` is not in the
-    /// prefix, so the `case` after it is never at the position asked.
+    /// `OccurrenceUsagePrefix` and a `CASES` keyword run with no `def` after it, which is
+    /// what makes it the definition beside it. The prefix skipped is the one `case_usage`
+    /// reads with `occurrence_usage_prefix`. A `use case` is never taken for a `case`: `use`
+    /// is not in the prefix, so the `case` after it is never at the position asked.
     fn at_case_usage(&self, n: usize) -> Option<Case> {
         let after = self.skip_occurrence_usage_prefix(n);
         CASES.into_iter().find(|case| {
-            self.nth_is_keyword(after, case.keyword) && !self.nth_is_keyword(after + 1, "def")
+            self.case_keywords_at(after, case)
+                .is_some_and(|k| !self.nth_is_keyword(k, "def"))
         })
     }
 
@@ -1519,13 +1545,15 @@ impl<'a> Parser<'a> {
             return false;
         }
         if self.at_return_parameter_member()
-            || ["variant", "subject", "actor", "objective"]
+            || ["variant", "subject", "actor", "objective", "include"]
                 .iter()
                 .any(|word| self.at_element_keyword(word))
         {
             // `return` and `variant` continue the item run rather than ending it: both
             // are items of a calculation body (8.2.2.19, 8.2.2.17.1), and `subject`,
-            // `actor` and `objective` are items of a case body (8.2.2.22). None is in
+            // `actor` and `objective` are items of a case body (8.2.2.22), and `include`
+            // opens IncludeUseCaseUsage, a BehaviorUsageElement (8.2.2.6.4) and so an item
+            // of both through ActionBodyItem, unimplemented and recovered over. None is in
             // `at_sysml_keyword_member`, because none is a member `membership` reads,
             // and a reserved keyword is never an expression (8.2.2.1.2). Where a body
             // admits one, the loop asks about it first and never reaches here with it in
@@ -2304,15 +2332,18 @@ impl<'a> Parser<'a> {
         self.start_node(SyntaxKind::Error);
         let mut depth: usize = 0;
         let mut taken = false;
-        // Whether the last token taken was `use`. `use case` opens UseCaseDefinition and
-        // UseCaseUsage and follows `include` in IncludeUseCaseUsage (SysML 8.2.2.25), all
-        // unimplemented, and the `case` after it is their second keyword, not the start of a CaseDefinition or CaseUsage: ending
-        // the statement there read a use case's body as a case's.
-        let mut after_use = false;
+        // Whether the last token taken continues into the next one, so that a member
+        // keyword after it is not a new statement. `include` opens IncludeUseCaseUsage
+        // (SysML 8.2.2.25), which is unimplemented and writes `use case` after it:
+        // ending there read an included use case as a declared one. `use` begins the
+        // two-keyword `use case`, whose `case` would otherwise restart as a
+        // CaseDefinition or CaseUsage, which is how Annex A's use case bodies were once
+        // read as case bodies.
+        let mut continued = false;
         while let Some(token) = self.tokens.get(self.pos).copied() {
             if taken
                 && depth == 0
-                && (token.kind == SyntaxKind::RBrace || (!after_use && self.at_member_keyword()))
+                && (token.kind == SyntaxKind::RBrace || (!continued && self.at_member_keyword()))
             {
                 break;
             }
@@ -2324,7 +2355,7 @@ impl<'a> Parser<'a> {
             if !self.skippable(token.kind) {
                 end = Self::range_of(token).end();
                 taken = true;
-                after_use = self.text_of(token) == "use";
+                continued = matches!(self.text_of(token), "use" | "include");
             }
             self.push(token, token.kind);
             if depth == 0 && token.kind == SyntaxKind::Semicolon {
@@ -9347,25 +9378,35 @@ impl<'a> Parser<'a> {
 
     // production: CaseDefinition
     // production: AnalysisCaseDefinition
+    // production: UseCaseDefinition
     //
     // CaseDefinition         = OccurrenceDefinitionPrefix 'case' 'def'
     //                          DefinitionDeclaration CaseBody            (SysML 8.2.2.22)
     // AnalysisCaseDefinition = OccurrenceDefinitionPrefix 'analysis' 'def'
     //                          DefinitionDeclaration CaseBody            (SysML 8.2.2.23)
+    // UseCaseDefinition      = OccurrenceDefinitionPrefix 'use' 'case' 'def'
+    //                          DefinitionDeclaration CaseBody            (SysML 8.2.2.25)
     //
-    // One method, the keyword and node from `CASES`. "A case definition or usage is
+    // One method, the keywords and node from `CASES`. "A case definition or usage is
     // declared as a kind of calculation definition or usage ... using the kind keyword
     // case" (7.22.2, receipt eb25a69f), and an analysis case as a case with the kind
-    // keyword analysis (7.23.2, receipt 2aa2d6ce): CalculationDefinition's spine over
-    // CaseBody. The metaclasses chain AnalysisCaseDefinition > CaseDefinition >
-    // CalculationDefinition (8.3.23.2, receipt 188d1035; 8.3.22.2, receipt 692a4982).
+    // keyword analysis (7.23.2, receipt 2aa2d6ce), a use case with `use case` (7.25.2,
+    // receipt 9be3712a): CalculationDefinition's spine over CaseBody. The metaclasses
+    // chain AnalysisCaseDefinition and UseCaseDefinition > CaseDefinition >
+    // CalculationDefinition (8.3.23.2, receipt 188d1035; 8.3.25.3, receipt 32b25e8d;
+    // 8.3.22.2, receipt 692a4982).
     //
-    // implied specialization: Cases::Case, or AnalysisCases::AnalysisCase
+    // implied specialization: Cases::Case, AnalysisCases::AnalysisCase or
+    //     UseCases::UseCase
     // constraint: CaseDefinition::checkCaseDefinitionSpecialization,
     //     `specializesFromLibrary('Cases::Case')` (8.3.22.2), and
     //     AnalysisCaseDefinition::checkAnalysisCaseDefinitionSpecialization,
-    //     `specializesFromLibrary('AnalysisCases::AnalysisCase')` (8.3.23.2). Injections,
-    //     so sv2-hir's; this layer builds the tree only (ADR-0002).
+    //     `specializesFromLibrary('AnalysisCases::AnalysisCase')` (8.3.23.2), and
+    //     UseCaseDefinition::checkUseCaseDefinitionSpecialization,
+    //     `specializesFromLibrary('UseCases::UseCase')` (8.3.25.3). Injections, so
+    //     sv2-hir's; this layer builds the tree only (ADR-0002).
+    // constraint: UseCaseDefinition::deriveUseCaseDefinitionIncludedUseCase (8.3.25.3), a
+    //     derivation over the IncludeUseCaseUsages the body owns; sv2-resolve's.
     // constraint: CaseDefinition::validateCaseDefinitionOnlyOneSubject,
     //     validateCaseDefinitionOnlyOneObjective and
     //     validateCaseDefinitionSubjectParameterPosition (8.3.22.2): at most one subject
@@ -9375,7 +9416,9 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(case.definition);
         self.occurrence_definition_prefix();
-        self.expect_keyword(case.keyword);
+        for word in case.keywords {
+            self.expect_keyword(word);
+        }
         self.expect_keyword("def");
         self.definition_declaration();
         self.case_body();
@@ -9384,11 +9427,14 @@ impl<'a> Parser<'a> {
 
     // production: CaseUsage
     // production: AnalysisCaseUsage
+    // production: UseCaseUsage
     //
     // CaseUsage         = OccurrenceUsagePrefix 'case'
     //                     ConstraintUsageDeclaration CaseBody            (SysML 8.2.2.22)
     // AnalysisCaseUsage = OccurrenceUsagePrefix 'analysis'
     //                     ConstraintUsageDeclaration CaseBody            (SysML 8.2.2.23)
+    // UseCaseUsage      = OccurrenceUsagePrefix 'use' 'case'
+    //                     ConstraintUsageDeclaration CaseBody            (SysML 8.2.2.25)
     //
     // ConstraintUsageDeclaration and not ActionUsageDeclaration, although a CaseUsage is a
     // CalculationUsage (8.3.22.3, receipt f0ff6680) and CalculationUsage takes the
@@ -9398,16 +9444,21 @@ impl<'a> Parser<'a> {
     //
     // Marked although OccurrenceUsagePrefix is not, as ActionUsage is.
     //
-    // implied specialization: Cases::cases, or AnalysisCases::analysisCases
-    // constraint: CaseUsage::checkCaseUsageSpecialization (8.3.22.3) and
+    // implied specialization: Cases::cases, AnalysisCases::analysisCases or
+    //     UseCases::useCases
+    // constraint: CaseUsage::checkCaseUsageSpecialization (8.3.22.3),
     //     AnalysisCaseUsage::checkAnalysisCaseUsageSpecialization (8.3.23.3, receipt
-    //     ac8c6d0a), and the composite-owned checkCaseUsageSubcaseSpecialization and
-    //     checkAnalysisCaseUsageSubAnalysisCaseSpecialization. sv2-hir's (ADR-0002).
+    //     ac8c6d0a) and UseCaseUsage::checkUseCaseUsageSpecialization (8.3.25.4, receipt
+    //     b7b869b1), and the composite-owned checkCaseUsageSubcaseSpecialization,
+    //     checkAnalysisCaseUsageSubAnalysisCaseSpecialization and
+    //     checkUseCaseUsageSubUseCaseSpecialization. sv2-hir's (ADR-0002).
     fn case_usage(&mut self, case: Case) {
         self.eat_trivia();
         self.start_node(case.usage);
         self.occurrence_usage_prefix();
-        self.expect_keyword(case.keyword);
+        for word in case.keywords {
+            self.expect_keyword(word);
+        }
         self.constraint_usage_declaration();
         self.case_body();
         self.finish_node();

@@ -130,6 +130,7 @@ vendor/corpus/sysml/src/training/32. Requirements/Requirement Definitions.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Groups.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Usages.sysml
 vendor/corpus/sysml/src/training/33. Analysis/Trade Study Analysis Example.sysml
+vendor/corpus/sysml/src/training/35. Use Cases/Use Case Definition Example.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Definitions.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Usages.sysml

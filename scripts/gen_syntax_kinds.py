@@ -871,6 +871,20 @@ NODES = [
             "`SysML` 8.2.2.23."
         ),
     ),
+    (
+        "UseCaseDefinition",
+        (
+            "`OccurrenceDefinitionPrefix 'use' 'case' 'def' DefinitionDeclaration "
+            "CaseBody`. `SysML` 8.2.2.25."
+        ),
+    ),
+    (
+        "UseCaseUsage",
+        (
+            "`OccurrenceUsagePrefix 'use' 'case' ConstraintUsageDeclaration CaseBody`. "
+            "`SysML` 8.2.2.25."
+        ),
+    ),
     # The postfix `.`. PrimaryExpression's other alternative, and the only expression
     # form in this parser that folds to the LEFT: `a.b.c` is `(a.b).c`, because the left
     # operand is a PrimaryArgument and not a NonFeatureChainPrimaryArgument despite the
