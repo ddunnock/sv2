@@ -1412,6 +1412,99 @@ impl<'a> Parser<'a> {
         self.at_visibility() && self.nth_is_keyword(1, "import")
     }
 
+    /// The index just past a run of `#` prefix metadata written from the `n`th token, or
+    /// `n` itself when none is.
+    ///
+    /// Each is `'#' PrefixMetadataUsage` with `PrefixMetadataUsage = OwnedFeatureTyping`
+    /// (`SysML` 8.2.2.27): a `QualifiedName`, or an `OwnedFeatureChain` of them by
+    /// deviation `PrefixMetadataTyping-chain` (`follow_spec`), walked as `chainable_target`
+    /// reads it. The one shape stands behind `PrefixMetadataMember`,
+    /// `PrefixMetadataAnnotation` and both extension keywords, so every prefix recogniser
+    /// looks past it here and nowhere else. A `#` with no name after it is not looked
+    /// past, and the member it would have opened is reported.
+    ///
+    /// `SysML` only. `KerML`'s `#` opens `PrefixMetadataFeature` (8.2.5.12), a different
+    /// production and unimplemented, so a `.kerml` file's `#` is still reported.
+    fn skip_prefix_metadata(&self, n: usize) -> usize {
+        if self.language != Language::SysMl {
+            return n;
+        }
+        let mut n = n;
+        while self.nth_is(n, SyntaxKind::Hash) {
+            let Some(mut k) = self.skip_qualified_name(n + 1) else {
+                break;
+            };
+            while self.nth_is(k, SyntaxKind::Dot) {
+                match self.skip_qualified_name(k + 1) {
+                    Some(next) => k = next,
+                    None => break,
+                }
+            }
+            n = k;
+        }
+        n
+    }
+
+    // production: PrefixMetadataMember@sysml
+    //
+    // PrefixMetadataMember : OwningMembership =
+    //     '#' ownedRelatedElement = PrefixMetadataUsage            (SysML 8.2.2.27)
+    //
+    // production: PrefixMetadataUsage@sysml
+    //
+    // PrefixMetadataUsage : MetadataUsage =
+    //     ownedRelationship += OwnedFeatureTyping                  (SysML 8.2.2.27)
+    //
+    // "A user-defined keyword is the (possibly qualified) name (or short name) of a
+    // metadata definition (or KerML metaclass) preceded by the symbol #. ... [It] specifies
+    // a metadata annotation of the declared element" (7.27.4, receipt 0f2c5bd1). So the
+    // `#X` is a MetadataUsage typed by X and owned by the declared element; that it
+    // annotates its owner is a derivation, not text. The typing is the whole
+    // OwnedFeatureTyping, chain included (deviation PrefixMetadataTyping-chain,
+    // follow_spec): that X names a metaclass is validateMetadataFeatureMetaclass, not
+    // grammar (ADR-0002).
+    //
+    // implied specialization: when X specializes SemanticMetadata, the declared element
+    //     implicitly specializes its baseType (7.27.3, receipt 938f2744). Resolution's.
+    // constraint: MetadataUsage::checkMetadataUsageSpecialization (8.3.27.3). sv2-hir's.
+    fn prefix_metadata_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PrefixMetadataMember);
+        self.expect(SyntaxKind::Hash, "`#`");
+        self.prefix_metadata_usage();
+        self.finish_node();
+    }
+
+    fn prefix_metadata_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PrefixMetadataUsage);
+        self.owned_feature_typing();
+        self.finish_node();
+    }
+
+    // production: UsageExtensionKeyword@sysml
+    //
+    // UsageExtensionKeyword : Usage =
+    //     ownedRelationship += PrefixMetadataMember                (SysML 8.2.2.6.2)
+    //
+    // production: DefinitionExtensionKeyword@sysml
+    //
+    // DefinitionExtensionKeyword : Definition =
+    //     ownedRelationship += PrefixMetadataMember                (SysML 8.2.2.6.1)
+    //
+    // Every `#X` a prefix may write, as many as are written: "It is also possible to
+    // include more than one user defined-keyword in a declaration" (7.27.4, receipt
+    // 0f2c5bd1). The two productions have one body and differ in the element that owns
+    // the membership, so one method reads both and `node` says which it built.
+    fn extension_keywords(&mut self, node: SyntaxKind) {
+        while self.at(SyntaxKind::Hash) {
+            self.eat_trivia();
+            self.start_node(node);
+            self.prefix_metadata_member();
+            self.finish_node();
+        }
+    }
+
     /// Whether a `PartDefinition` starts at the `n`th meaningful token.
     ///
     /// `PartDefinition = OccurrenceDefinitionPrefix 'part' 'def' Definition`
@@ -1419,8 +1512,6 @@ impl<'a> Parser<'a> {
     /// ( 'individual' EmptyMultiplicityMember )? DefinitionExtensionKeyword*`
     /// (8.2.2.9.1). The prefix keywords are optional and also open usages
     /// (`abstract part x;` is a `PartUsage`), so only `part` followed by `def` decides.
-    /// A `DefinitionExtensionKeyword` (`#` prefix metadata) is not looked past: it is
-    /// unimplemented, and leaving it to the enclosing body's recovery reports it.
     fn at_simple_definition(&self, n: usize) -> Option<SimpleDefinition> {
         SIMPLE_DEFINITIONS.iter().copied().find(|definition| {
             let after = if definition.is_occurrence {
@@ -1435,25 +1526,30 @@ impl<'a> Parser<'a> {
     /// The index just past a `DefinitionPrefix` written from the `n`th token.
     ///
     /// `DefinitionPrefix = BasicDefinitionPrefix? DefinitionExtensionKeyword*`
-    /// (`SysML` 8.2.2.6.1). A `DefinitionExtensionKeyword` is not looked past: it is
-    /// unimplemented, and leaving it to the enclosing body's recovery reports it.
+    /// (`SysML` 8.2.2.6.1).
     fn skip_definition_prefix(&self, n: usize) -> usize {
+        self.skip_prefix_metadata(self.skip_basic_definition_prefix(n))
+    }
+
+    /// The index just past a `BasicDefinitionPrefix` at the `n`th token, if one is there.
+    fn skip_basic_definition_prefix(&self, n: usize) -> usize {
         n + usize::from(self.nth_is_keyword(n, "abstract") || self.nth_is_keyword(n, "variation"))
     }
 
     /// The index just past an `OccurrenceDefinitionPrefix` written from the `n`th token.
     ///
-    /// A `DefinitionPrefix` and the one keyword only an occurrence may carry:
-    /// `( 'individual' EmptyMultiplicityMember )?` (`SysML` 8.2.2.9.1). The same pair
+    /// A `DefinitionPrefix` with the one keyword only an occurrence may carry between its
+    /// two parts: `BasicDefinitionPrefix? ( 'individual' EmptyMultiplicityMember )?
+    /// DefinitionExtensionKeyword*` (`SysML` 8.2.2.9.1). The same pair
     /// `skip_basic_usage_prefix` and `skip_occurrence_usage_prefix` make one level down.
     fn skip_occurrence_definition_prefix(&self, n: usize) -> usize {
-        let n = self.skip_definition_prefix(n);
-        n + usize::from(self.nth_is_keyword(n, "individual"))
+        let n = self.skip_basic_definition_prefix(n);
+        self.skip_prefix_metadata(n + usize::from(self.nth_is_keyword(n, "individual")))
     }
 
     /// Whether an implemented `DefinitionElement` starts at the `n`th meaningful token.
     fn at_definition_element(&self, n: usize) -> bool {
-        self.nth_is_keyword(n, "package")
+        self.at_package(n)
             || self.at_dependency(n)
             || self.at_port_definition(n)
             || self.at_requirement_definition(n)
@@ -1465,6 +1561,27 @@ impl<'a> Parser<'a> {
             || self.at_state_definition(n)
             || self.at_enumeration_definition(n)
             || self.at_simple_definition(n).is_some()
+            || self.at_extended_definition(n)
+    }
+
+    /// Whether a `Package` starts at the `n`th meaningful token: its
+    /// `PrefixMetadataMember*` (`SysML` 8.2.2.5.1) looked past, then `package`.
+    fn at_package(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_prefix_metadata(n), "package")
+    }
+
+    /// Whether an `ExtendedDefinition` starts at the `n`th meaningful token.
+    ///
+    /// `BasicDefinitionPrefix? DefinitionExtensionKeyword+ 'def'` (`SysML` 8.2.2.27): at
+    /// least one `#` and then `def` with no kind keyword between, which is the whole of
+    /// what separates it from a definition whose prefix carries prefix metadata.
+    /// "A user-defined keyword for semantic metadata may also be used to declare a
+    /// definition or usage without using any language-defined keyword" (7.27.4, receipt
+    /// 0f2c5bd1).
+    fn at_extended_definition(&self, n: usize) -> bool {
+        let k = self.skip_basic_definition_prefix(n);
+        let after = self.skip_prefix_metadata(k);
+        after > k && self.nth_is_keyword(after, "def")
     }
 
     /// Whether an `ActionDefinition` starts at the `n`th meaningful token.
@@ -1499,9 +1616,9 @@ impl<'a> Parser<'a> {
     ///
     /// `'abstract'? DefinitionExtensionKeyword* 'metadata' 'def'` (`SysML` 8.2.2.27): its
     /// own prefix, `abstract` alone and not `DefinitionPrefix`'s `variation`, so it is not
-    /// on the `SIMPLE_DEFINITIONS` spine. The extension keywords are unimplemented.
+    /// on the `SIMPLE_DEFINITIONS` spine.
     fn at_metadata_definition(&self, n: usize) -> bool {
-        let after = n + usize::from(self.nth_is_keyword(n, "abstract"));
+        let after = self.skip_prefix_metadata(n + usize::from(self.nth_is_keyword(n, "abstract")));
         self.nth_is_keyword(after, "metadata") && self.nth_is_keyword(after + 1, "def")
     }
 
@@ -1759,6 +1876,7 @@ impl<'a> Parser<'a> {
             || self.at_include_use_case_usage(n)
             || self.at_simple_usage(n).is_some()
             || self.at_reference_usage(n)
+            || self.at_extended_usage(n)
     }
 
     /// The index just past a `BasicUsagePrefix` written from the `n`th token.
@@ -1773,8 +1891,7 @@ impl<'a> Parser<'a> {
     /// NOT a whole `UsagePrefix`: `UsagePrefix = UnextendedUsagePrefix
     /// UsageExtensionKeyword*` and `UnextendedUsagePrefix = EndUsagePrefix |
     /// BasicUsagePrefix`, and `skip_usage_prefix` is the one that also looks past an
-    /// `EndUsagePrefix`. `UsageExtensionKeyword` is unimplemented and looked past by
-    /// neither, so a usage carrying one is reported rather than silently accepted.
+    /// `EndUsagePrefix` and the `UsageExtensionKeyword`s after either.
     fn skip_basic_usage_prefix(&self, n: usize) -> usize {
         let mut n = n;
         for words in [
@@ -1800,7 +1917,7 @@ impl<'a> Parser<'a> {
         // EndUsagePrefix, the first alternative by deviation OccurrenceUsagePrefix
         // (follow_xtext), excludes the rest: an end is not also individual.
         if let Some(kind) = self.skip_end_usage_prefix(n) {
-            return kind;
+            return self.skip_prefix_metadata(kind);
         }
         let mut n = self.skip_basic_usage_prefix(n);
         for words in [&["individual"][..], &["snapshot", "timeslice"]] {
@@ -1808,13 +1925,18 @@ impl<'a> Parser<'a> {
                 n += 1;
             }
         }
-        n
+        self.skip_prefix_metadata(n)
     }
 
-    /// The index just past a `UsagePrefix` written from the `n`th token, as implemented:
-    /// `UnextendedUsagePrefix = EndUsagePrefix | BasicUsagePrefix` (`SysML` 8.2.2.6.2).
-    /// `UsageExtensionKeyword*` is unimplemented and not looked past.
+    /// The index just past a `UsagePrefix` written from the `n`th token:
+    /// `UnextendedUsagePrefix UsageExtensionKeyword*`, with `UnextendedUsagePrefix =
+    /// EndUsagePrefix | BasicUsagePrefix` (`SysML` 8.2.2.6.2).
     fn skip_usage_prefix(&self, n: usize) -> usize {
+        self.skip_prefix_metadata(self.skip_unextended_usage_prefix(n))
+    }
+
+    /// The index just past an `UnextendedUsagePrefix` written from the `n`th token.
+    fn skip_unextended_usage_prefix(&self, n: usize) -> usize {
         self.skip_end_usage_prefix(n)
             .unwrap_or_else(|| self.skip_basic_usage_prefix(n))
     }
@@ -1926,8 +2048,8 @@ impl<'a> Parser<'a> {
     ///
     /// `Comment` may open with `comment`, `locale` or its bare `REGULAR_COMMENT` body;
     /// `Documentation` with `doc`; `TextualRepresentation` with `rep` or `language`;
-    /// `MetadataUsage` with `@` or `metadata`, `SysML` only (see `at_metadata_usage`). Its
-    /// third opening, a `#` extension keyword, is unimplemented and reported.
+    /// `MetadataUsage` with `@` or `metadata`, or the `#` extension keywords before either,
+    /// `SysML` only (see `at_metadata_usage`).
     fn at_annotating_element(&self) -> bool {
         self.at(SyntaxKind::RegularComment)
             || ["comment", "locale", "doc", "rep", "language"]
@@ -1938,9 +2060,9 @@ impl<'a> Parser<'a> {
 
     /// Whether a `MetadataUsage` starts at the `n`th meaningful token.
     ///
-    /// `UsageExtensionKeyword* ( '@' | 'metadata' )` (`SysML` 8.2.2.27), less the extension
-    /// keywords, which are unimplemented. `metadata def` is the `MetadataDefinition` beside
-    /// it. `SysML` only: `KerML`'s fourth `AnnotatingElement` is `MetadataFeature`
+    /// `UsageExtensionKeyword* ( '@' | 'metadata' )` (`SysML` 8.2.2.27). `metadata def` is
+    /// the `MetadataDefinition` beside it, and `#X metadata def` too, the extension
+    /// keywords being looked past for both. `SysML` only: `KerML`'s fourth `AnnotatingElement` is `MetadataFeature`
     /// (8.2.5.12), a different production, unimplemented, and this one is reached in
     /// `SysML` only by deviation `AnnotatingElement`.
     ///
@@ -1949,6 +2071,7 @@ impl<'a> Parser<'a> {
     /// calculation body's items end in its result expression; `at_result_expression`
     /// settles that one.
     fn at_metadata_usage(&self, n: usize) -> bool {
+        let n = self.skip_prefix_metadata(n);
         self.language == Language::SysMl
             && (self.nth_is(n, SyntaxKind::At)
                 || (self.nth_is_keyword(n, "metadata") && !self.nth_is_keyword(n + 1, "def")))
@@ -3098,7 +3221,7 @@ impl<'a> Parser<'a> {
         let mut element = MemberElement::Other;
         if self.at_annotating_member(0) {
             self.annotating_element_at_member();
-        } else if self.at_keyword("package") {
+        } else if self.at_package(0) {
             self.package();
         } else if let Some(classifier) = self.at_classifier(0).filter(|_| {
             // Every classifier unit is scoped `kerml`. SysML reaches DefinitionElement
@@ -3183,19 +3306,89 @@ impl<'a> Parser<'a> {
                 );
             }
             self.simple_definition(definition);
+        } else if self.at_extended_definition(0) {
+            self.extended_definition();
         } else {
             return false;
         }
         true
     }
 
+    // production: ExtendedDefinition@sysml
+    //
+    // ExtendedDefinition : Definition =
+    //     BasicDefinitionPrefix? DefinitionExtensionKeyword+ 'def' Definition
+    //                                                            (SysML 8.2.2.27)
+    //
+    // "A user-defined keyword for semantic metadata may also be used to declare a
+    // definition or usage without using any language-defined keyword ... `#situation def
+    // Failure;`" (7.27.4, receipt 0f2c5bd1). The metaclass is Definition itself; what it
+    // specializes comes from the metadata's baseType (7.27.3, receipt 938f2744), which is
+    // resolution's. The prefix is written inline, so there is no DefinitionPrefix node.
+    //
+    // implied specialization: the baseType of each SemanticMetadata keyword (7.27.3).
+    fn extended_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ExtendedDefinition);
+        if self.at_keyword("abstract") || self.at_keyword("variation") {
+            self.basic_definition_prefix();
+        }
+        self.extension_keywords(SyntaxKind::DefinitionExtensionKeyword);
+        self.expect_keyword("def");
+        self.definition();
+        self.finish_node();
+    }
+
+    /// Whether an `ExtendedUsage` starts at the `n`th meaningful token.
+    ///
+    /// `UnextendedUsagePrefix UsageExtensionKeyword+ Usage` (`SysML` 8.2.2.27): at least
+    /// one `#`, and then what a `Usage` opens on, which is a `UsageDeclaration` or, with
+    /// no declaration, a `UsageCompletion` (8.2.2.6.2) -- a name, a short name's `<`, a
+    /// feature specialization or a multiplicity; a `ValuePart`'s `=`, `:=` or `default`;
+    /// a `UsageBody`'s `;` or `{`. A kind keyword there makes the `#`s that usage's
+    /// prefix instead, and `def` makes them an `ExtendedDefinition`'s.
+    fn at_extended_usage(&self, n: usize) -> bool {
+        let k = self.skip_unextended_usage_prefix(n);
+        let after = self.skip_prefix_metadata(k);
+        after > k
+            && (self.nth_is_name(after)
+                || self.nth_is(after, SyntaxKind::Lt)
+                || self.nth_at_feature_specialization(after)
+                || self.nth_is(after, SyntaxKind::LBracket)
+                || self.nth_is(after, SyntaxKind::Eq)
+                || self.nth_is(after, SyntaxKind::ColonEq)
+                || self.nth_is_keyword(after, "default")
+                || self.nth_is(after, SyntaxKind::Semicolon)
+                || self.nth_is(after, SyntaxKind::LBrace))
+    }
+
+    // production: ExtendedUsage@sysml
+    //
+    // ExtendedUsage : Usage =
+    //     UnextendedUsagePrefix UsageExtensionKeyword+ Usage       (SysML 8.2.2.27)
+    //
+    // `#situation batteryLow;` (7.27.4, receipt 0f2c5bd1): a usage declared with no
+    // language-defined keyword. A NonOccurrenceUsageElement (8.2.2.6.4). The prefix is
+    // written inline, so there is no UsagePrefix node, and it is UNEXTENDED: the `#`s
+    // after it are this production's own `+`.
+    //
+    // implied specialization: the baseType of each SemanticMetadata keyword (7.27.3).
+    fn extended_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ExtendedUsage);
+        self.unextended_usage_prefix();
+        self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
+        self.usage();
+        self.finish_node();
+    }
+
     /// Whether a `Dependency` starts at the `n`th meaningful token.
     ///
-    /// `dependency`, reserved in both grammars, with nothing looked past before it:
-    /// `PrefixMetadataAnnotation*` is unimplemented, so `#refinement dependency ...` is
-    /// reported, as prefix metadata is on every other element.
+    /// `dependency`, reserved in both grammars, after its `PrefixMetadataAnnotation*`.
+    /// Those are looked past in `SysML` only: `KerML`'s are over `PrefixMetadataFeature`
+    /// (8.2.5.12), unimplemented, so a `.kerml` `#refinement dependency ...` is reported.
     fn at_dependency(&self, n: usize) -> bool {
-        self.nth_is_keyword(n, "dependency")
+        self.nth_is_keyword(self.skip_prefix_metadata(n), "dependency")
     }
 
     // Dependency =
@@ -3209,9 +3402,11 @@ impl<'a> Parser<'a> {
     //     supplier += [QualifiedName] ( ',' supplier += [QualifiedName] )*
     //     RelationshipBody                                          (KerML 8.2.3.2)
     //
-    // NOT marked for coverage in either language: PrefixMetadataAnnotation*, the first
-    // part of both, is unimplemented, and the corpus writes it (`#refinement dependency`,
-    // SimpleVehicleModel.sysml:937). Everything after it is read.
+    // production: Dependency@sysml
+    //
+    // Dependency@kerml is NOT marked: its PrefixMetadataAnnotation is over KerML's
+    // PrefixMetadataFeature (8.2.5.12), unimplemented. SysML's is read, and the corpus
+    // writes it: `#refinement dependency` (SimpleVehicleModel.sysml:937).
     //
     // The two languages state the same text: `Identification?` and `Identification`
     // accept the same strings, since every part of an Identification is optional. What
@@ -3229,12 +3424,35 @@ impl<'a> Parser<'a> {
     fn dependency(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::Dependency);
+        if self.language == Language::SysMl {
+            while self.at(SyntaxKind::Hash) {
+                self.prefix_metadata_annotation();
+            }
+        }
         self.expect_keyword("dependency");
         match self.language {
             Language::SysMl => self.dependency_declaration(),
             Language::KerMl => self.dependency_declaration_parts(),
         }
         self.relationship_body();
+        self.finish_node();
+    }
+
+    // production: PrefixMetadataAnnotation@sysml
+    //
+    // PrefixMetadataAnnotation : Annotation =
+    //     '#' annotatingElement = PrefixMetadataUsage
+    //     { ownedRelatedElement += annotatingElement }            (SysML 8.2.2.27)
+    //
+    // An Annotation where Package's PrefixMetadataMember is an OwningMembership: the
+    // Dependency is a Relationship (KerML 8.3.2.2.2, receipt ec1e3424), and the clause
+    // owns the metadata through the annotation's ownedRelatedElement. The text is the same
+    // `#X`, read by the same PrefixMetadataUsage.
+    fn prefix_metadata_annotation(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PrefixMetadataAnnotation);
+        self.expect(SyntaxKind::Hash, "`#`");
+        self.prefix_metadata_usage();
         self.finish_node();
     }
 
@@ -3289,23 +3507,23 @@ impl<'a> Parser<'a> {
 
     /// Whether an `EnumerationDefinition` starts at the `n`th meaningful token.
     ///
-    /// `enum def`, with nothing looked past before it. The production opens on
-    /// `DefinitionExtensionKeyword*`, not a `DefinitionPrefix` (`SysML` 8.2.2.8), so
+    /// `enum def`, with only prefix metadata looked past before it. The production opens
+    /// on `DefinitionExtensionKeyword*`, not a `DefinitionPrefix` (`SysML` 8.2.2.8), so
     /// `abstract enum def` is no enumeration definition -- "the keywords abstract and
-    /// variation may not be used with an enumeration definition" (7.8.2) -- and prefix
-    /// metadata is unimplemented, as it is for every definition.
+    /// variation may not be used with an enumeration definition" (7.8.2).
     fn at_enumeration_definition(&self, n: usize) -> bool {
+        let n = self.skip_prefix_metadata(n);
         self.nth_is_keyword(n, "enum") && self.nth_is_keyword(n + 1, "def")
     }
 
+    // production: EnumerationDefinition@sysml
+    //
     // EnumerationDefinition =
     //     DefinitionExtensionKeyword* 'enum' 'def'
     //     DefinitionDeclaration EnumerationBody                     (SysML 8.2.2.8)
     //
-    // NOT marked for coverage, for the reason DefinitionPrefix is not: its own first part,
-    // DefinitionExtensionKeyword* (`#` prefix metadata), is unimplemented, and
-    // examples/Simple Tests/MetadataTest.sysml writes `#Security enum def ...`. Everything
-    // after it is read.
+    // examples/Simple Tests/MetadataTest.sysml writes the extension keyword:
+    // `#Security enum def ClassificationLevel :> ScalarValues::Natural {`.
     //
     // The metaclass is EnumerationDefinition (8.3.8.2, receipt 224a4a2e), an
     // AttributeDefinition "all of whose instances are given by an explicit list of
@@ -3319,6 +3537,7 @@ impl<'a> Parser<'a> {
     fn enumeration_definition(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::EnumerationDefinition);
+        self.extension_keywords(SyntaxKind::DefinitionExtensionKeyword);
         self.expect_keyword("enum");
         self.expect_keyword("def");
         self.definition_declaration();
@@ -3384,8 +3603,10 @@ impl<'a> Parser<'a> {
     /// With the keyword, anything may follow that `Usage` may -- except `def`, which makes
     /// it a nested enumeration definition, and that is no item of an enumeration body.
     /// Without it, a keyword other than `default` is not claimed, so `in a;` and `part p;`
-    /// are reported.
+    /// are reported. Prefix metadata before either form is looked past, by deviation
+    /// `EnumeratedValue`.
     fn at_enumerated_value(&self, n: usize) -> bool {
+        let n = self.skip_prefix_metadata(n);
         if self.nth_is_keyword(n, "enum") {
             return !self.nth_is_keyword(n + 1, "def");
         }
@@ -3415,19 +3636,25 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: EnumeratedValue@sysml
+    //
     // EnumeratedValue : EnumerationUsage =
     //     UsageExtensionKeyword* 'enum'? Usage       (SysML 8.2.2.8, with the deviation)
     //
-    // NOT marked for coverage. The clause writes `'enum'? Usage`; deviations.json records
-    // follow_xtext for EnumeratedValue, adding the leading UsageExtensionKeyword* every
-    // other usage carries, on the corpus's own `#Security enum secret ...`
-    // (examples/Simple Tests/MetadataTest.sysml:9). Prefix metadata is unimplemented, so
-    // this production is read less its first part.
+    // The clause writes `'enum'? Usage`; deviations.json records follow_xtext for
+    // EnumeratedValue, adding the leading UsageExtensionKeyword* every other usage carries,
+    // on the corpus's own `#Security enum secret ...` (examples/Simple
+    // Tests/MetadataTest.sysml:9). The keywords are that departure, so they carry its note.
     //
     // "The declaration of an enumerated value may omit the enum keyword" (7.8.2).
     fn enumerated_value(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::EnumeratedValue);
+        if self.at(SyntaxKind::Hash) {
+            // deviation: EnumeratedValue
+            self.note_deviation("EnumeratedValue", "prefix metadata on an enumerated value");
+            self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
+        }
         self.eat_optional_keyword("enum");
         self.usage();
         self.finish_node();
@@ -3500,13 +3727,12 @@ impl<'a> Parser<'a> {
     // part: VariantReference opens on one, and no keyword usage does.
     //
     // ExtendedUsage (`UnextendedUsagePrefix UsageExtensionKeyword+ Usage`, 8.2.2.6.4) is
-    // unimplemented, so `usage_element_of_class` does not read it and nothing leaks today.
-    // WHEN IT LANDS THERE, it must be refused here as EnumerationUsage is; the test
-    // a_variant_usage_member_is_bounded_by_its_rules fails until it is.
+    // read by `usage_element_of_class`, so it is refused here as EnumerationUsage is.
     fn variant_usage_element(&mut self) {
         if self.at_name() {
             self.variant_reference();
         } else if self.at_default_reference_usage(0)
+            || self.at_extended_usage(0)
             || self
                 .at_simple_usage(0)
                 .is_some_and(|usage| usage.node == SyntaxKind::EnumerationUsage)
@@ -3559,6 +3785,10 @@ impl<'a> Parser<'a> {
     /// - the keyword usages come before the two reference usages, because
     ///   `at_reference_usage` sees the `ref` in `ref attribute y;` too, and that `ref`
     ///   is an `AttributeUsage`'s `BasicUsagePrefix` rather than a `ReferenceUsage`;
+    /// - `ExtendedUsage` comes after the keyword usages, because their prefixes look past
+    ///   the same `#`s and a kind keyword after them makes those the usage's prefix
+    ///   (`SysML` 8.2.2.6.2), and it needs at least one `#`, which is what separates it
+    ///   from `DefaultReferenceUsage`;
     /// - `DefaultReferenceUsage` is last of all, because it is the usage with no
     ///   keyword, so everything that opens with one has already been taken.
     fn usage_element(&mut self) -> bool {
@@ -3600,6 +3830,10 @@ impl<'a> Parser<'a> {
             Some(usage.class)
         } else if self.at_reference_usage(0) {
             self.reference_usage();
+            Some(UsageClass::NonOccurrence)
+        } else if self.at_extended_usage(0) {
+            // A NonOccurrenceUsageElement (8.2.2.6.4).
+            self.extended_usage();
             Some(UsageClass::NonOccurrence)
         } else if self.at_default_reference_usage(0) {
             self.default_reference_usage();
@@ -3683,11 +3917,16 @@ impl<'a> Parser<'a> {
     }
 
     /// Whether a `ReferenceUsage` starts at the `n`th meaningful token.
+    ///
+    /// Not when a `#` follows the `ref`: `ReferenceUsage = ( EndUsagePrefix | RefPrefix )
+    /// 'ref' Usage` takes no extension keyword, and a `Usage` does not open on one, so in
+    /// `ref #X y;` the `ref` is `BasicUsagePrefix`'s and the whole is an `ExtendedUsage`
+    /// (`SysML` 8.2.2.6.2, 8.2.2.27).
     fn at_reference_usage(&self, n: usize) -> bool {
         let after = self
             .skip_end_usage_prefix(n)
             .unwrap_or_else(|| self.skip_ref_prefix(n));
-        self.nth_is_keyword(after, "ref")
+        self.nth_is_keyword(after, "ref") && !self.nth_is(after + 1, SyntaxKind::Hash)
     }
 
     /// The index just past a `RefPrefix` written from the `n`th token.
@@ -3854,6 +4093,8 @@ impl<'a> Parser<'a> {
         })
     }
 
+    // production: UsagePrefix@sysml
+    //
     // UsagePrefix : Usage = UnextendedUsagePrefix UsageExtensionKeyword*
     //                                                            (SysML 8.2.2.6.2)
     //
@@ -3861,23 +4102,30 @@ impl<'a> Parser<'a> {
     //
     // UnextendedUsagePrefix = EndUsagePrefix | BasicUsagePrefix
     //
-    // UsagePrefix is NOT marked: UsageExtensionKeyword (`#` prefix metadata) is
-    // unimplemented, the gap OccurrenceUsagePrefix has too. UnextendedUsagePrefix IS,
-    // both of its alternatives being read; it gets no node, being an alternation whose
-    // taken alternative says which it was.
+    // UnextendedUsagePrefix gets no node, being an alternation whose taken alternative
+    // says which it was.
     //
     // The node is built even when empty, as MemberPrefix's is.
     fn usage_prefix(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::UsagePrefix);
+        self.unextended_usage_prefix();
+        self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
+        self.finish_node();
+    }
+
+    /// `UnextendedUsagePrefix = EndUsagePrefix | BasicUsagePrefix` (`SysML` 8.2.2.6.2),
+    /// the part of a `UsagePrefix` an `ExtendedUsage` writes before its keywords.
+    fn unextended_usage_prefix(&mut self) {
         if self.at_keyword("end") {
             self.end_usage_prefix();
         } else if self.at_basic_usage_prefix() {
             self.basic_usage_prefix();
         }
-        self.finish_node();
     }
 
+    // production: OccurrenceUsagePrefix@sysml
+    //
     // OccurrenceUsagePrefix : OccurrenceUsage =
     //     ( EndUsagePrefix
     //     | BasicUsagePrefix ( isIndividual ?= 'individual' )?
@@ -3885,12 +4133,9 @@ impl<'a> Parser<'a> {
     //     ) UsageExtensionKeyword*        (SysML 8.2.2.9.2, as deviation OccurrenceUsagePrefix
     //                                      reads it: follow_xtext adds the first alternative)
     //
-    // NOT marked for coverage: UsageExtensionKeyword (`#` prefix metadata, a
-    // PrefixMetadataMember) is unimplemented, as on OccurrenceDefinitionPrefix, and
-    // `at_part_usage` does not look past a `#`, so a usage carrying one never reaches
-    // here. The EndUsagePrefix alternative is read: `end port supplierPort :
-    // FuelOutPort;` (training/13. Flows/Flow Definition Example.sysml:8), the deviation's
-    // own evidence.
+    // The EndUsagePrefix alternative is read: `end port supplierPort : FuelOutPort;`
+    // (training/13. Flows/Flow Definition Example.sysml:8), the deviation's own evidence.
+    // The extension keywords follow either alternative.
     //
     // The node is built even when every slot is empty, as MemberPrefix's is.
     fn occurrence_usage_prefix(&mut self) {
@@ -3902,6 +4147,7 @@ impl<'a> Parser<'a> {
             // deviation: OccurrenceUsagePrefix
             self.note_deviation("OccurrenceUsagePrefix", "`end` on an occurrence usage");
             self.end_usage_prefix();
+            self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
             self.finish_node();
             return;
         }
@@ -3914,6 +4160,7 @@ impl<'a> Parser<'a> {
         if self.at_keyword("snapshot") || self.at_keyword("timeslice") {
             self.portion_kind();
         }
+        self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
         self.finish_node();
     }
 
@@ -8725,12 +8972,12 @@ impl<'a> Parser<'a> {
     /// A `ControlNodePrefix` looked past, then one of the four keywords. The prefix is
     /// `RefPrefix 'individual'? PortionKind?` (`SysML` 8.2.2.17.3) — `RefPrefix`, not
     /// `BasicUsagePrefix`, so a `ref` is not looked past and `ref merge m;` is reported.
-    /// `UsageExtensionKeyword*` is not looked past either: it is unimplemented, as it is
-    /// on `OccurrenceUsagePrefix`.
+    /// Its `UsageExtensionKeyword*` is.
     fn at_control_node(&self, n: usize) -> Option<(&'static str, SyntaxKind)> {
         let mut n = self.skip_ref_prefix(n);
         n += usize::from(self.nth_is_keyword(n, "individual"));
         n += usize::from(self.nth_is_keyword(n, "snapshot") || self.nth_is_keyword(n, "timeslice"));
+        let n = self.skip_prefix_metadata(n);
         CONTROL_NODES
             .into_iter()
             .find(|(word, _)| self.nth_is_keyword(n, word))
@@ -8775,13 +9022,14 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: ControlNodePrefix@sysml
+    //
     // ControlNodePrefix : OccurrenceUsage =
     //     RefPrefix ( isIndividual ?= 'individual' )?
     //     ( portionKind = PortionKind { isPortion = true } )?
     //     UsageExtensionKeyword*                                   (SysML 8.2.2.17.3)
     //
-    // NOT marked for coverage: UsageExtensionKeyword (`#` prefix metadata) is
-    // unimplemented, as on OccurrenceUsagePrefix. The clause's `'individual` is missing
+    // The clause's `'individual` is missing
     // its closing quote; deviation ControlNodePrefix (spec_only, follow_spec, SYSML21-400)
     // closes it, and the keyword read here is that repaired one. The node is built even
     // when every slot is empty, as OccurrenceUsagePrefix's is.
@@ -8793,6 +9041,7 @@ impl<'a> Parser<'a> {
         if self.at_keyword("snapshot") || self.at_keyword("timeslice") {
             self.portion_kind();
         }
+        self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
         self.finish_node();
     }
 
@@ -9200,16 +9449,18 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: RequirementConstraintUsage@sysml
+    //
     // RequirementConstraintUsage : ConstraintUsage =
     //     ownedRelationship += OwnedReferenceSubsetting FeatureSpecializationPart?
     //     RequirementBody
     //   | ( UsageExtensionKeyword* 'constraint' | UsageExtensionKeyword+ )
     //     ConstraintUsageDeclaration CalculationBody              (SysML 8.2.2.21.1)
     //
-    // NOT marked for coverage. The second alternative's `UsageExtensionKeyword+` — prefix
-    // metadata standing in for the `constraint` keyword entirely — is unimplemented, as
-    // prefix metadata is everywhere in this parser. The `*` form with zero of them is
-    // read, which is every instance the corpus writes.
+    // The second alternative's `UsageExtensionKeyword+` is prefix metadata standing in
+    // for the `constraint` keyword entirely, so `require #approved { a <= b }` is that
+    // alternative with no `constraint`: `( X* 'constraint' | X+ )` is "a `#` or a
+    // `constraint`", then the keywords, then the keyword if written.
     //
     // THE TWO ALTERNATIVES TAKE DIFFERENT BODIES, and that is the adjudicated conflict.
     // The clause gives the by-reference alternative a RequirementBody and the Pilot gives
@@ -9220,13 +9471,14 @@ impl<'a> Parser<'a> {
     // a trailing ResultExpressionMember, and no body admits both.
     //
     // The alternatives are told apart BEFORE either body begins, which is what makes the
-    // conflict harmless to read: the second opens on the keyword `constraint` and the
-    // first on a QualifiedName, and a keyword is not a name (SysML 8.2.2.1.2).
+    // conflict harmless to read: the second opens on the keyword `constraint` or a `#`
+    // and the first on a QualifiedName, and a keyword is not a name (SysML 8.2.2.1.2).
     fn requirement_constraint_usage(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::RequirementConstraintUsage);
-        if self.at_keyword("constraint") {
-            self.bump_as(keyword("constraint").unwrap_or(SyntaxKind::BasicName));
+        if self.at_keyword("constraint") || self.at(SyntaxKind::Hash) {
+            self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
+            self.eat_optional_keyword("constraint");
             self.constraint_usage_declaration();
             self.calculation_body();
         } else {
@@ -9462,11 +9714,13 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: ActorUsage@sysml
+    //
     // ActorUsage : PartUsage =
     //     'actor' UsageExtensionKeyword* Usage                  (SysML 8.2.2.21.1)
     //
-    // NOT marked for coverage, for SubjectUsage's reason: UsageExtensionKeyword (`#`
-    // prefix metadata) is unimplemented, so `actor #m a;` is reported. The metaclass is
+    // The keywords come AFTER `actor` here, where a prefix writes them before its kind
+    // keyword, so `#m actor a;` is reported and `actor #m a;` read. The metaclass is
     // PartUsage: "Actor and stakeholder parameters are part usages, so they must be
     // (explicitly or implicitly) defined by part definitions" (7.21.2, receipt 021b9219).
     //
@@ -9478,6 +9732,7 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::ActorUsage);
         self.expect_keyword("actor");
+        self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
         self.usage();
         self.finish_node();
     }
@@ -9513,24 +9768,27 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: RequirementVerificationUsage@sysml
+    //
     // RequirementVerificationUsage : RequirementUsage =
     //     ownedRelationship += OwnedReferenceSubsetting FeatureSpecialization*
     //     RequirementBody
     //   | ( UsageExtensionKeyword* 'requirement' | UsageExtensionKeyword+ )
     //     ConstraintUsageDeclaration RequirementBody             (SysML 8.2.2.24)
     //
-    // NOT marked for coverage, for RequirementConstraintUsage's reason: the second
-    // alternative's `UsageExtensionKeyword+`, prefix metadata standing in for the keyword,
-    // is unimplemented. The `*` form with zero of them is read, and so is every corpus
-    // form. Unlike RequirementConstraintUsage both alternatives take a RequirementBody, and
+    // The second alternative is read as RequirementConstraintUsage's is, a `#` standing
+    // in for `requirement`. Unlike RequirementConstraintUsage both alternatives take a
+    // RequirementBody, and
     // the reference alternative takes `FeatureSpecialization*`, not a
     // FeatureSpecializationPart: no multiplicity (`verify r[1];` is reported), as
-    // VariantReference has none. Told apart on one token: `requirement` is reserved.
+    // VariantReference has none. Told apart on one token: `requirement` is reserved, and
+    // `#` opens no name.
     fn requirement_verification_usage(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::RequirementVerificationUsage);
-        if self.at_keyword("requirement") {
-            self.bump_as(keyword("requirement").unwrap_or(SyntaxKind::BasicName));
+        if self.at_keyword("requirement") || self.at(SyntaxKind::Hash) {
+            self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
+            self.eat_optional_keyword("requirement");
             self.constraint_usage_declaration();
         } else {
             self.owned_reference_subsetting();
@@ -9542,14 +9800,12 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: SubjectUsage@sysml
+    //
     // SubjectUsage : ReferenceUsage =
     //     'subject' UsageExtensionKeyword* Usage                (SysML 8.2.2.21.1)
     //
-    // NOT marked for coverage. UsageExtensionKeyword is a PrefixMetadataMember
-    // (8.2.2.6.2) and prefix metadata is unimplemented everywhere in this parser, so a
-    // `subject #approved s;` is reported rather than read — the same gap UsagePrefix and
-    // DefinitionPrefix carry, and recorded here for the same reason. The `*` makes zero
-    // of them the common case, which is why the production is useful unmarked.
+    // The keywords follow `subject`, as ActorUsage's follow `actor`.
     //
     // The metaclass is ReferenceUsage, not a SubjectUsage of its own: what makes the
     // usage a subject is the membership that owns it, not the usage.
@@ -9557,6 +9813,7 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::SubjectUsage);
         self.expect_keyword("subject");
+        self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
         self.usage();
         self.finish_node();
     }
@@ -9731,19 +9988,20 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: ObjectiveRequirementUsage@sysml
+    //
     // ObjectiveRequirementUsage : RequirementUsage =
     //     UsageExtensionKeyword* ConstraintUsageDeclaration RequirementBody
     //                                                            (SysML 8.2.2.22)
     //
-    // NOT marked for coverage: UsageExtensionKeyword (`#` prefix metadata) is
-    // unimplemented, as it is on SubjectUsage, so `objective #goal o;` is reported. The
-    // `*` makes zero of them every corpus form. A RequirementBody, so a `require` or
+    // `objective #goal o;` carries one. A RequirementBody, so a `require` or
     // `subject` inside an objective reads as it does inside a requirement; "the subject of
     // an objective requirement is bound by default to the result" (7.22.2) is a binding
     // sv2-hir injects, not text.
     fn objective_requirement_usage(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ObjectiveRequirementUsage);
+        self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
         self.constraint_usage_declaration();
         self.requirement_body();
         self.finish_node();
@@ -9790,13 +10048,10 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: DefinitionPrefix@sysml
+    //
     // DefinitionPrefix : Definition =
     //     BasicDefinitionPrefix? DefinitionExtensionKeyword*      (SysML 8.2.2.6.1)
-    //
-    // NOT marked for coverage, for the reason OccurrenceDefinitionPrefix is not:
-    // DefinitionExtensionKeyword (`#` prefix metadata) is unimplemented, and
-    // `at_simple_definition` does not look past a `#`, so a definition carrying one
-    // never reaches here and is reported by the enclosing body instead.
     //
     // This is OccurrenceDefinitionPrefix without the `individual` part. The two are
     // separate productions because only an occurrence may be individual, and keeping
@@ -9807,6 +10062,7 @@ impl<'a> Parser<'a> {
         if self.at_keyword("abstract") || self.at_keyword("variation") {
             self.basic_definition_prefix();
         }
+        self.extension_keywords(SyntaxKind::DefinitionExtensionKeyword);
         self.finish_node();
     }
 
@@ -9816,11 +10072,6 @@ impl<'a> Parser<'a> {
     //     BasicDefinitionPrefix?
     //     ( isIndividual ?= 'individual' ownedRelationship += EmptyMultiplicityMember )?
     //     DefinitionExtensionKeyword*                            (SysML 8.2.2.9.1)
-    //
-    // DefinitionExtensionKeyword (`#` prefix metadata, a PrefixMetadataMember) is not
-    // implemented. at_part_definition does not look past a `#`, so a definition that
-    // carries one never reaches here: the enclosing body reports the `#` and its
-    // name token by token, then parses the definition after them.
     //
     // The node is built even when every slot is empty, as MemberPrefix's is.
     fn occurrence_definition_prefix(&mut self) {
@@ -9833,6 +10084,7 @@ impl<'a> Parser<'a> {
             self.bump_as(keyword("individual").unwrap_or(SyntaxKind::BasicName));
             self.empty_multiplicity_member();
         }
+        self.extension_keywords(SyntaxKind::DefinitionExtensionKeyword);
         self.finish_node();
     }
 
@@ -9972,9 +10224,22 @@ impl<'a> Parser<'a> {
     }
 
     // production: Package
+    //
+    // Package = ( ownedRelationship += PrefixMetadataMember )*
+    //           PackageDeclaration PackageBody                   (SysML 8.2.2.5.1)
+    //
+    // The PrefixMetadataMembers stand directly in the package, with no extension-keyword
+    // node between, as the clause writes them. KerML's Package states the same text over
+    // its own PrefixMetadataMember (8.2.3.4.1, 8.2.5.12), which is unimplemented, so a
+    // `.kerml` package's `#` is reported: `at_package` looks past `#` in SysML only.
     fn package(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::Package);
+        if self.language == Language::SysMl {
+            while self.at(SyntaxKind::Hash) {
+                self.prefix_metadata_member();
+            }
+        }
         self.package_declaration();
         self.package_body();
         self.finish_node();
@@ -10004,6 +10269,8 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: MetadataDefinition@sysml
+    //
     // MetadataDefinition = ( isAbstract ?= 'abstract' )? DefinitionExtensionKeyword*
     //                      'metadata' 'def' Definition                (SysML 8.2.2.27)
     //
@@ -10013,11 +10280,8 @@ impl<'a> Parser<'a> {
     // is reported. `abstract` is a keyword token of this node, as the clause writes it
     // inline, and there is no DefinitionPrefix node. The metaclass is MetadataDefinition
     // (8.3.27.2, receipt 29a5d69e), an ItemDefinition that is also a KerML Metaclass.
-    //
-    // NOT marked for coverage: DefinitionExtensionKeyword* is written in this production's
-    // own body, not in a separate prefix production, and it is unimplemented --
-    // EnumerationDefinition's shape and precedent, not the definitions whose gap sits in
-    // an unmarked DefinitionPrefix. `#` prefix metadata is the next piece of this layer.
+    // The DefinitionExtensionKeyword* is written in this production's own body, not in a
+    // prefix production, so it is read here.
     //
     // implied specialization: Metadata::MetadataItem
     // constraint: MetadataDefinition::checkMetadataDefinitionSpecialization
@@ -10026,20 +10290,22 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::MetadataDefinition);
         self.eat_optional_keyword("abstract");
+        self.extension_keywords(SyntaxKind::DefinitionExtensionKeyword);
         self.expect_keyword("metadata");
         self.expect_keyword("def");
         self.definition();
         self.finish_node();
     }
 
+    // production: MetadataUsage@sysml
+    //
     // MetadataUsage : MetadataUsage =
     //     UsageExtensionKeyword* ( '@' | 'metadata' ) MetadataUsageDeclaration
     //     ( 'about' ownedRelationship += Annotation
     //       ( ',' ownedRelationship += Annotation )* )?
     //     MetadataBody                                           (SysML 8.2.2.27)
     //
-    // NOT marked for coverage: UsageExtensionKeyword (`#` prefix metadata) is
-    // unimplemented, as on SubjectUsage. Reached only as AnnotatingElement's fourth
+    // Reached only as AnnotatingElement's fourth
     // alternative, by deviation AnnotatingElement, which adds no text and so
     // carries no note (see `metadata_annotating_element`). "A metadata usage
     // is declared like an item usage ... using the keyword metadata (or the symbol @)"
@@ -10055,6 +10321,7 @@ impl<'a> Parser<'a> {
     fn metadata_usage(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::MetadataUsage);
+        self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
         if self.at(SyntaxKind::At) {
             self.bump();
         } else {

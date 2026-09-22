@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T20:00:11Z",
+    "regenerated_utc": "2026-09-22T20:17:45Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 306,
-      "unimplemented": 248,
+      "implemented": 327,
+      "unimplemented": 227,
       "absent": 0,
-      "percent": 55.2
+      "percent": 59.0
     },
     "tests": {
-      "unit": 518,
+      "unit": 523,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 208,
+      "negative_cases": 213,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "23e3406 Stop rejecting `#` prefix metadata by absence: the next commit reads it",
       "a7e573e Close the session: the case and metadata layers recorded, the `#` prefix written to start cold",
       "aa81590 Read the metadata definition, usage and body, and buy ten files",
       "6448723 Read the requirement verification member, and buy the two verification files it held",
       "875edec Read the verification case definition and usage, the fourth and last case row",
       "2296540 Read the include use case usage, buy the three use case files it held, and drop the guard it made useless",
       "4e30f08 Read the use case definition and usage, and buy the file only they held back",
-      "bff74cc Read the actor member, in requirement and case bodies alike",
-      "bb69266 Read the case and analysis case layer, and buy the six files it predicted"
+      "bff74cc Read the actor member, in requirement and case bodies alike"
     ]
   },
   "authored": {

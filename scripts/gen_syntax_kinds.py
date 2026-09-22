@@ -1475,6 +1475,40 @@ NODES = [
             "ValuePart? MetadataBody`. `SysML` 8.2.2.27 — the metaclass is `ReferenceUsage`."
         ),
     ),
+    (
+        "PrefixMetadataMember",
+        (
+            "`'#' ownedRelatedElement = PrefixMetadataUsage`. `SysML` 8.2.2.27 — an "
+            "`OwningMembership`."
+        ),
+    ),
+    (
+        "PrefixMetadataAnnotation",
+        (
+            "`'#' annotatingElement = PrefixMetadataUsage`. `SysML` 8.2.2.27 — an "
+            "`Annotation`, on a `Dependency`."
+        ),
+    ),
+    (
+        "PrefixMetadataUsage",
+        "`ownedRelationship += OwnedFeatureTyping`. `SysML` 8.2.2.27 — a `MetadataUsage`.",
+    ),
+    (
+        "UsageExtensionKeyword",
+        "`ownedRelationship += PrefixMetadataMember`. `SysML` 8.2.2.6.2.",
+    ),
+    (
+        "DefinitionExtensionKeyword",
+        "`ownedRelationship += PrefixMetadataMember`. `SysML` 8.2.2.6.1.",
+    ),
+    (
+        "ExtendedDefinition",
+        "`BasicDefinitionPrefix? DefinitionExtensionKeyword+ 'def' Definition`. `SysML` 8.2.2.27.",
+    ),
+    (
+        "ExtendedUsage",
+        "`UnextendedUsagePrefix UsageExtensionKeyword+ Usage`. `SysML` 8.2.2.27.",
+    ),
     ("Error", "recovered-over text; carries its bytes so the tree stays lossless"),
 ]
 

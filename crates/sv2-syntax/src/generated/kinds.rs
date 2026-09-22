@@ -1119,6 +1119,20 @@ pub enum SyntaxKind {
     MetadataBodyUsageMember,
     /// `'ref'? ( ':>>' | 'redefines' )? OwnedRedefinition FeatureSpecializationPart? ValuePart? MetadataBody`. `SysML` 8.2.2.27 — the metaclass is `ReferenceUsage`.
     MetadataBodyUsage,
+    /// `'#' ownedRelatedElement = PrefixMetadataUsage`. `SysML` 8.2.2.27 — an `OwningMembership`.
+    PrefixMetadataMember,
+    /// `'#' annotatingElement = PrefixMetadataUsage`. `SysML` 8.2.2.27 — an `Annotation`, on a `Dependency`.
+    PrefixMetadataAnnotation,
+    /// `ownedRelationship += OwnedFeatureTyping`. `SysML` 8.2.2.27 — a `MetadataUsage`.
+    PrefixMetadataUsage,
+    /// `ownedRelationship += PrefixMetadataMember`. `SysML` 8.2.2.6.2.
+    UsageExtensionKeyword,
+    /// `ownedRelationship += PrefixMetadataMember`. `SysML` 8.2.2.6.1.
+    DefinitionExtensionKeyword,
+    /// `BasicDefinitionPrefix? DefinitionExtensionKeyword+ 'def' Definition`. `SysML` 8.2.2.27.
+    ExtendedDefinition,
+    /// `UnextendedUsagePrefix UsageExtensionKeyword+ Usage`. `SysML` 8.2.2.27.
+    ExtendedUsage,
     /// recovered-over text; carries its bytes so the tree stays lossless
     Error,
 
@@ -1684,6 +1698,13 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::MetadataBody,
     SyntaxKind::MetadataBodyUsageMember,
     SyntaxKind::MetadataBodyUsage,
+    SyntaxKind::PrefixMetadataMember,
+    SyntaxKind::PrefixMetadataAnnotation,
+    SyntaxKind::PrefixMetadataUsage,
+    SyntaxKind::UsageExtensionKeyword,
+    SyntaxKind::DefinitionExtensionKeyword,
+    SyntaxKind::ExtendedDefinition,
+    SyntaxKind::ExtendedUsage,
     SyntaxKind::Error,
     SyntaxKind::Tombstone,
 ];

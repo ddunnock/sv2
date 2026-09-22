@@ -3835,8 +3835,8 @@ fn a_variant_usage_member_is_bounded_by_its_rules() {
     parse_rejected("part def P { variant x = 1; }");
     parse_rejected("part def P { variant :>> x; }");
     parse_rejected("part def P { variant <s> x; }");
-    // ExtendedUsage is not a VariantUsageElement either. Rejected today because it is
-    // unimplemented; this holds the rule for the day `usage_element_of_class` reads it.
+    // ExtendedUsage is not a VariantUsageElement either, though `usage_element_of_class`
+    // reads one.
     parse_rejected("part def P { variant #M x; }");
     // VariantReference writes no MultiplicityPart, though 7.6.7 (receipt 5a7843af) says a
     // variant reference "may also optionally further constrain the variant usage by
@@ -5691,71 +5691,81 @@ fn deviations_named(source: &str) -> Vec<String> {
         .collect()
 }
 
+/// Each deviation site, as (admitted text, its conformant twin, register entry).
+const DEVIATION_SITES: &[(&str, &str, &str)] = &[
+    // SendNode, follow_xtext: `action NAME send` (ServerSequenceRealization-2:19).
+    (
+        "action def A { action publish send x; }",
+        "action def A { send x; }",
+        "SendNode",
+    ),
+    // OccurrenceUsagePrefix, follow_xtext: `end` on an occurrence usage.
+    (
+        "connection def D { end part p; }",
+        "connection def D { part p; }",
+        "OccurrenceUsagePrefix",
+    ),
+    // DefaultReferenceUsage, follow_xtext: a keywordless `end` (ConnectionTest:33).
+    (
+        "connection def D { end end1; }",
+        "connection def D { end1; }",
+        "DefaultReferenceUsage",
+    ),
+    // EntryTransitionMember, follow_xtext: one `then` after an entry action.
+    (
+        "state def S { entry; then off; state off; }",
+        "state def S { entry; if g then off; state off; }",
+        "EntryTransitionMember",
+    ),
+    // FlowEndSubsetting, follow_xtext: a two-segment end's `.`, as in Annex A's first flow;
+    // the three-segment end beside it is FeatureChainPrefix, as written.
+    (
+        "part def P { flow p1.torque to a.b.c; }",
+        "part def P { flow a.b.c to d.e.f; }",
+        "FlowEndSubsetting",
+    ),
+    // ConnectorEnd-trailing-multiplicity, follow_spec_example: 7.13.2's `mainSwitch[1]`.
+    (
+        "part def P { connect a[1] to b; }",
+        "part def P { connect [1] a to b; }",
+        "ConnectorEnd-trailing-multiplicity",
+    ),
+    // DefinitionElement, follow_xtext: 8.2.2.5.2 omits AllocationDefinition.
+    (
+        "package P { allocation def A; }",
+        "package P { connection def A; }",
+        "DefinitionElement",
+    ),
+    // AnnotatingMember, follow_xtext: a visibility on an enum body's annotation.
+    (
+        "enum def E { private doc /* d */ enum a; }",
+        "enum def E { doc /* d */ enum a; }",
+        "AnnotatingMember",
+    ),
+    // CaseBodyItem, follow_xtext: `return` in a case body, as 7.23.2's example writes it.
+    (
+        "analysis def A { subject v : V; return r : R; }",
+        "analysis def A { subject v : V; r }",
+        "CaseBodyItem",
+    ),
+    // MetadataUsageDeclaration, follow_xtext: `defined by` for KerML's `typed by`.
+    (
+        "package P { metadata m defined by M; }",
+        "package P { metadata m : M; }",
+        "MetadataUsageDeclaration",
+    ),
+    // EnumeratedValue, follow_xtext: prefix metadata on an enumerated value, as
+    // examples/Simple Tests/MetadataTest.sysml:9 writes it.
+    (
+        "enum def E { #Security enum secret = 2; }",
+        "enum def E { enum secret = 2; }",
+        "EnumeratedValue",
+    ),
+];
+
 #[test]
 fn each_deviation_site_fires_on_the_text_it_admits_and_no_other() {
-    for (admitted, conformant, entry) in [
-        // SendNode, follow_xtext: `action NAME send` (ServerSequenceRealization-2:19).
-        (
-            "action def A { action publish send x; }",
-            "action def A { send x; }",
-            "SendNode",
-        ),
-        // OccurrenceUsagePrefix, follow_xtext: `end` on an occurrence usage.
-        (
-            "connection def D { end part p; }",
-            "connection def D { part p; }",
-            "OccurrenceUsagePrefix",
-        ),
-        // DefaultReferenceUsage, follow_xtext: a keywordless `end` (ConnectionTest:33).
-        (
-            "connection def D { end end1; }",
-            "connection def D { end1; }",
-            "DefaultReferenceUsage",
-        ),
-        // EntryTransitionMember, follow_xtext: one `then` after an entry action.
-        (
-            "state def S { entry; then off; state off; }",
-            "state def S { entry; if g then off; state off; }",
-            "EntryTransitionMember",
-        ),
-        // FlowEndSubsetting, follow_xtext: a two-segment end's `.`, as in Annex A's first flow;
-        // the three-segment end beside it is FeatureChainPrefix, as written.
-        (
-            "part def P { flow p1.torque to a.b.c; }",
-            "part def P { flow a.b.c to d.e.f; }",
-            "FlowEndSubsetting",
-        ),
-        // ConnectorEnd-trailing-multiplicity, follow_spec_example: 7.13.2's `mainSwitch[1]`.
-        (
-            "part def P { connect a[1] to b; }",
-            "part def P { connect [1] a to b; }",
-            "ConnectorEnd-trailing-multiplicity",
-        ),
-        // DefinitionElement, follow_xtext: 8.2.2.5.2 omits AllocationDefinition.
-        (
-            "package P { allocation def A; }",
-            "package P { connection def A; }",
-            "DefinitionElement",
-        ),
-        // AnnotatingMember, follow_xtext: a visibility on an enum body's annotation.
-        (
-            "enum def E { private doc /* d */ enum a; }",
-            "enum def E { doc /* d */ enum a; }",
-            "AnnotatingMember",
-        ),
-        // CaseBodyItem, follow_xtext: `return` in a case body, as 7.23.2's example writes it.
-        (
-            "analysis def A { subject v : V; return r : R; }",
-            "analysis def A { subject v : V; r }",
-            "CaseBodyItem",
-        ),
-        // MetadataUsageDeclaration, follow_xtext: `defined by` for KerML's `typed by`.
-        (
-            "package P { metadata m defined by M; }",
-            "package P { metadata m : M; }",
-            "MetadataUsageDeclaration",
-        ),
-    ] {
+    for &(admitted, conformant, entry) in DEVIATION_SITES {
         assert_eq!(deviations_named(admitted), [entry], "{admitted}");
         assert_eq!(
             deviations_named(conformant),
@@ -9335,6 +9345,231 @@ fn metadata_bodies_nested_too_deeply_are_reported_not_overflowed() {
                 .iter()
                 .any(|e| e.code() == DiagnosticCode::TooDeeplyNested),
             "{open}"
+        );
+    }
+}
+
+// -- Prefix metadata, SysML 8.2.2.27 with 8.2.2.6.1-2 ---------------------------------
+//
+//   PrefixMetadataMember       = '#' ownedRelatedElement = PrefixMetadataUsage
+//   PrefixMetadataUsage        = ownedRelationship += OwnedFeatureTyping
+//   DefinitionExtensionKeyword = ownedRelationship += PrefixMetadataMember
+//   UsageExtensionKeyword      = ownedRelationship += PrefixMetadataMember
+//   ExtendedDefinition         = BasicDefinitionPrefix? DefinitionExtensionKeyword+
+//                                'def' Definition
+//   ExtendedUsage              = UnextendedUsagePrefix UsageExtensionKeyword+ Usage
+//
+// "A user-defined keyword is the (possibly qualified) name (or short name) of a metadata
+// definition (or KerML metaclass) preceded by the symbol #. Such a keyword can be used in
+// package, dependency, definition and usage declarations" (7.27.4, receipt 0f2c5bd1).
+
+#[test]
+fn the_user_defined_keyword_examples_of_7_27_4_parse() {
+    // 7.27.4's example, receipt 0f2c5bd1, whole. Two of its declarations use a keyword
+    // with a language keyword, two without one, and one uses two keywords.
+    let parsed = parse_accepted(
+        "package UserKeywords {\n\
+         occurrence def Situation;\n\
+         occurrence situations : Situation[0..*] nonunique;\n\
+         metadata def <situation> SituationMetadata :> SemanticMetadata {\n\
+         :>> baseType = situations meta SysML::Usage;\n\
+         }\n\
+         #situation occurrence def Failure;\n\
+         #situation occurrence batteryLow;\n\
+         #situation def Failure;\n\
+         #situation batteryLow;\n\
+         #SecurityRelated #situation def Vulnerability;\n\
+         }",
+    );
+    assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
+    let rendered = render(&parsed.syntax());
+    // `#situation def Failure;` and `#SecurityRelated #situation def Vulnerability;`.
+    assert_eq!(
+        nodes_named(&rendered, "ExtendedDefinition"),
+        2,
+        "{rendered}"
+    );
+    // `#situation batteryLow;`.
+    assert_eq!(nodes_named(&rendered, "ExtendedUsage"), 1, "{rendered}");
+    // One on the occurrence definition, one and two on the extended definitions.
+    assert_eq!(
+        nodes_named(&rendered, "DefinitionExtensionKeyword"),
+        4,
+        "{rendered}"
+    );
+    // One on the occurrence usage, one on the extended usage.
+    assert_eq!(
+        nodes_named(&rendered, "UsageExtensionKeyword"),
+        2,
+        "{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "PrefixMetadataMember"),
+        6,
+        "{rendered}"
+    );
+}
+
+#[test]
+fn prefix_metadata_is_one_membership_owning_one_typed_usage() {
+    // `ref` is BasicUsagePrefix's here, so this is an ExtendedUsage, with its prefix inline
+    // and no UsagePrefix node. The typing is the whole OwnedFeatureTyping, chain included
+    // (deviation PrefixMetadataTyping-chain, follow_spec, so no note).
+    let parsed = parse_accepted("package P { ref #a::b.c x : T; }");
+    assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
+    let rendered = render(&parsed.syntax());
+    let usage = subtree(&rendered, "ExtendedUsage");
+    let kinds: Vec<&str> = usage
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.contains(' '))
+        .collect();
+    assert_eq!(
+        kinds.get(..9),
+        Some(
+            &[
+                "ExtendedUsage",
+                "BasicUsagePrefix",
+                "RefPrefix",
+                "UsageExtensionKeyword",
+                "PrefixMetadataMember",
+                "PrefixMetadataUsage",
+                "OwnedFeatureTyping",
+                "OwnedFeatureChain",
+                "OwnedFeatureChaining",
+            ][..]
+        ),
+        "{usage}"
+    );
+    assert_eq!(nodes_named(&rendered, "UsagePrefix"), 0, "{rendered}");
+}
+
+#[test]
+fn every_production_that_writes_prefix_metadata_reads_it() {
+    // Each line is one production's own `#` site, cited to the clause that writes it.
+    for (source, node) in [
+        // Package: PrefixMetadataMember* (8.2.2.5.1), with no extension-keyword node.
+        ("#X #Y package Q { }", "Package"),
+        // Dependency: PrefixMetadataAnnotation* (8.2.2.3); SimpleVehicleModel.sysml:937.
+        ("#refinement dependency a to b;", "PrefixMetadataAnnotation"),
+        // DefinitionPrefix (8.2.2.6.1).
+        ("abstract #X attribute def A;", "DefinitionPrefix"),
+        // OccurrenceDefinitionPrefix: BasicDefinitionPrefix? individual? keywords* (8.2.2.9.1).
+        (
+            "abstract individual #X part def P;",
+            "OccurrenceDefinitionPrefix",
+        ),
+        // UsagePrefix (8.2.2.6.2).
+        ("part def P { in #X attribute a; }", "UsagePrefix"),
+        // OccurrenceUsagePrefix, both alternatives (8.2.2.9.2 and deviation
+        // OccurrenceUsagePrefix, whose own note is asserted elsewhere).
+        (
+            "part def P { in individual snapshot #X part p; }",
+            "OccurrenceUsagePrefix",
+        ),
+        (
+            "connection def C { end #X part p; }",
+            "OccurrenceUsagePrefix",
+        ),
+        // ControlNodePrefix (8.2.2.17.3).
+        ("action def A { #X merge m; }", "ControlNodePrefix"),
+        // MetadataDefinition, after its `abstract` (8.2.2.27).
+        ("abstract #X metadata def M;", "MetadataDefinition"),
+        // MetadataUsage, before `@` or `metadata` (8.2.2.27).
+        ("part def P { #X @Y; }", "MetadataUsage"),
+        ("part def P { #X metadata m : Y; }", "MetadataUsage"),
+        // EnumerationDefinition (8.2.2.8); examples/Simple Tests/MetadataTest.sysml.
+        ("#Security enum def E { enum a; }", "EnumerationDefinition"),
+        // SubjectUsage and ActorUsage, AFTER their keywords (8.2.2.21.1).
+        (
+            "requirement def R { subject #approved v : Vehicle; }",
+            "SubjectUsage",
+        ),
+        ("case def C { actor #m a; }", "ActorUsage"),
+        // ObjectiveRequirementUsage (8.2.2.22).
+        (
+            "case def C { objective #m o; }",
+            "ObjectiveRequirementUsage",
+        ),
+        // RequirementConstraintUsage, with the keyword and in its place (8.2.2.21.1).
+        (
+            "requirement def R { require #m constraint c { a <= b } }",
+            "RequirementConstraintUsage",
+        ),
+        (
+            "requirement def R { require #approved { a <= b } }",
+            "RequirementConstraintUsage",
+        ),
+        // RequirementVerificationUsage, likewise (8.2.2.24).
+        (
+            "requirement def R { verify #m requirement r; }",
+            "RequirementVerificationUsage",
+        ),
+        (
+            "requirement def R { verify #m r { } }",
+            "RequirementVerificationUsage",
+        ),
+        // ExtendedUsage with no declaration at all: `Usage = UsageDeclaration?
+        // UsageCompletion` (8.2.2.6.2), and a qualified keyword.
+        ("part def P { #X::Y::z; }", "ExtendedUsage"),
+        ("part def P { #X = 3; }", "ExtendedUsage"),
+        // An ExtendedUsage is an item of a calculation body before its result expression.
+        ("calc def C { #X x; a + b }", "ExtendedUsage"),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        let owner = subtree(&rendered, node);
+        assert!(
+            owner.contains("PrefixMetadataUsage"),
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn prefix_metadata_is_bounded_by_its_rules() {
+    // A keyword follows BasicDefinitionPrefix and `individual`, never precedes them
+    // (8.2.2.6.1, 8.2.2.9.1), and an ExtendedDefinition's own prefix is the same order.
+    // Held as a file by tests/rejection/prefix-metadata-follows-the-definition-prefix.sysml.
+    parse_rejected("#Safety abstract part def Brake;");
+    parse_rejected("#Safety individual part def Brake;");
+    parse_rejected("#Safety variation def V;");
+    // And it follows UnextendedUsagePrefix (8.2.2.6.2). Held as a file by
+    // tests/rejection/prefix-metadata-follows-the-usage-prefix.sysml.
+    parse_rejected("part def P { #X in x : T; }");
+    parse_rejected("part def P { #X end part p; }");
+    // ReferenceUsage takes no extension keyword: `( EndUsagePrefix | RefPrefix ) 'ref'
+    // Usage` (8.2.2.6.2). Held by tests/rejection/reference-usage-takes-no-extension-keyword.sysml.
+    parse_rejected("part def P { #X ref y; }");
+    // Nor does ControlNodePrefix's RefPrefix take a `ref` (8.2.2.17.3).
+    parse_rejected("action def A { ref #X merge m; }");
+    // EnumerationDefinition opens on its keywords alone, with no BasicDefinitionPrefix
+    // (8.2.2.8), and an enumerated value's `enum` comes after them, not before.
+    parse_rejected("abstract #X enum def E;");
+    parse_rejected("enum def E { enum #X a; }");
+    // An actor's keywords follow `actor` (8.2.2.21.1). Held by
+    // tests/rejection/actor-usage-writes-its-keywords-after-actor.sysml.
+    parse_rejected("case def C { #m actor a; }");
+    // `#` names a metadata definition: a QualifiedName, not a number or an import's `*`
+    // (8.2.2.27, OwnedFeatureTyping). Held by
+    // tests/rejection/prefix-metadata-names-a-metadata-definition.sysml.
+    parse_rejected("# part def P;");
+    parse_rejected("part def P { #3 p; }");
+    parse_rejected("part def P { #X::* p; }");
+    // An ExtendedUsage still needs its UsageBody.
+    parse_rejected("calc def C { in a; #X }");
+    // ExtendedUsage is not a VariantUsageElement (8.2.2.6.4).
+    parse_rejected("part def P { variant #M x; }");
+}
+
+#[test]
+fn kerml_prefix_metadata_is_still_absent() {
+    // REJECTED BY ABSENCE. KerML's `#` is PrefixMetadataMember over PrefixMetadataFeature
+    // (8.2.5.12), a different production from SysML's and unimplemented. Removed when
+    // PrefixMetadataFeature@kerml lands.
+    for source in ["#X package Q;", "#X dependency a to b;"] {
+        assert!(
+            !parse(source, Language::KerMl).errors().is_empty(),
+            "{source}"
         );
     }
 }
