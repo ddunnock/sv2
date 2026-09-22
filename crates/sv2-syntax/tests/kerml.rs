@@ -738,6 +738,17 @@ fn parsing_a_binding_connector_never_hangs_or_loses_bytes_on_truncated_input() {
     }
 }
 
+// -- ConstructorExpression, KerML 8.2.5.8.3 ----------------------------------------
+
+#[test]
+fn a_constructor_expression_is_kerml_too() {
+    // A shared unit, stated in KerML's own clause: vendor/corpus/kerml/src/examples/
+    // Simple Tests/Expressions.kerml:73 writes `feature l = new L();`.
+    let tree = render(&kerml_accepted("package P { feature l = new L(); }").syntax());
+    assert!(has_node(&tree, "ConstructorExpression"), "{tree}");
+    kerml_rejected("package P { feature l = new L; }");
+}
+
 // -- the invariants, under this grammar too ---------------------------------------
 
 #[test]

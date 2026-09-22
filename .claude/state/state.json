@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T15:38:46Z",
+    "regenerated_utc": "2026-09-22T16:00:32Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 263,
-      "unimplemented": 291,
+      "implemented": 281,
+      "unimplemented": 273,
       "absent": 0,
-      "percent": 47.5
+      "percent": 50.7
     },
     "tests": {
-      "unit": 454,
+      "unit": 466,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 192,
+      "negative_cases": 200,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "64b05bf Stop rejecting send, assign, accept and `new` by absence: the next commit reads them",
       "8775eea Close the session: the send/assign/new step written to start cold, and one decision recorded",
       "c9fa442 Read the rest of the state layer: state actions, entry transitions, effects and triggers",
       "4fc015e Stop rejecting entry actions and transition effects by absence: the next commit reads them",
       "3f84a6c Read the state layer as one construct, and buy the four files that declared states",
       "e793207 Stop rejecting `state def S;` by absence: the next commit reads it",
       "45aa4d8 Read the conjugated port typing, and buy the three files that typed a port by its conjugate",
-      "0282090 Read KerML's relationship body, and buy the file whose dependency owned a feature",
-      "d8b2cde Propose ADR-0020 and ADR-0021: sysand manages packages, markings live in the model"
+      "0282090 Read KerML's relationship body, and buy the file whose dependency owned a feature"
     ]
   },
   "authored": {
@@ -173,6 +173,13 @@
         "question": "7.6.7 (receipt 5a7843af) says a variant written as a reference to a separately declared usage \"may also optionally further constrain the variant usage by including a multiplicity and/or further specializations\", but VariantReference (SysML 8.2.2.6.3) is `OwnedReferenceSubsetting FeatureSpecialization* UsageBody` and writes no MultiplicityPart. The parser follows the grammar and `variant x[1];` is reported (a_variant_usage_member_is_bounded_by_its_rules holds it), but the conflict is recorded only in a comment at `variant_reference`, not in deviations.json. No corpus file writes the form. Run the grammar-adjudicator and record the outcome, checking the Pilot's VariantReference and the OMG issue list.",
         "blocks": [
           "nothing today; the prose form is rejected and no corpus file writes it"
+        ]
+      },
+      {
+        "id": "keyword-table-per-language",
+        "question": "The parser's keyword table (KEYWORDS, generated from .claude/state/grammar/keywords.json) is ONE table for both languages, so every SysML reserved word is also treated as reserved in a .kerml file, and vice versa: `part` and `classifier` are in the same list. The pinned sources disagree: KerML's RESERVED_KEYWORD (vendor/spec-bnf/KerML-textual-bnf.kebnf, KerML 8.2.2.6) omits SysML-only words, and omits `new` although KerML 8.2.5.8.3's ConstructorExpression writes it as a literal, while SysML's Tier B' list (SysML-textual-bnf.kebnf:20) includes `new` and its clause list in the wiki does not. So `feature new;` or `feature part;` is rejected in KerML where its own list admits it. Found by the conformance review of the send/assign/`new` construct (2026-09-22); it predates that change (KwNew was already in the table). Decide: split the table per Language (ADR-0014 already makes the grammars two), and whether `new` in KerML is a deviation in the SYSML21-11 family (missing reserved keywords) or simply not reserved. Needs the grammar-adjudicator.",
+        "blocks": [
+          "a KerML name spelled like a SysML-only keyword"
         ]
       }
     ],

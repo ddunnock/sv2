@@ -580,6 +580,25 @@ const CONTROL_NODES: [(&str, SyntaxKind); 4] = [
     ("fork", SyntaxKind::ForkNode),
 ];
 
+/// Which `ActionNode` a member is, of the alternatives this parser reads.
+///
+/// `ActionNode = ControlNode | SendNode | AcceptNode | AssignmentNode | TerminateNode |
+/// IfNode | WhileLoopNode | ForLoopNode` (`SysML` 8.2.2.17.1). The control nodes open on a
+/// `ControlNodePrefix` and their keyword; the other three on `OccurrenceUsagePrefix
+/// ActionNodeUsageDeclaration?` and theirs, which is why they are told apart here rather
+/// than folded into `CONTROL_NODES`.
+#[derive(Clone, Copy)]
+enum ActionNode {
+    /// One of the four `CONTROL_NODES`: its keyword and its node.
+    Control(&'static str, SyntaxKind),
+    /// `AcceptNode`, 8.2.2.17.4.
+    Accept,
+    /// `SendNode`, 8.2.2.17.4.
+    Send,
+    /// `AssignmentNode`, 8.2.2.17.5.
+    Assignment,
+}
+
 /// Every usage production that is a prefix, one keyword and the `Usage` spine.
 ///
 /// Ordered as the clauses number them. The keywords are disjoint, so the order does
@@ -1337,8 +1356,8 @@ impl<'a> Parser<'a> {
             // so the two cannot drift: kept as a separate list, it missed `action a;`
             // once and four productions after that.
             || self.at_sysml_keyword_member(n)
-            // ActionBodyItem's control nodes, which no other body's member reaches.
-            || self.at_control_node(n).is_some()
+            // ActionBodyItem's action nodes, which no other body's member reaches.
+            || self.at_action_node(n).is_some()
             // Asked only of a body that ends in a result expression, and
             // `ends_in_result_expression` says that is a calculation body alone.
             || self.at_source_succession_member(Body::Calculation)
@@ -1855,10 +1874,10 @@ impl<'a> Parser<'a> {
         } else if self.at_member_element(usize::from(self.at_visibility()))
             || (body.admits_action_body_item()
                 && self
-                    .at_control_node(usize::from(self.at_visibility()))
+                    .at_action_node(usize::from(self.at_visibility()))
                     .is_some())
         {
-            // A control node is an ActionNodeMember, ActionBehaviorMember's second
+            // An action node is an ActionNodeMember, ActionBehaviorMember's second
             // alternative (8.2.2.17.1), and so an item of the action-body family only:
             // no other body's item production reaches ActionNode, which
             // validateControlNodeOwningType states of the metaclass too (8.3.17.6,
@@ -2043,7 +2062,7 @@ impl<'a> Parser<'a> {
                         || self.at_constraint_usage(0)
                         || self.at_requirement_usage(0)
                         || self.at_calculation_usage(0)
-                        || self.at_control_node(0).is_some()
+                        || self.at_action_node(0).is_some()
                 }
             }
     }
@@ -2649,8 +2668,8 @@ impl<'a> Parser<'a> {
     //     MemberPrefix ownedRelatedElement += ActionNode            (SysML 8.2.2.17.1)
     //
     // The same shape once more, marked as the member it is while ActionNode is not: of
-    // its eight alternatives only ControlNode is read, and SendNode, AcceptNode,
-    // AssignmentNode, TerminateNode, IfNode, WhileLoopNode and ForLoopNode are reported.
+    // its eight alternatives ControlNode, SendNode, AcceptNode and AssignmentNode are
+    // read, and TerminateNode, IfNode, WhileLoopNode and ForLoopNode are reported.
     //
     // production: ActionBehaviorMember@sysml
     //
@@ -2683,15 +2702,17 @@ impl<'a> Parser<'a> {
             self.dependency();
         } else if self.language == Language::KerMl {
             self.error_expected("a package, a classifier or a dependency");
-        } else if let Some((word, node)) = self
-            .at_control_node(0)
+        } else if let Some(node) = self
+            .at_action_node(0)
             .filter(|_| body.admits_action_body_item())
         {
             // Only the action-body family reaches ActionNodeMember; `body_elements`
             // asks the same question before calling here. The guard is repeated for
             // the reason the classifier one above is: a dispatch that is only correct
-            // when reached one way is a trap.
-            self.control_node(node, word);
+            // when reached one way is a trap. BEFORE the usages, because `action publish
+            // send x;` opens as an ActionUsage does and is not one: the `send` after the
+            // declaration is what makes it a SendNode.
+            self.action_node(node);
             element = MemberElement::ActionNode;
         } else if self.definition_element() {
             // A definition: `MemberElement::Other`, which `element` already is.
@@ -4529,19 +4550,17 @@ impl<'a> Parser<'a> {
     //
     // NONE OF THE THREE IS MARKED FOR COVERAGE. Each is an alternation and each has
     // alternatives that are absent, so marking any of them would claim a production
-    // this parser does not read. What is implemented is SequenceExpression from the
-    // middle one, and NullExpression, LiteralExpression and FeatureReferenceExpression
-    // from the last. What is not, each with a rejection case naming the clause:
+    // this parser does not read. What is implemented is FeatureChainExpression from the
+    // first; BracketExpression and SequenceExpression from the middle one; and
+    // NullExpression, LiteralExpression, FeatureReferenceExpression, InvocationExpression
+    // and ConstructorExpression from the last. What is not, each with a rejection case
+    // naming the clause:
     //
-    //   FeatureChainExpression     `a.b`            the postfix `.`
-    //   BracketExpression          `1200 [kg]`      the quantity form of `[`
     //   IndexExpression            `tanks#(1)`
     //   SelectExpression           `x.?{ ... }`     needs BodyExpression
     //   CollectExpression          `x.{ ... }`      needs BodyExpression
     //   FunctionOperationExpression `x->size()`
     //   MetadataAccessExpression   `E.metadata`
-    //   InvocationExpression       `f(1, 2)`        needs ArgumentList
-    //   ConstructorExpression      `new T(1)`       needs ArgumentList
     //   BodyExpression             `{ in x; x }`    reaches ExpressionBody, and in
     //                                              SysML that reads CalculationBody,
     //                                              which is most of the language
@@ -4594,8 +4613,9 @@ impl<'a> Parser<'a> {
     // FeatureChainMember = FeatureReferenceMember | OwnedFeatureChainMember, and is NOT
     // marked: the second alternative, a FeatureChain of two or more links, is absent.
     // With the left fold it is also unreachable here — every member this loop reads is a
-    // single link, because the accumulated chain is the LEFT operand. It is reachable
-    // from SysML's AssignmentActionUsage (8.2.2.17.5), which is unimplemented.
+    // single link, because the accumulated chain is the LEFT operand. SysML's
+    // AssignmentNodeDeclaration (8.2.2.17.5) reaches SysML's own FeatureChainMember, a
+    // different unit; see `sysml_feature_chain_member`.
     // production: BracketExpression
     //
     // BracketExpression =
@@ -4735,6 +4755,10 @@ impl<'a> Parser<'a> {
             self.sequence_expression();
         } else if self.at_literal_expression() {
             self.literal_expression();
+        } else if self.at_keyword("new") {
+            // In the keyword table, so never a name here and nothing else can open on it.
+            // See `constructor_expression` for why that holds in KerML only by the table.
+            self.constructor_expression();
         } else if self.at_invocation_expression() {
             // BEFORE the feature reference, and the two are told apart by ONE token:
             // both open on a QualifiedName and only an invocation has a `(` after it.
@@ -4913,6 +4937,67 @@ impl<'a> Parser<'a> {
         self.finish_node();
         self.argument_list();
         self.empty_result_member();
+        self.finish_node();
+    }
+
+    // production: ConstructorExpression
+    //
+    // ConstructorExpression =
+    //     'new' ownedRelationship += InstantiatedTypeMember
+    //     ownedRelationship += ConstructorResultMember               (KerML 8.2.5.8.3)
+    //
+    // production: ConstructorResultMember
+    //
+    // ConstructorResultMember : ReturnParameterMembership =
+    //     ownedRelatedElement += ConstructorResult                   (KerML 8.2.5.8.3)
+    //
+    // production: ConstructorResult
+    //
+    // ConstructorResult : Feature = ArgumentList                    (KerML 8.2.5.8.3)
+    //
+    // "the keyword new followed by the qualified name of a type to be instantiated ...
+    // followed by a parenthesized list of argument expressions, similarly to an invocation
+    // expression" (KerML 7.4.9.4, receipt f77ceb64). A shared unit: SysML reaches it
+    // through the same BaseExpression.
+    //
+    // `new` is RESERVED IN SYSML ONLY. The SysML Tier B' BNF lists it among the reserved
+    // keywords (vendor/spec-bnf/SysML-textual-bnf.kebnf:20); KerML's list does not
+    // (KerML-textual-bnf.kebnf RESERVED_KEYWORD, and KerML 8.2.2.6), although this very
+    // production writes it as a literal. The parser treats it as reserved in both only
+    // because its keyword table is one table for both languages — the pending decision
+    // [keyword-table-per-language] — so `feature new;` is rejected in a .kerml file where
+    // KerML's own list would admit it.
+    //
+    // The ArgumentList is not the expression's own, as it is an InvocationExpression's: it
+    // belongs to the ConstructorResult, the result parameter the arguments bind features
+    // of — "binding some or all of the features of the instantiatedType to the results of
+    // its argument Expressions" (8.3.4.8.3, receipt 554f13c6). So there is NO
+    // EmptyResultMember here, and the clause names none; the ConstructorResultMember is the
+    // result.
+    //
+    // InstantiatedTypeMember is read in its first alternative only, as in
+    // `invocation_expression`, and stays unmarked for the reason given there.
+    //
+    // implied specialization: Performances::constructorEvaluations
+    // constraint: ConstructorExpression::checkConstructorExpressionSpecialization
+    //     `specializes('Performances::constructorEvaluations')` (8.3.4.8.3). Injections
+    //     belong in sv2-hir; this layer builds the tree only (ADR-0002).
+    fn constructor_expression(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ConstructorExpression);
+        self.expect_keyword("new");
+        self.eat_trivia();
+        self.start_node(SyntaxKind::InstantiatedTypeMember);
+        self.start_node(SyntaxKind::InstantiatedTypeReference);
+        self.qualified_name();
+        self.finish_node();
+        self.finish_node();
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ConstructorResultMember);
+        self.start_node(SyntaxKind::ConstructorResult);
+        self.argument_list();
+        self.finish_node();
+        self.finish_node();
         self.finish_node();
     }
 
@@ -5629,11 +5714,10 @@ impl<'a> Parser<'a> {
     // | NonOccurrenceUsageMember | SourceSuccessionMember? StructureUsageMember
     // (8.2.2.17.1), and the first three are the three a definition body reads. The
     // second is read whole in its TargetSuccession form. The third is read over the
-    // behaviour usages that exist (ActionUsage, PerformActionUsage) and over the one
-    // ActionNode that does, ControlNode — `merge`, `decide`, `join`, `fork`. What is
-    // still reported where it stands: the other ActionNodes (`accept`, `send`,
-    // `assign`, `terminate`, `if`, `while`, `for`), GuardedSuccessionMember, and the
-    // guarded and default target successions.
+    // behaviour usages that exist and over the ActionNodes that do: ControlNode (`merge`,
+    // `decide`, `join`, `fork`), AcceptNode, SendNode and AssignmentNode. The fourth,
+    // GuardedSuccessionMember, is read too. What is still reported where it stands: the
+    // other ActionNodes, `terminate`, `if`, `while` and `for`.
     fn action_body(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ActionBody);
@@ -6021,7 +6105,7 @@ impl<'a> Parser<'a> {
     //
     // "The accepter action for a transition usage is ... notated using the accept keyword,
     // with its payload and receiver parameters" (7.18.3, receipt 6e6e9493): `via` names
-    // the receiver. AcceptNode reads this part too, and is unimplemented.
+    // the receiver. AcceptNode reads this part too, through AcceptNodeDeclaration.
     fn accept_parameter_part(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::AcceptParameterPart);
@@ -6204,9 +6288,10 @@ impl<'a> Parser<'a> {
     //     | StateSendActionUsage
     //     | StateAssignmentActionUsage                               (SysML 8.2.2.18.1)
     //
-    // NOT marked for coverage: the send and assignment forms are action nodes
-    // (8.2.2.17.4, 8.2.2.17.5), unimplemented, and reported where they stand. No node of
-    // its own: the alternative taken is the node.
+    // production: StateActionUsage@sysml
+    //
+    // Marked: every alternative is read. No node of its own: the alternative taken is the
+    // node.
     //
     // "If the keyword is immediately followed by a semicolon ;, then they are empty
     // actions. If they are followed by a qualified name or feature chain for an action
@@ -6227,6 +6312,23 @@ impl<'a> Parser<'a> {
     //
     // StateAcceptActionUsage : AcceptActionUsage =
     //     AcceptNodeDeclaration ActionBody                           (SysML 8.2.2.18.1)
+    //
+    // production: StateSendActionUsage@sysml
+    //
+    // StateSendActionUsage : SendActionUsage =
+    //     SendNodeDeclaration ActionBody                             (SysML 8.2.2.18.1)
+    //
+    // production: StateAssignmentActionUsage@sysml
+    //
+    // StateAssignmentActionUsage : AssignmentActionUsage =
+    //     AssignmentNodeDeclaration ActionBody                       (SysML 8.2.2.18.1)
+    //
+    // The clause prints the send form's head as `StateSendActionUsage : SendActionUsage`
+    // with no `=`, SYSML21-402; deviations.json has both spec_only, follow_spec, since the
+    // Pilot reaches the same text through its general action alternatives. "A send action
+    // usage must be ... The owned entry, do or exit action of a state definition or usage"
+    // (7.17.7, receipt db730711), and 7.17.9 says the same of an assignment (receipt
+    // 7d690ecc).
     fn state_action_usage(&mut self) {
         if self.at(SyntaxKind::Semicolon) {
             self.empty_action_usage();
@@ -6241,8 +6343,20 @@ impl<'a> Parser<'a> {
                 self.action_body();
                 self.finish_node();
             }
+            Some("send") => {
+                self.eat_trivia();
+                self.start_node(SyntaxKind::StateSendActionUsage);
+                self.send_node_declaration();
+                self.action_body();
+                self.finish_node();
+            }
             Some(_) => {
-                self.error_expected("an action; send and assignment actions are not implemented");
+                // `assign`, the third of the keywords `action_node_keyword` finds.
+                self.eat_trivia();
+                self.start_node(SyntaxKind::StateAssignmentActionUsage);
+                self.assignment_node_declaration();
+                self.action_body();
+                self.finish_node();
             }
             None => {
                 self.eat_trivia();
@@ -6268,6 +6382,11 @@ impl<'a> Parser<'a> {
     /// perform declaration opens on `action` too, so the keyword has to be looked for past
     /// the declaration, which contains no reserved word and ends before a `;` or a body.
     fn action_node_keyword(&self) -> Option<&'static str> {
+        self.action_node_keyword_at(0)
+    }
+
+    /// `action_node_keyword`, asked from the `start`th meaningful token.
+    fn action_node_keyword_at(&self, start: usize) -> Option<&'static str> {
         const NODES: [&str; 3] = ["accept", "send", "assign"];
         let found = |n: usize| {
             NODES
@@ -6275,13 +6394,13 @@ impl<'a> Parser<'a> {
                 .copied()
                 .find(|word| self.nth_is_keyword(n, word))
         };
-        if let Some(word) = found(0) {
+        if let Some(word) = found(start) {
             return Some(word);
         }
-        if !self.nth_is_keyword(0, "action") {
+        if !self.nth_is_keyword(start, "action") {
             return None;
         }
-        let mut n = 1;
+        let mut n = start + 1;
         loop {
             if let Some(word) = found(n) {
                 return Some(word);
@@ -6311,23 +6430,300 @@ impl<'a> Parser<'a> {
     //     'action' UsageDeclaration?                                 (SysML 8.2.2.17.2)
     //
     // "If the action declaration part is empty, then the action keyword may be omitted"
-    // (7.17.8, receipt bb0d6dc7). Read here for the state and effect forms; AcceptNode,
-    // the action-body form with its ActionNodePrefix, is unimplemented.
+    // (7.17.8, receipt bb0d6dc7). Read for the state and effect forms and for AcceptNode,
+    // the action-body form, which puts an OccurrenceUsagePrefix before it.
     fn accept_node_declaration(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::AcceptNodeDeclaration);
+        self.action_node_usage_declaration("accept");
+        self.expect_keyword("accept");
+        self.accept_parameter_part();
+        self.finish_node();
+    }
+
+    /// `ActionNodeUsageDeclaration?` before an action node's `word`: `'action'
+    /// UsageDeclaration?` when an `action` is written, nothing otherwise.
+    ///
+    /// `word` is reserved and a `UsageDeclaration` never contains it, so the declaration
+    /// ends at `word`; an `action` with nothing between it and `word` is the declaration
+    /// with its optional part empty.
+    fn action_node_usage_declaration(&mut self, word: &str) {
         if self.at_keyword("action") {
             self.eat_trivia();
             self.start_node(SyntaxKind::ActionNodeUsageDeclaration);
             self.expect_keyword("action");
-            if !self.at_keyword("accept") {
+            if !self.at_keyword(word) {
                 self.usage_declaration();
             }
             self.finish_node();
         }
-        self.expect_keyword("accept");
-        self.accept_parameter_part();
+    }
+
+    // production: AcceptNode@sysml
+    //
+    // AcceptNode : AcceptActionUsage =
+    //     OccurrenceUsagePrefix AcceptNodeDeclaration ActionBody     (SysML 8.2.2.17.4)
+    //
+    // The action-body form of the declaration the state and transition forms already read.
+    // Marked although OccurrenceUsagePrefix is not, as ActionUsage is.
+    //
+    // implied specialization: Actions::acceptActions, Actions::Action::acceptSubactions
+    // constraint: AcceptActionUsage::checkAcceptActionUsageSpecialization and
+    //     checkAcceptActionUsageSubactionSpecialization (8.3.17.2, receipt e2e8fcd4).
+    //     Injections belong in sv2-hir; this layer builds the tree only (ADR-0002).
+    fn accept_node(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::AcceptNode);
+        self.occurrence_usage_prefix();
+        self.accept_node_declaration();
+        self.action_body();
         self.finish_node();
+    }
+
+    // production: SendNode@sysml
+    //
+    // SendNode : SendActionUsage =
+    //     OccurrenceUsagePrefix ActionNodeUsageDeclaration? 'send'
+    //     ( ownedRelationship += NodeParameterMember SenderReceiverPart?
+    //     | ownedRelationship += EmptyParameterMember SenderReceiverPart )?
+    //     ActionBody            (SysML 8.2.2.17.4, as deviations SendNode and
+    //                            SendReceiverPart-misspelling read it)
+    //
+    // The clause prints `SendReceiverPart` here; deviation SendReceiverPart-misspelling
+    // (spec_only, follow_spec, SYSML21-408) reads it as the SenderReceiverPart the same
+    // clause defines.
+    //
+    // The clause's own line writes ActionUsageDeclaration? where its three siblings write
+    // ActionNodeUsageDeclaration?; deviations.json records follow_xtext (SYSML21-624), and
+    // `action publish send new Publish(...) via publicationPort;` (examples/Interaction
+    // Sequencing Examples/ServerSequenceRealization-2.sysml:19) parses under that reading
+    // and no other. So a declared send writes `action`, and `snd send x;` is not one.
+    //
+    // "values for the three SendAction parameters are given after the action declaration
+    // part, identified by the keywords send (payload), via (sender) and to (receiver)"
+    // (7.17.7, receipt db730711), and validateSendActionParameters wants all three as owned
+    // input parameters "whether or not they have FeatureValues" (8.3.17.15, receipt
+    // 320cf1d4). That is what the EmptyParameterMembers are: the payload of `send via p`,
+    // the sender of `send x to q`, each a parameter the text does not write.
+    //
+    // The parameter group is optional, and `send {` is the bare form (examples/Simple
+    // Tests/ActionTest.sysml:34). A `{` there is read as the ActionBody. BodyExpression,
+    // which also opens on `{`, is unimplemented, and the Pilot resolves the same choice
+    // the same way, trying ActionBody first (SysML.xtext SendNode).
+    //
+    // implied specialization: Actions::sendActions, Actions::Action::sendSubactions
+    // constraint: SendActionUsage::checkSendActionUsageSpecialization and
+    //     checkSendActionUsageSubactionSpecialization (8.3.17.15, receipt 320cf1d4), whose
+    //     OCL names 'Actions::Action::acceptSubactions' where its prose says sendSubactions;
+    //     the semantic rule 8.4.13.5 (receipt e2a3572d) also says sendSubactions. The
+    //     conflict is unrecorded in deviations.json and must be adjudicated before sv2-hir
+    //     injects it.
+    //     Injections belong in sv2-hir; this layer builds the tree only (ADR-0002).
+    fn send_node(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SendNode);
+        self.occurrence_usage_prefix();
+        self.action_node_usage_declaration("send");
+        self.expect_keyword("send");
+        if self.at_sender_receiver_part() {
+            self.empty_parameter_member();
+            self.sender_receiver_part();
+        } else if !self.at(SyntaxKind::Semicolon) && !self.at(SyntaxKind::LBrace) {
+            self.node_parameter_member();
+            if self.at_sender_receiver_part() {
+                self.sender_receiver_part();
+            }
+        }
+        self.action_body();
+        self.finish_node();
+    }
+
+    // production: SendNodeDeclaration@sysml
+    //
+    // SendNodeDeclaration : SendActionUsage =
+    //     ActionNodeUsageDeclaration? 'send'
+    //     ownedRelationship += NodeParameterMember SenderReceiverPart?  (SysML 8.2.2.17.4)
+    //
+    // The state and transition forms' declaration. Unlike SendNode's, its payload is NOT
+    // optional: `entry send via p;` is no StateSendActionUsage.
+    fn send_node_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SendNodeDeclaration);
+        self.action_node_usage_declaration("send");
+        self.expect_keyword("send");
+        self.node_parameter_member();
+        if self.at_sender_receiver_part() {
+            self.sender_receiver_part();
+        }
+        self.finish_node();
+    }
+
+    /// Whether a `SenderReceiverPart` starts here: `via`, or `to`.
+    fn at_sender_receiver_part(&self) -> bool {
+        self.at_keyword("via") || self.at_keyword("to")
+    }
+
+    // production: SenderReceiverPart@sysml
+    //
+    // SenderReceiverPart : SendActionUsage =
+    //       'via' ownedRelationship += NodeParameterMember
+    //       ( 'to' ownedRelationship += NodeParameterMember )?
+    //     | ownedRelationship += EmptyParameterMember
+    //       'to' ownedRelationship += NodeParameterMember            (SysML 8.2.2.17.4)
+    //
+    // `via` before `to`, never after: the second alternative has no `via`.
+    fn sender_receiver_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SenderReceiverPart);
+        if self.at_keyword("via") {
+            self.expect_keyword("via");
+            self.node_parameter_member();
+            if self.at_keyword("to") {
+                self.expect_keyword("to");
+                self.node_parameter_member();
+            }
+        } else {
+            self.empty_parameter_member();
+            self.expect_keyword("to");
+            self.node_parameter_member();
+        }
+        self.finish_node();
+    }
+
+    // production: AssignmentNode@sysml
+    //
+    // AssignmentNode : AssignmentActionUsage =
+    //     OccurrenceUsagePrefix AssignmentNodeDeclaration ActionBody (SysML 8.2.2.17.5)
+    //
+    // Marked although OccurrenceUsagePrefix is not, as ActionUsage is.
+    //
+    // implied specialization: Actions::assignmentActions, Actions::Action::assignments
+    // constraint: AssignmentActionUsage::checkAssignmentActionUsageSpecialization and
+    //     checkAssignmentActionUsageSubactionSpecialization (8.3.17.5, receipt d0143fb3).
+    //     Injections belong in sv2-hir; this layer builds the tree only (ADR-0002).
+    fn assignment_node(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::AssignmentNode);
+        self.occurrence_usage_prefix();
+        self.assignment_node_declaration();
+        self.action_body();
+        self.finish_node();
+    }
+
+    // production: AssignmentNodeDeclaration@sysml
+    //
+    // AssignmentNodeDeclaration : ActionUsage =
+    //     ActionNodeUsageDeclaration? 'assign'
+    //     ownedRelationship += AssignmentTargetMember
+    //     ownedRelationship += FeatureChainMember ':='
+    //     ownedRelationship += NodeParameterMember                  (SysML 8.2.2.17.5)
+    //
+    // "An assignment part consists of the keyword assign followed by an expression that
+    // evaluates to the target and a feature chain identifying the referent, separated by a
+    // dot (.), followed by the symbol := and an expression whose result is the assigned
+    // value" (7.17.9, receipt 7d690ecc). The target may be omitted; the referent may not.
+    fn assignment_node_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::AssignmentNodeDeclaration);
+        self.action_node_usage_declaration("assign");
+        self.expect_keyword("assign");
+        self.assignment_target_member();
+        self.sysml_feature_chain_member();
+        self.expect(SyntaxKind::ColonEq, "`:=`");
+        self.node_parameter_member();
+        self.finish_node();
+    }
+
+    // production: AssignmentTargetMember@sysml
+    //
+    // AssignmentTargetMember : ParameterMembership =
+    //     ownedRelatedElement += AssignmentTargetParameter           (SysML 8.2.2.17.5)
+    //
+    // production: AssignmentTargetParameter@sysml
+    //
+    // AssignmentTargetParameter : ReferenceUsage =
+    //     ( ownedRelationship += AssignmentTargetBinding '.' )?      (SysML 8.2.2.17.5)
+    //
+    // production: AssignmentTargetBinding@sysml
+    //
+    // AssignmentTargetBinding : FeatureValue =
+    //     ownedRelatedElement += NonFeatureChainPrimaryExpression    (SysML 8.2.2.17.5)
+    //
+    // The clause's decomposition, not the Pilot's TargetParameter, which carries the
+    // referent inside itself; the derived unit AssignmentTargetMember@sysml records why.
+    //
+    // The target is the FIRST primary and the referent everything after its `.`: 7.17.9's
+    // example says of `assign sim.vehicle.position := ...` that "The target of the
+    // assignment below is "sim". The referent feature chain is "vehicle.position"" (receipt
+    // 7d690ecc). With no `.` the parameter is empty, built from no tokens, and the target
+    // is "implicitly the occurrence owning the assignment action usage".
+    //
+    // Which it is is decided by looking past the primary for the `.`; see
+    // `skip_assignment_target`, which also says which primaries it can look past.
+    //
+    // MARKED, BUT NOT EVERY TARGET IS READ. NonFeatureChainPrimaryExpression includes the
+    // postfix forms (Index, Bracket, Select, Collect, FunctionOperation), whose operand
+    // may itself be a chain — `a.b#(1).c` — and there the target is not the first
+    // primary; 7.17.9 does not address that case, and it is not read. Nor are literal and
+    // null targets. Each such input is reported, never misread.
+    fn assignment_target_member(&mut self) {
+        let binding = self
+            .skip_assignment_target(0)
+            .is_some_and(|after| self.nth_is(after, SyntaxKind::Dot));
+        if binding {
+            self.eat_trivia();
+        }
+        self.start_node(SyntaxKind::AssignmentTargetMember);
+        self.start_node(SyntaxKind::AssignmentTargetParameter);
+        if binding {
+            self.start_node(SyntaxKind::AssignmentTargetBinding);
+            self.non_feature_chain_primary_expression();
+            self.finish_node();
+            self.expect(SyntaxKind::Dot, "`.`");
+        }
+        self.finish_node();
+        self.finish_node();
+    }
+
+    /// The index just past a `NonFeatureChainPrimaryExpression` written from the `n`th
+    /// token, for the primaries an assignment's target is written as.
+    ///
+    /// A name, an invocation (`Increment(c).count`), a constructor or a parenthesised
+    /// expression. A literal or `null` target is NOT looked past, so a `.` after one is
+    /// not seen and the literal is read as the referent and reported: 7.17.9 requires the
+    /// target to "evaluate to an occurrence" (receipt 7d690ecc), which neither can, but
+    /// the grammar admits both, and this is a gap in the lookahead rather than a rule.
+    fn skip_assignment_target(&self, n: usize) -> Option<usize> {
+        let after = if self.nth_is(n, SyntaxKind::LParen) {
+            return self.skip_parenthesised(n);
+        } else if self.nth_is_keyword(n, "new") {
+            self.skip_qualified_name(n + 1)?
+        } else {
+            self.skip_qualified_name(n)?
+        };
+        if self.nth_is(after, SyntaxKind::LParen) {
+            self.skip_parenthesised(after)
+        } else {
+            Some(after)
+        }
+    }
+
+    /// The index just past the balanced `( ... )` opening at the `n`th token.
+    fn skip_parenthesised(&self, n: usize) -> Option<usize> {
+        let mut depth = 0_usize;
+        let mut at = n;
+        loop {
+            let kind = self.peek_nth(at)?.kind;
+            if kind == SyntaxKind::LParen {
+                depth += 1;
+            } else if kind == SyntaxKind::RParen {
+                depth = depth.saturating_sub(1);
+            }
+            at += 1;
+            if depth == 0 {
+                return Some(at);
+            }
+        }
     }
 
     /// Whether an `EntryTransitionMember` starts here.
@@ -6377,7 +6773,7 @@ impl<'a> Parser<'a> {
     //     'do' { kind = 'effect' }
     //     ownedRelatedElement += EffectBehaviorUsage                 (SysML 8.2.2.18.3)
     //
-    // Marked although EffectBehaviorUsage is not. The `do` sets the
+    // The `do` sets the
     // TransitionFeatureMembership's kind (8.3.18.8, receipt 7818cc5c), as `accept` and
     // `if` set theirs.
     //
@@ -6386,7 +6782,9 @@ impl<'a> Parser<'a> {
     //     | TransitionSendActionUsage | TransitionAssignmentActionUsage
     //                                                                (SysML 8.2.2.18.3)
     //
-    // NOT marked, for StateActionUsage's reason: send and assign. Its empty form writes no
+    // production: EffectBehaviorUsage@sysml
+    //
+    // Marked, as StateActionUsage is: every alternative is read. Its empty form writes no
     // `;`, unlike StateActionUsage's, so `do then b;` is an effect that does nothing.
     //
     // production: TransitionPerformActionUsage@sysml
@@ -6399,8 +6797,19 @@ impl<'a> Parser<'a> {
     // TransitionAcceptActionUsage : AcceptActionUsage =
     //     AcceptNodeDeclaration ( '{' ActionBodyItem* '}' )?         (SysML 8.2.2.18.3)
     //
+    // production: TransitionSendActionUsage@sysml
+    //
+    // TransitionSendActionUsage : SendActionUsage =
+    //     SendNodeDeclaration ( '{' ActionBodyItem* '}' )?           (SysML 8.2.2.18.3)
+    //
+    // production: TransitionAssignmentActionUsage@sysml
+    //
+    // TransitionAssignmentActionUsage : AssignmentActionUsage =
+    //     AssignmentNodeDeclaration ( '{' ActionBodyItem* '}' )?     (SysML 8.2.2.18.3)
+    //
     // Not ActionBody: the braced form or nothing, never `;`, because the `then` after the
-    // effect is what ends it.
+    // effect is what ends it. `do send s to p then S1;` (examples/Simple
+    // Tests/StateTest.sysml:36-37) writes it so.
     fn effect_behavior_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::EffectBehaviorMember);
@@ -6416,8 +6825,21 @@ impl<'a> Parser<'a> {
                     self.optional_action_body_items();
                     self.finish_node();
                 }
-                Some(_) => self
-                    .error_expected("an action; send and assignment actions are not implemented"),
+                Some("send") => {
+                    self.eat_trivia();
+                    self.start_node(SyntaxKind::TransitionSendActionUsage);
+                    self.send_node_declaration();
+                    self.optional_action_body_items();
+                    self.finish_node();
+                }
+                Some(_) => {
+                    // `assign`, the third of the keywords `action_node_keyword` finds.
+                    self.eat_trivia();
+                    self.start_node(SyntaxKind::TransitionAssignmentActionUsage);
+                    self.assignment_node_declaration();
+                    self.optional_action_body_items();
+                    self.finish_node();
+                }
                 None => {
                     self.eat_trivia();
                     self.start_node(SyntaxKind::TransitionPerformActionUsage);
@@ -7597,7 +8019,34 @@ impl<'a> Parser<'a> {
             || self
                 .at_simple_usage(n)
                 .is_some_and(|usage| usage.class != UsageClass::NonOccurrence)
-            || (body.admits_action_body_item() && self.at_control_node(n).is_some())
+            || (body.admits_action_body_item() && self.at_action_node(n).is_some())
+    }
+
+    /// Which `ActionNode` starts at the `n`th meaningful token, of those this parser reads.
+    ///
+    /// A `ControlNode`, or `OccurrenceUsagePrefix ActionNodeUsageDeclaration?` and one of
+    /// `accept`, `send` or `assign` (`SysML` 8.2.2.17.4, 8.2.2.17.5) — the prefix looked past
+    /// here, the declaration by `action_node_keyword_at`.
+    fn at_action_node(&self, n: usize) -> Option<ActionNode> {
+        if let Some((word, node)) = self.at_control_node(n) {
+            return Some(ActionNode::Control(word, node));
+        }
+        match self.action_node_keyword_at(self.skip_occurrence_usage_prefix(n)) {
+            Some("accept") => Some(ActionNode::Accept),
+            Some("send") => Some(ActionNode::Send),
+            Some("assign") => Some(ActionNode::Assignment),
+            _ => None,
+        }
+    }
+
+    /// The `ActionNode` `at_action_node` found.
+    fn action_node(&mut self, node: ActionNode) {
+        match node {
+            ActionNode::Control(word, kind) => self.control_node(kind, word),
+            ActionNode::Accept => self.accept_node(),
+            ActionNode::Send => self.send_node(),
+            ActionNode::Assignment => self.assignment_node(),
+        }
     }
 
     /// Which `ControlNode` starts at the `n`th meaningful token, if one does.

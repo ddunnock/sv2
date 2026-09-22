@@ -1621,10 +1621,11 @@ fn a_then_that_opens_another_production_is_not_a_target_succession() {
     // by UsageBody, and are not implemented, so each is rejected — but WITHOUT an
     // ActionTargetSuccessionMember in the tree, because the text is not one.
     //
-    // `then s send x;`: SourceSuccessionMember ActionBehaviorMember, the third
-    // ActionBodyItem alternative (8.2.2.17.1), over a SendNode, whose
-    // ActionUsageDeclaration opens on a bare Identification (8.2.2.17.4) — so `then NAME`
-    // alone does not decide it, and the lookahead must reach the UsageBody.
+    // `then s send x;` is REJECTED: a declared send writes `action` (deviation SendNode,
+    // follow_xtext, 8.2.2.17.4), so `s send x` is no SendNode: `then s` is reported, and
+    // `send x;` after it is a SendNode of its own. The literal clause line's
+    // ActionUsageDeclaration would read the whole as one;
+    // tests/rejection/send-node-declaration-writes-action.sysml holds that reading out.
     //
     // `then action a;` was here too, and is not: it is the same alternative over an
     // ActionUsage, well-formed SysML, now implemented and asserted accepted with no
@@ -3976,8 +3977,8 @@ fn a_state_definition_keeps_every_byte() {
 //                         ( OwnedReferenceSubsetting FeatureSpecializationPart?
 //                         | 'state' UsageDeclaration ) ValuePart? StateUsageBody (8.2.2.18.2)
 //
-// The send and assignment forms are action nodes (8.2.2.17.4, 8.2.2.17.5), unimplemented,
-// and reported wherever they are written.
+// The send and assignment forms read the action nodes' declarations (8.2.2.17.4,
+// 8.2.2.17.5); they are tested with those nodes, below.
 
 #[test]
 fn a_state_action_reads_the_corpus_forms() {
@@ -4022,7 +4023,8 @@ fn a_state_action_reads_the_corpus_forms() {
 #[test]
 fn a_trigger_and_an_effect_read_the_corpus_forms() {
     // training/25. Transitions/Local Clock Example.sysml:17-29, less its `new`
-    // instantiation (unimplemented): a receiver, a named payload, and a relative time.
+    // instantiation (tested with ConstructorExpression): a receiver, a named payload, and a
+    // relative time.
     parse_accepted(
         "state def S {\n\
          \tstate off;\n\
@@ -4206,6 +4208,371 @@ fn a_state_action_is_bounded_by_its_rules() {
 #[test]
 fn a_state_action_keeps_every_byte() {
     let source = "state def D {\n\tentry /* e */ ; then a;\n\tdo action d { }\n\tstate a;\n\taccept after 5 [s] do e then a;\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
+// -- SendNode, AcceptNode and AssignmentNode, SysML 8.2.2.17.4-5 -----------------------
+//
+// SendNode       = OccurrenceUsagePrefix ActionNodeUsageDeclaration? 'send'
+//                  ( NodeParameterMember SenderReceiverPart?
+//                  | EmptyParameterMember SenderReceiverPart )? ActionBody  (8.2.2.17.4,
+//                  with deviation SendNode, follow_xtext)
+// SendNodeDeclaration = ActionNodeUsageDeclaration? 'send'
+//                  NodeParameterMember SenderReceiverPart?
+// SenderReceiverPart = 'via' NodeParameterMember ( 'to' NodeParameterMember )?
+//                    | EmptyParameterMember 'to' NodeParameterMember
+// AcceptNode     = OccurrenceUsagePrefix AcceptNodeDeclaration ActionBody
+// AssignmentNode = OccurrenceUsagePrefix AssignmentNodeDeclaration ActionBody (8.2.2.17.5)
+// AssignmentNodeDeclaration = ActionNodeUsageDeclaration? 'assign'
+//                  AssignmentTargetMember FeatureChainMember ':=' NodeParameterMember
+// AssignmentTargetMember    = AssignmentTargetParameter
+// AssignmentTargetParameter = ( AssignmentTargetBinding '.' )?
+// AssignmentTargetBinding   = NonFeatureChainPrimaryExpression
+//
+// All three are ActionNodes, reached through ActionNodeMember as ControlNode is
+// (8.2.2.17.1), and the state and transition forms (8.2.2.18.1, 8.2.2.18.3) read the
+// declarations with their own bodies.
+
+#[test]
+fn a_send_node_reads_the_corpus_forms() {
+    // examples/Simple Tests/ActionTest.sysml:21 — a send after `then`, its payload a
+    // constructor, its receiver after `to`.
+    let then_send =
+        render(&parse_accepted("action def A { first start; then send new S() to b; }").syntax());
+    assert_eq!(nodes_named(&then_send, "SendNode"), 1, "{then_send}");
+    assert_eq!(
+        nodes_named(&then_send, "SourceSuccessionMember"),
+        1,
+        "{then_send}"
+    );
+    assert_eq!(
+        nodes_named(&then_send, "ConstructorExpression"),
+        1,
+        "{then_send}"
+    );
+    assert_eq!(
+        child_kinds(&then_send, "SendNode"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwSend",
+            "NodeParameterMember",
+            "SenderReceiverPart",
+            "ActionBody"
+        ],
+        "{then_send}"
+    );
+    // `x to y`: the receiver alternative, whose sender is the EmptyParameterMember the
+    // text never writes -- validateSendActionParameters wants three input parameters
+    // (8.3.17.15, receipt 320cf1d4), payload, sender and receiver in that order.
+    assert_eq!(
+        child_kinds(&then_send, "SenderReceiverPart"),
+        ["EmptyParameterMember", "KwTo", "NodeParameterMember"],
+        "{then_send}"
+    );
+    // ActionTest.sysml:34-36 — a declared send with no parameters in its declaration and
+    // its payload bound in the body instead (7.17.7, receipt db730711).
+    let bare = render(
+        &parse_accepted("action def A { action snd send {\n\t\tin :>> payload = s;\n\t} }")
+            .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&bare, "SendNode"),
+        [
+            "OccurrenceUsagePrefix",
+            "ActionNodeUsageDeclaration",
+            "KwSend",
+            "ActionBody"
+        ],
+        "{bare}"
+    );
+}
+
+#[test]
+fn a_send_node_reads_the_sender_forms() {
+    // examples/Simple Tests/ActionTest.sysml:37 — no payload, a sender and a receiver:
+    // the second alternative.
+    let via_to = render(
+        &parse_accepted("action def A { action snd2 send via this to aa.target; }").syntax(),
+    );
+    assert_eq!(
+        child_kinds(&via_to, "SendNode"),
+        [
+            "OccurrenceUsagePrefix",
+            "ActionNodeUsageDeclaration",
+            "KwSend",
+            "EmptyParameterMember",
+            "SenderReceiverPart",
+            "ActionBody"
+        ],
+        "{via_to}"
+    );
+    assert_eq!(
+        child_kinds(&via_to, "SenderReceiverPart"),
+        [
+            "KwVia",
+            "NodeParameterMember",
+            "KwTo",
+            "NodeParameterMember"
+        ],
+        "{via_to}"
+    );
+    // examples/Interaction Sequencing Examples/ServerSequenceRealization-2.sysml:19 —
+    // the line the SendNode deviation turns on: `action NAME send`.
+    parse_accepted(
+        "action def A { action publish send new Publish(someTopic, somePublication) via publicationPort; }",
+    );
+    // The clause's own example, 7.17.7 (receipt db730711).
+    parse_accepted(
+        "part monitor { action sendReadingTo { in part destination;\n\
+         \tperform getReading { out reading : SensorReading; }\n\
+         \taction sendReading\n\
+         \t\tsend getReading.reading via monitor to destination;\n\
+         \tsend getReading.reading via monitor to destination;\n\
+         \tsend getReading.reading to destination;\n\
+         } }",
+    );
+}
+
+#[test]
+fn an_action_node_is_an_action_node_member_and_takes_target_successions() {
+    for item in ["send s to b;", "accept S;", "assign x := 1;"] {
+        assert_eq!(
+            member_of("action def A", item),
+            ["ActionNodeMember"],
+            "{item}"
+        );
+    }
+    // ActionBodyItem's third alternative: `SourceSuccessionMember? ActionBehaviorMember
+    // ActionTargetSuccessionMember*` (8.2.2.17.1), and an ActionNodeMember is an
+    // ActionBehaviorMember, so the `then` members after one are its own.
+    let tree = render(&parse_accepted("action def A { send s to b; then c; then d; }").syntax());
+    assert_eq!(
+        nodes_named(&tree, "ActionTargetSuccessionMember"),
+        2,
+        "{tree}"
+    );
+}
+
+#[test]
+fn an_accept_node_reads_the_corpus_forms() {
+    // examples/Simple Tests/ActionTest.sysml:17-19 — a type, a time trigger, and an
+    // absolute time whose value is a constructor.
+    let tree = render(
+        &parse_accepted(
+            "action def A {\n\
+             \tfirst start;\n\
+             \tthen accept S;\n\
+             \tthen accept sig after 10[SI::s];\n\
+             \tthen accept at new Time::Iso8601DateTime(\"2022-01-30T01:00:00Z\");\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "AcceptNode"), 3, "{tree}");
+    assert_eq!(
+        child_kinds(&tree, "AcceptNode"),
+        [
+            "OccurrenceUsagePrefix",
+            "AcceptNodeDeclaration",
+            "ActionBody"
+        ],
+        "{tree}"
+    );
+}
+
+#[test]
+fn an_assignment_node_reads_the_corpus_forms() {
+    // examples/Simple Tests/AssignmentTest.sysml:7 — no target: the target parameter is
+    // empty and the referent is one name (7.17.9, receipt 7d690ecc: "If the target
+    // expression ... is omitted, then the target is implicitly the occurrence owning the
+    // assignment action usage").
+    let bare = render(&parse_accepted("action incr { assign count := count + 1; }").syntax());
+    assert_eq!(
+        child_kinds(&bare, "AssignmentNode"),
+        [
+            "OccurrenceUsagePrefix",
+            "AssignmentNodeDeclaration",
+            "ActionBody"
+        ],
+        "{bare}"
+    );
+    assert_eq!(
+        child_kinds(&bare, "AssignmentNodeDeclaration"),
+        [
+            "KwAssign",
+            "AssignmentTargetMember",
+            "FeatureChainMember",
+            "ColonEq",
+            "NodeParameterMember"
+        ],
+        "{bare}"
+    );
+    assert_eq!(
+        child_kinds(&bare, "AssignmentTargetParameter"),
+        Vec::<String>::new(),
+        "{bare}"
+    );
+    // AssignmentTest.sysml:49 — the target is the first primary and the referent the
+    // chain after its `.`: 7.17.9's own example, `assign sim.vehicle.position := ...`,
+    // says "The target of the assignment below is "sim". The referent feature chain is
+    // "vehicle.position"".
+    let chained = render(
+        &parse_accepted(
+            "action a { assign counting.counter.count := counting.counter.count + 1; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&chained, "AssignmentTargetParameter"),
+        ["AssignmentTargetBinding", "Dot"],
+        "{chained}"
+    );
+    assert_eq!(
+        child_kinds(&chained, "FeatureChainMember"),
+        ["OwnedFeatureChainMember"],
+        "{chained}"
+    );
+    // validation/03-Function-based Behavior/3c-Function-based Behavior-structure
+    // mod-1.sysml:38 — a quoted name as the target, a constructor as the value.
+    parse_accepted(
+        "action a { assign 'vehicle-trailer system'.trailerHitch := new TrailerHitch(); }",
+    );
+    // AssignmentTest.sysml:50 — an invocation, then a chain, as the value.
+    parse_accepted(
+        "action a { assign counting.counter.count := Increment(counting.counter).count; }",
+    );
+    // A declared assignment: `action NAME assign`.
+    parse_accepted("action def A { action reset assign counter.count := 0; }");
+}
+
+#[test]
+fn a_state_and_a_transition_read_assignment_actions() {
+    // examples/Simple Tests/AssignmentTest.sysml:18-37 — an entry assignment and two do
+    // assignments.
+    let state = render(
+        &parse_accepted(
+            "state def Counting {\n\
+             \tpart counter : Counter;\n\
+             \tentry assign counter.count := 0;\n\
+             \tthen state wait;\n\
+             \tstate increment {\n\
+             \t\tdo assign counter.count := counter.count + 1;\n\
+             \t}\n\
+             \tthen wait;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&state, "StateAssignmentActionUsage"),
+        2,
+        "{state}"
+    );
+    assert_eq!(
+        child_kinds(&state, "StateAssignmentActionUsage"),
+        ["AssignmentNodeDeclaration", "ActionBody"],
+        "{state}"
+    );
+    // training/31. Constraints/Time Constraints.sysml:30 — an entry assignment whose
+    // value adds two chains.
+    parse_accepted(
+        "state def S { state maintenance {\n\
+         \tentry assign vehicle.maintenanceTime := vehicle.maintenanceTime + vehicle.maintenanceInterval;\n\
+         } }",
+    );
+    // A transition's assignment effect, braced.
+    let effect = render(
+        &parse_accepted("state def S { transition t first a do assign x := 1 { } then b; }")
+            .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&effect, "TransitionAssignmentActionUsage"),
+        ["AssignmentNodeDeclaration", "LBrace", "RBrace"],
+        "{effect}"
+    );
+}
+
+#[test]
+fn a_state_and_a_transition_read_send_actions() {
+    // examples/Simple Tests/StateTest.sysml:20-23 and 32-37 — a do send in a state, and
+    // a send as a transition's effect, ended by the `then` rather than a `;`.
+    let sends = render(
+        &parse_accepted(
+            "state def S {\n\
+             \tstate S2 {\n\
+             \t\tdo send new Sig(T.s.x) to p;\n\
+             \t\tstate S3;\n\
+             \t}\n\
+             \ttransition T\n\
+             \t\tfirst S2.S3\n\
+             \t\taccept s : Sig via p\n\
+             \t\tif true\n\
+             \t\tdo send s to p\n\
+             \t\tthen S1;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&sends, "StateSendActionUsage"), 1, "{sends}");
+    assert_eq!(
+        child_kinds(&sends, "StateSendActionUsage"),
+        ["SendNodeDeclaration", "ActionBody"],
+        "{sends}"
+    );
+    assert_eq!(
+        child_kinds(&sends, "TransitionSendActionUsage"),
+        ["SendNodeDeclaration"],
+        "{sends}"
+    );
+    // training/25. Transitions/Transition Actions.sysml:31 — a target transition's
+    // effect, a send of a constructed signal.
+    parse_accepted(
+        "state def S {\n\
+         \tstate off;\n\
+         \taccept VehicleStartSignal\n\
+         \t\tdo send new ControllerStartSignal() to controller\n\
+         \t\tthen on;\n\
+         \tstate on;\n\
+         }",
+    );
+}
+
+#[test]
+fn send_assign_and_accept_nodes_are_bounded_by_their_rules() {
+    // `via` before `to`: SenderReceiverPart's first alternative is `'via' ... ( 'to'
+    // ... )?`, and its second has no `via` at all. Held as a file by
+    // tests/rejection/sender-receiver-part-writes-via-before-to.sysml.
+    parse_rejected("action def A { send s to b via p; }");
+    // A state or transition send names its payload: SendNodeDeclaration's
+    // NodeParameterMember is not optional, unlike SendNode's (8.2.2.17.4). Held as a
+    // file by tests/rejection/state-send-action-names-its-payload.sysml.
+    parse_rejected("state def D { entry send via p; }");
+    parse_rejected("state def D { entry send; }");
+    // A declared send writes `action` (deviation SendNode, follow_xtext): `snd send x;`
+    // is the literal clause line's reading, which the corpus contradicts. Held as a file
+    // by tests/rejection/send-node-declaration-writes-action.sysml.
+    parse_rejected("action def A { snd send x; }");
+    // An assignment writes `:=`, not `=` (8.2.2.17.5). Held as a file by
+    // tests/rejection/assignment-writes-colon-equals.sysml.
+    parse_rejected("action def A { assign x = 1; }");
+    // The referent is not optional: AssignmentTargetParameter may be empty, the
+    // FeatureChainMember may not. Held as a file by
+    // tests/rejection/assignment-names-its-referent.sysml.
+    parse_rejected("action def A { assign := 1; }");
+    // A transition's send effect takes a braced body or none, never `;`
+    // (TransitionSendActionUsage, 8.2.2.18.3). Held as a file by
+    // tests/rejection/transition-send-effect-takes-no-semicolon.sysml.
+    parse_rejected("state def D { transition t first a do send s to p; then b; }");
+    // An ActionNode is an item of the action-body family only (8.2.2.17.1): a part
+    // definition's body has no ActionNodeMember. Held as a file by
+    // tests/rejection/action-node-is-not-a-definition-body-item.sysml.
+    parse_rejected("part def P { assign x := 1; }");
+    parse_rejected("part def P { send s to b; }");
+}
+
+#[test]
+fn send_and_assignment_nodes_keep_every_byte() {
+    let source = "action def A {\n\tthen /* s */ send new S ( 1 ) via p /* v */ to q ;\n\tassign a . b . c := 1 { }\n\taction x send { }\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -7046,6 +7413,61 @@ fn an_argument_list_is_one_alternative_or_the_other_and_never_both() {
     parse_rejected("calc def C { f(a,) }");
     // An unclosed list is still an error.
     parse_rejected("calc def C { f(a }");
+}
+
+// -- ConstructorExpression, KerML 8.2.5.8.3 ----------------------------------------
+//
+// ConstructorExpression   = 'new' InstantiatedTypeMember ConstructorResultMember
+// ConstructorResultMember = ConstructorResult
+// ConstructorResult       = ArgumentList
+//
+// BaseExpression's other alternative ending in an ArgumentList: "the keyword new followed
+// by the qualified name of a type to be instantiated ... followed by a parenthesized list
+// of argument expressions, similarly to an invocation expression" (KerML 7.4.9.4, receipt
+// f77ceb64).
+
+#[test]
+fn a_constructor_expression_reads_the_corpus_forms() {
+    // examples/Simple Tests/ParameterTest.sysml writes `new A(y=a, x="")`: named.
+    let named = render(&parse_accepted("calc def C { new A(y = a, x = \"\") }").syntax());
+    // NO EmptyResultMember among its own children, unlike InvocationExpression: 8.2.5.8.3
+    // names one in the invocation and not here, where the ConstructorResultMember is the
+    // result. (The argument `a` owns one, as every FeatureReferenceExpression does.)
+    assert_eq!(
+        child_kinds(&named, "ConstructorExpression"),
+        ["KwNew", "InstantiatedTypeMember", "ConstructorResultMember"],
+        "{named}"
+    );
+    assert_eq!(
+        child_kinds(&named, "ConstructorResultMember"),
+        ["ConstructorResult"],
+        "{named}"
+    );
+    assert_eq!(
+        child_kinds(&named, "ConstructorResult"),
+        ["ArgumentList"],
+        "{named}"
+    );
+    // training/25. Transitions/Local Clock Example.sysml:8 — a qualified type, no
+    // arguments, as a feature value.
+    parse_accepted("part def P { part :>> localClock = new Time::Clock(); }");
+    // examples/Vehicle Example/SysML v2 Spec Annex A SimpleVehicleModel.sysml:1328 — a
+    // space before the list, and a named argument whose value is qualified.
+    parse_accepted("calc def C { new IgnitionCmd (ignitionOnOff=IgnitionOnOff::on) }");
+    // validation/09-Verification/9-Verification-simplified.sysml:72 — nested in an
+    // invocation's named argument.
+    parse_accepted(
+        "calc def C { PassIf(vehicleMassRequirement(vehicle = new testVehicle(mass = massProcessed))) }",
+    );
+}
+
+#[test]
+fn a_constructor_expression_is_bounded_by_its_rules() {
+    // The ArgumentList is not optional: ConstructorResult = ArgumentList. Held as a file
+    // by tests/rejection/constructor-expression-needs-an-argument-list.sysml.
+    parse_rejected("calc def C { new A }");
+    // `new` takes a type, not an expression.
+    parse_rejected("calc def C { new 1() }");
 }
 
 // -- multiplicity, SysML 8.2.2.6.6 -------------------------------------------------

@@ -1037,6 +1037,62 @@ NODES = [
         "`ActionNodeUsageDeclaration? 'accept' AcceptParameterPart`. `SysML` 8.2.2.17.4.",
     ),
     ("ActionNodeUsageDeclaration", "`'action' UsageDeclaration?`. `SysML` 8.2.2.17.2."),
+    (
+        "AcceptNode",
+        "`OccurrenceUsagePrefix AcceptNodeDeclaration ActionBody`. `SysML` 8.2.2.17.4.",
+    ),
+    (
+        "SendNode",
+        (
+            "`OccurrenceUsagePrefix ActionNodeUsageDeclaration? 'send' ( NodeParameterMember "
+            "SenderReceiverPart? | EmptyParameterMember SenderReceiverPart )? ActionBody`. "
+            "`SysML` 8.2.2.17.4, with the `SendNode` deviation."
+        ),
+    ),
+    (
+        "SendNodeDeclaration",
+        (
+            "`ActionNodeUsageDeclaration? 'send' NodeParameterMember SenderReceiverPart?`. "
+            "`SysML` 8.2.2.17.4."
+        ),
+    ),
+    (
+        "SenderReceiverPart",
+        (
+            "`'via' NodeParameterMember ( 'to' NodeParameterMember )? | EmptyParameterMember "
+            "'to' NodeParameterMember`. `SysML` 8.2.2.17.4."
+        ),
+    ),
+    (
+        "AssignmentNode",
+        "`OccurrenceUsagePrefix AssignmentNodeDeclaration ActionBody`. `SysML` 8.2.2.17.5.",
+    ),
+    (
+        "AssignmentNodeDeclaration",
+        (
+            "`ActionNodeUsageDeclaration? 'assign' AssignmentTargetMember FeatureChainMember "
+            "':=' NodeParameterMember`. `SysML` 8.2.2.17.5."
+        ),
+    ),
+    ("AssignmentTargetMember", "`AssignmentTargetParameter`. `SysML` 8.2.2.17.5."),
+    ("AssignmentTargetParameter", "`( AssignmentTargetBinding '.' )?`. `SysML` 8.2.2.17.5."),
+    (
+        "AssignmentTargetBinding",
+        "`NonFeatureChainPrimaryExpression`, a `FeatureValue`. `SysML` 8.2.2.17.5.",
+    ),
+    ("StateSendActionUsage", "`SendNodeDeclaration ActionBody`. `SysML` 8.2.2.18.1."),
+    (
+        "StateAssignmentActionUsage",
+        "`AssignmentNodeDeclaration ActionBody`. `SysML` 8.2.2.18.1.",
+    ),
+    (
+        "TransitionSendActionUsage",
+        "`SendNodeDeclaration ( '{' ActionBodyItem* '}' )?`. `SysML` 8.2.2.18.3.",
+    ),
+    (
+        "TransitionAssignmentActionUsage",
+        "`AssignmentNodeDeclaration ( '{' ActionBodyItem* '}' )?`. `SysML` 8.2.2.18.3.",
+    ),
     ("TriggerValuePart", "`TriggerFeatureValue`. `SysML` 8.2.2.17.4."),
     ("TriggerFeatureValue", "`TriggerExpression`, a `FeatureValue`. `SysML` 8.2.2.17.4."),
     (
@@ -1203,6 +1259,12 @@ NODES = [
         ),
     ),
     ("InstantiatedTypeReference", "`[QualifiedName]`. `KerML` 8.2.5.8.3."),
+    (
+        "ConstructorExpression",
+        "`'new' InstantiatedTypeMember ConstructorResultMember`. `KerML` 8.2.5.8.3.",
+    ),
+    ("ConstructorResultMember", "`ConstructorResult`. `KerML` 8.2.5.8.3."),
+    ("ConstructorResult", "`ArgumentList`. `KerML` 8.2.5.8.3."),
     (
         "ArgumentList",
         ("`'(' ( PositionalArgumentList | NamedArgumentList )? ')'`. `KerML` 8.2.5.8.3."),

@@ -903,6 +903,32 @@ pub enum SyntaxKind {
     AcceptNodeDeclaration,
     /// `'action' UsageDeclaration?`. `SysML` 8.2.2.17.2.
     ActionNodeUsageDeclaration,
+    /// `OccurrenceUsagePrefix AcceptNodeDeclaration ActionBody`. `SysML` 8.2.2.17.4.
+    AcceptNode,
+    /// `OccurrenceUsagePrefix ActionNodeUsageDeclaration? 'send' ( NodeParameterMember SenderReceiverPart? | EmptyParameterMember SenderReceiverPart )? ActionBody`. `SysML` 8.2.2.17.4, with the `SendNode` deviation.
+    SendNode,
+    /// `ActionNodeUsageDeclaration? 'send' NodeParameterMember SenderReceiverPart?`. `SysML` 8.2.2.17.4.
+    SendNodeDeclaration,
+    /// `'via' NodeParameterMember ( 'to' NodeParameterMember )? | EmptyParameterMember 'to' NodeParameterMember`. `SysML` 8.2.2.17.4.
+    SenderReceiverPart,
+    /// `OccurrenceUsagePrefix AssignmentNodeDeclaration ActionBody`. `SysML` 8.2.2.17.5.
+    AssignmentNode,
+    /// `ActionNodeUsageDeclaration? 'assign' AssignmentTargetMember FeatureChainMember ':=' NodeParameterMember`. `SysML` 8.2.2.17.5.
+    AssignmentNodeDeclaration,
+    /// `AssignmentTargetParameter`. `SysML` 8.2.2.17.5.
+    AssignmentTargetMember,
+    /// `( AssignmentTargetBinding '.' )?`. `SysML` 8.2.2.17.5.
+    AssignmentTargetParameter,
+    /// `NonFeatureChainPrimaryExpression`, a `FeatureValue`. `SysML` 8.2.2.17.5.
+    AssignmentTargetBinding,
+    /// `SendNodeDeclaration ActionBody`. `SysML` 8.2.2.18.1.
+    StateSendActionUsage,
+    /// `AssignmentNodeDeclaration ActionBody`. `SysML` 8.2.2.18.1.
+    StateAssignmentActionUsage,
+    /// `SendNodeDeclaration ( '{' ActionBodyItem* '}' )?`. `SysML` 8.2.2.18.3.
+    TransitionSendActionUsage,
+    /// `AssignmentNodeDeclaration ( '{' ActionBodyItem* '}' )?`. `SysML` 8.2.2.18.3.
+    TransitionAssignmentActionUsage,
     /// `TriggerFeatureValue`. `SysML` 8.2.2.17.4.
     TriggerValuePart,
     /// `TriggerExpression`, a `FeatureValue`. `SysML` 8.2.2.17.4.
@@ -1005,6 +1031,12 @@ pub enum SyntaxKind {
     InstantiatedTypeMember,
     /// `[QualifiedName]`. `KerML` 8.2.5.8.3.
     InstantiatedTypeReference,
+    /// `'new' InstantiatedTypeMember ConstructorResultMember`. `KerML` 8.2.5.8.3.
+    ConstructorExpression,
+    /// `ConstructorResult`. `KerML` 8.2.5.8.3.
+    ConstructorResultMember,
+    /// `ArgumentList`. `KerML` 8.2.5.8.3.
+    ConstructorResult,
     /// `'(' ( PositionalArgumentList | NamedArgumentList )? ')'`. `KerML` 8.2.5.8.3.
     ArgumentList,
     /// `ArgumentMember ( ',' ArgumentMember )*`. `KerML` 8.2.5.8.3.
@@ -1484,6 +1516,19 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::TransitionAcceptActionUsage,
     SyntaxKind::AcceptNodeDeclaration,
     SyntaxKind::ActionNodeUsageDeclaration,
+    SyntaxKind::AcceptNode,
+    SyntaxKind::SendNode,
+    SyntaxKind::SendNodeDeclaration,
+    SyntaxKind::SenderReceiverPart,
+    SyntaxKind::AssignmentNode,
+    SyntaxKind::AssignmentNodeDeclaration,
+    SyntaxKind::AssignmentTargetMember,
+    SyntaxKind::AssignmentTargetParameter,
+    SyntaxKind::AssignmentTargetBinding,
+    SyntaxKind::StateSendActionUsage,
+    SyntaxKind::StateAssignmentActionUsage,
+    SyntaxKind::TransitionSendActionUsage,
+    SyntaxKind::TransitionAssignmentActionUsage,
     SyntaxKind::TriggerValuePart,
     SyntaxKind::TriggerFeatureValue,
     SyntaxKind::TriggerExpression,
@@ -1535,6 +1580,9 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::InvocationExpression,
     SyntaxKind::InstantiatedTypeMember,
     SyntaxKind::InstantiatedTypeReference,
+    SyntaxKind::ConstructorExpression,
+    SyntaxKind::ConstructorResultMember,
+    SyntaxKind::ConstructorResult,
     SyntaxKind::ArgumentList,
     SyntaxKind::PositionalArgumentList,
     SyntaxKind::NamedArgumentList,
