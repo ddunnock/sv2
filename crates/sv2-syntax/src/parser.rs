@@ -1910,6 +1910,7 @@ impl<'a> Parser<'a> {
             || self.at_flow_usage(n)
             || self.at_connection_usage(n)
             || self.at_interface_usage(n)
+            || self.at_event_occurrence_usage(n)
             || self.at_succession_as_usage(n)
             || self.at_binding_connector_as_usage(n)
             || self.at_assert_constraint_usage(n)
@@ -3777,9 +3778,9 @@ impl<'a> Parser<'a> {
     //     | PortUsage | ConnectionUsage | InterfaceUsage | AllocationUsage | Message
     //     | FlowUsage | SuccessionFlowUsage | BehaviorUsageElement   (SysML 8.2.2.6.4)
     //
-    // NOT marked for coverage: IndividualUsage, PortionUsage, EventOccurrenceUsage,
-    // ViewUsage, ConnectionUsage, InterfaceUsage, AllocationUsage, Message and
-    // SuccessionFlowUsage are unimplemented, and so is most of BehaviorUsageElement.
+    // NOT marked for coverage: IndividualUsage, PortionUsage, ViewUsage, AllocationUsage,
+    // Message and SuccessionFlowUsage are unimplemented, and so is most of
+    // BehaviorUsageElement.
     //
     // It is UsageElement less three of NonOccurrenceUsageElement's alternatives (8.2.2.6.4):
     // DefaultReferenceUsage, replaced by VariantReference; EnumerationUsage; and
@@ -3880,6 +3881,10 @@ impl<'a> Parser<'a> {
         } else if self.at_interface_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), as ConnectionUsage is.
             self.interface_usage();
+            Some(UsageClass::Structure)
+        } else if self.at_event_occurrence_usage(0) {
+            // A StructureUsageElement (8.2.2.6.4), as OccurrenceUsage is.
+            self.event_occurrence_usage();
             Some(UsageClass::Structure)
         } else if self.at_succession_as_usage(0) {
             // A NonOccurrenceUsageElement (8.2.2.6.4): "a succession is not a kind of
@@ -4157,6 +4162,75 @@ impl<'a> Parser<'a> {
             };
             self.nth_is_keyword(after, usage.keyword) && !self.nth_is_keyword(after + 1, "def")
         })
+    }
+
+    // production: EventOccurrenceUsage@sysml
+    //
+    // EventOccurrenceUsage : EventOccurrenceUsage =
+    //     OccurrenceUsagePrefix 'event'
+    //     ( ownedRelationship += OwnedReferenceSubsetting
+    //       FeatureSpecializationPart?
+    //     | 'occurrence' UsageDeclaration? )
+    //     UsageCompletion                                        (SysML 8.2.2.9.2)
+    //
+    // "An event occurrence usage is declared like an occurrence usage ... but using the
+    // kind keyword event occurrence instead of just occurrence ... [or] using just the
+    // keyword event. In this case, the declaration does not include either a name or a
+    // short name. Instead, the referenced event occurrence ... is identified by giving a
+    // qualified name or feature chain immediately after the event keyword" (7.9.5,
+    // receipt f08885e6). PerformActionUsageDeclaration's two alternatives, one clause
+    // earlier in the book, told apart the same way on one token: `occurrence` is reserved
+    // and a reference opens on a name.
+    //
+    // The reference alternative's FeatureSpecializationPart may open on a multiplicity
+    // (`event subscriptionMessage.source[1];`, 7.9.5), so `[` is asked for as
+    // `include_use_case_usage` asks for it. An empty UsageDeclaration builds no node: it
+    // is optional, and what follows it, a UsageCompletion, opens on none of its tokens.
+    //
+    // Marked although OccurrenceUsagePrefix is not, as ActionUsage is.
+    //
+    // implied specialization: Occurrences::Occurrence::timeEnclosedOccurrences, when owned
+    //     by an occurrence definition or usage
+    // constraint: EventOccurrenceUsage::checkEventOccurrenceUsageSpecialization (8.3.9.2,
+    //     receipt 9cf02679). An injection that depends on the owner, so sv2-hir's
+    //     (ADR-0002).
+    // constraint: EventOccurrenceUsage::validateEventOccurrenceUsageIsReference (8.3.9.2):
+    //     `isReference` is derived true whether or not `ref` is written (7.9.5), so the
+    //     tree records only what was written.
+    // constraint: EventOccurrenceUsage::validateEventOccurrenceUsageReference (8.3.9.2):
+    //     the reference's target must be an OccurrenceUsage. A question of resolution, so
+    //     sv2-resolve's.
+    fn event_occurrence_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::EventOccurrenceUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("event");
+        if self.at_keyword("occurrence") {
+            self.bump_as(keyword("occurrence").unwrap_or(SyntaxKind::BasicName));
+            if self.at_name()
+                || self.at(SyntaxKind::Lt)
+                || self.at_feature_specialization()
+                || self.at_multiplicity_part()
+            {
+                self.usage_declaration();
+            }
+        } else {
+            self.owned_reference_subsetting();
+            if self.at_feature_specialization() || self.at_multiplicity_part() {
+                self.feature_specialization_part();
+            }
+        }
+        self.usage_completion();
+        self.finish_node();
+    }
+
+    /// Whether an `EventOccurrenceUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'event'` (`SysML` 8.2.2.9.2). No `def` test, as for
+    /// `perform`: `event` names a usage and nothing else. The prefix skipped is the one
+    /// `event_occurrence_usage` reads with `occurrence_usage_prefix`.
+    fn at_event_occurrence_usage(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_occurrence_usage_prefix(n), "event")
     }
 
     // production: UsagePrefix@sysml
@@ -9300,6 +9374,7 @@ impl<'a> Parser<'a> {
             || self.at_flow_usage(n)
             || self.at_connection_usage(n)
             || self.at_interface_usage(n)
+            || self.at_event_occurrence_usage(n)
             || self
                 .at_simple_usage(n)
                 .is_some_and(|usage| usage.class != UsageClass::NonOccurrence)

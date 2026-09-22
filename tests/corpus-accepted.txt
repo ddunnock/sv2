@@ -34,6 +34,7 @@ vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_UnownedEn
 vendor/corpus/sysml/src/examples/Camera Example/Camera.sysml
 vendor/corpus/sysml/src/examples/Camera Example/PictureTaking.sysml
 vendor/corpus/sysml/src/examples/Cause and Effect Examples/CauseAndEffectExample.sysml
+vendor/corpus/sysml/src/examples/Cause and Effect Examples/MedicalDeviceFailure.sysml
 vendor/corpus/sysml/src/examples/Comment Examples/Comments.sysml
 vendor/corpus/sysml/src/examples/Geometry Examples/CarWithEnvelopingShape.sysml
 vendor/corpus/sysml/src/examples/Geometry Examples/CarWithShapeAndCSG.sysml
@@ -43,7 +44,11 @@ vendor/corpus/sysml/src/examples/Import Tests/AliasImport.sysml
 vendor/corpus/sysml/src/examples/Import Tests/CircularImport.sysml
 vendor/corpus/sysml/src/examples/Import Tests/PrivateImportTest.sysml
 vendor/corpus/sysml/src/examples/Import Tests/QualifiedNameImportTest.sysml
+vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModelOutside.sysml
 vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-2.sysml
+vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-3.sysml
+vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-2.sysml
+vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-3.sysml
 vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassConstraintExample.sysml
 vendor/corpus/sysml/src/examples/Mass Roll-up Example/Vehicles.sysml
 vendor/corpus/sysml/src/examples/Metadata Examples/IssueMetadataExample.sysml
@@ -135,6 +140,7 @@ vendor/corpus/sysml/src/training/25. Transitions/Change and Time Triggers.sysml
 vendor/corpus/sysml/src/training/25. Transitions/Local Clock Example.sysml
 vendor/corpus/sysml/src/training/25. Transitions/Transition Actions.sysml
 vendor/corpus/sysml/src/training/26. State Exhibition/State Exhibition Example.sysml
+vendor/corpus/sysml/src/training/27. Occurrences/Event Occurrence Example.sysml
 vendor/corpus/sysml/src/training/28. Individuals/Individuals and Snapshots Example.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 1.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 2.sysml
@@ -189,6 +195,7 @@ vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security 
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml
 vendor/corpus/sysml/src/validation/14-Language Extensions/14a-Language Extensions.sysml
 vendor/corpus/sysml/src/validation/14-Language Extensions/14b-Language Extensions.sysml
+vendor/corpus/sysml/src/validation/14-Language Extensions/14c-Language Extensions.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_01-Constants.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_02-Basic Value Properties.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_03-Value Expression.sysml

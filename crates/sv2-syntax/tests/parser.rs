@@ -9883,3 +9883,193 @@ fn a_library_package_is_bounded_by_its_rules() {
             .is_empty()
     );
 }
+
+// -- EventOccurrenceUsage, SysML 8.2.2.9.2 ---------------------------------------------
+//
+//   EventOccurrenceUsage = OccurrenceUsagePrefix 'event'
+//                          ( ownedRelationship += OwnedReferenceSubsetting
+//                            FeatureSpecializationPart?
+//                          | 'occurrence' UsageDeclaration? )
+//                          UsageCompletion
+//
+// "An event occurrence usage is declared like an occurrence usage ... but using the kind
+// keyword event occurrence instead of just occurrence ... An event occurrence usage may
+// also be declared using just the keyword event ... the declaration does not include
+// either a name or a short name" (7.9.5, receipt f08885e6).
+
+#[test]
+fn the_event_occurrence_examples_of_7_9_5_parse() {
+    // Both of 7.9.5's examples (receipt f08885e6), whole.
+    let parsed = parse_accepted(
+        "package P {\n\
+         part client {\n\
+         event occurrence request[1] references subscriptionMessage.source;\n\
+         event occurrence delivery[*] ::> publicationMessage.target;\n\
+         }\n\
+         part client2 {\n\
+         event subscriptionMessage.source[1];\n\
+         event publicationMessage.target[*];\n\
+         }\n\
+         }",
+    );
+    assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
+    let rendered = render(&parsed.syntax());
+    assert_eq!(
+        nodes_named(&rendered, "EventOccurrenceUsage"),
+        4,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "OccurrenceUsage"), 0, "{rendered}");
+}
+
+#[test]
+fn an_event_occurrence_usage_is_one_of_two_alternatives() {
+    // The declaring alternative: `occurrence`, a declaration, and a completion.
+    let rendered = render(&parse_accepted("part c { event occurrence e : E [1] = x; }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "EventOccurrenceUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwEvent",
+            "KwOccurrence",
+            "UsageDeclaration",
+            "UsageCompletion"
+        ],
+        "{rendered}"
+    );
+    // The UsageDeclaration is optional.
+    let rendered = render(&parse_accepted("part c { event occurrence; }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "EventOccurrenceUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwEvent",
+            "KwOccurrence",
+            "UsageCompletion"
+        ],
+        "{rendered}"
+    );
+    // The referencing alternative: a chain, then a specialization part that may open on
+    // a multiplicity (training/27, examples/Arrowhead Framework Example/AHFSequences).
+    for source in [
+        "part c { event a.b[1] :>> e; }",
+        "part c { event forw1 : MQTTforwarding; }",
+        "part c { event a.b { } }",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        let kinds = child_kinds(&rendered, "EventOccurrenceUsage");
+        assert_eq!(
+            kinds.get(2).map(String::as_str),
+            Some("OwnedReferenceSubsetting"),
+            "{source}\n{rendered}"
+        );
+        assert_eq!(
+            kinds.last().map(String::as_str),
+            Some("UsageCompletion"),
+            "{source}\n{rendered}"
+        );
+    }
+    // With no specialization part, none is built.
+    let rendered = render(&parse_accepted("part c { event a.b = x; }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "EventOccurrenceUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwEvent",
+            "OwnedReferenceSubsetting",
+            "UsageCompletion"
+        ],
+        "{rendered}"
+    );
+}
+
+#[test]
+fn an_event_occurrence_usage_takes_the_occurrence_usage_prefix() {
+    // "The ref keyword may be used ... an event occurrence usage is always referential,
+    // whether or not ref is included" (7.9.5, receipt f08885e6), and the prefix is
+    // OccurrenceUsagePrefix, so `individual`, a portion kind and `#` keywords too.
+    for source in [
+        "part c { ref event occurrence e; }",
+        "part c { individual event a.b; }",
+        "part c { snapshot event occurrence e; }",
+        "part c { #M event occurrence e; }",
+        "part c { in event a; }",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            nodes_named(&rendered, "EventOccurrenceUsage"),
+            1,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn an_event_occurrence_usage_is_a_structure_usage_element() {
+    // A StructureUsageElement (8.2.2.6.4), so an OccurrenceUsageElement: a `then` may
+    // prefix it (training/27. Occurrences/Interaction Example-2.sysml), and it is a
+    // variant, an item of an interface body, and an item of an action body.
+    for (source, member) in [
+        (
+            "part c { event a.b; then event c.d; }",
+            "SourceSuccessionMember",
+        ),
+        (
+            "part c { then event occurrence e; }",
+            "SourceSuccessionMember",
+        ),
+        (
+            "variation part def V { variant event a.b; }",
+            "VariantUsageMember",
+        ),
+        (
+            "interface def I { event occurrence e; }",
+            "InterfaceOccurrenceUsageMember",
+        ),
+        (
+            "action def A { event occurrence e; }",
+            "EventOccurrenceUsage",
+        ),
+        // A keyword member, so an item of a calculation body and not its result
+        // expression.
+        ("calc def C { event a.b; x }", "ResultExpressionMember"),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert!(nodes_named(&rendered, member) >= 1, "{source}\n{rendered}");
+        assert!(
+            nodes_named(&rendered, "EventOccurrenceUsage") >= 1,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn an_event_occurrence_usage_is_bounded_by_its_rules() {
+    // The referencing alternative declares no name (7.9.5): `event request m.source;`
+    // leaves out `occurrence`. Held by
+    // tests/rejection/event-reference-declares-no-name.sysml.
+    parse_rejected("part c { event request m.source; }");
+    parse_rejected("part c { event m.source request; }");
+    parse_rejected("part c { event m.source request : T; }");
+    parse_rejected("part c { event <s> m.source; }");
+    // One alternative or the other: `event` alone is neither. Held by
+    // tests/rejection/event-needs-a-reference-or-occurrence.sysml.
+    parse_rejected("part c { event; }");
+    parse_rejected("part c { event = x; }");
+    // `event` names a usage only; there is no event definition. Held by
+    // tests/rejection/event-names-no-definition.sysml.
+    parse_rejected("part c { event def E; }");
+    parse_rejected("event def E;");
+    // `occurrence` follows `event`, not the other way round.
+    parse_rejected("part c { occurrence event e; }");
+    // A completion is not optional.
+    parse_rejected("part c { event a.b }");
+    // An enumeration body holds no usage but its values (8.2.2.8).
+    parse_rejected("enum def E { event a.b; }");
+    // SysML only.
+    assert!(
+        !parse("event occurrence e;", Language::KerMl)
+            .errors()
+            .is_empty()
+    );
+}

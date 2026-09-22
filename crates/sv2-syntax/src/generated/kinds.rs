@@ -823,6 +823,8 @@ pub enum SyntaxKind {
     ItemUsage,
     /// `OccurrenceUsagePrefix 'occurrence' Usage`. `SysML` 8.2.2.9.2.
     OccurrenceUsage,
+    /// `OccurrenceUsagePrefix 'event' ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'occurrence' UsageDeclaration? ) UsageCompletion`. `SysML` 8.2.2.9.2.
+    EventOccurrenceUsage,
     /// `OccurrenceUsagePrefix 'port' Usage`. `SysML` 8.2.2.12.
     PortUsage,
     /// `OccurrenceUsagePrefix 'rendering' Usage`. `SysML` 8.2.2.26.3.
@@ -1574,6 +1576,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::AttributeUsage,
     SyntaxKind::ItemUsage,
     SyntaxKind::OccurrenceUsage,
+    SyntaxKind::EventOccurrenceUsage,
     SyntaxKind::PortUsage,
     SyntaxKind::RenderingUsage,
     SyntaxKind::EnumerationUsage,
