@@ -763,6 +763,20 @@ pub enum SyntaxKind {
     CalculationBody,
     /// `CalculationBodyItem* ResultExpressionMember?`. `SysML` 8.2.2.19.
     CalculationBodyPart,
+    /// `';' | '{' CaseBodyItem* ResultExpressionMember? '}'`. `SysML` 8.2.2.22.
+    CaseBody,
+    /// `OccurrenceDefinitionPrefix 'case' 'def' DefinitionDeclaration CaseBody`. `SysML` 8.2.2.22.
+    CaseDefinition,
+    /// `OccurrenceUsagePrefix 'case' ConstraintUsageDeclaration CaseBody`. `SysML` 8.2.2.22.
+    CaseUsage,
+    /// `MemberPrefix 'objective' ObjectiveRequirementUsage`. `SysML` 8.2.2.22.
+    ObjectiveMember,
+    /// `UsageExtensionKeyword* ConstraintUsageDeclaration RequirementBody`. `SysML` 8.2.2.22 — the metaclass is `RequirementUsage`.
+    ObjectiveRequirementUsage,
+    /// `OccurrenceDefinitionPrefix 'analysis' 'def' DefinitionDeclaration CaseBody`. `SysML` 8.2.2.23.
+    AnalysisCaseDefinition,
+    /// `OccurrenceUsagePrefix 'analysis' ConstraintUsageDeclaration CaseBody`. `SysML` 8.2.2.23.
+    AnalysisCaseUsage,
     /// `NonFeatureChainPrimaryArgumentMember '.' FeatureChainMember`. `KerML` 8.2.5.8.2 — the metaclass is an `OperatorExpression`, 8.3.4.8.4.
     FeatureChainExpression,
     /// `ownedMemberParameter = PrimaryArgument`. `KerML` 8.2.5.8.2.
@@ -1462,6 +1476,13 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ForkNode,
     SyntaxKind::CalculationBody,
     SyntaxKind::CalculationBodyPart,
+    SyntaxKind::CaseBody,
+    SyntaxKind::CaseDefinition,
+    SyntaxKind::CaseUsage,
+    SyntaxKind::ObjectiveMember,
+    SyntaxKind::ObjectiveRequirementUsage,
+    SyntaxKind::AnalysisCaseDefinition,
+    SyntaxKind::AnalysisCaseUsage,
     SyntaxKind::FeatureChainExpression,
     SyntaxKind::NonFeatureChainPrimaryArgumentMember,
     SyntaxKind::BracketExpression,

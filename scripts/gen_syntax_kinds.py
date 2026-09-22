@@ -816,6 +816,49 @@ NODES = [
         "CalculationBodyPart",
         "`CalculationBodyItem* ResultExpressionMember?`. `SysML` 8.2.2.19.",
     ),
+    # The case layer. CaseBody is CalculationBodyPart's shape braced directly, over an item
+    # production that adds the subject, actor and objective members; the four
+    # declarations over it differ in one keyword and in definition against usage.
+    (
+        "CaseBody",
+        "`';' | '{' CaseBodyItem* ResultExpressionMember? '}'`. `SysML` 8.2.2.22.",
+    ),
+    (
+        "CaseDefinition",
+        (
+            "`OccurrenceDefinitionPrefix 'case' 'def' DefinitionDeclaration CaseBody`. "
+            "`SysML` 8.2.2.22."
+        ),
+    ),
+    (
+        "CaseUsage",
+        ("`OccurrenceUsagePrefix 'case' ConstraintUsageDeclaration CaseBody`. `SysML` 8.2.2.22."),
+    ),
+    (
+        "ObjectiveMember",
+        "`MemberPrefix 'objective' ObjectiveRequirementUsage`. `SysML` 8.2.2.22.",
+    ),
+    (
+        "ObjectiveRequirementUsage",
+        (
+            "`UsageExtensionKeyword* ConstraintUsageDeclaration RequirementBody`. "
+            "`SysML` 8.2.2.22 — the metaclass is `RequirementUsage`."
+        ),
+    ),
+    (
+        "AnalysisCaseDefinition",
+        (
+            "`OccurrenceDefinitionPrefix 'analysis' 'def' DefinitionDeclaration "
+            "CaseBody`. `SysML` 8.2.2.23."
+        ),
+    ),
+    (
+        "AnalysisCaseUsage",
+        (
+            "`OccurrenceUsagePrefix 'analysis' ConstraintUsageDeclaration CaseBody`. "
+            "`SysML` 8.2.2.23."
+        ),
+    ),
     # The postfix `.`. PrimaryExpression's other alternative, and the only expression
     # form in this parser that folds to the LEFT: `a.b.c` is `(a.b).c`, because the left
     # operand is a PrimaryArgument and not a NonFeatureChainPrimaryArgument despite the

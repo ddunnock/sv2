@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T17:28:51Z",
+    "regenerated_utc": "2026-09-22T17:56:14Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 289,
-      "unimplemented": 265,
+      "implemented": 295,
+      "unimplemented": 259,
       "absent": 0,
-      "percent": 52.2
+      "percent": 53.2
     },
     "tests": {
-      "unit": 480,
+      "unit": 488,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 204,
+      "negative_cases": 207,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "4e95087 Close the session: deviation diagnostics recorded, next_step current",
       "ffefd20 Site the DefinitionElement deviation: `allocation def` was read but reported conformant",
       "42d730f Read a connector end's trailing multiplicity by deviation, as 7.13.2's example writes it, and flag it",
       "5193fb1 Report every departure from the specification where the parser takes it, and let --strict fail it (ADR-0022)",
       "d263580 Close the session: connections and end features recorded, the analysis case measured and written to start cold",
       "db4f468 Read the end usage prefix and its owned cross feature, and buy the five files it predicted",
       "29b560e Stop rejecting `end part p;` by absence: the next commit reads the end usage prefix",
-      "4fd3c91 Read the connection usage and a SysML end's cross multiplicity, and buy the nine files it predicted",
-      "25a9862 Stop rejecting a SysML cross multiplicity by absence: the next commit reads it"
+      "4fd3c91 Read the connection usage and a SysML end's cross multiplicity, and buy the nine files it predicted"
     ]
   },
   "authored": {

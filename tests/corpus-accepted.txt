@@ -44,6 +44,7 @@ vendor/corpus/sysml/src/examples/Packet Example/Packets.sysml
 vendor/corpus/sysml/src/examples/Requirements Examples/HSUVRequirements.sysml
 vendor/corpus/sysml/src/examples/Room Model/RoomModel.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/AliasTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/AnalysisTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CalculationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml
@@ -61,7 +62,9 @@ vendor/corpus/sysml/src/examples/Simple Tests/ParameterTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/RootPackageTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/StateTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/TextualRepresentationTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/TradeStudyTest.sysml
 vendor/corpus/sysml/src/examples/State Space Representation Examples/CartSample.sysml
+vendor/corpus/sysml/src/examples/State Space Representation Examples/EVSample.sysml
 vendor/corpus/sysml/src/examples/Variability Examples/VehicleVariabilityModel.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package - Updated.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package.sysml
@@ -126,6 +129,7 @@ vendor/corpus/sysml/src/training/31. Constraints/Time Constraints.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Definitions.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Groups.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Usages.sysml
+vendor/corpus/sysml/src/training/33. Analysis/Trade Study Analysis Example.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Definitions.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Usages.sysml
@@ -145,6 +149,8 @@ vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavio
 vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-2.sysml
 vendor/corpus/sysml/src/validation/07-Variant Configuration/7a-Variant Configuration - General Concept.sysml
 vendor/corpus/sysml/src/validation/07-Variant Configuration/7a1-Variant Configuration - General Concept-a.sysml
+vendor/corpus/sysml/src/validation/10-Analysis and Trades/10a-Analysis.sysml
+vendor/corpus/sysml/src/validation/10-Analysis and Trades/10b-Trade-off Among Alternative Configurations.sysml
 vendor/corpus/sysml/src/validation/12-Dependency Relationships/12a-Dependency.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13a-Model Containment.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml

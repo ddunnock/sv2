@@ -5752,6 +5752,12 @@ fn each_deviation_site_fires_on_the_text_it_admits_and_no_other() {
             "enum def E { doc /* d */ enum a; }",
             "AnnotatingMember",
         ),
+        // CaseBodyItem, follow_xtext: `return` in a case body, as 7.23.2's example writes it.
+        (
+            "analysis def A { subject v : V; return r : R; }",
+            "analysis def A { subject v : V; r }",
+            "CaseBodyItem",
+        ),
     ] {
         assert_eq!(deviations_named(admitted), [entry], "{admitted}");
         assert_eq!(
@@ -8210,4 +8216,296 @@ fn the_metaclassification_operators_are_read_at_their_tier() {
     // leaving them out of INFIX cannot quietly become leaving them out.
     parse_accepted("attribute x = y meta T;");
     parse_accepted("attribute x = y @@ T;");
+}
+
+// -- The case layer, SysML 8.2.2.22 and 8.2.2.23 --------------------------------------
+//
+// CaseDefinition         = OccurrenceDefinitionPrefix 'case' 'def'
+//                          DefinitionDeclaration CaseBody                    (8.2.2.22)
+// CaseUsage              = OccurrenceUsagePrefix 'case'
+//                          ConstraintUsageDeclaration CaseBody               (8.2.2.22)
+// CaseBody               = ';' | '{' CaseBodyItem* ResultExpressionMember? '}'
+// CaseBodyItem           = ActionBodyItem | SubjectMember | ActorMember | ObjectiveMember
+// ObjectiveMember        = MemberPrefix 'objective' ObjectiveRequirementUsage
+// ObjectiveRequirementUsage = UsageExtensionKeyword* ConstraintUsageDeclaration
+//                          RequirementBody
+// AnalysisCaseDefinition, AnalysisCaseUsage: the same with `analysis`         (8.2.2.23)
+//
+// "declared as a kind of calculation definition or usage ..., using the kind keyword
+// case" (7.22.2, receipt eb25a69f); an analysis case "as a case definition or usage ...,
+// using the kind keyword analysis" (7.23.2, receipt 2aa2d6ce).
+
+#[test]
+fn an_analysis_case_reads_the_corpus_forms() {
+    // examples/Simple Tests/AnalysisTest.sysml:13-37 — a subject, a typed objective with a
+    // body, a trailing result expression, a keywordless objective, a nested analysis
+    // usage returning a value, and an analysis usage binding its subject.
+    let tree = render(
+        &parse_accepted(
+            "package AnalysisTest {\n\
+             analysis def AnalysisCase {\n\
+             subject v : V;\n\
+             objective obj : AnalysisObjective {\n\
+             subject = result;\n\
+             }\n\
+             v.m\n\
+             }\n\
+             analysis def AnalysisPlan {\n\
+             subject v : V;\n\
+             objective {\n\
+             doc /* ... */\n\
+             }\n\
+             analysis analysisCase : AnalysisCase { return mass; }\n\
+             }\n\
+             part analysisContext {\n\
+             analysis analysisPlan : AnalysisPlan {\n\
+             subject v = vv;\n\
+             }\n\
+             }\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "AnalysisCaseDefinition"), 2, "{tree}");
+    assert_eq!(nodes_named(&tree, "AnalysisCaseUsage"), 2, "{tree}");
+    assert_eq!(nodes_named(&tree, "ObjectiveMember"), 2, "{tree}");
+    // Three in case bodies, one in the objective's RequirementBody.
+    assert_eq!(nodes_named(&tree, "SubjectMember"), 4, "{tree}");
+    assert_eq!(nodes_named(&tree, "ResultExpressionMember"), 1, "{tree}");
+    assert_eq!(nodes_named(&tree, "ReturnParameterMember"), 1, "{tree}");
+}
+
+#[test]
+fn a_case_reads_the_training_and_specification_examples() {
+    // training/33. Analysis/Analysis Case Definition Example.sysml:30-45 — the objective
+    // holds the assume and require constraints, which its RequirementBody admits.
+    parse_accepted(
+        "analysis def FuelEconomyAnalysis {\n\
+         subject vehicle : Vehicle;\n\
+         objective fuelEconomyAnalysisObjective {\n\
+         assume constraint { vehicle.wheelDiameter == 33 }\n\
+         require constraint { fuelEconomyResult > 30 }\n\
+         }\n\
+         in attribute scenario : WayPoint[*];\n\
+         action solveForPower { out power : PowerValue[*]; }\n\
+         then action solveForFuelConsumption { in power : PowerValue[*] = solveForPower.power; }\n\
+         return fuelEconomyResult : DistancePerVolumeValue = solveForFuelConsumption.fuelEconomy;\n\
+         }",
+    );
+    // 7.22.2's FaultRecovery example (receipt eb25a69f) less its `actor`, which is
+    // unimplemented: tests/rejection/case-body-actor-member-is-not-implemented.sysml.
+    let case = render(
+        &parse_accepted(
+            "case def FaultRecovery {\n\
+             subject system : AutomationSystem;\n\
+             objective {\n\
+             doc /* The engineer determines the cause of the system fault. */\n\
+             }\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&case, "CaseDefinition"), 1, "{case}");
+    // 7.23.2's example (receipt 2aa2d6ce): a `return` before the objective, and an
+    // unnamed requirement usage inside it.
+    parse_accepted(
+        "analysis def FuelEconomyAnalysis {\n\
+         subject vehicle : Vehicle;\n\
+         return fuelEconomyResult : DistancePerVolumeValue;\n\
+         objective fuelEconomyAnalysisObjective {\n\
+         doc /* ... */\n\
+         requirement : FuelEconomyRequirement;\n\
+         }\n\
+         }",
+    );
+}
+
+#[test]
+fn a_case_owns_what_its_production_writes() {
+    let tree =
+        render(&parse_accepted("analysis def A { subject s; objective o : O { } r } ").syntax());
+    assert_eq!(
+        child_kinds(&tree, "AnalysisCaseDefinition"),
+        [
+            "OccurrenceDefinitionPrefix",
+            "KwAnalysis",
+            "KwDef",
+            "DefinitionDeclaration",
+            "CaseBody"
+        ],
+        "{tree}"
+    );
+    // No CaseBodyPart: the grammar braces the item run and the expression directly.
+    assert_eq!(
+        child_kinds(&tree, "CaseBody"),
+        [
+            "LBrace",
+            "SubjectMember",
+            "ObjectiveMember",
+            "ResultExpressionMember",
+            "RBrace"
+        ],
+        "{tree}"
+    );
+    // The keyword is the MEMBER's, and the usage is a declaration over a RequirementBody.
+    assert_eq!(
+        child_kinds(&tree, "ObjectiveMember"),
+        ["MemberPrefix", "KwObjective", "ObjectiveRequirementUsage"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "ObjectiveRequirementUsage"),
+        ["ConstraintUsageDeclaration", "RequirementBody"],
+        "{tree}"
+    );
+}
+
+#[test]
+fn a_case_usage_owns_what_its_production_writes() {
+    let usage = render(&parse_accepted("part def P { case c : C = x { } }").syntax());
+    assert_eq!(
+        child_kinds(&usage, "CaseUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwCase",
+            "ConstraintUsageDeclaration",
+            "CaseBody"
+        ],
+        "{usage}"
+    );
+    // ConstraintUsageDeclaration = UsageDeclaration ValuePart? (8.2.2.20): the `= x`.
+    assert_eq!(
+        child_kinds(&usage, "ConstraintUsageDeclaration"),
+        ["UsageDeclaration", "ValuePart"],
+        "{usage}"
+    );
+    // The `def` alone separates the two, in both pairs.
+    for (source, definition, other) in [
+        ("case def C;", "CaseDefinition", "CaseUsage"),
+        ("case c;", "CaseUsage", "CaseDefinition"),
+        (
+            "analysis def A;",
+            "AnalysisCaseDefinition",
+            "AnalysisCaseUsage",
+        ),
+        ("analysis a;", "AnalysisCaseUsage", "AnalysisCaseDefinition"),
+    ] {
+        let tree = render(&parse_accepted(source).syntax());
+        assert_eq!(nodes_named(&tree, definition), 1, "{tree}");
+        assert_eq!(nodes_named(&tree, other), 0, "{tree}");
+    }
+    // Occurrence prefixes, both levels.
+    parse_accepted("individual analysis def A; part def P { individual case c; }");
+    // A BehaviorUsageElement (8.2.2.6.4): a BehaviorUsageMember in an action body, after
+    // a `then` and before target successions.
+    let action = render(
+        &parse_accepted("action def A { action a; then analysis c { x } then b; }").syntax(),
+    );
+    assert_eq!(nodes_named(&action, "BehaviorUsageMember"), 2, "{action}");
+    assert_eq!(
+        nodes_named(&action, "SourceSuccessionMember"),
+        1,
+        "{action}"
+    );
+    assert_eq!(
+        nodes_named(&action, "ActionTargetSuccessionMember"),
+        1,
+        "{action}"
+    );
+}
+
+#[test]
+fn a_case_body_reads_every_item_a_calculation_body_does_and_its_own() {
+    // ActionBodyItem through CaseBodyItem (8.2.2.22): the control-flow items, a variant,
+    // an action node and the usages; then the case's own subject and objective.
+    let tree = render(
+        &parse_accepted(
+            "case def C {\n\
+             subject s : S;\n\
+             objective o;\n\
+             first start;\n\
+             then action a;\n\
+             then merge m;\n\
+             first m if g then x;\n\
+             variant part v;\n\
+             attribute x;\n\
+             return r;\n\
+             x + 1\n\
+             }",
+        )
+        .syntax(),
+    );
+    for node in [
+        "SubjectMember",
+        "ObjectiveMember",
+        "InitialNodeMember",
+        "ActionNodeMember",
+        "GuardedSuccessionMember",
+        "VariantUsageMember",
+        "ReturnParameterMember",
+        "ResultExpressionMember",
+    ] {
+        assert_eq!(nodes_named(&tree, node), 1, "{node}: {tree}");
+    }
+    // `subject`, `actor` and `objective` are reserved (8.2.2.1.2) and never an expression,
+    // so a case body with only items ends in none.
+    let items = render(&parse_accepted("case def C { subject s; objective o; }").syntax());
+    assert_eq!(nodes_named(&items, "ResultExpressionMember"), 0, "{items}");
+}
+
+#[test]
+fn a_case_is_bounded_by_its_rules() {
+    // CaseBody is not optional.
+    parse_rejected("case def C");
+    parse_rejected("part def P { analysis a }");
+    // The result expression is last (8.2.2.22): no item follows it.
+    parse_rejected("analysis def A { (a + b) subject s; }");
+    // An objective is a case's alone: not a calculation's, a requirement's or a
+    // definition's item (8.2.2.19, 8.2.2.21.1, 8.2.2.6.1).
+    parse_rejected("calc def C { objective o; }");
+    parse_rejected("requirement def R { objective o; }");
+    parse_rejected("part def P { objective o; }");
+    // And a RequirementConstraintMember is a requirement's, not a case's (8.2.2.21.1).
+    parse_rejected("case def C { require constraint { x } }");
+    // A case's own keywords are reserved and never an expression (8.2.2.1.2), so in a
+    // calculation body, which admits none of them, they are recovered over as items.
+    for word in ["subject", "actor", "objective"] {
+        let parsed = parse_rejected(&format!("calc def C {{ {word} s; }}"));
+        assert_eq!(parsed.errors().len(), 1, "{word}: {:?}", parsed.errors());
+        assert_eq!(
+            parsed.errors()[0].code(),
+            DiagnosticCode::Unexpected,
+            "{word}"
+        );
+    }
+    // ObjectiveRequirementUsage's UsageExtensionKeyword* is unimplemented (8.2.2.22).
+    parse_rejected("case def C { objective #m o; }");
+    // Unclosed.
+    parse_rejected("analysis def A { subject s;");
+}
+
+#[test]
+fn a_use_case_is_not_read_as_a_case() {
+    // `use case` (8.2.2.25) is unimplemented. Recovery must take the whole statement: once
+    // `case def` began a member, the `case` after the reported `use` restarted there and
+    // Annex A's use case bodies were read as case bodies.
+    let parsed = parse_rejected("package P { use case def U { actor a; } use case u : U; }");
+    let tree = render(&parsed.syntax());
+    assert_eq!(nodes_named(&tree, "CaseDefinition"), 0, "{tree}");
+    assert_eq!(nodes_named(&tree, "CaseUsage"), 0, "{tree}");
+    // Only the `use` is reported: nothing inside the use case is read as an item.
+    assert!(
+        parsed
+            .errors()
+            .iter()
+            .all(|error| error.message() == "unexpected `use`"),
+        "{:?}",
+        parsed.errors()
+    );
+}
+
+#[test]
+fn a_case_keeps_every_byte() {
+    let source = "analysis def /* n */ A // d\n{\n\tsubject v : V;\n\tobjective {\n\t\trequire constraint { v > 0 }\n\t}\n\treturn r;\n\tr\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
 }

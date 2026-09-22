@@ -624,6 +624,49 @@ enum ActionNode {
     Assignment,
 }
 
+/// A case production pair: one kind keyword over the case layer's spine.
+///
+/// ```text
+/// CaseDefinition         = OccurrenceDefinitionPrefix 'case' 'def'
+///                          DefinitionDeclaration CaseBody            SysML 8.2.2.22
+/// CaseUsage              = OccurrenceUsagePrefix 'case'
+///                          ConstraintUsageDeclaration CaseBody       SysML 8.2.2.22
+/// AnalysisCaseDefinition = OccurrenceDefinitionPrefix 'analysis' 'def'
+///                          DefinitionDeclaration CaseBody            SysML 8.2.2.23
+/// AnalysisCaseUsage      = OccurrenceUsagePrefix 'analysis'
+///                          ConstraintUsageDeclaration CaseBody       SysML 8.2.2.23
+/// ```
+///
+/// "An analysis case definition or usage is declared as a case definition or usage ...
+/// using the kind keyword analysis" (7.23.2, receipt 2aa2d6ce), so the pairs differ in the
+/// keyword and the metaclass alone. `VerificationCase*` (8.2.2.24) and `UseCase*`
+/// (8.2.2.25) are stated on the same spine and are not here yet; `use case` is two
+/// keywords, and the one a row names here must stand first.
+#[derive(Clone, Copy)]
+struct Case {
+    /// The kind keyword, before the `def` of a definition.
+    keyword: &'static str,
+    /// The node the definition production builds.
+    definition: SyntaxKind,
+    /// The node the usage production builds.
+    usage: SyntaxKind,
+}
+
+/// Every case production pair read. The keywords are reserved and disjoint, so the order
+/// decides nothing.
+const CASES: [Case; 2] = [
+    Case {
+        keyword: "case",
+        definition: SyntaxKind::CaseDefinition,
+        usage: SyntaxKind::CaseUsage,
+    },
+    Case {
+        keyword: "analysis",
+        definition: SyntaxKind::AnalysisCaseDefinition,
+        usage: SyntaxKind::AnalysisCaseUsage,
+    },
+];
+
 /// Every usage production that is a prefix, one keyword and the `Usage` spine.
 ///
 /// Ordered as the clauses number them. The keywords are disjoint, so the order does
@@ -747,6 +790,22 @@ enum Body {
     /// It is a variant of its own because the loop must STOP before the trailing
     /// `ResultExpressionMember`, and no other body has one. See `at_result_expression`.
     Calculation,
+    /// The braced form of `CaseBody`. `SysML` only.
+    ///
+    /// ```text
+    /// CaseBody     = ';' | '{' CaseBodyItem* ResultExpressionMember? '}'
+    /// CaseBodyItem = ActionBodyItem | SubjectMember | ActorMember
+    ///              | ObjectiveMember                               SysML 8.2.2.22
+    /// ```
+    ///
+    /// `Calculation`'s item run and trailing expression, plus the subject, actor and
+    /// objective members: "a case definition or usage is declared as a kind of
+    /// calculation definition or usage" (7.22.2, receipt eb25a69f). The BNF leaves
+    /// `ReturnParameterMember` out of `CaseBodyItem`, and deviation `CaseBodyItem`
+    /// (`follow_xtext`) puts it back, as the 7.23.2 example writes it (receipt 2aa2d6ce);
+    /// see `admits_return_parameter`. A variant of its own rather than `Calculation`
+    /// because `SubjectMember` and `ObjectiveMember` are items here and not there.
+    Case,
     /// The braced form of `StateDefBody` and `StateUsageBody`. `SysML` only.
     ///
     /// ```text
@@ -789,6 +848,7 @@ impl Body {
                 Self::Definition
                 | Self::Requirement
                 | Self::Calculation
+                | Self::Case
                 | Self::Action
                 | Self::State,
                 _,
@@ -800,6 +860,7 @@ impl Body {
                 Self::Definition
                 | Self::Requirement
                 | Self::Calculation
+                | Self::Case
                 | Self::Action
                 | Self::State,
                 _,
@@ -813,8 +874,9 @@ impl Body {
             // NonBehaviorBodyItem: `SourceSuccessionMember? StructureUsageMember`
             // (8.2.2.17.1), which StateBodyItem reaches as its first alternative
             // (8.2.2.18.1).
+            // A case body reaches both through CaseBodyItem's ActionBodyItem (8.2.2.22).
             (
-                Self::Calculation | Self::Action | Self::State,
+                Self::Calculation | Self::Case | Self::Action | Self::State,
                 _,
                 MemberElement::Usage(UsageClass::Structure),
             ) => SyntaxKind::StructureUsageMember,
@@ -826,11 +888,11 @@ impl Body {
             // StateBodyItem's second alternative names the same member, with target
             // transitions after it rather than target successions (8.2.2.18.1).
             (
-                Self::Calculation | Self::Action | Self::State,
+                Self::Calculation | Self::Case | Self::Action | Self::State,
                 _,
                 MemberElement::Usage(UsageClass::Behavior),
             ) => SyntaxKind::BehaviorUsageMember,
-            (Self::Calculation | Self::Action, _, MemberElement::ActionNode) => {
+            (Self::Calculation | Self::Case | Self::Action, _, MemberElement::ActionNode) => {
                 SyntaxKind::ActionNodeMember
             }
             (_, Language::SysMl, _) => SyntaxKind::PackageMember,
@@ -853,6 +915,7 @@ impl Body {
             Self::Definition
             | Self::Requirement
             | Self::Calculation
+            | Self::Case
             | Self::Action
             | Self::State
             | Self::Type => false,
@@ -861,15 +924,25 @@ impl Body {
 
     /// Whether `SubjectMember` is one of this body's alternatives.
     ///
-    /// Only `RequirementBodyItem` reaches it (`SysML` 8.2.2.21.1). `CaseBodyItem` does
-    /// too, and `CaseBody` is unimplemented, so this is the whole of it today.
+    /// `RequirementBodyItem` (`SysML` 8.2.2.21.1) and `CaseBodyItem` (8.2.2.22) reach it,
+    /// and nothing else does.
     ///
     /// Asked separately from `member`, for the reason `admits_filter` is: what a body
     /// owns its ordinary members through and which extra alternatives it has are two
     /// questions, and deriving one from the other admits a `subject` in a definition
     /// body — which `DefinitionBodyItem` does not have.
     fn admits_subject(self) -> bool {
-        matches!(self, Self::Requirement)
+        matches!(self, Self::Requirement | Self::Case)
+    }
+
+    /// Whether `ObjectiveMember` is one of this body's alternatives.
+    ///
+    /// `CaseBodyItem` alone names it (`SysML` 8.2.2.22). That its owner is a case is also
+    /// `validateObjectiveMembershipOwningType` (8.3.22.4), and "at most one" is
+    /// `validateCaseDefinitionOnlyOneObjective` and its usage twin (8.3.22.2, 8.3.22.3):
+    /// constraints, not grammar, so two objectives read and are `sv2-resolve`'s to raise.
+    fn admits_objective(self) -> bool {
+        matches!(self, Self::Case)
     }
 
     /// Whether `VariantUsageMember` is one of this body's alternatives.
@@ -877,10 +950,10 @@ impl Body {
     /// It is an alternative of `DefinitionBodyItem` (`SysML` 8.2.2.6.1), which a
     /// definition or usage body and a requirement body reach (8.2.2.21.1), and of
     /// `NonBehaviorBodyItem` (8.2.2.17.1), which an action or calculation body reaches
-    /// through `ActionBodyItem`, and a state body reaches through `StateBodyItem`
-    /// (8.2.2.18.1). `InterfaceBodyItem` (8.2.2.14.1) names it directly, and `CaseBodyItem`
-    /// (8.2.2.22) and the view bodies (8.2.2.26) reach it too; each joins this when its
-    /// body lands. NOT `PackageBodyElement` (8.2.2.5.1), nor any `KerML` body: `KerML` has
+    /// through `ActionBodyItem`, as a case body does through `CaseBodyItem` (8.2.2.22),
+    /// and a state body reaches through `StateBodyItem` (8.2.2.18.1).
+    /// `InterfaceBodyItem` (8.2.2.14.1) names it directly, and the view bodies (8.2.2.26)
+    /// reach it too; each joins this when its body lands. NOT `PackageBodyElement` (8.2.2.5.1), nor any `KerML` body: `KerML` has
     /// no variants.
     ///
     /// NOT only a variation's body, although "variant usages may only be declared within
@@ -891,7 +964,12 @@ impl Body {
     fn admits_variant(self) -> bool {
         matches!(
             self,
-            Self::Definition | Self::Requirement | Self::Action | Self::Calculation | Self::State
+            Self::Definition
+                | Self::Requirement
+                | Self::Action
+                | Self::Calculation
+                | Self::Case
+                | Self::State
         )
     }
 
@@ -919,11 +997,10 @@ impl Body {
 
     /// Whether `RequirementConstraintMember` is one of this body's alternatives.
     ///
-    /// Asked separately from `admits_subject` although both answer `Requirement` today,
-    /// because they stop agreeing the moment `CaseBody` lands: `CaseBodyItem` reaches
-    /// `SubjectMember` and does NOT reach `RequirementConstraintMember` (`SysML`
-    /// 8.2.2.21.1 against 8.2.2.22). Folding them into one question now would have to be
-    /// unfolded then, and the unfolding is the kind that gets missed.
+    /// Asked separately from `admits_subject`, and the two disagree about `Case`:
+    /// `CaseBodyItem` reaches `SubjectMember` and does NOT reach
+    /// `RequirementConstraintMember` (`SysML` 8.2.2.21.1 against 8.2.2.22). A
+    /// `require` belongs in a case's objective, which is a `RequirementBody`.
     fn admits_requirement_constraint(self) -> bool {
         matches!(self, Self::Requirement)
     }
@@ -931,11 +1008,12 @@ impl Body {
     /// Whether this body's items may be followed by a `ResultExpressionMember`.
     ///
     /// `CalculationBodyPart = CalculationBodyItem* ResultExpressionMember?`
-    /// (`SysML` 8.2.2.19), and no other implemented body ends in an expression. The item
+    /// (`SysML` 8.2.2.19), and `CaseBody` braces the same shape (8.2.2.22); no other
+    /// implemented body ends in an expression. The item
     /// loop has to stop before it, because an expression is not a member and the loop
     /// would otherwise recover over it one token at a time.
     fn ends_in_result_expression(self) -> bool {
-        matches!(self, Self::Calculation)
+        matches!(self, Self::Calculation | Self::Case)
     }
 
     /// Whether `ReturnParameterMember` is one of this body's alternatives.
@@ -947,8 +1025,14 @@ impl Body {
     /// come to be admitted in an action body by accident;
     /// tests/rejection/return-parameter-member-is-not-an-action-body-item.sysml is the
     /// file that fails if it ever is.
+    ///
+    /// `Case` by deviation `CaseBodyItem` (`follow_xtext`): 8.2.2.22 leaves
+    /// `ReturnParameterMember` out of `CaseBodyItem`, while 7.22.2 declares a case "a kind
+    /// of calculation definition or usage" (receipt eb25a69f) and 7.23.2's own example
+    /// writes `return` in an analysis case body (receipt 2aa2d6ce). `body_specific_item`
+    /// notes the departure where it reads one.
     fn admits_return_parameter(self) -> bool {
-        matches!(self, Self::Calculation)
+        matches!(self, Self::Calculation | Self::Case)
     }
 
     /// Whether `ActionBodyItem`'s alternatives beyond `NonBehaviorBodyItem` belong to
@@ -962,14 +1046,15 @@ impl Body {
     /// A comment on `admits_return_parameter` once said the opposite; it was false, and
     /// widening this to `Requirement` on its word would have admitted `first` where the
     /// grammar has none. tests/rejection/initial-node-member-is-not-a-requirement-body-item.sysml
-    /// fails if it ever is. Of the eight, only `ActionBody` and `CalculationBody` have a
-    /// `Body` variant — the rest are unimplemented — so `Action` and `Calculation` are the
-    /// whole of it today, and each of the others joins this when its body lands.
+    /// fails if it ever is. Of the eight, `ActionBody`, `CalculationBody` and `CaseBody`
+    /// have a `Body` variant — the rest are unimplemented — so `Action`, `Calculation` and
+    /// `Case` are the whole of it today, and each of the others joins this when its body
+    /// lands.
     ///
     /// `Calculation` covers `ConstraintDefinition` too, which shares `CalculationBody`
     /// (8.2.2.20): a constraint body admits `first` by the grammar, however unusual.
     fn admits_action_body_item(self) -> bool {
-        matches!(self, Self::Action | Self::Calculation)
+        matches!(self, Self::Action | Self::Calculation | Self::Case)
     }
 
     /// Whether `SourceSuccessionMember` may prefix a member here.
@@ -992,7 +1077,12 @@ impl Body {
     fn admits_source_succession(self) -> bool {
         matches!(
             self,
-            Self::Definition | Self::Requirement | Self::Action | Self::Calculation | Self::State
+            Self::Definition
+                | Self::Requirement
+                | Self::Action
+                | Self::Calculation
+                | Self::Case
+                | Self::State
         )
     }
 }
@@ -1322,6 +1412,7 @@ impl<'a> Parser<'a> {
             || self.at_requirement_definition(n)
             || self.at_constraint_definition(n)
             || self.at_calculation_definition(n)
+            || self.at_case_definition(n).is_some()
             || self.at_action_definition(n)
             || self.at_state_definition(n)
             || self.at_enumeration_definition(n)
@@ -1354,6 +1445,30 @@ impl<'a> Parser<'a> {
     fn at_calculation_definition(&self, n: usize) -> bool {
         let after = self.skip_occurrence_definition_prefix(n);
         self.nth_is_keyword(after, "calc") && self.nth_is_keyword(after + 1, "def")
+    }
+
+    /// Which case definition starts at the `n`th meaningful token, if one does.
+    ///
+    /// `OccurrenceDefinitionPrefix`, a `CASES` keyword and `def` (`SysML` 8.2.2.22,
+    /// 8.2.2.23). The prefix skipped is the one `case_definition` reads.
+    fn at_case_definition(&self, n: usize) -> Option<Case> {
+        let after = self.skip_occurrence_definition_prefix(n);
+        CASES.into_iter().find(|case| {
+            self.nth_is_keyword(after, case.keyword) && self.nth_is_keyword(after + 1, "def")
+        })
+    }
+
+    /// Which case usage starts at the `n`th meaningful token, if one does.
+    ///
+    /// `OccurrenceUsagePrefix` and a `CASES` keyword with no `def` after it, which is what
+    /// makes it the definition beside it. The prefix skipped is the one `case_usage` reads
+    /// with `occurrence_usage_prefix`. `use case u;` is not claimed: `use` is not in the
+    /// prefix, so the `case` after it is never at the position asked.
+    fn at_case_usage(&self, n: usize) -> Option<Case> {
+        let after = self.skip_occurrence_usage_prefix(n);
+        CASES.into_iter().find(|case| {
+            self.nth_is_keyword(after, case.keyword) && !self.nth_is_keyword(after + 1, "def")
+        })
     }
 
     /// Whether the trailing `ResultExpressionMember` starts here rather than one more
@@ -1392,14 +1507,22 @@ impl<'a> Parser<'a> {
         {
             return false;
         }
-        if self.at_return_parameter_member() || self.at_element_keyword("variant") {
+        if self.at_return_parameter_member()
+            || ["variant", "subject", "actor", "objective"]
+                .iter()
+                .any(|word| self.at_element_keyword(word))
+        {
             // `return` and `variant` continue the item run rather than ending it: both
-            // are items of a calculation body (8.2.2.19, 8.2.2.17.1), neither is in
-            // `at_sysml_keyword_member`, because neither is a member `membership` reads,
-            // and a reserved keyword is never an expression (8.2.2.1.2). The body loop asks
-            // about both first and so never reaches here with either in front of it, but
-            // a recogniser that is only right because of where it is called is
-            // the trap `membership`'s classifier guard is written against.
+            // are items of a calculation body (8.2.2.19, 8.2.2.17.1), and `subject`,
+            // `actor` and `objective` are items of a case body (8.2.2.22), `actor`'s
+            // ActorMember unimplemented and so recovered over as an item. None is in
+            // `at_sysml_keyword_member`, because none is a member `membership` reads,
+            // and a reserved keyword is never an expression (8.2.2.1.2). Where a body
+            // admits one, the loop asks about it first and never reaches here with it in
+            // front; where a body does not (`subject` in a calculation body), this sends it
+            // to recovery as unexpected text rather than to the expression reader. Either
+            // way the answer does not depend on where it is asked, which is the trap
+            // `membership`'s classifier guard is written against.
             return false;
         }
         if self.at_default_reference_usage(n) {
@@ -1551,6 +1674,7 @@ impl<'a> Parser<'a> {
             || self.at_constraint_usage(n)
             || self.at_requirement_usage(n)
             || self.at_calculation_usage(n)
+            || self.at_case_usage(n).is_some()
             || self.at_simple_usage(n).is_some()
             || self.at_reference_usage(n)
     }
@@ -2021,8 +2145,8 @@ impl<'a> Parser<'a> {
             self.namespace_feature_member();
         } else if self.body_specific_item(body) {
             // GuardedSuccessionMember, InitialNodeMember, ReturnParameterMember,
-            // VariantUsageMember, RequirementConstraintMember, SubjectMember and
-            // TransitionUsageMember: see `body_specific_item`.
+            // VariantUsageMember, RequirementConstraintMember, SubjectMember,
+            // ObjectiveMember and TransitionUsageMember: see `body_specific_item`.
         } else if body.ends_in_result_expression() && self.at_result_expression() {
             // The item run is over and what is left is the body's trailing
             // expression, which is not a member. `calculation_body_part` reads it;
@@ -2058,8 +2182,9 @@ impl<'a> Parser<'a> {
     ///
     /// Split out of `body_element`, which asks it before the result-expression test: every
     /// one of these continues an item run, and none is admitted by a calculation body
-    /// except the four that are (the guarded succession, `first`, `return`, `variant`), so
-    /// the others' position relative to that test decides nothing. The arms are disjoint on their keywords, so
+    /// except the four that are (the guarded succession, `first`, `return`, `variant`),
+    /// nor by a case body except those four and `subject` and `objective`, so the others'
+    /// position relative to that test decides nothing. The arms are disjoint on their keywords, so
     /// their order decides nothing either.
     fn body_specific_item(&mut self, body: Body) -> bool {
         if body.admits_action_body_item() && self.at_guarded_succession_member() {
@@ -2081,6 +2206,12 @@ impl<'a> Parser<'a> {
             // result-expression test below, because `return` is where the item run
             // continues rather than where it ends; `at_result_expression` says so
             // too, so neither position depends on the other being right.
+            if body == Body::Case {
+                // 8.2.2.22's CaseBodyItem has no ReturnParameterMember; see
+                // `Body::admits_return_parameter`.
+                // deviation: CaseBodyItem
+                self.note_deviation("CaseBodyItem", "a return parameter in a case body");
+            }
             self.return_parameter_member();
         } else if body.admits_variant() && self.at_element_keyword("variant") {
             // DefinitionBodyItem's and NonBehaviorBodyItem's VariantUsageMember
@@ -2102,6 +2233,10 @@ impl<'a> Parser<'a> {
             // of its own — SubjectMembership — so it cannot go through `membership`,
             // which builds the body's ordinary member node.
             self.subject_member();
+        } else if body.admits_objective() && self.at_element_keyword("objective") {
+            // CaseBodyItem's fourth alternative (SysML 8.2.2.22), owning its requirement
+            // through an ObjectiveMembership of its own, as SubjectMember does.
+            self.objective_member();
         } else if body.admits_state_action()
             && ["entry", "do", "exit"]
                 .iter()
@@ -2154,8 +2289,15 @@ impl<'a> Parser<'a> {
         self.start_node(SyntaxKind::Error);
         let mut depth: usize = 0;
         let mut taken = false;
+        // Whether the last token taken was `use`. `use case` opens UseCaseDefinition and
+        // UseCaseUsage and follows `include` in IncludeUseCaseUsage (SysML 8.2.2.25), all
+        // unimplemented, and the `case` after it is their second keyword, not the start of a CaseDefinition or CaseUsage: ending
+        // the statement there read a use case's body as a case's.
+        let mut after_use = false;
         while let Some(token) = self.tokens.get(self.pos).copied() {
-            if taken && depth == 0 && (token.kind == SyntaxKind::RBrace || self.at_member_keyword())
+            if taken
+                && depth == 0
+                && (token.kind == SyntaxKind::RBrace || (!after_use && self.at_member_keyword()))
             {
                 break;
             }
@@ -2167,6 +2309,7 @@ impl<'a> Parser<'a> {
             if !self.skippable(token.kind) {
                 end = Self::range_of(token).end();
                 taken = true;
+                after_use = self.text_of(token) == "use";
             }
             self.push(token, token.kind);
             if depth == 0 && token.kind == SyntaxKind::Semicolon {
@@ -2224,6 +2367,9 @@ impl<'a> Parser<'a> {
                         || self.at_constraint_usage(0)
                         || self.at_requirement_usage(0)
                         || self.at_calculation_usage(0)
+                        || self.at_case_usage(0).is_some()
+                        // A CaseBodyItem rather than a member `membership` reads.
+                        || self.at_element_keyword("objective")
                         || self.at_action_node(0).is_some()
                 }
             }
@@ -2914,6 +3060,8 @@ impl<'a> Parser<'a> {
             self.constraint_definition();
         } else if self.at_calculation_definition(0) {
             self.calculation_definition();
+        } else if let Some(case) = self.at_case_definition(0) {
+            self.case_definition(case);
         } else if self.at_action_definition(0) {
             self.action_definition();
         } else if self.at_state_definition(0) {
@@ -3376,6 +3524,10 @@ impl<'a> Parser<'a> {
         } else if self.at_calculation_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
             self.calculation_usage();
+            true
+        } else if let Some(case) = self.at_case_usage(0) {
+            // CaseUsage and AnalysisCaseUsage are BehaviorUsageElements (8.2.2.6.4).
+            self.case_usage(case);
             true
         } else if self.at_requirement_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ConstraintUsage is.
@@ -8362,6 +8514,7 @@ impl<'a> Parser<'a> {
             || self.at_constraint_usage(n)
             || self.at_requirement_usage(n)
             || self.at_calculation_usage(n)
+            || self.at_case_usage(n).is_some()
             || self.at_flow_usage(n)
             || self.at_connection_usage(n)
             || self
@@ -9132,6 +9285,162 @@ impl<'a> Parser<'a> {
         self.start_node(SyntaxKind::SubjectUsage);
         self.expect_keyword("subject");
         self.usage();
+        self.finish_node();
+    }
+
+    // production: CaseDefinition
+    // production: AnalysisCaseDefinition
+    //
+    // CaseDefinition         = OccurrenceDefinitionPrefix 'case' 'def'
+    //                          DefinitionDeclaration CaseBody            (SysML 8.2.2.22)
+    // AnalysisCaseDefinition = OccurrenceDefinitionPrefix 'analysis' 'def'
+    //                          DefinitionDeclaration CaseBody            (SysML 8.2.2.23)
+    //
+    // One method, the keyword and node from `CASES`. "A case definition or usage is
+    // declared as a kind of calculation definition or usage ... using the kind keyword
+    // case" (7.22.2, receipt eb25a69f), and an analysis case as a case with the kind
+    // keyword analysis (7.23.2, receipt 2aa2d6ce): CalculationDefinition's spine over
+    // CaseBody. The metaclasses chain AnalysisCaseDefinition > CaseDefinition >
+    // CalculationDefinition (8.3.23.2, receipt 188d1035; 8.3.22.2, receipt 692a4982).
+    //
+    // implied specialization: Cases::Case, or AnalysisCases::AnalysisCase
+    // constraint: CaseDefinition::checkCaseDefinitionSpecialization,
+    //     `specializesFromLibrary('Cases::Case')` (8.3.22.2), and
+    //     AnalysisCaseDefinition::checkAnalysisCaseDefinitionSpecialization,
+    //     `specializesFromLibrary('AnalysisCases::AnalysisCase')` (8.3.23.2). Injections,
+    //     so sv2-hir's; this layer builds the tree only (ADR-0002).
+    // constraint: CaseDefinition::validateCaseDefinitionOnlyOneSubject,
+    //     validateCaseDefinitionOnlyOneObjective and
+    //     validateCaseDefinitionSubjectParameterPosition (8.3.22.2): at most one subject
+    //     and one objective, and the subject the first parameter. Constraints on what the
+    //     body holds, not grammar, so sv2-resolve's; the body reads any number of each.
+    fn case_definition(&mut self, case: Case) {
+        self.eat_trivia();
+        self.start_node(case.definition);
+        self.occurrence_definition_prefix();
+        self.expect_keyword(case.keyword);
+        self.expect_keyword("def");
+        self.definition_declaration();
+        self.case_body();
+        self.finish_node();
+    }
+
+    // production: CaseUsage
+    // production: AnalysisCaseUsage
+    //
+    // CaseUsage         = OccurrenceUsagePrefix 'case'
+    //                     ConstraintUsageDeclaration CaseBody            (SysML 8.2.2.22)
+    // AnalysisCaseUsage = OccurrenceUsagePrefix 'analysis'
+    //                     ConstraintUsageDeclaration CaseBody            (SysML 8.2.2.23)
+    //
+    // ConstraintUsageDeclaration and not ActionUsageDeclaration, although a CaseUsage is a
+    // CalculationUsage (8.3.22.3, receipt f0ff6680) and CalculationUsage takes the
+    // action's: the grammar states it so. The two bodies are the same,
+    // `UsageDeclaration ValuePart?` (8.2.2.20, 8.2.2.17.2), so the choice decides the node
+    // name alone and not what text is read.
+    //
+    // Marked although OccurrenceUsagePrefix is not, as ActionUsage is.
+    //
+    // implied specialization: Cases::cases, or AnalysisCases::analysisCases
+    // constraint: CaseUsage::checkCaseUsageSpecialization (8.3.22.3) and
+    //     AnalysisCaseUsage::checkAnalysisCaseUsageSpecialization (8.3.23.3, receipt
+    //     ac8c6d0a), and the composite-owned checkCaseUsageSubcaseSpecialization and
+    //     checkAnalysisCaseUsageSubAnalysisCaseSpecialization. sv2-hir's (ADR-0002).
+    fn case_usage(&mut self, case: Case) {
+        self.eat_trivia();
+        self.start_node(case.usage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword(case.keyword);
+        self.constraint_usage_declaration();
+        self.case_body();
+        self.finish_node();
+    }
+
+    // production: CaseBody
+    //
+    // CaseBody : Type =
+    //     ';'
+    //   | '{' CaseBodyItem* ( ownedRelationship += ResultExpressionMember )? '}'
+    //                                                            (SysML 8.2.2.22)
+    //
+    // CalculationBody's shape with the part inlined, so there is no CaseBodyPart node:
+    // the grammar names none. The items are read by `body_elements` under `Body::Case`,
+    // which says what they are; the trailing expression as `calculation_body_part` reads
+    // its own.
+    //
+    // CaseBodyItem is NOT marked:
+    //
+    //     CaseBodyItem = ActionBodyItem | SubjectMember | ActorMember | ObjectiveMember
+    //
+    // ActorMember (8.2.2.21.1) is unimplemented, so `actor` in a case body is reported,
+    // and ActionBodyItem carries the action layer's own gaps. `return` IS read, by
+    // deviation CaseBodyItem; see `Body::admits_return_parameter`.
+    fn case_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::CaseBody);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.body_elements(Some(SyntaxKind::RBrace), Body::Case);
+            // As in `calculation_body_part`: the loop returned before the `}` only
+            // because what is left is the trailing ResultExpressionMember.
+            if !self.at_end() && !self.at(SyntaxKind::RBrace) {
+                self.result_expression_member();
+            }
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.error_expected("`;` or `{` after a case declaration");
+        }
+        self.finish_node();
+    }
+
+    // production: ObjectiveMember
+    //
+    // ObjectiveMember : ObjectiveMembership =
+    //     MemberPrefix 'objective'
+    //     ownedRelatedElement += ObjectiveRequirementUsage       (SysML 8.2.2.22)
+    //
+    // "The objective of a case definition or usage is declared as a requirement usage
+    // ..., but using the keyword objective instead of requirement" (7.22.2, receipt
+    // eb25a69f). Unlike SubjectMember, the keyword belongs to the MEMBER here, not to the
+    // usage it owns. The metaclass is ObjectiveMembership (8.3.22.4, receipt d68190c3), a
+    // FeatureMembership.
+    //
+    // constraint: ObjectiveMembership::validateObjectiveMembershipOwningType (8.3.22.4):
+    //     `owningType.oclIsType(CaseDefinition) or owningType.oclIsType(CaseUsage)`. The
+    //     grammar says only part of it: CaseBodyItem alone reaches this, but the analysis,
+    //     verification and use case bodies reach CaseBodyItem too, and the corpus writes
+    //     objectives there (AnalysisTest.sysml, Annex A's use cases), which an exact-type
+    //     test refuses. sv2-resolve's to decide, as a spec question and not this layer's.
+    // constraint: ObjectiveMembership::validateObjectiveMembershipIsComposite (8.3.22.4).
+    //     sv2-resolve's; the tree carries no `ref` here to contradict it.
+    fn objective_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ObjectiveMember);
+        self.member_prefix();
+        self.expect_keyword("objective");
+        self.objective_requirement_usage();
+        self.finish_node();
+    }
+
+    // ObjectiveRequirementUsage : RequirementUsage =
+    //     UsageExtensionKeyword* ConstraintUsageDeclaration RequirementBody
+    //                                                            (SysML 8.2.2.22)
+    //
+    // NOT marked for coverage: UsageExtensionKeyword (`#` prefix metadata) is
+    // unimplemented, as it is on SubjectUsage, so `objective #goal o;` is reported. The
+    // `*` makes zero of them every corpus form. A RequirementBody, so a `require` or
+    // `subject` inside an objective reads as it does inside a requirement; "the subject of
+    // an objective requirement is bound by default to the result" (7.22.2) is a binding
+    // sv2-hir injects, not text.
+    fn objective_requirement_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ObjectiveRequirementUsage);
+        self.constraint_usage_declaration();
+        self.requirement_body();
         self.finish_node();
     }
 
