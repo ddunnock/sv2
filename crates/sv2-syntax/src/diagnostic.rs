@@ -24,11 +24,12 @@ use text_size::TextRange;
 
 /// How much a diagnostic matters.
 ///
-/// Only [`Severity::Error`] has a producer today — every diagnostic this crate raises
-/// is one, and `only_errors_are_raised_today` in the parser's tests holds that down so
-/// the claim is checked rather than assumed. The other two are named by decisions
-/// already taken: ADR-0002 decorates rather than filters, and ADR-0016 emits an
-/// informational diagnostic when an element is given a new identity.
+/// [`Severity::Error`] is raised for text the language does not admit, and
+/// [`Severity::Info`] for text admitted only by a recorded deviation from the
+/// specification (`PARSE-DEVIATION`, ADR-0022), which the parser keeps apart from its
+/// errors. `only_errors_and_deviations_are_raised` in the parser's tests holds that down.
+/// [`Severity::Warning`] has no producer yet; ADR-0002 decorates rather than filters, and
+/// ADR-0016 names an informational diagnostic of its own.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[non_exhaustive]
 pub enum Severity {
@@ -72,6 +73,9 @@ pub enum DiagnosticCode {
     UnterminatedComment,
     /// Input nested deeper than the parser will recurse (invariant 3).
     TooDeeplyNested,
+    /// Text the parser admits only because of a recorded deviation from the
+    /// specification's BNF, whose register entry the message names (ADR-0022).
+    Deviation,
 }
 
 impl DiagnosticCode {
@@ -86,6 +90,7 @@ impl DiagnosticCode {
             Self::Unexpected => "PARSE-UNEXPECTED",
             Self::UnterminatedComment => "PARSE-UNTERMINATED-COMMENT",
             Self::TooDeeplyNested => "PARSE-TOO-DEEPLY-NESTED",
+            Self::Deviation => "PARSE-DEVIATION",
         }
     }
 
@@ -100,6 +105,7 @@ impl DiagnosticCode {
             | Self::Unexpected
             | Self::UnterminatedComment
             | Self::TooDeeplyNested => Severity::Error,
+            Self::Deviation => Severity::Info,
         }
     }
 }

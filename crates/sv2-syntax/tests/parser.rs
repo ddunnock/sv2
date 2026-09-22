@@ -5631,11 +5631,11 @@ fn a_port_usage_is_not_a_port_definition() {
 // -- the diagnostics themselves ---------------------------------------------------
 
 #[test]
-fn only_errors_are_raised_today() {
-    // Severity has three variants and this crate produces one of them. Asserted rather
-    // than assumed, so that the first Warning or Info raised has to come here and say
-    // what it is: the doc comment on Severity claims this, and a claim nothing checks
-    // is how a doc comment stops being true.
+fn only_errors_and_deviations_are_raised() {
+    // Severity has three variants and this crate produces two: Error in `errors()`, and
+    // Info in `deviations()`, only ever as PARSE-DEVIATION (ADR-0022). Asserted rather
+    // than assumed, so that the first Warning raised, or an Info anywhere else, has to
+    // come here and say what it is.
     for source in [
         "package",
         "class Wrong;",
@@ -5643,15 +5643,113 @@ fn only_errors_are_raised_today() {
         "/* never closed",
         "part def",
         "}}}",
+        "connection def D { end part p; }",
     ] {
-        for diagnostic in parse(source, Language::SysMl).errors() {
+        let parsed = parse(source, Language::SysMl);
+        for diagnostic in parsed.errors() {
             assert_eq!(
                 diagnostic.severity(),
                 Severity::Error,
                 "{source:?} raised {diagnostic:?}"
             );
         }
+        for diagnostic in parsed.deviations() {
+            assert_eq!(diagnostic.severity(), Severity::Info, "{source:?}");
+            assert_eq!(diagnostic.code(), DiagnosticCode::Deviation, "{source:?}");
+        }
     }
+}
+
+// -- deviation diagnostics, ADR-0022 ---------------------------------------------
+//
+// Text the parser admits only because of a recorded deviation parses, and carries a
+// PARSE-DEVIATION note naming the register entry. Each case below pairs the text the
+// deviation admits with text the specification's BNF already admits, which must carry
+// no note: a site that fired on both would flag conformant files.
+
+/// The register entries named by `source`'s deviation notes, in order, asserting that it
+/// parses with no errors.
+fn deviations_named(source: &str) -> Vec<String> {
+    let parsed = parse_accepted(source);
+    parsed
+        .deviations()
+        .iter()
+        .map(|d| {
+            let message = d.message();
+            message
+                .split("admitted by deviation ")
+                .nth(1)
+                .and_then(|rest| rest.split(',').next())
+                .unwrap_or(message)
+                .to_owned()
+        })
+        .collect()
+}
+
+#[test]
+fn each_deviation_site_fires_on_the_text_it_admits_and_no_other() {
+    for (admitted, conformant, entry) in [
+        // SendNode, follow_xtext: `action NAME send` (ServerSequenceRealization-2:19).
+        (
+            "action def A { action publish send x; }",
+            "action def A { send x; }",
+            "SendNode",
+        ),
+        // OccurrenceUsagePrefix, follow_xtext: `end` on an occurrence usage.
+        (
+            "connection def D { end part p; }",
+            "connection def D { part p; }",
+            "OccurrenceUsagePrefix",
+        ),
+        // DefaultReferenceUsage, follow_xtext: a keywordless `end` (ConnectionTest:33).
+        (
+            "connection def D { end end1; }",
+            "connection def D { end1; }",
+            "DefaultReferenceUsage",
+        ),
+        // EntryTransitionMember, follow_xtext: one `then` after an entry action.
+        (
+            "state def S { entry; then off; state off; }",
+            "state def S { entry; if g then off; state off; }",
+            "EntryTransitionMember",
+        ),
+        // FlowEndSubsetting, follow_xtext: a two-segment end's `.`, as in Annex A's first flow;
+        // the three-segment end beside it is FeatureChainPrefix, as written.
+        (
+            "part def P { flow p1.torque to a.b.c; }",
+            "part def P { flow a.b.c to d.e.f; }",
+            "FlowEndSubsetting",
+        ),
+        // AnnotatingMember, follow_xtext: a visibility on an enum body's annotation.
+        (
+            "enum def E { private doc /* d */ enum a; }",
+            "enum def E { doc /* d */ enum a; }",
+            "AnnotatingMember",
+        ),
+    ] {
+        assert_eq!(deviations_named(admitted), [entry], "{admitted}");
+        assert_eq!(
+            deviations_named(conformant),
+            Vec::<String>::new(),
+            "{conformant}"
+        );
+    }
+}
+
+#[test]
+fn a_deviation_is_not_an_error_and_strictness_is_asked_separately() {
+    let parsed = parse_accepted("connection def D { end part p; }");
+    assert!(parsed.errors().is_empty());
+    assert_eq!(parsed.deviations().len(), 1);
+    assert!(!parsed.is_spec_conformant());
+    assert!(parse_accepted("part def P { part p; }").is_spec_conformant());
+    // A deviation's note points at the text that uses it: the `end`.
+    let source = "connection def D { end part p; }";
+    let range = parsed.deviations()[0].range();
+    assert_eq!(
+        source.get(usize::from(range.start())..usize::from(range.end())),
+        Some("end")
+    );
 }
 
 #[test]

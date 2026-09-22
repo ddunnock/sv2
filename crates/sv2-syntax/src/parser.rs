@@ -66,6 +66,7 @@ use crate::lexer::{Token, is_trivia, is_unterminated_comment, tokenize};
 pub struct Parse {
     green: GreenNode,
     errors: Vec<Diagnostic>,
+    deviations: Vec<Diagnostic>,
 }
 
 impl Parse {
@@ -91,6 +92,30 @@ impl Parse {
     #[must_use]
     pub fn errors(&self) -> &[Diagnostic] {
         &self.errors
+    }
+
+    /// The places the text is admitted only because of a recorded deviation from the
+    /// specification's BNF, in source order (ADR-0022).
+    ///
+    /// Each is a `PARSE-DEVIATION` diagnostic of severity `Info` whose message names its
+    /// entry in `.claude/state/deviations.json`. They are NOT errors: the text parses, and
+    /// [`Parse::errors`] does not contain them. A caller that needs the specification's
+    /// literal reading treats them as errors — `sv2 parse --strict` does.
+    ///
+    /// Only EXTENSIONS are reported. A deviation that restricts the specification rejects
+    /// text, and rejected text has no tree to carry a note; the register says which way
+    /// each deviation runs.
+    #[must_use]
+    pub fn deviations(&self) -> &[Diagnostic] {
+        &self.deviations
+    }
+
+    /// Whether the text parses AND depends on no recorded deviation: what a tool written
+    /// from the specification's BNF alone would also accept, as far as this parser can
+    /// tell (see [`Parse::deviations`] on restrictions).
+    #[must_use]
+    pub fn is_spec_conformant(&self) -> bool {
+        self.errors.is_empty() && self.deviations.is_empty()
     }
 }
 
@@ -1110,6 +1135,8 @@ struct Parser<'a> {
     pos: usize,
     builder: GreenNodeBuilder<'static>,
     errors: Vec<Diagnostic>,
+    /// The `PARSE-DEVIATION` notes, kept apart from `errors` (ADR-0022).
+    deviations: Vec<Diagnostic>,
     /// How many nesting levels of recursive production this parser is inside.
     ///
     /// Bounded by [`MAX_DEPTH`]. Invariant 3 is that the parser does not die on any
@@ -1140,6 +1167,7 @@ impl<'a> Parser<'a> {
             pos: 0,
             builder: GreenNodeBuilder::new(),
             errors: Vec::new(),
+            deviations: Vec::new(),
             depth: 0,
             depth_reported: false,
             comments_significant: false,
@@ -1814,6 +1842,22 @@ impl<'a> Parser<'a> {
         self.emit(DiagnosticCode::Expected, range, message);
     }
 
+    /// Record that the text at the next meaningful token is admitted only by the register
+    /// entry `entry` (ADR-0022).
+    ///
+    /// Every call site carries a `// deviation: <entry>` marker, which
+    /// `scripts/check_deviation_sites.py` checks against the register: the entry must exist
+    /// and must depart from the specification. A site calls this only where the text uses
+    /// what the deviation adds, never merely where the deviation could apply.
+    fn note_deviation(&mut self, entry: &str, what: &str) {
+        let range = self.here();
+        self.deviations.push(Diagnostic::new(
+            DiagnosticCode::Deviation,
+            range,
+            format!("{what}: admitted by deviation {entry}, not by the specification's BNF"),
+        ));
+    }
+
     /// Record one diagnostic.
     ///
     /// Every diagnostic this parser raises goes through here, so that the range is
@@ -1897,13 +1941,13 @@ impl<'a> Parser<'a> {
     // is what ADR-0014 exists for. `Body::Root` carries the difference; the loop below
     // is shared, because everything else about reading a body is. Two grammar units, and
     // this reads both bodies, so it carries both markers.
-    fn root_namespace(mut self) -> (GreenNode, Vec<Diagnostic>) {
+    fn root_namespace(mut self) -> (GreenNode, Vec<Diagnostic>, Vec<Diagnostic>) {
         self.start_node(SyntaxKind::RootNamespace);
         self.body_elements(None, Body::Root);
         // Trailing trivia belongs to the tree as much as anything else.
         self.eat_trivia();
         self.finish_node();
-        (self.builder.finish(), self.errors)
+        (self.builder.finish(), self.errors, self.deviations)
     }
 
     /// The elements of one `body`, up to `until` or end of input.
@@ -3137,6 +3181,13 @@ impl<'a> Parser<'a> {
     fn annotating_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::AnnotatingMember);
+        if self.at_visibility() {
+            // deviation: AnnotatingMember
+            self.note_deviation(
+                "AnnotatingMember",
+                "a visibility on an enumeration body's annotation",
+            );
+        }
         self.member_prefix();
         self.with_significant_comments(Self::annotating_element);
         self.finish_node();
@@ -3405,6 +3456,10 @@ impl<'a> Parser<'a> {
     fn default_reference_usage(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::DefaultReferenceUsage);
+        if self.at_keyword("end") {
+            // deviation: DefaultReferenceUsage
+            self.note_deviation("DefaultReferenceUsage", "`end` on a keywordless usage");
+        }
         self.eat_optional_keyword("end");
         self.ref_prefix();
         if self.at_name() || self.at(SyntaxKind::Lt) {
@@ -3563,6 +3618,8 @@ impl<'a> Parser<'a> {
         if self.at_keyword("end") {
             // The first alternative, by deviation OccurrenceUsagePrefix (follow_xtext):
             // it excludes `individual` and the portion kind.
+            // deviation: OccurrenceUsagePrefix
+            self.note_deviation("OccurrenceUsagePrefix", "`end` on an occurrence usage");
             self.end_usage_prefix();
             self.finish_node();
             return;
@@ -6672,6 +6729,10 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::SendNode);
         self.occurrence_usage_prefix();
+        if self.at_keyword("action") {
+            // deviation: SendNode
+            self.note_deviation("SendNode", "`action` declaring a send action node");
+        }
         self.action_node_usage_declaration("send");
         self.expect_keyword("send");
         if self.at_sender_receiver_part() {
@@ -6909,6 +6970,11 @@ impl<'a> Parser<'a> {
         if self.at_keyword("if") {
             self.guarded_target_succession();
         } else {
+            // deviation: EntryTransitionMember
+            self.note_deviation(
+                "EntryTransitionMember",
+                "`then` and a TransitionSuccession after an entry action",
+            );
             self.expect_keyword("then");
             self.transition_succession();
         }
@@ -7372,6 +7438,8 @@ impl<'a> Parser<'a> {
             None => self.error_expected("a flow end"),
             Some((_, 1)) => self.flow_feature_member(),
             Some((_, 2)) => {
+                // deviation: FlowEndSubsetting
+                self.note_deviation("FlowEndSubsetting", "a two-segment flow end's `.`");
                 self.start_node(SyntaxKind::FlowEndSubsetting);
                 self.qualified_name();
                 self.expect(SyntaxKind::Dot, "`.`");
@@ -9911,8 +9979,12 @@ impl<'a> Parser<'a> {
 /// that keep their bytes, so `parse(s, l).text() == s` for every `s` and every `l`.
 #[must_use]
 pub fn parse(source: &str, language: Language) -> Parse {
-    let (green, errors) = Parser::new(source, language).root_namespace();
-    Parse { green, errors }
+    let (green, errors, deviations) = Parser::new(source, language).root_namespace();
+    Parse {
+        green,
+        errors,
+        deviations,
+    }
 }
 
 #[cfg(test)]

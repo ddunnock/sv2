@@ -71,6 +71,7 @@ main() {
   run_check "namespace link" "${PY}" scripts/check_namespace_link.py
   run_check "wiki receipts" "${PY}" .claude/scripts/build_wiki_receipts.py --check
   run_check "citations" "${PY}" scripts/check_citations.py
+  run_check "deviation sites" "${PY}" scripts/check_deviation_sites.py
 
   # --- derived artifacts ---
   run_check "derived artifacts" "${PY}" scripts/extract_productions.py --check

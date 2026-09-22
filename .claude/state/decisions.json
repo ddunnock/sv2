@@ -158,6 +158,13 @@
       "status": "proposed",
       "date": "2026-09-22",
       "file": "docs/adr/0021-security-markings-are-model-metadata.md"
+    },
+    {
+      "id": "0022",
+      "title": "Deviations are reported as diagnostics, and strict conformance promotes them",
+      "status": "accepted",
+      "date": "2026-09-22",
+      "file": "docs/adr/0022-deviations-are-reported-and-strict-conformance-promotes-them.md"
     }
   ]
 }

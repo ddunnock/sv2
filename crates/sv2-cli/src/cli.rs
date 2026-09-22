@@ -3,7 +3,8 @@
 //! Dispatch for the `sv2` command.
 //!
 //! Two requests are implemented: `--version`, and `parse`, which reads one file and
-//! says whether the parser accepts it. Everything else reports that it is not
+//! says whether the parser accepts it — or, with `--strict`, whether it is also
+//! specification-conformant (ADR-0022). Everything else reports that it is not
 //! implemented and exits 2.
 //!
 //! `scripts/corpus-sweep.sh` reads the exit status alone and discards both streams
@@ -29,6 +30,15 @@ enum Reporting {
     Silent,
 }
 
+/// What a file must be to pass `parse`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Acceptance {
+    /// The parser reports no error against it.
+    Parses,
+    /// It parses AND depends on no recorded deviation (`--strict`, ADR-0022).
+    Conformant,
+}
+
 /// What a command line asked for.
 #[derive(Debug, PartialEq, Eq)]
 enum Request {
@@ -40,6 +50,8 @@ enum Request {
         path: PathBuf,
         /// What to say when it does not parse.
         reporting: Reporting,
+        /// What the file must be to pass.
+        acceptance: Acceptance,
     },
 }
 
@@ -87,7 +99,9 @@ fn attempt(
             let version = writeln!(stdout, "sv2 {}", env!("CARGO_PKG_VERSION"));
             return version.map_err(|_| Failure::Write);
         }
-        Ok(Request::Parse { path, .. }) => parse_file(&path),
+        Ok(Request::Parse {
+            path, acceptance, ..
+        }) => parse_file(&path, acceptance),
         Err(error) => Err(error),
     };
     match outcome {
@@ -113,9 +127,10 @@ fn request(args: impl IntoIterator<Item = OsString>) -> Result<Request, CommandE
     }
 }
 
-/// `parse [--quiet] [--] <file>` — the arguments after the command word.
+/// `parse [--quiet] [--strict] [--] <file>` — the arguments after the command word.
 fn parse_request(args: impl Iterator<Item = OsString>) -> Result<Request, CommandError> {
     let mut reporting = Reporting::Loud;
+    let mut acceptance = Acceptance::Parses;
     let mut path: Option<PathBuf> = None;
     let mut positional_only = false;
     for arg in args {
@@ -123,6 +138,8 @@ fn parse_request(args: impl Iterator<Item = OsString>) -> Result<Request, Comman
             positional_only = true;
         } else if !positional_only && arg == "--quiet" {
             reporting = Reporting::Silent;
+        } else if !positional_only && arg == "--strict" {
+            acceptance = Acceptance::Conformant;
         } else if !positional_only && is_option(&arg) {
             let name = arg.to_string_lossy();
             return Err(usage(format!("parse: unknown option {name}")));
@@ -130,8 +147,12 @@ fn parse_request(args: impl Iterator<Item = OsString>) -> Result<Request, Comman
             return Err(usage("parse: takes one file".to_owned()));
         }
     }
-    path.map(|path| Request::Parse { path, reporting })
-        .ok_or_else(|| usage("parse: needs a file to parse".to_owned()))
+    path.map(|path| Request::Parse {
+        path,
+        reporting,
+        acceptance,
+    })
+    .ok_or_else(|| usage("parse: needs a file to parse".to_owned()))
 }
 
 /// Whether `arg` reads as an option rather than a path.
@@ -152,7 +173,12 @@ fn usage(message: String) -> CommandError {
 /// Acceptance is "the parser reported nothing", never "a tree came back": `parse`
 /// always returns a tree, because the tree keeps every byte whether or not the text is
 /// well formed (ADR-0004). The diagnostics are what say whether it is a model.
-fn parse_file(path: &Path) -> Result<(), CommandError> {
+///
+/// With [`Acceptance::Conformant`], the `PARSE-DEVIATION` notes count too, rendered as errors and merged
+/// with the parser's errors in source order (ADR-0022). Without it they are not printed
+/// at all, so the default output and exit status are what they were before the notes
+/// existed.
+fn parse_file(path: &Path, acceptance: Acceptance) -> Result<(), CommandError> {
     // Which grammar, chosen from the name and before the file is opened (§3.3).
     //
     // There is no default and must not be: `KerML` and `SysML` are two grammars with
@@ -171,7 +197,12 @@ fn parse_file(path: &Path) -> Result<(), CommandError> {
         source,
     })?;
     let parsed = sv2_syntax::parse(&source, language);
-    if parsed.errors().is_empty() {
+    let mut failing: Vec<&sv2_syntax::Diagnostic> = parsed.errors().iter().collect();
+    if acceptance == Acceptance::Conformant {
+        failing.extend(parsed.deviations());
+        failing.sort_by_key(|d| d.range().start());
+    }
+    if failing.is_empty() {
         return Ok(());
     }
     // Located here, where the source is, rather than carried into the error: a
@@ -180,7 +211,7 @@ fn parse_file(path: &Path) -> Result<(), CommandError> {
     let map = sv2_syntax::OffsetMap::new(&source);
     Err(CommandError::Parse {
         path: path.to_path_buf(),
-        diagnostics: parsed.errors().iter().map(|d| located(&map, d)).collect(),
+        diagnostics: failing.iter().map(|d| located(&map, d)).collect(),
     })
 }
 
@@ -189,13 +220,17 @@ fn parse_file(path: &Path) -> Result<(), CommandError> {
 /// The shape every compiler prints, because it is the shape every editor and every
 /// `grep` already knows how to read. The code is in the line so that a diagnostic can
 /// be named in a bug report without quoting its prose, which is free to be reworded.
+///
+/// Every diagnostic printed here fails the file, so every one prints as an `error` —
+/// including a `PARSE-DEVIATION` note, whose own severity is `info`, when `--strict`
+/// promotes it.
 fn located(map: &sv2_syntax::OffsetMap, diagnostic: &sv2_syntax::Diagnostic) -> String {
     let at = map.line_col(diagnostic.range().start());
     format!(
         "{}:{}: {}[{}]: {}",
         at.line,
         at.col,
-        diagnostic.severity().as_str(),
+        sv2_syntax::Severity::Error.as_str(),
         diagnostic.code().as_str(),
         diagnostic.message()
     )
@@ -287,6 +322,31 @@ mod tests {
     }
 
     #[test]
+    fn strict_fails_a_file_that_parses_only_by_a_deviation() {
+        // `end` on an occurrence usage parses by deviation OccurrenceUsagePrefix
+        // (follow_xtext): accepted by default, and reported as an error under --strict,
+        // naming the register entry (ADR-0022).
+        let dir = std::env::temp_dir().join(format!("sv2-cli-strict-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("Ends.sysml");
+        std::fs::write(&path, "connection def D {\n  end part p;\n}\n").unwrap();
+        let file = path.to_str().unwrap();
+
+        let (default_code, _, default_err) = invoke(&["sv2", "parse", file]);
+        let (strict_code, _, strict_err) = invoke(&["sv2", "parse", "--strict", file]);
+        std::fs::remove_file(&path).ok();
+
+        assert_eq!(default_code, ExitCode::SUCCESS, "{default_err}");
+        assert!(default_err.is_empty(), "{default_err}");
+        assert_eq!(strict_code, exit(ErrorCode::ParseFailed));
+        assert!(
+            strict_err.contains("2:3: error[PARSE-DEVIATION]")
+                && strict_err.contains("OccurrenceUsagePrefix"),
+            "{strict_err}"
+        );
+    }
+
+    #[test]
     fn a_file_naming_neither_grammar_is_a_usage_error() {
         let (code, _, err) = invoke(&["sv2", "parse", "notes.md"]);
         assert_eq!(code, exit(ErrorCode::Usage));
@@ -324,6 +384,7 @@ mod tests {
             Request::Parse {
                 path: PathBuf::from("a.sysml"),
                 reporting: Reporting::Loud,
+                acceptance: Acceptance::Parses,
             }
         );
         assert_eq!(
@@ -331,6 +392,7 @@ mod tests {
             Request::Parse {
                 path: PathBuf::from("a.sysml"),
                 reporting: Reporting::Silent,
+                acceptance: Acceptance::Parses,
             }
         );
     }
@@ -343,6 +405,7 @@ mod tests {
             Request::Parse {
                 path: PathBuf::from("--quiet"),
                 reporting: Reporting::Loud,
+                acceptance: Acceptance::Parses,
             }
         );
     }
