@@ -308,9 +308,10 @@ fn a_definition_whose_body_is_not_a_definition_body_is_not_in_the_table() {
     // PortDefinition shares the spine but adds a ConjugatedPortDefinitionMember. Each
     // body still absent has a file in tests/rejection/.
     //
-    // The list empties as the specialised bodies land, and `state def S;` is what is
-    // left of it here: StateBody (8.2.2.18) is absent, so StateDefinition is.
-    parse_rejected("state def S;");
+    // The list empties as the specialised bodies land. `state def S;` was the last input
+    // held here by absence, and leaves it ahead of the commit that reads StateDefBody
+    // (8.2.2.18.1), which asserts it accepted.
+    //
     // `requirement def` left this list when RequirementBody landed, `constraint def`
     // when CalculationBody did, and `calc def` leaves it now that something dispatches
     // to the body those two already shared. Each left because the production is read,
