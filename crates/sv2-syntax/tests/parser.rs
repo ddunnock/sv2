@@ -8090,6 +8090,26 @@ fn a_body_expression_is_a_base_expression() {
 }
 
 #[test]
+fn an_expression_body_is_braced() {
+    // Deviation ExpressionBody reads SysML's ExpressionBody as CalculationBody's braced
+    // alternative alone, `'{' CalculationBodyPart '}'` (settled 2026-09-23, decision
+    // expression-body-semicolon): every expression body in the corpus is braced, 13
+    // after `->` and 4 after `.?` or `.`, and none is a bare `;`. Taken literally the `;`
+    // alternative would make these expressions. Held as a file by
+    // tests/rejection/expression-body-is-braced.sysml.
+    //
+    // Each case is text that parses ONLY if a bare `;` is a body: the second `;` closes the
+    // attribute. A case like `a->f;` alone does not tell the two readings apart, since both
+    // then lack the attribute's own `;`.
+    parse_rejected("attribute x = ;;");
+    parse_rejected("attribute x = a->f;;");
+    parse_rejected("attribute x = a.?;;");
+    parse_rejected("attribute x = a.;;");
+    // The braced form, empty, is a body.
+    parse_accepted("attribute x = {};");
+}
+
+#[test]
 fn a_brace_in_an_expression_is_not_taken_for_a_usage_body() {
     // A result expression that opens on a name collides with DefaultReferenceUsage, and
     // usage_completion_follows settles it by looking for a `;` or `{` before the body

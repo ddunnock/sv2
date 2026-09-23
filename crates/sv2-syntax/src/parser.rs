@@ -6175,14 +6175,18 @@ impl<'a> Parser<'a> {
     // ExpressionBodyMember : FeatureMembership =
     //     ownedMemberFeature = ExpressionBody                    (KerML 8.2.5.8.3)
     //
-    // ExpressionBody is NOT marked, in either language. KerML's, `'{' FunctionBodyPart
-    // '}'`, is not read at all: the callers do not reach here from a .kerml file.
-    // SysML's is CalculationBody by deviation ExpressionBody (follow_xtext, adjudicated
-    // 2026-09-17 on the corpus's `in ref w` bodies), and CalculationBody is
-    // `';' | '{' CalculationBodyPart '}'` (SysML 8.2.2.19). Only the braced alternative
-    // is reached, because the callers dispatch on `{`: taken literally the `;` form would
-    // make `attribute x = ;;` an attribute valued by an empty body, and whether the
-    // deviation means that is the pending decision [expression-body-semicolon].
+    // production: ExpressionBody@sysml
+    //
+    // SysML states no ExpressionBody. Deviation ExpressionBody (follow_xtext, adjudicated
+    // 2026-09-17 on the corpus's `in ref w` bodies) reads it as SysML's CalculationBody,
+    // `';' | '{' CalculationBodyPart '}'` (8.2.2.19), NARROWED on 2026-09-23 (decision
+    // expression-body-semicolon) to the braced alternative alone: taken literally the `;`
+    // form makes `attribute x = ;;` an attribute valued by an empty body, and every
+    // expression body in the corpus is braced. The callers dispatch on `{`, which is the
+    // narrowing; tests/rejection/expression-body-is-braced.sysml holds it.
+    //
+    // ExpressionBody@kerml, `'{' FunctionBodyPart '}'`, is NOT marked and not read at all:
+    // the callers do not reach here from a .kerml file.
     //
     // The CalculationBody node is inside an ExpressionBody node because the Pilot's
     // ExpressionBody is an Expression whose content IS a CalculationBody fragment
