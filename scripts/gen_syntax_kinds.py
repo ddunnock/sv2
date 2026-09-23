@@ -321,6 +321,15 @@ NODES = [
         "FlowUsage",
         "`OccurrenceUsagePrefix 'flow' FlowDeclaration DefinitionBody`. `SysML` 8.2.2.16.",
     ),
+    # The succession flow, `succession flow a.x to b.y;`: a flow usage by the two
+    # keywords, which is also a KerML SuccessionFlow (8.3.16.4).
+    (
+        "SuccessionFlowUsage",
+        (
+            "`OccurrenceUsagePrefix 'succession' 'flow' FlowDeclaration DefinitionBody`. "
+            "`SysML` 8.2.2.16."
+        ),
+    ),
     # The message, `message of S from a.send to b.receive;`: a flow usage by the kind
     # keyword `message`, whose ends are events rather than flow ends (7.16.2).
     (

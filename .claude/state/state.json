@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T19:27:41Z",
+    "regenerated_utc": "2026-09-23T19:39:45Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 396,
-      "unimplemented": 158,
+      "implemented": 397,
+      "unimplemented": 157,
       "absent": 0,
-      "percent": 71.5
+      "percent": 71.7
     },
     "tests": {
-      "unit": 605,
+      "unit": 610,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 240,
+      "negative_cases": 243,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "a684449 Stop using `succession flow` as the unreadable example: the next commit reads it",
+      "d729a6c Settle expression-body-semicolon: an expression body is braced",
       "8a1284c Close the session: the postfix expression layer and the view layer recorded, succession flows next",
       "72ef125 Read `expose`, completing the view layer",
       "f612d52 Stop using `expose` as the unreadable example: the next commit reads it",
       "6470178 Read filtered imports, `A::**[@Safety]`, completing NamespaceImport",
       "ac6155b Read view definitions, view usages and `render`, the view layer less `expose`",
-      "b2356c1 Read viewpoint definitions and usages, requirements by the keyword `viewpoint`",
-      "10d5ae9 Read collect expressions, `x.{ ... }`, completing the postfix layer",
-      "b733786 Read select expressions, `x.?{ ... }`, in the postfix loop"
+      "b2356c1 Read viewpoint definitions and usages, requirements by the keyword `viewpoint`"
     ]
   },
   "authored": {

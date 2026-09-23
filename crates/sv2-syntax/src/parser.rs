@@ -2047,6 +2047,7 @@ impl<'a> Parser<'a> {
             || self.at_exhibit_state_usage(n)
             || self.at_perform_action_usage(n)
             || self.at_flow_usage(n)
+            || self.at_succession_flow_usage(n)
             || self.at_message(n)
             || self.at_connection_usage(n)
             || self.at_interface_usage(n)
@@ -2822,6 +2823,7 @@ impl<'a> Parser<'a> {
                             .any(|word| self.at_element_keyword(word))
                         || self.at_perform_action_usage(0)
                         || self.at_flow_usage(0)
+                        || self.at_succession_flow_usage(0)
                         || self.at_connection_usage(0)
                         || self.at_succession_as_usage(0)
                         || self.at_binding_connector_as_usage(0)
@@ -4049,8 +4051,8 @@ impl<'a> Parser<'a> {
     //     | PortUsage | ConnectionUsage | InterfaceUsage | AllocationUsage | Message
     //     | FlowUsage | SuccessionFlowUsage | BehaviorUsageElement   (SysML 8.2.2.6.4)
     //
-    // NOT marked for coverage: ViewUsage and SuccessionFlowUsage are unimplemented, and so
-    // is most of BehaviorUsageElement.
+    // NOT marked for coverage while the StructureUsageElement and BehaviorUsageElement
+    // alternations it lists are not (see `usage_element_of_class`).
     //
     // It is UsageElement less three of NonOccurrenceUsageElement's alternatives (8.2.2.6.4):
     // DefaultReferenceUsage, replaced by VariantReference; EnumerationUsage; and
@@ -4141,7 +4143,7 @@ impl<'a> Parser<'a> {
             // (8.2.2.6.4).
             Some(UsageClass::Behavior)
         } else if self.structure_usage_element() {
-            // FlowUsage, Message, ConnectionUsage, InterfaceUsage, AllocationUsage,
+            // FlowUsage, SuccessionFlowUsage, Message, ConnectionUsage, InterfaceUsage, AllocationUsage,
             // ViewUsage and EventOccurrenceUsage, each a StructureUsageElement.
             Some(UsageClass::Structure)
         } else if self.at_succession_as_usage(0) {
@@ -4185,6 +4187,9 @@ impl<'a> Parser<'a> {
         if self.at_flow_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), though its metaclass is an ActionUsage.
             self.flow_usage();
+        } else if self.at_succession_flow_usage(0) {
+            // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
+            self.succession_flow_usage();
         } else if self.at_message(0) {
             // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
             self.message();
@@ -8845,6 +8850,49 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    /// Whether a `SuccessionFlowUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'succession' 'flow'` (`SysML` 8.2.2.16). Both keywords are
+    /// reserved (8.2.2.1.2), so the pair decides alone: no `SuccessionAsUsage` writes
+    /// `flow` after its `succession`, and there is no succession flow definition, so no
+    /// `def` test.
+    fn at_succession_flow_usage(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_usage_prefix(n);
+        self.nth_is_keyword(after, "succession") && self.nth_is_keyword(after + 1, "flow")
+    }
+
+    // production: SuccessionFlowUsage@sysml
+    //
+    // SuccessionFlowUsage =
+    //     OccurrenceUsagePrefix 'succession' 'flow'
+    //     FlowDeclaration DefinitionBody                         (SysML 8.2.2.16)
+    //
+    // "A flow usage is declared as a succession flow like a streaming flow above, but
+    // using the keyword succession flow" (7.16.2, receipt 13d6f883): FlowUsage's shape
+    // with two keywords for its one, so FlowDeclaration is read by the same method. The
+    // metaclass is SuccessionFlowUsage (8.3.16.4, receipt 66280078), "a FlowUsage that is
+    // also a KerML SuccessionFlow". The Pilot factors the keywords into
+    // SuccessionFlowKeyword; deviation SuccessionFlowKeyword (xtext_only, follow_spec)
+    // says to match the literals, so there is no production for it.
+    //
+    // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
+    //
+    // implied specialization: Flows::successionFlows ("The base flow usages are also from
+    //     the Flows library model: ... successionFlows for a succession flow", 7.16.2)
+    // constraint: SuccessionFlowUsage::checkSuccessionFlowUsageSpecialization,
+    //     `specializesFromLibrary('Flows::successionFlows')` (8.3.16.4). An injection, so
+    //     sv2-hir's; this layer builds the tree only (ADR-0002).
+    fn succession_flow_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SuccessionFlowUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("succession");
+        self.expect_keyword("flow");
+        self.flow_declaration();
+        self.definition_body();
+        self.finish_node();
+    }
+
     /// Whether a `Message` starts at the `n`th meaningful token.
     ///
     /// `OccurrenceUsagePrefix 'message'` (`SysML` 8.2.2.16). No `def` test, as for
@@ -10526,6 +10574,7 @@ impl<'a> Parser<'a> {
             || self.at_case_usage(n).is_some()
             || self.at_include_use_case_usage(n)
             || self.at_flow_usage(n)
+            || self.at_succession_flow_usage(n)
             || self.at_message(n)
             || self.at_connection_usage(n)
             || self.at_interface_usage(n)
@@ -10764,7 +10813,8 @@ impl<'a> Parser<'a> {
     /// The declaration is scanned rather than parsed, by `scan_for_keyword`, because
     /// `first` is reserved (8.2.2.1.2) and a `UsageDeclaration` writes no `;` or brace.
     /// `succession flow`, a `SuccessionFlowUsage` (8.2.2.16), writes no `first` at all, so
-    /// the scan declines it at its `;`.
+    /// the scan declines it at its `;` or `{`; `structure_usage_element` reads it first
+    /// in any case.
     ///
     /// The prefix skipped is `UsagePrefix`, which is what `succession_as_usage` reads, and
     /// NOT `OccurrenceUsagePrefix`: a recogniser that looked past `snapshot` would accept

@@ -10987,6 +10987,162 @@ fn a_message_is_bounded_by_its_rules() {
     assert!(!parse("message m;", Language::KerMl).errors().is_empty());
 }
 
+// -- SuccessionFlowUsage, SysML 8.2.2.16 ------------------------------------------------
+//
+//   SuccessionFlowUsage = OccurrenceUsagePrefix 'succession' 'flow'
+//                         FlowDeclaration DefinitionBody
+//
+// "A flow usage is declared as a succession flow like a streaming flow above, but using
+// the keyword succession flow" (7.16.2, receipt 13d6f883). FlowDeclaration is FlowUsage's,
+// read whole (see the FlowUsage section); the metaclass is SuccessionFlowUsage (8.3.16.4,
+// receipt 66280078), a FlowUsage that is also a KerML SuccessionFlow.
+
+#[test]
+fn the_succession_flow_example_of_7_16_2_parses() {
+    // 7.16.2's example (receipt 13d6f883), whole.
+    let source = "action def TakePicture {\n\
+                  action focus : Focus {\n\
+                  out image : Image;\n\
+                  }\n\
+                  action shoot : Shoot {\n\
+                  in image : Image;\n\
+                  }\n\
+                  // The use of a succession flow usage means that focus must\n\
+                  // complete before the image is transferred, after which shoot can begin.\n\
+                  succession flow focus.image to shoot.image;\n\
+                  }";
+    // Its two-segment ends take FlowEndSubsetting's `.`, as a flow usage's do, and that
+    // is the one deviation it depends on.
+    assert_eq!(deviations_named(source), ["FlowEndSubsetting"; 2]);
+    let rendered = render(&parse_accepted(source).syntax());
+    assert_eq!(
+        nodes_named(&rendered, "SuccessionFlowUsage"),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "FlowUsage"), 0, "{rendered}");
+    assert_eq!(
+        child_kinds(&rendered, "SuccessionFlowUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwSuccession",
+            "KwFlow",
+            "FlowDeclaration",
+            "DefinitionBody"
+        ],
+        "{rendered}"
+    );
+    assert_eq!(
+        child_kinds(&rendered, "FlowDeclaration"),
+        ["FlowEndMember", "KwTo", "FlowEndMember"],
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_succession_flow_usage_reads_the_corpus_forms() {
+    // vendor/corpus/sysml/src/training/14. Action Definitions/Action Succession
+    // Example-2.sysml:17 — the first FlowDeclaration alternative, with `from`.
+    let from = render(
+        &parse_accepted("action def A { succession flow from focus.image to shoot.image; }")
+            .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&from, "FlowDeclaration"),
+        [
+            "UsageDeclaration",
+            "KwFrom",
+            "FlowEndMember",
+            "KwTo",
+            "FlowEndMember"
+        ],
+        "{from}"
+    );
+    // vendor/corpus/sysml/src/examples/Flashlight Example/Flashlight Example.sysml:48 —
+    // named.
+    parse_accepted(
+        "action a { succession flow onOffCmdFlow from sendOnOffCmd.onOffCmd to produceDirectedLight.onOffCmd; }",
+    );
+    // vendor/corpus/sysml/src/examples/Simple Tests/PartTest.sysml:27 — a three-segment
+    // end, in a part definition.
+    parse_accepted("part def P { succession flow x.p to a1.aa.receiver; }");
+    // Every part of FlowDeclaration's first alternative, and a braced body.
+    parse_accepted("part def P { succession flow f : F of Fuel from a.b to c.d { } }");
+}
+
+#[test]
+fn a_succession_flow_usage_is_a_structure_usage_element() {
+    // A StructureUsageElement (8.2.2.6.4), owned as FlowUsage is, and prefixed as an
+    // occurrence usage is.
+    assert_eq!(
+        member_of("action def A", "succession flow a.b to c.d;"),
+        ["StructureUsageMember"]
+    );
+    assert_eq!(
+        member_of("part def P", "succession flow a.b to c.d;"),
+        ["OccurrenceUsageMember"]
+    );
+    for (source, member) in [
+        ("package P { succession flow a.b to c.d; }", "PackageMember"),
+        (
+            "part c { part x; then succession flow a.b to c.d; }",
+            "SourceSuccessionMember",
+        ),
+        (
+            "variation part def V { variant succession flow f; }",
+            "VariantUsageMember",
+        ),
+        (
+            "interface def I { succession flow f; }",
+            "InterfaceOccurrenceUsageMember",
+        ),
+        (
+            "calc def C { succession flow f; x }",
+            "ResultExpressionMember",
+        ),
+        (
+            "part def P { individual succession flow a to b; }",
+            "OccurrenceUsageMember",
+        ),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert!(nodes_named(&rendered, member) >= 1, "{source}\n{rendered}");
+        assert_eq!(
+            nodes_named(&rendered, "SuccessionFlowUsage"),
+            1,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn a_succession_flow_usage_keeps_every_byte() {
+    let source =
+        "part def P {\n\tsuccession /* c */ flow // n\n\t  of Fuel from a . b\n\t\tto c.d.e ;\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
+#[test]
+fn a_succession_flow_usage_is_bounded_by_its_rules() {
+    // The keywords are `succession` then `flow`. Held by
+    // tests/rejection/succession-flow-keyword-order.sysml.
+    parse_rejected("part def P { flow succession a.b to c.d; }");
+    // There is no succession flow definition: FlowDefinition writes `flow def` alone
+    // (8.2.2.16). Held by tests/rejection/succession-flow-has-no-definition.sysml.
+    parse_rejected("succession flow def F;");
+    // It is not a SuccessionAsUsage: FlowDeclaration writes no `first`/`then`. Held by
+    // tests/rejection/succession-flow-takes-no-first-then.sysml.
+    parse_rejected("part def P { succession flow first a then b; }");
+    // FlowDeclaration's rules hold here as in a flow usage.
+    parse_rejected("part def P { succession flow from a.b; }");
+    parse_rejected("part def P { succession flow a. to c.d; }");
+    // DefinitionBody is not optional.
+    parse_rejected("part def P { succession flow a.b to c.d }");
+    // It never becomes a SuccessionAsUsage or a FlowUsage while it is being refused.
+    let tree = render(&parse_rejected("part def P { flow succession a.b to c.d; }").syntax());
+    assert_eq!(nodes_named(&tree, "SuccessionFlowUsage"), 0, "{tree}");
+}
+
 // -- SatisfyRequirementUsage, SysML 8.2.2.21.2 -------------------------------------------
 //
 //   SatisfyRequirementUsage = OccurrenceUsagePrefix 'assert' ( isNegated ?= 'not' ) 'satisfy'

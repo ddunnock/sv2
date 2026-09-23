@@ -39,6 +39,7 @@ vendor/corpus/sysml/src/examples/Camera Example/PictureTaking.sysml
 vendor/corpus/sysml/src/examples/Cause and Effect Examples/CauseAndEffectExample.sysml
 vendor/corpus/sysml/src/examples/Cause and Effect Examples/MedicalDeviceFailure.sysml
 vendor/corpus/sysml/src/examples/Comment Examples/Comments.sysml
+vendor/corpus/sysml/src/examples/Flashlight Example/Flashlight Example.sysml
 vendor/corpus/sysml/src/examples/Geometry Examples/CarWithEnvelopingShape.sysml
 vendor/corpus/sysml/src/examples/Geometry Examples/CarWithShapeAndCSG.sysml
 vendor/corpus/sysml/src/examples/Geometry Examples/ExternalShapeRefExample.sysml
@@ -93,6 +94,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/MetadataTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/MultiplicityTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/OccurrenceTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ParameterTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/PartTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/RequirementTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/RootPackageTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/StateTest.sysml
@@ -139,6 +141,7 @@ vendor/corpus/sysml/src/training/13. Flows/Flow Usage Example.sysml
 vendor/corpus/sysml/src/training/14. Action Definitions/Action Definition Example.sysml
 vendor/corpus/sysml/src/training/14. Action Definitions/Action Shorthand Example.sysml
 vendor/corpus/sysml/src/training/14. Action Definitions/Action Succession Example-1.sysml
+vendor/corpus/sysml/src/training/14. Action Definitions/Action Succession Example-2.sysml
 vendor/corpus/sysml/src/training/15. Actions/Action Decomposition.sysml
 vendor/corpus/sysml/src/training/16. Conditional Succession/Conditional Succession Example-1.sysml
 vendor/corpus/sysml/src/training/16. Conditional Succession/Conditional Succession Example-2.sysml

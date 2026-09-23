@@ -583,6 +583,8 @@ pub enum SyntaxKind {
     FlowDefinition,
     /// `OccurrenceUsagePrefix 'flow' FlowDeclaration DefinitionBody`. `SysML` 8.2.2.16.
     FlowUsage,
+    /// `OccurrenceUsagePrefix 'succession' 'flow' FlowDeclaration DefinitionBody`. `SysML` 8.2.2.16.
+    SuccessionFlowUsage,
     /// `OccurrenceUsagePrefix 'message' MessageDeclaration DefinitionBody`. `SysML` 8.2.2.16 — the metaclass is `FlowUsage`.
     Message,
     /// `UsageDeclaration ValuePart? ( 'of' FlowPayloadFeatureMember )? ( 'from' MessageEventMember 'to' MessageEventMember )? | MessageEventMember 'to' MessageEventMember`. `SysML` 8.2.2.16 — returns `FlowUsage`.
@@ -1556,6 +1558,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ConnectionDefinition,
     SyntaxKind::FlowDefinition,
     SyntaxKind::FlowUsage,
+    SyntaxKind::SuccessionFlowUsage,
     SyntaxKind::Message,
     SyntaxKind::MessageDeclaration,
     SyntaxKind::MessageEventMember,
