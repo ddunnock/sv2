@@ -180,21 +180,23 @@ fn an_unclosed_brace_is_reported_and_the_contents_are_kept() {
 #[test]
 fn text_no_implemented_production_accepts_becomes_an_error_node() {
     // This case has now been `part def Engine;`, `part engine : Engine;`,
-    // `attribute mass : Real;`, `item wheel : Wheel;` and `connection fuelLine connect a
-    // to b;`. Each stopped being a rejection when its production landed, and the
-    // positive cases hold all five. The property the test protects never changes: text this parser cannot
-    // read is reported, not silently accepted. Only the example moves.
+    // `attribute mass : Real;`, `item wheel : Wheel;`, `connection fuelLine connect a
+    // to b;` and `satisfy vehicleSpecification by vehicle_design;`. Each stopped being a
+    // rejection when its production landed, and the positive cases hold all six. The
+    // property the test protects never changes: text this parser cannot read is reported,
+    // not silently accepted. Only the example moves.
     //
-    // It is deliberately no longer a usage of the `<prefix> KEYWORD Usage` shape.
-    // Those now arrive in batches — seven of them are one table — so any of them
-    // would be a placeholder with a short life. A SatisfyRequirementUsage has a shape of
-    // its own, a reference and a `by` subject, so it will not land incidentally alongside
-    // something else.
+    // It is deliberately not a usage of the `<prefix> KEYWORD Usage` shape. Those arrive
+    // in batches -- seven of them are one table -- so any of them would be a placeholder
+    // with a short life. A view usage with an `expose` needs the view layer whole
+    // (ViewUsage, ViewBody, ViewBodyItem, Expose and its two alternatives), so it will
+    // not land incidentally alongside something else.
     //
-    // SysML 8.2.2.21.2 — SatisfyRequirementUsage = OccurrenceUsagePrefix 'assert'? 'not'?
-    //                    'satisfy' ( OwnedReferenceSubsetting ... ) ValuePart?
-    //                    ( 'by' SatisfactionSubjectMember )? RequirementBody
-    let parsed = parse_rejected("satisfy vehicleSpecification by vehicle_design;");
+    // SysML 8.2.2.26.2 — ViewUsage = OccurrenceUsagePrefix 'view' UsageDeclaration?
+    //                    ValuePart? ViewBody
+    //                    ViewBodyItem = DefinitionBodyItem | ElementFilterMember
+    //                                 | ViewRenderingMember | Expose
+    let parsed = parse_rejected("view vehicleView : VehicleView { expose Vehicle::*; }");
     assert!(render(&parsed.syntax()).contains("Error"));
 }
 
@@ -3162,11 +3164,6 @@ fn an_assert_constraint_usage_is_bounded_by_its_rules() {
     // The reference alternative takes no declaration: the name after the reference is
     // no FeatureSpecializationPart and no body.
     parse_rejected("part def P { assert c d; }");
-    // `assert satisfy` is SatisfyRequirementUsage (8.2.2.21.2), unimplemented, and the
-    // recogniser declines it, so it is rejected BY ABSENCE rather than read as an
-    // assertion referencing `satisfy` — which is reserved and cannot be a name.
-    parse_rejected("part def P { assert satisfy r; }");
-    parse_rejected("part def P { assert not satisfy r; }");
 }
 
 #[test]
@@ -6651,11 +6648,11 @@ fn a_reserved_word_cannot_name_a_part_definition() {
 fn unimplemented_definition_body_items_are_reported_at_the_body() {
     // The unimplemented item here moves for the same reason as the case above, and
     // to the same construct: the usages it previously held are all read now, and each
-    // is exercised inside a definition body as a positive case below. A
-    // SatisfyRequirementUsage (SysML 8.2.2.21.2) is not; it replaced a ConnectionUsage
-    // when that landed. It must be reported, and the definition after it must still
-    // parse — recovery happens at the enclosing body.
-    let parsed = parse_rejected("part def Vehicle { satisfy r by v; part def Wheel; }");
+    // is exercised inside a definition body as a positive case below. A ViewUsage
+    // (SysML 8.2.2.26.2) with an `expose` is not; it replaced a SatisfyRequirementUsage
+    // when that landed, as that replaced a ConnectionUsage. It must be reported, and the
+    // definition after it must still parse — recovery happens at the enclosing body.
+    let parsed = parse_rejected("part def Vehicle { view v : V { expose X::*; } part def Wheel; }");
     let rendered = render(&parsed.syntax());
     assert_eq!(nodes_named(&rendered, "PartDefinition"), 2, "{rendered}");
 }
