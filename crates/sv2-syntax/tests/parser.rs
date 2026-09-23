@@ -4146,10 +4146,12 @@ fn a_state_definition_reads_the_clause_examples() {
          \t\tthen off;\n\
          }",
     );
-    // Adapted from OnOff5 and OnOff6: their entry actions, effects, time triggers
-    // (`accept after 5[min]`) and `terminate` are unimplemented and dropped, and `then
-    // done;` stands in for OnOff6's timed transition to `done`. What is left is target
-    // transitions with an accepter, a receiver and a guard.
+    // Adapted from OnOff5 and OnOff6: their entry actions, effects and time triggers
+    // (`accept after 5[min]`) were unimplemented when this was written and are dropped,
+    // and `then done;` stands in for OnOff6's timed transition to `done`. OnOff6's
+    // `action stop terminate;` is dropped for another reason: no grammar admits a
+    // TerminateNode as a state body item (pending decision state-body-terminate). What
+    // is left is target transitions with an accepter, a receiver and a guard.
     parse_accepted(
         "state def OnOff {\n\
          \tstate off;\n\
@@ -4923,6 +4925,171 @@ fn send_assign_and_accept_nodes_are_bounded_by_their_rules() {
 fn send_and_assignment_nodes_keep_every_byte() {
     let source = "action def A {\n\tthen /* s */ send new S ( 1 ) via p /* v */ to q ;\n\tassign a . b . c := 1 { }\n\taction x send { }\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
+}
+
+// -- TerminateNode, SysML 8.2.2.17.6 --------------------------------------------------
+//
+//   TerminateNode = OccurrenceUsagePrefix ActionNodeUsageDeclaration?
+//                   'terminate' NodeParameterMember? ActionBody
+//
+// "the value for the terminated occurrence parameter is given after the action declaration
+// part, after the keyword terminate. If the declaration part is empty, then the action
+// keyword may be omitted" (7.17.10, receipt aa4c3e77). An ActionNode, reached through
+// ActionNodeMember as the other action nodes are (8.2.2.17.1).
+
+#[test]
+fn the_terminate_examples_of_7_17_10_parse() {
+    // 7.17.10's three examples (receipt aa4c3e77), whole.
+    let processor = "part processor {\n\
+                     private ref action process : ProcessWorkflow;\n\
+                     action startProcessing {\n\
+                     assign process := new ProcessWorkFlow();\n\
+                     }\n\
+                     action terminateProcessing {\n\
+                     // The following terminate action has the name \"terminate1\".\n\
+                     action terminate1 terminate process; // Terminates \"process\" action.\n\
+                     // The following terminate action is unnamed.\n\
+                     terminate this; // Terminates \"processor\" part.\n\
+                     }\n\
+                     }";
+    let monitored = "action def MonitoredActivity {\n\
+                     merge continue;\n\
+                     then action performCriticalActivity {\n\
+                     perform action monitorCriticalActivity;\n\
+                     perform action criticalActivity;\n\
+                     then terminate; // Terminates \"performCriticalActivity\" even if\n\
+                     // \"monitorCriticalActivity\" is still ongoing.\n\
+                     }\n\
+                     then decide;\n\
+                     if continueActivity() then continue;\n\
+                     else stop;\n\
+                     action stop terminate; // Terminates performance of \"MonitoredActivity\".\n\
+                     }";
+    for (source, terminates) in [(processor, 2), (monitored, 2)] {
+        let parsed = parse_accepted(source);
+        assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
+        let rendered = render(&parsed.syntax());
+        assert_eq!(
+            nodes_named(&rendered, "TerminateNode"),
+            terminates,
+            "{rendered}"
+        );
+    }
+    // The third binds the parameter by a flow into the body, so `terminate {` is the
+    // ActionBody; its flow's two-segment ends are the one deviation it depends on.
+    let by_flow = "action def TerminateProcessByID {\n\
+                   in attribute id : ProcessID;\n\
+                   perform action getProcessByID {\n\
+                   in processID = id;\n\
+                   \n\
+                   out process;\n\
+                   }\n\
+                   flow getProcessByID.process to terminateProcess.terminatedProcess;\n\
+                   action terminateProccess terminate {\n\
+                   in terminatedProcess;\n\
+                   }\n\
+                   }";
+    assert_eq!(deviations_named(by_flow), ["FlowEndSubsetting"; 2]);
+    let rendered = render(&parse_accepted(by_flow).syntax());
+    assert_eq!(
+        child_kinds(&rendered, "TerminateNode"),
+        [
+            "OccurrenceUsagePrefix",
+            "ActionNodeUsageDeclaration",
+            "KwTerminate",
+            "ActionBody"
+        ],
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_terminate_node_owns_what_its_production_writes() {
+    for (item, kinds) in [
+        // examples/Simple Tests/ActionTest.sysml:51, after `then`.
+        (
+            "first start; then terminate;",
+            &["OccurrenceUsagePrefix", "KwTerminate", "ActionBody"][..],
+        ),
+        // ActionTest.sysml:49 — the parameter, an OwnedExpression.
+        (
+            "terminate c1;",
+            &[
+                "OccurrenceUsagePrefix",
+                "KwTerminate",
+                "NodeParameterMember",
+                "ActionBody",
+            ],
+        ),
+        // training/19. Terminate Actions/Terminate Actions Example-2.sysml:15 — a chain.
+        (
+            "terminate processor.workflowProcess;",
+            &[
+                "OccurrenceUsagePrefix",
+                "KwTerminate",
+                "NodeParameterMember",
+                "ActionBody",
+            ],
+        ),
+        // training/19. Terminate Actions/Terminate Actions Example-1.sysml:26 — declared,
+        // its UsageDeclaration a name.
+        (
+            "action stop terminate;",
+            &[
+                "OccurrenceUsagePrefix",
+                "ActionNodeUsageDeclaration",
+                "KwTerminate",
+                "ActionBody",
+            ],
+        ),
+        // Every part at once, and OccurrenceUsagePrefix's `ref`, which ControlNodePrefix
+        // does not take and this production's prefix does.
+        (
+            "ref action t : T terminate p { }",
+            &[
+                "OccurrenceUsagePrefix",
+                "ActionNodeUsageDeclaration",
+                "KwTerminate",
+                "NodeParameterMember",
+                "ActionBody",
+            ],
+        ),
+    ] {
+        let source = format!("action def A {{ {item} }}");
+        let rendered = render(&parse_accepted(&source).syntax());
+        assert_eq!(child_kinds(&rendered, "TerminateNode"), kinds, "{rendered}");
+    }
+    // The member that owns it is ActionNodeMember's, in an action usage's body too.
+    let tree = render(&parse_accepted("action a { terminate; }").syntax());
+    assert_eq!(nodes_named(&tree, "ActionNodeMember"), 1, "{tree}");
+}
+
+#[test]
+fn a_terminate_node_keeps_every_byte() {
+    let source =
+        "action def A {\n\tthen /* t */ terminate ;\n\taction x terminate a . b // n\n\t{ }\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
+#[test]
+fn a_terminate_node_is_bounded_by_its_rules() {
+    // A declared terminate writes `action` (ActionNodeUsageDeclaration = 'action'
+    // UsageDeclaration?). Held as a file by
+    // tests/rejection/terminate-node-declaration-writes-action.sysml.
+    parse_rejected("action def A { stop terminate; }");
+    // One terminated occurrence, not two. Held as a file by
+    // tests/rejection/terminate-node-takes-one-parameter.sysml.
+    parse_rejected("action def A { terminate p q; }");
+    // An ActionNode is an action-body item only (8.2.2.17.1), and a state's entry, do
+    // and exit actions have no terminate form (StateActionUsage, 8.2.2.18.1). Held as a
+    // file by tests/rejection/terminate-node-is-not-a-definition-body-item.sysml.
+    parse_rejected("part def P { terminate; }");
+    parse_rejected("state def S { entry terminate; }");
+    // ActionBody is not optional.
+    parse_rejected("action def A { terminate p }");
+    // Refused, it is never begun.
+    let tree = render(&parse_rejected("part def P { terminate; }").syntax());
+    assert_eq!(nodes_named(&tree, "TerminateNode"), 0, "{tree}");
 }
 
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------

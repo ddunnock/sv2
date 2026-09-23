@@ -71,6 +71,7 @@ vendor/corpus/sysml/src/examples/Requirements Examples/HSUVRequirements.sysml
 vendor/corpus/sysml/src/examples/Requirements Examples/RequirementDerivationExample.sysml
 vendor/corpus/sysml/src/examples/Requirements Examples/VehicleRequirementDerivation.sysml
 vendor/corpus/sysml/src/examples/Room Model/RoomModel.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/AliasTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/AllocationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/AnalysisTest.sysml
@@ -150,6 +151,8 @@ vendor/corpus/sysml/src/training/17. Control/Decision Example.sysml
 vendor/corpus/sysml/src/training/17. Control/Fork Join Example.sysml
 vendor/corpus/sysml/src/training/17. Control/Merge Example.sysml
 vendor/corpus/sysml/src/training/18. Action Performance/Action Performance Example.sysml
+vendor/corpus/sysml/src/training/19. Terminate Actions/Terminate Actions Example-1.sysml
+vendor/corpus/sysml/src/training/19. Terminate Actions/Terminate Actions Example-2.sysml
 vendor/corpus/sysml/src/training/21. Asynchronous Messaging/Messaging Example.sysml
 vendor/corpus/sysml/src/training/21. Asynchronous Messaging/Messaging with Ports.sysml
 vendor/corpus/sysml/src/training/22. Opaque Actions/Opaque Action Example.sysml

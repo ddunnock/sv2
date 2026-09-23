@@ -1065,6 +1065,8 @@ pub enum SyntaxKind {
     SendNodeDeclaration,
     /// `'via' NodeParameterMember ( 'to' NodeParameterMember )? | EmptyParameterMember 'to' NodeParameterMember`. `SysML` 8.2.2.17.4.
     SenderReceiverPart,
+    /// `OccurrenceUsagePrefix ActionNodeUsageDeclaration? 'terminate' NodeParameterMember? ActionBody`. `SysML` 8.2.2.17.6 — returns `TerminateActionUsage`.
+    TerminateNode,
     /// `OccurrenceUsagePrefix AssignmentNodeDeclaration ActionBody`. `SysML` 8.2.2.17.5.
     AssignmentNode,
     /// `ActionNodeUsageDeclaration? 'assign' AssignmentTargetMember FeatureChainMember ':=' NodeParameterMember`. `SysML` 8.2.2.17.5.
@@ -1799,6 +1801,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::SendNode,
     SyntaxKind::SendNodeDeclaration,
     SyntaxKind::SenderReceiverPart,
+    SyntaxKind::TerminateNode,
     SyntaxKind::AssignmentNode,
     SyntaxKind::AssignmentNodeDeclaration,
     SyntaxKind::AssignmentTargetMember,

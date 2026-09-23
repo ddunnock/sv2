@@ -1501,6 +1501,14 @@ NODES = [
         ),
     ),
     (
+        "TerminateNode",
+        (
+            "`OccurrenceUsagePrefix ActionNodeUsageDeclaration? 'terminate' "
+            "NodeParameterMember? ActionBody`. `SysML` 8.2.2.17.6 — returns "
+            "`TerminateActionUsage`."
+        ),
+    ),
+    (
         "AssignmentNode",
         "`OccurrenceUsagePrefix AssignmentNodeDeclaration ActionBody`. `SysML` 8.2.2.17.5.",
     ),

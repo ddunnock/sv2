@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T19:39:45Z",
+    "regenerated_utc": "2026-09-23T20:02:37Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 397,
-      "unimplemented": 157,
+      "implemented": 398,
+      "unimplemented": 156,
       "absent": 0,
-      "percent": 71.7
+      "percent": 71.8
     },
     "tests": {
-      "unit": 610,
+      "unit": 614,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 243,
+      "negative_cases": 246,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "a0ea0ef Stop rejecting `then terminate;` by absence: the next commit reads it",
+      "daf5709 Read succession flow usages, `succession flow a.x to b.y;`",
       "a684449 Stop using `succession flow` as the unreadable example: the next commit reads it",
       "d729a6c Settle expression-body-semicolon: an expression body is braced",
       "8a1284c Close the session: the postfix expression layer and the view layer recorded, succession flows next",
       "72ef125 Read `expose`, completing the view layer",
       "f612d52 Stop using `expose` as the unreadable example: the next commit reads it",
-      "6470178 Read filtered imports, `A::**[@Safety]`, completing NamespaceImport",
-      "ac6155b Read view definitions, view usages and `render`, the view layer less `expose`",
-      "b2356c1 Read viewpoint definitions and usages, requirements by the keyword `viewpoint`"
+      "6470178 Read filtered imports, `A::**[@Safety]`, completing NamespaceImport"
     ]
   },
   "authored": {
@@ -212,6 +212,11 @@
       {
         "id": "expression-body-semicolon",
         "question": "RESOLVED on 2026-09-23 by the author, on the recommendation below: braced only. Deviation ExpressionBody's record now says the reading is CalculationBody's braced alternative alone, with the corpus count as evidence (17 expression bodies, all braced, none a bare `;`); ExpressionBody@sysml is marked; an_expression_body_is_braced and tests/rejection/expression-body-is-braced.sysml hold `attribute x = ;;` and `a->f;` rejected. THE QUESTION WAS: Deviation ExpressionBody (follow_xtext) reads SysML's ExpressionBody as CalculationBody, which is `';' | '{' CalculationBodyPart '}'` (SysML 8.2.2.19). Taken literally the `;` alternative makes a bare `;` a BodyExpression wherever a BaseExpression or a BodyArgumentMember may stand, so `attribute x = ;;` would be an attribute valued by an empty body and `a->f;` a complete operation. The Pilot inherits exactly that (SysML.xtext:2437). The parser reaches only the braced alternative, because body_expression's callers dispatch on `{`, and ExpressionBody@sysml is therefore left UNMARKED. Recommendation: keep the braced reading and narrow the deviation's record to say so, since the corpus's evidence for the deviation (7b:127, 15_05:9) is braced bodies only and no corpus file writes a `;` body; the alternative is to read the `;` form and mark the unit. Decide before marking ExpressionBody@sysml.",
+        "blocks": []
+      },
+      {
+        "id": "state-body-terminate",
+        "question": "OPEN. SysML 7.18.3's OnOff6 (Transition-Usages layer note, the example ending `action stop terminate;` inside `state def OnOff6 { ... }`) writes a TerminateNode as a STATE body item. No grammar admits it there: StateBodyItem (SysML 8.2.2.18.1) reaches usages only through BehaviorUsageMember, whose BehaviorUsageElement (8.2.2.6.4) lists no ActionNode, and the Pilot's fragment StateBodyItem (SysML.xtext:1754) is the same; ActionNodeMember belongs to ActionBehaviorMember (8.2.2.17.1), an action-body production. No corpus file writes `terminate` in a state body. The parser follows the BNF and the Pilot, so OnOff6 is rejected at `terminate`, while TerminateNode itself is read wherever an ActionBodyItem is. Needs a grammar-adjudicator pass and, if the example is the error, a deviations.json entry recording it. Not blocking: the text is rejected by rule until decided.",
         "blocks": []
       }
     ],

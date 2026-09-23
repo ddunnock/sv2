@@ -621,6 +621,8 @@ enum ActionNode {
     Send,
     /// `AssignmentNode`, 8.2.2.17.5.
     Assignment,
+    /// `TerminateNode`, 8.2.2.17.6.
+    Terminate,
 }
 
 /// A case production pair: one kind keyword run over the case layer's spine.
@@ -8221,14 +8223,15 @@ impl<'a> Parser<'a> {
     /// perform declaration opens on `action` too, so the keyword has to be looked for past
     /// the declaration, which contains no reserved word and ends before a `;` or a body.
     fn action_node_keyword(&self) -> Option<&'static str> {
-        self.action_node_keyword_at(0)
+        self.action_node_keyword_at(0, &["accept", "send", "assign"])
     }
 
-    /// `action_node_keyword`, asked from the `start`th meaningful token.
-    fn action_node_keyword_at(&self, start: usize) -> Option<&'static str> {
-        const NODES: [&str; 3] = ["accept", "send", "assign"];
+    /// `action_node_keyword`, asked from the `start`th meaningful token over the keywords
+    /// `nodes`. An action body asks for `terminate` as well (8.2.2.17.6); the state and
+    /// transition forms do not, having no terminate alternative (8.2.2.18.1, 8.2.2.18.3).
+    fn action_node_keyword_at(&self, start: usize, nodes: &[&'static str]) -> Option<&'static str> {
         let found = |n: usize| {
-            NODES
+            nodes
                 .iter()
                 .copied()
                 .find(|word| self.nth_is_keyword(n, word))
@@ -8449,6 +8452,45 @@ impl<'a> Parser<'a> {
         self.start_node(SyntaxKind::AssignmentNode);
         self.occurrence_usage_prefix();
         self.assignment_node_declaration();
+        self.action_body();
+        self.finish_node();
+    }
+
+    // production: TerminateNode@sysml
+    //
+    // TerminateNode : TerminateActionUsage =
+    //     OccurrenceUsagePrefix ActionNodeUsageDeclaration?
+    //     'terminate' ( ownedRelationship += NodeParameterMember )?
+    //     ActionBody                                                 (SysML 8.2.2.17.6)
+    //
+    // "the value for the terminated occurrence parameter is given after the action
+    // declaration part, after the keyword terminate. If the declaration part is empty,
+    // then the action keyword may be omitted" (7.17.10, receipt aa4c3e77). With no value,
+    // "the default is to terminate the immediately containing action" -- a default of the
+    // model, so the tree holds no parameter the text does not write.
+    //
+    // `terminate {` is the ActionBody, not a BodyExpression as the parameter: 7.17.10's
+    // `action terminateProccess terminate { in terminatedProcess; }` binds the parameter
+    // by a flow into the body, and the Pilot resolves the choice the same way, trying
+    // ActionBody first (SysML.xtext TerminateNode), as SendNode's `send {` is read.
+    //
+    // The metaclass is TerminateActionUsage (8.3.17.16, receipt 95d9959c), an ActionUsage.
+    // Marked although OccurrenceUsagePrefix is not, as ActionUsage is.
+    //
+    // implied specialization: Actions::terminateActions, Actions::Action::terminateSubactions
+    // constraint: TerminateActionUsage::checkTerminateActionUsageSpecialization and
+    //     checkTerminateActionUsageSubactionSpecialization (8.3.17.16; 8.4.13.8, receipt
+    //     e7812698). Injections belong in sv2-hir; this layer builds the tree only
+    //     (ADR-0002).
+    fn terminate_node(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TerminateNode);
+        self.occurrence_usage_prefix();
+        self.action_node_usage_declaration("terminate");
+        self.expect_keyword("terminate");
+        if !self.at(SyntaxKind::Semicolon) && !self.at(SyntaxKind::LBrace) {
+            self.node_parameter_member();
+        }
         self.action_body();
         self.finish_node();
     }
@@ -10592,16 +10634,20 @@ impl<'a> Parser<'a> {
     /// Which `ActionNode` starts at the `n`th meaningful token, of those this parser reads.
     ///
     /// A `ControlNode`, or `OccurrenceUsagePrefix ActionNodeUsageDeclaration?` and one of
-    /// `accept`, `send` or `assign` (`SysML` 8.2.2.17.4, 8.2.2.17.5) — the prefix looked past
-    /// here, the declaration by `action_node_keyword_at`.
+    /// `accept`, `send`, `assign` or `terminate` (`SysML` 8.2.2.17.4-6) — the prefix looked
+    /// past here, the declaration by `action_node_keyword_at`.
     fn at_action_node(&self, n: usize) -> Option<ActionNode> {
         if let Some((word, node)) = self.at_control_node(n) {
             return Some(ActionNode::Control(word, node));
         }
-        match self.action_node_keyword_at(self.skip_occurrence_usage_prefix(n)) {
+        match self.action_node_keyword_at(
+            self.skip_occurrence_usage_prefix(n),
+            &["accept", "send", "assign", "terminate"],
+        ) {
             Some("accept") => Some(ActionNode::Accept),
             Some("send") => Some(ActionNode::Send),
             Some("assign") => Some(ActionNode::Assignment),
+            Some("terminate") => Some(ActionNode::Terminate),
             _ => None,
         }
     }
@@ -10613,6 +10659,7 @@ impl<'a> Parser<'a> {
             ActionNode::Accept => self.accept_node(),
             ActionNode::Send => self.send_node(),
             ActionNode::Assignment => self.assignment_node(),
+            ActionNode::Terminate => self.terminate_node(),
         }
     }
 
