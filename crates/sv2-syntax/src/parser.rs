@@ -5409,16 +5409,61 @@ impl<'a> Parser<'a> {
     // OwnedMultiplicity : OwningMembership =
     //     ownedRelatedElement += MultiplicityRange               (SysML 8.2.2.6.6)
     //
-    // SysML's OwnedMultiplicity owns a MultiplicityRange directly. KerML writes
-    // `ownedRelatedElement += OwnedMultiplicityRange` over its own MultiplicityRange,
-    // which is the named `'multiplicity' Identification MultiplicityBounds TypeBody`
-    // element — a different production with the same name, split by scope in
-    // ADR-0015. This is the SysML reading.
+    // production: OwnedMultiplicity@kerml
+    //
+    // OwnedMultiplicity : OwningMembership =
+    //     ownedRelatedElement += OwnedMultiplicityRange           (KerML 8.2.5.11)
+    //
+    // SysML's OwnedMultiplicity owns a MultiplicityRange directly. KerML's owns an
+    // OwnedMultiplicityRange, because in KerML the name MultiplicityRange is the named
+    // `'multiplicity' Identification MultiplicityBounds TypeBody` declaration -- a
+    // different production with the same name, split by scope in ADR-0015. The TEXT is
+    // the same in both, `[` bounds `]`; the language decides the node. The element is a
+    // MultiplicityRange either way (KerML 8.3.4.11.2, receipt 4c789163).
     fn owned_multiplicity(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::OwnedMultiplicity);
-        self.multiplicity_range();
+        match self.language {
+            Language::SysMl => self.multiplicity_range(),
+            Language::KerMl => self.owned_multiplicity_range(),
+        }
         self.finish_node();
+    }
+
+    // production: OwnedMultiplicityRange@kerml
+    //
+    // OwnedMultiplicityRange : MultiplicityRange = MultiplicityBounds   (KerML 8.2.5.11)
+    //
+    // production: MultiplicityBounds@kerml
+    //
+    // MultiplicityBounds : MultiplicityRange =
+    //     '[' ( ownedRelationship += MultiplicityExpressionMember '..' )?
+    //           ownedRelationship += MultiplicityExpressionMember ']'
+    //                                                            (KerML 8.2.5.11)
+    //
+    // MultiplicityBounds returns the MultiplicityRange it is written into and builds no
+    // node of its own -- the Pilot states it as a fragment (KerML.xtext:774) -- so its
+    // tokens are OwnedMultiplicityRange's children. Its text is SysML's MultiplicityRange
+    // exactly, the lower bound the optional one: "If no lowerBound Expression, then the
+    // default is that the lower bound has the same value as the upper bound" (8.3.4.11.2).
+    // The bounds are the shared MultiplicityExpressionMember.
+    fn owned_multiplicity_range(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OwnedMultiplicityRange);
+        self.multiplicity_bounds();
+        self.finish_node();
+    }
+
+    /// `MultiplicityBounds`' text, into the caller's node: the same as `SysML`'s
+    /// `MultiplicityRange` body, which `multiplicity_range` wraps in its own node.
+    fn multiplicity_bounds(&mut self) {
+        self.expect(SyntaxKind::LBracket, "`[`");
+        self.multiplicity_expression_member();
+        if self.at(SyntaxKind::DotDot) {
+            self.bump();
+            self.multiplicity_expression_member();
+        }
+        self.expect(SyntaxKind::RBracket, "`]`");
     }
 
     // production: MultiplicityRange@sysml
@@ -5434,13 +5479,7 @@ impl<'a> Parser<'a> {
     fn multiplicity_range(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::MultiplicityRange);
-        self.expect(SyntaxKind::LBracket, "`[`");
-        self.multiplicity_expression_member();
-        if self.at(SyntaxKind::DotDot) {
-            self.bump();
-            self.multiplicity_expression_member();
-        }
-        self.expect(SyntaxKind::RBracket, "`]`");
+        self.multiplicity_bounds();
         self.finish_node();
     }
 
@@ -10639,11 +10678,10 @@ impl<'a> Parser<'a> {
     ///
     /// `( NAME REFERENCES )? OwnedReferenceSubsetting` (`SysML` 8.2.2.13.1), where
     /// `REFERENCES = '::>' | 'references'` (8.2.2.1.2) and the subsetting is a
-    /// `QualifiedName` followed by `OwnedFeatureChain`'s further links (8.2.2.6.5). In
-    /// `SysML` it also looks past a leading `OwnedCrossMultiplicityMember` and, by deviation
-    /// ConnectorEnd-trailing-multiplicity, a trailing multiplicity, as `connector_end`
-    /// reads both; `KerML`'s multiplicity is unimplemented, so there neither is looked past
-    /// and an end that writes one is declined here and reported by the caller's recovery.
+    /// `QualifiedName` followed by `OwnedFeatureChain`'s further links (8.2.2.6.5). It
+    /// looks past a leading `OwnedCrossMultiplicityMember` in both languages and, in
+    /// `SysML` only, by deviation ConnectorEnd-trailing-multiplicity, a trailing
+    /// multiplicity, as `connector_end` reads both.
     fn skip_connector_end(&self, n: usize) -> Option<usize> {
         let n = self.skip_interface_end(n)?;
         // The trailing multiplicity `connector_end` reads by deviation
@@ -10659,7 +10697,7 @@ impl<'a> Parser<'a> {
     /// `ConnectorEnd` takes (`SysML` 8.2.2.14.2).
     fn skip_interface_end(&self, n: usize) -> Option<usize> {
         let mut n = n;
-        if self.language == Language::SysMl && self.nth_is(n, SyntaxKind::LBracket) {
+        if self.nth_is(n, SyntaxKind::LBracket) {
             n = self.skip_bracketed(n)?;
         }
         if self.nth_is_name(n)
@@ -11143,24 +11181,24 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: ConnectorEnd
+    //
     // ConnectorEnd : ReferenceUsage =
     //     ( ownedRelationship += OwnedCrossMultiplicityMember )?
     //     ( declaredName = NAME REFERENCES )?
     //     ownedRelationship += OwnedReferenceSubsetting             (SysML 8.2.2.13.1)
     //
-    // NOT marked, and neither are OwnedCrossMultiplicityMember and OwnedCrossMultiplicity:
-    // all three are shared units, and the cross multiplicity is read in SysML only.
-    // OwnedCrossMultiplicity = OwnedMultiplicity, which is OwnedMultiplicity@sysml =
-    // MultiplicityRange in SysML and OwnedMultiplicity@kerml = OwnedMultiplicityRange in
-    // KerML, and the KerML one is unimplemented, so a leading `[` in a .kerml end is left
-    // unread and reported. `skip_connector_end` walks the parts in this order and asks the
-    // same language question.
-    //
-    // OwnedCrossMultiplicityMember, read in SysML only and so NOT marked (see above):
+    // production: OwnedCrossMultiplicityMember
+    // production: OwnedCrossMultiplicity
     //
     // OwnedCrossMultiplicityMember : OwningMembership =
     //     ownedRelatedElement += OwnedCrossMultiplicity   (SysML 8.2.2.13.1, KerML 8.2.5.5.1)
     // OwnedCrossMultiplicity : Feature = ownedRelationship += OwnedMultiplicity
+    //
+    // All three are shared units, read in both languages by `end_reference`: the cross
+    // multiplicity's OwnedMultiplicity is each language's own (`owned_multiplicity`),
+    // MultiplicityRange in SysML and OwnedMultiplicityRange in KerML. `skip_connector_end`
+    // walks the parts in this order.
     //
     // "The identification of a related feature may optionally be preceded by a cross
     // multiplicity and/or an end feature name followed by the keyword references or the
@@ -11190,7 +11228,7 @@ impl<'a> Parser<'a> {
     /// ( NAME REFERENCES )? OwnedReferenceSubsetting` (`SysML` 8.2.2.13.1, 8.2.2.14.2),
     /// into the caller's node.
     fn end_reference(&mut self) {
-        if self.language == Language::SysMl && self.at(SyntaxKind::LBracket) {
+        if self.at(SyntaxKind::LBracket) {
             self.start_node(SyntaxKind::OwnedCrossMultiplicityMember);
             self.start_node(SyntaxKind::OwnedCrossMultiplicity);
             self.owned_multiplicity();
@@ -11262,11 +11300,8 @@ impl<'a> Parser<'a> {
     // over an EMPTY declaration, `succession first a then b;` (AHFSequences.sysml), which
     // the production admits because Identification is fully optional.
     //
-    // Marked although ConnectorEnd is not: this production's own body is read in full,
-    // as ActionTargetSuccessionMember is marked over the same ConnectorEndMember. What
-    // ConnectorEnd lacks is its OwnedCrossMultiplicityMember in KerML, held by
-    // tests/rejection/kerml-connector-end-cross-multiplicity-is-not-implemented.kerml; in
-    // SysML, `first [1] a then b;` is read from the next commit.
+    // ConnectorEnd is read whole, its cross multiplicity included, so `first [1] a then
+    // b;` is this production in full.
     //
     // implied specialization: Occurrences::happensBeforeLinks
     // constraint: Succession::checkSuccessionSpecialization, which "requires that a
@@ -11320,9 +11355,7 @@ impl<'a> Parser<'a> {
     // the declaration part is empty, then the keyword binding may be omitted" (7.13.3,
     // receipt 6db87b41) — which is what the corpus's `bind a = b;` is.
     //
-    // Marked although ConnectorEnd is not, as SuccessionAsUsage is: this production's own
-    // body is read in full. ConnectorEnd's OwnedCrossMultiplicityMember, `bind [1] a = b;`,
-    // is read in SysML from the next commit and is still missing in KerML.
+    // ConnectorEnd is read whole, its cross multiplicity included (`bind [1] a = b;`).
     //
     // implied specialization: Links::selfLinks
     // constraint: BindingConnector::checkBindingConnectorSpecialization,
@@ -13629,24 +13662,27 @@ impl<'a> Parser<'a> {
     //     ( isSufficient ?= 'all' )? Identification
     //     ( ownedRelationship += OwnedMultiplicity )?
     //     ( SuperclassingPart | ConjugationPart )?
-    //     TypeRelationshipPart*                                   (KerML 8.2.4.2)
+    //     TypeRelationshipPart*                                   (KerML 8.2.4.2.1)
     //
-    // NOT marked for coverage. Three of its five parts are unimplemented, and each is a
+    // NOT marked for coverage. Two of its five parts are unimplemented, and each is a
     // construct the language has rather than an optional slot left empty:
     //
-    //   - OwnedMultiplicity, the `[1..*]` on a classifier rather than on a feature.
     //   - ConjugationPart (`~` or `conjugates`), the second alternative of the one
     //     alternation here, held by tests/rejection/conjugation-part-is-not-implemented.kerml.
     //   - TypeRelationshipPart, the disjoining, unioning, intersecting and differencing
     //     parts, held by tests/rejection/type-relationship-part-is-not-implemented.kerml.
     //
-    // `all` and Identification are read, and SuperclassingPart is fully implemented and
-    // marked on its own below.
+    // `all`, Identification and the OwnedMultiplicity (`classifier MyBike [1]`, KerML Spec
+    // Annex A Examples/A-2-ModelingInstances.kerml:8) are read, and SuperclassingPart is
+    // fully implemented and marked on its own below.
     fn classifier_declaration(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ClassifierDeclaration);
         self.eat_optional_keyword("all");
         self.identification();
+        if self.at(SyntaxKind::LBracket) {
+            self.owned_multiplicity();
+        }
         if self.at_superclassing() {
             self.superclassing_part();
         }

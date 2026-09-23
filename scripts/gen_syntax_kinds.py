@@ -1643,6 +1643,16 @@ NODES = [
             "`SysML` 8.2.2.6.6."
         ),
     ),
+    # KerML's OwnedMultiplicity owns an OwnedMultiplicityRange, whose body is the
+    # MultiplicityBounds fragment (KerML 8.2.5.11); its metaclass is MultiplicityRange,
+    # the name KerML gives the named `multiplicity` declaration's production instead.
+    (
+        "OwnedMultiplicityRange",
+        (
+            "`MultiplicityBounds`, `'[' ( MultiplicityExpressionMember '..' )? "
+            "MultiplicityExpressionMember ']'`. `KerML` 8.2.5.11 — returns `MultiplicityRange`."
+        ),
+    ),
     (
         "MultiplicityExpressionMember",
         "`LiteralExpression | FeatureReferenceExpression`. `SysML` 8.2.2.6.6.",

@@ -1123,6 +1123,8 @@ pub enum SyntaxKind {
     OwnedMultiplicity,
     /// `'[' ( MultiplicityExpressionMember '..' )? MultiplicityExpressionMember ']'`. `SysML` 8.2.2.6.6.
     MultiplicityRange,
+    /// `MultiplicityBounds`, `'[' ( MultiplicityExpressionMember '..' )? MultiplicityExpressionMember ']'`. `KerML` 8.2.5.11 — returns `MultiplicityRange`.
+    OwnedMultiplicityRange,
     /// `LiteralExpression | FeatureReferenceExpression`. `SysML` 8.2.2.6.6.
     MultiplicityExpressionMember,
     /// `ownedRelationship += FeatureValue`. `SysML` 8.2.2.6.2.
@@ -1848,6 +1850,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::MultiplicityPart,
     SyntaxKind::OwnedMultiplicity,
     SyntaxKind::MultiplicityRange,
+    SyntaxKind::OwnedMultiplicityRange,
     SyntaxKind::MultiplicityExpressionMember,
     SyntaxKind::ValuePart,
     SyntaxKind::FeatureValue,

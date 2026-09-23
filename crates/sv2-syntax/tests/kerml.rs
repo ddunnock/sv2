@@ -849,6 +849,101 @@ fn a_kerml_expression_body_is_not_read_yet() {
     }
 }
 
+// -- multiplicity, KerML 8.2.5.11 ------------------------------------------------
+//
+//   OwnedMultiplicity      = ownedRelatedElement += OwnedMultiplicityRange
+//   OwnedMultiplicityRange : MultiplicityRange = MultiplicityBounds
+//   MultiplicityBounds     = '[' ( MultiplicityExpressionMember '..' )?
+//                                 MultiplicityExpressionMember ']'
+//
+// SysML's OwnedMultiplicity owns a MultiplicityRange of the same text (SysML 8.2.2.6.6);
+// in KerML the name MultiplicityRange is the named `multiplicity` declaration, so the
+// language decides the node (ADR-0015).
+
+#[test]
+fn a_kerml_multiplicity_is_an_owned_multiplicity_range() {
+    // A feature's MultiplicityPart (KerML 8.2.4.3.1), in KerML's own shape.
+    let tree = render(&kerml_accepted("package P { feature x : T[0..*]; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "OwnedMultiplicity"),
+        ["OwnedMultiplicityRange"],
+        "{tree}"
+    );
+    // MultiplicityBounds is a fragment of the range it is written into: no node.
+    assert_eq!(
+        child_kinds(&tree, "OwnedMultiplicityRange"),
+        [
+            "LBracket",
+            "MultiplicityExpressionMember",
+            "DotDot",
+            "MultiplicityExpressionMember",
+            "RBracket"
+        ],
+        "{tree}"
+    );
+    assert!(!has_node(&tree, "MultiplicityRange"), "{tree}");
+    // The upper bound alone.
+    let one = render(&kerml_accepted("package P { feature x[1]; }").syntax());
+    assert_eq!(
+        child_kinds(&one, "OwnedMultiplicityRange"),
+        ["LBracket", "MultiplicityExpressionMember", "RBracket"],
+        "{one}"
+    );
+    // SysML keeps its own: the same text is a MultiplicityRange there.
+    let sysml = render(&parse("part p[1];", Language::SysMl).syntax());
+    assert!(has_node(&sysml, "MultiplicityRange"), "{sysml}");
+    assert!(!has_node(&sysml, "OwnedMultiplicityRange"), "{sysml}");
+}
+
+#[test]
+fn a_classifier_declaration_takes_a_multiplicity() {
+    // ClassifierDeclaration's OwnedMultiplicity, after the Identification (KerML
+    // 8.2.4.2.1): KerML Spec Annex A Examples/A-2-ModelingInstances.kerml:8 and
+    // Individuals Examples/JohnIndividualExample.kerml:52.
+    let tree = render(
+        &kerml_accepted("package P { classifier MyBike [1] specializes Bicycle; }").syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "ClassifierDeclaration"),
+        ["Identification", "OwnedMultiplicity", "SuperclassingPart"],
+        "{tree}"
+    );
+    kerml_accepted("package P { class all JohnLife[0..1] specializes John, Occurrences::Life; }");
+    kerml_accepted("package P { struct S [*]; }");
+    // After the Identification, once. Held as files by
+    // tests/rejection/kerml-classifier-multiplicity-follows-identification.kerml and
+    // tests/rejection/kerml-classifier-takes-one-multiplicity.kerml.
+    kerml_rejected("package P { classifier [1] MyBike; }");
+    kerml_rejected("package P { classifier MyBike [1] [2]; }");
+    // A bound is a literal or a name, not an operator expression. Held as a file by
+    // tests/rejection/kerml-multiplicity-bound-is-not-an-operator-expression.kerml.
+    kerml_rejected("package P { classifier MyBike [1 + 1]; }");
+}
+
+#[test]
+fn a_kerml_connector_end_takes_a_cross_multiplicity() {
+    // ConnectorEnd's OwnedCrossMultiplicityMember, now read in KerML as in SysML: KerML
+    // Spec Annex A Examples/A-3-6-Sequences.kerml:10 writes it on its successions.
+    let tree = render(
+        &kerml_accepted("class C { succession p_before_d first [1] paint then [1] dry; }").syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "ConnectorEnd"),
+        ["OwnedCrossMultiplicityMember", "OwnedReferenceSubsetting"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "OwnedCrossMultiplicity"),
+        ["OwnedMultiplicity"],
+        "{tree}"
+    );
+    assert!(has_node(&tree, "OwnedMultiplicityRange"), "{tree}");
+    kerml_accepted("package P { binding of [1] a = b; }");
+    // The multiplicity AFTER an end is SysML's deviation ConnectorEnd-trailing-multiplicity
+    // alone, not KerML's.
+    kerml_rejected("class C { succession first a[1] then b; }");
+}
+
 // -- the invariants, under this grammar too ---------------------------------------
 
 #[test]
