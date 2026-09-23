@@ -321,8 +321,8 @@ fn the_unimplemented_halves_of_a_classifier_declaration_are_reported() {
     kerml_rejected("class B conjugates A;");
     kerml_rejected("class B ~ A;");
     kerml_rejected("classifier C unions A, B;");
-    // OwnedMultiplicity on a classifier, the remaining unimplemented slot.
-    kerml_rejected("classifier C [1..*];");
+    // OwnedMultiplicity on a classifier, `classifier C [1..*];`, was here: rejected by
+    // absence until OwnedMultiplicity@kerml, which the next commit reads.
 }
 
 #[test]
@@ -588,10 +588,8 @@ fn a_succession_is_bounded_by_its_rules() {
     kerml_rejected("succession a then b");
     // No keywordless form in KerML; that is SysML's SuccessionAsUsage (ADR-0014).
     kerml_rejected("first a then b;");
-    // OwnedCrossMultiplicityMember, ConnectorEnd's first part, is unimplemented — rejected
-    // BY ABSENCE, and tests/rejection/kerml-connector-end-cross-multiplicity-is-not-implemented.kerml
-    // holds it.
-    kerml_rejected("succession first [1] a then b;");
+    // `succession first [1] a then b;` was here, rejected by absence while KerML's
+    // OwnedMultiplicity was unimplemented; the next commit reads it.
 }
 
 #[test]
@@ -708,9 +706,7 @@ fn a_binding_connector_is_bounded_by_its_rules() {
     kerml_rejected("binding a = b");
     // `bind` is SysML's BindingConnectorAsUsage, not a KerML keyword (ADR-0014).
     kerml_rejected("bind a = b;");
-    // OwnedCrossMultiplicityMember, ConnectorEnd's first part, is unimplemented — rejected
-    // BY ABSENCE, as for the succession.
-    kerml_rejected("binding of [1] a = b;");
+    // `binding of [1] a = b;` was here, rejected by absence as the succession's was.
 }
 
 #[test]
