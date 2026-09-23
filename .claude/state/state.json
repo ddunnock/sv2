@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T17:48:03Z",
+    "regenerated_utc": "2026-09-23T17:57:07Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "6470178 Read filtered imports, `A::**[@Safety]`, completing NamespaceImport",
       "ac6155b Read view definitions, view usages and `render`, the view layer less `expose`",
       "b2356c1 Read viewpoint definitions and usages, requirements by the keyword `viewpoint`",
       "10d5ae9 Read collect expressions, `x.{ ... }`, completing the postfix layer",
       "b733786 Read select expressions, `x.?{ ... }`, in the postfix loop",
       "22a1f5b Stop rejecting select and collect by absence: the next commits read them",
       "ff4e6cf Read index expressions, `x#(i)`, in the postfix loop",
-      "e663c21 Stop rejecting `#(` by absence: the next commit reads it",
-      "5649eb2 Read the `->` operation and expression bodies, and site deviation ExpressionBody"
+      "e663c21 Stop rejecting `#(` by absence: the next commit reads it"
     ]
   },
   "authored": {
