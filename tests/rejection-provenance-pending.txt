@@ -57,7 +57,6 @@ tests/rejection/import-missing-relationship-body.sysml
 tests/rejection/import-recursive-suffix-is-not-a-single-star.sysml
 tests/rejection/import-separator-without-target.sysml
 tests/rejection/import-without-visibility.sysml
-tests/rejection/index-expression-is-not-implemented.sysml
 tests/rejection/individual-comes-after-basic-definition-prefix.sysml
 tests/rejection/initial-node-member-is-not-a-definition-body-item.sysml
 tests/rejection/initial-node-member-is-not-a-requirement-body-item.sysml

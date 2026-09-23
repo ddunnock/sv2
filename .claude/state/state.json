@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T16:09:23Z",
+    "regenerated_utc": "2026-09-23T16:23:17Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -26,7 +26,7 @@
       "unit": 576,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 235,
+      "negative_cases": 234,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "5649eb2 Read the `->` operation and expression bodies, and site deviation ExpressionBody",
       "03c8416 Stop rejecting `->` and expression bodies by absence: the next commit reads them",
       "315f588 Close the session: messages, satisfy, allocations and concerns recorded, the arrow invocation next",
       "893dce4 Read a multiplicity after every reference that takes a FeatureSpecializationPart",
       "5e3d072 Read concerns, stakeholders and framed concerns, and site deviation FramedConcernUsage",
       "fa3f315 Stop rejecting `frame` and `stakeholder` by absence: the next commit reads them",
       "38c8529 Read allocation usages, by declaration and by their ends alone",
-      "789e8bd Read satisfy requirement usages, and site deviation SatisfyRequirementUsage",
-      "2d3c97c Stop rejecting `satisfy` by absence: the next commit reads it"
+      "789e8bd Read satisfy requirement usages, and site deviation SatisfyRequirementUsage"
     ]
   },
   "authored": {
