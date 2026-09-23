@@ -36,9 +36,7 @@
 //! productions and is given by that clause's table 6. The table is data at
 //! `docs/operator-precedence.toml`, and `INFIX` below is what the parser reads. The
 //! operator core reads all fifteen tiers, and the postfix layer of 8.2.5.8.2 reads
-//! `a.b`, `x[kg]`, `x#(1)`, `x->f()` and `x.?{ ... }`; its collect form, `x.{ ... }`, is
-//! not implemented yet. Its absence rejection case was retired ahead of it, so until it
-//! lands `x.{` is reported only because `at_feature_chain` asks for a name after the dot.
+//! all six of its forms: `a.b`, `x[kg]`, `x#(1)`, `x->f()`, `x.?{ ... }` and `x.{ ... }`.
 //!
 //! All four `PackageBodyElement` alternatives are handled: `PackageMember`, `Import`,
 //! `AliasMember` and `ElementFilterMember`, the last of which waited on the expression
@@ -1854,7 +1852,7 @@ impl<'a> Parser<'a> {
     ///
     /// - as a `BodyArgumentMember`: straight after `'->' InstantiatedTypeMember`, whose
     ///   member is read as a `QualifiedName`, so the test walks back over one to the
-    ///   arrow; or straight after a select's `.?`.
+    ///   arrow; or straight after a select's `.?` or a collect's `.`.
     /// - where an operand is expected, as `BaseExpression`: after `=` or `:=`, an opening
     ///   `(` or `[`, a `,`, `?` or `else`, or an operator from table 6.
     ///
@@ -1893,6 +1891,7 @@ impl<'a> Parser<'a> {
             SyntaxKind::Comma,
             SyntaxKind::Question,
             SyntaxKind::DotQuestion,
+            SyntaxKind::Dot,
         ]
         .into_iter()
         .any(|kind| self.nth_is(prev, kind))
@@ -5724,13 +5723,12 @@ impl<'a> Parser<'a> {
     // NONE OF THE THREE IS MARKED FOR COVERAGE. Each is an alternation and each has
     // alternatives that are absent, so marking any of them would claim a production
     // this parser does not read. What is implemented is FeatureChainExpression from the
-    // first; BracketExpression, IndexExpression, SequenceExpression, SelectExpression and
-    // FunctionOperationExpression from the middle one; and NullExpression, LiteralExpression, FeatureReferenceExpression,
+    // first; BracketExpression, IndexExpression, SequenceExpression, SelectExpression,
+    // CollectExpression and FunctionOperationExpression from the middle one; and NullExpression, LiteralExpression, FeatureReferenceExpression,
     // InvocationExpression, ConstructorExpression and BodyExpression from the last, the
     // body in SysML only (see `body_expression`). What is not, each with a rejection case
     // naming the clause:
     //
-    //   CollectExpression          `x.{ ... }`
     //   MetadataAccessExpression   `E.metadata`
     //
     // No node of its own for any of the three, as DefinitionElement and
@@ -5825,6 +5823,44 @@ impl<'a> Parser<'a> {
         self.bump();
         self.kerml_feature_chain_member();
         self.finish_node();
+    }
+
+    // production: CollectExpression
+    //
+    // CollectExpression =
+    //     ownedRelationship += PrimaryArgumentMember '.'
+    //     ownedRelationship += BodyArgumentMember                (KerML 8.2.5.8.2)
+    //
+    // `x.{in xx; xx + 1}` (vendor/corpus/kerml/src/examples/Simple Tests/Expressions.kerml
+    // :16). The Pilot writes the same alternative inline,
+    // `{SysML::CollectExpression.operand += current} '.' operand += BodyExpression`
+    // (KerMLExpressions.xtext:314-315).
+    //
+    // A body and nothing else, and no EmptyResultMember, as SelectExpression. It is told
+    // from a FeatureChainExpression by the token after the `.`: see
+    // `at_collect_expression`. A .kerml body is reported at its `{`, as a select's is.
+    fn collect_expression(&mut self, start: rowan::Checkpoint) {
+        self.start_node_at(start, SyntaxKind::CollectExpression);
+        self.wrap_at(start, &PRIMARY_ARGUMENT);
+        self.bump();
+        self.eat_trivia();
+        if self.at(SyntaxKind::LBrace) && self.language == Language::SysMl {
+            self.body_argument_member();
+        } else {
+            self.error_expected("a `{` body after `.`");
+        }
+        self.finish_node();
+    }
+
+    /// Whether a `.` here opens a `CollectExpression`.
+    ///
+    /// A `BodyArgumentMember` reaches `BodyExpression`, which opens on `{`
+    /// (`ExpressionBody`, `KerML` 8.2.5.8.3), so a `.` with a `{` after it is a collect. A
+    /// chain asks for a name after its `.` (`at_feature_chain`), and a `{` is not one, so
+    /// the two never both answer. Asked in both languages, so that a `.kerml` collect is
+    /// reported at its body rather than at its dot.
+    fn at_collect_expression(&self) -> bool {
+        self.at(SyntaxKind::Dot) && self.nth_is(1, SyntaxKind::LBrace)
     }
 
     // production: SelectExpression
@@ -6080,9 +6116,9 @@ impl<'a> Parser<'a> {
     /// `IndexExpression` (`#(`) too, and it is the one form whose opening token is shared:
     /// see `at_index_expression`.
     ///
-    /// `SelectExpression` (`.?{`) is the fifth. The remaining postfix form of 8.2.5.8.2,
-    /// `CollectExpression` (`.{`), is absent; its rejection case was retired ahead of it,
-    /// and `at_feature_chain` is what reports it until it lands.
+    /// `SelectExpression` (`.?{`) is the fifth and `CollectExpression` (`.{`) the sixth,
+    /// which completes the postfix forms of 8.2.5.8.2. A collect shares the chain's `.`,
+    /// and `at_collect_expression` and `at_feature_chain` split it by the token after.
     fn postfix_tail(&mut self, start: rowan::Checkpoint) {
         let mut levels: u32 = 0;
         while self.at_feature_chain()
@@ -6090,6 +6126,7 @@ impl<'a> Parser<'a> {
             || self.at(SyntaxKind::ThinArrow)
             || self.at_index_expression()
             || self.at(SyntaxKind::DotQuestion)
+            || self.at_collect_expression()
         {
             // BOUNDED, although this loop uses no stack of its own. Every level wraps
             // what is already there, so the TREE is as deep as the expression is long
@@ -6112,6 +6149,8 @@ impl<'a> Parser<'a> {
                 self.index_expression(start);
             } else if self.at(SyntaxKind::DotQuestion) {
                 self.select_expression(start);
+            } else if self.at_collect_expression() {
+                self.collect_expression(start);
             } else {
                 self.feature_chain_expression(start);
             }
@@ -6140,9 +6179,10 @@ impl<'a> Parser<'a> {
     /// `FeatureChainMember` reaches a `QualifiedName`, which opens on a NAME — and a
     /// keyword is not a name (`KerML` 8.2.2.6), so asking for a name excludes both.
     ///
-    /// All three are unimplemented. This check is what keeps them that way rather than
-    /// letting a chain quietly accept text it is not: `E.metadata` reads as a metadata
-    /// access or not at all, never as a feature called `metadata`.
+    /// Select and collect are read, by `select_expression` and `collect_expression`;
+    /// the metadata access is unimplemented. This check is what keeps it that way rather
+    /// than letting a chain quietly accept text it is not: `E.metadata` reads as a
+    /// metadata access or not at all, never as a feature called `metadata`.
     fn at_feature_chain(&self) -> bool {
         self.at(SyntaxKind::Dot) && self.nth_is_name(1)
     }

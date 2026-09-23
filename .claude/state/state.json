@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T16:52:33Z",
+    "regenerated_utc": "2026-09-23T17:02:33Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 377,
-      "unimplemented": 177,
+      "implemented": 378,
+      "unimplemented": 176,
       "absent": 0,
-      "percent": 68.1
+      "percent": 68.2
     },
     "tests": {
-      "unit": 586,
+      "unit": 589,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 234,
+      "negative_cases": 235,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "b733786 Read select expressions, `x.?{ ... }`, in the postfix loop",
       "22a1f5b Stop rejecting select and collect by absence: the next commits read them",
       "ff4e6cf Read index expressions, `x#(i)`, in the postfix loop",
       "e663c21 Stop rejecting `#(` by absence: the next commit reads it",
       "5649eb2 Read the `->` operation and expression bodies, and site deviation ExpressionBody",
       "03c8416 Stop rejecting `->` and expression bodies by absence: the next commit reads them",
       "315f588 Close the session: messages, satisfy, allocations and concerns recorded, the arrow invocation next",
-      "893dce4 Read a multiplicity after every reference that takes a FeatureSpecializationPart",
-      "5e3d072 Read concerns, stakeholders and framed concerns, and site deviation FramedConcernUsage"
+      "893dce4 Read a multiplicity after every reference that takes a FeatureSpecializationPart"
     ]
   },
   "authored": {

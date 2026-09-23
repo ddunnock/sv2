@@ -1100,6 +1100,10 @@ NODES = [
         ("`PrimaryArgumentMember '#' '(' SequenceExpressionListMember ')'`. `KerML` 8.2.5.8.2."),
     ),
     (
+        "CollectExpression",
+        "`PrimaryArgumentMember '.' BodyArgumentMember`. `KerML` 8.2.5.8.2.",
+    ),
+    (
         "SelectExpression",
         "`PrimaryArgumentMember '.?' BodyArgumentMember`. `KerML` 8.2.5.8.2.",
     ),

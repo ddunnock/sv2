@@ -8305,6 +8305,69 @@ fn a_select_expression_takes_a_body_and_nothing_else() {
     parse_rejected("calc def C { things.? }");
 }
 
+// -- CollectExpression, KerML 8.2.5.8.2 ----------------------------------------------
+//
+// CollectExpression =
+//     ownedRelationship += PrimaryArgumentMember '.'
+//     ownedRelationship += BodyArgumentMember
+//
+// The one postfix form that shares its first token with the feature chain: both write a
+// bare `.`, and what follows it decides. The corpus writes it once, in KerML
+// (vendor/corpus/kerml/src/examples/Simple Tests/Expressions.kerml:16,
+// `c1 = x.{in xx; xx + 1};`), so the SysML cases are built from the clause.
+
+#[test]
+fn a_collect_expression_builds_the_members_the_clause_names() {
+    let rendered = render(&parse_accepted("calc def C { xs.{in x; x + 1} }").syntax());
+    // No EmptyResultMember: the clause names none.
+    assert_eq!(
+        child_kinds(&rendered, "CollectExpression"),
+        ["PrimaryArgumentMember", "Dot", "BodyArgumentMember"],
+        "{rendered}"
+    );
+    // The `.` is the collect's, not a chain's.
+    assert_eq!(
+        nodes_named(&rendered, "FeatureChainExpression"),
+        0,
+        "{rendered}"
+    );
+    // Opening on a name, the whole is the body's result expression, not a usage whose
+    // body is the collect's.
+    assert_eq!(
+        child_kinds(&rendered, "CalculationBodyPart"),
+        ["ResultExpressionMember"],
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_collect_expression_folds_with_the_other_postfix_forms() {
+    // After a chain, `a.b.{ ... }`: the last `.` is the collect's, the first the chain's.
+    let over_chain = render(&parse_accepted("calc def C { a.b.{in x; x} }").syntax());
+    assert_eq!(
+        child_kinds(&over_chain, "PrimaryArgumentValue"),
+        ["FeatureChainExpression"],
+        "{over_chain}"
+    );
+    // And a chain after a collect.
+    let under = render(&parse_accepted("calc def C { xs.{in x; x}.b }").syntax());
+    assert_eq!(
+        child_kinds(&under, "PrimaryArgumentValue"),
+        ["CollectExpression"],
+        "{under}"
+    );
+    // Expressions.kerml:47's shape with the collect written by `.` rather than `->`.
+    parse_accepted("calc def C { xs.{in p; p.mass}->reduce '+' }");
+}
+
+#[test]
+fn a_collect_expression_takes_a_body_and_nothing_else() {
+    // BodyArgumentMember is its only argument. Held as a file by
+    // tests/rejection/collect-expression-takes-a-body.sysml.
+    parse_rejected("calc def C { things.(a) }");
+    parse_rejected("calc def C { things. }");
+}
+
 // -- ConstructorExpression, KerML 8.2.5.8.3 ----------------------------------------
 //
 // ConstructorExpression   = 'new' InstantiatedTypeMember ConstructorResultMember
