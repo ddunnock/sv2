@@ -2148,8 +2148,9 @@ fn a_guarded_target_succession_is_a_suffix_and_nothing_else() {
 #[test]
 fn one_token_is_reported_once_however_many_productions_fail_on_it() {
     // The expression, the parenthesis around it and the enclosing definition each fail at
-    // the `{`. Before this rule they reported four times at one offset.
-    let parsed = parse_rejected("part def P {\n\t:>> x = ({ 1 });\n}\n");
+    // the `]`. Before this rule they reported four times at one offset. (The case was
+    // `({ 1 })` until BodyExpression landed and made `{ 1 }` an expression.)
+    let parsed = parse_rejected("part def P {\n\t:>> x = (]);\n}\n");
     let starts: Vec<usize> = parsed
         .errors()
         .iter()

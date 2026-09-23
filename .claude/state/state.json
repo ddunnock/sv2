@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T15:04:41Z",
+    "regenerated_utc": "2026-09-23T16:06:51Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -26,7 +26,7 @@
       "unit": 564,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 235,
+      "negative_cases": 233,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "315f588 Close the session: messages, satisfy, allocations and concerns recorded, the arrow invocation next",
       "893dce4 Read a multiplicity after every reference that takes a FeatureSpecializationPart",
       "5e3d072 Read concerns, stakeholders and framed concerns, and site deviation FramedConcernUsage",
       "fa3f315 Stop rejecting `frame` and `stakeholder` by absence: the next commit reads them",
       "38c8529 Read allocation usages, by declaration and by their ends alone",
       "789e8bd Read satisfy requirement usages, and site deviation SatisfyRequirementUsage",
       "2d3c97c Stop rejecting `satisfy` by absence: the next commit reads it",
-      "4d3e06e Read messages, by declaration and by their events alone",
-      "89457d7 Close the session: event occurrences and the keywordless occurrences recorded, messages next"
+      "4d3e06e Read messages, by declaration and by their events alone"
     ]
   },
   "authored": {

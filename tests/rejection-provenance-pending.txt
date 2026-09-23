@@ -23,7 +23,6 @@ tests/rejection/attribute-usage-is-not-an-occurrence.sysml
 tests/rejection/basic-definition-prefix-at-most-one.sysml
 tests/rejection/basic-name-starts-with-a-digit.sysml
 tests/rejection/binary-operator-without-a-right-operand.sysml
-tests/rejection/body-expression-is-not-implemented.sysml
 tests/rejection/bracket-expression-needs-a-sequence.sysml
 tests/rejection/bracket-expression-needs-an-operand.sysml
 tests/rejection/bracket-expression-unclosed.sysml
@@ -51,7 +50,6 @@ tests/rejection/flow-end-needs-its-feature.sysml
 tests/rejection/flow-from-needs-to.sysml
 tests/rejection/flow-payload-multiplicity-needs-a-type.sysml
 tests/rejection/flow-payload-needs-a-specialization.sysml
-tests/rejection/function-operation-expression-is-not-implemented.sysml
 tests/rejection/import-all-without-declaration.sysml
 tests/rejection/import-global-scope-without-name.sysml
 tests/rejection/import-keyword-missing.sysml
