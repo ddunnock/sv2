@@ -202,6 +202,7 @@ vendor/corpus/sysml/src/training/38. Allocation/Allocation Usage Example.sysml
 vendor/corpus/sysml/src/training/39. Metadata/Metadata Example-1.sysml
 vendor/corpus/sysml/src/training/39. Metadata/Metadata Example-2.sysml
 vendor/corpus/sysml/src/training/40. Filtering/Filtering Example-1.sysml
+vendor/corpus/sysml/src/training/40. Filtering/Filtering Example-2.sysml
 vendor/corpus/sysml/src/training/41. Language Extension/Model Library Example.sysml
 vendor/corpus/sysml/src/training/41. Language Extension/Semantic Metadata Example.sysml
 vendor/corpus/sysml/src/training/41. Language Extension/User Keyword Example.sysml
@@ -236,6 +237,7 @@ vendor/corpus/sysml/src/validation/12-Dependency Relationships/12b-Allocation-1.
 vendor/corpus/sysml/src/validation/12-Dependency Relationships/12b-Allocation.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13a-Model Containment.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group-1.sysml
+vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group-2.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml
 vendor/corpus/sysml/src/validation/14-Language Extensions/14a-Language Extensions.sysml
 vendor/corpus/sysml/src/validation/14-Language Extensions/14b-Language Extensions.sysml

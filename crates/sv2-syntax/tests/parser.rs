@@ -11991,3 +11991,94 @@ fn a_view_is_structure_and_its_bodies_are_definition_bodies_and_more() {
     // Import writes a VisibilityIndicator, not optional in SysML (8.2.2.5.1).
     parse_accepted("view v { variant part p; private import A::*; }");
 }
+
+// -- FilterPackage, SysML 8.2.2.5.1 ------------------------------------------------
+//
+//   NamespaceImport     = [QualifiedName] '::' '*' ( '::' '**' )?
+//                       | importedNamespace = FilterPackage
+//                         { ownedRelatedElement += importedNamespace }
+//   FilterPackage       = FilterPackageImport FilterPackageMember+
+//   FilterPackageImport = ImportDeclaration { visibility = 'public' }
+//   FilterPackageMember = '[' OwnedExpression ']'
+
+#[test]
+fn a_filter_package_reads_the_corpus_forms() {
+    // vendor/corpus/sysml/src/training/40. Filtering/Filtering Example-2.sysml:28 and :33.
+    parse_accepted("package P { public import vehicle::**[@Safety]; }");
+    parse_accepted("package P { public import vehicle::**[@Safety and (as Safety).isMandatory]; }");
+    // validation/13-Model Containment/13b-...-2.sysml:45.
+    parse_accepted("package P { public import vehicle::**[@Safety or @Security]; }");
+    // FilterPackageMember+: more than one condition, as vendor/corpus/kerml/src/examples/
+    // Simple Tests/Filtering.kerml:34-36 writes them.
+    parse_accepted("package P { private import DesignModel::**[@Structure][x.level > 1]; }");
+    // The inner declaration may be any ImportDeclaration: a namespace import, or a
+    // membership import with or without its recursive suffix.
+    parse_accepted("package P { private import A::*[@S]; }");
+    parse_accepted("package P { private import A::*::**[@S]; }");
+    parse_accepted("package P { private import A[@S]; }");
+    // `all` and a braced RelationshipBody follow as for any import.
+    parse_accepted("package P { private import all A::**[@S] { /* why */ } }");
+}
+
+#[test]
+fn a_filter_package_builds_the_members_the_clause_names() {
+    let rendered =
+        render(&parse_accepted("package P { public import vehicle::**[@Safety][b]; }").syntax());
+    // The import's declaration is a NamespaceImport whose namespace is the FilterPackage,
+    // owned by it (the `{ ownedRelatedElement += importedNamespace }` action).
+    assert_eq!(
+        child_kinds(&rendered, "Import"),
+        [
+            "VisibilityIndicator",
+            "KwImport",
+            "ImportDeclaration",
+            "RelationshipBody"
+        ],
+        "{rendered}"
+    );
+    assert_eq!(
+        child_kinds(&rendered, "ImportDeclaration"),
+        ["NamespaceImport"],
+        "{rendered}"
+    );
+    assert_eq!(
+        child_kinds(&rendered, "NamespaceImport"),
+        ["FilterPackage"],
+        "{rendered}"
+    );
+    // SysML: the first is a FilterPackageImport, then one member per condition.
+    assert_eq!(
+        child_kinds(&rendered, "FilterPackage"),
+        [
+            "FilterPackageImport",
+            "FilterPackageMember",
+            "FilterPackageMember"
+        ],
+        "{rendered}"
+    );
+    // FilterPackageImport = ImportDeclaration, which is the recursive membership import.
+    assert_eq!(
+        child_kinds(&rendered, "FilterPackageImport"),
+        ["ImportDeclaration"],
+        "{rendered}"
+    );
+    let inner = subtree(&rendered, "FilterPackageImport");
+    assert_eq!(nodes_named(&inner, "MembershipImport"), 1, "{rendered}");
+    assert_eq!(
+        child_kinds(&rendered, "FilterPackageMember"),
+        ["LBracket", "ClassificationExpression", "RBracket"],
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_filter_package_is_bounded_by_its_rules() {
+    // FilterPackageMember holds one OwnedExpression: not none. Held as a file by
+    // tests/rejection/filter-package-member-holds-an-expression.sysml.
+    parse_rejected("package P { private import A::**[]; }");
+    parse_rejected("package P { private import A::**[@S; }");
+    // Nor a list: an OwnedExpression has no `,` operator (8.2.5.8.1).
+    parse_rejected("package P { private import A::**[@S, @T]; }");
+    // The condition follows the declaration, not the RelationshipBody.
+    parse_rejected("package P { private import A::**; [@S] }");
+}

@@ -787,6 +787,31 @@ fn an_index_expression_is_kerml_too() {
     assert!(has_node(&tree, "IndexExpression"), "{tree}");
 }
 
+// -- FilterPackage, KerML 8.2.3.4.2 ----------------------------------------------
+
+#[test]
+fn a_kerml_filter_package_takes_its_declaration_directly() {
+    // KerML's FilterPackage is `ImportDeclaration FilterPackageMember+` (8.2.3.4.2), with
+    // no FilterPackageImport between: that production is SysML's (8.2.2.5.1).
+    // vendor/corpus/kerml/src/examples/Simple Tests/Filtering.kerml:34-36, less its
+    // `as` conditions.
+    let tree = render(
+        &kerml_accepted("package P { private import DesignModel::**[@Structure][x > 1]; }")
+            .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "FilterPackage"),
+        [
+            "ImportDeclaration",
+            "FilterPackageMember",
+            "FilterPackageMember"
+        ],
+        "{tree}"
+    );
+    assert!(!tree.contains("FilterPackageImport"), "{tree}");
+    kerml_rejected("package P { private import A::**[]; }");
+}
+
 #[test]
 fn a_kerml_expression_body_is_not_read_yet() {
     // KerML's ExpressionBody is `'{' FunctionBodyPart '}'` (8.2.5.8.3), whose

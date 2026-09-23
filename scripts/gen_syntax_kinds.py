@@ -134,7 +134,19 @@ NODES = [
     ("VisibilityIndicator", "`'public' | 'private' | 'protected'`. `SysML` 8.2.2.5.1."),
     ("ImportDeclaration", "`MembershipImport | NamespaceImport`. `SysML` 8.2.2.5.1."),
     ("MembershipImport", "`[QualifiedName] ( '::' '**' )?`. `SysML` 8.2.2.5.1."),
-    ("NamespaceImport", "`[QualifiedName] '::' '*' ( '::' '**' )?`. `SysML` 8.2.2.5.1."),
+    (
+        "NamespaceImport",
+        "`[QualifiedName] '::' '*' ( '::' '**' )? | FilterPackage`. `SysML` 8.2.2.5.1.",
+    ),
+    (
+        "FilterPackage",
+        (
+            "`FilterPackageImport FilterPackageMember+` in `SysML` 8.2.2.5.1; "
+            "`ImportDeclaration FilterPackageMember+` in `KerML` 8.2.3.4.2."
+        ),
+    ),
+    ("FilterPackageImport", "`ImportDeclaration { visibility = 'public' }`. `SysML` 8.2.2.5.1."),
+    ("FilterPackageMember", "`'[' OwnedExpression ']'`. `SysML` 8.2.2.5.1, `KerML` 8.2.3.4.2."),
     ("RelationshipBody", "`';' | '{' OwnedAnnotation* '}'`. `SysML` 8.2.2.2."),
     (
         "PackageMember",

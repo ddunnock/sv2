@@ -12491,17 +12491,43 @@ impl<'a> Parser<'a> {
     // production: ImportDeclaration
     //
     // ImportDeclaration = MembershipImport | NamespaceImport
-    // MembershipImport  = [QualifiedName] ( '::' isRecursive ?= '**' )?
-    // NamespaceImport   = [QualifiedName] '::' '*' ( '::' isRecursive ?= '**' )?
     //
-    // Which one it is cannot be known until after the QualifiedName, because they
-    // share that prefix. The node is opened retroactively at a checkpoint rather
-    // than guessed and repaired.
+    // production: MembershipImport
     //
-    // NamespaceImport's second alternative, `importedNamespace = FilterPackage`, is
-    // not implemented; it stays unimplemented in the coverage report.
+    // MembershipImport = importedMembership = [QualifiedName]
+    //                    ( '::' isRecursive ?= '**' )?
+    //
+    // production: NamespaceImport
+    //
+    // NamespaceImport = importedNamespace = [QualifiedName] '::' '*'
+    //                   ( '::' isRecursive ?= '**' )?
+    //                 | importedNamespace = FilterPackage
+    //                   { ownedRelatedElement += importedNamespace }
+    //                                               (SysML 8.2.2.5.1, KerML 8.2.3.4.2)
+    //
+    // All three are the same in both languages, so shared units. MembershipImport was read
+    // whole long before it was marked; NamespaceImport is whole now that its FilterPackage
+    // alternative is read.
+    //
+    // Which import it is cannot be known until after the QualifiedName, because the
+    // first alternatives share that prefix, and a FilterPackage cannot be known until
+    // after a whole declaration, because it OPENS with one: `vehicle::**[@Safety]` is the
+    // membership import `vehicle::**` and then its condition. So the nodes are opened
+    // retroactively at checkpoints rather than guessed and repaired. A `[` after a
+    // declaration can only be a FilterPackageMember: a RelationshipBody, the one other
+    // thing that follows, opens on `;` or `{`.
     fn import_declaration(&mut self) {
         self.eat_trivia();
+        let outer = self.builder.checkpoint();
+        self.plain_import_declaration();
+        if self.at(SyntaxKind::LBracket) {
+            self.filter_package(outer);
+        }
+    }
+
+    /// An `ImportDeclaration` in its first two shapes: a `MembershipImport` or a
+    /// `NamespaceImport` of a named namespace.
+    fn plain_import_declaration(&mut self) {
         self.start_node(SyntaxKind::ImportDeclaration);
         let inner = self.builder.checkpoint();
         self.qualified_name();
@@ -12509,6 +12535,66 @@ impl<'a> Parser<'a> {
         self.builder
             .start_node_at(inner, Sv2Language::kind_to_raw(kind));
         self.finish_node();
+        self.finish_node();
+    }
+
+    // production: FilterPackage@sysml
+    //
+    // FilterPackage : Package =
+    //     ownedRelationship += FilterPackageImport
+    //     ( ownedRelationship += FilterPackageMember )+          (SysML 8.2.2.5.1)
+    //
+    // production: FilterPackage@kerml
+    //
+    // FilterPackage : Package =
+    //     ownedRelationship += ImportDeclaration
+    //     ( ownedRelationship += FilterPackageMember )+          (KerML 8.2.3.4.2)
+    //
+    // production: FilterPackageImport@sysml
+    //
+    // FilterPackageImport : Import = ImportDeclaration { visibility = 'public' }
+    //                                                            (SysML 8.2.2.5.1)
+    //
+    // Two units, one method: the languages differ only in whether the declaration is
+    // wrapped in a FilterPackageImport. SysML's clause uses FilterPackageImport without
+    // defining it (SYSML21-449); the definition is the specification's own Tier B' BNF,
+    // deviation FilterPackageImport (conflict, follow_spec). Its action sets visibility and
+    // consumes no tokens, so the node holds the declaration alone. The Pilot's
+    // FilterPackageMembershipImport and FilterPackageNamespaceImport are factorings of it,
+    // recorded xtext_only/follow_spec, and add no production here.
+    //
+    // `outer` is where the declaration already read began. It becomes the FilterPackage's
+    // own first member, so the outer ImportDeclaration, NamespaceImport and FilterPackage
+    // are opened around it there, and FilterPackageImport around it alone.
+    fn filter_package(&mut self, outer: rowan::Checkpoint) {
+        self.start_node_at(outer, SyntaxKind::ImportDeclaration);
+        self.start_node_at(outer, SyntaxKind::NamespaceImport);
+        self.start_node_at(outer, SyntaxKind::FilterPackage);
+        if self.language == Language::SysMl {
+            self.wrap_at(outer, &[SyntaxKind::FilterPackageImport]);
+        }
+        while self.at(SyntaxKind::LBracket) {
+            self.filter_package_member();
+        }
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
+    }
+
+    // production: FilterPackageMember
+    //
+    // FilterPackageMember : ElementFilterMembership =
+    //     '[' ownedRelatedElement += OwnedExpression ']'
+    //                                               (SysML 8.2.2.5.1, KerML 8.2.3.4.2)
+    //
+    // A shared unit. The `+` is the loop in `filter_package`, which enters only on `[`.
+    // The expression is a whole OwnedExpression, bounded by the brackets.
+    fn filter_package_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FilterPackageMember);
+        self.expect(SyntaxKind::LBracket, "`[`");
+        self.owned_expression();
+        self.expect(SyntaxKind::RBracket, "`]`");
         self.finish_node();
     }
 

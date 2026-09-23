@@ -495,8 +495,14 @@ pub enum SyntaxKind {
     ImportDeclaration,
     /// `[QualifiedName] ( '::' '**' )?`. `SysML` 8.2.2.5.1.
     MembershipImport,
-    /// `[QualifiedName] '::' '*' ( '::' '**' )?`. `SysML` 8.2.2.5.1.
+    /// `[QualifiedName] '::' '*' ( '::' '**' )? | FilterPackage`. `SysML` 8.2.2.5.1.
     NamespaceImport,
+    /// `FilterPackageImport FilterPackageMember+` in `SysML` 8.2.2.5.1; `ImportDeclaration FilterPackageMember+` in `KerML` 8.2.3.4.2.
+    FilterPackage,
+    /// `ImportDeclaration { visibility = 'public' }`. `SysML` 8.2.2.5.1.
+    FilterPackageImport,
+    /// `'[' OwnedExpression ']'`. `SysML` 8.2.2.5.1, `KerML` 8.2.3.4.2.
+    FilterPackageMember,
     /// `';' | '{' OwnedAnnotation* '}'`. `SysML` 8.2.2.2.
     RelationshipBody,
     /// `MemberPrefix ( DefinitionElement | UsageElement )`. `SysML` 8.2.2.5.1.
@@ -1501,6 +1507,9 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ImportDeclaration,
     SyntaxKind::MembershipImport,
     SyntaxKind::NamespaceImport,
+    SyntaxKind::FilterPackage,
+    SyntaxKind::FilterPackageImport,
+    SyntaxKind::FilterPackageMember,
     SyntaxKind::RelationshipBody,
     SyntaxKind::PackageMember,
     SyntaxKind::Classifier,
