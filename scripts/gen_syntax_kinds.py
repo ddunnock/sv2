@@ -1512,6 +1512,18 @@ NODES = [
         ),
     ),
     (
+        "IfNode",
+        (
+            "`ActionNodePrefix 'if' ExpressionParameterMember ActionBodyParameterMember "
+            "( 'else' ( ActionBodyParameterMember | IfNodeParameterMember ) )?`. `SysML` "
+            "8.2.2.17.7 — returns `IfActionUsage`."
+        ),
+    ),
+    (
+        "IfNodeParameterMember",
+        "`ownedRelatedElement += IfNode`. `SysML` 8.2.2.17.7 — a `ParameterMembership`.",
+    ),
+    (
         "ExpressionParameterMember",
         "`ownedRelatedElement += OwnedExpression`. `SysML` 8.2.2.17.7 — a `ParameterMembership`.",
     ),

@@ -1067,6 +1067,10 @@ pub enum SyntaxKind {
     SenderReceiverPart,
     /// `ActionNodePrefix ( 'while' ExpressionParameterMember | 'loop' EmptyParameterMember ) ActionBodyParameterMember ( 'until' ExpressionParameterMember ';' )?`. `SysML` 8.2.2.17.7 — returns `WhileLoopActionUsage`.
     WhileLoopNode,
+    /// `ActionNodePrefix 'if' ExpressionParameterMember ActionBodyParameterMember ( 'else' ( ActionBodyParameterMember | IfNodeParameterMember ) )?`. `SysML` 8.2.2.17.7 — returns `IfActionUsage`.
+    IfNode,
+    /// `ownedRelatedElement += IfNode`. `SysML` 8.2.2.17.7 — a `ParameterMembership`.
+    IfNodeParameterMember,
     /// `ownedRelatedElement += OwnedExpression`. `SysML` 8.2.2.17.7 — a `ParameterMembership`.
     ExpressionParameterMember,
     /// `ownedRelatedElement += ActionBodyParameter`. `SysML` 8.2.2.17.7 — a `ParameterMembership`.
@@ -1810,6 +1814,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::SendNodeDeclaration,
     SyntaxKind::SenderReceiverPart,
     SyntaxKind::WhileLoopNode,
+    SyntaxKind::IfNode,
+    SyntaxKind::IfNodeParameterMember,
     SyntaxKind::ExpressionParameterMember,
     SyntaxKind::ActionBodyParameterMember,
     SyntaxKind::ActionBodyParameter,

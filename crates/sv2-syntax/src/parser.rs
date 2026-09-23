@@ -625,6 +625,8 @@ enum ActionNode {
     Terminate,
     /// `WhileLoopNode`, 8.2.2.17.7, by `while` or `loop`.
     WhileLoop,
+    /// `IfNode`, 8.2.2.17.7.
+    If,
 }
 
 /// A case production pair: one kind keyword run over the case layer's spine.
@@ -3445,8 +3447,7 @@ impl<'a> Parser<'a> {
     //     MemberPrefix ownedRelatedElement += ActionNode            (SysML 8.2.2.17.1)
     //
     // The same shape once more, marked as the member it is while ActionNode is not: of
-    // its eight alternatives ControlNode, SendNode, AcceptNode, AssignmentNode,
-    // TerminateNode and WhileLoopNode are read, and IfNode and ForLoopNode are reported.
+    // its eight alternatives all but ForLoopNode are read, and ForLoopNode is reported.
     //
     // production: ActionBehaviorMember@sysml
     //
@@ -7558,9 +7559,9 @@ impl<'a> Parser<'a> {
     // (8.2.2.17.1), and the first three are the three a definition body reads. The
     // second is read whole in its TargetSuccession form. The third is read over the
     // behaviour usages that exist and over the ActionNodes that do: ControlNode (`merge`,
-    // `decide`, `join`, `fork`), AcceptNode, SendNode, AssignmentNode, TerminateNode and
-    // WhileLoopNode. The fourth, GuardedSuccessionMember, is read too. What is still
-    // reported where it stands: the other ActionNodes, `if` and `for`.
+    // `decide`, `join`, `fork`), AcceptNode, SendNode, AssignmentNode, TerminateNode,
+    // WhileLoopNode and IfNode. The fourth, GuardedSuccessionMember, is read too. What is
+    // still reported where it stands: the last ActionNode, `for`.
     fn action_body(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ActionBody);
@@ -8232,6 +8233,16 @@ impl<'a> Parser<'a> {
     /// `nodes`. An action body asks for `terminate` as well (8.2.2.17.6); the state and
     /// transition forms do not, having no terminate alternative (8.2.2.18.1, 8.2.2.18.3).
     fn action_node_keyword_at(&self, start: usize, nodes: &[&'static str]) -> Option<&'static str> {
+        self.action_node_keyword_index_at(start, nodes)
+            .map(|(word, _)| word)
+    }
+
+    /// `action_node_keyword_at`, answering where the keyword stands as well.
+    fn action_node_keyword_index_at(
+        &self,
+        start: usize,
+        nodes: &[&'static str],
+    ) -> Option<(&'static str, usize)> {
         let found = |n: usize| {
             nodes
                 .iter()
@@ -8239,7 +8250,7 @@ impl<'a> Parser<'a> {
                 .find(|word| self.nth_is_keyword(n, word))
         };
         if let Some(word) = found(start) {
-            return Some(word);
+            return Some((word, start));
         }
         if !self.nth_is_keyword(start, "action") {
             return None;
@@ -8247,7 +8258,7 @@ impl<'a> Parser<'a> {
         let mut n = start + 1;
         loop {
             if let Some(word) = found(n) {
-                return Some(word);
+                return Some((word, n));
             }
             if self.peek_nth(n).is_none()
                 || ["then", "if", "do"]
@@ -8563,6 +8574,65 @@ impl<'a> Parser<'a> {
             self.expect_keyword("until");
             self.expression_parameter_member();
             self.expect(SyntaxKind::Semicolon, "`;` after an `until` expression");
+        }
+        self.finish_node();
+    }
+
+    // production: IfNode@sysml
+    //
+    // IfNode : IfActionUsage =
+    //     ActionNodePrefix
+    //     'if' ownedRelationship += ExpressionParameterMember
+    //     ownedRelationship += ActionBodyParameterMember
+    //     ( 'else' ownedRelationship +=
+    //       ( ActionBodyParameterMember | IfNodeParameterMember ) )?
+    //                                                            (SysML 8.2.2.17.7)
+    //
+    // production: IfNodeParameterMember@sysml
+    //
+    // IfNodeParameterMember : ParameterMembership =
+    //     ownedRelatedElement += IfNode                              (SysML 8.2.2.17.7)
+    //
+    // "the action declaration part is followed by the keyword if, which introduces a
+    // Boolean-valued condition expression, followed by a then clause and, for an
+    // IfThenElseAction, the keyword else and an else clause ... if the else-clause is
+    // itself an if action usage, then the special if action usage notation can be used"
+    // (7.17.11, receipt 5a98cecc). The then clause is the ActionBodyParameterMember; the
+    // grammar writes no `then` keyword before it. The ifArgument, thenAction and
+    // elseAction are the first, second and third parameters (deriveIfActionUsage*,
+    // 8.3.17.10, receipt 11d9efbf), which is the order the members are owned in.
+    //
+    // The `else` is taken only when an else clause follows it: a `{`, an `action`, or an
+    // IfNode. Otherwise it is a DefaultTargetSuccession, `else stop;` (8.2.2.17.8), which
+    // may follow an ActionBehaviorMember as an ActionTargetSuccessionMember (8.2.2.17.1),
+    // and whose target is a ConnectorEnd, never one of those three.
+    //
+    // implied specialization: Actions::ifThenActions, or Actions::ifThenElseActions with
+    //     an else clause; Actions::Action::ifSubactions
+    // constraint: IfActionUsage::checkIfActionUsageSpecialization and
+    //     checkIfActionUsageSubactionSpecialization (8.3.17.10). Injections belong in
+    //     sv2-hir; this layer builds the tree only (ADR-0002).
+    fn if_node(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::IfNode);
+        self.action_node_prefix("if");
+        self.expect_keyword("if");
+        self.expression_parameter_member();
+        self.action_body_parameter_member();
+        if self.at_keyword("else")
+            && (self.nth_is(1, SyntaxKind::LBrace)
+                || self.nth_is_keyword(1, "action")
+                || matches!(self.at_action_node(1), Some(ActionNode::If)))
+        {
+            self.expect_keyword("else");
+            if matches!(self.at_action_node(0), Some(ActionNode::If)) {
+                self.eat_trivia();
+                self.start_node(SyntaxKind::IfNodeParameterMember);
+                self.if_node();
+                self.finish_node();
+            } else {
+                self.action_body_parameter_member();
+            }
         }
         self.finish_node();
     }
@@ -10401,15 +10471,17 @@ impl<'a> Parser<'a> {
     /// `GuardExpressionMember 'then' TransitionSuccessionMember` (`SysML` 8.2.2.17.8), so
     /// `if`, an expression, and a `then`. The `then` is what has to be found, because
     /// `IfNode` opens on `if` as well — `ActionNodePrefix 'if' ExpressionParameterMember
-    /// ActionBodyParameterMember` (8.2.2.17.7), an `ActionNode` that is unimplemented —
-    /// and so does `KerML`'s `ConditionalExpression`, `'if' Expression '?' Expression
-    /// 'else' Expression` (8.2.5.8.1), which a calculation body may write as its result.
+    /// ActionBodyParameterMember` (8.2.2.17.7) — and so does `KerML`'s
+    /// `ConditionalExpression`, `'if' Expression '?' Expression 'else' Expression`
+    /// (8.2.5.8.1), which a calculation body may write as its result.
     ///
     /// The expression between the two keywords is scanned rather than parsed: no
-    /// implemented expression contains a `then`, and none reaches a `;`, a `{` or a `}`
-    /// without ending, so the first of those four tokens decides. `if i < 0 { }` is an
-    /// `IfNode` and reported; `if x ? 1 else 2 }` is the result expression and left to
-    /// the body.
+    /// expression contains a `then`, and none but a `BodyExpression` reaches a `;`, a `{`
+    /// or a `}` without ending, so the first of those four tokens decides. `if i < 0 { }`
+    /// is an `IfNode` (see `if_node_body_follows`); `if x ? 1 else 2 }` is the result
+    /// expression and left to the body. A guard holding a `BodyExpression`, `if
+    /// xs->forAll { ... } then a;`, is declined at its brace, and `if_node_body_follows`
+    /// then takes it for an `IfNode`, which reports the `then`; no corpus guard writes one.
     fn at_guarded_target_succession(&self, n: usize) -> bool {
         self.nth_is_keyword(n, "if") && self.scan_for_keyword(n + 1, "then").is_some()
     }
@@ -10756,22 +10828,71 @@ impl<'a> Parser<'a> {
     /// Which `ActionNode` starts at the `n`th meaningful token, of those this parser reads.
     ///
     /// A `ControlNode`, or `OccurrenceUsagePrefix ActionNodeUsageDeclaration?` and one of
-    /// `accept`, `send`, `assign`, `terminate`, `while` or `loop` (`SysML` 8.2.2.17.4-7) —
-    /// the prefix looked past here, the declaration by `action_node_keyword_at`.
+    /// `accept`, `send`, `assign`, `terminate`, `while`, `loop` or `if` (`SysML`
+    /// 8.2.2.17.4-7) — the prefix looked past here, the declaration by
+    /// `action_node_keyword_index_at`. An `if` is an `IfNode` only when its body clause
+    /// follows the condition; see `if_node_body_follows`.
     fn at_action_node(&self, n: usize) -> Option<ActionNode> {
         if let Some((word, node)) = self.at_control_node(n) {
             return Some(ActionNode::Control(word, node));
         }
-        match self.action_node_keyword_at(
+        match self.action_node_keyword_index_at(
             self.skip_occurrence_usage_prefix(n),
-            &["accept", "send", "assign", "terminate", "while", "loop"],
-        ) {
-            Some("accept") => Some(ActionNode::Accept),
-            Some("send") => Some(ActionNode::Send),
-            Some("assign") => Some(ActionNode::Assignment),
-            Some("terminate") => Some(ActionNode::Terminate),
-            Some("while" | "loop") => Some(ActionNode::WhileLoop),
+            &[
+                "accept",
+                "send",
+                "assign",
+                "terminate",
+                "while",
+                "loop",
+                "if",
+            ],
+        )? {
+            ("if", at) => self.if_node_body_follows(at + 1).then_some(ActionNode::If),
+            (word, _) => Self::action_node_of_keyword(word),
+        }
+    }
+
+    /// The `ActionNode` that opens on `word`, of the keywords `at_action_node` asks for
+    /// other than `if`.
+    fn action_node_of_keyword(word: &str) -> Option<ActionNode> {
+        match word {
+            "accept" => Some(ActionNode::Accept),
+            "send" => Some(ActionNode::Send),
+            "assign" => Some(ActionNode::Assignment),
+            "terminate" => Some(ActionNode::Terminate),
+            "while" | "loop" => Some(ActionNode::WhileLoop),
             _ => None,
+        }
+    }
+
+    /// Whether an `IfNode`'s body clause follows the condition that starts at the `n`th
+    /// meaningful token: whether a `{` or an `action` comes before a `then`, a `;` or a
+    /// `}`.
+    ///
+    /// Three productions open on `if` where an item may stand: `IfNode`, whose condition
+    /// is followed by its `ActionBodyParameterMember` (`'action'` or `'{'`, `SysML`
+    /// 8.2.2.17.7); `GuardedTargetSuccession`, whose guard is followed by `then`
+    /// (8.2.2.17.8); and, as a calculation body's result, `KerML`'s `ConditionalExpression`
+    /// (`'if' Expression '?' Expression 'else' Expression`, 8.2.5.8.1), which ends at the
+    /// body's `}` or a `;`. `action` is reserved and no expression contains it; a
+    /// `BodyExpression`'s `{` can stand inside a condition (`xs->forAll { ... }`), and is
+    /// then taken as the body clause, as it is by `at_guarded_target_succession`, which
+    /// stops at the same brace.
+    fn if_node_body_follows(&self, n: usize) -> bool {
+        let mut n = n;
+        loop {
+            if self.nth_is(n, SyntaxKind::LBrace) || self.nth_is_keyword(n, "action") {
+                return true;
+            }
+            if self.peek_nth(n).is_none()
+                || self.nth_is_keyword(n, "then")
+                || self.nth_is(n, SyntaxKind::Semicolon)
+                || self.nth_is(n, SyntaxKind::RBrace)
+            {
+                return false;
+            }
+            n += 1;
         }
     }
 
@@ -10784,6 +10905,7 @@ impl<'a> Parser<'a> {
             ActionNode::Assignment => self.assignment_node(),
             ActionNode::Terminate => self.terminate_node(),
             ActionNode::WhileLoop => self.while_loop_node(),
+            ActionNode::If => self.if_node(),
         }
     }
 

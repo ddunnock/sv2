@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T20:29:54Z",
+    "regenerated_utc": "2026-09-23T20:36:46Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 403,
-      "unimplemented": 151,
+      "implemented": 405,
+      "unimplemented": 149,
       "absent": 0,
-      "percent": 72.7
+      "percent": 73.1
     },
     "tests": {
-      "unit": 619,
+      "unit": 625,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 248,
+      "negative_cases": 251,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "4d3bd43 Stop rejecting `if i < 0 { }` by absence: the next commit reads it",
       "80415c1 Read while loops, `while c { ... } until d;` and `loop { ... }`",
       "4c71e51 Read terminate actions, `terminate;` and `action t terminate x;`",
       "a0ea0ef Stop rejecting `then terminate;` by absence: the next commit reads it",
       "daf5709 Read succession flow usages, `succession flow a.x to b.y;`",
       "a684449 Stop using `succession flow` as the unreadable example: the next commit reads it",
       "d729a6c Settle expression-body-semicolon: an expression body is braced",
-      "8a1284c Close the session: the postfix expression layer and the view layer recorded, succession flows next",
-      "72ef125 Read `expose`, completing the view layer"
+      "8a1284c Close the session: the postfix expression layer and the view layer recorded, succession flows next"
     ]
   },
   "authored": {
@@ -222,6 +222,11 @@
       {
         "id": "reserved-words-per-language",
         "question": "OPEN, found 2026-09-23 while reading 7.17.12's first while-loop example, `action step { ... }`. Parser::is_name refuses any BasicName that `keyword()` (the generated table in crates/sv2-syntax/src/generated/kinds.rs) knows, and that table is the UNION of both languages' RESERVED_KEYWORD lists. Each language reserves its own words (KerML 8.2.2.6 and SysML 8.2.2.1.2 each state RESERVED_KEYWORD), so in a .sysml file the 44 KerML-only words -- assoc, behavior, bool, chains, class, classifier, composite, conjugate, conjugates, conjugation, connector, const, datatype, differences, disjoining, disjoint, expr, feature, featured, featuring, function, interaction, intersects, inv, inverse, inverting, member, metaclass, multiplicity, namespace, portion, predicate, redefinition, specialization, step, struct, subclassifier, subset, subtype, type, typed, typing, unions, var -- are refused as names although SysML does not reserve them (`part step;` is rejected today), and presumably the 72 SysML-only words are refused in .kerml files the same way. Fix: make the reserved test language-aware (the generator would need per-language keyword sets; kinds.rs is machine-owned, so the change is to scripts/gen_syntax_kinds.py). Tests for the 7.17.12 example write the name as `'step'` until this is settled. Measure the corpus effect before and after.",
+        "blocks": []
+      },
+      {
+        "id": "if-then-brace-example",
+        "question": "OPEN. SysML 7.17.11's third example (If-Action-Usages layer note, receipt 5a98cecc) writes `if threat.level == high then { ... } else if threat.level == medium then { ... } else { ... }`: a `then` between the condition and the then clause. IfNode (SysML 8.2.2.17.7) writes none -- `ActionNodePrefix 'if' ExpressionParameterMember ActionBodyParameterMember ( 'else' ... )?` -- and neither does the Pilot's IfNode; no corpus file writes `then {` after an if condition (the corpus's IfNodes, StructuredControlTest.sysml:7-17 and Control Structures Example.sysml:19, write the brace directly), and the same clause's second example writes `if selectedSensor != null {` without it. The parser follows the BNF and the Pilot: the `then` makes the text a GuardedTargetSuccession, which then fails at `{`. Needs a grammar-adjudicator pass and, if the example is the error, a deviations.json entry recording it. Not blocking.",
         "blocks": []
       }
     ],

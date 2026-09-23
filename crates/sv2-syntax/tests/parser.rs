@@ -2097,10 +2097,9 @@ fn an_if_that_is_not_a_guarded_succession_is_left_alone() {
     // IfNode = ActionNodePrefix 'if' ExpressionParameterMember ActionBodyParameterMember
     // ( 'else' … )? (8.2.2.17.7) — an ActionNode, and it opens on `if` too. What
     // separates the two is the `then` before the body, so an `if` with none is declined
-    // at recognition. Asked of the tree whether or not IfNode is read: this test is about
-    // the guard's recogniser, and IfNode lands in the next commit.
-    let if_node =
-        render(&parse("action def A { action a; if i < 0 { } }", Language::SysMl).syntax());
+    // at recognition, and the text is the IfNode it is.
+    let if_node = render(&parse_accepted("action def A { action a; if i < 0 { } }").syntax());
+    assert_eq!(nodes_named(&if_node, "IfNode"), 1, "{if_node}");
     assert_eq!(
         nodes_named(&if_node, "GuardedTargetSuccession"),
         0,
@@ -5115,7 +5114,7 @@ fn the_while_until_example_of_7_17_12_parses() {
     // It names its body clause `step`, which SysML does not reserve but this parser
     // refuses (pending decision reserved-words-per-language); it is written `'step'`
     // here, the same name as an unrestricted one. The third example, `loop { ... then
-    // if ... }`, writes an IfNode and lands with it.
+    // if ... }`, is in the IfNode section.
     let advance = "action def A {\n\
                    action advance while t < endTime\n\
                    action 'step' {\n\
@@ -5282,6 +5281,179 @@ fn a_while_loop_node_is_bounded_by_its_rules() {
     // An ActionNode is an action-body item only (8.2.2.17.1).
     let tree = render(&parse_rejected("part def P { while c { } }").syntax());
     assert_eq!(nodes_named(&tree, "WhileLoopNode"), 0, "{tree}");
+}
+
+// -- IfNode, SysML 8.2.2.17.7 --------------------------------------------------------
+//
+//   IfNode = ActionNodePrefix 'if' ExpressionParameterMember ActionBodyParameterMember
+//            ( 'else' ( ActionBodyParameterMember | IfNodeParameterMember ) )?
+//   IfNodeParameterMember = IfNode
+//
+// "the action declaration part is followed by the keyword if, which introduces a
+// Boolean-valued condition expression, followed by a then clause and, for an
+// IfThenElseAction, the keyword else and an else clause" (7.17.11, receipt 5a98cecc).
+
+#[test]
+fn the_if_examples_of_7_17_11_parse() {
+    // 7.17.11's first two examples (receipt 5a98cecc), each in an action definition. The
+    // third writes `then {` after its conditions, which IfNode does not (pending decision
+    // if-then-brace-example).
+    let test = "action def A {\n\
+                action test if speed < lowerLimit\n\
+                action increase : IncreaseSpeed { }\n\
+                else\n\
+                action main : MaintainSpeed { }\n\
+                }";
+    let parsed = parse_accepted(test);
+    assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
+    let rendered = render(&parsed.syntax());
+    assert_eq!(
+        child_kinds(&rendered, "IfNode"),
+        [
+            "OccurrenceUsagePrefix",
+            "ActionNodeUsageDeclaration",
+            "KwIf",
+            "ExpressionParameterMember",
+            "ActionBodyParameterMember",
+            "KwElse",
+            "ActionBodyParameterMember"
+        ],
+        "{rendered}"
+    );
+    let sensor = "action def A {\n\
+                  if selectedSensor != null {\n\
+                  assign reading := selectedSensor.reading;\n\
+                  } else {\n\
+                  assign reading := undefinedValue;\n\
+                  }\n\
+                  }";
+    let parsed = parse_accepted(sensor);
+    assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
+    let rendered = render(&parsed.syntax());
+    assert_eq!(
+        child_kinds(&rendered, "IfNode"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwIf",
+            "ExpressionParameterMember",
+            "ActionBodyParameterMember",
+            "KwElse",
+            "ActionBodyParameterMember"
+        ],
+        "{rendered}"
+    );
+}
+
+#[test]
+fn the_loop_example_of_7_17_12_parses_with_its_if() {
+    // 7.17.12's third while-loop example (receipt b0446148): `loop`, a `then if` inside
+    // its body, and an `until`.
+    let source = "action def A {\n\
+                  loop {\n\
+                  assign charge := MonitorBattery();\n\
+                  then if charge < 100 {\n\
+                  action AddCharge;\n\
+                  }\n\
+                  } until charge >= 100;\n\
+                  }";
+    let parsed = parse_accepted(source);
+    assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
+    let rendered = render(&parsed.syntax());
+    assert_eq!(nodes_named(&rendered, "WhileLoopNode"), 1, "{rendered}");
+    assert_eq!(nodes_named(&rendered, "IfNode"), 1, "{rendered}");
+    assert_eq!(
+        nodes_named(&rendered, "SourceSuccessionMember"),
+        1,
+        "{rendered}"
+    );
+}
+
+#[test]
+fn an_if_node_reads_else_if_as_a_nested_if_node() {
+    // examples/Simple Tests/StructuredControlTest.sysml:7-13.
+    let tree = render(
+        &parse_accepted(
+            "action a {\n\tif i < 0 {\n\t\tassign i := 0;\n\t} else if i == 0 {\n\t\tassign i := 1;\n\t} else {\n\t\tassign i := i + 1;\n\t}\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&tree, "IfNode"), 2, "{tree}");
+    assert_eq!(
+        child_kinds(&tree, "IfNode"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwIf",
+            "ExpressionParameterMember",
+            "ActionBodyParameterMember",
+            "KwElse",
+            "IfNodeParameterMember"
+        ],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "IfNodeParameterMember"),
+        ["IfNode"],
+        "{tree}"
+    );
+    // And the one with no else, StructuredControlTest.sysml:15-17.
+    let plain = render(&parse_accepted("action a { if i > 0 { assign i := i + 1; } }").syntax());
+    assert_eq!(
+        child_kinds(&plain, "IfNode"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwIf",
+            "ExpressionParameterMember",
+            "ActionBodyParameterMember"
+        ],
+        "{plain}"
+    );
+}
+
+#[test]
+fn an_else_with_no_else_clause_after_it_is_not_the_if_nodes() {
+    // `else stop;` after an IfNode is a DefaultTargetSuccession (8.2.2.17.8), an
+    // ActionTargetSuccessionMember after the IfNode's ActionBehaviorMember (8.2.2.17.1):
+    // its target is a ConnectorEnd, never a brace, an `action` or an `if`.
+    let tree = render(&parse_accepted("action a { if c { } else stop; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "IfNode"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwIf",
+            "ExpressionParameterMember",
+            "ActionBodyParameterMember"
+        ],
+        "{tree}"
+    );
+    assert_eq!(nodes_named(&tree, "DefaultTargetSuccession"), 1, "{tree}");
+    // A guard is still a guard, and a conditional result expression still an expression.
+    let guard = render(&parse_accepted("action a { first start; if c then b; }").syntax());
+    assert_eq!(nodes_named(&guard, "IfNode"), 0, "{guard}");
+    let conditional = render(&parse_accepted("calc def C { if x ? 1 else 2 }").syntax());
+    assert_eq!(nodes_named(&conditional, "IfNode"), 0, "{conditional}");
+}
+
+#[test]
+fn an_if_node_keeps_every_byte() {
+    let source = "action def A {\n\tthen /* i */ if a < b // n\n\t{ } else\n\tif c { assign x := 1 ; }\n\telse action e { }\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
+#[test]
+fn an_if_node_is_bounded_by_its_rules() {
+    // The then clause is braced, "with a semicolon not allowed for an empty body"
+    // (7.17.11). Held as a file by tests/rejection/if-then-clause-is-braced.sysml.
+    parse_rejected("action a { if c; }");
+    parse_rejected("action a { if c action b; }");
+    // So is the else clause, when it is not an if. Held as a file by
+    // tests/rejection/if-else-clause-is-braced.sysml.
+    parse_rejected("action a { if c { } else action b; }");
+    // The then clause is not optional. Held as a file by
+    // tests/rejection/if-node-needs-a-then-clause.sysml.
+    parse_rejected("action a { first start; if c else { } }");
+    // An ActionNode is an action-body item only (8.2.2.17.1).
+    let tree = render(&parse_rejected("part def P { if c { } }").syntax());
+    assert_eq!(nodes_named(&tree, "IfNode"), 0, "{tree}");
 }
 
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
