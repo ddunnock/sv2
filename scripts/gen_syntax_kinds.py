@@ -411,6 +411,16 @@ NODES = [
         ),
     ),
     ("BasicDefinitionPrefix", "`'abstract' | 'variation'`. `SysML` 8.2.2.6.1."),
+    # The keywordless occurrence definition, `individual def Flight_248;`: `individual`
+    # "in place of the kind keyword" (7.9.4), its prefix written inline.
+    (
+        "IndividualDefinition",
+        (
+            "`BasicDefinitionPrefix? 'individual' DefinitionExtensionKeyword* 'def' "
+            "Definition EmptyMultiplicityMember`. `SysML` 8.2.2.9.1 — the metaclass is "
+            "`OccurrenceDefinition`."
+        ),
+    ),
     ("EmptyMultiplicityMember", "`ownedRelatedElement += EmptyMultiplicity`. `SysML` 8.2.2.9.1."),
     ("EmptyMultiplicity", "`{ }`, a Multiplicity that consumes no tokens. `SysML` 8.2.2.9.1."),
     ("Definition", "`DefinitionDeclaration DefinitionBody`. `SysML` 8.2.2.6.1."),
@@ -986,6 +996,22 @@ NODES = [
     ("AttributeUsage", "`UsagePrefix 'attribute' Usage`. `SysML` 8.2.2.7."),
     ("ItemUsage", "`OccurrenceUsagePrefix 'item' Usage`. `SysML` 8.2.2.10."),
     ("OccurrenceUsage", "`OccurrenceUsagePrefix 'occurrence' Usage`. `SysML` 8.2.2.9.2."),
+    # The keywordless occurrence usages, `individual x : T;` and `snapshot s;`: an
+    # `individual` or a portion kind "in place of the kind keyword" (7.9.3, 7.9.4).
+    (
+        "IndividualUsage",
+        (
+            "`BasicUsagePrefix 'individual' UsageExtensionKeyword* Usage`. "
+            "`SysML` 8.2.2.9.2 — the metaclass is `OccurrenceUsage`."
+        ),
+    ),
+    (
+        "PortionUsage",
+        (
+            "`BasicUsagePrefix 'individual'? PortionKind UsageExtensionKeyword* Usage`. "
+            "`SysML` 8.2.2.9.2 — the metaclass is `OccurrenceUsage`."
+        ),
+    ),
     # The event occurrence, `event occurrence e;` or `event a.b[1];`: a reference to an
     # occurrence, or one declared behind `occurrence` (7.9.5).
     (

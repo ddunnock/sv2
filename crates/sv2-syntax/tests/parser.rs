@@ -10073,3 +10073,222 @@ fn an_event_occurrence_usage_is_bounded_by_its_rules() {
             .is_empty()
     );
 }
+
+// -- IndividualDefinition, IndividualUsage and PortionUsage, SysML 8.2.2.9.1-2 ---------
+//
+//   IndividualDefinition = BasicDefinitionPrefix? 'individual'
+//                          DefinitionExtensionKeyword* 'def' Definition
+//                          EmptyMultiplicityMember
+//   IndividualUsage      = BasicUsagePrefix 'individual' UsageExtensionKeyword* Usage
+//   PortionUsage         = BasicUsagePrefix 'individual'? PortionKind
+//                          UsageExtensionKeyword* Usage
+//
+// The keywordless forms: "individual may be used in place of the kind keyword" (7.9.4,
+// receipt 8c84370d), and "timeslice or snapshot may be used in place of the kind keyword"
+// (7.9.3, receipt ebffdbf2).
+
+#[test]
+fn the_individual_and_portion_examples_of_7_9_3_and_7_9_4_parse() {
+    // Every example of 7.9.3 (receipt ebffdbf2) and 7.9.4 (receipt 8c84370d), whole.
+    let parsed = parse_accepted(
+        "package P {\n\
+         occurrence def Flight {\n\
+         ref part aircraft : Aircraft;\n\
+         timeslice preflight;\n\
+         timeslice inflight;\n\
+         timeslice postflight;\n\
+         }\n\
+         part aircraft : Aircraft {\n\
+         snapshot part aircraftTakeOff;\n\
+         snapshot part aircraftLanding;\n\
+         }\n\
+         individual def Flight_248 :> Flight;\n\
+         individual part def TestPlane_1 :> Aircraft;\n\
+         individual flightRecord : Flight_248 {\n\
+         individual part redefines aircraft : TestPlane_1;\n\
+         individual timeslice redefines preflight;\n\
+         individual timeslice redefines inflight;\n\
+         individual timeslice redefines postflight;\n\
+         }\n\
+         }",
+    );
+    assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
+    let rendered = render(&parsed.syntax());
+    assert_eq!(nodes_named(&rendered, "PortionUsage"), 6, "{rendered}");
+    assert_eq!(nodes_named(&rendered, "IndividualUsage"), 1, "{rendered}");
+    assert_eq!(
+        nodes_named(&rendered, "IndividualDefinition"),
+        1,
+        "{rendered}"
+    );
+    // The keyword forms are what they were: Flight's `ref part`, the plain part, two
+    // snapshot parts and an individual part; an individual part definition.
+    assert_eq!(nodes_named(&rendered, "PartUsage"), 5, "{rendered}");
+    assert_eq!(nodes_named(&rendered, "PartDefinition"), 1, "{rendered}");
+}
+
+#[test]
+fn an_individual_definition_writes_its_prefix_inline() {
+    // No OccurrenceDefinitionPrefix node: the production writes its prefix inline, and
+    // its EmptyMultiplicityMember last, after the Definition (8.2.2.9.1).
+    let rendered = render(&parse_accepted("individual def V :> Vehicle;").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "IndividualDefinition"),
+        [
+            "KwIndividual",
+            "KwDef",
+            "Definition",
+            "EmptyMultiplicityMember"
+        ],
+        "{rendered}"
+    );
+    let rendered = render(&parse_accepted("abstract individual #M def V { }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "IndividualDefinition"),
+        [
+            "BasicDefinitionPrefix",
+            "KwIndividual",
+            "DefinitionExtensionKeyword",
+            "KwDef",
+            "Definition",
+            "EmptyMultiplicityMember"
+        ],
+        "{rendered}"
+    );
+    // A keyword member, so an item of a calculation body and not its result expression.
+    let rendered = render(&parse_accepted("calc def C { individual def V; x }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "CalculationBodyPart")
+            .iter()
+            .filter(|kind| kind.as_str() == "ResultExpressionMember")
+            .count(),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "IndividualDefinition"),
+        1,
+        "{rendered}"
+    );
+    // The corpus form (omg/SimpleVehicleModel.sysml:436), in a definition body.
+    let rendered =
+        render(&parse_accepted("part def P { individual def Wheel_1:>Wheel; }").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "IndividualDefinition"),
+        1,
+        "{rendered}"
+    );
+}
+
+#[test]
+fn an_individual_or_portion_usage_is_told_by_its_portion_kind() {
+    for (source, node, kinds) in [
+        (
+            "part c { ref individual x : T; }",
+            "IndividualUsage",
+            &["BasicUsagePrefix", "KwIndividual", "Usage"][..],
+        ),
+        (
+            "part c { individual #M x; }",
+            "IndividualUsage",
+            &["KwIndividual", "UsageExtensionKeyword", "Usage"],
+        ),
+        (
+            "part c { individual snapshot x; }",
+            "PortionUsage",
+            &["KwIndividual", "PortionKind", "Usage"],
+        ),
+        // examples/Timeslice and Snapshot Examples/TimeVaryingAttribute.sysml
+        (
+            "part c { snapshot :>> start { } }",
+            "PortionUsage",
+            &["PortionKind", "Usage"],
+        ),
+        (
+            "part c { in timeslice #M t = x; }",
+            "PortionUsage",
+            &[
+                "BasicUsagePrefix",
+                "PortionKind",
+                "UsageExtensionKeyword",
+                "Usage",
+            ],
+        ),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(child_kinds(&rendered, node), kinds, "{source}\n{rendered}");
+    }
+    // With a kind keyword, the keywords are that usage's OccurrenceUsagePrefix.
+    for source in [
+        "part c { individual part p; }",
+        "part c { snapshot item i; }",
+        "part c { individual timeslice occurrence o; }",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            nodes_named(&rendered, "IndividualUsage") + nodes_named(&rendered, "PortionUsage"),
+            0,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn an_individual_or_portion_usage_is_a_structure_usage_element() {
+    // Both are StructureUsageElements (8.2.2.6.4), as EventOccurrenceUsage is.
+    for (source, member) in [
+        ("part c { then snapshot s; }", "SourceSuccessionMember"),
+        (
+            "variation part def V { variant individual x; }",
+            "VariantUsageMember",
+        ),
+        (
+            "interface def I { timeslice t; }",
+            "InterfaceOccurrenceUsageMember",
+        ),
+        ("calc def C { snapshot s; x }", "ResultExpressionMember"),
+        ("action def A { individual i; }", "IndividualUsage"),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert!(nodes_named(&rendered, member) >= 1, "{source}\n{rendered}");
+        assert_eq!(
+            nodes_named(&rendered, "IndividualUsage") + nodes_named(&rendered, "PortionUsage"),
+            1,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn individual_and_portion_forms_are_bounded_by_their_rules() {
+    // `individual` comes before the portion kind (7.9.4: "before a timeslice or snapshot
+    // keyword"). Held by tests/rejection/individual-precedes-portion-kind.sysml.
+    parse_rejected("part c { snapshot individual s; }");
+    parse_rejected("part c { snapshot timeslice s; }");
+    parse_rejected("part c { individual individual s; }");
+    // There is no portion definition. Held by
+    // tests/rejection/portion-kind-names-no-definition.sysml.
+    parse_rejected("snapshot def S;");
+    parse_rejected("individual timeslice def S;");
+    // Extension keywords follow `individual`. Held by
+    // tests/rejection/individual-definition-extension-keywords-follow-individual.sysml.
+    parse_rejected("#M individual def V;");
+    parse_rejected("part c { #M individual x; }");
+    // BasicUsagePrefix, not OccurrenceUsagePrefix: no `end`.
+    parse_rejected("connection def D { end snapshot s; }");
+    // `individual` follows the BasicDefinitionPrefix.
+    parse_rejected("individual abstract def V;");
+    // A definition declares no multiplicity; a completion is not optional.
+    parse_rejected("individual def V[1];");
+    parse_rejected("part c { snapshot s }");
+    // Not an occurrence: a non-occurrence usage takes no portion kind.
+    parse_rejected("part c { snapshot bind a = b; }");
+    parse_rejected("part c { individual attribute a; }");
+    // SysML only.
+    for source in ["individual def V;", "snapshot s;"] {
+        assert!(
+            !parse(source, Language::KerMl).errors().is_empty(),
+            "{source}"
+        );
+    }
+}

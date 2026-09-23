@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-22T22:16:40Z",
+    "regenerated_utc": "2026-09-23T11:10:10Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 343,
-      "unimplemented": 211,
+      "implemented": 346,
+      "unimplemented": 208,
       "absent": 0,
-      "percent": 61.9
+      "percent": 62.5
     },
     "tests": {
-      "unit": 535,
+      "unit": 540,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 221,
+      "negative_cases": 224,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "c92f41f Read event occurrence usages, by reference and by declaration",
       "fcb55c3 Regenerate state at session end: timestamp and commit list only",
       "f422a16 Correct the objective: enumeration definitions and values now read their prefix metadata",
       "87cb13a Close the session: `#`, interfaces and library packages recorded, event occurrences next",
       "29b69de Read library packages in both languages, and site deviation LibraryPackage",
       "95d9148 Read interface definitions and usages, and the port ends they declare",
       "4d7af66 Read `#` prefix metadata, and the definitions and usages it declares alone",
-      "23e3406 Stop rejecting `#` prefix metadata by absence: the next commit reads it",
-      "a7e573e Close the session: the case and metadata layers recorded, the `#` prefix written to start cold"
+      "23e3406 Stop rejecting `#` prefix metadata by absence: the next commit reads it"
     ]
   },
   "authored": {

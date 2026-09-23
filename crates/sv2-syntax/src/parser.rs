@@ -1594,6 +1594,7 @@ impl<'a> Parser<'a> {
             || self.at_enumeration_definition(n)
             || self.at_simple_definition(n).is_some()
             || self.at_interface_definition(n)
+            || self.at_individual_definition(n)
             || self.at_extended_definition(n)
     }
 
@@ -1911,6 +1912,7 @@ impl<'a> Parser<'a> {
             || self.at_connection_usage(n)
             || self.at_interface_usage(n)
             || self.at_event_occurrence_usage(n)
+            || self.at_individual_or_portion_usage(n).is_some()
             || self.at_succession_as_usage(n)
             || self.at_binding_connector_as_usage(n)
             || self.at_assert_constraint_usage(n)
@@ -3357,24 +3359,33 @@ impl<'a> Parser<'a> {
         } else if self.at_state_definition(0) {
             self.state_definition();
         } else if let Some(definition) = self.at_simple_definition(0) {
-            if definition.keyword == "allocation" {
-                // 8.2.2.5.2's DefinitionElement lists 29 alternatives and not
-                // AllocationDefinition, which 8.2.2.15 defines.
-                // deviation: DefinitionElement
-                self.note_deviation(
-                    "DefinitionElement",
-                    "an allocation definition as a DefinitionElement",
-                );
-            }
-            self.simple_definition(definition);
+            self.simple_definition_element(definition);
         } else if self.at_interface_definition(0) {
             self.interface_definition();
+        } else if self.at_individual_definition(0) {
+            self.individual_definition();
         } else if self.at_extended_definition(0) {
             self.extended_definition();
         } else {
             return false;
         }
         true
+    }
+
+    /// One of `SIMPLE_DEFINITIONS` read as a `DefinitionElement`. Split out of
+    /// `definition_element` so that function stays within clippy's complexity budget, as
+    /// `behavior_usage_element` is split out of `usage_element_of_class`.
+    fn simple_definition_element(&mut self, definition: SimpleDefinition) {
+        if definition.keyword == "allocation" {
+            // 8.2.2.5.2's DefinitionElement lists 29 alternatives and not
+            // AllocationDefinition, which 8.2.2.15 defines.
+            // deviation: DefinitionElement
+            self.note_deviation(
+                "DefinitionElement",
+                "an allocation definition as a DefinitionElement",
+            );
+        }
+        self.simple_definition(definition);
     }
 
     // production: ExtendedDefinition@sysml
@@ -3402,6 +3413,53 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: IndividualDefinition@sysml
+    //
+    // IndividualDefinition : OccurrenceDefinition =
+    //     BasicDefinitionPrefix? isIndividual ?= 'individual'
+    //     DefinitionExtensionKeyword* 'def' Definition
+    //     ownedRelationship += EmptyMultiplicityMember           (SysML 8.2.2.9.1)
+    //
+    // "individual may be used in place of the kind keyword, in which case the declaration
+    // is equivalent to individual occurrence" (7.9.4, receipt 8c84370d): `individual def
+    // Flight_248 :> Flight;`. The metaclass is OccurrenceDefinition (8.3.9.3, receipt
+    // 69f220d7). The prefix is written inline, as ExtendedDefinition's is, so there is no
+    // OccurrenceDefinitionPrefix node.
+    //
+    // The EmptyMultiplicityMember is LAST, where the specification writes it. The Pilot
+    // writes it straight after `individual` (SysML.xtext:816), as OccurrenceDefinitionPrefix
+    // does in both. It consumes no tokens, so the two accept the same text and differ only
+    // in where the node sits; the specification is followed, and no deviation is needed.
+    //
+    // implied specialization: the EmptyMultiplicity's, for an individual definition
+    // constraint: OccurrenceDefinition::checkOccurrenceDefinitionIndividualSpecialization
+    //     and checkOccurrenceDefinitionMultiplicitySpecialization (8.3.9.3). Injections,
+    //     so sv2-hir's (ADR-0002).
+    fn individual_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::IndividualDefinition);
+        if self.at_keyword("abstract") || self.at_keyword("variation") {
+            self.basic_definition_prefix();
+        }
+        self.expect_keyword("individual");
+        self.extension_keywords(SyntaxKind::DefinitionExtensionKeyword);
+        self.expect_keyword("def");
+        self.definition();
+        self.empty_multiplicity_member();
+        self.finish_node();
+    }
+
+    /// Whether an `IndividualDefinition` starts at the `n`th meaningful token.
+    ///
+    /// `BasicDefinitionPrefix? 'individual' DefinitionExtensionKeyword* 'def'` (`SysML`
+    /// 8.2.2.9.1): `def` straight after the prefix, with no kind keyword between, which is
+    /// what separates it from an occurrence definition whose prefix is individual.
+    fn at_individual_definition(&self, n: usize) -> bool {
+        let k = self.skip_basic_definition_prefix(n);
+        self.nth_is_keyword(k, "individual")
+            && self.nth_is_keyword(self.skip_prefix_metadata(k + 1), "def")
+    }
+
     /// Whether an `ExtendedUsage` starts at the `n`th meaningful token.
     ///
     /// `UnextendedUsagePrefix UsageExtensionKeyword+ Usage` (`SysML` 8.2.2.27): at least
@@ -3413,16 +3471,26 @@ impl<'a> Parser<'a> {
     fn at_extended_usage(&self, n: usize) -> bool {
         let k = self.skip_unextended_usage_prefix(n);
         let after = self.skip_prefix_metadata(k);
-        after > k
-            && (self.nth_is_name(after)
-                || self.nth_is(after, SyntaxKind::Lt)
-                || self.nth_at_feature_specialization(after)
-                || self.nth_is(after, SyntaxKind::LBracket)
-                || self.nth_is(after, SyntaxKind::Eq)
-                || self.nth_is(after, SyntaxKind::ColonEq)
-                || self.nth_is_keyword(after, "default")
-                || self.nth_is(after, SyntaxKind::Semicolon)
-                || self.nth_is(after, SyntaxKind::LBrace))
+        after > k && self.nth_opens_usage(after)
+    }
+
+    /// Whether a `Usage` opens at the `n`th meaningful token.
+    ///
+    /// `Usage = UsageDeclaration UsageCompletion` (`SysML` 8.2.2.6.2), every part of it
+    /// optional but the `UsageBody`: a name, a short name's `<`, a feature specialization
+    /// or a multiplicity; a `ValuePart`'s `=`, `:=` or `default`; a `UsageBody`'s `;` or
+    /// `{`. A reserved keyword opens none of them (8.2.2.1.2), which is what tells a usage
+    /// with no kind keyword from the keyword usage its prefix would otherwise belong to.
+    fn nth_opens_usage(&self, n: usize) -> bool {
+        self.nth_is_name(n)
+            || self.nth_is(n, SyntaxKind::Lt)
+            || self.nth_at_feature_specialization(n)
+            || self.nth_is(n, SyntaxKind::LBracket)
+            || self.nth_is(n, SyntaxKind::Eq)
+            || self.nth_is(n, SyntaxKind::ColonEq)
+            || self.nth_is_keyword(n, "default")
+            || self.nth_is(n, SyntaxKind::Semicolon)
+            || self.nth_is(n, SyntaxKind::LBrace)
     }
 
     // production: ExtendedUsage@sysml
@@ -3778,9 +3846,8 @@ impl<'a> Parser<'a> {
     //     | PortUsage | ConnectionUsage | InterfaceUsage | AllocationUsage | Message
     //     | FlowUsage | SuccessionFlowUsage | BehaviorUsageElement   (SysML 8.2.2.6.4)
     //
-    // NOT marked for coverage: IndividualUsage, PortionUsage, ViewUsage, AllocationUsage,
-    // Message and SuccessionFlowUsage are unimplemented, and so is most of
-    // BehaviorUsageElement.
+    // NOT marked for coverage: ViewUsage, AllocationUsage, Message and
+    // SuccessionFlowUsage are unimplemented, and so is most of BehaviorUsageElement.
     //
     // It is UsageElement less three of NonOccurrenceUsageElement's alternatives (8.2.2.6.4):
     // DefaultReferenceUsage, replaced by VariantReference; EnumerationUsage; and
@@ -3899,6 +3966,12 @@ impl<'a> Parser<'a> {
         } else if let Some(usage) = self.at_simple_usage(0) {
             self.simple_usage(usage);
             Some(usage.class)
+        } else if let Some(node) = self.at_individual_or_portion_usage(0) {
+            // StructureUsageElements (8.2.2.6.4), as OccurrenceUsage is. Before
+            // `at_reference_usage`, which sees the `ref` in `ref individual x;` too, and that
+            // `ref` is this usage's BasicUsagePrefix.
+            self.individual_or_portion_usage(node);
+            Some(UsageClass::Structure)
         } else if self.at_reference_usage(0) {
             self.reference_usage();
             Some(UsageClass::NonOccurrence)
@@ -4231,6 +4304,91 @@ impl<'a> Parser<'a> {
     /// `event_occurrence_usage` reads with `occurrence_usage_prefix`.
     fn at_event_occurrence_usage(&self, n: usize) -> bool {
         self.nth_is_keyword(self.skip_occurrence_usage_prefix(n), "event")
+    }
+
+    // production: IndividualUsage@sysml
+    // production: PortionUsage@sysml
+    //
+    // IndividualUsage : OccurrenceUsage =
+    //     BasicUsagePrefix isIndividual ?= 'individual'
+    //     UsageExtensionKeyword* Usage                           (SysML 8.2.2.9.2)
+    //
+    // PortionUsage : OccurrenceUsage =
+    //     BasicUsagePrefix ( isIndividual ?= 'individual' )?
+    //     portionKind = PortionKind
+    //     UsageExtensionKeyword* Usage
+    //     { isPortion = true }                                   (SysML 8.2.2.9.2)
+    //
+    // The occurrence usages with no kind keyword: "If the declaration of an occurrence
+    // usage includes the the [sic] keyword individual (and, possibly, timeslice or
+    // snapshot), but no kind keyword, then this is equivalent to having included the
+    // occurrence keyword"
+    // (7.9.4, receipt 8c84370d), and "timeslice or snapshot may be used in place of the
+    // kind keyword" (7.9.3, receipt ebffdbf2). Both metaclasses are OccurrenceUsage
+    // (8.3.9.4, receipt bfd9746a).
+    //
+    // Two productions, one method, told apart by the portion kind: it is what PortionUsage
+    // has and IndividualUsage has not. The prefix is written inline, BasicUsagePrefix and
+    // not OccurrenceUsagePrefix, so there is no `end` (the EndUsagePrefix alternative is
+    // OccurrenceUsagePrefix's alone) and no prefix-metadata before the `individual`.
+    //
+    // implied specialization: Occurrences::Occurrence::snapshots or ::timeSlices
+    // constraint: OccurrenceUsage::checkOccurrenceUsageSnapshotSpecialization and
+    //     checkOccurrenceUsageTimeSliceSpecialization (8.3.9.4). Injections, so sv2-hir's
+    //     (ADR-0002).
+    // constraint: OccurrenceUsage::validateOccurrenceUsagePortionKind (8.3.9.4): a portion
+    //     is owned by an occurrence definition or usage ("A time slice or snapshot usage
+    //     must be declared in the body of an occurrence definition or usage", 7.9.3). The
+    //     grammar reaches it from every body, so it does not guarantee it; sv2-resolve's.
+    // constraint: OccurrenceUsage::validateOccurrenceUsageIndividualUsage (8.3.9.4): an
+    //     individual usage has an individual definition. A question of resolution, so
+    //     sv2-resolve's.
+    fn individual_or_portion_usage(&mut self, node: SyntaxKind) {
+        self.eat_trivia();
+        self.start_node(node);
+        if self.at_basic_usage_prefix() {
+            self.basic_usage_prefix();
+        }
+        if node == SyntaxKind::IndividualUsage {
+            self.expect_keyword("individual");
+        } else {
+            self.eat_optional_keyword("individual");
+            self.portion_kind();
+        }
+        self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
+        self.usage();
+        self.finish_node();
+    }
+
+    /// Which of `IndividualUsage` and `PortionUsage` starts at the `n`th meaningful token,
+    /// as the node to build, if either does.
+    ///
+    /// `BasicUsagePrefix 'individual'? PortionKind?` with at least one of the two keywords
+    /// (`SysML` 8.2.2.9.2), its `UsageExtensionKeyword`s, and then the opening of a
+    /// `Usage` rather than a kind keyword: before `part`, the same keywords are that
+    /// usage's `OccurrenceUsagePrefix`.
+    ///
+    /// `usage_element_of_class` asks every keyword usage first, so there the
+    /// `nth_opens_usage` test changes nothing today, and a mutation removing it survives
+    /// the suite as an equivalent mutant. It stays because the recogniser is also asked
+    /// where order does not protect it, by `at_sysml_keyword_member` and
+    /// `at_source_succession_member`, and before kind keywords not yet read at all
+    /// (`snapshot allocation a;`), where claiming the text would be a false answer.
+    fn at_individual_or_portion_usage(&self, n: usize) -> Option<SyntaxKind> {
+        let k = self.skip_basic_usage_prefix(n);
+        let individual = self.nth_is_keyword(k, "individual");
+        let k = k + usize::from(individual);
+        let portion = self.nth_is_keyword(k, "snapshot") || self.nth_is_keyword(k, "timeslice");
+        let after = self.skip_prefix_metadata(k + usize::from(portion));
+        if !self.nth_opens_usage(after) {
+            None
+        } else if portion {
+            Some(SyntaxKind::PortionUsage)
+        } else if individual {
+            Some(SyntaxKind::IndividualUsage)
+        } else {
+            None
+        }
     }
 
     // production: UsagePrefix@sysml
@@ -9375,6 +9533,7 @@ impl<'a> Parser<'a> {
             || self.at_connection_usage(n)
             || self.at_interface_usage(n)
             || self.at_event_occurrence_usage(n)
+            || self.at_individual_or_portion_usage(n).is_some()
             || self
                 .at_simple_usage(n)
                 .is_some_and(|usage| usage.class != UsageClass::NonOccurrence)

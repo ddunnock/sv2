@@ -44,6 +44,8 @@ vendor/corpus/sysml/src/examples/Import Tests/AliasImport.sysml
 vendor/corpus/sysml/src/examples/Import Tests/CircularImport.sysml
 vendor/corpus/sysml/src/examples/Import Tests/PrivateImportTest.sysml
 vendor/corpus/sysml/src/examples/Import Tests/QualifiedNameImportTest.sysml
+vendor/corpus/sysml/src/examples/Individuals Examples/AnalysisIndividualExample.sysml
+vendor/corpus/sysml/src/examples/Individuals Examples/JohnIndividualExample.sysml
 vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModelOutside.sysml
 vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-2.sysml
 vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-3.sysml
@@ -75,10 +77,12 @@ vendor/corpus/sysml/src/examples/Simple Tests/DependencyTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/EnumerationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/FeaturePathTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ImportTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/IndividualTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/InterfaceTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ItemTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/MetadataTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/MultiplicityTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/OccurrenceTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ParameterTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/RootPackageTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/StateTest.sysml
@@ -89,8 +93,10 @@ vendor/corpus/sysml/src/examples/Simple Tests/VariabilityTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/VerificationTest.sysml
 vendor/corpus/sysml/src/examples/State Space Representation Examples/CartSample.sysml
 vendor/corpus/sysml/src/examples/State Space Representation Examples/EVSample.sysml
+vendor/corpus/sysml/src/examples/Timeslice and Snapshot Examples/TimeVaryingAttribute.sysml
 vendor/corpus/sysml/src/examples/Variability Examples/VehicleVariabilityModel.sysml
 vendor/corpus/sysml/src/examples/Vehicle Example/VehicleDefinitions.sysml
+vendor/corpus/sysml/src/examples/Vehicle Example/VehicleIndividuals.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package - Updated.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition - Updated.sysml
@@ -141,7 +147,10 @@ vendor/corpus/sysml/src/training/25. Transitions/Local Clock Example.sysml
 vendor/corpus/sysml/src/training/25. Transitions/Transition Actions.sysml
 vendor/corpus/sysml/src/training/26. State Exhibition/State Exhibition Example.sysml
 vendor/corpus/sysml/src/training/27. Occurrences/Event Occurrence Example.sysml
+vendor/corpus/sysml/src/training/27. Occurrences/Time Slice and Snapshot Example.sysml
+vendor/corpus/sysml/src/training/28. Individuals/Individuals and Roles-1.sysml
 vendor/corpus/sysml/src/training/28. Individuals/Individuals and Snapshots Example.sysml
+vendor/corpus/sysml/src/training/28. Individuals/Individuals and Time Slices.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 1.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 2.sysml
 vendor/corpus/sysml/src/training/29. Expressions/MassRollup1.sysml
@@ -160,6 +169,7 @@ vendor/corpus/sysml/src/training/32. Requirements/Requirement Groups.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Usages.sysml
 vendor/corpus/sysml/src/training/33. Analysis/Trade Study Analysis Example.sysml
 vendor/corpus/sysml/src/training/34. Verification/Verification Case Definition Example.sysml
+vendor/corpus/sysml/src/training/34. Verification/Verification Case Usage Example.sysml
 vendor/corpus/sysml/src/training/35. Use Cases/Use Case Definition Example.sysml
 vendor/corpus/sysml/src/training/35. Use Cases/Use Case Usage Example.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml
@@ -185,8 +195,10 @@ vendor/corpus/sysml/src/validation/04-Functional Allocation/4a-Functional Alloca
 vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-1.sysml
 vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-1a.sysml
 vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-2.sysml
+vendor/corpus/sysml/src/validation/06-Individual and Snapshots/6-Individual and Snapshots.sysml
 vendor/corpus/sysml/src/validation/07-Variant Configuration/7a-Variant Configuration - General Concept.sysml
 vendor/corpus/sysml/src/validation/07-Variant Configuration/7a1-Variant Configuration - General Concept-a.sysml
+vendor/corpus/sysml/src/validation/09-Verification/9-Verification-simplified.sysml
 vendor/corpus/sysml/src/validation/10-Analysis and Trades/10a-Analysis.sysml
 vendor/corpus/sysml/src/validation/10-Analysis and Trades/10b-Trade-off Among Alternative Configurations.sysml
 vendor/corpus/sysml/src/validation/12-Dependency Relationships/12a-Dependency.sysml
@@ -207,5 +219,6 @@ vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_10-Primit
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_11-Variable Length Collection Types.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_12-Compound Value Type.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_13-Discretely Sampled Function Value.sysml
+vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_19-Materials with Properties.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_19a-Materials with Properties.sysml
 vendor/corpus/sysml/src/validation/18-Use Case/18-Use Case.sysml

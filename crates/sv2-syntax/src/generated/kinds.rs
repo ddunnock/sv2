@@ -619,6 +619,8 @@ pub enum SyntaxKind {
     OccurrenceDefinitionPrefix,
     /// `'abstract' | 'variation'`. `SysML` 8.2.2.6.1.
     BasicDefinitionPrefix,
+    /// `BasicDefinitionPrefix? 'individual' DefinitionExtensionKeyword* 'def' Definition EmptyMultiplicityMember`. `SysML` 8.2.2.9.1 — the metaclass is `OccurrenceDefinition`.
+    IndividualDefinition,
     /// `ownedRelatedElement += EmptyMultiplicity`. `SysML` 8.2.2.9.1.
     EmptyMultiplicityMember,
     /// `{ }`, a Multiplicity that consumes no tokens. `SysML` 8.2.2.9.1.
@@ -823,6 +825,10 @@ pub enum SyntaxKind {
     ItemUsage,
     /// `OccurrenceUsagePrefix 'occurrence' Usage`. `SysML` 8.2.2.9.2.
     OccurrenceUsage,
+    /// `BasicUsagePrefix 'individual' UsageExtensionKeyword* Usage`. `SysML` 8.2.2.9.2 — the metaclass is `OccurrenceUsage`.
+    IndividualUsage,
+    /// `BasicUsagePrefix 'individual'? PortionKind UsageExtensionKeyword* Usage`. `SysML` 8.2.2.9.2 — the metaclass is `OccurrenceUsage`.
+    PortionUsage,
     /// `OccurrenceUsagePrefix 'event' ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'occurrence' UsageDeclaration? ) UsageCompletion`. `SysML` 8.2.2.9.2.
     EventOccurrenceUsage,
     /// `OccurrenceUsagePrefix 'port' Usage`. `SysML` 8.2.2.12.
@@ -1474,6 +1480,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::DefinitionPrefix,
     SyntaxKind::OccurrenceDefinitionPrefix,
     SyntaxKind::BasicDefinitionPrefix,
+    SyntaxKind::IndividualDefinition,
     SyntaxKind::EmptyMultiplicityMember,
     SyntaxKind::EmptyMultiplicity,
     SyntaxKind::Definition,
@@ -1576,6 +1583,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::AttributeUsage,
     SyntaxKind::ItemUsage,
     SyntaxKind::OccurrenceUsage,
+    SyntaxKind::IndividualUsage,
+    SyntaxKind::PortionUsage,
     SyntaxKind::EventOccurrenceUsage,
     SyntaxKind::PortUsage,
     SyntaxKind::RenderingUsage,
