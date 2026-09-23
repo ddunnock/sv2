@@ -7,6 +7,6 @@ AnnotatingElement  # adds no text: under ADR-0015's resolution SysML's literal M
 BooleanExpression  # KerML's BooleanExpression is unimplemented
 Expression  # KerML's Expression is unimplemented
 FlowDeclaration  # a KerML clause's missing '?'; FlowDeclaration@kerml is unimplemented, and SysML's UsageDeclaration is nullable, so SysML needs no site
-ForVariableDeclarationMember  # ForLoopNode is unimplemented
+ForVariableDeclarationMember  # adds no text: the register's own rationale, "Both readings accept identical text"; the deviation makes the member own a ForVariableDeclaration (a ReferenceUsage, as validateForLoopActionUsageLoopVariable requires, 8.3.17.9) rather than the bare UsageDeclaration fragment, so SysML needs no site (ForLoopNode read)
 Invariant  # KerML's Invariant is unimplemented
 Step  # KerML's Step is unimplemented

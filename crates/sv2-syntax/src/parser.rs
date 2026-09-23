@@ -627,6 +627,8 @@ enum ActionNode {
     WhileLoop,
     /// `IfNode`, 8.2.2.17.7.
     If,
+    /// `ForLoopNode`, 8.2.2.17.7.
+    ForLoop,
 }
 
 /// A case production pair: one kind keyword run over the case layer's spine.
@@ -3446,8 +3448,8 @@ impl<'a> Parser<'a> {
     // ActionNodeMember : FeatureMembership =
     //     MemberPrefix ownedRelatedElement += ActionNode            (SysML 8.2.2.17.1)
     //
-    // The same shape once more, marked as the member it is while ActionNode is not: of
-    // its eight alternatives all but ForLoopNode are read, and ForLoopNode is reported.
+    // The same shape once more, marked as the member it is; ActionNode is marked at
+    // `action_node`.
     //
     // production: ActionBehaviorMember@sysml
     //
@@ -7560,8 +7562,8 @@ impl<'a> Parser<'a> {
     // second is read whole in its TargetSuccession form. The third is read over the
     // behaviour usages that exist and over the ActionNodes that do: ControlNode (`merge`,
     // `decide`, `join`, `fork`), AcceptNode, SendNode, AssignmentNode, TerminateNode,
-    // WhileLoopNode and IfNode. The fourth, GuardedSuccessionMember, is read too. What is
-    // still reported where it stands: the last ActionNode, `for`.
+    // WhileLoopNode, IfNode and ForLoopNode. The fourth, GuardedSuccessionMember, is read
+    // too.
     fn action_body(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ActionBody);
@@ -8634,6 +8636,64 @@ impl<'a> Parser<'a> {
                 self.action_body_parameter_member();
             }
         }
+        self.finish_node();
+    }
+
+    // production: ForLoopNode@sysml
+    //
+    // ForLoopNode : ForLoopActionUsage =
+    //     ActionNodePrefix
+    //     'for' ownedRelationship += ForVariableDeclarationMember
+    //     'in' ownedRelationship += NodeParameterMember
+    //     ownedRelationship += ActionBodyParameterMember             (SysML 8.2.2.17.7)
+    //
+    // "the action declaration part is followed by the keyword for, which introduces a loop
+    // variable declaration followed by the keyword in and a sequence expression, and,
+    // after that, a body clause" (7.17.12, receipt b0446148). The sequence is a
+    // NodeParameterMember, bound to the seq input (deriveForLoopActionUsageSeqArgument,
+    // 8.3.17.9, receipt 277f7243). The declaration ends at `in`, which is reserved; the
+    // sequence expression ends at the body clause's `{` or `action`.
+    //
+    // implied specialization: Actions::forLoopActions, Actions::Action::forLoops, and the
+    //     loop variable's redefinition of Actions::ForLoopAction::var
+    // constraint: ForLoopActionUsage::checkForLoopActionUsageSpecialization,
+    //     checkForLoopActionUsageSubactionSpecialization and
+    //     checkForLoopActionUsageVarRedefinition (8.3.17.9). Injections belong in sv2-hir;
+    //     this layer builds the tree only (ADR-0002).
+    fn for_loop_node(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ForLoopNode);
+        self.action_node_prefix("for");
+        self.expect_keyword("for");
+        self.for_variable_declaration_member();
+        self.expect_keyword("in");
+        self.node_parameter_member();
+        self.action_body_parameter_member();
+        self.finish_node();
+    }
+
+    // production: ForVariableDeclarationMember@sysml
+    //
+    // ForVariableDeclarationMember : FeatureMembership =
+    //     ownedRelatedElement += UsageDeclaration                    (SysML 8.2.2.17.7)
+    //
+    // read, by deviation ForVariableDeclarationMember (conflict, follow_xtext), as
+    // `ownedRelatedElement += ForVariableDeclaration`: the clause's line assigns the
+    // fragment where its three sibling members assign an element-producing production,
+    // and ForVariableDeclaration is otherwise unreachable. Both readings accept identical
+    // text, so the deviation has no site: it changes the element, not the language. The
+    // element it builds is the one validateForLoopActionUsageLoopVariable asks for, "The
+    // first ownedFeature of a ForLoopActionUsage must be a ReferenceUsage" (8.3.17.9).
+    //
+    // production: ForVariableDeclaration@sysml
+    //
+    // ForVariableDeclaration : ReferenceUsage = UsageDeclaration   (SysML 8.2.2.17.7)
+    fn for_variable_declaration_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ForVariableDeclarationMember);
+        self.start_node(SyntaxKind::ForVariableDeclaration);
+        self.usage_declaration();
+        self.finish_node();
         self.finish_node();
     }
 
@@ -10828,7 +10888,7 @@ impl<'a> Parser<'a> {
     /// Which `ActionNode` starts at the `n`th meaningful token, of those this parser reads.
     ///
     /// A `ControlNode`, or `OccurrenceUsagePrefix ActionNodeUsageDeclaration?` and one of
-    /// `accept`, `send`, `assign`, `terminate`, `while`, `loop` or `if` (`SysML`
+    /// `accept`, `send`, `assign`, `terminate`, `while`, `loop`, `if` or `for` (`SysML`
     /// 8.2.2.17.4-7) — the prefix looked past here, the declaration by
     /// `action_node_keyword_index_at`. An `if` is an `IfNode` only when its body clause
     /// follows the condition; see `if_node_body_follows`.
@@ -10846,6 +10906,7 @@ impl<'a> Parser<'a> {
                 "while",
                 "loop",
                 "if",
+                "for",
             ],
         )? {
             ("if", at) => self.if_node_body_follows(at + 1).then_some(ActionNode::If),
@@ -10862,6 +10923,7 @@ impl<'a> Parser<'a> {
             "assign" => Some(ActionNode::Assignment),
             "terminate" => Some(ActionNode::Terminate),
             "while" | "loop" => Some(ActionNode::WhileLoop),
+            "for" => Some(ActionNode::ForLoop),
             _ => None,
         }
     }
@@ -10896,6 +10958,17 @@ impl<'a> Parser<'a> {
         }
     }
 
+    // production: ActionNode@sysml
+    //
+    // ActionNode : ActionUsage =
+    //       ControlNode
+    //     | SendNode | AcceptNode
+    //     | AssignmentNode
+    //     | TerminateNode
+    //     | IfNode | WhileLoopNode | ForLoopNode                  (SysML 8.2.2.17.2)
+    //
+    // An alternation with no node, marked because all eight alternatives are read — the
+    // convention ActionBehaviorMember and OwnedExpression follow.
     /// The `ActionNode` `at_action_node` found.
     fn action_node(&mut self, node: ActionNode) {
         match node {
@@ -10906,6 +10979,7 @@ impl<'a> Parser<'a> {
             ActionNode::Terminate => self.terminate_node(),
             ActionNode::WhileLoop => self.while_loop_node(),
             ActionNode::If => self.if_node(),
+            ActionNode::ForLoop => self.for_loop_node(),
         }
     }
 

@@ -1512,6 +1512,25 @@ NODES = [
         ),
     ),
     (
+        "ForLoopNode",
+        (
+            "`ActionNodePrefix 'for' ForVariableDeclarationMember 'in' NodeParameterMember "
+            "ActionBodyParameterMember`. `SysML` 8.2.2.17.7 — returns `ForLoopActionUsage`."
+        ),
+    ),
+    (
+        "ForVariableDeclarationMember",
+        (
+            "`ownedRelatedElement += ForVariableDeclaration`, by deviation "
+            "`ForVariableDeclarationMember` (`follow_xtext`). `SysML` 8.2.2.17.7 — a "
+            "`FeatureMembership`."
+        ),
+    ),
+    (
+        "ForVariableDeclaration",
+        "`UsageDeclaration`. `SysML` 8.2.2.17.7 — returns `ReferenceUsage`.",
+    ),
+    (
         "IfNode",
         (
             "`ActionNodePrefix 'if' ExpressionParameterMember ActionBodyParameterMember "

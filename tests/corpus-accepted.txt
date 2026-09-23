@@ -99,6 +99,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/PartTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/RequirementTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/RootPackageTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/StateTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/StructuredControlTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/TextualRepresentationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/TradeStudyTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/UseCaseTest.sysml
@@ -154,6 +155,7 @@ vendor/corpus/sysml/src/training/17. Control/Merge Example.sysml
 vendor/corpus/sysml/src/training/18. Action Performance/Action Performance Example.sysml
 vendor/corpus/sysml/src/training/19. Terminate Actions/Terminate Actions Example-1.sysml
 vendor/corpus/sysml/src/training/19. Terminate Actions/Terminate Actions Example-2.sysml
+vendor/corpus/sysml/src/training/20. Assignment Actions/Assignment Example.sysml
 vendor/corpus/sysml/src/training/21. Asynchronous Messaging/Messaging Example.sysml
 vendor/corpus/sysml/src/training/21. Asynchronous Messaging/Messaging with Ports.sysml
 vendor/corpus/sysml/src/training/22. Opaque Actions/Opaque Action Example.sysml
@@ -242,6 +244,7 @@ vendor/corpus/sysml/src/validation/09-Verification/9-Verification-simplified.sys
 vendor/corpus/sysml/src/validation/10-Analysis and Trades/10a-Analysis.sysml
 vendor/corpus/sysml/src/validation/10-Analysis and Trades/10b-Trade-off Among Alternative Configurations.sysml
 vendor/corpus/sysml/src/validation/10-Analysis and Trades/10c-Fuel Economy Analysis.sysml
+vendor/corpus/sysml/src/validation/10-Analysis and Trades/10d-Dynamics Analysis.sysml
 vendor/corpus/sysml/src/validation/11-View and Viewpoint/11a-View-Viewpoint.sysml
 vendor/corpus/sysml/src/validation/11-View and Viewpoint/11b-Safety and Security Feature Views.sysml
 vendor/corpus/sysml/src/validation/12-Dependency Relationships/12a-Dependency.sysml

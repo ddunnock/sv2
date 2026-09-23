@@ -7,7 +7,6 @@
 # is a deliberate act, visible in review, and the gate fails a file that neither declares
 # nor is listed. The backlog is the 117 cases that predate the check.
 tests/rejection/a-classifier-is-not-a-sysml-element.sysml
-tests/rejection/action-body-control-flow-is-not-implemented.sysml
 tests/rejection/action-definition-missing-action-body.sysml
 tests/rejection/action-usage-is-not-an-action-definition.sysml
 tests/rejection/alias-missing-relationship-body.sysml

@@ -1067,6 +1067,12 @@ pub enum SyntaxKind {
     SenderReceiverPart,
     /// `ActionNodePrefix ( 'while' ExpressionParameterMember | 'loop' EmptyParameterMember ) ActionBodyParameterMember ( 'until' ExpressionParameterMember ';' )?`. `SysML` 8.2.2.17.7 — returns `WhileLoopActionUsage`.
     WhileLoopNode,
+    /// `ActionNodePrefix 'for' ForVariableDeclarationMember 'in' NodeParameterMember ActionBodyParameterMember`. `SysML` 8.2.2.17.7 — returns `ForLoopActionUsage`.
+    ForLoopNode,
+    /// `ownedRelatedElement += ForVariableDeclaration`, by deviation `ForVariableDeclarationMember` (`follow_xtext`). `SysML` 8.2.2.17.7 — a `FeatureMembership`.
+    ForVariableDeclarationMember,
+    /// `UsageDeclaration`. `SysML` 8.2.2.17.7 — returns `ReferenceUsage`.
+    ForVariableDeclaration,
     /// `ActionNodePrefix 'if' ExpressionParameterMember ActionBodyParameterMember ( 'else' ( ActionBodyParameterMember | IfNodeParameterMember ) )?`. `SysML` 8.2.2.17.7 — returns `IfActionUsage`.
     IfNode,
     /// `ownedRelatedElement += IfNode`. `SysML` 8.2.2.17.7 — a `ParameterMembership`.
@@ -1814,6 +1820,9 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::SendNodeDeclaration,
     SyntaxKind::SenderReceiverPart,
     SyntaxKind::WhileLoopNode,
+    SyntaxKind::ForLoopNode,
+    SyntaxKind::ForVariableDeclarationMember,
+    SyntaxKind::ForVariableDeclaration,
     SyntaxKind::IfNode,
     SyntaxKind::IfNodeParameterMember,
     SyntaxKind::ExpressionParameterMember,

@@ -361,20 +361,35 @@ fn an_action_body_reads_the_items_a_definition_body_reads() {
 }
 
 #[test]
-fn an_action_body_does_not_admit_the_control_flow_layer() {
-    // The alternatives of ActionBodyItem that are NOT NonBehaviorBodyItem, less
-    // InitialNodeMember: successions and guards. Rejected by absence — every one is well-formed
-    // SysML. Held as a file by tests/rejection/action-body-control-flow-is-not-implemented.sysml.
-    //
-    // `first start;` was here and is not: it is InitialNodeMember, ActionBodyItem's
-    // second alternative (SysML 8.2.2.17.1) — well-formed, and rejected only while that
-    // production was absent. Asserting it rejected is asserting the absence, which is
-    // the one thing this case must not outlive.
-    //
-    // `accept Signal;`, `send Sig to target;` and `assign x := 1;` were here and are not:
-    // they are AcceptNode, SendNode and AssignmentNode (8.2.2.17.4, 8.2.2.17.5), ActionNodes
-    // reached through ActionBehaviorMember -- well-formed, and rejected only while those
-    // productions were absent. The next commit implements them.
+fn an_action_body_admits_the_whole_control_flow_layer() {
+    // The alternatives of ActionBodyItem that are NOT NonBehaviorBodyItem: the initial
+    // node, successions, and every ActionNode after a `then` (SysML 8.2.2.17.1-7). This
+    // case asserted them rejected by absence, held as the file
+    // tests/rejection/action-body-control-flow-is-not-implemented.sysml, whose last line
+    // moved on as each landed -- `then accelerate;` (ActionTargetSuccessionMember),
+    // `then action decelerate;` (the third alternative), `then merge m;` (ControlNode),
+    // `then accept s;` (AcceptNode), `then terminate;` (TerminateNode) and `then for i in
+    // items { }` (ForLoopNode). With ForLoopNode the layer is whole, the file is gone, and
+    // its text is accepted here.
+    let source = "action def Brake {\n\
+                  \tfirst start;\n\
+                  \tthen accelerate;\n\
+                  \tthen action decelerate;\n\
+                  \tthen merge m;\n\
+                  \tthen accept s;\n\
+                  \tthen terminate;\n\
+                  \tthen for i in items { }\n\
+                  }";
+    let rendered = render(&parse_accepted(source).syntax());
+    assert_eq!(
+        nodes_named(&rendered, "SourceSuccessionMember"),
+        5,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "ForLoopNode"), 1, "{rendered}");
+    // `then stop;` with nothing before it stays rejected, by rule: a target succession
+    // needs a predecessor (8.2.2.17.1). Held as a file by
+    // tests/rejection/target-succession-member-needs-a-predecessor.sysml.
     parse_rejected("action def B { then stop; }");
 }
 
@@ -5454,6 +5469,118 @@ fn an_if_node_is_bounded_by_its_rules() {
     // An ActionNode is an action-body item only (8.2.2.17.1).
     let tree = render(&parse_rejected("part def P { if c { } }").syntax());
     assert_eq!(nodes_named(&tree, "IfNode"), 0, "{tree}");
+}
+
+// -- ForLoopNode, SysML 8.2.2.17.7 ---------------------------------------------------
+//
+//   ForLoopNode = ActionNodePrefix 'for' ForVariableDeclarationMember
+//                 'in' NodeParameterMember ActionBodyParameterMember
+//   ForVariableDeclarationMember = ForVariableDeclaration   (deviation, follow_xtext)
+//   ForVariableDeclaration       = UsageDeclaration
+//
+// "the action declaration part is followed by the keyword for, which introduces a loop
+// variable declaration followed by the keyword in and a sequence expression, and, after
+// that, a body clause" (7.17.12, receipt b0446148).
+
+#[test]
+fn the_for_loop_examples_of_7_17_12_parse() {
+    // 7.17.12's three for-loop examples (receipt b0446148), each in an action definition,
+    // all spec-conformant: deviation ForVariableDeclarationMember adds no text.
+    let scenario = "action def A {\n\
+                    action dynamicScenario\n\
+                    for power : PowerValue in powerProfile\n\
+                    \n\
+                    action dynamicsStep {\n\
+                    assign position := ComputeDynamics(position, power);\n\
+                    }\n\
+                    }";
+    let bare = "action def A {\n\
+                for power : PowerValue in powerProfile {\n\
+                assign position := ComputeDynamics(position, power);\n\
+                }\n\
+                }";
+    let range = "action def A {\n\
+                 for i in 1..scenario->size() {\n\
+                 assign positionList :=\n\
+                 positionList->including(scenario.postion#(i));\n\
+                 assign velocityList :=\n\
+                 velocityList->including(scenario.velocity#(i));\n\
+                 }\n\
+                 }";
+    let undeclared = [
+        "OccurrenceUsagePrefix",
+        "KwFor",
+        "ForVariableDeclarationMember",
+        "KwIn",
+        "NodeParameterMember",
+        "ActionBodyParameterMember",
+    ];
+    let declared = [
+        &undeclared[..1],
+        &["ActionNodeUsageDeclaration"],
+        &undeclared[1..],
+    ]
+    .concat();
+    for (source, kinds) in [
+        (scenario, &declared[..]),
+        (bare, &undeclared[..]),
+        (range, &undeclared[..]),
+    ] {
+        let parsed = parse_accepted(source);
+        assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
+        let rendered = render(&parsed.syntax());
+        assert_eq!(child_kinds(&rendered, "ForLoopNode"), kinds, "{rendered}");
+    }
+}
+
+#[test]
+fn a_for_loop_variable_is_a_for_variable_declaration() {
+    // The member owns a ForVariableDeclaration, a ReferenceUsage, over the
+    // UsageDeclaration (deviation ForVariableDeclarationMember, follow_xtext;
+    // validateForLoopActionUsageLoopVariable, 8.3.17.9). examples/Simple Tests/
+    // StructuredControlTest.sysml:32 types it.
+    let tree = render(
+        &parse_accepted(
+            "action a {\n\tfor n : ScalarValues::Integer in (1, 2, 3) {\n\t\tassign i := i * n;\n\t}\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "ForVariableDeclarationMember"),
+        ["ForVariableDeclaration"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "ForVariableDeclaration"),
+        ["UsageDeclaration"],
+        "{tree}"
+    );
+    // training/20. Assignment Actions/Assignment Example.sysml:25 and validation/10-
+    // Analysis and Trades/10d-Dynamics Analysis.sysml:65, the sequence a name and a range.
+    parse_accepted("action a { for vehiclePower in powerProfile { } }");
+    parse_accepted("action a { for i in 1..powerProfile->size()-1 { } }");
+}
+
+#[test]
+fn a_for_loop_node_keeps_every_byte() {
+    let source = "action def A {\n\tthen /* f */ for i : I // n\n\tin ( 1 , 2 ) action b { }\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
+#[test]
+fn a_for_loop_node_is_bounded_by_its_rules() {
+    // The loop variable is followed by `in` and a sequence expression. Held as a file by
+    // tests/rejection/for-loop-needs-in.sysml.
+    parse_rejected("action a { for i powerProfile { } }");
+    parse_rejected("action a { for i in { } }");
+    // The loop variable is a declaration, not a reference: UsageDeclaration takes no
+    // feature chain. Held as a file by tests/rejection/for-variable-is-a-declaration.sysml.
+    parse_rejected("action a { for a.b in xs { } }");
+    // The body clause is braced (7.17.12).
+    parse_rejected("action a { for i in xs; }");
+    // An ActionNode is an action-body item only (8.2.2.17.1).
+    let tree = render(&parse_rejected("part def P { for i in xs { } }").syntax());
+    assert_eq!(nodes_named(&tree, "ForLoopNode"), 0, "{tree}");
 }
 
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------

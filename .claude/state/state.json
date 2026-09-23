@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T20:36:46Z",
+    "regenerated_utc": "2026-09-23T20:51:40Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 405,
-      "unimplemented": 149,
+      "implemented": 409,
+      "unimplemented": 145,
       "absent": 0,
-      "percent": 73.1
+      "percent": 73.8
     },
     "tests": {
-      "unit": 625,
+      "unit": 629,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 251,
+      "negative_cases": 252,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "f1eb89d Read if actions, `if c { ... } else if d { ... } else { ... }`",
       "4d3bd43 Stop rejecting `if i < 0 { }` by absence: the next commit reads it",
       "80415c1 Read while loops, `while c { ... } until d;` and `loop { ... }`",
       "4c71e51 Read terminate actions, `terminate;` and `action t terminate x;`",
       "a0ea0ef Stop rejecting `then terminate;` by absence: the next commit reads it",
       "daf5709 Read succession flow usages, `succession flow a.x to b.y;`",
       "a684449 Stop using `succession flow` as the unreadable example: the next commit reads it",
-      "d729a6c Settle expression-body-semicolon: an expression body is braced",
-      "8a1284c Close the session: the postfix expression layer and the view layer recorded, succession flows next"
+      "d729a6c Settle expression-body-semicolon: an expression body is braced"
     ]
   },
   "authored": {
