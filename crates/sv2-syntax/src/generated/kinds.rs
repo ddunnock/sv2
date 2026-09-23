@@ -677,6 +677,18 @@ pub enum SyntaxKind {
     ConcernDefinition,
     /// `OccurrenceUsagePrefix 'concern' ConstraintUsageDeclaration RequirementBody`. `SysML` 8.2.2.21.3.
     ConcernUsage,
+    /// `OccurrenceDefinitionPrefix 'view' 'def' DefinitionDeclaration ViewDefinitionBody`. `SysML` 8.2.2.26.1.
+    ViewDefinition,
+    /// `';' | '{' ViewDefinitionBodyItem* '}'`. `SysML` 8.2.2.26.1.
+    ViewDefinitionBody,
+    /// `MemberPrefix 'render' ViewRenderingUsage`. `SysML` 8.2.2.26.1.
+    ViewRenderingMember,
+    /// `OwnedReferenceSubsetting FeatureSpecializationPart? UsageBody | ( UsageExtensionKeyword* 'rendering' | UsageExtensionKeyword+ ) Usage`. `SysML` 8.2.2.26.1.
+    ViewRenderingUsage,
+    /// `OccurrenceUsagePrefix 'view' UsageDeclaration? ValuePart? ViewBody`. `SysML` 8.2.2.26.2.
+    ViewUsage,
+    /// `';' | '{' ViewBodyItem* '}'`. `SysML` 8.2.2.26.2.
+    ViewBody,
     /// `OccurrenceDefinitionPrefix 'viewpoint' 'def' DefinitionDeclaration RequirementBody`. `SysML` 8.2.2.26.3.
     ViewpointDefinition,
     /// `OccurrenceUsagePrefix 'viewpoint' ConstraintUsageDeclaration RequirementBody`. `SysML` 8.2.2.26.3.
@@ -1579,6 +1591,12 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::FramedConcernUsage,
     SyntaxKind::ConcernDefinition,
     SyntaxKind::ConcernUsage,
+    SyntaxKind::ViewDefinition,
+    SyntaxKind::ViewDefinitionBody,
+    SyntaxKind::ViewRenderingMember,
+    SyntaxKind::ViewRenderingUsage,
+    SyntaxKind::ViewUsage,
+    SyntaxKind::ViewBody,
     SyntaxKind::ViewpointDefinition,
     SyntaxKind::ViewpointUsage,
     SyntaxKind::RequirementConstraintMember,

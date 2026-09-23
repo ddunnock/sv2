@@ -548,6 +548,35 @@ NODES = [
             "RequirementBody`. `SysML` 8.2.2.21.3."
         ),
     ),
+    # Views, SysML 8.2.2.26.1 (definitions) and 8.2.2.26.2 (usages).
+    (
+        "ViewDefinition",
+        (
+            "`OccurrenceDefinitionPrefix 'view' 'def' DefinitionDeclaration "
+            "ViewDefinitionBody`. `SysML` 8.2.2.26.1."
+        ),
+    ),
+    ("ViewDefinitionBody", "`';' | '{' ViewDefinitionBodyItem* '}'`. `SysML` 8.2.2.26.1."),
+    (
+        "ViewRenderingMember",
+        "`MemberPrefix 'render' ViewRenderingUsage`. `SysML` 8.2.2.26.1.",
+    ),
+    (
+        "ViewRenderingUsage",
+        (
+            "`OwnedReferenceSubsetting FeatureSpecializationPart? UsageBody | "
+            "( UsageExtensionKeyword* 'rendering' | UsageExtensionKeyword+ ) Usage`. "
+            "`SysML` 8.2.2.26.1."
+        ),
+    ),
+    (
+        "ViewUsage",
+        (
+            "`OccurrenceUsagePrefix 'view' UsageDeclaration? ValuePart? ViewBody`. "
+            "`SysML` 8.2.2.26.2."
+        ),
+    ),
+    ("ViewBody", "`';' | '{' ViewBodyItem* '}'`. `SysML` 8.2.2.26.2."),
     # Viewpoints, SysML 8.2.2.26.3: requirements by the kind keyword `viewpoint`.
     (
         "ViewpointDefinition",

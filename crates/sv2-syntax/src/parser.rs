@@ -863,6 +863,28 @@ enum Body {
     /// so a keywordless `end p : P;` is a port end here and a reference end elsewhere.
     /// See `interface_body_item`.
     Interface,
+    /// The braced form of `ViewDefinitionBody`. `SysML` only.
+    ///
+    /// ```text
+    /// ViewDefinitionBodyItem = DefinitionBodyItem | ElementFilterMember
+    ///                        | ViewRenderingMember                SysML 8.2.2.26.1
+    /// ```
+    ///
+    /// A superset of `DefinitionBodyItem`, as `RequirementBodyItem` is, so it answers every
+    /// question `Definition` answers the same way but two: a `filter` and a `render` are
+    /// items here.
+    ViewDefinition,
+    /// The braced form of `ViewBody`. `SysML` only.
+    ///
+    /// ```text
+    /// ViewBodyItem = DefinitionBodyItem | ElementFilterMember
+    ///              | ViewRenderingMember | Expose                  SysML 8.2.2.26.2
+    /// ```
+    ///
+    /// `ViewDefinition`'s items and `Expose`, which a view usage exposes and a definition
+    /// does not. A variant of its own because the item set differs in the grammar, as
+    /// `Action` was before anything it decided differed.
+    View,
     /// The braced form of `TypeBody`. `KerML` only — what a classifier holds.
     Type,
 }
@@ -885,6 +907,8 @@ impl Body {
             (
                 Self::Definition
                 | Self::Requirement
+                | Self::ViewDefinition
+                | Self::View
                 | Self::Calculation
                 | Self::Case
                 | Self::Action
@@ -907,6 +931,8 @@ impl Body {
             (
                 Self::Definition
                 | Self::Requirement
+                | Self::ViewDefinition
+                | Self::View
                 | Self::Calculation
                 | Self::Case
                 | Self::Action
@@ -916,9 +942,11 @@ impl Body {
             ) => SyntaxKind::NonOccurrenceUsageMember,
             // DefinitionBodyItem: `SourceSuccessionMember? OccurrenceUsageMember`
             // (8.2.2.6.1), and OccurrenceUsageElement is both of the other classes.
-            (Self::Definition | Self::Requirement, _, MemberElement::Usage(_)) => {
-                SyntaxKind::OccurrenceUsageMember
-            }
+            (
+                Self::Definition | Self::Requirement | Self::ViewDefinition | Self::View,
+                _,
+                MemberElement::Usage(_),
+            ) => SyntaxKind::OccurrenceUsageMember,
             // NonBehaviorBodyItem: `SourceSuccessionMember? StructureUsageMember`
             // (8.2.2.17.1), which StateBodyItem reaches as its first alternative
             // (8.2.2.18.1).
@@ -956,7 +984,8 @@ impl Body {
     /// Whether `ElementFilterMember` is one of this body's alternatives.
     fn admits_filter(self, language: Language) -> bool {
         match self {
-            Self::Package => true,
+            // ViewDefinitionBodyItem and ViewBodyItem name it (SysML 8.2.2.26.1, .2).
+            Self::Package | Self::ViewDefinition | Self::View => true,
             Self::Root => language == Language::SysMl,
             // TypeBodyElement has no ElementFilterMember alternative, and neither
             // DefinitionBodyItem, RequirementBodyItem nor NonBehaviorBodyItem reaches one.
@@ -1032,9 +1061,9 @@ impl Body {
     /// `NonBehaviorBodyItem` (8.2.2.17.1), which an action or calculation body reaches
     /// through `ActionBodyItem`, as a case body does through `CaseBodyItem` (8.2.2.22),
     /// and a state body reaches through `StateBodyItem` (8.2.2.18.1).
-    /// `InterfaceBodyItem` (8.2.2.14.1) names it directly. The view bodies (8.2.2.26)
-    /// reach it too, and join this when they land. NOT `PackageBodyElement` (8.2.2.5.1), nor any `KerML` body: `KerML` has
-    /// no variants.
+    /// `InterfaceBodyItem` (8.2.2.14.1) names it directly, and the two view bodies reach
+    /// it through their `DefinitionBodyItem` alternative (8.2.2.26.1, .2). NOT
+    /// `PackageBodyElement` (8.2.2.5.1), nor any `KerML` body: `KerML` has no variants.
     ///
     /// NOT only a variation's body, although "variant usages may only be declared within
     /// a variation" (7.6.7, receipt 5a7843af). That is
@@ -1046,12 +1075,25 @@ impl Body {
             self,
             Self::Definition
                 | Self::Requirement
+                | Self::ViewDefinition
+                | Self::View
                 | Self::Action
                 | Self::Calculation
                 | Self::Case
                 | Self::State
                 | Self::Interface
         )
+    }
+
+    /// Whether `ViewRenderingMember` is one of this body's alternatives.
+    ///
+    /// `ViewDefinitionBodyItem` and `ViewBodyItem` name it (`SysML` 8.2.2.26.1, .2), and
+    /// nothing else does; that its owner is a view is also
+    /// `validateViewRenderingMembershipOwningType` (8.3.26.10, receipt 75857b4b). "Only
+    /// one" is `validateViewDefinitionOnlyOneViewRendering` and its usage twin, constraints
+    /// and not grammar, so two `render`s read.
+    fn admits_render(self) -> bool {
+        matches!(self, Self::ViewDefinition | Self::View)
     }
 
     /// Whether `TransitionUsageMember` is one of this body's alternatives.
@@ -1172,6 +1214,8 @@ impl Body {
             self,
             Self::Definition
                 | Self::Requirement
+                | Self::ViewDefinition
+                | Self::View
                 | Self::Action
                 | Self::Calculation
                 | Self::Case
@@ -1622,6 +1666,7 @@ impl<'a> Parser<'a> {
             || self.at_interface_definition(n)
             || self.at_concern_definition(n)
             || self.at_viewpoint_definition(n)
+            || self.at_view_definition(n)
             || self.at_individual_definition(n)
             || self.at_extended_definition(n)
     }
@@ -1998,6 +2043,7 @@ impl<'a> Parser<'a> {
             || self.at_connection_usage(n)
             || self.at_interface_usage(n)
             || self.at_allocation_usage(n)
+            || self.at_view_usage(n)
             || self.at_event_occurrence_usage(n)
             || self.at_individual_or_portion_usage(n).is_some()
             || self.at_succession_as_usage(n)
@@ -2589,7 +2635,46 @@ impl<'a> Parser<'a> {
             // so it decides; before the result-expression test, as `return` is, because
             // it continues the item run.
             self.variant_usage_member();
-        } else if body.admits_requirement_constraint()
+        } else if self.requirement_body_member(body) {
+            // SubjectMember, RequirementConstraintMember, FramedConcernMember,
+            // RequirementVerificationMember, ActorMember and StakeholderMember: see
+            // `requirement_body_member`.
+        } else if body.admits_render() && self.at_element_keyword("render") {
+            // ViewDefinitionBodyItem's and ViewBodyItem's ViewRenderingMember (SysML
+            // 8.2.2.26.1, .2): a ViewRenderingMembership of its own, so not `membership`'s.
+            self.view_rendering_member();
+        } else if body.admits_objective() && self.at_element_keyword("objective") {
+            // CaseBodyItem's fourth alternative (SysML 8.2.2.22), owning its requirement
+            // through an ObjectiveMembership of its own, as SubjectMember does.
+            self.objective_member();
+        } else if body.admits_state_action()
+            && ["entry", "do", "exit"]
+                .iter()
+                .any(|word| self.at_element_keyword(word))
+        {
+            // StateBodyItem's fourth, fifth and sixth alternatives (SysML 8.2.2.18.1),
+            // each owning a StateActionUsage through a StateSubactionMembership of its
+            // own; an entry action takes its EntryTransitionMembers after it.
+            self.state_action_item();
+        } else if body.admits_transition() && self.at_element_keyword("transition") {
+            // StateBodyItem's third alternative (SysML 8.2.2.18.1). An item of its own,
+            // owning its element through a membership of its own. A `transition` that
+            // opens a TARGET transition is read as a suffix by `behaviour_targets` and
+            // never reaches here unless nothing precedes it, where it is no item and
+            // `transition_usage` reports the missing source.
+            self.transition_usage_member();
+        } else {
+            return false;
+        }
+        true
+    }
+
+    /// `RequirementBodyItem`'s six members of its own (`SysML` 8.2.2.21.1), each owning its
+    /// element through a membership of its own. Returns whether one was read. Split out of
+    /// `body_specific_item` for clippy's complexity budget; the arms are disjoint on their
+    /// keywords, so where they are asked decides nothing.
+    fn requirement_body_member(&mut self, body: Body) -> bool {
+        if body.admits_requirement_constraint()
             && (self.at_element_keyword("require") || self.at_element_keyword("assume"))
         {
             // RequirementBodyItem's third alternative (SysML 8.2.2.21.1). Owns its
@@ -2624,26 +2709,6 @@ impl<'a> Parser<'a> {
             // FramedConcernMembership of its own, as RequirementConstraintMember is.
             self.note_framed_concern_body_item(body);
             self.framed_concern_member();
-        } else if body.admits_objective() && self.at_element_keyword("objective") {
-            // CaseBodyItem's fourth alternative (SysML 8.2.2.22), owning its requirement
-            // through an ObjectiveMembership of its own, as SubjectMember does.
-            self.objective_member();
-        } else if body.admits_state_action()
-            && ["entry", "do", "exit"]
-                .iter()
-                .any(|word| self.at_element_keyword(word))
-        {
-            // StateBodyItem's fourth, fifth and sixth alternatives (SysML 8.2.2.18.1),
-            // each owning a StateActionUsage through a StateSubactionMembership of its
-            // own; an entry action takes its EntryTransitionMembers after it.
-            self.state_action_item();
-        } else if body.admits_transition() && self.at_element_keyword("transition") {
-            // StateBodyItem's third alternative (SysML 8.2.2.18.1). An item of its own,
-            // owning its element through a membership of its own. A `transition` that
-            // opens a TARGET transition is read as a suffix by `behaviour_targets` and
-            // never reaches here unless nothing precedes it, where it is no item and
-            // `transition_usage` reports the missing source.
-            self.transition_usage_member();
         } else {
             return false;
         }
@@ -3448,6 +3513,11 @@ impl<'a> Parser<'a> {
             self.enumeration_definition();
         } else if self.requirement_family_definition() {
             // Read by the call, which answers whether it read one.
+        } else if self.at_view_definition(0) {
+            // Where it stands decides nothing: `view def` is its own keyword pair, and
+            // IndividualDefinition writes `def` after `individual` and its extension
+            // keywords (8.2.2.9.1), never `view`, so `individual view def` is not one.
+            self.view_definition();
         } else if let Some(case) = self.at_case_definition(0) {
             self.case_definition(case);
         } else if self.at_metadata_definition(0) {
@@ -4057,29 +4127,9 @@ impl<'a> Parser<'a> {
             // Every usage `behavior_usage_element` reads is a BehaviorUsageElement
             // (8.2.2.6.4).
             Some(UsageClass::Behavior)
-        } else if self.at_flow_usage(0) {
-            // A StructureUsageElement (8.2.2.6.4), though its metaclass is an ActionUsage.
-            self.flow_usage();
-            Some(UsageClass::Structure)
-        } else if self.at_message(0) {
-            // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
-            self.message();
-            Some(UsageClass::Structure)
-        } else if self.at_connection_usage(0) {
-            // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
-            self.connection_usage();
-            Some(UsageClass::Structure)
-        } else if self.at_interface_usage(0) {
-            // A StructureUsageElement (8.2.2.6.4), as ConnectionUsage is.
-            self.interface_usage();
-            Some(UsageClass::Structure)
-        } else if self.at_allocation_usage(0) {
-            // A StructureUsageElement (8.2.2.6.4), as ConnectionUsage is.
-            self.allocation_usage();
-            Some(UsageClass::Structure)
-        } else if self.at_event_occurrence_usage(0) {
-            // A StructureUsageElement (8.2.2.6.4), as OccurrenceUsage is.
-            self.event_occurrence_usage();
+        } else if self.structure_usage_element() {
+            // FlowUsage, Message, ConnectionUsage, InterfaceUsage, AllocationUsage,
+            // ViewUsage and EventOccurrenceUsage, each a StructureUsageElement.
             Some(UsageClass::Structure)
         } else if self.at_succession_as_usage(0) {
             // A NonOccurrenceUsageElement (8.2.2.6.4): "a succession is not a kind of
@@ -4113,6 +4163,37 @@ impl<'a> Parser<'a> {
         } else {
             None
         }
+    }
+
+    /// The keyword-led `StructureUsageElement`s of `usage_element_of_class` (`SysML`
+    /// 8.2.2.6.4), returning whether one was read. Split out for clippy's complexity
+    /// budget, as `behavior_usage_element` is; the order is the one the dispatch had.
+    fn structure_usage_element(&mut self) -> bool {
+        if self.at_flow_usage(0) {
+            // A StructureUsageElement (8.2.2.6.4), though its metaclass is an ActionUsage.
+            self.flow_usage();
+        } else if self.at_message(0) {
+            // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
+            self.message();
+        } else if self.at_connection_usage(0) {
+            // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
+            self.connection_usage();
+        } else if self.at_interface_usage(0) {
+            // A StructureUsageElement (8.2.2.6.4), as ConnectionUsage is.
+            self.interface_usage();
+        } else if self.at_allocation_usage(0) {
+            // A StructureUsageElement (8.2.2.6.4), as ConnectionUsage is.
+            self.allocation_usage();
+        } else if self.at_view_usage(0) {
+            // A StructureUsageElement (8.2.2.6.4), as PartUsage is.
+            self.view_usage();
+        } else if self.at_event_occurrence_usage(0) {
+            // A StructureUsageElement (8.2.2.6.4), as OccurrenceUsage is.
+            self.event_occurrence_usage();
+        } else {
+            return false;
+        }
+        true
     }
 
     /// The `BehaviorUsageElement`s of `usage_element_of_class`, returning whether one was
@@ -7187,6 +7268,186 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    /// Whether a `ViewDefinition` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceDefinitionPrefix 'view' 'def'` (`SysML` 8.2.2.26.1). `view` is reserved,
+    /// so a `viewpoint` is a different token and never answers this.
+    fn at_view_definition(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_definition_prefix(n);
+        self.nth_is_keyword(after, "view") && self.nth_is_keyword(after + 1, "def")
+    }
+
+    // production: ViewDefinition@sysml
+    //
+    // ViewDefinition =
+    //     OccurrenceDefinitionPrefix 'view' 'def'
+    //     DefinitionDeclaration ViewDefinitionBody               (SysML 8.2.2.26.1)
+    //
+    // Not on SIMPLE_DEFINITIONS' spine: it names its declaration and its own body rather
+    // than taking a `Definition`. The Pilot factors the keywords into ViewDefKeyword,
+    // deviation ViewDefKeyword (xtext_only, follow_spec), so the literals are matched here. The metaclass is ViewDefinition (8.3.26.7, receipt
+    // ced9a812), a PartDefinition.
+    //
+    // implied specialization: Views::View
+    // constraint: ViewDefinition::checkViewDefinitionSpecialization
+    //     `specializesFromLibrary('Views::View')` (8.3.26.7). An injection, so sv2-hir's
+    //     (ADR-0002).
+    fn view_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ViewDefinition);
+        self.occurrence_definition_prefix();
+        self.expect_keyword("view");
+        self.expect_keyword("def");
+        self.definition_declaration();
+        self.view_definition_body();
+        self.finish_node();
+    }
+
+    // production: ViewDefinitionBody@sysml
+    //
+    // ViewDefinitionBody : ViewDefinition = ';' | '{' ViewDefinitionBodyItem* '}'
+    //                                                            (SysML 8.2.2.26.1)
+    //
+    // ViewDefinitionBodyItem is NOT marked: its first alternative is DefinitionBodyItem,
+    // which is not marked either. What it adds, ElementFilterMember and
+    // ViewRenderingMember, is read; see `Body::ViewDefinition`.
+    fn view_definition_body(&mut self) {
+        self.braced_body(
+            SyntaxKind::ViewDefinitionBody,
+            Body::ViewDefinition,
+            "`;` or `{` after a view definition declaration",
+        );
+    }
+
+    // production: ViewBody@sysml
+    //
+    // ViewBody : ViewUsage = ';' | '{' ViewBodyItem* '}'         (SysML 8.2.2.26.2)
+    //
+    // ViewBodyItem is NOT marked, for ViewDefinitionBodyItem's reason, and because its
+    // Expose alternative is not read yet.
+    fn view_body(&mut self) {
+        self.braced_body(
+            SyntaxKind::ViewBody,
+            Body::View,
+            "`;` or `{` after a view usage declaration",
+        );
+    }
+
+    /// `';' | '{' <body>'s items '}'` as a `node`, the shape every `SysML` body shares.
+    fn braced_body(&mut self, node: SyntaxKind, body: Body, what: &str) {
+        self.eat_trivia();
+        self.start_node(node);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.body_elements(Some(SyntaxKind::RBrace), body);
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.error_expected(what);
+        }
+        self.finish_node();
+    }
+
+    // production: ViewRenderingMember@sysml
+    //
+    // ViewRenderingMember : ViewRenderingMembership =
+    //     MemberPrefix 'render'
+    //     ownedRelatedElement += ViewRenderingUsage              (SysML 8.2.2.26.1)
+    //
+    // The metaclass is ViewRenderingMembership (8.3.26.10, receipt 75857b4b), a
+    // FeatureMembership whose referencedRendering is the reference's target when the
+    // usage has one and the usage itself otherwise.
+    //
+    // constraint: ViewRenderingMembership::validateViewRenderingMembershipOwningType
+    //     (8.3.26.10): the owner is a view. The grammar already reaches this member from
+    //     the two view bodies alone.
+    fn view_rendering_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ViewRenderingMember);
+        self.member_prefix();
+        self.expect_keyword("render");
+        self.view_rendering_usage();
+        self.finish_node();
+    }
+
+    // production: ViewRenderingUsage@sysml
+    //
+    // ViewRenderingUsage : RenderingUsage =
+    //       ownedRelationship += OwnedReferenceSubsetting
+    //       FeatureSpecializationPart?
+    //       UsageBody
+    //     | ( UsageExtensionKeyword* 'rendering'
+    //       | UsageExtensionKeyword+ )
+    //       Usage                                                (SysML 8.2.2.26.1)
+    //
+    // FramedConcernUsage's and RequirementConstraintUsage's shape: a rendering by
+    // reference (`render asTreeDiagram;`, training/42. Views/Views Example.sysml:13), or
+    // declared (`render rendering r1: R[0..1];`, examples/Simple Tests/ViewTest.sysml:32).
+    // The alternatives are told apart before either begins: the second opens on the
+    // keyword `rendering` or a `#`, the first on a name, and a keyword is not a name
+    // (8.2.2.1.2). `( X* 'rendering' | X+ )` is "a `#` or a `rendering`", then the rest.
+    fn view_rendering_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ViewRenderingUsage);
+        if self.at_keyword("rendering") || self.at(SyntaxKind::Hash) {
+            self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
+            self.eat_optional_keyword("rendering");
+            self.usage();
+        } else {
+            self.owned_reference_subsetting();
+            self.optional_feature_specialization_part();
+            self.usage_body();
+        }
+        self.finish_node();
+    }
+
+    /// Whether a `ViewUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'view'` with no `def` after it (`SysML` 8.2.2.26.2).
+    fn at_view_usage(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_usage_prefix(n);
+        self.nth_is_keyword(after, "view") && !self.nth_is_keyword(after + 1, "def")
+    }
+
+    // production: ViewUsage@sysml
+    //
+    // ViewUsage =
+    //     OccurrenceUsagePrefix 'view'
+    //     UsageDeclaration? ValuePart? ViewBody                  (SysML 8.2.2.26.2)
+    //
+    // A StructureUsageElement (8.2.2.6.4). The declaration is optional whole, so
+    // `view { ... }` declares nothing and `view :>> columnView[1] { ... }` (training/42.
+    // Views/Views Example.sysml:17) only a redefinition; it is read only when something
+    // that opens one is written, as `event_occurrence_usage` reads its own, and an empty one
+    // builds no node. The Pilot factors the keyword into ViewUsageKeyword, deviation
+    // ViewUsageKeyword (xtext_only, follow_spec), so the literal is matched here. The metaclass is ViewUsage (8.3.26.11, receipt 6bbae03d), a PartUsage.
+    //
+    // implied specialization: Views::views, and Views::View::subviews when owned by a view
+    // constraint: ViewUsage::checkViewUsageSpecialization and
+    //     checkViewUsageSubviewSpecialization (8.3.26.11). Injections, so sv2-hir's
+    //     (ADR-0002).
+    fn view_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ViewUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("view");
+        if self.at_name()
+            || self.at(SyntaxKind::Lt)
+            || self.at_feature_specialization()
+            || self.at_multiplicity_part()
+        {
+            self.usage_declaration();
+        }
+        if self.at_value_part() {
+            self.value_part();
+        }
+        self.view_body();
+        self.finish_node();
+    }
+
     // production: RequirementBody
     //
     // RequirementBody : Type = ';' | '{' RequirementBodyItem* '}'
@@ -10251,6 +10512,7 @@ impl<'a> Parser<'a> {
             || self.at_connection_usage(n)
             || self.at_interface_usage(n)
             || self.at_allocation_usage(n)
+            || self.at_view_usage(n)
             || self.at_event_occurrence_usage(n)
             || self.at_individual_or_portion_usage(n).is_some()
             || self

@@ -11812,3 +11812,182 @@ fn a_viewpoint_is_bounded_by_its_rules() {
     // DefinitionDeclaration takes no value.
     parse_rejected("viewpoint def VP = 1;");
 }
+
+// -- views, SysML 8.2.2.26.1 and 8.2.2.26.2 ---------------------------------------
+//
+//   ViewDefinition         = OccurrenceDefinitionPrefix 'view' 'def'
+//                            DefinitionDeclaration ViewDefinitionBody
+//   ViewDefinitionBody     = ';' | '{' ViewDefinitionBodyItem* '}'
+//   ViewDefinitionBodyItem = DefinitionBodyItem | ElementFilterMember
+//                          | ViewRenderingMember
+//   ViewRenderingMember    = MemberPrefix 'render' ViewRenderingUsage
+//   ViewRenderingUsage     = OwnedReferenceSubsetting FeatureSpecializationPart?
+//                            UsageBody
+//                          | ( UsageExtensionKeyword* 'rendering'
+//                            | UsageExtensionKeyword+ ) Usage
+//   ViewUsage              = OccurrenceUsagePrefix 'view'
+//                            UsageDeclaration? ValuePart? ViewBody
+//   ViewBody               = ';' | '{' ViewBodyItem* '}'
+//   ViewBodyItem           = DefinitionBodyItem | ElementFilterMember
+//                          | ViewRenderingMember | Expose
+//
+// Expose, the one item a view usage's body has and a definition's has not, is read by
+// the next commit; until then these cases leave it out.
+
+#[test]
+fn a_view_definition_reads_the_corpus_forms() {
+    // vendor/corpus/sysml/src/validation/11-View and Viewpoint/11b-Safety and Security
+    // Feature Views.sysml:35-39: a comment, a filter and a render.
+    let rendered = render(
+        &parse_accepted(
+            "view def SafetyFeatureView {\n\
+             /* Parts that contribute to safety. */\n\
+             filter @Safety;\n\
+             render asTreeDiagram;\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&rendered, "ViewDefinition"),
+        [
+            "OccurrenceDefinitionPrefix",
+            "KwView",
+            "KwDef",
+            "DefinitionDeclaration",
+            "ViewDefinitionBody"
+        ],
+        "{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "ElementFilterMember"),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "ViewRenderingMember"),
+        1,
+        "{rendered}"
+    );
+    // training/42. Views/Views Example.sysml:6-9: a satisfy, a DefinitionBodyItem.
+    parse_accepted(
+        "view def 'Part Structure View' { satisfy 'system structure perspective'; filter @SysML::PartUsage; }",
+    );
+    // Annex A SimpleVehicleModel.sysml:1561 and :1564.
+    parse_accepted("view def NestedView;");
+    parse_accepted("view def PartsTreeView:>TreeView { render asTreeDiagram; }");
+}
+
+#[test]
+fn a_view_usage_reads_the_corpus_forms() {
+    // ViewTest.sysml:46-48: a render reference with a multiplicity.
+    let rendered = render(&parse_accepted("view v : V { render r [0..*]; }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "ViewUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwView",
+            "UsageDeclaration",
+            "ViewBody"
+        ],
+        "{rendered}"
+    );
+    // Views Example.sysml:17-19: no name, a redefinition, in a rendering's body.
+    let rendered = render(
+        &parse_accepted(
+            "rendering asTextualNotationTable :> asElementTable { view :>> columnView[1] { render asTextualNotation; } }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&rendered, "ViewUsage"), 1, "{rendered}");
+    // UsageDeclaration? is optional whole: `view { ... }` declares nothing.
+    let rendered = render(&parse_accepted("view { render r; }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "ViewUsage"),
+        ["OccurrenceUsagePrefix", "KwView", "ViewBody"],
+        "{rendered}"
+    );
+    // 11b:60-63 less its expose, and nested views (Views Example.sysml:22-32).
+    parse_accepted("view vehicleMandatorySafetyFeatureViewStandalone { render asElementTable; }");
+    parse_accepted(
+        "view 'vehicle tabular views' { view 'safety features view' : 'Part Structure View' { render asTextualNotationTable; } }",
+    );
+    // ValuePart? before the body.
+    parse_accepted("view v : V = w;");
+    // A filter is a ViewBodyItem too.
+    parse_accepted("view v { filter @Safety and (as Safety).isMandatory; }");
+}
+
+#[test]
+fn a_view_rendering_member_is_one_of_two_alternatives() {
+    for (source, kinds) in [
+        // The reference alternative (ViewTest.sysml:36), and with a multiplicity (:47).
+        (
+            "view def V { render r; }",
+            &["OwnedReferenceSubsetting", "UsageBody"][..],
+        ),
+        (
+            "view def V { render r [0..*]; }",
+            &[
+                "OwnedReferenceSubsetting",
+                "FeatureSpecializationPart",
+                "UsageBody",
+            ][..],
+        ),
+        // The declaring alternative (ViewTest.sysml:32).
+        (
+            "view def V { render rendering r1: R[0..1]; }",
+            &["KwRendering", "Usage"][..],
+        ),
+        // `UsageExtensionKeyword+` standing in for the keyword.
+        (
+            "view def V { render #M r1; }",
+            &["UsageExtensionKeyword", "Usage"][..],
+        ),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            child_kinds(&rendered, "ViewRenderingMember"),
+            ["MemberPrefix", "KwRender", "ViewRenderingUsage"],
+            "{source}\n{rendered}"
+        );
+        assert_eq!(
+            child_kinds(&rendered, "ViewRenderingUsage"),
+            kinds,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn views_are_bounded_by_their_rules() {
+    // `render` is an item of the two view bodies alone (8.2.2.26.1, .2): DefinitionBodyItem
+    // has no ViewRenderingMember. Held as a file by
+    // tests/rejection/view-rendering-member-is-a-view-body-item.sysml.
+    parse_rejected("part def P { render r; }");
+    parse_rejected("part p { render r; }");
+    // A filter is not a DefinitionBodyItem either (8.2.2.6.1), only a view body's.
+    parse_rejected("part def P { filter @Safety; }");
+    // The body is not optional.
+    parse_rejected("view def V");
+    parse_rejected("part p { view v }");
+    // A view definition's declaration takes no value.
+    parse_rejected("view def V = w;");
+    // The reference alternative names what it renders.
+    parse_rejected("view def V { render; }");
+}
+
+#[test]
+fn a_view_is_structure_and_its_bodies_are_definition_bodies_and_more() {
+    // A StructureUsageElement (8.2.2.6.4): after `then` in a definition body, and as a
+    // variant.
+    parse_accepted("part p { part a; then view v; }");
+    parse_accepted("variation part def Q { variant view v; }");
+    // ViewBodyItem's first alternative is DefinitionBodyItem, whole: usages, aliases,
+    // variants and nested views (ViewTest.sysml:34-43, less its expose).
+    parse_accepted(
+        "view def V { viewpoint vp: VP { frame concern c1; concern c2; } render rendering r1: R[0..1]; view v: V[0..*] { render r; rendering r2; alias vp1 for p1; alias vp2 for p2; } }",
+    );
+    // Import writes a VisibilityIndicator, not optional in SysML (8.2.2.5.1).
+    parse_accepted("view v { variant part p; private import A::*; }");
+}

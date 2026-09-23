@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T17:16:44Z",
+    "regenerated_utc": "2026-09-23T17:34:38Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 380,
-      "unimplemented": 174,
+      "implemented": 386,
+      "unimplemented": 168,
       "absent": 0,
-      "percent": 68.6
+      "percent": 69.7
     },
     "tests": {
-      "unit": 592,
+      "unit": 597,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 236,
+      "negative_cases": 237,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "b2356c1 Read viewpoint definitions and usages, requirements by the keyword `viewpoint`",
       "10d5ae9 Read collect expressions, `x.{ ... }`, completing the postfix layer",
       "b733786 Read select expressions, `x.?{ ... }`, in the postfix loop",
       "22a1f5b Stop rejecting select and collect by absence: the next commits read them",
       "ff4e6cf Read index expressions, `x#(i)`, in the postfix loop",
       "e663c21 Stop rejecting `#(` by absence: the next commit reads it",
       "5649eb2 Read the `->` operation and expression bodies, and site deviation ExpressionBody",
-      "03c8416 Stop rejecting `->` and expression bodies by absence: the next commit reads them",
-      "315f588 Close the session: messages, satisfy, allocations and concerns recorded, the arrow invocation next"
+      "03c8416 Stop rejecting `->` and expression bodies by absence: the next commit reads them"
     ]
   },
   "authored": {
