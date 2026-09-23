@@ -5333,17 +5333,13 @@ fn a_requirement_body_admits_what_a_definition_body_admits() {
 }
 
 #[test]
-fn a_requirement_body_does_not_admit_the_two_members_it_has_not_got() {
-    // The part of RequirementBodyItem that is NOT DefinitionBodyItem, less the four now
-    // implemented: SubjectMember, RequirementConstraintMember, ActorMember and
-    // RequirementVerificationMember. Rejected by absence, not by rule — each is
-    // well-formed SysML.
-    //
-    // The count in this test's name is the honest running total of what is left of
-    // 8.2.2.21.1, and it has gone six, five, four, three, two as the members landed.
-    parse_rejected("requirement def R { frame concern c; }");
-    parse_rejected("requirement def R { stakeholder owner; }");
-    // The four that left the list, here so it cannot quietly grow back.
+fn a_requirement_body_admits_the_members_a_definition_body_has_not_got() {
+    // The part of RequirementBodyItem that is NOT DefinitionBodyItem (8.2.2.21.1). This
+    // test was a_requirement_body_does_not_admit_the_N_members_it_has_not_got, and N went
+    // six, five, four, three, two as the members landed; FramedConcernMember and
+    // StakeholderMember, the last two, are read by the next commit, and their absence
+    // rejections are retired here. What is left is the members that left the list, here
+    // so it cannot quietly grow back.
     parse_accepted("requirement def R { subject vehicle : Vehicle; }");
     parse_accepted("requirement def R { require constraint { a <= b } }");
     parse_accepted("requirement def R { actor operator; }");

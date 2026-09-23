@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T13:14:18Z",
+    "regenerated_utc": "2026-09-23T13:55:31Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "38c8529 Read allocation usages, by declaration and by their ends alone",
       "789e8bd Read satisfy requirement usages, and site deviation SatisfyRequirementUsage",
       "2d3c97c Stop rejecting `satisfy` by absence: the next commit reads it",
       "4d3e06e Read messages, by declaration and by their events alone",
       "89457d7 Close the session: event occurrences and the keywordless occurrences recorded, messages next",
       "468bea3 Read individual definitions, individual usages and portion usages",
       "c92f41f Read event occurrence usages, by reference and by declaration",
-      "fcb55c3 Regenerate state at session end: timestamp and commit list only",
-      "f422a16 Correct the objective: enumeration definitions and values now read their prefix metadata"
+      "fcb55c3 Regenerate state at session end: timestamp and commit list only"
     ]
   },
   "authored": {
