@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T20:18:15Z",
+    "regenerated_utc": "2026-09-23T20:29:54Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -26,7 +26,7 @@
       "unit": 619,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 249,
+      "negative_cases": 248,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "80415c1 Read while loops, `while c { ... } until d;` and `loop { ... }`",
       "4c71e51 Read terminate actions, `terminate;` and `action t terminate x;`",
       "a0ea0ef Stop rejecting `then terminate;` by absence: the next commit reads it",
       "daf5709 Read succession flow usages, `succession flow a.x to b.y;`",
       "a684449 Stop using `succession flow` as the unreadable example: the next commit reads it",
       "d729a6c Settle expression-body-semicolon: an expression body is braced",
       "8a1284c Close the session: the postfix expression layer and the view layer recorded, succession flows next",
-      "72ef125 Read `expose`, completing the view layer",
-      "f612d52 Stop using `expose` as the unreadable example: the next commit reads it"
+      "72ef125 Read `expose`, completing the view layer"
     ]
   },
   "authored": {

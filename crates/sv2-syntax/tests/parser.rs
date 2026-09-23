@@ -2095,11 +2095,12 @@ fn a_guard_reads_a_whole_expression() {
 #[test]
 fn an_if_that_is_not_a_guarded_succession_is_left_alone() {
     // IfNode = ActionNodePrefix 'if' ExpressionParameterMember ActionBodyParameterMember
-    // ( 'else' … )? (8.2.2.17.7) — an ActionNode, unimplemented, and it opens on `if`
-    // too. What separates the two is the `then` before the body, so an `if` with none is
-    // declined at recognition and reported. Held as a file by
-    // tests/rejection/if-node-is-not-implemented.sysml.
-    let if_node = render(&parse_rejected("action def A { action a; if i < 0 { } }").syntax());
+    // ( 'else' … )? (8.2.2.17.7) — an ActionNode, and it opens on `if` too. What
+    // separates the two is the `then` before the body, so an `if` with none is declined
+    // at recognition. Asked of the tree whether or not IfNode is read: this test is about
+    // the guard's recogniser, and IfNode lands in the next commit.
+    let if_node =
+        render(&parse("action def A { action a; if i < 0 { } }", Language::SysMl).syntax());
     assert_eq!(
         nodes_named(&if_node, "GuardedTargetSuccession"),
         0,
