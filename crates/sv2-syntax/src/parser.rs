@@ -776,7 +776,7 @@ enum Body {
     /// `RequirementBodyItem = DefinitionBodyItem | SubjectMember | …` (8.2.2.21.1), so
     /// every question `Body::Definition` answers this answers the same way. It is a
     /// variant of its own for the ONE thing it answers differently: the six extra
-    /// members, of which `SubjectMember` is implemented. A `subject` reached from a
+    /// members, all of them read. A `subject` reached from a
     /// definition body is not a `SubjectMember` — `DefinitionBodyItem` has no such
     /// alternative — and without this variant it would be read as one.
     Requirement,
@@ -997,6 +997,23 @@ impl Body {
     /// `ConstraintUsage`. It parses, and the constraint is `sv2-resolve`'s to raise.
     fn admits_actor(self) -> bool {
         matches!(self, Self::Requirement | Self::Case)
+    }
+
+    /// Whether `StakeholderMember` is one of this body's alternatives.
+    ///
+    /// `RequirementBodyItem` alone names it (`SysML` 8.2.2.21.1); `CaseBodyItem` (8.2.2.22)
+    /// has `ActorMember` and not this. `validateStakeholderMembershipOwningType` (8.3.21.12,
+    /// receipt 9d209633) says the same of the owner, a requirement definition or usage.
+    fn admits_stakeholder(self) -> bool {
+        matches!(self, Self::Requirement)
+    }
+
+    /// Whether `FramedConcernMember` is one of this body's alternatives.
+    ///
+    /// `RequirementBodyItem` alone names it (`SysML` 8.2.2.21.1), as it alone names
+    /// `StakeholderMember`.
+    fn admits_framed_concern(self) -> bool {
+        matches!(self, Self::Requirement)
     }
 
     /// Whether `ObjectiveMember` is one of this body's alternatives.
@@ -1324,6 +1341,15 @@ struct Parser<'a> {
     /// still attaches it as trivia, because the `AnnotatingMember` that would own it
     /// as an element in a package or definition body is not implemented.
     comments_significant: bool,
+    /// The `depth` of the `RequirementBody` a `FramedConcernUsage`'s reference alternative
+    /// is reading, while it reads it, and `None` otherwise.
+    ///
+    /// Deviation `FramedConcernUsage` gives that alternative a `RequirementBody` where the
+    /// printed clause gives a `CalculationBody` (`SysML` 8.2.2.21.1). The two share every
+    /// item but `RequirementBodyItem`'s six own members, so a note falls on each of those
+    /// six read at exactly this depth: `note_framed_concern_body_item` says so, and a
+    /// body nested in one reads at a greater depth and draws none.
+    framed_concern_body: Option<u32>,
 }
 
 impl<'a> Parser<'a> {
@@ -1339,6 +1365,7 @@ impl<'a> Parser<'a> {
             depth: 0,
             depth_reported: false,
             comments_significant: false,
+            framed_concern_body: None,
         }
     }
 
@@ -1594,6 +1621,7 @@ impl<'a> Parser<'a> {
             || self.at_enumeration_definition(n)
             || self.at_simple_definition(n).is_some()
             || self.at_interface_definition(n)
+            || self.at_concern_definition(n)
             || self.at_individual_definition(n)
             || self.at_extended_definition(n)
     }
@@ -1921,6 +1949,7 @@ impl<'a> Parser<'a> {
             || self.at_satisfy_requirement_usage(n)
             || self.at_constraint_usage(n)
             || self.at_requirement_usage(n)
+            || self.at_concern_usage(n)
             || self.at_calculation_usage(n)
             || self.at_case_usage(n).is_some()
             || self.at_include_use_case_usage(n)
@@ -2508,21 +2537,35 @@ impl<'a> Parser<'a> {
             // RequirementBodyItem's third alternative (SysML 8.2.2.21.1). Owns its
             // element through RequirementConstraintMembership, so like SubjectMember
             // below it cannot go through `membership`.
+            self.note_framed_concern_body_item(body);
             self.requirement_constraint_member();
         } else if body.admits_requirement_verification() && self.at_element_keyword("verify") {
             // RequirementBodyItem's fifth alternative (SysML 8.2.2.21.1), owning its
             // requirement through a RequirementVerificationMembership of its own.
+            self.note_framed_concern_body_item(body);
             self.requirement_verification_member();
         } else if body.admits_subject() && self.at_element_keyword("subject") {
             // RequirementBodyItem's second alternative (SysML 8.2.2.21.1). Like
             // NamespaceFeatureMember above, it owns its element through a membership
             // of its own — SubjectMembership — so it cannot go through `membership`,
             // which builds the body's ordinary member node.
+            self.note_framed_concern_body_item(body);
             self.subject_member();
         } else if body.admits_actor() && self.at_element_keyword("actor") {
             // RequirementBodyItem's sixth alternative (SysML 8.2.2.21.1) and CaseBodyItem's
             // third (8.2.2.22): an ActorMembership of its own, as SubjectMember is.
+            self.note_framed_concern_body_item(body);
             self.actor_member();
+        } else if body.admits_stakeholder() && self.at_element_keyword("stakeholder") {
+            // RequirementBodyItem's seventh alternative (SysML 8.2.2.21.1): a
+            // StakeholderMembership of its own, as ActorMember is.
+            self.note_framed_concern_body_item(body);
+            self.stakeholder_member();
+        } else if body.admits_framed_concern() && self.at_element_keyword("frame") {
+            // RequirementBodyItem's fourth alternative (SysML 8.2.2.21.1): a
+            // FramedConcernMembership of its own, as RequirementConstraintMember is.
+            self.note_framed_concern_body_item(body);
+            self.framed_concern_member();
         } else if body.admits_objective() && self.at_element_keyword("objective") {
             // CaseBodyItem's fourth alternative (SysML 8.2.2.22), owning its requirement
             // through an ObjectiveMembership of its own, as SubjectMember does.
@@ -3347,12 +3390,8 @@ impl<'a> Parser<'a> {
             self.port_definition();
         } else if self.at_enumeration_definition(0) {
             self.enumeration_definition();
-        } else if self.at_requirement_definition(0) {
-            self.requirement_definition();
-        } else if self.at_constraint_definition(0) {
-            self.constraint_definition();
-        } else if self.at_calculation_definition(0) {
-            self.calculation_definition();
+        } else if self.requirement_family_definition() {
+            // Read by the call, which answers whether it read one.
         } else if let Some(case) = self.at_case_definition(0) {
             self.case_definition(case);
         } else if self.at_metadata_definition(0) {
@@ -3369,6 +3408,25 @@ impl<'a> Parser<'a> {
             self.individual_definition();
         } else if self.at_extended_definition(0) {
             self.extended_definition();
+        } else {
+            return false;
+        }
+        true
+    }
+
+    /// A `RequirementDefinition`, `ConcernDefinition`, `ConstraintDefinition` or
+    /// `CalculationDefinition` read as a `DefinitionElement`, returning whether one was.
+    /// Split out of `definition_element` so that function stays within clippy's complexity
+    /// budget; each opens on its own keyword pair, so the order decides nothing.
+    fn requirement_family_definition(&mut self) -> bool {
+        if self.at_requirement_definition(0) {
+            self.requirement_definition();
+        } else if self.at_concern_definition(0) {
+            self.concern_definition();
+        } else if self.at_constraint_definition(0) {
+            self.constraint_definition();
+        } else if self.at_calculation_definition(0) {
+            self.calculation_definition();
         } else {
             return false;
         }
@@ -4032,6 +4090,10 @@ impl<'a> Parser<'a> {
         } else if self.at_requirement_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ConstraintUsage is.
             self.requirement_usage();
+            true
+        } else if self.at_concern_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as RequirementUsage is.
+            self.concern_usage();
             true
         } else if self.at_constraint_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as AssertConstraintUsage is.
@@ -6679,6 +6741,43 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    /// Whether a `ConcernDefinition` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceDefinitionPrefix 'concern' 'def'` (`SysML` 8.2.2.21.3), as
+    /// `at_requirement_definition` asks of `requirement`.
+    fn at_concern_definition(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_definition_prefix(n);
+        self.nth_is_keyword(after, "concern") && self.nth_is_keyword(after + 1, "def")
+    }
+
+    // production: ConcernDefinition@sysml
+    //
+    // ConcernDefinition =
+    //     OccurrenceDefinitionPrefix 'concern' 'def'
+    //     DefinitionDeclaration RequirementBody                  (SysML 8.2.2.21.3)
+    //
+    // "A concern definition or usage is declared as a requirement definition or usage (see
+    // 7.21.2 ) using the kind keyword concern instead of requirement. Otherwise, a concern
+    // definition or usage is specified exactly like a regular requirement definition or
+    // usage" (7.21.3, receipt 0e50a373). RequirementDefinition's spine with the other
+    // keyword; the Pilot factors it into ConcernDefKeyword, deviation ConcernDefKeyword
+    // (xtext_only, follow_spec). The metaclass is ConcernDefinition (8.3.21.3, receipt
+    // 35e9eaca), a RequirementDefinition.
+    //
+    // implied specialization: Requirements::ConcernCheck
+    // constraint: ConcernDefinition::checkConcernDefinitionSpecialization (8.3.21.3). An
+    //     injection, so sv2-hir's (ADR-0002).
+    fn concern_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ConcernDefinition);
+        self.occurrence_definition_prefix();
+        self.expect_keyword("concern");
+        self.expect_keyword("def");
+        self.definition_declaration();
+        self.requirement_body();
+        self.finish_node();
+    }
+
     // production: RequirementBody
     //
     // RequirementBody : Type = ';' | '{' RequirementBodyItem* '}'
@@ -6691,11 +6790,12 @@ impl<'a> Parser<'a> {
     //     | StakeholderMember
     //
     // — a SUPERSET of DefinitionBodyItem, and that is the whole reason this body is
-    // reachable at the cost of one method. Of the six extra members, SubjectMember,
-    // RequirementConstraintMember, RequirementVerificationMember and ActorMember are read;
-    // `frame` and `stakeholder` at member position are reported by the body's recovery like any
-    // other text the parser does not yet read. (This comment once named two rejection
-    // files for `subject` and `require`; both were retired when those members landed.)
+    // reachable at the cost of one method. All six extra members are read, each through a
+    // membership of its own, in `body_specific_item`. It stays unmarked because its first
+    // alternative is DefinitionBodyItem, itself unmarked while usages it reaches (the view
+    // layer among them) are unread. (This comment once named rejection files for `subject`
+    // and `require`, then listed `frame` and `stakeholder` as unread; each was retired as
+    // its member landed.)
     //
     // `Body::Requirement`, which when this production landed was `Body::Definition` on
     // the argument that the two would differ in nothing. They differ in one thing, and
@@ -9738,6 +9838,7 @@ impl<'a> Parser<'a> {
             || self.at_satisfy_requirement_usage(n)
             || self.at_constraint_usage(n)
             || self.at_requirement_usage(n)
+            || self.at_concern_usage(n)
             || self.at_calculation_usage(n)
             || self.at_case_usage(n).is_some()
             || self.at_include_use_case_usage(n)
@@ -10376,6 +10477,41 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    /// Whether a `ConcernUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'concern'` with no `def` after it (`SysML` 8.2.2.21.3), as
+    /// `at_requirement_usage` asks of `requirement`.
+    fn at_concern_usage(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_usage_prefix(n);
+        self.nth_is_keyword(after, "concern") && !self.nth_is_keyword(after + 1, "def")
+    }
+
+    // production: ConcernUsage@sysml
+    //
+    // ConcernUsage =
+    //     OccurrenceUsagePrefix 'concern'
+    //     ConstraintUsageDeclaration RequirementBody             (SysML 8.2.2.21.3)
+    //
+    // RequirementUsage's shape with the kind keyword `concern` (7.21.3, receipt 0e50a373);
+    // deviation ConcernUsageKeyword (xtext_only, follow_spec) matches the literal. The
+    // metaclass is ConcernUsage (8.3.21.4, receipt 7b9ce89b), a RequirementUsage. A
+    // BehaviorUsageElement (8.2.2.6.4), as RequirementUsage is.
+    //
+    // implied specialization: Requirements::concernChecks, and
+    //     Requirements::RequirementCheck::concerns when framed
+    // constraint: ConcernUsage::checkConcernUsageSpecialization and
+    //     checkConcernUsageFramedConcernSpecialization (8.3.21.4). Injections, so sv2-hir's
+    //     (ADR-0002).
+    fn concern_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ConcernUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("concern");
+        self.constraint_usage_declaration();
+        self.requirement_body();
+        self.finish_node();
+    }
+
     /// Whether a `ConstraintUsage` starts at the `n`th meaningful token.
     ///
     /// `OccurrenceUsagePrefix 'constraint'` with no `def` after it (`SysML` 8.2.2.20): the
@@ -10659,6 +10795,142 @@ impl<'a> Parser<'a> {
         self.member_prefix();
         self.actor_usage();
         self.finish_node();
+    }
+
+    // production: StakeholderMember@sysml
+    //
+    // StakeholderMember : StakeholderMembership =
+    //     MemberPrefix ownedRelatedElement += StakeholderUsage   (SysML 8.2.2.21.1)
+    //
+    // production: StakeholderUsage@sysml
+    //
+    // StakeholderUsage : PartUsage =
+    //     'stakeholder' UsageExtensionKeyword* Usage             (SysML 8.2.2.21.1)
+    //
+    // ActorMember's shape over `stakeholder`: "A requirement definition or usage may also
+    // have one or more actor or stakeholder parameters ... declared using the keywords
+    // actor and stakeholder rather than explicitly declaring their direction" (7.21.2,
+    // receipt 021b9219). The metaclass is StakeholderMembership (8.3.21.12, receipt
+    // 9d209633) over a PartUsage.
+    //
+    // implied specialization: Requirements::RequirementCheck::stakeholders
+    // constraint: PartUsage::checkPartUsageStakeholderSpecialization (8.3.11.3), as
+    //     `actor_usage` cites checkPartUsageActorSpecialization. An injection that depends
+    //     on the owning membership, so sv2-hir's (ADR-0002).
+    // constraint: StakeholderMembership::validateStakeholderMembershipOwningType
+    //     (8.3.21.12): the owner is a requirement definition or usage. `admits_stakeholder`
+    //     gives the grammar's part of that; RequirementConstraintUsage's reference
+    //     alternative takes a RequirementBody too, so `require c { stakeholder s; }`
+    //     parses, and the constraint is sv2-resolve's to raise, as for an actor.
+    fn stakeholder_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::StakeholderMember);
+        self.member_prefix();
+        self.eat_trivia();
+        self.start_node(SyntaxKind::StakeholderUsage);
+        self.expect_keyword("stakeholder");
+        self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
+        self.usage();
+        self.finish_node();
+        self.finish_node();
+    }
+
+    // production: FramedConcernMember@sysml
+    //
+    // FramedConcernMember : FramedConcernMembership =
+    //     MemberPrefix? 'frame'
+    //     ownedRelatedElement += FramedConcernUsage              (SysML 8.2.2.21.1)
+    //
+    // "A framed concern usage is a subrequirement usage (see 7.21.2 ) indicated by
+    // prefixing a concern usage declaration with the keyword frame. As for an assumed or
+    // required constraint, the keyword frame can be used rather than frame concern to
+    // declare a framed concern using reference subsetting" (7.21.3, receipt 0e50a373).
+    // RequirementConstraintMember's shape with the one kind `frame`; the Pilot's
+    // FramedConcernKind is deviation FramedConcernKind (xtext_only, follow_spec). The
+    // metaclass is FramedConcernMembership (8.3.21.5, receipt 6d58b568).
+    //
+    // constraint: FramedConcernMembership::validateFramedConcernMembershipConstraintKind
+    //     (8.3.21.5): `kind = requirement`, which `frame` sets and no text can change.
+    fn framed_concern_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FramedConcernMember);
+        self.member_prefix();
+        self.expect_keyword("frame");
+        self.framed_concern_usage();
+        self.finish_node();
+    }
+
+    // production: FramedConcernUsage@sysml
+    //
+    // FramedConcernUsage : ConcernUsage =
+    //       ownedRelationship += OwnedReferenceSubsetting
+    //       FeatureSpecializationPart? RequirementBody
+    //     | ( UsageExtensionKeyword* 'concern'
+    //       | UsageExtensionKeyword+ )
+    //       ConstraintUsageDeclaration RequirementBody          (SysML 8.2.2.21.1, as
+    //                                        deviation FramedConcernUsage reads it)
+    //
+    // The printed clause gives both alternatives a CalculationBody and the second the
+    // undefined CalculationUsageDeclaration (SYSML21-366); deviation FramedConcernUsage
+    // (follow_xtext) reads both as RequirementUsage reads its own. What that admits beyond
+    // the print, and so where its note falls:
+    //
+    // - the second alternative, whole: the printed one names a production nothing
+    //   defines, so no text reaches it. Noted once, at its first token.
+    // - in the first, the body's items that a CalculationBody could not hold.
+    //   CalculationBodyItem has every DefinitionBodyItem, through ActionBodyItem
+    //   (8.2.2.17.1, 8.2.2.19), and none of RequirementBodyItem's six own members, so
+    //   those six are the difference: `framed_concern_body` marks the body's depth and
+    //   `note_framed_concern_body_item` notes each of them read there.
+    //
+    // It also narrows: every CalculationBodyItem that is not a DefinitionBodyItem is no
+    // RequirementBodyItem either -- the result expression (`frame c { x }`), a
+    // ReturnParameterMember, and ActionBodyItem's control-flow items: InitialNodeMember,
+    // an ActionNodeMember, and the target and guarded successions (8.2.2.17.1, 8.2.2.19)
+    // -- so the deviation rejects what the print admits. Rejected text carries no note,
+    // and tests say so.
+    //
+    // Told apart as RequirementConstraintUsage's alternatives are: `concern` is reserved and
+    // `#` opens no name. The reference alternative's FeatureSpecializationPart may open on
+    // a multiplicity (`frame c3[0..*];`, examples/Simple Tests/RequirementTest.sysml:36), so
+    // `[` is asked for.
+    fn framed_concern_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FramedConcernUsage);
+        let saved = self.framed_concern_body.take();
+        if self.at_keyword("concern") || self.at(SyntaxKind::Hash) {
+            // deviation: FramedConcernUsage
+            self.note_deviation(
+                "FramedConcernUsage",
+                "a framed concern declared with `concern` or a user-defined keyword",
+            );
+            self.extension_keywords(SyntaxKind::UsageExtensionKeyword);
+            self.eat_optional_keyword("concern");
+            self.constraint_usage_declaration();
+        } else {
+            self.owned_reference_subsetting();
+            if self.at_feature_specialization() || self.at_multiplicity_part() {
+                self.feature_specialization_part();
+            }
+            self.framed_concern_body = Some(self.depth + 1);
+        }
+        self.requirement_body();
+        self.framed_concern_body = saved;
+        self.finish_node();
+    }
+
+    /// A `PARSE-DEVIATION` note for one of `RequirementBodyItem`'s six own members, read
+    /// directly in a framed concern's reference-alternative body: text that the printed
+    /// `CalculationBody` could not hold and deviation `FramedConcernUsage` admits. See
+    /// `framed_concern_usage`. Nothing anywhere else.
+    fn note_framed_concern_body_item(&mut self, body: Body) {
+        if body == Body::Requirement && self.framed_concern_body == Some(self.depth) {
+            // deviation: FramedConcernUsage
+            self.note_deviation(
+                "FramedConcernUsage",
+                "a requirement member in a framed concern's body",
+            );
+        }
     }
 
     // production: ActorUsage@sysml

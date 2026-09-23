@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T13:55:31Z",
+    "regenerated_utc": "2026-09-23T14:12:13Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 357,
-      "unimplemented": 197,
+      "implemented": 363,
+      "unimplemented": 191,
       "absent": 0,
-      "percent": 64.4
+      "percent": 65.5
     },
     "tests": {
-      "unit": 556,
+      "unit": 562,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 232,
+      "negative_cases": 235,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "fa3f315 Stop rejecting `frame` and `stakeholder` by absence: the next commit reads them",
       "38c8529 Read allocation usages, by declaration and by their ends alone",
       "789e8bd Read satisfy requirement usages, and site deviation SatisfyRequirementUsage",
       "2d3c97c Stop rejecting `satisfy` by absence: the next commit reads it",
       "4d3e06e Read messages, by declaration and by their events alone",
       "89457d7 Close the session: event occurrences and the keywordless occurrences recorded, messages next",
       "468bea3 Read individual definitions, individual usages and portion usages",
-      "c92f41f Read event occurrence usages, by reference and by declaration",
-      "fcb55c3 Regenerate state at session end: timestamp and commit list only"
+      "c92f41f Read event occurrence usages, by reference and by declaration"
     ]
   },
   "authored": {

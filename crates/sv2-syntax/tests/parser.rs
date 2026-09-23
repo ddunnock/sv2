@@ -10912,3 +10912,259 @@ fn an_allocation_usage_is_bounded_by_its_rules() {
             .is_empty()
     );
 }
+
+// -- Concerns, SysML 8.2.2.21.3, and their two RequirementBodyItems, 8.2.2.21.1 ------------
+//
+//   ConcernDefinition   = OccurrenceDefinitionPrefix 'concern' 'def'
+//                         DefinitionDeclaration RequirementBody
+//   ConcernUsage        = OccurrenceUsagePrefix 'concern'
+//                         ConstraintUsageDeclaration RequirementBody
+//   FramedConcernMember = MemberPrefix? 'frame' FramedConcernUsage
+//   FramedConcernUsage  = OwnedReferenceSubsetting FeatureSpecializationPart? RequirementBody
+//                       | ( UsageExtensionKeyword* 'concern' | UsageExtensionKeyword+ )
+//                         ConstraintUsageDeclaration RequirementBody
+//   StakeholderMember   = MemberPrefix StakeholderUsage
+//   StakeholderUsage    = 'stakeholder' UsageExtensionKeyword* Usage
+//
+// FramedConcernUsage as deviation FramedConcernUsage (follow_xtext) reads it: the printed
+// clause gives both alternatives a CalculationBody and the second the undefined
+// CalculationUsageDeclaration (SYSML21-366).
+
+#[test]
+fn the_concern_examples_of_7_21_3_parse() {
+    // Both of 7.21.3's examples (receipt 0e50a373), whole. The one departure is the
+    // `frame concern`, whose alternative the printed clause cannot reach.
+    let source = "package P {\n\
+         concern def BrakingConcern {\n\
+         subject vehicle : Vehicle;\n\
+         stakeholder driver : Person;\n\
+         attribute maxBrakingDistance : DistanceValue;\n\
+         assume constraint {\n\
+         doc /* The driver is an occupant of the vehicle. */\n\
+         }\n\
+         require constraint {\n\
+         doc /* The vehicle shall brake from its initial speed to zero\n\
+         * speed in a distance less than the maxBrakingDistance.\n\
+         */\n\
+         }\n\
+         }\n\
+         requirement def BrakingRequirement {\n\
+         subject vehicle : Vehicle;\n\
+         actor environment : 'Driving Environment';\n\
+         attribute speedLimit : SpeedValue;\n\
+         attribute maxBrakingDistance : DistanceValue;\n\
+         assume constraint {\n\
+         doc /* The environment conditions are poor. */\n\
+         }\n\
+         frame concern brakingConcern : BrakingConcern {\n\
+         // Subject is automatically bound to \"vehicle\".\n\
+         :>> maxBrakingDistance = BrakingRequirement::maxBrakingDistance;\n\
+         }\n\
+         }\n\
+         }";
+    assert_eq!(deviations_named(source), ["FramedConcernUsage"], "{source}");
+    let rendered = render(&parse_accepted(source).syntax());
+    for (node, count) in [
+        ("ConcernDefinition", 1),
+        ("StakeholderMember", 1),
+        ("FramedConcernMember", 1),
+        ("FramedConcernUsage", 1),
+    ] {
+        assert_eq!(nodes_named(&rendered, node), count, "{node}\n{rendered}");
+    }
+}
+
+#[test]
+fn a_concern_is_declared_as_a_requirement_is() {
+    // "declared as a requirement definition or usage ... using the kind keyword concern
+    // instead of requirement" (7.21.3, receipt 0e50a373).
+    let rendered = render(&parse_accepted("concern def C :> D { subject s; }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "ConcernDefinition"),
+        [
+            "OccurrenceDefinitionPrefix",
+            "KwConcern",
+            "KwDef",
+            "DefinitionDeclaration",
+            "RequirementBody"
+        ],
+        "{rendered}"
+    );
+    // examples/Simple Tests/ViewTest.sysml:14, in a part rather than a viewpoint.
+    let rendered = render(&parse_accepted("part p { concern c : C { subject s; } }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "ConcernUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwConcern",
+            "ConstraintUsageDeclaration",
+            "RequirementBody"
+        ],
+        "{rendered}"
+    );
+    // A BehaviorUsageElement (8.2.2.6.4), as RequirementUsage is.
+    for source in [
+        "part p { concern a; then concern b; }",
+        "calc def C { concern c; x }",
+        "variation part def V { variant concern c; }",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert!(
+            nodes_named(&rendered, "ConcernUsage") >= 1,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn a_framed_concern_is_one_of_two_alternatives() {
+    for (source, kinds) in [
+        // The reference alternative (examples/Simple Tests/ViewTest.sysml:20, and
+        // RequirementTest.sysml:36 with its multiplicity).
+        (
+            "frame c;",
+            &["OwnedReferenceSubsetting", "RequirementBody"][..],
+        ),
+        (
+            "frame c3[0..*];",
+            &[
+                "OwnedReferenceSubsetting",
+                "FeatureSpecializationPart",
+                "RequirementBody",
+            ],
+        ),
+        // The declaring alternative (omg/SimpleVehicleModel.sysml:1546), and a `#` in
+        // place of `concern`.
+        (
+            "frame concern vs:VehicleSafety;",
+            &["KwConcern", "ConstraintUsageDeclaration", "RequirementBody"],
+        ),
+        (
+            "frame #M c : C;",
+            &[
+                "UsageExtensionKeyword",
+                "ConstraintUsageDeclaration",
+                "RequirementBody",
+            ],
+        ),
+        (
+            "frame concern;",
+            &["KwConcern", "ConstraintUsageDeclaration", "RequirementBody"],
+        ),
+    ] {
+        let source = format!("requirement def R {{ {source} }}");
+        let rendered = render(&parse_accepted(&source).syntax());
+        assert_eq!(
+            child_kinds(&rendered, "FramedConcernMember"),
+            ["MemberPrefix", "KwFrame", "FramedConcernUsage"],
+            "{source}\n{rendered}"
+        );
+        assert_eq!(
+            child_kinds(&rendered, "FramedConcernUsage"),
+            kinds,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn deviation_framed_concern_usage_is_noted_on_what_the_printed_clause_cannot_read() {
+    // The printed FramedConcernUsage (8.2.2.21.1) is `OwnedReferenceSubsetting
+    // FeatureSpecializationPart? CalculationBody | ( ... 'concern' | ... )
+    // CalculationUsageDeclaration CalculationBody`. Its second alternative names an
+    // undefined production, so every use of it is the deviation's. Its first differs only
+    // in the body: CalculationBodyItem has every DefinitionBodyItem, through
+    // ActionBodyItem (8.2.2.17.1, 8.2.2.19), and none of RequirementBodyItem's six own
+    // members, so a note falls on each of those six read directly in that body, and on
+    // nothing else.
+    for (item, expected) in [
+        ("frame c;", 0),
+        ("frame c { }", 0),
+        ("frame c { attribute a; part p; }", 0),
+        ("frame c { subject s; }", 1),
+        ("frame c { require d; }", 1),
+        ("frame c { assume d; }", 1),
+        ("frame c { verify r; }", 1),
+        ("frame c { actor a; }", 1),
+        ("frame c { stakeholder s; }", 1),
+        // The inner `frame d;` is a reference with a `;` body, noted as an item of the
+        // outer body and not again for its own.
+        ("frame c { stakeholder s; frame d; }", 2),
+        // Only the framed body's own items: a member of a body nested in one is not.
+        ("frame c { verify r { subject s; } }", 1),
+        ("frame c { part p { } requirement q { subject s; } }", 0),
+        // Nor a member of a later body at the framed body's depth, once it has closed.
+        ("frame c; require d { subject s; }", 0),
+        // The declaring alternative is noted once, whatever its body holds.
+        ("frame concern c;", 1),
+        ("frame concern c { subject s; }", 1),
+        ("frame #M c;", 1),
+    ] {
+        let source = format!("requirement def R {{ {item} }}");
+        let named = deviations_named(&source);
+        assert_eq!(named.len(), expected, "{source}: {named:?}");
+        assert!(
+            named.iter().all(|entry| entry == "FramedConcernUsage"),
+            "{source}: {named:?}"
+        );
+    }
+}
+
+#[test]
+fn a_stakeholder_is_a_part_usage_in_a_requirement_body() {
+    // "Actor and stakeholder parameters are part usages" (7.21.2); the metaclass of
+    // StakeholderUsage is PartUsage (8.2.2.21.1). omg/SimpleVehicleModel.sysml:1551 and
+    // validation/11-View and Viewpoint/11a-View-Viewpoint.sysml:39.
+    for source in [
+        "requirement def R { stakeholder se:SafetyEngineer; }",
+        "requirement r { stakeholder :>> 'systems engineer'; }",
+        "concern def C { stakeholder #M s1; }",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            child_kinds(&rendered, "StakeholderMember"),
+            ["MemberPrefix", "StakeholderUsage"],
+            "{source}\n{rendered}"
+        );
+        let kinds = child_kinds(&rendered, "StakeholderUsage");
+        assert_eq!(
+            (
+                kinds.first().map(String::as_str),
+                kinds.last().map(String::as_str)
+            ),
+            (Some("KwStakeholder"), Some("Usage")),
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn concerns_and_their_members_are_bounded_by_their_rules() {
+    // Both are RequirementBodyItems alone (8.2.2.21.1): not DefinitionBodyItems, and not
+    // CaseBodyItems (8.2.2.22). Held by tests/rejection/framed-concern-member-is-a-
+    // requirement-body-item.sysml and stakeholder-member-is-a-requirement-body-item.sysml.
+    parse_rejected("part def P { frame c; }");
+    parse_rejected("case def K { frame c; }");
+    parse_rejected("part def P { stakeholder s; }");
+    parse_rejected("case def K { stakeholder s; }");
+    parse_rejected("action def A { stakeholder s; }");
+    // The reference alternative declares no name. Held by
+    // tests/rejection/framed-concern-reference-declares-no-name.sysml.
+    parse_rejected("requirement def R { frame c d; }");
+    // `frame` needs one alternative or the other.
+    parse_rejected("requirement def R { frame; }");
+    // A RequirementBody has no result expression: under the deviation, neither does a
+    // framed concern's body, though the printed clause's CalculationBody would. The same
+    // holds for every other CalculationBodyItem that is not a DefinitionBodyItem: a
+    // return parameter and ActionBodyItem's control-flow items (8.2.2.17.1, 8.2.2.19).
+    parse_rejected("requirement def R { frame c { x } }");
+    parse_rejected("requirement def R { frame c { return r; } }");
+    parse_rejected("requirement def R { frame c { first a; } }");
+    parse_rejected("requirement def R { frame c { merge m; } }");
+    parse_rejected("requirement def R { frame c { if g then a; } }");
+    parse_rejected("part p { concern c { x } }");
+    // A `def` makes it a definition, which takes a DefinitionDeclaration.
+    parse_rejected("concern def C = x;");
+    // SysML only.
+    assert!(!parse("concern def C;", Language::KerMl).errors().is_empty());
+}

@@ -665,6 +665,18 @@ pub enum SyntaxKind {
     ActorMember,
     /// `'actor' UsageExtensionKeyword* Usage`. `SysML` 8.2.2.21.1 — the metaclass is `PartUsage`.
     ActorUsage,
+    /// `MemberPrefix ownedRelatedElement += StakeholderUsage`. `SysML` 8.2.2.21.1.
+    StakeholderMember,
+    /// `'stakeholder' UsageExtensionKeyword* Usage`. `SysML` 8.2.2.21.1 — the metaclass is `PartUsage`.
+    StakeholderUsage,
+    /// `MemberPrefix? 'frame' ownedRelatedElement += FramedConcernUsage`. `SysML` 8.2.2.21.1 — a `FramedConcernMembership`.
+    FramedConcernMember,
+    /// `OwnedReferenceSubsetting FeatureSpecializationPart? RequirementBody | ( UsageExtensionKeyword* 'concern' | UsageExtensionKeyword+ ) ConstraintUsageDeclaration RequirementBody`, as deviation `FramedConcernUsage` reads it. `SysML` 8.2.2.21.1 — the metaclass is `ConcernUsage`.
+    FramedConcernUsage,
+    /// `OccurrenceDefinitionPrefix 'concern' 'def' DefinitionDeclaration RequirementBody`. `SysML` 8.2.2.21.3.
+    ConcernDefinition,
+    /// `OccurrenceUsagePrefix 'concern' ConstraintUsageDeclaration RequirementBody`. `SysML` 8.2.2.21.3.
+    ConcernUsage,
     /// `MemberPrefix? RequirementKind ownedRelatedElement += RequirementConstraintUsage`. `SysML` 8.2.2.21.1.
     RequirementConstraintMember,
     /// `'assume' | 'require'`. `SysML` 8.2.2.21.1.
@@ -1525,6 +1537,12 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::SubjectUsage,
     SyntaxKind::ActorMember,
     SyntaxKind::ActorUsage,
+    SyntaxKind::StakeholderMember,
+    SyntaxKind::StakeholderUsage,
+    SyntaxKind::FramedConcernMember,
+    SyntaxKind::FramedConcernUsage,
+    SyntaxKind::ConcernDefinition,
+    SyntaxKind::ConcernUsage,
     SyntaxKind::RequirementConstraintMember,
     SyntaxKind::RequirementKind,
     SyntaxKind::RequirementVerificationMember,

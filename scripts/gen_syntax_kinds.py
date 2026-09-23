@@ -504,6 +504,50 @@ NODES = [
             "`PartUsage`."
         ),
     ),
+    # The last two of RequirementBodyItem's six extra members, and the concern they frame:
+    # a concern is a requirement by the kind keyword `concern` (7.21.3), and `stakeholder`
+    # is `actor`'s sibling, reached from a requirement body alone.
+    (
+        "StakeholderMember",
+        "`MemberPrefix ownedRelatedElement += StakeholderUsage`. `SysML` 8.2.2.21.1.",
+    ),
+    (
+        "StakeholderUsage",
+        (
+            "`'stakeholder' UsageExtensionKeyword* Usage`. `SysML` 8.2.2.21.1 — the "
+            "metaclass is `PartUsage`."
+        ),
+    ),
+    (
+        "FramedConcernMember",
+        (
+            "`MemberPrefix? 'frame' ownedRelatedElement += FramedConcernUsage`. "
+            "`SysML` 8.2.2.21.1 — a `FramedConcernMembership`."
+        ),
+    ),
+    (
+        "FramedConcernUsage",
+        (
+            "`OwnedReferenceSubsetting FeatureSpecializationPart? RequirementBody | "
+            "( UsageExtensionKeyword* 'concern' | UsageExtensionKeyword+ ) "
+            "ConstraintUsageDeclaration RequirementBody`, as deviation `FramedConcernUsage` "
+            "reads it. `SysML` 8.2.2.21.1 — the metaclass is `ConcernUsage`."
+        ),
+    ),
+    (
+        "ConcernDefinition",
+        (
+            "`OccurrenceDefinitionPrefix 'concern' 'def' DefinitionDeclaration "
+            "RequirementBody`. `SysML` 8.2.2.21.3."
+        ),
+    ),
+    (
+        "ConcernUsage",
+        (
+            "`OccurrenceUsagePrefix 'concern' ConstraintUsageDeclaration "
+            "RequirementBody`. `SysML` 8.2.2.21.3."
+        ),
+    ),
     # The second of RequirementBodyItem's six extra members, and the one that needed the
     # calculation body. Its two alternatives take DIFFERENT bodies — a RequirementBody by
     # reference and a CalculationBody by construction — which is the whole of the

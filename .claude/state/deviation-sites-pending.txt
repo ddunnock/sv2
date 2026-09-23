@@ -9,6 +9,5 @@ Expression  # KerML's Expression is unimplemented
 ExpressionBody  # BodyExpression, the only route to it, is unimplemented
 FlowDeclaration  # a KerML clause's missing '?'; FlowDeclaration@kerml is unimplemented, and SysML's UsageDeclaration is nullable, so SysML needs no site
 ForVariableDeclarationMember  # ForLoopNode is unimplemented
-FramedConcernUsage  # concern usages are unimplemented
 Invariant  # KerML's Invariant is unimplemented
 Step  # KerML's Step is unimplemented
