@@ -5127,7 +5127,7 @@ fn a_terminate_node_is_bounded_by_its_rules() {
 fn the_while_until_example_of_7_17_12_parses() {
     // 7.17.12's first while-loop example (receipt b0446148), in an action definition.
     // It names its body clause `step`, which SysML does not reserve but this parser
-    // refuses (pending decision reserved-words-per-language); it is written `'step'`
+    // refuses (pending decision keyword-table-per-language); it is written `'step'`
     // here, the same name as an unrestricted one. The third example, `loop { ... then
     // if ... }`, is in the IfNode section.
     let advance = "action def A {\n\

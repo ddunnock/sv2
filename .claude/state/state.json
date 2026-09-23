@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T20:51:40Z",
+    "regenerated_utc": "2026-09-23T21:00:49Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "7c6166e Read for loops, completing the action nodes",
       "f1eb89d Read if actions, `if c { ... } else if d { ... } else { ... }`",
       "4d3bd43 Stop rejecting `if i < 0 { }` by absence: the next commit reads it",
       "80415c1 Read while loops, `while c { ... } until d;` and `loop { ... }`",
       "4c71e51 Read terminate actions, `terminate;` and `action t terminate x;`",
       "a0ea0ef Stop rejecting `then terminate;` by absence: the next commit reads it",
       "daf5709 Read succession flow usages, `succession flow a.x to b.y;`",
-      "a684449 Stop using `succession flow` as the unreadable example: the next commit reads it",
-      "d729a6c Settle expression-body-semicolon: an expression body is braced"
+      "a684449 Stop using `succession flow` as the unreadable example: the next commit reads it"
     ]
   },
   "authored": {
@@ -177,7 +177,7 @@
       },
       {
         "id": "keyword-table-per-language",
-        "question": "The parser's keyword table (KEYWORDS, generated from .claude/state/grammar/keywords.json) is ONE table for both languages, so every SysML reserved word is also treated as reserved in a .kerml file, and vice versa: `part` and `classifier` are in the same list. The pinned sources disagree: KerML's RESERVED_KEYWORD (vendor/spec-bnf/KerML-textual-bnf.kebnf, KerML 8.2.2.6) omits SysML-only words, and omits `new` although KerML 8.2.5.8.3's ConstructorExpression writes it as a literal, while SysML's Tier B' list (SysML-textual-bnf.kebnf:20) includes `new` and its clause list in the wiki does not. So `feature new;` or `feature part;` is rejected in KerML where its own list admits it. Found by the conformance review of the send/assign/`new` construct (2026-09-22); it predates that change (KwNew was already in the table). Decide: split the table per Language (ADR-0014 already makes the grammars two), and whether `new` in KerML is a deviation in the SYSML21-11 family (missing reserved keywords) or simply not reserved. Needs the grammar-adjudicator.",
+        "question": "The parser's keyword table (KEYWORDS, generated from .claude/state/grammar/keywords.json) is ONE table for both languages, so every SysML reserved word is also treated as reserved in a .kerml file, and vice versa: `part` and `classifier` are in the same list. The pinned sources disagree: KerML's RESERVED_KEYWORD (vendor/spec-bnf/KerML-textual-bnf.kebnf, KerML 8.2.2.6) omits SysML-only words, and omits `new` although KerML 8.2.5.8.3's ConstructorExpression writes it as a literal, while SysML's Tier B' list (SysML-textual-bnf.kebnf:20) includes `new` and its clause list in the wiki does not. So `feature new;` or `feature part;` is rejected in KerML where its own list admits it. Found by the conformance review of the send/assign/`new` construct (2026-09-22); it predates that change (KwNew was already in the table). Decide: split the table per Language (ADR-0014 already makes the grammars two), and whether `new` in KerML is a deviation in the SYSML21-11 family (missing reserved keywords) or simply not reserved. Needs the grammar-adjudicator. ADDED 2026-09-23 (80415c1, where it was first filed as a duplicate, reserved-words-per-language, now folded in here): the effect in SysML is concrete and spec-visible. The 44 KerML-only words -- assoc, behavior, bool, chains, class, classifier, composite, conjugate, conjugates, conjugation, connector, const, datatype, differences, disjoining, disjoint, expr, feature, featured, featuring, function, interaction, intersects, inv, inverse, inverting, member, metaclass, multiplicity, namespace, portion, predicate, redefinition, specialization, step, struct, subclassifier, subset, subtype, type, typed, typing, unions, var -- are refused as SysML names (`part step;` is rejected), and SysML 7.17.12's first while-loop example names its body clause `step`; the_while_until_example_of_7_17_12_parses writes it `'step'` until this is settled. The reverse set is 72 SysML-only words refused in .kerml files. The fix is in scripts/gen_syntax_kinds.py (kinds.rs is machine-owned): per-language keyword sets, asked by is_name with the parse's Language.",
         "blocks": [
           "a KerML name spelled like a SysML-only keyword"
         ]
@@ -217,11 +217,6 @@
       {
         "id": "state-body-terminate",
         "question": "OPEN. SysML 7.18.3's OnOff6 (Transition-Usages layer note, the example ending `action stop terminate;` inside `state def OnOff6 { ... }`) writes a TerminateNode as a STATE body item. No grammar admits it there: StateBodyItem (SysML 8.2.2.18.1) reaches usages only through BehaviorUsageMember, whose BehaviorUsageElement (8.2.2.6.4) lists no ActionNode, and the Pilot's fragment StateBodyItem (SysML.xtext:1754) is the same; ActionNodeMember belongs to ActionBehaviorMember (8.2.2.17.1), an action-body production. No corpus file writes `terminate` in a state body. The parser follows the BNF and the Pilot, so OnOff6 is rejected at `terminate`, while TerminateNode itself is read wherever an ActionBodyItem is. Needs a grammar-adjudicator pass and, if the example is the error, a deviations.json entry recording it. Not blocking: the text is rejected by rule until decided.",
-        "blocks": []
-      },
-      {
-        "id": "reserved-words-per-language",
-        "question": "OPEN, found 2026-09-23 while reading 7.17.12's first while-loop example, `action step { ... }`. Parser::is_name refuses any BasicName that `keyword()` (the generated table in crates/sv2-syntax/src/generated/kinds.rs) knows, and that table is the UNION of both languages' RESERVED_KEYWORD lists. Each language reserves its own words (KerML 8.2.2.6 and SysML 8.2.2.1.2 each state RESERVED_KEYWORD), so in a .sysml file the 44 KerML-only words -- assoc, behavior, bool, chains, class, classifier, composite, conjugate, conjugates, conjugation, connector, const, datatype, differences, disjoining, disjoint, expr, feature, featured, featuring, function, interaction, intersects, inv, inverse, inverting, member, metaclass, multiplicity, namespace, portion, predicate, redefinition, specialization, step, struct, subclassifier, subset, subtype, type, typed, typing, unions, var -- are refused as names although SysML does not reserve them (`part step;` is rejected today), and presumably the 72 SysML-only words are refused in .kerml files the same way. Fix: make the reserved test language-aware (the generator would need per-language keyword sets; kinds.rs is machine-owned, so the change is to scripts/gen_syntax_kinds.py). Tests for the 7.17.12 example write the name as `'step'` until this is settled. Measure the corpus effect before and after.",
         "blocks": []
       },
       {
