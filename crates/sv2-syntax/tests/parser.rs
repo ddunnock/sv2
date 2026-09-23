@@ -5687,6 +5687,13 @@ fn deviations_named(source: &str) -> Vec<String> {
 
 /// Each deviation site, as (admitted text, its conformant twin, register entry).
 const DEVIATION_SITES: &[(&str, &str, &str)] = &[
+    // ExpressionBody, follow_xtext: an expression body read as SysML's CalculationBody
+    // (7b-Variant Configurations.sysml:127). The twin takes an argument list, no body.
+    (
+        "constraint def C { ws->forAll {in ref w; w > 0} }",
+        "constraint def C { ws->including(w) }",
+        "ExpressionBody",
+    ),
     // SendNode, follow_xtext: `action NAME send` (ServerSequenceRealization-2:19).
     (
         "action def A { action publish send x; }",
@@ -7885,6 +7892,258 @@ fn an_argument_list_is_one_alternative_or_the_other_and_never_both() {
     parse_rejected("calc def C { f(a,) }");
     // An unclosed list is still an error.
     parse_rejected("calc def C { f(a }");
+}
+
+// -- FunctionOperationExpression, KerML 8.2.5.8.2 ------------------------------------
+//
+// FunctionOperationExpression =
+//     PrimaryArgumentMember '->' InstantiatedTypeMember
+//     ( BodyArgumentMember | FunctionReferenceArgumentMember | ArgumentList )
+//     EmptyResultMember
+//
+// The `->` invocation. The member after the arrow is InstantiatedTypeMember, not the
+// clause's undefined InvocationTypeMember (deviation InvocationTypeMember-misnomer,
+// KERML11-83). A BodyArgumentMember reaches BodyExpression and ExpressionBody, which SysML
+// reads as CalculationBody by deviation ExpressionBody.
+
+#[test]
+fn a_function_operation_reads_an_argument_list() {
+    // vendor/corpus/sysml/src/training/20. Assignment Actions/Assignment Example.sysml:37,
+    // `positions->including(position)`.
+    parse_accepted("calc def C { positions->including(position) }");
+    // 10d-Dynamics Analysis.sysml:65, `powerProfile->size()-1`: an empty list, and the
+    // operation is a primary, so it binds tighter than the `-` after it.
+    let rendered = render(&parse_accepted("calc def C { powerProfile->size() - 1 }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "BinaryOperatorExpression")
+            .first()
+            .map(String::as_str),
+        Some("ArgumentMember"),
+        "{rendered}"
+    );
+    assert_eq!(
+        subtree(&rendered, "ArgumentMember")
+            .lines()
+            .filter(|l| l.trim() == "FunctionOperationExpression")
+            .count(),
+        1,
+        "the operation is the minus's left operand\n{rendered}"
+    );
+    // A qualified name after the arrow (InstantiatedTypeReference = [QualifiedName]).
+    parse_accepted("calc def C { xs->SequenceFunctions::size() }");
+    // Named arguments are an ArgumentList too.
+    parse_accepted("calc def C { xs->f(q = 1) }");
+}
+
+#[test]
+fn a_function_operation_reads_a_body() {
+    // 7b-Variant Configurations.sysml:127 and 15_05:9 write `in ref w`, the SysML prefix
+    // that is the evidence for deviation ExpressionBody.
+    parse_accepted(
+        "constraint def C { rearWheelChoice->forAll {in ref w; w == rearWheelChoice::narrowRimWheel} }",
+    );
+    parse_accepted("constraint def C { wheelAssy->forAll {in ref w: WheelAssy; w.mass > 0} }");
+    // Vehicle Analysis Demo.sysml:206: a sequence expression as the primary argument.
+    parse_accepted("constraint def C { (1..sc.n-1)->forAll {in i: Integer; i > 0} }");
+    // A body with no parameter: CalculationBodyPart = CalculationBodyItem*
+    // ResultExpressionMember? (SysML 8.2.2.19), and the star admits none. The shape is the
+    // grammar's: every `->` body in the corpus declares one.
+    parse_accepted("constraint def C { (1..numberOfBolts)->forAll { true } }");
+    // An operator expression inside the body is the result expression.
+    parse_accepted("calc def C { x->select {in xx; xx != null} }");
+}
+
+#[test]
+fn a_function_operation_reads_a_function_reference() {
+    // FunctionReferenceArgumentMember: vendor/corpus/kerml/src/examples/Simple
+    // Tests/Expressions.kerml:19, `->reduce '+'`, an unrestricted name.
+    parse_accepted("calc def C { x->reduce '+' }");
+    parse_accepted("calc def C { x->reduce RealFunctions::sum }");
+    // Expressions.kerml:47, the three forms chained, with `??` after them.
+    parse_accepted(
+        "calc def C { partMass + (subparts->collect {in p; totalMass(partMass, subparts)}->reduce '+' ?? 0.0) }",
+    );
+}
+
+#[test]
+fn a_function_operation_builds_the_members_the_clause_names() {
+    for (source, argument) in [
+        ("calc def C { a->f(b) }", "ArgumentList"),
+        ("calc def C { a->f {in x; x} }", "BodyArgumentMember"),
+        ("calc def C { a->f g }", "FunctionReferenceArgumentMember"),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            child_kinds(&rendered, "FunctionOperationExpression"),
+            [
+                "PrimaryArgumentMember",
+                "ThinArrow",
+                "InstantiatedTypeMember",
+                argument,
+                "EmptyResultMember",
+            ],
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn a_body_argument_is_reached_through_the_memberships_the_clause_names() {
+    let rendered = render(&parse_accepted("calc def C { a->f {in x; x} }").syntax());
+    for (parent, child) in [
+        ("BodyArgumentMember", "BodyArgument"),
+        ("BodyArgument", "BodyArgumentValue"),
+        ("BodyArgumentValue", "BodyExpression"),
+        ("BodyExpression", "ExpressionBodyMember"),
+        ("ExpressionBodyMember", "ExpressionBody"),
+        // SysML: ExpressionBody = CalculationBody, by deviation ExpressionBody.
+        ("ExpressionBody", "CalculationBody"),
+    ] {
+        assert_eq!(
+            child_kinds(&rendered, parent),
+            [child],
+            "{parent}\n{rendered}"
+        );
+    }
+    let rendered = render(&parse_accepted("calc def C { a->f g }").syntax());
+    for (parent, child) in [
+        (
+            "FunctionReferenceArgumentMember",
+            "FunctionReferenceArgument",
+        ),
+        (
+            "FunctionReferenceArgument",
+            "FunctionReferenceArgumentValue",
+        ),
+        (
+            "FunctionReferenceArgumentValue",
+            "FunctionReferenceExpression",
+        ),
+        ("FunctionReferenceExpression", "FunctionReferenceMember"),
+        ("FunctionReferenceMember", "FunctionReference"),
+        ("FunctionReference", "ReferenceTyping"),
+    ] {
+        assert_eq!(
+            child_kinds(&rendered, parent),
+            [child],
+            "{parent}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn a_function_operation_folds_with_the_other_postfix_forms() {
+    // PrimaryArgumentMember holds whatever is already written, so the operation folds
+    // left with the chain and the bracket, in the order written (KerMLExpressions.xtext
+    // puts all of them in one loop, :299-322).
+    let chained = render(&parse_accepted("calc def C { a.b->size() }").syntax());
+    assert_eq!(
+        child_kinds(&chained, "PrimaryArgumentValue"),
+        ["FeatureChainExpression"],
+        "{chained}"
+    );
+    let over = render(&parse_accepted("calc def C { a->head().b }").syntax());
+    assert_eq!(
+        child_kinds(&over, "PrimaryArgumentValue"),
+        ["FunctionOperationExpression"],
+        "{over}"
+    );
+    // Two operations fold left: the second's argument is the first.
+    let twice = render(
+        &parse_accepted("calc def C { x->reduce {in s; in t; s + t}->reduce '+' }").syntax(),
+    );
+    assert_eq!(
+        nodes_named(&twice, "FunctionOperationExpression"),
+        2,
+        "{twice}"
+    );
+    assert_eq!(
+        child_kinds(&twice, "PrimaryArgumentValue"),
+        ["FunctionOperationExpression"],
+        "{twice}"
+    );
+}
+
+#[test]
+fn a_function_operation_takes_exactly_one_argument_form() {
+    // None of the three alternatives is optional: `x->size` names a function and gives
+    // it nothing. Held as a file by
+    // tests/rejection/function-operation-takes-an-argument-form.sysml.
+    parse_rejected("calc def C { x->size }");
+    // The InstantiatedTypeMember is not optional either.
+    parse_rejected("calc def C { x->(y) }");
+    parse_rejected("calc def C { x-> }");
+    // One form, not two.
+    parse_rejected("calc def C { x->f {in y; y} (z) }");
+    parse_rejected("calc def C { x->f(z) {in y; y} }");
+}
+
+#[test]
+fn a_body_expression_is_a_base_expression() {
+    // BaseExpression's BodyExpression alternative (KerML 8.2.5.8.3), on its own.
+    parse_accepted("attribute x = {in y; y};");
+    let rendered = render(&parse_accepted("calc def C { {in y; y} }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "ResultExpressionMember"),
+        ["MemberPrefix", "BodyExpression"],
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_brace_in_an_expression_is_not_taken_for_a_usage_body() {
+    // A result expression that opens on a name collides with DefaultReferenceUsage, and
+    // usage_completion_follows settles it by looking for a `;` or `{` before the body
+    // closes. A body argument's `{` must not answer: this is 7b:127's shape, a name first
+    // and a body inside. Nor may a body expression that is an operand.
+    //
+    // Asked of the OUTER body's own members: the body expression is a CalculationBody
+    // with a ResultExpressionMember of its own, so counting the whole tree would count
+    // that one too. The outer CalculationBodyPart is the first in the rendering.
+    for source in [
+        "constraint def C { ws->forAll {in ref w; w > 0} }",
+        "constraint def C { a == {in y; y} }",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            child_kinds(&rendered, "CalculationBodyPart"),
+            ["ResultExpressionMember"],
+            "{source}\n{rendered}"
+        );
+    }
+    // A `{` after a declaration is still a usage body, and a body expression in a usage's
+    // value is inside it, not its completion: one member, and it is not the expression.
+    for source in [
+        "calc def C { x { } }",
+        "calc def C { x : T { } }",
+        "calc def C { x = {in y; y}; }",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        let members = child_kinds(&rendered, "CalculationBodyPart");
+        assert_eq!(members.len(), 1, "{source}\n{rendered}");
+        assert_ne!(
+            members.first().map(String::as_str),
+            Some("ResultExpressionMember"),
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn a_function_operation_is_bounded_by_the_depth_limit() {
+    // Each operation wraps the last, as each chain link does, so the run is counted
+    // against MAX_DEPTH. Losslessness at this length is asserted in tests/roundtrip.rs.
+    let source = format!("constraint def C {{ a{} }}", "->f()".repeat(50_000));
+    let parsed = parse(&source, Language::SysMl);
+    assert!(
+        parsed
+            .errors()
+            .iter()
+            .any(|d| d.code() == DiagnosticCode::TooDeeplyNested),
+        "expected a depth diagnostic, got {:?}",
+        parsed.errors()
+    );
+    parse_accepted(&format!("constraint def C {{ a{} }}", "->f()".repeat(100)));
 }
 
 // -- ConstructorExpression, KerML 8.2.5.8.3 ----------------------------------------

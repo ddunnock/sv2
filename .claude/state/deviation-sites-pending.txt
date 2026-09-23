@@ -6,7 +6,6 @@
 AnnotatingElement  # adds no text: under ADR-0015's resolution SysML's literal MetadataFeature reads SysML's PrefixMetadataMember and MetadataBody, and MetadataFeatureDeclaration prints MetadataUsageDeclaration's text; the deviation changes the element kind only, so SysML needs no site (adjudicated 2026-09-22)
 BooleanExpression  # KerML's BooleanExpression is unimplemented
 Expression  # KerML's Expression is unimplemented
-ExpressionBody  # BodyExpression, the only route to it, is unimplemented
 FlowDeclaration  # a KerML clause's missing '?'; FlowDeclaration@kerml is unimplemented, and SysML's UsageDeclaration is nullable, so SysML needs no site
 ForVariableDeclarationMember  # ForLoopNode is unimplemented
 Invariant  # KerML's Invariant is unimplemented

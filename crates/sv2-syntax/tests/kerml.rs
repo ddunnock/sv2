@@ -761,6 +761,44 @@ fn a_constructor_expression_is_kerml_too() {
     kerml_rejected("package P { feature l = new L; }");
 }
 
+// -- FunctionOperationExpression, KerML 8.2.5.8.2 -----------------------------------
+
+#[test]
+fn a_function_operation_is_kerml_too() {
+    // A shared unit. Its argument-list and function-reference forms reach nothing
+    // SysML-specific: vendor/corpus/kerml/src/examples/Simple Tests/Expressions.kerml:19
+    // ends `->reduce '+'`.
+    let tree = render(&kerml_accepted("package P { feature e = x->reduce '+'; }").syntax());
+    assert!(has_node(&tree, "FunctionReferenceArgumentMember"), "{tree}");
+    let tree = render(&kerml_accepted("package P { feature s = x->size(); }").syntax());
+    assert!(has_node(&tree, "FunctionOperationExpression"), "{tree}");
+}
+
+#[test]
+fn a_kerml_expression_body_is_not_read_yet() {
+    // KerML's ExpressionBody is `'{' FunctionBodyPart '}'` (8.2.5.8.3), whose
+    // FunctionBodyPart@kerml is unimplemented. SysML's reading, CalculationBody, is SysML's
+    // alone (deviation ExpressionBody), so a .kerml body is reported rather than read as
+    // SysML's. Expressions.kerml:15 writes `x->collect {in xx; xx + 1}`. Held as a file by
+    // tests/rejection/kerml-expression-body-is-not-implemented.kerml.
+    kerml_rejected("package P { feature c = x->collect {in xx; xx + 1}; }");
+    // A body SysML's CalculationBody would read whole, in both positions that reach one,
+    // so what rejects it is the `{` and not an item inside: the report is AT the brace.
+    for source in [
+        "package P { feature c = x->collect { 1 }; }",
+        "package P { feature c = { 1 }; }",
+    ] {
+        let parsed = kerml_rejected(source);
+        // The second `{`: the first is the package body's.
+        let brace = source.match_indices('{').nth(1).map(|(at, _)| at);
+        let first = parsed
+            .errors()
+            .first()
+            .map(|d| usize::from(d.range().start()));
+        assert_eq!(first, brace, "{source}: {:?}", parsed.errors());
+    }
+}
+
 // -- the invariants, under this grammar too ---------------------------------------
 
 #[test]

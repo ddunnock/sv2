@@ -222,6 +222,20 @@ fn deeply_nested_input_is_reported_and_not_a_stack_overflow() {
             "feature chains",
             format!("attribute x = a{};", ".b".repeat(50_000)),
         ),
+        // The `->` operation folds as a chain link does, and for the same reason.
+        (
+            "function operations",
+            format!("attribute x = a{};", "->f()".repeat(50_000)),
+        ),
+        // A body expression recurses through a calculation body back to an expression.
+        (
+            "expression bodies",
+            format!(
+                "attribute x = {}1{};",
+                "{".repeat(50_000),
+                "}".repeat(50_000)
+            ),
+        ),
     ] {
         // SysML: `attribute` and `part` are usages, which KerML has none of.
         let parsed = parse(&source, Language::SysMl);

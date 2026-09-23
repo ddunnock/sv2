@@ -213,6 +213,7 @@ vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavio
 vendor/corpus/sysml/src/validation/06-Individual and Snapshots/6-Individual and Snapshots.sysml
 vendor/corpus/sysml/src/validation/07-Variant Configuration/7a-Variant Configuration - General Concept.sysml
 vendor/corpus/sysml/src/validation/07-Variant Configuration/7a1-Variant Configuration - General Concept-a.sysml
+vendor/corpus/sysml/src/validation/07-Variant Configuration/7b-Variant Configurations.sysml
 vendor/corpus/sysml/src/validation/08-Requirements/8-Requirements.sysml
 vendor/corpus/sysml/src/validation/09-Verification/9-Verification-simplified.sysml
 vendor/corpus/sysml/src/validation/10-Analysis and Trades/10a-Analysis.sysml
@@ -231,6 +232,7 @@ vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_01-Consta
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_02-Basic Value Properties.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_03-Value Expression.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_04-Logical Expressions.sysml
+vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_05-Unification of Expression and Constraint Definition.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_06-System of Quantities.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_07-System of Units and Scales.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_08-Range Restriction.sysml

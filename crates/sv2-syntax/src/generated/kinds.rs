@@ -845,6 +845,32 @@ pub enum SyntaxKind {
     PrimaryArgument,
     /// `value = PrimaryExpression`. `KerML` 8.2.5.8.2.
     PrimaryArgumentValue,
+    /// `PrimaryArgumentMember '->' InstantiatedTypeMember ( BodyArgumentMember | FunctionReferenceArgumentMember | ArgumentList ) EmptyResultMember`. `KerML` 8.2.5.8.2.
+    FunctionOperationExpression,
+    /// `ownedMemberParameter = BodyArgument`. `KerML` 8.2.5.8.2.
+    BodyArgumentMember,
+    /// `ownedRelationship += BodyArgumentValue`. `KerML` 8.2.5.8.2.
+    BodyArgument,
+    /// `value = BodyExpression`. `KerML` 8.2.5.8.2.
+    BodyArgumentValue,
+    /// `ownedMemberParameter = FunctionReferenceArgument`. `KerML` 8.2.5.8.2.
+    FunctionReferenceArgumentMember,
+    /// `ownedRelationship += FunctionReferenceArgumentValue`. `KerML` 8.2.5.8.2.
+    FunctionReferenceArgument,
+    /// `value = FunctionReferenceExpression`. `KerML` 8.2.5.8.2.
+    FunctionReferenceArgumentValue,
+    /// `ownedRelationship += FunctionReferenceMember`. `KerML` 8.2.5.8.2.
+    FunctionReferenceExpression,
+    /// `ownedMemberFeature = FunctionReference`. `KerML` 8.2.5.8.2.
+    FunctionReferenceMember,
+    /// `ownedRelationship += ReferenceTyping`. `KerML` 8.2.5.8.2.
+    FunctionReference,
+    /// `ownedRelationship += ExpressionBodyMember`. `KerML` 8.2.5.8.3.
+    BodyExpression,
+    /// `ownedMemberFeature = ExpressionBody`. `KerML` 8.2.5.8.3.
+    ExpressionBodyMember,
+    /// `'{' FunctionBodyPart '}'` in `KerML` 8.2.5.8.3; `CalculationBody` in `SysML`, by deviation `ExpressionBody`.
+    ExpressionBody,
     /// `MemberPrefix? ownedRelatedElement += OwnedExpression`. `SysML` 8.2.2.19 — the metaclass is `KerML`'s `ResultExpressionMembership`, 8.3.4.7.7.
     ResultExpressionMember,
     /// `OccurrenceUsagePrefix 'part' Usage`. `SysML` 8.2.2.11.
@@ -1627,6 +1653,19 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::PrimaryArgumentMember,
     SyntaxKind::PrimaryArgument,
     SyntaxKind::PrimaryArgumentValue,
+    SyntaxKind::FunctionOperationExpression,
+    SyntaxKind::BodyArgumentMember,
+    SyntaxKind::BodyArgument,
+    SyntaxKind::BodyArgumentValue,
+    SyntaxKind::FunctionReferenceArgumentMember,
+    SyntaxKind::FunctionReferenceArgument,
+    SyntaxKind::FunctionReferenceArgumentValue,
+    SyntaxKind::FunctionReferenceExpression,
+    SyntaxKind::FunctionReferenceMember,
+    SyntaxKind::FunctionReference,
+    SyntaxKind::BodyExpression,
+    SyntaxKind::ExpressionBodyMember,
+    SyntaxKind::ExpressionBody,
     SyntaxKind::ResultExpressionMember,
     SyntaxKind::PartUsage,
     SyntaxKind::ReferenceUsage,

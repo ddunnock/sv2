@@ -1095,6 +1095,50 @@ NODES = [
     ),
     ("PrimaryArgument", "`ownedRelationship += PrimaryArgumentValue`. `KerML` 8.2.5.8.2."),
     ("PrimaryArgumentValue", "`value = PrimaryExpression`. `KerML` 8.2.5.8.2."),
+    # The `->` invocation, KerML 8.2.5.8.2, and the two argument forms only it takes.
+    (
+        "FunctionOperationExpression",
+        (
+            "`PrimaryArgumentMember '->' InstantiatedTypeMember ( BodyArgumentMember "
+            "| FunctionReferenceArgumentMember | ArgumentList ) EmptyResultMember`. "
+            "`KerML` 8.2.5.8.2."
+        ),
+    ),
+    ("BodyArgumentMember", "`ownedMemberParameter = BodyArgument`. `KerML` 8.2.5.8.2."),
+    ("BodyArgument", "`ownedRelationship += BodyArgumentValue`. `KerML` 8.2.5.8.2."),
+    ("BodyArgumentValue", "`value = BodyExpression`. `KerML` 8.2.5.8.2."),
+    (
+        "FunctionReferenceArgumentMember",
+        "`ownedMemberParameter = FunctionReferenceArgument`. `KerML` 8.2.5.8.2.",
+    ),
+    (
+        "FunctionReferenceArgument",
+        "`ownedRelationship += FunctionReferenceArgumentValue`. `KerML` 8.2.5.8.2.",
+    ),
+    (
+        "FunctionReferenceArgumentValue",
+        "`value = FunctionReferenceExpression`. `KerML` 8.2.5.8.2.",
+    ),
+    (
+        "FunctionReferenceExpression",
+        "`ownedRelationship += FunctionReferenceMember`. `KerML` 8.2.5.8.2.",
+    ),
+    (
+        "FunctionReferenceMember",
+        "`ownedMemberFeature = FunctionReference`. `KerML` 8.2.5.8.2.",
+    ),
+    ("FunctionReference", "`ownedRelationship += ReferenceTyping`. `KerML` 8.2.5.8.2."),
+    # The expression body, KerML 8.2.5.8.3. SysML reads it as CalculationBody by
+    # deviation ExpressionBody (follow_xtext).
+    ("BodyExpression", "`ownedRelationship += ExpressionBodyMember`. `KerML` 8.2.5.8.3."),
+    ("ExpressionBodyMember", "`ownedMemberFeature = ExpressionBody`. `KerML` 8.2.5.8.3."),
+    (
+        "ExpressionBody",
+        (
+            "`'{' FunctionBodyPart '}'` in `KerML` 8.2.5.8.3; `CalculationBody` in `SysML`, "
+            "by deviation `ExpressionBody`."
+        ),
+    ),
     (
         "ResultExpressionMember",
         (

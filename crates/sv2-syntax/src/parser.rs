@@ -1812,16 +1812,17 @@ impl<'a> Parser<'a> {
     /// closes. An expression reaches the enclosing `}` instead.
     ///
     /// Brackets are counted so that a `;` or `{` inside a nested construct does not
-    /// answer for this one. A `{` at depth zero says "usage" rather than opening a
-    /// depth, because among what is implemented an expression never contains one —
-    /// `BodyExpression` is unimplemented, and
-    /// tests/rejection/body-expression-is-not-implemented.sysml holds that. When it
-    /// lands, this is one of the places that has to change.
+    /// answer for this one. A `{` at depth zero says "usage" unless it opens a
+    /// `BodyExpression`, which `opens_body_expression` decides; that one opens a depth
+    /// like any other bracket, so the `;` items inside it do not answer either.
     fn usage_completion_follows(&self, n: usize) -> bool {
         let mut depth = 0u32;
         let mut i = n;
         while let Some(token) = self.peek_nth(i) {
             match token.kind {
+                SyntaxKind::LBrace if depth == 0 && self.opens_body_expression(n, i) => {
+                    depth += 1;
+                }
                 // A completion, so what starts at `n` is a usage and not an expression.
                 SyntaxKind::Semicolon | SyntaxKind::LBrace if depth == 0 => return true,
                 // The enclosing body closed and no completion was reached, so what is
@@ -1842,6 +1843,59 @@ impl<'a> Parser<'a> {
         // state, and reading the remainder as an expression reports one error rather
         // than one per token.
         false
+    }
+
+    /// Whether the `{` at the `i`th token opens a `BodyExpression` inside the construct
+    /// that starts at the `n`th, rather than a usage body that completes it.
+    ///
+    /// Two positions reach a `BodyExpression` (`KerML` 8.2.5.8.2, 8.2.5.8.3), and a usage
+    /// body is at neither:
+    ///
+    /// - straight after `'->' InstantiatedTypeMember`, a `BodyArgumentMember`. The member
+    ///   is read as a `QualifiedName`, so the test walks back over one to the arrow.
+    /// - where an operand is expected, as `BaseExpression`: after `=` or `:=`, an opening
+    ///   `(` or `[`, a `,`, `?` or `else`, or an operator from table 6.
+    ///
+    /// A usage body follows what ends a declaration: a name, a literal, `]`, `)`, or a
+    /// keyword such as `ordered`. Only the arrow case can put a NAME before an expression
+    /// body, which is why it is asked for by name rather than by the token alone. Tokens
+    /// before `n` are never looked at; they belong to whatever encloses this construct.
+    ///
+    /// `KerML` never answers yes, because its bodies are not read (see `body_expression`).
+    fn opens_body_expression(&self, n: usize, i: usize) -> bool {
+        if self.language != Language::SysMl {
+            return false;
+        }
+        let Some(prev) = i.checked_sub(1).filter(|&p| p >= n) else {
+            return false;
+        };
+        let mut k = prev;
+        if self.nth_is_name(k) {
+            while k >= n + 2
+                && self.nth_is(k - 1, SyntaxKind::ColonColon)
+                && self.nth_is_name(k - 2)
+            {
+                k -= 2;
+            }
+            return k > n && self.nth_is(k - 1, SyntaxKind::ThinArrow);
+        }
+        let spelled = |spelling: &Spelling| match spelling {
+            Spelling::Symbol(kind) => self.nth_is(prev, *kind),
+            Spelling::Word(word) => self.nth_is_keyword(prev, word),
+        };
+        [
+            SyntaxKind::Eq,
+            SyntaxKind::ColonEq,
+            SyntaxKind::LParen,
+            SyntaxKind::LBracket,
+            SyntaxKind::Comma,
+            SyntaxKind::Question,
+        ]
+        .into_iter()
+        .any(|kind| self.nth_is(prev, kind))
+            || self.nth_is_keyword(prev, "else")
+            || INFIX.iter().any(|op| spelled(&op.spelling))
+            || UNARY_OPERATORS.iter().any(spelled)
     }
 
     /// Whether a `RequirementDefinition` starts at the `n`th meaningful token.
@@ -5667,19 +5721,16 @@ impl<'a> Parser<'a> {
     // NONE OF THE THREE IS MARKED FOR COVERAGE. Each is an alternation and each has
     // alternatives that are absent, so marking any of them would claim a production
     // this parser does not read. What is implemented is FeatureChainExpression from the
-    // first; BracketExpression and SequenceExpression from the middle one; and
-    // NullExpression, LiteralExpression, FeatureReferenceExpression, InvocationExpression
-    // and ConstructorExpression from the last. What is not, each with a rejection case
+    // first; BracketExpression, SequenceExpression and FunctionOperationExpression from
+    // the middle one; and NullExpression, LiteralExpression, FeatureReferenceExpression,
+    // InvocationExpression, ConstructorExpression and BodyExpression from the last, the
+    // body in SysML only (see `body_expression`). What is not, each with a rejection case
     // naming the clause:
     //
     //   IndexExpression            `tanks#(1)`
-    //   SelectExpression           `x.?{ ... }`     needs BodyExpression
-    //   CollectExpression          `x.{ ... }`      needs BodyExpression
-    //   FunctionOperationExpression `x->size()`
+    //   SelectExpression           `x.?{ ... }`
+    //   CollectExpression          `x.{ ... }`
     //   MetadataAccessExpression   `E.metadata`
-    //   BodyExpression             `{ in x; x }`    reaches ExpressionBody, and in
-    //                                              SysML that reads CalculationBody,
-    //                                              which is most of the language
     //
     // No node of its own for any of the three, as DefinitionElement and
     // FeatureSpecialization have none: an alternation's node would add a level
@@ -5775,6 +5826,172 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: FunctionOperationExpression
+    //
+    // FunctionOperationExpression : InvocationExpression =
+    //     ownedRelationship += PrimaryArgumentMember '->'
+    //     ownedRelationship += InstantiatedTypeMember
+    //     ( ownedRelationship += BodyArgumentMember
+    //     | ownedRelationship += FunctionReferenceArgumentMember
+    //     | ArgumentList )
+    //     ownedRelationship += EmptyResultMember                 (KerML 8.2.5.8.2)
+    //
+    // The member after the arrow is InstantiatedTypeMember. The clause prints
+    // InvocationTypeMember, which no clause defines; deviations.json records
+    // InvocationTypeMember-misnomer on OMG issue KERML11-83, where the technical editor
+    // says InstantiatedTypeMember was meant, and the Pilot uses it in this slot
+    // (KerMLExpressions.xtext:309). It is read in its first alternative only and stays
+    // unmarked, as in `invocation_expression`.
+    //
+    // The three argument forms open on three different tokens, so one token decides:
+    // an ArgumentList on `(`, a BodyArgumentMember on `{` (ExpressionBody, 8.2.5.8.3),
+    // and a FunctionReferenceArgumentMember on the NAME or `$` that opens its
+    // QualifiedName (ReferenceTyping, 8.2.5.8.1). None is optional, so anything else is
+    // reported, and the EmptyResultMember is still built so the node is whole.
+    //
+    // A KerML body is reported rather than read: KerML's ExpressionBody is
+    // `'{' FunctionBodyPart '}'` and FunctionBodyPart@kerml is unimplemented. Reading
+    // SysML's CalculationBody there instead would give a .kerml file SysML's elements.
+    fn function_operation_expression(&mut self, start: rowan::Checkpoint) {
+        self.start_node_at(start, SyntaxKind::FunctionOperationExpression);
+        self.wrap_at(start, &PRIMARY_ARGUMENT);
+        self.bump();
+        self.eat_trivia();
+        self.start_node(SyntaxKind::InstantiatedTypeMember);
+        self.start_node(SyntaxKind::InstantiatedTypeReference);
+        self.qualified_name();
+        self.finish_node();
+        self.finish_node();
+        if self.at(SyntaxKind::LParen) {
+            self.argument_list();
+        } else if self.at(SyntaxKind::LBrace) && self.language == Language::SysMl {
+            self.body_argument_member();
+        } else if self.at_feature_reference() {
+            self.function_reference_argument_member();
+        } else {
+            self.error_expected("`(`, `{` or a function name after `->` and the function");
+        }
+        self.empty_result_member();
+        self.finish_node();
+    }
+
+    // production: BodyArgumentMember
+    //
+    // BodyArgumentMember : ParameterMembership =
+    //     ownedMemberParameter = BodyArgument                    (KerML 8.2.5.8.2)
+    //
+    // production: BodyArgument
+    //
+    // BodyArgument : Feature = ownedRelationship += BodyArgumentValue
+    //                                                            (KerML 8.2.5.8.2)
+    //
+    // production: BodyArgumentValue
+    //
+    // BodyArgumentValue : FeatureValue = value = BodyExpression  (KerML 8.2.5.8.2)
+    fn body_argument_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::BodyArgumentMember);
+        self.start_node(SyntaxKind::BodyArgument);
+        self.start_node(SyntaxKind::BodyArgumentValue);
+        self.body_expression();
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
+    }
+
+    // production: FunctionReferenceArgumentMember
+    //
+    // FunctionReferenceArgumentMember : ParameterMembership =
+    //     ownedMemberParameter = FunctionReferenceArgument       (KerML 8.2.5.8.2)
+    //
+    // production: FunctionReferenceArgument
+    //
+    // FunctionReferenceArgument : Feature =
+    //     ownedRelationship += FunctionReferenceArgumentValue    (KerML 8.2.5.8.2)
+    //
+    // production: FunctionReferenceArgumentValue
+    //
+    // FunctionReferenceArgumentValue : FeatureValue =
+    //     value = FunctionReferenceExpression                    (KerML 8.2.5.8.2)
+    //
+    // production: FunctionReferenceExpression
+    //
+    // FunctionReferenceExpression : FeatureReferenceExpression =
+    //     ownedRelationship += FunctionReferenceMember           (KerML 8.2.5.8.2)
+    //
+    // production: FunctionReferenceMember
+    //
+    // FunctionReferenceMember : FeatureMembership =
+    //     ownedMemberFeature = FunctionReference                 (KerML 8.2.5.8.2)
+    //
+    // production: FunctionReference
+    //
+    // FunctionReference : Expression = ownedRelationship += ReferenceTyping
+    //                                                            (KerML 8.2.5.8.2)
+    //
+    // `x->reduce '+'`: the function is named by typing an Expression, and a
+    // FeatureReferenceExpression refers to it. Unlike FeatureReferenceExpression in
+    // 8.2.5.8.3, this one's production names NO EmptyResultMember, so none is built.
+    fn function_reference_argument_member(&mut self) {
+        const NESTED: [SyntaxKind; 7] = [
+            SyntaxKind::FunctionReferenceArgumentMember,
+            SyntaxKind::FunctionReferenceArgument,
+            SyntaxKind::FunctionReferenceArgumentValue,
+            SyntaxKind::FunctionReferenceExpression,
+            SyntaxKind::FunctionReferenceMember,
+            SyntaxKind::FunctionReference,
+            SyntaxKind::ReferenceTyping,
+        ];
+        self.eat_trivia();
+        for kind in NESTED {
+            self.start_node(kind);
+        }
+        self.qualified_name();
+        for _ in NESTED {
+            self.finish_node();
+        }
+    }
+
+    // production: BodyExpression
+    //
+    // BodyExpression : FeatureReferenceExpression =
+    //     ownedRelationship += ExpressionBodyMember              (KerML 8.2.5.8.3)
+    //
+    // production: ExpressionBodyMember
+    //
+    // ExpressionBodyMember : FeatureMembership =
+    //     ownedMemberFeature = ExpressionBody                    (KerML 8.2.5.8.3)
+    //
+    // ExpressionBody is NOT marked, in either language. KerML's, `'{' FunctionBodyPart
+    // '}'`, is not read at all: the callers do not reach here from a .kerml file.
+    // SysML's is CalculationBody by deviation ExpressionBody (follow_xtext, adjudicated
+    // 2026-09-17 on the corpus's `in ref w` bodies), and CalculationBody is
+    // `';' | '{' CalculationBodyPart '}'` (SysML 8.2.2.19). Only the braced alternative
+    // is reached, because the callers dispatch on `{`: taken literally the `;` form would
+    // make `attribute x = ;;` an attribute valued by an empty body, and whether the
+    // deviation means that is the pending decision [expression-body-semicolon].
+    //
+    // The CalculationBody node is inside an ExpressionBody node because the Pilot's
+    // ExpressionBody is an Expression whose content IS a CalculationBody fragment
+    // (SysML.xtext:2437), as a CalculationDefinition's is.
+    fn body_expression(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::BodyExpression);
+        self.start_node(SyntaxKind::ExpressionBodyMember);
+        self.start_node(SyntaxKind::ExpressionBody);
+        // Every SysML expression body is read by the deviation: under the printed
+        // grammar SysML has no ExpressionBody of its own and would reach KerML's.
+        // deviation: ExpressionBody
+        self.note_deviation(
+            "ExpressionBody",
+            "an expression body read as a calculation body",
+        );
+        self.calculation_body();
+        self.finish_node();
+        self.finish_node();
+        self.finish_node();
+    }
+
     /// The postfix layer of `PrimaryExpression`, folded left over `start`.
     ///
     /// `FeatureChainExpression` and `BracketExpression` are both written after their
@@ -5783,12 +6000,17 @@ impl<'a> Parser<'a> {
     /// is a chain over a bracket. One loop is what makes that fall out rather than being
     /// arranged.
     ///
+    /// `FunctionOperationExpression` (`->`) takes its operand the same way and is in the
+    /// same loop, as the Pilot has it (KerMLExpressions.xtext:308).
+    ///
     /// The remaining postfix forms of 8.2.5.8.2 — `IndexExpression` (`#(`),
-    /// `FunctionOperationExpression` (`->`), `CollectExpression` and `SelectExpression` —
-    /// are absent, each with a rejection case.
+    /// `CollectExpression` and `SelectExpression` — are absent, each with a rejection case.
     fn postfix_tail(&mut self, start: rowan::Checkpoint) {
         let mut levels: u32 = 0;
-        while self.at_feature_chain() || self.at(SyntaxKind::LBracket) {
+        while self.at_feature_chain()
+            || self.at(SyntaxKind::LBracket)
+            || self.at(SyntaxKind::ThinArrow)
+        {
             // BOUNDED, although this loop uses no stack of its own. Every level wraps
             // what is already there, so the TREE is as deep as the expression is long
             // even when the parser's own recursion is flat — and a consumer walking a
@@ -5804,6 +6026,8 @@ impl<'a> Parser<'a> {
             levels += 1;
             if self.at(SyntaxKind::LBracket) {
                 self.bracket_expression(start);
+            } else if self.at(SyntaxKind::ThinArrow) {
+                self.function_operation_expression(start);
             } else {
                 self.feature_chain_expression(start);
             }
@@ -5881,6 +6105,10 @@ impl<'a> Parser<'a> {
             self.invocation_expression();
         } else if self.at_feature_reference() {
             self.feature_reference_expression();
+        } else if self.at(SyntaxKind::LBrace) && self.language == Language::SysMl {
+            // BaseExpression's BodyExpression alternative (8.2.5.8.3). SysML only, for
+            // the reason `function_operation_expression` gives.
+            self.body_expression();
         } else {
             self.error_expected("an expression");
         }

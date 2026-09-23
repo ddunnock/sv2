@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T16:06:51Z",
+    "regenerated_utc": "2026-09-23T16:09:23Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 363,
-      "unimplemented": 191,
+      "implemented": 375,
+      "unimplemented": 179,
       "absent": 0,
-      "percent": 65.5
+      "percent": 67.7
     },
     "tests": {
-      "unit": 564,
+      "unit": 576,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 233,
+      "negative_cases": 235,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "03c8416 Stop rejecting `->` and expression bodies by absence: the next commit reads them",
       "315f588 Close the session: messages, satisfy, allocations and concerns recorded, the arrow invocation next",
       "893dce4 Read a multiplicity after every reference that takes a FeatureSpecializationPart",
       "5e3d072 Read concerns, stakeholders and framed concerns, and site deviation FramedConcernUsage",
       "fa3f315 Stop rejecting `frame` and `stakeholder` by absence: the next commit reads them",
       "38c8529 Read allocation usages, by declaration and by their ends alone",
       "789e8bd Read satisfy requirement usages, and site deviation SatisfyRequirementUsage",
-      "2d3c97c Stop rejecting `satisfy` by absence: the next commit reads it",
-      "4d3e06e Read messages, by declaration and by their events alone"
+      "2d3c97c Stop rejecting `satisfy` by absence: the next commit reads it"
     ]
   },
   "authored": {
@@ -207,6 +207,13 @@
         "question": "7.15.2 (receipt 546a588c) says \"Allocation definitions and usages are always binary, having exactly two end features, even if abstract\", but AllocationUsageDeclaration (SysML 8.2.2.15) writes ConnectorPart, which admits NaryConnectorPart, and the one constraint of AllocationUsage (checkAllocationUsageSpecialization, 8.3.15.3, receipt 13aa56df) says nothing of arity. The parser follows the grammar: `allocate (a, b, c);` parses (tests: an_allocation_usage_may_name_its_ends_in_parentheses), and examples/Simple Tests/AllocationTest.sysml:30 writes the parenthesised form with two ends. Where is the prose rule enforced, if anywhere: a diagnostic in sv2-resolve on an allocation with other than two ends, or nowhere until an OMG issue settles which of 7.15.2 and 8.2.2.15 is right? deviations.json does not fit: it records Pilot-versus-specification differences, and this is the specification's prose against its own grammar.",
         "blocks": [
           "nothing in sv2-syntax; the arity check, if any, when sv2-resolve exists"
+        ]
+      },
+      {
+        "id": "expression-body-semicolon",
+        "question": "Deviation ExpressionBody (follow_xtext) reads SysML's ExpressionBody as CalculationBody, which is `';' | '{' CalculationBodyPart '}'` (SysML 8.2.2.19). Taken literally the `;` alternative makes a bare `;` a BodyExpression wherever a BaseExpression or a BodyArgumentMember may stand, so `attribute x = ;;` would be an attribute valued by an empty body and `a->f;` a complete operation. The Pilot inherits exactly that (SysML.xtext:2437). The parser reaches only the braced alternative, because body_expression's callers dispatch on `{`, and ExpressionBody@sysml is therefore left UNMARKED. Recommendation: keep the braced reading and narrow the deviation's record to say so, since the corpus's evidence for the deviation (7b:127, 15_05:9) is braced bodies only and no corpus file writes a `;` body; the alternative is to read the `;` form and mark the unit. Decide before marking ExpressionBody@sysml.",
+        "blocks": [
+          "marking ExpressionBody@sysml for coverage"
         ]
       }
     ],
