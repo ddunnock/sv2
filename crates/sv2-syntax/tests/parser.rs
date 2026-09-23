@@ -181,21 +181,23 @@ fn an_unclosed_brace_is_reported_and_the_contents_are_kept() {
 fn text_no_implemented_production_accepts_becomes_an_error_node() {
     // This case has now been `part def Engine;`, `part engine : Engine;`,
     // `attribute mass : Real;`, `item wheel : Wheel;`, `connection fuelLine connect a
-    // to b;`, `satisfy vehicleSpecification by vehicle_design;` and `view vehicleView :
-    // VehicleView { expose Vehicle::*; }`. Each stopped being a rejection when its
-    // production landed, and the positive cases hold all seven. The property the test
-    // protects never changes: text this parser cannot read is reported, not silently
-    // accepted. Only the example moves.
+    // to b;`, `satisfy vehicleSpecification by vehicle_design;`, `view vehicleView :
+    // VehicleView { expose Vehicle::*; }` and `succession flow fuelFlow from tank.fuelOut
+    // to engine.fuelIn;`. Each stopped being a rejection when its production landed, and
+    // the positive cases hold all eight. The property the test protects never changes:
+    // text this parser cannot read is reported, not silently accepted. Only the example
+    // moves.
     //
     // It is deliberately not a usage of the `<prefix> KEYWORD Usage` shape. Those arrive
     // in batches -- seven of them are one table -- so any of them would be a placeholder
-    // with a short life. A succession flow needs two keywords and FlowDeclaration, and
-    // SuccessionAsUsage's `succession` form landing would not read it, since `flow` is
-    // reserved; it lands only with SuccessionFlowUsage itself.
+    // with a short life. The SysML members still unread are the action control nodes,
+    // which are next in line, so the example moves inside a member: a metadata access
+    // in a feature value. `metadata` is reserved (SysML 8.2.2.1.2), so the postfix `.`
+    // cannot take it as a feature name; it lands only with MetadataAccessExpression.
     //
-    // SysML 8.2.2.16 — SuccessionFlowUsage = OccurrenceUsagePrefix 'succession' 'flow'
-    //                  FlowDeclaration DefinitionBody
-    let parsed = parse_rejected("succession flow fuelFlow from tank.fuelOut to engine.fuelIn;");
+    // KerML 8.2.5.8.3 — MetadataAccessExpression =
+    //                   ownedRelationship += ElementReferenceMember '.' 'metadata'
+    let parsed = parse_rejected("attribute m = x.metadata;");
     assert!(render(&parsed.syntax()).contains("Error"));
 }
 
@@ -6647,15 +6649,15 @@ fn a_reserved_word_cannot_name_a_part_definition() {
 
 #[test]
 fn unimplemented_definition_body_items_are_reported_at_the_body() {
-    // The unimplemented item here moves for the same reason as the case above, and
+    // The unimplemented text here moves for the same reason as the case above, and
     // to the same construct: the usages it previously held are all read now, and each
-    // is exercised inside a definition body as a positive case below. A
-    // SuccessionFlowUsage (SysML 8.2.2.16) is not; it replaced a ViewUsage with an
-    // `expose` when that landed, as that replaced a SatisfyRequirementUsage and that a
-    // ConnectionUsage. It must be reported, and the definition after it must still parse
-    // — recovery happens at the enclosing body.
-    let parsed =
-        parse_rejected("part def Vehicle { succession flow f from a.x to b.y; part def Wheel; }");
+    // is exercised inside a definition body as a positive case below. It held a
+    // SuccessionFlowUsage (SysML 8.2.2.16), which replaced a ViewUsage with an `expose`,
+    // that a SatisfyRequirementUsage and that a ConnectionUsage. It is now an attribute
+    // whose feature value is not read, a MetadataAccessExpression (KerML 8.2.5.8.3). It
+    // must be reported, and the definition after it must still parse — recovery happens
+    // at the enclosing body.
+    let parsed = parse_rejected("part def Vehicle { attribute m = x.metadata; part def Wheel; }");
     let rendered = render(&parsed.syntax());
     assert_eq!(nodes_named(&rendered, "PartDefinition"), 2, "{rendered}");
 }
