@@ -13,15 +13,15 @@
 // of the second alternative (InitialNodeMember and, in its TargetSuccession form, the
 // ActionTargetSuccessionMember* after it), and the third alternative over the behaviour
 // usages this parser has, ActionUsage and PerformActionUsage, and over the four
-// ControlNodes (8.2.2.17.3) -- and, from the next commit, over AcceptNode, SendNode and
-// AssignmentNode (8.2.2.17.4, 8.2.2.17.5). So every line below parses but the last:
-// `then terminate;` is SourceSuccessionMember followed by an ActionNodeMember over a
-// TerminateNode (8.2.2.17.6), which is not implemented. It, IfNode, WhileLoopNode,
-// ForLoopNode, and the guarded and default target successions are what is left of the
-// control-flow layer.
+// ControlNodes (8.2.2.17.3), AcceptNode, SendNode and AssignmentNode (8.2.2.17.4,
+// 8.2.2.17.5) -- and, from the next commit, over TerminateNode (8.2.2.17.6). So every
+// line below parses but the last: `then for i in items { }` is SourceSuccessionMember
+// followed by an ActionNodeMember over a ForLoopNode (8.2.2.17.7), which is not
+// implemented. It, IfNode and WhileLoopNode are what is left of the control-flow layer.
 // History: this file rejected on `then accelerate;` until ActionTargetSuccessionMember
 // landed, on `then action decelerate;` until the third alternative did, on
-// `then merge m;` until ControlNode did, and on `then accept s;` until AcceptNode did.
+// `then merge m;` until ControlNode did, on `then accept s;` until AcceptNode did, and
+// on `then terminate;` until TerminateNode did.
 // Every line is kept, and each is asserted ACCEPTED in crates/sv2-syntax/tests/parser.rs.
 // Measured when ActionBody landed: of the 46 corpus files that write an `action def` and
 // still fail, exactly ONE fails first on `first`. The rest fail on ActionUsage and
@@ -33,4 +33,5 @@ action def Brake {
 	then merge m;
 	then accept s;
 	then terminate;
+	then for i in items { }
 }
