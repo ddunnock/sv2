@@ -10,8 +10,10 @@ vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_1.kerml
 vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_2.kerml
 vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_1.kerml
 vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_2.kerml
+vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml
 vendor/corpus/kerml/src/examples/Packet Example/PacketUsage.kerml
 vendor/corpus/kerml/src/examples/Packet Example/Packets.kerml
+vendor/corpus/kerml/src/examples/Simple Tests/ArgumentResolution.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Circular.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Classifications.kerml
@@ -23,6 +25,7 @@ vendor/corpus/kerml/src/examples/Simple Tests/Inheritance.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Redefinition.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Scoping.kerml
 vendor/corpus/kerml/src/examples/Vehicle Example/VehicleDefinitions.kerml
+vendor/corpus/kerml/src/examples/Vehicle Example/VehicleUsages.kerml
 vendor/corpus/omg/SimpleVehicleModel.sysml
 vendor/corpus/sysml/src/examples/Analysis Examples/AnalysisAnnotation.sysml
 vendor/corpus/sysml/src/examples/Analysis Examples/Dynamics.sysml

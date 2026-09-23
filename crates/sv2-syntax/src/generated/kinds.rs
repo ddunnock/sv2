@@ -543,6 +543,12 @@ pub enum SyntaxKind {
     FeatureDeclaration,
     /// `'<' NAME '>' NAME? | NAME`. `KerML` 8.2.4.3.1 — NOT `Identification`, whose parts are both optional. A feature declaration must name something.
     FeatureIdentification,
+    /// `FeaturePrefix 'connector' ( FeatureDeclaration? ValuePart? | ConnectorDeclaration ) TypeBody`. `KerML` 8.2.5.5.1.
+    Connector,
+    /// `( FeatureDeclaration? 'from' | 'all' 'from'? )? ConnectorEndMember 'to' ConnectorEndMember`. `KerML` 8.2.5.5.1.
+    BinaryConnectorDeclaration,
+    /// `FeatureDeclaration? '(' ConnectorEndMember ',' ConnectorEndMember ( ',' ConnectorEndMember )* ')'`. `KerML` 8.2.5.5.1.
+    NaryConnectorDeclaration,
     /// `FeaturePrefix 'succession' SuccessionDeclaration TypeBody`. `KerML` 8.2.5.5.3.
     Succession,
     /// `FeatureDeclaration ( 'first' ConnectorEndMember 'then' ConnectorEndMember )? | 'all'? ( 'first'? ConnectorEndMember 'then' ConnectorEndMember )?`. `KerML` 8.2.5.5.3.
@@ -1560,6 +1566,9 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::EndFeaturePrefix,
     SyntaxKind::FeatureDeclaration,
     SyntaxKind::FeatureIdentification,
+    SyntaxKind::Connector,
+    SyntaxKind::BinaryConnectorDeclaration,
+    SyntaxKind::NaryConnectorDeclaration,
     SyntaxKind::Succession,
     SyntaxKind::SuccessionDeclaration,
     SyntaxKind::BindingConnector,

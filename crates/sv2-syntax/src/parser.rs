@@ -604,6 +604,17 @@ const CONTROL_NODES: [(&str, SyntaxKind); 4] = [
     ("fork", SyntaxKind::ForkNode),
 ];
 
+/// Which of `KerML` `Connector`'s three declaration forms is written (`KerML` 8.2.5.5.1).
+#[derive(Clone, Copy)]
+enum ConnectorForm {
+    /// `FeatureDeclaration? ValuePart?`.
+    Feature,
+    /// `BinaryConnectorDeclaration`, `from ... to ...`.
+    Binary,
+    /// `NaryConnectorDeclaration`, `( ... , ... )`.
+    Nary,
+}
+
 /// Which `ActionNode` a member is, of the alternatives this parser reads.
 ///
 /// `ActionNode = ControlNode | SendNode | AcceptNode | AssignmentNode | TerminateNode |
@@ -2003,8 +2014,8 @@ impl<'a> Parser<'a> {
     ///
     /// Of `NonFeatureElement`, `Package` and `LibraryPackage` — shared units, the same
     /// productions in both grammars — and the eight classifiers of 8.2.4.2 are implemented. Of
-    /// `FeatureElement`'s ten alternatives, `Feature`, `BindingConnector` and `Succession`
-    /// are. The rest (`step`, `connector`, `flow`, `succession flow`, …) are reported
+    /// `FeatureElement`'s ten alternatives, `Feature`, `Connector`, `BindingConnector` and
+    /// `Succession` are. The rest (`step`, `flow`, `succession flow`, …) are reported
     /// rather than read.
     ///
     /// This is the check that stops a `SysML` construct being read out of a `KerML`
@@ -2028,6 +2039,7 @@ impl<'a> Parser<'a> {
                     || self.at_feature(n)
                     || self.at_kerml_succession(n)
                     || self.at_kerml_binding_connector(n)
+                    || self.at_kerml_connector(n)
             }
             Language::SysMl => {
                 self.at_sysml_keyword_member(n)
@@ -2561,7 +2573,8 @@ impl<'a> Parser<'a> {
         } else if self.language == Language::KerMl
             && (self.at_feature(usize::from(self.at_visibility()))
                 || self.at_kerml_succession(usize::from(self.at_visibility()))
-                || self.at_kerml_binding_connector(usize::from(self.at_visibility())))
+                || self.at_kerml_binding_connector(usize::from(self.at_visibility()))
+                || self.at_kerml_connector(usize::from(self.at_visibility())))
         {
             // NamespaceMember = NonFeatureMember | NamespaceFeatureMember
             // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
@@ -2815,6 +2828,7 @@ impl<'a> Parser<'a> {
                         || self.at_classifier(0).is_some()
                         || self.at_kerml_succession(0)
                         || self.at_kerml_binding_connector(0)
+                        || self.at_kerml_connector(0)
                 }
                 Language::SysMl => {
                     self.at_definition_element(0)
@@ -3206,7 +3220,8 @@ impl<'a> Parser<'a> {
     //
     // FeatureElement's ten alternatives are Feature, Step, Expression,
     // BooleanExpression, Invariant, Connector, BindingConnector, Succession, Flow and
-    // SuccessionFlow. Three are implemented, Feature, BindingConnector and Succession; the
+    // SuccessionFlow. Four are implemented, Feature, Connector, BindingConnector and
+    // Succession; the
     // member itself is, which is what this marks, exactly as NonFeatureMember marks its own
     // shape rather than MemberElement's alternatives.
     fn namespace_feature_member(&mut self) {
@@ -3217,6 +3232,8 @@ impl<'a> Parser<'a> {
             self.kerml_succession();
         } else if self.at_kerml_binding_connector(0) {
             self.kerml_binding_connector();
+        } else if self.at_kerml_connector(0) {
+            self.kerml_connector();
         } else {
             self.feature();
         }
@@ -3313,6 +3330,184 @@ impl<'a> Parser<'a> {
                 self.connector_end_member();
             }
         }
+        self.finish_node();
+    }
+
+    /// Whether a `KerML` `Connector` starts at the `n`th meaningful token.
+    ///
+    /// A `FeaturePrefix`, then `connector`, which is reserved (`KerML` 8.2.2.6) and opens
+    /// no other `KerML` production, so it decides on its own.
+    fn at_kerml_connector(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_feature_prefix(n), "connector")
+    }
+
+    // production: Connector@kerml
+    //
+    // Connector : Connector =
+    //     FeaturePrefix 'connector'
+    //     ( FeatureDeclaration? ValuePart?
+    //     | ConnectorDeclaration
+    //     )
+    //     TypeBody                                                (KerML 8.2.5.5.1)
+    //
+    // production: ConnectorDeclaration@kerml
+    //
+    // ConnectorDeclaration : Connector =
+    //     BinaryConnectorDeclaration | NaryConnectorDeclaration  (KerML 8.2.5.5.1)
+    //
+    // Scoped `kerml`: SysML's connector is ConnectionUsage (8.2.2.13.1), keyword
+    // `connection`/`connect`, and a .sysml file never reaches this (ADR-0014). The
+    // metaclass is Connector (8.3.4.5.3, receipt 8ac87fd0). ConnectorDeclaration is an
+    // alternation with no node, as ControlNode is; the member node says which.
+    //
+    // All three alternatives may open on a FeatureDeclaration, so the choice is made by
+    // looking along the statement, which `connector_form` does: a `from` anywhere, or an
+    // end followed directly by `to`, is the binary form; a `(` before any `;`, brace or
+    // `=` is the n-ary; anything else is the first alternative. `to`, `=` and `(` are not
+    // in a FeatureDeclaration -- only a ValuePart's expression writes a `(`, and the
+    // n-ary form has no ValuePart, so a `(` after `=` is the first alternative's. `from`
+    // IS, in one place: FeatureRelationshipPart reaches DisjoiningPart, `'disjoint' 'from'
+    // OwnedDisjoining` (KerML 8.2.4.1.1), unimplemented today. So a `from` directly after
+    // `disjoint` is not counted, and `connector c disjoint from d;` stays the first
+    // alternative when that part lands.
+    //
+    // Marked although FeaturePrefix is not, for the reason Succession gives, and although
+    // FeatureDeclaration is not: its implemented part is what is read here, as Feature
+    // reads it.
+    //
+    // implied specialization: Links::links, Links::binaryLinks for two ends, and the
+    //     Objects:: forms for an AssociationStructure type
+    // constraint: Connector::checkConnectorSpecialization,
+    //     checkConnectorBinarySpecialization, checkConnectorObjectSpecialization and
+    //     checkConnectorBinaryObjectSpecialization (KerML 8.3.4.5.3). Injections, so
+    //     sv2-hir's; this layer builds the tree only (ADR-0002).
+    fn kerml_connector(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Connector);
+        self.feature_prefix();
+        self.expect_keyword("connector");
+        match self.connector_form() {
+            ConnectorForm::Binary => self.binary_connector_declaration(),
+            ConnectorForm::Nary => self.nary_connector_declaration(),
+            ConnectorForm::Feature => {
+                if self.at_feature_declaration() {
+                    self.feature_declaration();
+                }
+                if self.at_value_part() {
+                    self.value_part();
+                }
+            }
+        }
+        self.type_body();
+        self.finish_node();
+    }
+
+    /// Which of `Connector`'s three declaration forms is written here, after the
+    /// `connector` keyword: see `kerml_connector`.
+    fn connector_form(&self) -> ConnectorForm {
+        if self.connector_from_follows() {
+            return ConnectorForm::Binary;
+        }
+        let after_all = usize::from(self.at_keyword("all"));
+        if self
+            .skip_connector_end(after_all)
+            .is_some_and(|after| self.nth_is_keyword(after, "to"))
+        {
+            return ConnectorForm::Binary;
+        }
+        let mut n = 0;
+        loop {
+            if self.nth_is(n, SyntaxKind::LParen) {
+                return ConnectorForm::Nary;
+            }
+            if self.peek_nth(n).is_none()
+                || self.nth_is(n, SyntaxKind::Semicolon)
+                || self.nth_is(n, SyntaxKind::LBrace)
+                || self.nth_is(n, SyntaxKind::RBrace)
+                || self.nth_is(n, SyntaxKind::Eq)
+            {
+                return ConnectorForm::Feature;
+            }
+            n += 1;
+        }
+    }
+
+    /// Whether the statement from here writes a binary connector's `from`: a `from`
+    /// before its `;` or brace that is not `disjoint from` (see `kerml_connector`).
+    fn connector_from_follows(&self) -> bool {
+        let mut n = 0;
+        while let Some(from) = self.scan_for_keyword(n, "from") {
+            if from == 0 || !self.nth_is_keyword(from - 1, "disjoint") {
+                return true;
+            }
+            n = from + 1;
+        }
+        false
+    }
+
+    // production: BinaryConnectorDeclaration@kerml
+    //
+    // BinaryConnectorDeclaration : Connector =
+    //     ( FeatureDeclaration? 'from' | isSufficient ?= 'all' 'from'? )?
+    //     ownedRelationship += ConnectorEndMember 'to'
+    //     ownedRelationship += ConnectorEndMember                  (KerML 8.2.5.5.1)
+    //
+    // "the source related feature is referenced after the keyword from, and the target
+    // related feature is referenced after the keyword to ... If a binary connector
+    // declaration includes only the related features part, then the keyword from can be
+    // omitted" (7.4.6.2, receipt d8abbbc3). `all from` is the second alternative's; `all`
+    // with a declaration after it is the FeatureDeclaration's own `all`, since a
+    // FeatureDeclaration cannot be `all` alone.
+    fn binary_connector_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::BinaryConnectorDeclaration);
+        if !self.connector_from_follows() {
+            // No `from`: the ends alone, or `all` and the ends.
+            self.eat_optional_keyword("all");
+        } else if self.at_keyword("all") && self.nth_is_keyword(1, "from") {
+            // `all from`: the second alternative with its optional `from` written.
+            self.eat_optional_keyword("all");
+            self.expect_keyword("from");
+        } else {
+            // `FeatureDeclaration? 'from'`: whatever stands before the `from` declares.
+            if !self.at_keyword("from") {
+                self.feature_declaration();
+            }
+            self.expect_keyword("from");
+        }
+        self.connector_end_member();
+        self.expect_keyword("to");
+        self.connector_end_member();
+        self.finish_node();
+    }
+
+    // production: NaryConnectorDeclaration@kerml
+    //
+    // NaryConnectorDeclaration : Connector =
+    //     FeatureDeclaration?
+    //     '(' ownedRelationship += ConnectorEndMember ','
+    //         ownedRelationship += ConnectorEndMember
+    //         ( ',' ownedRelationship += ConnectorEndMember )*
+    //     ')'                                                     (KerML 8.2.5.5.1)
+    //
+    // "they can be listed between parentheses, after the regular feature declaration part
+    // and before the body of the connector" (7.4.6.2, receipt d8abbbc3). At least two
+    // ends: a list of one is no connector's.
+    fn nary_connector_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::NaryConnectorDeclaration);
+        if !self.at(SyntaxKind::LParen) {
+            self.feature_declaration();
+        }
+        self.expect(SyntaxKind::LParen, "`(`");
+        self.connector_end_member();
+        self.expect(SyntaxKind::Comma, "`,` and a second connector end");
+        self.connector_end_member();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.connector_end_member();
+        }
+        self.expect(SyntaxKind::RParen, "`)`");
         self.finish_node();
     }
 
@@ -13274,7 +13469,7 @@ impl<'a> Parser<'a> {
     // Marked although RelationshipOwnedElement and OwnedRelatedElement are not: this
     // production's own parts are read, and the two alternations below it are read as far
     // as NonFeatureElement and FeatureElement are — Package, Dependency and the eight
-    // classifiers; Feature, Succession and BindingConnector. Neither alternation has a
+    // classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
     // node, as FeatureSpecialization has none: the element read says which was taken.
     //
     // An owned related element is the relationship's ownedRelatedElement, with no
@@ -13348,6 +13543,8 @@ impl<'a> Parser<'a> {
             self.kerml_succession();
         } else if self.at_kerml_binding_connector(0) {
             self.kerml_binding_connector();
+        } else if self.at_kerml_connector(0) {
+            self.kerml_connector();
         } else if self.at_feature(0) {
             self.feature();
         } else {

@@ -219,6 +219,30 @@ NODES = [
             "whose parts are both optional. A feature declaration must name something."
         ),
     ),
+    # KerML's Connector, over its three declaration forms: a bare FeatureDeclaration and
+    # value, the binary `from ... to ...`, and the n-ary parenthesised list. The
+    # ConnectorDeclaration alternation between the last two builds no node.
+    (
+        "Connector",
+        (
+            "`FeaturePrefix 'connector' ( FeatureDeclaration? ValuePart? | "
+            "ConnectorDeclaration ) TypeBody`. `KerML` 8.2.5.5.1."
+        ),
+    ),
+    (
+        "BinaryConnectorDeclaration",
+        (
+            "`( FeatureDeclaration? 'from' | 'all' 'from'? )? ConnectorEndMember 'to' "
+            "ConnectorEndMember`. `KerML` 8.2.5.5.1."
+        ),
+    ),
+    (
+        "NaryConnectorDeclaration",
+        (
+            "`FeatureDeclaration? '(' ConnectorEndMember ',' ConnectorEndMember "
+            "( ',' ConnectorEndMember )* ')'`. `KerML` 8.2.5.5.1."
+        ),
+    ),
     # KerML's Succession, the second FeatureElement implemented. The SysML succession is
     # SuccessionAsUsage, a different production over a different prefix and declaration;
     # the two share only ConnectorEndMember.

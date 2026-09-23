@@ -730,6 +730,174 @@ fn parsing_a_binding_connector_never_hangs_or_loses_bytes_on_truncated_input() {
     }
 }
 
+// -- Connector, KerML 8.2.5.5.1 ----------------------------------------------------
+//
+//   Connector = FeaturePrefix 'connector'
+//               ( FeatureDeclaration? ValuePart? | ConnectorDeclaration ) TypeBody
+//   ConnectorDeclaration       = BinaryConnectorDeclaration | NaryConnectorDeclaration
+//   BinaryConnectorDeclaration = ( FeatureDeclaration? 'from' | 'all' 'from'? )?
+//                                ConnectorEndMember 'to' ConnectorEndMember
+//   NaryConnectorDeclaration   = FeatureDeclaration?
+//                                '(' ConnectorEndMember ',' ConnectorEndMember
+//                                    ( ',' ConnectorEndMember )* ')'
+
+#[test]
+fn the_connector_examples_of_7_4_6_2_parse() {
+    // 7.4.6.2's connector declarations (receipt d8abbbc3), each in its example's struct.
+    // The binary form with and without a declaration, `from` omitted, chained ends, cross
+    // multiplicities, and the n-ary form with and without association end names.
+    for (item, form) in [
+        (
+            "connector mount : Mounting from axle to wheels;",
+            "BinaryConnectorDeclaration",
+        ),
+        ("connector axle to wheels;", "BinaryConnectorDeclaration"),
+        (
+            "connector mount[2] : Mounting\n    from mountingAxle ::> axle\n      to mountedWheel ::> wheels;",
+            "BinaryConnectorDeclaration",
+        ),
+        (
+            "connector mount[2] : Mounting from [1] halfAxles to [1] wheels;",
+            "BinaryConnectorDeclaration",
+        ),
+        (
+            "connector mount : Mounting from axle.halfAxles to wheels.hub;",
+            "BinaryConnectorDeclaration",
+        ),
+        (
+            "connector mount[2] : Mounting (axle, wheels);",
+            "NaryConnectorDeclaration",
+        ),
+        (
+            "connector mount[2] : Mounting (\n    mountingAxle ::> axle,\n    mountedWheel ::> wheels\n);",
+            "NaryConnectorDeclaration",
+        ),
+    ] {
+        let source = format!("struct WheelAssembly {{ {item} }}");
+        let tree = render(&kerml_accepted(&source).syntax());
+        assert_eq!(
+            child_kinds(&tree, "Connector"),
+            ["FeaturePrefix", "KwConnector", form, "TypeBody"],
+            "{source}\n{tree}"
+        );
+    }
+}
+
+#[test]
+fn a_binary_connector_declaration_owns_what_its_production_writes() {
+    let decl = |item: &str| {
+        let tree = render(&kerml_accepted(&format!("struct S {{ {item} }}")).syntax());
+        child_kinds(&tree, "BinaryConnectorDeclaration")
+    };
+    let ends = ["ConnectorEndMember", "KwTo", "ConnectorEndMember"];
+    // examples/Simple Tests/Connectors.kerml:7 — declared, then `from`.
+    assert_eq!(
+        decl("connector c1 from a to b;"),
+        [&["FeatureDeclaration", "KwFrom"][..], &ends].concat()
+    );
+    // `from` with nothing declared before it.
+    assert_eq!(
+        decl("connector from a to b;"),
+        [&["KwFrom"][..], &ends].concat()
+    );
+    // Named Collection Members Example/VehicleTanks.kerml:27 — the ends alone.
+    assert_eq!(decl("connector eng to tanks.main1;"), ends);
+    // `all`, with and without the optional `from`.
+    assert_eq!(
+        decl("connector all from a to b;"),
+        [&["KwAll", "KwFrom"][..], &ends].concat()
+    );
+    assert_eq!(
+        decl("connector all a to b;"),
+        [&["KwAll"][..], &ends].concat()
+    );
+    // `all` before a declaration is the declaration's own.
+    assert_eq!(
+        decl("connector all c from a to b;"),
+        [&["FeatureDeclaration", "KwFrom"][..], &ends].concat()
+    );
+    // Simple Tests/ArgumentResolution.kerml:15 — an end that names itself.
+    kerml_accepted("struct S { connector a ::> a.x to b; }");
+}
+
+#[test]
+fn a_connector_with_no_connector_declaration_is_a_feature_declaration_and_value() {
+    // The first alternative, examples/Simple Tests/Connectors.kerml:8-9: a value and no
+    // ends, the ends declared in the body or not at all.
+    for (item, kinds) in [
+        (
+            "abstract connector c2 = c1;",
+            &[
+                "FeaturePrefix",
+                "KwConnector",
+                "FeatureDeclaration",
+                "ValuePart",
+                "TypeBody",
+            ][..],
+        ),
+        (
+            "connector = c2 { }",
+            &["FeaturePrefix", "KwConnector", "ValuePart", "TypeBody"],
+        ),
+        ("connector;", &["FeaturePrefix", "KwConnector", "TypeBody"]),
+        // A `(` after the `=` is the value's, an invocation: the n-ary form has no
+        // ValuePart.
+        (
+            "connector c = f(a, b);",
+            &[
+                "FeaturePrefix",
+                "KwConnector",
+                "FeatureDeclaration",
+                "ValuePart",
+                "TypeBody",
+            ],
+        ),
+        (
+            "connector c : T;",
+            &[
+                "FeaturePrefix",
+                "KwConnector",
+                "FeatureDeclaration",
+                "TypeBody",
+            ],
+        ),
+    ] {
+        let tree = render(&kerml_accepted(&format!("struct S {{ {item} }}")).syntax());
+        assert_eq!(child_kinds(&tree, "Connector"), kinds, "{item}\n{tree}");
+    }
+}
+
+#[test]
+fn a_connector_keeps_every_byte() {
+    let source = "struct S {\n\tconnector /* c */ m[2] : M\n\t\tfrom [1] a . b // n\n\t\tto b ;\n\tconnector ( a , b , c ) { }\n}\n";
+    assert_eq!(kerml_accepted(source).text(), source);
+}
+
+#[test]
+fn a_connector_is_bounded_by_its_rules() {
+    // A binary connector names two ends, `to` between them. Held as a file by
+    // tests/rejection/kerml-binary-connector-needs-to.kerml.
+    kerml_rejected("struct S { connector c from a; }");
+    kerml_rejected("struct S { connector c from a to b to d; }");
+    // An n-ary list has at least two ends. Held as a file by
+    // tests/rejection/kerml-nary-connector-needs-two-ends.kerml.
+    kerml_rejected("struct S { connector (a); }");
+    kerml_rejected("struct S { connector (a, b }");
+    // TypeBody is not optional.
+    kerml_rejected("struct S { connector a to b }");
+    // `disjoint from` is a FeatureDeclaration's DisjoiningPart (KerML 8.2.4.1.1), not a
+    // binary connector's `from`: it is rejected by absence today, DisjoiningPart being
+    // unimplemented, and never begins a BinaryConnectorDeclaration.
+    let tree = render(&kerml_rejected("struct S { connector c disjoint from d; }").syntax());
+    assert!(!has_node(&tree, "BinaryConnectorDeclaration"), "{tree}");
+    // SysML's connector is `connection`; `connector` is KerML's (ADR-0014).
+    assert!(
+        !parse("part def P { connector a to b; }", Language::SysMl)
+            .errors()
+            .is_empty()
+    );
+}
+
 // -- ConnectionUsage is SysML's alone ---------------------------------------------
 
 #[test]
