@@ -23,6 +23,7 @@ vendor/corpus/kerml/src/examples/Simple Tests/Inheritance.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Redefinition.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Scoping.kerml
 vendor/corpus/kerml/src/examples/Vehicle Example/VehicleDefinitions.kerml
+vendor/corpus/omg/SimpleVehicleModel.sysml
 vendor/corpus/sysml/src/examples/Analysis Examples/AnalysisAnnotation.sysml
 vendor/corpus/sysml/src/examples/Analysis Examples/Dynamics.sysml
 vendor/corpus/sysml/src/examples/Analysis Examples/Turbojet Stage Analysis.sysml
@@ -110,6 +111,7 @@ vendor/corpus/sysml/src/examples/State Space Representation Examples/CartSample.
 vendor/corpus/sysml/src/examples/State Space Representation Examples/EVSample.sysml
 vendor/corpus/sysml/src/examples/Timeslice and Snapshot Examples/TimeVaryingAttribute.sysml
 vendor/corpus/sysml/src/examples/Variability Examples/VehicleVariabilityModel.sysml
+vendor/corpus/sysml/src/examples/Vehicle Example/SysML v2 Spec Annex A SimpleVehicleModel.sysml
 vendor/corpus/sysml/src/examples/Vehicle Example/VehicleDefinitions.sysml
 vendor/corpus/sysml/src/examples/Vehicle Example/VehicleIndividuals.sysml
 vendor/corpus/sysml/src/examples/Vehicle Example/VehicleUsages.sysml

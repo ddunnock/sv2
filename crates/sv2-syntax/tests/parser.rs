@@ -8431,6 +8431,66 @@ fn an_invocation_names_its_type_with_a_qualified_name() {
 }
 
 #[test]
+fn an_invocation_names_its_type_with_a_feature_chain() {
+    // InstantiatedTypeMember's second alternative, OwnedFeatureChainMember (KerML
+    // 8.2.5.8.3): SysML Annex A, vendor/corpus/omg/SimpleVehicleModel.sysml:1232, invokes
+    // a requirement through the feature that holds it.
+    let rendered = render(
+        &parse_accepted(
+            "calc def C { PassIf(vehicleSpecification.vehicleMassRequirement(vehicle_uut)) }",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        nodes_named(&rendered, "InvocationExpression"),
+        2,
+        "{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "FeatureChainExpression"),
+        0,
+        "{rendered}"
+    );
+    assert_eq!(
+        child_kinds(&rendered, "OwnedFeatureChainMember"),
+        ["OwnedFeatureChain"],
+        "{rendered}"
+    );
+    assert_eq!(
+        child_kinds(&rendered, "OwnedFeatureChain"),
+        ["OwnedFeatureChaining", "Dot", "OwnedFeatureChaining"],
+        "{rendered}"
+    );
+    // A lone name is the first alternative, never a chain of one.
+    let one = render(&parse_accepted("calc def C { f(x) }").syntax());
+    assert_eq!(
+        child_kinds(&one, "InstantiatedTypeMember"),
+        ["InstantiatedTypeReference"],
+        "{one}"
+    );
+    // The same member is the function after `->` and the type after `new`.
+    for source in [
+        "calc def C { xs->a.b.select(x) }",
+        "calc def C { new a.b(1) }",
+        "calc def C { A::B.c.d(1).e }",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            nodes_named(&rendered, "OwnedFeatureChainMember"),
+            1,
+            "{source}\n{rendered}"
+        );
+    }
+    // A chain with nothing after it is still a FeatureChainExpression.
+    let chain = render(&parse_accepted("calc def C { a.b }").syntax());
+    assert_eq!(nodes_named(&chain, "InvocationExpression"), 0, "{chain}");
+    // Every link is a name. Held as a file by
+    // tests/rejection/invoked-feature-chain-names-every-link.sysml.
+    parse_rejected("calc def C { a.b.(1) }");
+    parse_rejected("calc def C { a.(1) }");
+}
+
+#[test]
 fn an_invocation_reads_the_named_form() {
     // NamedArgument = ParameterRedefinition '=' ArgumentValue (KerML 8.2.5.8.3), which
     // ParameterTest writes as `F(q = 1, p = a)`.

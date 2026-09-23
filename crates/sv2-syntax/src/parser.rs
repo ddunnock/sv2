@@ -6065,8 +6065,7 @@ impl<'a> Parser<'a> {
     // InvocationTypeMember, which no clause defines; deviations.json records
     // InvocationTypeMember-misnomer on OMG issue KERML11-83, where the technical editor
     // says InstantiatedTypeMember was meant, and the Pilot uses it in this slot
-    // (KerMLExpressions.xtext:309). It is read in its first alternative only and stays
-    // unmarked, as in `invocation_expression`.
+    // (KerMLExpressions.xtext:309), read by `instantiated_type_member`.
     //
     // The three argument forms open on three different tokens, so one token decides:
     // an ArgumentList on `(`, a BodyArgumentMember on `{` (ExpressionBody, 8.2.5.8.3),
@@ -6081,12 +6080,7 @@ impl<'a> Parser<'a> {
         self.start_node_at(start, SyntaxKind::FunctionOperationExpression);
         self.wrap_at(start, &PRIMARY_ARGUMENT);
         self.bump();
-        self.eat_trivia();
-        self.start_node(SyntaxKind::InstantiatedTypeMember);
-        self.start_node(SyntaxKind::InstantiatedTypeReference);
-        self.qualified_name();
-        self.finish_node();
-        self.finish_node();
+        self.instantiated_type_member();
         if self.at(SyntaxKind::LParen) {
             self.argument_list();
         } else if self.at(SyntaxKind::LBrace) && self.language == Language::SysMl {
@@ -6476,9 +6470,10 @@ impl<'a> Parser<'a> {
 
     /// Whether an `InvocationExpression` starts here.
     ///
-    /// A `QualifiedName` with a `'('` after it — the whole of what separates it from a
-    /// `FeatureReferenceExpression`, which is the same name with nothing after it
-    /// (`KerML` 8.2.5.8.3).
+    /// A `QualifiedName`, or a chain of them, with a `'('` after it — the whole of what
+    /// separates it from a `FeatureReferenceExpression`, which is the same name with
+    /// nothing after it, and from a `FeatureChainExpression`, the chain with nothing after
+    /// it (`KerML` 8.2.5.8.2-3).
     ///
     /// It asks for a NAME rather than for any token before the `(`, which is what keeps
     /// `x and (y)` an operator over a parenthesised operand: `and` is reserved
@@ -6486,8 +6481,19 @@ impl<'a> Parser<'a> {
     /// with nothing before it never reaches here at all — `null_expression` and
     /// `sequence_expression` are asked first.
     fn at_invocation_expression(&self) -> bool {
-        self.skip_qualified_name(0)
+        self.skip_instantiated_type_member(0)
             .is_some_and(|n| self.nth_is(n, SyntaxKind::LParen))
+    }
+
+    /// The index just past an `InstantiatedTypeMember` written at the `n`th meaningful
+    /// token: a `QualifiedName`, and any `'.'`-joined names after it, as
+    /// `instantiated_type_member` reads them.
+    fn skip_instantiated_type_member(&self, n: usize) -> Option<usize> {
+        let mut n = self.skip_qualified_name(n)?;
+        while self.nth_is(n, SyntaxKind::Dot) && self.nth_is_name(n + 1) {
+            n = self.skip_qualified_name(n + 1)?;
+        }
+        Some(n)
     }
 
     // production: InvocationExpression
@@ -6501,29 +6507,73 @@ impl<'a> Parser<'a> {
     //
     // InstantiatedTypeReference : Type = [QualifiedName]         (KerML 8.2.5.8.3)
     //
-    // InstantiatedTypeMember is NOT marked. It is
-    //
-    //     InstantiatedTypeMember = memberElement = InstantiatedTypeReference
-    //                            | OwnedFeatureChainMember       (KerML 8.2.5.8.3)
-    //
-    // and only the first alternative is read here. The second is a FeatureChain — `a.b(x)`
-    // — and it is absent for the same reason FeatureChainMember's chain alternative is:
-    // the chain productions read a single link, and a multi-link chain in this position
-    // has no caller yet. The node is still built, because the membership is in the tree
-    // either way; what is not claimed is the alternation.
+    // The invoked type is an InstantiatedTypeMember, a name or a feature chain; see
+    // `instantiated_type_member`.
     //
     // The EmptyResultMember is the result parameter every invocation owns and nobody
     // writes, exactly as FeatureReferenceExpression owns one (8.2.5.8.3 names it in both).
     fn invocation_expression(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::InvocationExpression);
-        self.start_node(SyntaxKind::InstantiatedTypeMember);
-        self.start_node(SyntaxKind::InstantiatedTypeReference);
-        self.qualified_name();
-        self.finish_node();
-        self.finish_node();
+        self.instantiated_type_member();
         self.argument_list();
         self.empty_result_member();
+        self.finish_node();
+    }
+
+    // production: InstantiatedTypeMember
+    //
+    // InstantiatedTypeMember : Membership =
+    //       memberElement = InstantiatedTypeReference
+    //     | OwnedFeatureChainMember                              (KerML 8.2.5.8.3)
+    //
+    // production: OwnedFeatureChainMember@kerml
+    //
+    // OwnedFeatureChainMember : OwningMembership =
+    //     ownedMemberElement = FeatureChain                      (KerML 8.2.5.8.2)
+    //
+    // production: FeatureChain@kerml
+    //
+    // FeatureChain : Feature =
+    //     ownedRelationship += OwnedFeatureChaining
+    //     ( '.' ownedRelationship += OwnedFeatureChaining )+     (KerML 8.2.4.3.5)
+    //
+    // The invoked type of an InvocationExpression, a FunctionOperationExpression and a
+    // ConstructorExpression: a name, or a chain of two or more, `a.b(x)`. A SHARED unit,
+    // whose OwnedFeatureChainMember is each language's own: SysML's (8.2.2.17.5) owns an
+    // OwnedFeatureChain, `ownedRelationship += OwnedFeatureChaining ( '.' ... )+`
+    // (8.2.2.6.5), and KerML's owns a FeatureChain of the same text, so both are read by
+    // `owned_feature_chain` and build the same OwnedFeatureChain node, whose element is a
+    // Feature either way. NODE KIND, deliberately: KerML's FeatureChain builds an
+    // `OwnedFeatureChain` node, not a `FeatureChain` one, which does not exist; KerML's own
+    // `OwnedFeatureChain : Feature = FeatureChain` (8.2.4.3.5) is the same element, so a
+    // typed accessor in sv2-ast reads this node for both. The Pilot states the one rule for both
+    // (KerMLExpressions.xtext:436-438, `ownedRelatedElement += OwnedFeatureChain`).
+    //
+    // `a.b(x)` is otherwise `a`, a postfix `.b`, and a `(` nothing can read; the Pilot
+    // takes the invocation by backtracking out of that, and here the chain is looked past
+    // to the `(` instead (`at_invocation_expression`). A chain is two or more names, so a
+    // lone name is the InstantiatedTypeReference and never a chain of one.
+    //
+    // Deviations InstantiatedTypeReference and OwnedFeatureChainMember are spec_only,
+    // follow_spec: implement what the specification states. The corpus writes the chain
+    // in SysML Annex A (SimpleVehicleModel.sysml:1232,
+    // `vehicleSpecification.vehicleMassRequirement(vehicle_uut)`) and in KerML
+    // (examples/Simple Tests/Expressions.kerml:56, `f.s(1)`).
+    fn instantiated_type_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::InstantiatedTypeMember);
+        if self.at_owned_feature_chain() {
+            self.start_node(SyntaxKind::OwnedFeatureChainMember);
+            let start = self.builder.checkpoint();
+            self.qualified_name();
+            self.owned_feature_chain(start);
+            self.finish_node();
+        } else {
+            self.start_node(SyntaxKind::InstantiatedTypeReference);
+            self.qualified_name();
+            self.finish_node();
+        }
         self.finish_node();
     }
 
@@ -6562,8 +6612,7 @@ impl<'a> Parser<'a> {
     // EmptyResultMember here, and the clause names none; the ConstructorResultMember is the
     // result.
     //
-    // InstantiatedTypeMember is read in its first alternative only, as in
-    // `invocation_expression`, and stays unmarked for the reason given there.
+    // InstantiatedTypeMember is read by `instantiated_type_member`, as the invocation's is.
     //
     // implied specialization: Performances::constructorEvaluations
     // constraint: ConstructorExpression::checkConstructorExpressionSpecialization
@@ -6573,12 +6622,7 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::ConstructorExpression);
         self.expect_keyword("new");
-        self.eat_trivia();
-        self.start_node(SyntaxKind::InstantiatedTypeMember);
-        self.start_node(SyntaxKind::InstantiatedTypeReference);
-        self.qualified_name();
-        self.finish_node();
-        self.finish_node();
+        self.instantiated_type_member();
         self.eat_trivia();
         self.start_node(SyntaxKind::ConstructorResultMember);
         self.start_node(SyntaxKind::ConstructorResult);
@@ -10468,7 +10512,7 @@ impl<'a> Parser<'a> {
     fn sysml_feature_chain_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::FeatureChainMember);
-        if self.at_sysml_owned_feature_chain() {
+        if self.at_owned_feature_chain() {
             self.start_node(SyntaxKind::OwnedFeatureChainMember);
             let start = self.builder.checkpoint();
             self.qualified_name();
@@ -10482,7 +10526,7 @@ impl<'a> Parser<'a> {
 
     /// Whether the name starting here is followed by a `.` and another name, making it an
     /// `OwnedFeatureChain` rather than a bare `QualifiedName`.
-    fn at_sysml_owned_feature_chain(&self) -> bool {
+    fn at_owned_feature_chain(&self) -> bool {
         self.skip_qualified_name(0)
             .is_some_and(|after| self.nth_is(after, SyntaxKind::Dot) && self.nth_is_name(after + 1))
     }

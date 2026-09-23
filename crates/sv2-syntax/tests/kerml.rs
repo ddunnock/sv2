@@ -761,6 +761,18 @@ fn a_constructor_expression_is_kerml_too() {
     kerml_rejected("package P { feature l = new L; }");
 }
 
+#[test]
+fn an_invocation_through_a_feature_chain_is_kerml_too() {
+    // InstantiatedTypeMember is a shared unit, and KerML's OwnedFeatureChainMember
+    // (8.2.5.8.2) owns a FeatureChain (8.2.4.3.5) of the same text as SysML's
+    // OwnedFeatureChain: vendor/corpus/kerml/src/examples/Simple Tests/Expressions.kerml:56
+    // writes `bb : Boolean = f.s(1);`.
+    let tree = render(&kerml_accepted("package P { feature bb : Boolean = f.s(1); }").syntax());
+    assert!(has_node(&tree, "OwnedFeatureChainMember"), "{tree}");
+    assert!(has_node(&tree, "InvocationExpression"), "{tree}");
+    kerml_rejected("package P { feature bb = f.(1); }");
+}
+
 // -- FunctionOperationExpression, KerML 8.2.5.8.2 -----------------------------------
 
 #[test]
