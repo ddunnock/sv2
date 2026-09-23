@@ -14,6 +14,7 @@ vendor/corpus/kerml/src/examples/Packet Example/PacketUsage.kerml
 vendor/corpus/kerml/src/examples/Packet Example/Packets.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Circular.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml
+vendor/corpus/kerml/src/examples/Simple Tests/Classifications.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Dependencies.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml
@@ -25,6 +26,7 @@ vendor/corpus/kerml/src/examples/Vehicle Example/VehicleDefinitions.kerml
 vendor/corpus/sysml/src/examples/Analysis Examples/AnalysisAnnotation.sysml
 vendor/corpus/sysml/src/examples/Analysis Examples/Dynamics.sysml
 vendor/corpus/sysml/src/examples/Analysis Examples/Turbojet Stage Analysis.sysml
+vendor/corpus/sysml/src/examples/Analysis Examples/Vehicle Analysis Demo.sysml
 vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFCoreLib.sysml
 vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml
 vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFProfileLib.sysml
@@ -41,6 +43,7 @@ vendor/corpus/sysml/src/examples/Geometry Examples/CarWithEnvelopingShape.sysml
 vendor/corpus/sysml/src/examples/Geometry Examples/CarWithShapeAndCSG.sysml
 vendor/corpus/sysml/src/examples/Geometry Examples/ExternalShapeRefExample.sysml
 vendor/corpus/sysml/src/examples/Geometry Examples/SimpleQuadcopter.sysml
+vendor/corpus/sysml/src/examples/Geometry Examples/VehicleGeometryAndCoordinateFrames.sysml
 vendor/corpus/sysml/src/examples/Import Tests/AliasImport.sysml
 vendor/corpus/sysml/src/examples/Import Tests/CircularImport.sysml
 vendor/corpus/sysml/src/examples/Import Tests/PrivateImportTest.sysml
@@ -103,10 +106,12 @@ vendor/corpus/sysml/src/examples/Timeslice and Snapshot Examples/TimeVaryingAttr
 vendor/corpus/sysml/src/examples/Variability Examples/VehicleVariabilityModel.sysml
 vendor/corpus/sysml/src/examples/Vehicle Example/VehicleDefinitions.sysml
 vendor/corpus/sysml/src/examples/Vehicle Example/VehicleIndividuals.sysml
+vendor/corpus/sysml/src/examples/Vehicle Example/VehicleUsages.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package - Updated.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition - Updated.sysml
 vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition.sysml
+vendor/corpus/sysml/src/examples/v1 Spec Examples/D.4.7.8 Dynamics/HSUVDynamics.sysml
 vendor/corpus/sysml/src/training/01. Packages/Comment Example.sysml
 vendor/corpus/sysml/src/training/01. Packages/Documentation Example.sysml
 vendor/corpus/sysml/src/training/01. Packages/Package Example.sysml
@@ -179,6 +184,7 @@ vendor/corpus/sysml/src/training/32. Requirements/Requirement Definitions.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Groups.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Satisfaction.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Usages.sysml
+vendor/corpus/sysml/src/training/33. Analysis/Analysis Case Definition Example.sysml
 vendor/corpus/sysml/src/training/33. Analysis/Analysis Case Usage Example.sysml
 vendor/corpus/sysml/src/training/33. Analysis/Trade Study Analysis Example.sysml
 vendor/corpus/sysml/src/training/34. Verification/Verification Case Definition Example.sysml
@@ -197,7 +203,10 @@ vendor/corpus/sysml/src/training/40. Filtering/Filtering Example-1.sysml
 vendor/corpus/sysml/src/training/41. Language Extension/Model Library Example.sysml
 vendor/corpus/sysml/src/training/41. Language Extension/Semantic Metadata Example.sysml
 vendor/corpus/sysml/src/training/41. Language Extension/User Keyword Example.sysml
+vendor/corpus/sysml/src/validation/01-Parts Tree/1a-Parts Tree.sysml
+vendor/corpus/sysml/src/validation/01-Parts Tree/1c-Parts Tree Redefinition.sysml
 vendor/corpus/sysml/src/validation/01-Parts Tree/1d-Parts Tree with Reference.sysml
+vendor/corpus/sysml/src/validation/02-Parts Interconnection/2a-Parts Interconnection.sysml
 vendor/corpus/sysml/src/validation/02-Parts Interconnection/2c-Parts Interconnection-Multiple Decompositions.sysml
 vendor/corpus/sysml/src/validation/03-Function-based Behavior/3a-Function-based Behavior-1.sysml
 vendor/corpus/sysml/src/validation/03-Function-based Behavior/3a-Function-based Behavior-2.sysml

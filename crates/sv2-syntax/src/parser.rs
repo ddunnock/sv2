@@ -35,9 +35,9 @@
 //! that the grouping of nested `OperatorExpression`s is not expressed in the
 //! productions and is given by that clause's table 6. The table is data at
 //! `docs/operator-precedence.toml`, and `INFIX` below is what the parser reads. The
-//! operator core reads all fifteen tiers; the postfix layer of 8.2.5.8.2 — `a.b`,
-//! `x[kg]`, `x#(1)`, `x->f()` — and `BodyExpression` are not implemented, each with a
-//! rejection case in `tests/rejection/` naming its clause.
+//! operator core reads all fifteen tiers, and the postfix layer of 8.2.5.8.2 reads
+//! `a.b`, `x[kg]`, `x#(1)` and `x->f()`; its select and collect forms are not
+//! implemented, each with a rejection case in `tests/rejection/` naming its clause.
 //!
 //! All four `PackageBodyElement` alternatives are handled: `PackageMember`, `Import`,
 //! `AliasMember` and `ElementFilterMember`, the last of which waited on the expression
@@ -5721,13 +5721,12 @@ impl<'a> Parser<'a> {
     // NONE OF THE THREE IS MARKED FOR COVERAGE. Each is an alternation and each has
     // alternatives that are absent, so marking any of them would claim a production
     // this parser does not read. What is implemented is FeatureChainExpression from the
-    // first; BracketExpression, SequenceExpression and FunctionOperationExpression from
-    // the middle one; and NullExpression, LiteralExpression, FeatureReferenceExpression,
+    // first; BracketExpression, IndexExpression, SequenceExpression and
+    // FunctionOperationExpression from the middle one; and NullExpression, LiteralExpression, FeatureReferenceExpression,
     // InvocationExpression, ConstructorExpression and BodyExpression from the last, the
     // body in SysML only (see `body_expression`). What is not, each with a rejection case
     // naming the clause:
     //
-    //   IndexExpression            `tanks#(1)`
     //   SelectExpression           `x.?{ ... }`
     //   CollectExpression          `x.{ ... }`
     //   MetadataAccessExpression   `E.metadata`
@@ -5824,6 +5823,49 @@ impl<'a> Parser<'a> {
         self.bump();
         self.kerml_feature_chain_member();
         self.finish_node();
+    }
+
+    // production: IndexExpression
+    //
+    // IndexExpression =
+    //     ownedRelationship += PrimaryArgumentMember '#'
+    //     '(' ownedRelationship += SequenceExpressionListMember ')'
+    //                                                            (KerML 8.2.5.8.2)
+    //
+    // `power#(i)` (training/33. Analysis/Analysis Case Definition Example.sysml:61). The
+    // parentheses are this production's own, not a SequenceExpression's (8.2.5.8.2's
+    // SequenceExpression writes its own pair). The index is a SequenceExpressionListMember,
+    // as a bracket's is, so `m#(1, 2)` and `m#(1,)` read as SequenceExpressionList reads
+    // them. The Pilot agrees: its `'#' '(' operand += SequenceExpression ')'`
+    // (KerMLExpressions.xtext:305) names a rule that is the bare list with no parentheses
+    // (:389-395), the clause's SequenceExpressionList under another name.
+    //
+    // No EmptyResultMember, for the reason BracketExpression has none: the BNF names one
+    // where a production has one, and this production does not.
+    //
+    // deviations.json buckets this spec_only/follow_spec. As for BracketExpression, the
+    // bucket is a naming difference and not a gap: the Pilot implements the form inline
+    // under PrimaryExpression, and the corpus writes it 41 times.
+    fn index_expression(&mut self, start: rowan::Checkpoint) {
+        self.start_node_at(start, SyntaxKind::IndexExpression);
+        self.wrap_at(start, &PRIMARY_ARGUMENT);
+        self.bump();
+        self.expect(SyntaxKind::LParen, "`(`");
+        self.sequence_expression_list_member();
+        self.expect(SyntaxKind::RParen, "`)`");
+        self.finish_node();
+    }
+
+    /// Whether a `#` here opens an `IndexExpression`.
+    ///
+    /// `#` also opens `SysML`'s `PrefixMetadataMember` (8.2.2.27) and `KerML`'s
+    /// `PrefixMetadataFeature` (8.2.5.12). Both reach an `OwnedFeatureTyping` after it,
+    /// which is a `QualifiedName` or an `OwnedFeatureChain` (`KerML` through
+    /// `GeneralType`), and a chain too opens on a `QualifiedName`. So a name follows that
+    /// `#` either way. An index writes `(`, which no name opens on, so the `(` alone
+    /// decides, and a `#M` after an expression is left for whatever encloses it to report.
+    fn at_index_expression(&self) -> bool {
+        self.at(SyntaxKind::Hash) && self.nth_is(1, SyntaxKind::LParen)
     }
 
     // production: FunctionOperationExpression
@@ -6003,13 +6045,17 @@ impl<'a> Parser<'a> {
     /// `FunctionOperationExpression` (`->`) takes its operand the same way and is in the
     /// same loop, as the Pilot has it (KerMLExpressions.xtext:308).
     ///
-    /// The remaining postfix forms of 8.2.5.8.2 — `IndexExpression` (`#(`),
-    /// `CollectExpression` and `SelectExpression` — are absent, each with a rejection case.
+    /// `IndexExpression` (`#(`) too, and it is the one form whose opening token is shared:
+    /// see `at_index_expression`.
+    ///
+    /// The remaining postfix forms of 8.2.5.8.2 — `CollectExpression` and
+    /// `SelectExpression` — are absent, each with a rejection case.
     fn postfix_tail(&mut self, start: rowan::Checkpoint) {
         let mut levels: u32 = 0;
         while self.at_feature_chain()
             || self.at(SyntaxKind::LBracket)
             || self.at(SyntaxKind::ThinArrow)
+            || self.at_index_expression()
         {
             // BOUNDED, although this loop uses no stack of its own. Every level wraps
             // what is already there, so the TREE is as deep as the expression is long
@@ -6028,6 +6074,8 @@ impl<'a> Parser<'a> {
                 self.bracket_expression(start);
             } else if self.at(SyntaxKind::ThinArrow) {
                 self.function_operation_expression(start);
+            } else if self.at(SyntaxKind::Hash) {
+                self.index_expression(start);
             } else {
                 self.feature_chain_expression(start);
             }

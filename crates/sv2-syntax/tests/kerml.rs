@@ -774,6 +774,19 @@ fn a_function_operation_is_kerml_too() {
     assert!(has_node(&tree, "FunctionOperationExpression"), "{tree}");
 }
 
+// -- IndexExpression, KerML 8.2.5.8.2 ---------------------------------------------
+
+#[test]
+fn an_index_expression_is_kerml_too() {
+    // A shared unit: vendor/corpus/kerml/src/examples/Vehicle Example/VehicleUsages.kerml:49
+    // indexes a qualified name, `vehicle_C1::frontAxleAssembly::frontWheel#(1)`.
+    let tree = render(
+        &kerml_accepted("package P { feature w = vehicle_C1::frontAxleAssembly::frontWheel#(1); }")
+            .syntax(),
+    );
+    assert!(has_node(&tree, "IndexExpression"), "{tree}");
+}
+
 #[test]
 fn a_kerml_expression_body_is_not_read_yet() {
     // KerML's ExpressionBody is `'{' FunctionBodyPart '}'` (8.2.5.8.3), whose

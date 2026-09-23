@@ -1095,6 +1095,10 @@ NODES = [
     ),
     ("PrimaryArgument", "`ownedRelationship += PrimaryArgumentValue`. `KerML` 8.2.5.8.2."),
     ("PrimaryArgumentValue", "`value = PrimaryExpression`. `KerML` 8.2.5.8.2."),
+    (
+        "IndexExpression",
+        ("`PrimaryArgumentMember '#' '(' SequenceExpressionListMember ')'`. `KerML` 8.2.5.8.2."),
+    ),
     # The `->` invocation, KerML 8.2.5.8.2, and the two argument forms only it takes.
     (
         "FunctionOperationExpression",

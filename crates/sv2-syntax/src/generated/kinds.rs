@@ -845,6 +845,8 @@ pub enum SyntaxKind {
     PrimaryArgument,
     /// `value = PrimaryExpression`. `KerML` 8.2.5.8.2.
     PrimaryArgumentValue,
+    /// `PrimaryArgumentMember '#' '(' SequenceExpressionListMember ')'`. `KerML` 8.2.5.8.2.
+    IndexExpression,
     /// `PrimaryArgumentMember '->' InstantiatedTypeMember ( BodyArgumentMember | FunctionReferenceArgumentMember | ArgumentList ) EmptyResultMember`. `KerML` 8.2.5.8.2.
     FunctionOperationExpression,
     /// `ownedMemberParameter = BodyArgument`. `KerML` 8.2.5.8.2.
@@ -1653,6 +1655,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::PrimaryArgumentMember,
     SyntaxKind::PrimaryArgument,
     SyntaxKind::PrimaryArgumentValue,
+    SyntaxKind::IndexExpression,
     SyntaxKind::FunctionOperationExpression,
     SyntaxKind::BodyArgumentMember,
     SyntaxKind::BodyArgument,

@@ -8146,6 +8146,98 @@ fn a_function_operation_is_bounded_by_the_depth_limit() {
     parse_accepted(&format!("constraint def C {{ a{} }}", "->f()".repeat(100)));
 }
 
+// -- IndexExpression, KerML 8.2.5.8.2 ------------------------------------------------
+//
+// IndexExpression =
+//     ownedRelationship += PrimaryArgumentMember '#'
+//     '(' ownedRelationship += SequenceExpressionListMember ')'
+//
+// The fourth postfix form. Its `#` also opens SysML's PrefixMetadataMember (8.2.2.27),
+// but there a QualifiedName follows it, and here only a `(` does.
+
+#[test]
+fn an_index_expression_reads_the_corpus_forms() {
+    // vendor/corpus/sysml/src/training/33. Analysis/Analysis Case Definition
+    // Example.sysml:61 and :63: a name, a chain, and an operator expression as the index.
+    parse_accepted("calc def C { power#(i) }");
+    parse_accepted("calc def C { scenario.time#(i+1) - scenario.time#(i) }");
+    // examples/v1 Spec Examples/D.4.7.8 Dynamics/HSUVDynamics.sysml:29, inside a body.
+    parse_accepted(
+        "constraint def C { (1..size(x)-1)->forAll {in n : Natural; x#(n + 1) == x#(n) + v#(n) * dt} }",
+    );
+    // SequenceExpressionList admits a list and a trailing comma (8.2.5.8.2).
+    parse_accepted("calc def C { m#(1, 2) }");
+    parse_accepted("calc def C { m#(1,) }");
+}
+
+#[test]
+fn an_index_expression_builds_the_members_the_clause_names() {
+    let rendered = render(&parse_accepted("calc def C { power#(i) }").syntax());
+    // No EmptyResultMember: the clause names none, as BracketExpression's names none.
+    assert_eq!(
+        child_kinds(&rendered, "IndexExpression"),
+        [
+            "PrimaryArgumentMember",
+            "Hash",
+            "LParen",
+            "SequenceExpressionListMember",
+            "RParen",
+        ],
+        "{rendered}"
+    );
+}
+
+#[test]
+fn an_index_expression_folds_with_the_other_postfix_forms() {
+    // `scenario.time#(i)` is an index over a chain (Analysis Case Definition
+    // Example.sysml:63), and `a#(1).b` a chain over an index: one loop, in the order
+    // written (KerMLExpressions.xtext:299-322).
+    let over_chain = render(&parse_accepted("calc def C { scenario.time#(i) }").syntax());
+    assert_eq!(
+        child_kinds(&over_chain, "PrimaryArgumentValue"),
+        ["FeatureChainExpression"],
+        "{over_chain}"
+    );
+    let under_chain = render(&parse_accepted("calc def C { a#(1).b }").syntax());
+    assert_eq!(
+        child_kinds(&under_chain, "PrimaryArgumentValue"),
+        ["IndexExpression"],
+        "{under_chain}"
+    );
+    parse_accepted("calc def C { xs->select {in x; x > 0}#(1) }");
+    parse_accepted("calc def C { m#(1)#(2) }");
+}
+
+#[test]
+fn an_index_expression_is_bounded_by_its_rules() {
+    // SequenceExpressionListMember is not optional: the index is an OwnedExpression
+    // (8.2.5.8.2). Held as a file by tests/rejection/index-expression-takes-an-index.sysml.
+    parse_rejected("calc def C { tanks#() }");
+    // The parentheses are the production's own, not a SequenceExpression's.
+    parse_rejected("calc def C { tanks#1 }");
+    parse_rejected("calc def C { tanks#[1] }");
+    parse_rejected("calc def C { tanks#(1 }");
+    // A `#` with a name after it is prefix metadata's (SysML 8.2.2.27), and no postfix
+    // form: after an expression it is not an index, and no IndexExpression is begun.
+    let metadata = render(&parse_rejected("calc def C { tanks#M }").syntax());
+    assert_eq!(nodes_named(&metadata, "IndexExpression"), 0, "{metadata}");
+}
+
+#[test]
+fn an_index_expression_is_bounded_by_the_depth_limit() {
+    let source = format!("constraint def C {{ a{} }}", "#(1)".repeat(50_000));
+    let parsed = parse(&source, Language::SysMl);
+    assert!(
+        parsed
+            .errors()
+            .iter()
+            .any(|d| d.code() == DiagnosticCode::TooDeeplyNested),
+        "expected a depth diagnostic, got {:?}",
+        parsed.errors()
+    );
+    parse_accepted(&format!("constraint def C {{ a{} }}", "#(1)".repeat(100)));
+}
+
 // -- ConstructorExpression, KerML 8.2.5.8.3 ----------------------------------------
 //
 // ConstructorExpression   = 'new' InstantiatedTypeMember ConstructorResultMember
