@@ -800,6 +800,8 @@ fn a_kerml_expression_body_is_not_read_yet() {
     for source in [
         "package P { feature c = x->collect { 1 }; }",
         "package P { feature c = { 1 }; }",
+        // Expressions.kerml:18 writes a select, `x.?{in xx; xx != null}`.
+        "package P { feature d = x.?{ 1 }; }",
     ] {
         let parsed = kerml_rejected(source);
         // The second `{`: the first is the package body's.

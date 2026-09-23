@@ -1099,6 +1099,10 @@ NODES = [
         "IndexExpression",
         ("`PrimaryArgumentMember '#' '(' SequenceExpressionListMember ')'`. `KerML` 8.2.5.8.2."),
     ),
+    (
+        "SelectExpression",
+        "`PrimaryArgumentMember '.?' BodyArgumentMember`. `KerML` 8.2.5.8.2.",
+    ),
     # The `->` invocation, KerML 8.2.5.8.2, and the two argument forms only it takes.
     (
         "FunctionOperationExpression",

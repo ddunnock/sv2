@@ -232,6 +232,11 @@ fn deeply_nested_input_is_reported_and_not_a_stack_overflow() {
             "index expressions",
             format!("attribute x = a{};", "#(1)".repeat(50_000)),
         ),
+        // A select folds as a chain link does.
+        (
+            "select expressions",
+            format!("attribute x = a{};", ".?{1}".repeat(50_000)),
+        ),
         // A body expression recurses through a calculation body back to an expression.
         (
             "expression bodies",

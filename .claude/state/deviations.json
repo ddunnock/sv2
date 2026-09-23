@@ -5645,6 +5645,11 @@
           "kind": "file_id",
           "ref": "ptc/25-04-04",
           "note": "The KerML Tier A pin the governing clause belongs to."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "Pilot side read from the pinned grammar, and it corrects this entry's generic rationale. The spec_only bucket's boilerplate says to expect the corpus not to exercise the production. That is false here: the pinned corpus writes a select in training/29. Expressions/MassRollup2.sysml:18 and examples/Mass Roll-up Example/MassRollup.sysml:24, and KerML's examples/Simple Tests/Expressions.kerml:18, and the Pilot DOES implement the form. It simply does not name the rule, inlining it in PrimaryExpression's postfix repetition as `{SysML::SelectExpression.operand += current} '.?' operand += BodyExpression` (KerMLExpressions.xtext:316-317). grammar_diff.py compares production NAMES, so a rule the Xtext inlines without naming reports as spec_only. The resolution is unchanged - follow the spec, which names the production - but the reason is a naming difference, not a gap in the Pilot."
         }
       ]
     },

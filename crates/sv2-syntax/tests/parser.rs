@@ -8236,6 +8236,75 @@ fn an_index_expression_is_bounded_by_the_depth_limit() {
     parse_accepted(&format!("constraint def C {{ a{} }}", "#(1)".repeat(100)));
 }
 
+// -- SelectExpression, KerML 8.2.5.8.2 -----------------------------------------------
+//
+// SelectExpression =
+//     ownedRelationship += PrimaryArgumentMember '.?'
+//     ownedRelationship += BodyArgumentMember
+//
+// `.?` lexes as one token, so a feature chain never sees it.
+
+#[test]
+fn a_select_expression_reads_the_corpus_forms() {
+    // vendor/corpus/sysml/src/training/29. Expressions/MassRollup2.sysml:18: a select over
+    // a chain, as an argument, with a body parameter that subsets.
+    parse_accepted(
+        "calc def C { simpleMass + sum(subcomponents.totalMass.?{in p:>ISQ::mass; p >= minMass}) }",
+    );
+    // examples/Mass Roll-up Example/MassRollup.sysml:24, the same shape.
+    parse_accepted(
+        "calc def C { mass + sum(subcomponents.totalMass.?{in p :> ISQ::mass; p > minMass}) }",
+    );
+}
+
+#[test]
+fn a_select_expression_builds_the_members_the_clause_names() {
+    let rendered = render(&parse_accepted("calc def C { xs.?{in x; x > 0} }").syntax());
+    // No EmptyResultMember: the clause names none.
+    assert_eq!(
+        child_kinds(&rendered, "SelectExpression"),
+        ["PrimaryArgumentMember", "DotQuestion", "BodyArgumentMember"],
+        "{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "FeatureChainExpression"),
+        0,
+        "{rendered}"
+    );
+    // Opening on a name, the whole is the body's result expression, not a usage whose
+    // body is the select's: the brace after `.?` opens a body argument.
+    assert_eq!(
+        child_kinds(&rendered, "CalculationBodyPart"),
+        ["ResultExpressionMember"],
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_select_expression_folds_with_the_other_postfix_forms() {
+    let over_chain = render(&parse_accepted("calc def C { a.b.?{in x; x} }").syntax());
+    assert_eq!(
+        child_kinds(&over_chain, "PrimaryArgumentValue"),
+        ["FeatureChainExpression"],
+        "{over_chain}"
+    );
+    let under = render(&parse_accepted("calc def C { xs.?{in x; x}#(1) }").syntax());
+    assert_eq!(
+        child_kinds(&under, "PrimaryArgumentValue"),
+        ["SelectExpression"],
+        "{under}"
+    );
+}
+
+#[test]
+fn a_select_expression_takes_a_body_and_nothing_else() {
+    // BodyArgumentMember is the only form: not an argument list, not a name, not
+    // nothing. Held as a file by tests/rejection/select-expression-takes-a-body.sysml.
+    parse_rejected("calc def C { things.?(a) }");
+    parse_rejected("calc def C { things.?a }");
+    parse_rejected("calc def C { things.? }");
+}
+
 // -- ConstructorExpression, KerML 8.2.5.8.3 ----------------------------------------
 //
 // ConstructorExpression   = 'new' InstantiatedTypeMember ConstructorResultMember

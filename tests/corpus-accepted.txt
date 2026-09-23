@@ -57,6 +57,7 @@ vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceO
 vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-2.sysml
 vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-3.sysml
 vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassConstraintExample.sysml
+vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassRollup.sysml
 vendor/corpus/sysml/src/examples/Mass Roll-up Example/Vehicles.sysml
 vendor/corpus/sysml/src/examples/Metadata Examples/IssueMetadataExample.sysml
 vendor/corpus/sysml/src/examples/Metadata Examples/RationaleMetadataExample.sysml
@@ -170,6 +171,7 @@ vendor/corpus/sysml/src/training/28. Individuals/Individuals and Time Slices.sys
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 1.sysml
 vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 2.sysml
 vendor/corpus/sysml/src/training/29. Expressions/MassRollup1.sysml
+vendor/corpus/sysml/src/training/29. Expressions/MassRollup2.sysml
 vendor/corpus/sysml/src/training/30. Calculations/Calculation Definitions.sysml
 vendor/corpus/sysml/src/training/30. Calculations/Calculation Usages-1.sysml
 vendor/corpus/sysml/src/training/30. Calculations/Calculation Usages-2.sysml
