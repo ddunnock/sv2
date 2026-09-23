@@ -1500,6 +1500,35 @@ NODES = [
             "'to' NodeParameterMember`. `SysML` 8.2.2.17.4."
         ),
     ),
+    # The loop layer, 8.2.2.17.7. A loop's body clause is an ActionUsage of its own, a
+    # parameter of the loop, and its expressions are parameters too (8.3.17.12, .19).
+    (
+        "WhileLoopNode",
+        (
+            "`ActionNodePrefix ( 'while' ExpressionParameterMember | 'loop' "
+            "EmptyParameterMember ) ActionBodyParameterMember ( 'until' "
+            "ExpressionParameterMember ';' )?`. `SysML` 8.2.2.17.7 — returns "
+            "`WhileLoopActionUsage`."
+        ),
+    ),
+    (
+        "ExpressionParameterMember",
+        "`ownedRelatedElement += OwnedExpression`. `SysML` 8.2.2.17.7 — a `ParameterMembership`.",
+    ),
+    (
+        "ActionBodyParameterMember",
+        (
+            "`ownedRelatedElement += ActionBodyParameter`. `SysML` 8.2.2.17.7 — a "
+            "`ParameterMembership`."
+        ),
+    ),
+    (
+        "ActionBodyParameter",
+        (
+            "`( 'action' UsageDeclaration? )? '{' ActionBodyItem* '}'`. `SysML` 8.2.2.17.7 — "
+            "returns `ActionUsage`."
+        ),
+    ),
     (
         "TerminateNode",
         (

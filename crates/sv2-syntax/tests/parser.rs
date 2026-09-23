@@ -5092,6 +5092,197 @@ fn a_terminate_node_is_bounded_by_its_rules() {
     assert_eq!(nodes_named(&tree, "TerminateNode"), 0, "{tree}");
 }
 
+// -- WhileLoopNode, SysML 8.2.2.17.7 -------------------------------------------------
+//
+//   WhileLoopNode = ActionNodePrefix
+//                   ( 'while' ExpressionParameterMember | 'loop' EmptyParameterMember )
+//                   ActionBodyParameterMember
+//                   ( 'until' ExpressionParameterMember ';' )?
+//   ActionNodePrefix          = OccurrenceUsagePrefix ActionNodeUsageDeclaration?
+//   ExpressionParameterMember = OwnedExpression
+//   ActionBodyParameterMember = ActionBodyParameter
+//   ActionBodyParameter       = ( 'action' UsageDeclaration? )? '{' ActionBodyItem* '}'
+//
+// "the action declaration part is followed by the keyword while, which introduces a
+// Boolean-valued while expression, followed by a body clause, and then, optionally, the
+// keyword until, which introduces a Boolean-valued until expression terminated with a
+// semicolon" (7.17.12, receipt b0446148).
+
+#[test]
+fn the_while_until_example_of_7_17_12_parses() {
+    // 7.17.12's first while-loop example (receipt b0446148), in an action definition.
+    // It names its body clause `step`, which SysML does not reserve but this parser
+    // refuses (pending decision reserved-words-per-language); it is written `'step'`
+    // here, the same name as an unrestricted one. The third example, `loop { ... then
+    // if ... }`, writes an IfNode and lands with it.
+    let advance = "action def A {\n\
+                   action advance while t < endTime\n\
+                   action 'step' {\n\
+                   perform advanceState {\n\
+                   :>> stateVector = systemState;\n\
+                   :>> deltaT = dt;\n\
+                   }\n\
+                   then assign t := t + dt;\n\
+                   } until stateVector.position >= endPosition;\n\
+                   }";
+    let parsed = parse_accepted(advance);
+    assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
+    let rendered = render(&parsed.syntax());
+    assert_eq!(
+        child_kinds(&rendered, "WhileLoopNode"),
+        [
+            "OccurrenceUsagePrefix",
+            "ActionNodeUsageDeclaration",
+            "KwWhile",
+            "ExpressionParameterMember",
+            "ActionBodyParameterMember",
+            "KwUntil",
+            "ExpressionParameterMember",
+            "Semicolon"
+        ],
+        "{rendered}"
+    );
+    // The body clause: `action 'step'`, its braces, and two ActionBodyItems -- a
+    // BehaviorUsageMember over the perform, and SourceSuccessionMember then
+    // ActionNodeMember over the `then assign` (8.2.2.17.1).
+    assert_eq!(
+        child_kinds(&rendered, "ActionBodyParameter"),
+        [
+            "KwAction",
+            "UsageDeclaration",
+            "LBrace",
+            "BehaviorUsageMember",
+            "SourceSuccessionMember",
+            "ActionNodeMember",
+            "RBrace"
+        ],
+        "{rendered}"
+    );
+}
+
+#[test]
+fn the_while_not_example_of_7_17_12_parses() {
+    // 7.17.12's second while-loop example (receipt b0446148): no declaration for the loop
+    // or for its body clause, "The action keyword can be omitted ... if they have no
+    // action declaration part".
+    let not_ready = "action def A {\n\
+                     while not ready {\n\
+                     assign ready := poll(device);\n\
+                     }\n\
+                     }";
+    let parsed = parse_accepted(not_ready);
+    assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
+    let rendered = render(&parsed.syntax());
+    assert_eq!(
+        child_kinds(&rendered, "WhileLoopNode"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwWhile",
+            "ExpressionParameterMember",
+            "ActionBodyParameterMember"
+        ],
+        "{rendered}"
+    );
+    assert_eq!(
+        child_kinds(&rendered, "ActionBodyParameter")
+            .first()
+            .map(String::as_str),
+        Some("LBrace"),
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_while_loop_node_reads_the_corpus_forms() {
+    for (item, kinds) in [
+        // examples/Simple Tests/StructuredControlTest.sysml:19-22 — declared, after
+        // `then`, with an `until`.
+        (
+            "first start; then action aLoop\n\twhile i > 0 {\n\t\tassign i := i - 1;\n\t} until b;",
+            &[
+                "OccurrenceUsagePrefix",
+                "ActionNodeUsageDeclaration",
+                "KwWhile",
+                "ExpressionParameterMember",
+                "ActionBodyParameterMember",
+                "KwUntil",
+                "ExpressionParameterMember",
+                "Semicolon",
+            ][..],
+        ),
+        // StructuredControlTest.sysml:28-30 — `loop`, whose while slot is the
+        // EmptyParameterMember the text never writes (deriveWhileLoopActionUsageWhileArgument
+        // and deriveLoopActionUsageBodyAction keep the body the second parameter).
+        (
+            "loop {\n\t\tassign i := i - 1;\n\t} until b;",
+            &[
+                "OccurrenceUsagePrefix",
+                "KwLoop",
+                "EmptyParameterMember",
+                "ActionBodyParameterMember",
+                "KwUntil",
+                "ExpressionParameterMember",
+                "Semicolon",
+            ],
+        ),
+        // training/17. Control/Control Structures Example.sysml:14 — a declared body
+        // clause after `loop`; the corpus statement's body and its `until` (line 24) are
+        // cut, so this is also the form with no `until`.
+        (
+            "loop action charging { }",
+            &[
+                "OccurrenceUsagePrefix",
+                "KwLoop",
+                "EmptyParameterMember",
+                "ActionBodyParameterMember",
+            ],
+        ),
+    ] {
+        let source = format!("action def A {{ {item} }}");
+        let rendered = render(&parse_accepted(&source).syntax());
+        assert_eq!(child_kinds(&rendered, "WhileLoopNode"), kinds, "{rendered}");
+        // Owned through ActionNodeMember (8.2.2.17.1); the first in the tree is the
+        // loop's, the `assign`s in its body being members of their own.
+        assert_eq!(
+            child_kinds(&rendered, "ActionNodeMember"),
+            ["MemberPrefix", "WhileLoopNode"],
+            "{rendered}"
+        );
+    }
+    // The body clause's `action` with no declaration, and OccurrenceUsagePrefix's `ref`.
+    let tree = render(&parse_accepted("action a { ref while c action { } }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "ActionBodyParameter"),
+        ["KwAction", "LBrace", "RBrace"],
+        "{tree}"
+    );
+}
+
+#[test]
+fn a_while_loop_node_keeps_every_byte() {
+    let source = "action def A {\n\tthen /* w */ while i > 0 // n\n\t{ assign i := i - 1 ; }\n\tuntil b ;\n\tloop action x { }\n}\n";
+    assert_eq!(parse_accepted(source).text(), source);
+}
+
+#[test]
+fn a_while_loop_node_is_bounded_by_its_rules() {
+    // The body clause is braced, "with a semicolon not allowed for an empty body"
+    // (7.17.12). Held as a file by tests/rejection/loop-body-is-braced.sysml.
+    parse_rejected("action def A { while c; }");
+    parse_rejected("action def A { while c action b; }");
+    // `loop` is `while true`: it takes no expression. Held as a file by
+    // tests/rejection/loop-takes-no-expression.sysml.
+    parse_rejected("action def A { loop c { } }");
+    // The until expression is "terminated with a semicolon". Held as a file by
+    // tests/rejection/until-expression-needs-a-semicolon.sysml.
+    parse_rejected("action def A { while c { } until d }");
+    // A while expression is not optional.
+    parse_rejected("action def A { while { } }");
+    // An ActionNode is an action-body item only (8.2.2.17.1).
+    let tree = render(&parse_rejected("part def P { while c { } }").syntax());
+    assert_eq!(nodes_named(&tree, "WhileLoopNode"), 0, "{tree}");
+}
+
 // -- DefaultTargetSuccession, SysML 8.2.2.17.8 ----------------------------------------
 //
 // DefaultTargetSuccession : TransitionUsage =

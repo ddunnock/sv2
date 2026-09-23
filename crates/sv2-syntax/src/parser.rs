@@ -623,6 +623,8 @@ enum ActionNode {
     Assignment,
     /// `TerminateNode`, 8.2.2.17.6.
     Terminate,
+    /// `WhileLoopNode`, 8.2.2.17.7, by `while` or `loop`.
+    WhileLoop,
 }
 
 /// A case production pair: one kind keyword run over the case layer's spine.
@@ -3443,8 +3445,8 @@ impl<'a> Parser<'a> {
     //     MemberPrefix ownedRelatedElement += ActionNode            (SysML 8.2.2.17.1)
     //
     // The same shape once more, marked as the member it is while ActionNode is not: of
-    // its eight alternatives ControlNode, SendNode, AcceptNode and AssignmentNode are
-    // read, and TerminateNode, IfNode, WhileLoopNode and ForLoopNode are reported.
+    // its eight alternatives ControlNode, SendNode, AcceptNode, AssignmentNode,
+    // TerminateNode and WhileLoopNode are read, and IfNode and ForLoopNode are reported.
     //
     // production: ActionBehaviorMember@sysml
     //
@@ -7556,9 +7558,9 @@ impl<'a> Parser<'a> {
     // (8.2.2.17.1), and the first three are the three a definition body reads. The
     // second is read whole in its TargetSuccession form. The third is read over the
     // behaviour usages that exist and over the ActionNodes that do: ControlNode (`merge`,
-    // `decide`, `join`, `fork`), AcceptNode, SendNode and AssignmentNode. The fourth,
-    // GuardedSuccessionMember, is read too. What is still reported where it stands: the
-    // other ActionNodes, `terminate`, `if`, `while` and `for`.
+    // `decide`, `join`, `fork`), AcceptNode, SendNode, AssignmentNode, TerminateNode and
+    // WhileLoopNode. The fourth, GuardedSuccessionMember, is read too. What is still
+    // reported where it stands: the other ActionNodes, `if` and `for`.
     fn action_body(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ActionBody);
@@ -8492,6 +8494,126 @@ impl<'a> Parser<'a> {
             self.node_parameter_member();
         }
         self.action_body();
+        self.finish_node();
+    }
+
+    // production: ActionNodePrefix@sysml
+    //
+    // ActionNodePrefix : ActionUsage =
+    //     OccurrenceUsagePrefix ActionNodeUsageDeclaration?          (SysML 8.2.2.17.2)
+    //
+    // The prefix of the three structured nodes, WhileLoopNode, IfNode and ForLoopNode
+    // (8.2.2.17.7), before `word`. It builds no node of its own: it returns the ActionUsage
+    // it prefixes, the Pilot states it as a fragment (SysML.xtext ActionNodePrefix), and
+    // TerminateNode and SendNode, which write the same two parts inline, own them directly.
+    // Marked although OccurrenceUsagePrefix is not, as ActionUsage is.
+    fn action_node_prefix(&mut self, word: &str) {
+        self.occurrence_usage_prefix();
+        self.action_node_usage_declaration(word);
+    }
+
+    // production: WhileLoopNode@sysml
+    //
+    // WhileLoopNode : WhileLoopActionUsage =
+    //     ActionNodePrefix
+    //     ( 'while' ownedRelationship += ExpressionParameterMember
+    //     | 'loop' ownedRelationship += EmptyParameterMember
+    //     )
+    //     ownedRelationship += ActionBodyParameterMember
+    //     ( 'until' ownedRelationship += ExpressionParameterMember ';' )?
+    //                                                            (SysML 8.2.2.17.7)
+    //
+    // "the action declaration part is followed by the keyword while, which introduces a
+    // Boolean-valued while expression, followed by a body clause, and then, optionally,
+    // the keyword until, which introduces a Boolean-valued until expression terminated
+    // with a semicolon ... The keyword loop may be used as a shorthand for while true"
+    // (7.17.12, receipt b0446148). The EmptyParameterMember of `loop` holds the while
+    // slot: the whileArgument is the first input parameter, the bodyAction the second and
+    // the untilArgument the third (deriveWhileLoopActionUsageWhileArgument, 8.3.17.19,
+    // receipt b915a32c; deriveLoopActionUsageBodyAction, 8.3.17.12, receipt 2d51ae94),
+    // so the body stays second whichever keyword is written.
+    //
+    // The expression ends at the body clause's `{` or `action`: neither continues an
+    // OwnedExpression, and a BodyExpression's `{` is reached only as an argument.
+    //
+    // implied specialization: Actions::whileLoopActions, Actions::Action::whileLoops
+    // constraint: WhileLoopActionUsage::checkWhileLoopActionUsageSpecialization and
+    //     checkWhileLoopActionUsageSubactionSpecialization (8.3.17.19). Injections belong
+    //     in sv2-hir; this layer builds the tree only (ADR-0002).
+    // constraint: WhileLoopActionUsage::validateWhileLoopActionUsage, "at least two owned
+    //     input parameters" (8.3.17.19): the tree always holds the while slot and the
+    //     body, so the text cannot violate it.
+    fn while_loop_node(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::WhileLoopNode);
+        // The keyword `at_action_node` found past the prefix and the declaration.
+        let word = self
+            .action_node_keyword_at(self.skip_occurrence_usage_prefix(0), &["while", "loop"])
+            .unwrap_or("while");
+        self.action_node_prefix(word);
+        if word == "loop" {
+            self.expect_keyword("loop");
+            self.empty_parameter_member();
+        } else {
+            self.expect_keyword("while");
+            self.expression_parameter_member();
+        }
+        self.action_body_parameter_member();
+        if self.at_keyword("until") {
+            self.expect_keyword("until");
+            self.expression_parameter_member();
+            self.expect(SyntaxKind::Semicolon, "`;` after an `until` expression");
+        }
+        self.finish_node();
+    }
+
+    // production: ExpressionParameterMember@sysml
+    //
+    // ExpressionParameterMember : ParameterMembership =
+    //     ownedRelatedElement += OwnedExpression                     (SysML 8.2.2.17.7)
+    fn expression_parameter_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ExpressionParameterMember);
+        self.owned_expression();
+        self.finish_node();
+    }
+
+    // production: ActionBodyParameterMember@sysml
+    //
+    // ActionBodyParameterMember : ParameterMembership =
+    //     ownedRelatedElement += ActionBodyParameter                 (SysML 8.2.2.17.7)
+    //
+    // production: ActionBodyParameter@sysml
+    //
+    // ActionBodyParameter : ActionUsage =
+    //     ( 'action' UsageDeclaration? )?
+    //     '{' ActionBodyItem* '}'                                    (SysML 8.2.2.17.7)
+    //
+    // "the body clause is itself notated as an action usage, but with its body required
+    // to be given using curly braces { … }, with a semicolon not allowed for an empty
+    // body" (7.17.12, receipt b0446148): the braces are the production's own, not an
+    // ActionBody's, which would admit `;`. The items are an ActionBody's, read by the same
+    // loop.
+    fn action_body_parameter_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ActionBodyParameterMember);
+        self.start_node(SyntaxKind::ActionBodyParameter);
+        if self.at_keyword("action") {
+            self.expect_keyword("action");
+            if !self.at(SyntaxKind::LBrace) {
+                self.usage_declaration();
+            }
+        }
+        if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.body_elements(Some(SyntaxKind::RBrace), Body::Action);
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.error_expected("`{` opening a loop or branch body");
+        }
+        self.finish_node();
         self.finish_node();
     }
 
@@ -10634,20 +10756,21 @@ impl<'a> Parser<'a> {
     /// Which `ActionNode` starts at the `n`th meaningful token, of those this parser reads.
     ///
     /// A `ControlNode`, or `OccurrenceUsagePrefix ActionNodeUsageDeclaration?` and one of
-    /// `accept`, `send`, `assign` or `terminate` (`SysML` 8.2.2.17.4-6) — the prefix looked
-    /// past here, the declaration by `action_node_keyword_at`.
+    /// `accept`, `send`, `assign`, `terminate`, `while` or `loop` (`SysML` 8.2.2.17.4-7) —
+    /// the prefix looked past here, the declaration by `action_node_keyword_at`.
     fn at_action_node(&self, n: usize) -> Option<ActionNode> {
         if let Some((word, node)) = self.at_control_node(n) {
             return Some(ActionNode::Control(word, node));
         }
         match self.action_node_keyword_at(
             self.skip_occurrence_usage_prefix(n),
-            &["accept", "send", "assign", "terminate"],
+            &["accept", "send", "assign", "terminate", "while", "loop"],
         ) {
             Some("accept") => Some(ActionNode::Accept),
             Some("send") => Some(ActionNode::Send),
             Some("assign") => Some(ActionNode::Assignment),
             Some("terminate") => Some(ActionNode::Terminate),
+            Some("while" | "loop") => Some(ActionNode::WhileLoop),
             _ => None,
         }
     }
@@ -10660,6 +10783,7 @@ impl<'a> Parser<'a> {
             ActionNode::Send => self.send_node(),
             ActionNode::Assignment => self.assignment_node(),
             ActionNode::Terminate => self.terminate_node(),
+            ActionNode::WhileLoop => self.while_loop_node(),
         }
     }
 

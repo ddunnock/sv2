@@ -1065,6 +1065,14 @@ pub enum SyntaxKind {
     SendNodeDeclaration,
     /// `'via' NodeParameterMember ( 'to' NodeParameterMember )? | EmptyParameterMember 'to' NodeParameterMember`. `SysML` 8.2.2.17.4.
     SenderReceiverPart,
+    /// `ActionNodePrefix ( 'while' ExpressionParameterMember | 'loop' EmptyParameterMember ) ActionBodyParameterMember ( 'until' ExpressionParameterMember ';' )?`. `SysML` 8.2.2.17.7 — returns `WhileLoopActionUsage`.
+    WhileLoopNode,
+    /// `ownedRelatedElement += OwnedExpression`. `SysML` 8.2.2.17.7 — a `ParameterMembership`.
+    ExpressionParameterMember,
+    /// `ownedRelatedElement += ActionBodyParameter`. `SysML` 8.2.2.17.7 — a `ParameterMembership`.
+    ActionBodyParameterMember,
+    /// `( 'action' UsageDeclaration? )? '{' ActionBodyItem* '}'`. `SysML` 8.2.2.17.7 — returns `ActionUsage`.
+    ActionBodyParameter,
     /// `OccurrenceUsagePrefix ActionNodeUsageDeclaration? 'terminate' NodeParameterMember? ActionBody`. `SysML` 8.2.2.17.6 — returns `TerminateActionUsage`.
     TerminateNode,
     /// `OccurrenceUsagePrefix AssignmentNodeDeclaration ActionBody`. `SysML` 8.2.2.17.5.
@@ -1801,6 +1809,10 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::SendNode,
     SyntaxKind::SendNodeDeclaration,
     SyntaxKind::SenderReceiverPart,
+    SyntaxKind::WhileLoopNode,
+    SyntaxKind::ExpressionParameterMember,
+    SyntaxKind::ActionBodyParameterMember,
+    SyntaxKind::ActionBodyParameter,
     SyntaxKind::TerminateNode,
     SyntaxKind::AssignmentNode,
     SyntaxKind::AssignmentNodeDeclaration,

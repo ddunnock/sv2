@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T20:02:37Z",
+    "regenerated_utc": "2026-09-23T20:18:15Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 398,
-      "unimplemented": 156,
+      "implemented": 403,
+      "unimplemented": 151,
       "absent": 0,
-      "percent": 71.8
+      "percent": 72.7
     },
     "tests": {
-      "unit": 614,
+      "unit": 619,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 246,
+      "negative_cases": 249,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "4c71e51 Read terminate actions, `terminate;` and `action t terminate x;`",
       "a0ea0ef Stop rejecting `then terminate;` by absence: the next commit reads it",
       "daf5709 Read succession flow usages, `succession flow a.x to b.y;`",
       "a684449 Stop using `succession flow` as the unreadable example: the next commit reads it",
       "d729a6c Settle expression-body-semicolon: an expression body is braced",
       "8a1284c Close the session: the postfix expression layer and the view layer recorded, succession flows next",
       "72ef125 Read `expose`, completing the view layer",
-      "f612d52 Stop using `expose` as the unreadable example: the next commit reads it",
-      "6470178 Read filtered imports, `A::**[@Safety]`, completing NamespaceImport"
+      "f612d52 Stop using `expose` as the unreadable example: the next commit reads it"
     ]
   },
   "authored": {
@@ -217,6 +217,11 @@
       {
         "id": "state-body-terminate",
         "question": "OPEN. SysML 7.18.3's OnOff6 (Transition-Usages layer note, the example ending `action stop terminate;` inside `state def OnOff6 { ... }`) writes a TerminateNode as a STATE body item. No grammar admits it there: StateBodyItem (SysML 8.2.2.18.1) reaches usages only through BehaviorUsageMember, whose BehaviorUsageElement (8.2.2.6.4) lists no ActionNode, and the Pilot's fragment StateBodyItem (SysML.xtext:1754) is the same; ActionNodeMember belongs to ActionBehaviorMember (8.2.2.17.1), an action-body production. No corpus file writes `terminate` in a state body. The parser follows the BNF and the Pilot, so OnOff6 is rejected at `terminate`, while TerminateNode itself is read wherever an ActionBodyItem is. Needs a grammar-adjudicator pass and, if the example is the error, a deviations.json entry recording it. Not blocking: the text is rejected by rule until decided.",
+        "blocks": []
+      },
+      {
+        "id": "reserved-words-per-language",
+        "question": "OPEN, found 2026-09-23 while reading 7.17.12's first while-loop example, `action step { ... }`. Parser::is_name refuses any BasicName that `keyword()` (the generated table in crates/sv2-syntax/src/generated/kinds.rs) knows, and that table is the UNION of both languages' RESERVED_KEYWORD lists. Each language reserves its own words (KerML 8.2.2.6 and SysML 8.2.2.1.2 each state RESERVED_KEYWORD), so in a .sysml file the 44 KerML-only words -- assoc, behavior, bool, chains, class, classifier, composite, conjugate, conjugates, conjugation, connector, const, datatype, differences, disjoining, disjoint, expr, feature, featured, featuring, function, interaction, intersects, inv, inverse, inverting, member, metaclass, multiplicity, namespace, portion, predicate, redefinition, specialization, step, struct, subclassifier, subset, subtype, type, typed, typing, unions, var -- are refused as names although SysML does not reserve them (`part step;` is rejected today), and presumably the 72 SysML-only words are refused in .kerml files the same way. Fix: make the reserved test language-aware (the generator would need per-language keyword sets; kinds.rs is machine-owned, so the change is to scripts/gen_syntax_kinds.py). Tests for the 7.17.12 example write the name as `'step'` until this is settled. Measure the corpus effect before and after.",
         "blocks": []
       }
     ],
