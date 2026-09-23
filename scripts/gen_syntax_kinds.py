@@ -548,6 +548,21 @@ NODES = [
             "RequirementBody`. `SysML` 8.2.2.21.3."
         ),
     ),
+    # Viewpoints, SysML 8.2.2.26.3: requirements by the kind keyword `viewpoint`.
+    (
+        "ViewpointDefinition",
+        (
+            "`OccurrenceDefinitionPrefix 'viewpoint' 'def' DefinitionDeclaration "
+            "RequirementBody`. `SysML` 8.2.2.26.3."
+        ),
+    ),
+    (
+        "ViewpointUsage",
+        (
+            "`OccurrenceUsagePrefix 'viewpoint' ConstraintUsageDeclaration "
+            "RequirementBody`. `SysML` 8.2.2.26.3."
+        ),
+    ),
     # The second of RequirementBodyItem's six extra members, and the one that needed the
     # calculation body. Its two alternatives take DIFFERENT bodies — a RequirementBody by
     # reference and a CalculationBody by construction — which is the whole of the

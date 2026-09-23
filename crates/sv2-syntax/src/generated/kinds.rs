@@ -677,6 +677,10 @@ pub enum SyntaxKind {
     ConcernDefinition,
     /// `OccurrenceUsagePrefix 'concern' ConstraintUsageDeclaration RequirementBody`. `SysML` 8.2.2.21.3.
     ConcernUsage,
+    /// `OccurrenceDefinitionPrefix 'viewpoint' 'def' DefinitionDeclaration RequirementBody`. `SysML` 8.2.2.26.3.
+    ViewpointDefinition,
+    /// `OccurrenceUsagePrefix 'viewpoint' ConstraintUsageDeclaration RequirementBody`. `SysML` 8.2.2.26.3.
+    ViewpointUsage,
     /// `MemberPrefix? RequirementKind ownedRelatedElement += RequirementConstraintUsage`. `SysML` 8.2.2.21.1.
     RequirementConstraintMember,
     /// `'assume' | 'require'`. `SysML` 8.2.2.21.1.
@@ -1575,6 +1579,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::FramedConcernUsage,
     SyntaxKind::ConcernDefinition,
     SyntaxKind::ConcernUsage,
+    SyntaxKind::ViewpointDefinition,
+    SyntaxKind::ViewpointUsage,
     SyntaxKind::RequirementConstraintMember,
     SyntaxKind::RequirementKind,
     SyntaxKind::RequirementVerificationMember,

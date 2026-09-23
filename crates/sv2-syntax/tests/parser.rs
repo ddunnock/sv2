@@ -11711,3 +11711,104 @@ fn a_reference_takes_one_multiplicity() {
         parse_rejected(source);
     }
 }
+
+// -- viewpoints, SysML 8.2.2.26.3 ---------------------------------------------------
+//
+//   ViewpointDefinition = OccurrenceDefinitionPrefix 'viewpoint' 'def'
+//                         DefinitionDeclaration RequirementBody
+//   ViewpointUsage      = OccurrenceUsagePrefix 'viewpoint'
+//                         ConstraintUsageDeclaration RequirementBody
+//
+// "A viewpoint definition or usage is declared as a kind of requirement definition or
+// usage" (7.26.3, receipt 1813f74a): the concern's spine with the keyword `viewpoint`.
+
+#[test]
+fn the_viewpoint_examples_of_7_26_3_parse() {
+    // 7.26.3's viewpoint definition and usage (receipt 1813f74a), whole.
+    let source = "package P {\n\
+         viewpoint def 'System Structure Perspective' {\n\
+         frame 'system breakdown';\n\
+         frame 'modularity';\n\
+         require constraint {\n\
+         doc\n\
+         /* A system structure view shall show the hierarchical\n\
+         * part decomposition of a system, starting with a\n\
+         * specified root part.\n\
+         */\n\
+         }\n\
+         }\n\
+         viewpoint 'vehicle structure perspective' :\n\
+         'System Structure Perspective' {\n\
+         subject : Vehicle;\n\
+         }\n\
+         }";
+    let rendered = render(&parse_accepted(source).syntax());
+    assert_eq!(
+        nodes_named(&rendered, "ViewpointDefinition"),
+        1,
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "ViewpointUsage"), 1, "{rendered}");
+}
+
+#[test]
+fn a_viewpoint_is_declared_as_a_requirement_is() {
+    // vendor/corpus/sysml/src/examples/Simple Tests/ViewTest.sysml:19-21.
+    let rendered = render(&parse_accepted("viewpoint def VP { frame c; }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "ViewpointDefinition"),
+        [
+            "OccurrenceDefinitionPrefix",
+            "KwViewpoint",
+            "KwDef",
+            "DefinitionDeclaration",
+            "RequirementBody"
+        ],
+        "{rendered}"
+    );
+    // ViewTest.sysml:28-31, the body's members as the corpus writes them, in a part
+    // until the view definition it sits in is read.
+    let rendered = render(
+        &parse_accepted("part p { viewpoint vp: VP { frame concern c1; concern c2; } }").syntax(),
+    );
+    assert_eq!(
+        child_kinds(&rendered, "ViewpointUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwViewpoint",
+            "ConstraintUsageDeclaration",
+            "RequirementBody"
+        ],
+        "{rendered}"
+    );
+    // training/42. Views/Viewpoint Example.sysml:26, a package-level usage by name.
+    parse_accepted(
+        "package P { viewpoint 'system structure perspective' { frame 'modularity'; } }",
+    );
+    parse_accepted("viewpoint def BehaviorViewpoint;");
+    // A BehaviorUsageElement (8.2.2.6.4), as ConcernUsage is.
+    for source in [
+        "part p { viewpoint a; then viewpoint b; }",
+        "calc def C { viewpoint v; x }",
+        "variation part def V { variant viewpoint v; }",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert!(
+            nodes_named(&rendered, "ViewpointUsage") >= 1,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn a_viewpoint_is_bounded_by_its_rules() {
+    // A RequirementBody, not a CalculationBody: no trailing result expression
+    // (8.2.2.21.1, 8.2.2.19). Held as a file by
+    // tests/rejection/viewpoint-body-holds-no-result-expression.sysml.
+    parse_rejected("part p { viewpoint vp { x > 0 } }");
+    parse_rejected("viewpoint def VP { x > 0 }");
+    // A body is not optional: RequirementBody is `';' | '{' ... '}'`.
+    parse_rejected("part p { viewpoint vp }");
+    // DefinitionDeclaration takes no value.
+    parse_rejected("viewpoint def VP = 1;");
+}

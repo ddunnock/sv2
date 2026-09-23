@@ -1621,6 +1621,7 @@ impl<'a> Parser<'a> {
             || self.at_simple_definition(n).is_some()
             || self.at_interface_definition(n)
             || self.at_concern_definition(n)
+            || self.at_viewpoint_definition(n)
             || self.at_individual_definition(n)
             || self.at_extended_definition(n)
     }
@@ -2006,6 +2007,7 @@ impl<'a> Parser<'a> {
             || self.at_constraint_usage(n)
             || self.at_requirement_usage(n)
             || self.at_concern_usage(n)
+            || self.at_viewpoint_usage(n)
             || self.at_calculation_usage(n)
             || self.at_case_usage(n).is_some()
             || self.at_include_use_case_usage(n)
@@ -3468,8 +3470,9 @@ impl<'a> Parser<'a> {
         true
     }
 
-    /// A `RequirementDefinition`, `ConcernDefinition`, `ConstraintDefinition` or
-    /// `CalculationDefinition` read as a `DefinitionElement`, returning whether one was.
+    /// A `RequirementDefinition`, `ConcernDefinition`, `ViewpointDefinition`,
+    /// `ConstraintDefinition` or `CalculationDefinition` read as a `DefinitionElement`,
+    /// returning whether one was.
     /// Split out of `definition_element` so that function stays within clippy's complexity
     /// budget; each opens on its own keyword pair, so the order decides nothing.
     fn requirement_family_definition(&mut self) -> bool {
@@ -3477,6 +3480,8 @@ impl<'a> Parser<'a> {
             self.requirement_definition();
         } else if self.at_concern_definition(0) {
             self.concern_definition();
+        } else if self.at_viewpoint_definition(0) {
+            self.viewpoint_definition();
         } else if self.at_constraint_definition(0) {
             self.constraint_definition();
         } else if self.at_calculation_definition(0) {
@@ -4148,6 +4153,10 @@ impl<'a> Parser<'a> {
         } else if self.at_concern_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as RequirementUsage is.
             self.concern_usage();
+            true
+        } else if self.at_viewpoint_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as ConcernUsage is.
+            self.viewpoint_usage();
             true
         } else if self.at_constraint_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as AssertConstraintUsage is.
@@ -7131,6 +7140,47 @@ impl<'a> Parser<'a> {
         self.start_node(SyntaxKind::ConcernDefinition);
         self.occurrence_definition_prefix();
         self.expect_keyword("concern");
+        self.expect_keyword("def");
+        self.definition_declaration();
+        self.requirement_body();
+        self.finish_node();
+    }
+
+    /// Whether a `ViewpointDefinition` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceDefinitionPrefix 'viewpoint' 'def'` (`SysML` 8.2.2.26.3), as
+    /// `at_concern_definition` asks of `concern`.
+    fn at_viewpoint_definition(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_definition_prefix(n);
+        self.nth_is_keyword(after, "viewpoint") && self.nth_is_keyword(after + 1, "def")
+    }
+
+    // production: ViewpointDefinition@sysml
+    //
+    // ViewpointDefinition =
+    //     OccurrenceDefinitionPrefix 'viewpoint' 'def'
+    //     DefinitionDeclaration RequirementBody                  (SysML 8.2.2.26.3)
+    //
+    // "A viewpoint definition or usage is declared as a kind of requirement definition or
+    // usage" (7.26.3, receipt 1813f74a), so RequirementDefinition's spine with the keyword
+    // `viewpoint`, as ConcernDefinition is. The Pilot factors the keywords into
+    // ViewpointDefKeyword, deviation ViewpointDefKeyword (xtext_only, follow_spec), so the
+    // literals are matched here directly. The metaclass is ViewpointDefinition (8.3.26.8,
+    // receipt 3cf0e409), a RequirementDefinition.
+    //
+    // "The subject of a viewpoint definition or usage must be a view" (7.26.3) is a
+    // semantic constraint on the subject's type, not a production: any RequirementBody
+    // item is read, and checking the subject belongs above this layer (ADR-0002).
+    //
+    // implied specialization: Views::Viewpoint
+    // constraint: ViewpointDefinition::checkViewpointDefinitionSpecialization
+    //     `specializesFromLibrary('Views::Viewpoint')` (8.3.26.8). An injection, so
+    //     sv2-hir's (ADR-0002).
+    fn viewpoint_definition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ViewpointDefinition);
+        self.occurrence_definition_prefix();
+        self.expect_keyword("viewpoint");
         self.expect_keyword("def");
         self.definition_declaration();
         self.requirement_body();
@@ -10192,6 +10242,7 @@ impl<'a> Parser<'a> {
             || self.at_constraint_usage(n)
             || self.at_requirement_usage(n)
             || self.at_concern_usage(n)
+            || self.at_viewpoint_usage(n)
             || self.at_calculation_usage(n)
             || self.at_case_usage(n).is_some()
             || self.at_include_use_case_usage(n)
@@ -10858,6 +10909,41 @@ impl<'a> Parser<'a> {
         self.start_node(SyntaxKind::ConcernUsage);
         self.occurrence_usage_prefix();
         self.expect_keyword("concern");
+        self.constraint_usage_declaration();
+        self.requirement_body();
+        self.finish_node();
+    }
+
+    /// Whether a `ViewpointUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'viewpoint'` with no `def` after it (`SysML` 8.2.2.26.3), as
+    /// `at_concern_usage` asks of `concern`.
+    fn at_viewpoint_usage(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_usage_prefix(n);
+        self.nth_is_keyword(after, "viewpoint") && !self.nth_is_keyword(after + 1, "def")
+    }
+
+    // production: ViewpointUsage@sysml
+    //
+    // ViewpointUsage =
+    //     OccurrenceUsagePrefix 'viewpoint'
+    //     ConstraintUsageDeclaration RequirementBody             (SysML 8.2.2.26.3)
+    //
+    // RequirementUsage's shape with the kind keyword `viewpoint` (7.26.3, receipt
+    // 1813f74a); deviation ViewpointUsageKeyword (xtext_only, follow_spec) matches the
+    // literal. The metaclass is ViewpointUsage (8.3.26.9, receipt 26897969), a
+    // RequirementUsage. A BehaviorUsageElement (8.2.2.6.4), as ConcernUsage is.
+    //
+    // implied specialization: Views::viewpoints, and Views::View::viewpointSatisfactions
+    //     when composite and owned by a view
+    // constraint: ViewpointUsage::checkViewpointUsageSpecialization and
+    //     checkViewpointUsageViewpointSatisfactionSpecialization (8.3.26.9). Injections, so
+    //     sv2-hir's (ADR-0002).
+    fn viewpoint_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ViewpointUsage);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("viewpoint");
         self.constraint_usage_declaration();
         self.requirement_body();
         self.finish_node();
