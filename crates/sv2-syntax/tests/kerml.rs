@@ -223,15 +223,10 @@ fn a_filter_is_admitted_in_a_kerml_package_body_and_not_at_a_kerml_root() {
 #[test]
 fn the_other_feature_elements_are_unimplemented_rather_than_accepted() {
     // NamespaceFeatureMember reaches FeatureElement's ten alternatives. Feature,
-    // Succession and BindingConnector are implemented; the other seven are not, and
-    // reporting them is the honest state. `succession flow` is SuccessionFlow, one of
-    // the seven.
-    for source in [
-        "connector c from a to b;",
-        "succession flow f from a to b;",
-        "step s;",
-        "inv { true }",
-    ] {
+    // Succession and BindingConnector are implemented, and Connector is next (`connector
+    // c from a to b;` was here); the other six are not, and reporting them is the honest
+    // state. `succession flow` is SuccessionFlow, one of the six.
+    for source in ["succession flow f from a to b;", "step s;", "inv { true }"] {
         kerml_rejected(source);
     }
 }
