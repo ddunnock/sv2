@@ -1917,6 +1917,7 @@ impl<'a> Parser<'a> {
             || self.at_succession_as_usage(n)
             || self.at_binding_connector_as_usage(n)
             || self.at_assert_constraint_usage(n)
+            || self.at_satisfy_requirement_usage(n)
             || self.at_constraint_usage(n)
             || self.at_requirement_usage(n)
             || self.at_calculation_usage(n)
@@ -4034,6 +4035,10 @@ impl<'a> Parser<'a> {
         } else if self.at_assert_constraint_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
             self.assert_constraint_usage();
+            true
+        } else if self.at_satisfy_requirement_usage(0) {
+            // A BehaviorUsageElement (8.2.2.6.4), as AssertConstraintUsage is.
+            self.satisfy_requirement_usage();
             true
         } else {
             false
@@ -9655,6 +9660,7 @@ impl<'a> Parser<'a> {
             || self.at_exhibit_state_usage(n)
             || self.at_perform_action_usage(n)
             || self.at_assert_constraint_usage(n)
+            || self.at_satisfy_requirement_usage(n)
             || self.at_constraint_usage(n)
             || self.at_requirement_usage(n)
             || self.at_calculation_usage(n)
@@ -10343,9 +10349,9 @@ impl<'a> Parser<'a> {
     ///
     /// `OccurrenceUsagePrefix`, then `assert`. The keyword is reserved (`SysML` 8.2.2.1.2)
     /// and opens one other production, `SatisfyRequirementUsage` (8.2.2.21.2), whose
-    /// `satisfy` comes after the same optional `not`: that is declined here, so it is
-    /// reported rather than read as an assertion referencing `satisfy`, which is reserved
-    /// and cannot be a name anyway.
+    /// `satisfy` comes after the same optional `not`: that is declined here and read by
+    /// `satisfy_requirement_usage`, rather than read as an assertion referencing `satisfy`,
+    /// which is reserved and cannot be a name anyway.
     ///
     /// The prefix skipped is `OccurrenceUsagePrefix`, and `assert_constraint_usage` reads
     /// exactly that with `occurrence_usage_prefix` — the pairing that must match, since a
@@ -10408,6 +10414,131 @@ impl<'a> Parser<'a> {
         }
         self.calculation_body();
         self.finish_node();
+    }
+
+    /// Whether a `SatisfyRequirementUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'assert'? 'not'? 'satisfy'` (`SysML` 8.2.2.21.2, with the two
+    /// `?` of deviation `SatisfyRequirementUsage`). `satisfy` is reserved and opens nothing
+    /// else, so it decides, and `at_assert_constraint_usage` declines exactly what this
+    /// accepts after an `assert`.
+    fn at_satisfy_requirement_usage(&self, n: usize) -> bool {
+        let n = self.skip_occurrence_usage_prefix(n);
+        let n = n + usize::from(self.nth_is_keyword(n, "assert"));
+        let n = n + usize::from(self.nth_is_keyword(n, "not"));
+        self.nth_is_keyword(n, "satisfy")
+    }
+
+    // production: SatisfyRequirementUsage@sysml
+    //
+    // SatisfyRequirementUsage =
+    //     OccurrenceUsagePrefix 'assert' ( isNegated ?= 'not' ) 'satisfy'
+    //     ( ownedRelationship += OwnedReferenceSubsetting
+    //       FeatureSpecializationPart?
+    //     | 'requirement' UsageDeclaration )
+    //     ValuePart?
+    //     ( 'by' ownedRelationship += SatisfactionSubjectMember )?
+    //     RequirementBody                                        (SysML 8.2.2.21.2)
+    //
+    // "A satisfy requirement usage is declared as a requirement usage (see 7.21.2 ), using
+    // the kind keyword satisfy requirement ... A satisfy requirement usage may also be
+    // declared using just the keyword satisfy ... the requirement to be satisfied is
+    // identified by giving a qualified name or feature chain immediately after the satisfy
+    // keyword" (7.21.4, receipt 05678331). PerformActionUsageDeclaration's two
+    // alternatives again, told apart on one token: `requirement` is reserved and a
+    // reference opens on a name. The metaclass is SatisfyRequirementUsage (8.3.21.10,
+    // receipt e9c53cb3), both an AssertConstraintUsage and a RequirementUsage.
+    //
+    // The clause writes `'assert'` and `( isNegated ?= 'not' )` with no `?` on either, so
+    // the only spelling it admits is `assert not satisfy`. Deviation SatisfyRequirementUsage
+    // (follow_xtext) makes each optional, on 7.21.4's own `satisfy vehicleMaximumMass by
+    // vehicle1;` and `not satisfy ...` and the corpus's use of all four; the order is kept.
+    //
+    // The reference alternative's FeatureSpecializationPart may open on a multiplicity, as
+    // `event`'s and `include`'s do, so `[` is asked for.
+    //
+    // implied specialization: Requirements::satisfiedRequirementChecks, or
+    //     ::notSatisfiedRequirementChecks when negated
+    // constraint: SatisfyRequirementUsage::checkSatisfyRequirementUsageSpecialization and
+    //     checkSatisfyRequirementUsageBindingConnector (8.3.21.10): the specialization, and
+    //     the binding of the subject parameter to the satisfying feature. Injections, so
+    //     sv2-hir's (ADR-0002).
+    // constraint: SatisfyRequirementUsage::validateSatisfyRequirementUsageReference
+    //     (8.3.21.10): the reference's target is a RequirementUsage. sv2-resolve's.
+    fn satisfy_requirement_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SatisfyRequirementUsage);
+        self.occurrence_usage_prefix();
+        if !(self.at_keyword("assert") && self.nth_is_keyword(1, "not")) {
+            // deviation: SatisfyRequirementUsage
+            self.note_deviation(
+                "SatisfyRequirementUsage",
+                "a satisfy without both `assert` and `not`",
+            );
+        }
+        self.eat_optional_keyword("assert");
+        self.eat_optional_keyword("not");
+        self.expect_keyword("satisfy");
+        if self.at_keyword("requirement") {
+            self.bump_as(keyword("requirement").unwrap_or(SyntaxKind::BasicName));
+            self.usage_declaration();
+        } else {
+            self.owned_reference_subsetting();
+            if self.at_feature_specialization() || self.at_multiplicity_part() {
+                self.feature_specialization_part();
+            }
+        }
+        if self.at_value_part() {
+            self.value_part();
+        }
+        if self.at_keyword("by") {
+            self.bump_as(keyword("by").unwrap_or(SyntaxKind::BasicName));
+            self.satisfaction_subject_member();
+        }
+        self.requirement_body();
+        self.finish_node();
+    }
+
+    // production: SatisfactionSubjectMember@sysml
+    //
+    // SatisfactionSubjectMember : SubjectMembership =
+    //     ownedRelatedElement += SatisfactionParameter
+    //
+    // production: SatisfactionParameter@sysml
+    //
+    // SatisfactionParameter : ReferenceUsage =
+    //     ownedRelationship += SatisfactionFeatureValue
+    //
+    // production: SatisfactionFeatureValue@sysml
+    //
+    // SatisfactionFeatureValue : FeatureValue =
+    //     ownedRelatedElement += SatisfactionReferenceExpression
+    //
+    // production: SatisfactionReferenceExpression@sysml
+    //
+    // SatisfactionReferenceExpression : FeatureReferenceExpression =
+    //     ownedRelationship += FeatureChainMember                (SysML 8.2.2.21.2)
+    //
+    // "The satisfying feature for a satisfy requirement usage can be specified in its
+    // declaration, immediately before its body, after keyword by" (7.21.4). Four elements
+    // over one reference: the subject parameter, whose value is an expression that
+    // references the satisfying feature. Each is a node, as the productions write each; the
+    // text is a FeatureChainMember, SysML's (8.2.2.17.5), a name or a chain and nothing
+    // more, so `by f(x)` is reported.
+    fn satisfaction_subject_member(&mut self) {
+        for node in [
+            SyntaxKind::SatisfactionSubjectMember,
+            SyntaxKind::SatisfactionParameter,
+            SyntaxKind::SatisfactionFeatureValue,
+            SyntaxKind::SatisfactionReferenceExpression,
+        ] {
+            self.eat_trivia();
+            self.start_node(node);
+        }
+        self.sysml_feature_chain_member();
+        for _ in 0..4 {
+            self.finish_node();
+        }
     }
 
     // production: SubjectMember

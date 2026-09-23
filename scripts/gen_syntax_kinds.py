@@ -555,6 +555,45 @@ NODES = [
             "`SysML` 8.2.2.21.2."
         ),
     ),
+    # The satisfy requirement usage, `satisfy r by v;`: a requirement usage asserted of a
+    # satisfying feature (7.21.4), by reference or by declaration, as `perform` is.
+    (
+        "SatisfyRequirementUsage",
+        (
+            "`OccurrenceUsagePrefix 'assert' 'not' 'satisfy' ( OwnedReferenceSubsetting "
+            "FeatureSpecializationPart? | 'requirement' UsageDeclaration ) ValuePart? "
+            "( 'by' SatisfactionSubjectMember )? RequirementBody`, `assert` and `not` "
+            "optional by deviation. `SysML` 8.2.2.21.2."
+        ),
+    ),
+    (
+        "SatisfactionSubjectMember",
+        (
+            "`ownedRelatedElement += SatisfactionParameter`. `SysML` 8.2.2.21.2 — a "
+            "`SubjectMembership`."
+        ),
+    ),
+    (
+        "SatisfactionParameter",
+        (
+            "`ownedRelationship += SatisfactionFeatureValue`. `SysML` 8.2.2.21.2 — the "
+            "metaclass is `ReferenceUsage`."
+        ),
+    ),
+    (
+        "SatisfactionFeatureValue",
+        (
+            "`ownedRelatedElement += SatisfactionReferenceExpression`. `SysML` 8.2.2.21.2 "
+            "— the metaclass is `FeatureValue`."
+        ),
+    ),
+    (
+        "SatisfactionReferenceExpression",
+        (
+            "`ownedRelationship += FeatureChainMember`. `SysML` 8.2.2.21.2 — the "
+            "metaclass is `FeatureReferenceExpression`."
+        ),
+    ),
     # The constraint usage, `constraint c : C { a <= b }`: AssertConstraintUsage's second
     # alternative less the `assert`, over the same declaration and body.
     (

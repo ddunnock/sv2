@@ -10485,3 +10485,223 @@ fn a_message_is_bounded_by_its_rules() {
     // SysML only.
     assert!(!parse("message m;", Language::KerMl).errors().is_empty());
 }
+
+// -- SatisfyRequirementUsage, SysML 8.2.2.21.2 -------------------------------------------
+//
+//   SatisfyRequirementUsage = OccurrenceUsagePrefix 'assert' ( isNegated ?= 'not' ) 'satisfy'
+//                             ( OwnedReferenceSubsetting FeatureSpecializationPart?
+//                             | 'requirement' UsageDeclaration )
+//                             ValuePart? ( 'by' SatisfactionSubjectMember )?
+//                             RequirementBody
+//
+// with `assert` and `not` each optional by deviation SatisfyRequirementUsage (follow_xtext):
+// only `assert not satisfy` is the specification's own, and every other spelling carries
+// the deviation's note.
+
+#[test]
+fn the_satisfy_examples_of_7_21_4_parse() {
+    // Every example of 7.21.4 (receipt 05678331), whole. None writes `assert`, so each
+    // satisfy carries deviation SatisfyRequirementUsage's note, and nothing else does.
+    let source = "package P {\n\
+         part vehicle1 : Vehicle;\n\
+         satisfy requirement braking : BrakingRequirement by vehicle1 {\n\
+         :>> speedLimit = 100[km/h];\n\
+         :>> maxBrakingDistance = 10[m];\n\
+         }\n\
+         satisfy vehicleMaximumMass by vehicle1;\n\
+         part vehicle2 : ExperimentalVehicle;\n\
+         not satisfy vehicleMaximumMass by vehicle2;\n\
+         part vehicle3 : Vehicle {\n\
+         part engine : Engine;\n\
+         // \"vehicle3\" is implicitly the satisfying feature.\n\
+         satisfy rqts : VehicleRequirementsGroup;\n\
+         }\n\
+         }";
+    assert_eq!(
+        deviations_named(source),
+        ["SatisfyRequirementUsage"; 4],
+        "{source}"
+    );
+    let rendered = render(&parse_accepted(source).syntax());
+    assert_eq!(
+        nodes_named(&rendered, "SatisfyRequirementUsage"),
+        4,
+        "{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "SatisfactionSubjectMember"),
+        3,
+        "{rendered}"
+    );
+}
+
+#[test]
+fn only_assert_not_satisfy_is_the_specifications_own() {
+    // Deviation SatisfyRequirementUsage makes `assert` and `not` each optional; the corpus
+    // writes all four (examples/Simple Tests/RequirementTest.sysml:21, 22, 26, 27).
+    for (source, expected) in [
+        ("part p { assert not satisfy r1 by q; }", &[][..]),
+        (
+            "part p { assert satisfy r by q; }",
+            &["SatisfyRequirementUsage"],
+        ),
+        (
+            "part p { not satisfy r1 by p; }",
+            &["SatisfyRequirementUsage"],
+        ),
+        ("part p { satisfy r by p; }", &["SatisfyRequirementUsage"]),
+    ] {
+        assert_eq!(deviations_named(source), expected, "{source}");
+    }
+}
+
+#[test]
+fn a_satisfy_requirement_usage_is_one_of_two_alternatives() {
+    // The reference alternative, every optional part written.
+    let rendered =
+        render(&parse_accepted("part p { assert not satisfy r : R [1] = x by a.b { } }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "SatisfyRequirementUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwAssert",
+            "KwNot",
+            "KwSatisfy",
+            "OwnedReferenceSubsetting",
+            "FeatureSpecializationPart",
+            "ValuePart",
+            "KwBy",
+            "SatisfactionSubjectMember",
+            "RequirementBody"
+        ],
+        "{rendered}"
+    );
+    // The declaring alternative (examples/Requirements Examples/
+    // RequirementDerivationExample.sysml:28).
+    let rendered = render(
+        &parse_accepted("part p { satisfy requirement req1_1 : Req1_1 by system.sub1; }").syntax(),
+    );
+    assert_eq!(
+        child_kinds(&rendered, "SatisfyRequirementUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwSatisfy",
+            "KwRequirement",
+            "UsageDeclaration",
+            "KwBy",
+            "SatisfactionSubjectMember",
+            "RequirementBody"
+        ],
+        "{rendered}"
+    );
+    // The declaration may be empty, and `by` is optional (SysML v2 Spec Annex A
+    // SimpleVehicleModel.sysml:1574 writes the second).
+    for source in [
+        "part p { satisfy requirement by s; }",
+        "part p { satisfy requirement sv:SafetyViewpoint; }",
+        "part p { satisfy Requirements::engineSpecification by vehicle_b.engine { } }",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            nodes_named(&rendered, "SatisfyRequirementUsage"),
+            1,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn a_satisfaction_subject_is_four_elements_over_one_reference() {
+    // A reference expression over a FeatureChainMember, four nodes deep, as the four
+    // productions of 8.2.2.21.2 write it; a chain here, as
+    // examples/Requirements Examples/RequirementDerivationExample.sysml:28 writes it.
+    let rendered = render(
+        &parse_accepted("part p { satisfy requirement req1_1 : Req1_1 by system.sub1; }").syntax(),
+    );
+    for (node, child) in [
+        ("SatisfactionSubjectMember", "SatisfactionParameter"),
+        ("SatisfactionParameter", "SatisfactionFeatureValue"),
+        (
+            "SatisfactionFeatureValue",
+            "SatisfactionReferenceExpression",
+        ),
+        ("SatisfactionReferenceExpression", "FeatureChainMember"),
+    ] {
+        assert_eq!(child_kinds(&rendered, node), [child], "{rendered}");
+    }
+    assert_eq!(
+        child_kinds(&rendered, "FeatureChainMember"),
+        ["OwnedFeatureChainMember"],
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_satisfy_requirement_usage_is_a_behavior_usage_element() {
+    // A BehaviorUsageElement (8.2.2.6.4), as AssertConstraintUsage is: `then` may prefix
+    // it, it is a variant, and an item of a calculation body rather than its result. And
+    // `assert` alone is still an AssertConstraintUsage.
+    for (source, member) in [
+        (
+            "part c { satisfy r; then satisfy s; }",
+            "SourceSuccessionMember",
+        ),
+        (
+            "variation part def V { variant satisfy r; }",
+            "VariantUsageMember",
+        ),
+        ("calc def C { satisfy r by s; x }", "ResultExpressionMember"),
+        (
+            "requirement def R { assert not satisfy q by s; }",
+            "SatisfyRequirementUsage",
+        ),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert!(nodes_named(&rendered, member) >= 1, "{source}\n{rendered}");
+        assert!(
+            nodes_named(&rendered, "SatisfyRequirementUsage") >= 1,
+            "{source}\n{rendered}"
+        );
+    }
+    let rendered = render(&parse_accepted("part c { assert c; assert not c; }").syntax());
+    assert_eq!(
+        nodes_named(&rendered, "AssertConstraintUsage"),
+        2,
+        "{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "SatisfyRequirementUsage"),
+        0,
+        "{rendered}"
+    );
+}
+
+#[test]
+fn a_satisfy_requirement_usage_is_bounded_by_its_rules() {
+    // `assert` comes before `not`. Held by tests/rejection/satisfy-assert-precedes-not.sysml.
+    parse_rejected("part p { not assert satisfy r by q; }");
+    parse_rejected("part p { satisfy not r by q; }");
+    // One alternative or the other: a reference, or `requirement` and a declaration.
+    parse_rejected("part p { satisfy; }");
+    parse_rejected("part p { satisfy by q; }");
+    // The reference alternative declares no name (7.21.4: "the declaration does not
+    // include either a name or short name").
+    parse_rejected("part p { satisfy r s by q; }");
+    parse_rejected("part p { satisfy <s> r by q; }");
+    // The value comes before `by`. Held by tests/rejection/satisfy-value-precedes-by.sysml.
+    parse_rejected("part p { satisfy r by q = x; }");
+    // The satisfying subject is a feature reference, not an expression. Held by
+    // tests/rejection/satisfaction-subject-is-a-feature-reference.sysml.
+    parse_rejected("part p { satisfy r by f(x); }");
+    parse_rejected("part p { satisfy r by q + 1; }");
+    parse_rejected("part p { satisfy r by; }");
+    // A RequirementBody is not optional; there is no satisfy definition.
+    parse_rejected("part p { satisfy r by q }");
+    parse_rejected("satisfy def S;");
+    // SysML only.
+    assert!(
+        !parse("satisfy r by q;", Language::KerMl)
+            .errors()
+            .is_empty()
+    );
+}

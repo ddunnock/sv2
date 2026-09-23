@@ -679,6 +679,16 @@ pub enum SyntaxKind {
     ConstraintUsageDeclaration,
     /// `OccurrenceUsagePrefix 'requirement' ConstraintUsageDeclaration RequirementBody`. `SysML` 8.2.2.21.2.
     RequirementUsage,
+    /// `OccurrenceUsagePrefix 'assert' 'not' 'satisfy' ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'requirement' UsageDeclaration ) ValuePart? ( 'by' SatisfactionSubjectMember )? RequirementBody`, `assert` and `not` optional by deviation. `SysML` 8.2.2.21.2.
+    SatisfyRequirementUsage,
+    /// `ownedRelatedElement += SatisfactionParameter`. `SysML` 8.2.2.21.2 — a `SubjectMembership`.
+    SatisfactionSubjectMember,
+    /// `ownedRelationship += SatisfactionFeatureValue`. `SysML` 8.2.2.21.2 — the metaclass is `ReferenceUsage`.
+    SatisfactionParameter,
+    /// `ownedRelatedElement += SatisfactionReferenceExpression`. `SysML` 8.2.2.21.2 — the metaclass is `FeatureValue`.
+    SatisfactionFeatureValue,
+    /// `ownedRelationship += FeatureChainMember`. `SysML` 8.2.2.21.2 — the metaclass is `FeatureReferenceExpression`.
+    SatisfactionReferenceExpression,
     /// `OccurrenceUsagePrefix 'constraint' ConstraintUsageDeclaration CalculationBody`. `SysML` 8.2.2.20.
     ConstraintUsage,
     /// `OccurrenceUsagePrefix 'assert' 'not'? ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'constraint' ConstraintUsageDeclaration ) CalculationBody`. `SysML` 8.2.2.20.
@@ -1518,6 +1528,11 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::RequirementConstraintUsage,
     SyntaxKind::ConstraintUsageDeclaration,
     SyntaxKind::RequirementUsage,
+    SyntaxKind::SatisfyRequirementUsage,
+    SyntaxKind::SatisfactionSubjectMember,
+    SyntaxKind::SatisfactionParameter,
+    SyntaxKind::SatisfactionFeatureValue,
+    SyntaxKind::SatisfactionReferenceExpression,
     SyntaxKind::ConstraintUsage,
     SyntaxKind::AssertConstraintUsage,
     SyntaxKind::ConstraintDefinition,

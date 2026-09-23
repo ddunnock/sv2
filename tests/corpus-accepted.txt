@@ -63,6 +63,7 @@ vendor/corpus/sysml/src/examples/Metadata Examples/VerificationMetadataExample.s
 vendor/corpus/sysml/src/examples/Packet Example/PacketUsage.sysml
 vendor/corpus/sysml/src/examples/Packet Example/Packets.sysml
 vendor/corpus/sysml/src/examples/Requirements Examples/HSUVRequirements.sysml
+vendor/corpus/sysml/src/examples/Requirements Examples/RequirementDerivationExample.sysml
 vendor/corpus/sysml/src/examples/Requirements Examples/VehicleRequirementDerivation.sysml
 vendor/corpus/sysml/src/examples/Room Model/RoomModel.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/AliasTest.sysml
@@ -174,7 +175,9 @@ vendor/corpus/sysml/src/training/31. Constraints/Derivation Constraints.sysml
 vendor/corpus/sysml/src/training/31. Constraints/Time Constraints.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Definitions.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Groups.sysml
+vendor/corpus/sysml/src/training/32. Requirements/Requirement Satisfaction.sysml
 vendor/corpus/sysml/src/training/32. Requirements/Requirement Usages.sysml
+vendor/corpus/sysml/src/training/33. Analysis/Analysis Case Usage Example.sysml
 vendor/corpus/sysml/src/training/33. Analysis/Trade Study Analysis Example.sysml
 vendor/corpus/sysml/src/training/34. Verification/Verification Case Definition Example.sysml
 vendor/corpus/sysml/src/training/34. Verification/Verification Case Usage Example.sysml
@@ -206,9 +209,11 @@ vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavio
 vendor/corpus/sysml/src/validation/06-Individual and Snapshots/6-Individual and Snapshots.sysml
 vendor/corpus/sysml/src/validation/07-Variant Configuration/7a-Variant Configuration - General Concept.sysml
 vendor/corpus/sysml/src/validation/07-Variant Configuration/7a1-Variant Configuration - General Concept-a.sysml
+vendor/corpus/sysml/src/validation/08-Requirements/8-Requirements.sysml
 vendor/corpus/sysml/src/validation/09-Verification/9-Verification-simplified.sysml
 vendor/corpus/sysml/src/validation/10-Analysis and Trades/10a-Analysis.sysml
 vendor/corpus/sysml/src/validation/10-Analysis and Trades/10b-Trade-off Among Alternative Configurations.sysml
+vendor/corpus/sysml/src/validation/10-Analysis and Trades/10c-Fuel Economy Analysis.sysml
 vendor/corpus/sysml/src/validation/12-Dependency Relationships/12a-Dependency.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13a-Model Containment.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group-1.sysml
