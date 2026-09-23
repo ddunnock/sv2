@@ -101,6 +101,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/TradeStudyTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/UseCaseTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/VariabilityTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/VerificationTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/ViewTest.sysml
 vendor/corpus/sysml/src/examples/State Space Representation Examples/CartSample.sysml
 vendor/corpus/sysml/src/examples/State Space Representation Examples/EVSample.sysml
 vendor/corpus/sysml/src/examples/Timeslice and Snapshot Examples/TimeVaryingAttribute.sysml
@@ -207,6 +208,7 @@ vendor/corpus/sysml/src/training/41. Language Extension/Model Library Example.sy
 vendor/corpus/sysml/src/training/41. Language Extension/Semantic Metadata Example.sysml
 vendor/corpus/sysml/src/training/41. Language Extension/User Keyword Example.sysml
 vendor/corpus/sysml/src/training/42. Views/Viewpoint Example.sysml
+vendor/corpus/sysml/src/training/42. Views/Views Example.sysml
 vendor/corpus/sysml/src/validation/01-Parts Tree/1a-Parts Tree.sysml
 vendor/corpus/sysml/src/validation/01-Parts Tree/1c-Parts Tree Redefinition.sysml
 vendor/corpus/sysml/src/validation/01-Parts Tree/1d-Parts Tree with Reference.sysml
@@ -232,6 +234,8 @@ vendor/corpus/sysml/src/validation/09-Verification/9-Verification-simplified.sys
 vendor/corpus/sysml/src/validation/10-Analysis and Trades/10a-Analysis.sysml
 vendor/corpus/sysml/src/validation/10-Analysis and Trades/10b-Trade-off Among Alternative Configurations.sysml
 vendor/corpus/sysml/src/validation/10-Analysis and Trades/10c-Fuel Economy Analysis.sysml
+vendor/corpus/sysml/src/validation/11-View and Viewpoint/11a-View-Viewpoint.sysml
+vendor/corpus/sysml/src/validation/11-View and Viewpoint/11b-Safety and Security Feature Views.sysml
 vendor/corpus/sysml/src/validation/12-Dependency Relationships/12a-Dependency.sysml
 vendor/corpus/sysml/src/validation/12-Dependency Relationships/12b-Allocation-1.sysml
 vendor/corpus/sysml/src/validation/12-Dependency Relationships/12b-Allocation.sysml

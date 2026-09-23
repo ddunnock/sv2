@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T17:57:07Z",
+    "regenerated_utc": "2026-09-23T18:02:58Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 392,
-      "unimplemented": 162,
+      "implemented": 395,
+      "unimplemented": 159,
       "absent": 0,
-      "percent": 70.8
+      "percent": 71.3
     },
     "tests": {
-      "unit": 601,
+      "unit": 604,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 238,
+      "negative_cases": 239,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "f612d52 Stop using `expose` as the unreadable example: the next commit reads it",
       "6470178 Read filtered imports, `A::**[@Safety]`, completing NamespaceImport",
       "ac6155b Read view definitions, view usages and `render`, the view layer less `expose`",
       "b2356c1 Read viewpoint definitions and usages, requirements by the keyword `viewpoint`",
       "10d5ae9 Read collect expressions, `x.{ ... }`, completing the postfix layer",
       "b733786 Read select expressions, `x.?{ ... }`, in the postfix loop",
       "22a1f5b Stop rejecting select and collect by absence: the next commits read them",
-      "ff4e6cf Read index expressions, `x#(i)`, in the postfix loop",
-      "e663c21 Stop rejecting `#(` by absence: the next commit reads it"
+      "ff4e6cf Read index expressions, `x#(i)`, in the postfix loop"
     ]
   },
   "authored": {

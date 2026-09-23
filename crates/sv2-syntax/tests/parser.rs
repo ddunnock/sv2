@@ -11832,8 +11832,8 @@ fn a_viewpoint_is_bounded_by_its_rules() {
 //   ViewBodyItem           = DefinitionBodyItem | ElementFilterMember
 //                          | ViewRenderingMember | Expose
 //
-// Expose, the one item a view usage's body has and a definition's has not, is read by
-// the next commit; until then these cases leave it out.
+// Expose, the one item a view usage's body has and a definition's has not, has its own
+// section below; these cases were written before it landed and leave it out.
 
 #[test]
 fn a_view_definition_reads_the_corpus_forms() {
@@ -12082,4 +12082,143 @@ fn a_filter_package_is_bounded_by_its_rules() {
     parse_rejected("package P { private import A::**[@S, @T]; }");
     // The condition follows the declaration, not the RelationshipBody.
     parse_rejected("package P { private import A::**; [@S] }");
+}
+
+// -- Expose, SysML 8.2.2.26.2 ------------------------------------------------------
+//
+//   Expose           = 'expose' ( MembershipExpose | NamespaceExpose ) RelationshipBody
+//   MembershipExpose = MembershipImport
+//   NamespaceExpose  = NamespaceImport
+//
+// ViewBodyItem's fourth alternative, and the one item a view usage's body has that a
+// view definition's has not.
+
+#[test]
+fn the_view_test_example_parses_whole() {
+    // vendor/corpus/sysml/src/examples/Simple Tests/ViewTest.sysml, every statement in
+    // order: the file the view layer's productions were each checked against in part. Its
+    // tokens, not its bytes: indentation and blank lines are not reproduced, and the file
+    // itself is in the corpus sweep, which round-trips it.
+    let source = "package ViewTest {\n\
+         package P {\n\
+         public part p1;\n\
+         private part p2;\n\
+         }\n\
+         part def S;\n\
+         concern def C {\n\
+         subject;\n\
+         stakeholder s : S;\n\
+         }\n\
+         concern c : C {\n\
+         subject;\n\
+         stakeholder s1;\n\
+         }\n\
+         viewpoint def VP {\n\
+         frame c;\n\
+         }\n\
+         rendering def R;\n\
+         rendering r : R;\n\
+         view def V {\n\
+         viewpoint vp: VP {\n\
+         frame concern c1;\n\
+         concern c2;\n\
+         }\n\
+         render rendering r1: R[0..1]; \n\
+         view v: V[0..*] {\n\
+         expose P::*;\n\
+         render r;\n\
+         rendering r2;\n\
+         alias vp1 for p1;\n\
+         // Note: \"expose\" imports all.\n\
+         alias vp2 for p2;\n\
+         }\n\
+         }\n\
+         view v : V {\n\
+         render r [0..*];\n\
+         }\n\
+         }";
+    let rendered = render(&parse_accepted(source).syntax());
+    for (node, count) in [
+        ("ViewDefinition", 1),
+        ("ViewUsage", 2),
+        ("ViewpointDefinition", 1),
+        ("ViewpointUsage", 1),
+        ("ViewRenderingMember", 3),
+        ("Expose", 1),
+        ("NamespaceExpose", 1),
+    ] {
+        assert_eq!(nodes_named(&rendered, node), count, "{node}\n{rendered}");
+    }
+}
+
+#[test]
+fn an_expose_is_one_of_two_alternatives() {
+    for (source, alternative, import) in [
+        // validation/11-View and Viewpoint/11b-Safety and Security Feature Views.sysml:52,
+        // a membership.
+        (
+            "view v { expose vehicle; }",
+            "MembershipExpose",
+            "MembershipImport",
+        ),
+        // training/42. Views/Views Example.sysml:12, recursive, and still a membership:
+        // MembershipImport writes `( '::' '**' )?` (8.2.2.5.1).
+        (
+            "view v { expose vehicle::**; }",
+            "MembershipExpose",
+            "MembershipImport",
+        ),
+        // 11b:56, a namespace with the recursive suffix.
+        (
+            "view v { expose vehicle::*::**; }",
+            "NamespaceExpose",
+            "NamespaceImport",
+        ),
+        // 11b:61, a filter package, NamespaceImport's second alternative.
+        (
+            "view v { expose vehicle::**[@Safety and (as Safety).isMandatory]; }",
+            "NamespaceExpose",
+            "NamespaceImport",
+        ),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            child_kinds(&rendered, "Expose"),
+            ["KwExpose", alternative, "RelationshipBody"],
+            "{source}\n{rendered}"
+        );
+        assert_eq!(
+            child_kinds(&rendered, alternative),
+            [import],
+            "{source}\n{rendered}"
+        );
+        // An Expose is an Import (8.3.26.2), but the text is not an Import's: no Import
+        // node, with its visibility and `import`, is built. (A filtered expose does hold
+        // an ImportDeclaration, deep inside, as FilterPackageImport's own content.)
+        assert_eq!(nodes_named(&rendered, "Import"), 0, "{source}\n{rendered}");
+    }
+    // Views Example.sysml:25, the filter inside a nested view.
+    parse_accepted(
+        "view 'vehicle tabular views' { view 'safety features view' : 'Part Structure View' { expose vehicle::**[@Safety]; render asTextualNotationTable; } }",
+    );
+    // A braced RelationshipBody, as an import may take.
+    parse_accepted("view v { expose vehicle { /* why */ } }");
+}
+
+#[test]
+fn an_expose_is_bounded_by_its_rules() {
+    // ViewDefinitionBodyItem has no Expose (8.2.2.26.1): a definition says how to render,
+    // a usage what to expose. Held as a file by
+    // tests/rejection/expose-is-a-view-usage-body-item.sysml.
+    parse_rejected("view def V { expose vehicle; }");
+    parse_rejected("part p { expose vehicle; }");
+    parse_rejected("package P { expose vehicle; }");
+    // No MemberPrefix and no `all`: an Expose's visibility and isImportAll are fixed by
+    // validateExposeVisibility and validateExposeIsImportAll (8.3.26.2), not written.
+    let visible = render(&parse_rejected("view v { private expose vehicle; }").syntax());
+    assert_eq!(nodes_named(&visible, "Expose"), 0, "{visible}");
+    parse_rejected("view v { expose all vehicle; }");
+    // It names what it exposes, and ends in a RelationshipBody.
+    parse_rejected("view v { expose; }");
+    parse_rejected("view v { expose vehicle }");
 }

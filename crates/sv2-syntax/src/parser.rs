@@ -1096,6 +1096,14 @@ impl Body {
         matches!(self, Self::ViewDefinition | Self::View)
     }
 
+    /// Whether `Expose` is one of this body's alternatives.
+    ///
+    /// `ViewBodyItem` alone names it (`SysML` 8.2.2.26.2); `ViewDefinitionBodyItem` does
+    /// not, and `validateExposeOwningNamespace` (8.3.26.2) says the owner is a `ViewUsage`.
+    fn admits_expose(self) -> bool {
+        matches!(self, Self::View)
+    }
+
     /// Whether `TransitionUsageMember` is one of this body's alternatives.
     ///
     /// `StateBodyItem` alone names it (`SysML` 8.2.2.18.1). A transition "can be used within
@@ -2639,6 +2647,11 @@ impl<'a> Parser<'a> {
             // SubjectMember, RequirementConstraintMember, FramedConcernMember,
             // RequirementVerificationMember, ActorMember and StakeholderMember: see
             // `requirement_body_member`.
+        } else if body.admits_expose() && self.at_keyword("expose") {
+            // ViewBodyItem's Expose (SysML 8.2.2.26.2). `at_keyword`, not
+            // `at_element_keyword`: an Expose writes no visibility, so a `private` before
+            // it is no item and is recovered over.
+            self.expose();
         } else if body.admits_render() && self.at_element_keyword("render") {
             // ViewDefinitionBodyItem's and ViewBodyItem's ViewRenderingMember (SysML
             // 8.2.2.26.1, .2): a ViewRenderingMembership of its own, so not `membership`'s.
@@ -7323,8 +7336,9 @@ impl<'a> Parser<'a> {
     //
     // ViewBody : ViewUsage = ';' | '{' ViewBodyItem* '}'         (SysML 8.2.2.26.2)
     //
-    // ViewBodyItem is NOT marked, for ViewDefinitionBodyItem's reason, and because its
-    // Expose alternative is not read yet.
+    // ViewBodyItem is NOT marked, for ViewDefinitionBodyItem's reason: its first
+    // alternative is DefinitionBodyItem. The other three, ElementFilterMember,
+    // ViewRenderingMember and Expose, are read; see `Body::View`.
     fn view_body(&mut self) {
         self.braced_body(
             SyntaxKind::ViewBody,
@@ -12518,24 +12532,28 @@ impl<'a> Parser<'a> {
     // thing that follows, opens on `;` or `{`.
     fn import_declaration(&mut self) {
         self.eat_trivia();
-        let outer = self.builder.checkpoint();
-        self.plain_import_declaration();
-        if self.at(SyntaxKind::LBracket) {
-            self.filter_package(outer);
-        }
+        self.start_node(SyntaxKind::ImportDeclaration);
+        self.imported();
+        self.finish_node();
     }
 
-    /// An `ImportDeclaration` in its first two shapes: a `MembershipImport` or a
-    /// `NamespaceImport` of a named namespace.
-    fn plain_import_declaration(&mut self) {
-        self.start_node(SyntaxKind::ImportDeclaration);
-        let inner = self.builder.checkpoint();
+    /// A whole `MembershipImport` or `NamespaceImport`, returning which.
+    ///
+    /// What an `ImportDeclaration` holds, and what `SysML`'s `MembershipExpose` and
+    /// `NamespaceExpose` hold directly (8.2.2.26.2), so both callers wrap this.
+    fn imported(&mut self) -> SyntaxKind {
+        self.eat_trivia();
+        let outer = self.builder.checkpoint();
         self.qualified_name();
         let kind = self.import_suffix();
         self.builder
-            .start_node_at(inner, Sv2Language::kind_to_raw(kind));
+            .start_node_at(outer, Sv2Language::kind_to_raw(kind));
         self.finish_node();
-        self.finish_node();
+        if self.at(SyntaxKind::LBracket) {
+            self.filter_package(outer);
+            return SyntaxKind::NamespaceImport;
+        }
+        kind
     }
 
     // production: FilterPackage@sysml
@@ -12563,21 +12581,63 @@ impl<'a> Parser<'a> {
     // FilterPackageMembershipImport and FilterPackageNamespaceImport are factorings of it,
     // recorded xtext_only/follow_spec, and add no production here.
     //
-    // `outer` is where the declaration already read began. It becomes the FilterPackage's
-    // own first member, so the outer ImportDeclaration, NamespaceImport and FilterPackage
-    // are opened around it there, and FilterPackageImport around it alone.
+    // `outer` is where the import already read began. It becomes the FilterPackage's own
+    // first member, an ImportDeclaration, so the NamespaceImport and FilterPackage are
+    // opened around it there, then (SysML) the FilterPackageImport, then the declaration
+    // itself around the import alone.
     fn filter_package(&mut self, outer: rowan::Checkpoint) {
-        self.start_node_at(outer, SyntaxKind::ImportDeclaration);
         self.start_node_at(outer, SyntaxKind::NamespaceImport);
         self.start_node_at(outer, SyntaxKind::FilterPackage);
-        if self.language == Language::SysMl {
-            self.wrap_at(outer, &[SyntaxKind::FilterPackageImport]);
-        }
+        let own: &[SyntaxKind] = match self.language {
+            Language::SysMl => &[
+                SyntaxKind::FilterPackageImport,
+                SyntaxKind::ImportDeclaration,
+            ],
+            Language::KerMl => &[SyntaxKind::ImportDeclaration],
+        };
+        self.wrap_at(outer, own);
         while self.at(SyntaxKind::LBracket) {
             self.filter_package_member();
         }
         self.finish_node();
         self.finish_node();
+    }
+
+    // production: Expose@sysml
+    //
+    // Expose = 'expose' ( MembershipExpose | NamespaceExpose ) RelationshipBody
+    //                                                            (SysML 8.2.2.26.2)
+    //
+    // production: MembershipExpose@sysml
+    //
+    // MembershipExpose = MembershipImport                        (SysML 8.2.2.26.2)
+    //
+    // production: NamespaceExpose@sysml
+    //
+    // NamespaceExpose = NamespaceImport                          (SysML 8.2.2.26.2)
+    //
+    // `expose vehicle::**[@Safety];` (training/42. Views/Views Example.sysml:25). The
+    // metaclass is Expose (8.3.26.2, receipt d5e99e59), an Import, but the text is not an
+    // Import's: no VisibilityIndicator and no `all`. "An Expose always has protected
+    // visibility" and "always imports all Elements", which validateExposeVisibility and
+    // validateExposeIsImportAll state of the model, so there is nothing to write. The Pilot
+    // reads the keyword as an ExposePrefix that sets the visibility; the literal is matched
+    // here. Which of the two alternatives it is, is which import `imported` read.
+    //
+    // constraint: Expose::validateExposeOwningNamespace (8.3.26.2): the owner is a
+    //     ViewUsage. The grammar already reaches this from ViewBodyItem alone.
+    fn expose(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Expose);
+        self.expect_keyword("expose");
+        self.eat_trivia();
+        let start = self.builder.checkpoint();
+        let alternative = match self.imported() {
+            SyntaxKind::NamespaceImport => SyntaxKind::NamespaceExpose,
+            _ => SyntaxKind::MembershipExpose,
+        };
+        self.wrap_at(start, &[alternative]);
+        self.relationship_body();
         self.finish_node();
     }
 

@@ -695,6 +695,12 @@ pub enum SyntaxKind {
     ViewUsage,
     /// `';' | '{' ViewBodyItem* '}'`. `SysML` 8.2.2.26.2.
     ViewBody,
+    /// `'expose' ( MembershipExpose | NamespaceExpose ) RelationshipBody`. `SysML` 8.2.2.26.2.
+    Expose,
+    /// `MembershipImport`. `SysML` 8.2.2.26.2.
+    MembershipExpose,
+    /// `NamespaceImport`. `SysML` 8.2.2.26.2.
+    NamespaceExpose,
     /// `OccurrenceDefinitionPrefix 'viewpoint' 'def' DefinitionDeclaration RequirementBody`. `SysML` 8.2.2.26.3.
     ViewpointDefinition,
     /// `OccurrenceUsagePrefix 'viewpoint' ConstraintUsageDeclaration RequirementBody`. `SysML` 8.2.2.26.3.
@@ -1606,6 +1612,9 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ViewRenderingUsage,
     SyntaxKind::ViewUsage,
     SyntaxKind::ViewBody,
+    SyntaxKind::Expose,
+    SyntaxKind::MembershipExpose,
+    SyntaxKind::NamespaceExpose,
     SyntaxKind::ViewpointDefinition,
     SyntaxKind::ViewpointUsage,
     SyntaxKind::RequirementConstraintMember,

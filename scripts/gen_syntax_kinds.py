@@ -589,6 +589,12 @@ NODES = [
         ),
     ),
     ("ViewBody", "`';' | '{' ViewBodyItem* '}'`. `SysML` 8.2.2.26.2."),
+    (
+        "Expose",
+        ("`'expose' ( MembershipExpose | NamespaceExpose ) RelationshipBody`. `SysML` 8.2.2.26.2."),
+    ),
+    ("MembershipExpose", "`MembershipImport`. `SysML` 8.2.2.26.2."),
+    ("NamespaceExpose", "`NamespaceImport`. `SysML` 8.2.2.26.2."),
     # Viewpoints, SysML 8.2.2.26.3: requirements by the kind keyword `viewpoint`.
     (
         "ViewpointDefinition",
