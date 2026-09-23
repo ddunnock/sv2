@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T12:22:50Z",
+    "regenerated_utc": "2026-09-23T12:44:48Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 346,
-      "unimplemented": 208,
+      "implemented": 350,
+      "unimplemented": 204,
       "absent": 0,
-      "percent": 62.5
+      "percent": 63.2
     },
     "tests": {
-      "unit": 540,
+      "unit": 545,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 224,
+      "negative_cases": 227,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "89457d7 Close the session: event occurrences and the keywordless occurrences recorded, messages next",
       "468bea3 Read individual definitions, individual usages and portion usages",
       "c92f41f Read event occurrence usages, by reference and by declaration",
       "fcb55c3 Regenerate state at session end: timestamp and commit list only",
       "f422a16 Correct the objective: enumeration definitions and values now read their prefix metadata",
       "87cb13a Close the session: `#`, interfaces and library packages recorded, event occurrences next",
       "29b69de Read library packages in both languages, and site deviation LibraryPackage",
-      "95d9148 Read interface definitions and usages, and the port ends they declare",
-      "4d7af66 Read `#` prefix metadata, and the definitions and usages it declares alone"
+      "95d9148 Read interface definitions and usages, and the port ends they declare"
     ]
   },
   "authored": {

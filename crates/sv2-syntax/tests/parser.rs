@@ -10292,3 +10292,199 @@ fn individual_and_portion_forms_are_bounded_by_their_rules() {
         );
     }
 }
+
+// -- Message, SysML 8.2.2.16 -------------------------------------------------------------
+//
+//   Message            = OccurrenceUsagePrefix 'message' MessageDeclaration DefinitionBody
+//   MessageDeclaration = UsageDeclaration ValuePart?
+//                        ( 'of' FlowPayloadFeatureMember )?
+//                        ( 'from' MessageEventMember 'to' MessageEventMember )?
+//                      | MessageEventMember 'to' MessageEventMember
+//   MessageEventMember = MessageEvent
+//   MessageEvent       = OwnedReferenceSubsetting
+//
+// "A flow usage is declared as a message using the kind keyword message rather than flow
+// ... the source event identified after the keyword from, followed by the target event
+// after the keyword to" (7.16.2, receipt 13d6f883).
+
+#[test]
+fn the_message_example_of_7_16_2_parses() {
+    // 7.16.2's example (receipt 13d6f883), whole.
+    let parsed = parse_accepted(
+        "part def Vehicle {\n\
+         attribute def ControlSignal;\n\
+         part controller {\n\
+         event occurrence sendControl;\n\
+         }\n\
+         part engine {\n\
+         event occurrence receiveControl;\n\
+         }\n\
+         message of ControlSignal from controller.sendControl to engine.receiveControl;\n\
+         }",
+    );
+    // A two-segment event is an OwnedReferenceSubsetting over a feature chain: deviation
+    // FlowEndSubsetting is FlowEnd's, and a message has no flow ends.
+    assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
+    let rendered = render(&parsed.syntax());
+    assert_eq!(nodes_named(&rendered, "Message"), 1, "{rendered}");
+    assert_eq!(
+        child_kinds(&rendered, "Message"),
+        [
+            "OccurrenceUsagePrefix",
+            "KwMessage",
+            "MessageDeclaration",
+            "DefinitionBody"
+        ],
+        "{rendered}"
+    );
+    assert_eq!(
+        child_kinds(&rendered, "MessageDeclaration"),
+        [
+            "UsageDeclaration",
+            "KwOf",
+            "FlowPayloadFeatureMember",
+            "KwFrom",
+            "MessageEventMember",
+            "KwTo",
+            "MessageEventMember"
+        ],
+        "{rendered}"
+    );
+    assert_eq!(
+        child_kinds(&rendered, "MessageEventMember"),
+        ["MessageEvent"],
+        "{rendered}"
+    );
+    assert_eq!(
+        child_kinds(&rendered, "MessageEvent"),
+        ["OwnedReferenceSubsetting"],
+        "{rendered}"
+    );
+    assert_eq!(nodes_named(&rendered, "FlowEnd"), 0, "{rendered}");
+}
+
+/// Each source parses, spec-conformant, with a `MessageDeclaration` of these children.
+fn assert_message_declarations(cases: &[(&str, &[&str])]) {
+    for (source, kinds) in cases {
+        let parsed = parse_accepted(source);
+        assert!(
+            parsed.is_spec_conformant(),
+            "{source}: {:?}",
+            parsed.deviations()
+        );
+        let rendered = render(&parsed.syntax());
+        assert_eq!(
+            child_kinds(&rendered, "MessageDeclaration"),
+            *kinds,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn a_message_declaration_of_events_alone_is_the_second_alternative() {
+    // A whole reference and then `to` (8.2.2.16).
+    assert_message_declarations(&[
+        (
+            "part c { message a.b to c.d; }",
+            &["MessageEventMember", "KwTo", "MessageEventMember"],
+        ),
+        (
+            "part c { message a to b; }",
+            &["MessageEventMember", "KwTo", "MessageEventMember"],
+        ),
+    ]);
+}
+
+#[test]
+fn a_message_declaration_with_a_usage_declaration_is_the_first_alternative() {
+    let events = ["KwFrom", "MessageEventMember", "KwTo", "MessageEventMember"];
+    let declared_events = [&["UsageDeclaration"][..], &events].concat();
+    let every_part = [
+        &[
+            "UsageDeclaration",
+            "ValuePart",
+            "KwOf",
+            "FlowPayloadFeatureMember",
+        ][..],
+        &events,
+    ]
+    .concat();
+    assert_message_declarations(&[
+        // Every part written (validation/17-Sequence Modeling/17a:26 plus a value, which
+        // the grammar admits beside the events).
+        (
+            "part c { message m : M = x of Publish[1] from p.s.e to q.t; }",
+            &every_part,
+        ),
+        // Simple Tests/ConnectionTest.sysml:59.
+        ("part c { message : F from p to p; }", &declared_events),
+        // training/27. Occurrences/Interaction Realization-1.sysml:51.
+        (
+            "part c { message :>> setSpeedMessage = d.b.s.sentMessage; }",
+            &["UsageDeclaration", "ValuePart"],
+        ),
+        // The declaration may be empty; its node is built, as FlowDeclaration's is.
+        ("part c { message; }", &["UsageDeclaration"]),
+        ("part c { message from a to b; }", &declared_events),
+    ]);
+}
+
+#[test]
+fn a_message_is_a_structure_usage_element() {
+    // A StructureUsageElement (8.2.2.6.4): a `then` may prefix it (training/27.
+    // Occurrences/Interaction Example-2.sysml), and it is a variant, an item of an
+    // interface body, and an item of a calculation body rather than its result.
+    for (source, member) in [
+        (
+            "part c { message m; then message n of N; }",
+            "SourceSuccessionMember",
+        ),
+        (
+            "variation part def V { variant message m; }",
+            "VariantUsageMember",
+        ),
+        (
+            "interface def I { message m; }",
+            "InterfaceOccurrenceUsageMember",
+        ),
+        ("calc def C { message m; x }", "ResultExpressionMember"),
+        ("action def A { individual message m { } }", "Message"),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert!(nodes_named(&rendered, member) >= 1, "{source}\n{rendered}");
+        assert!(
+            nodes_named(&rendered, "Message") >= 1,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn a_message_is_bounded_by_its_rules() {
+    // Events come in a pair, `from` and `to`. Held by
+    // tests/rejection/message-events-come-in-pairs.sysml.
+    parse_rejected("part c { message m from a; }");
+    parse_rejected("part c { message a to; }");
+    // A declaration writes `to` only after `from`. (`message m to b;` is no such case:
+    // it is the second alternative, `m` and `b` both events.)
+    parse_rejected("part c { message m : M to b; }");
+    parse_rejected("part c { message m of P to b; }");
+    // The payload comes before the events (7.16.2: "they follow the payload
+    // specification"), and the events-only alternative takes neither payload nor value.
+    // Held by tests/rejection/message-payload-precedes-events.sysml.
+    parse_rejected("part c { message m from a to b of P; }");
+    parse_rejected("part c { message a to b of P; }");
+    parse_rejected("part c { message a.b to c.d = x; }");
+    // A MessageEvent is an OwnedReferenceSubsetting and nothing more: no multiplicity.
+    // Held by tests/rejection/message-event-takes-no-multiplicity.sysml. Both
+    // alternatives: the event before `to`, told by the lookahead, and after `from`.
+    parse_rejected("part c { message a[1] to b; }");
+    parse_rejected("part c { message m from a[1] to b; }");
+    parse_rejected("part c { message m from a to b[1]; }");
+    // There is no message definition; a DefinitionBody is not optional.
+    parse_rejected("message def M;");
+    parse_rejected("part c { message m }");
+    // SysML only.
+    assert!(!parse("message m;", Language::KerMl).errors().is_empty());
+}

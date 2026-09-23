@@ -1909,6 +1909,7 @@ impl<'a> Parser<'a> {
             || self.at_exhibit_state_usage(n)
             || self.at_perform_action_usage(n)
             || self.at_flow_usage(n)
+            || self.at_message(n)
             || self.at_connection_usage(n)
             || self.at_interface_usage(n)
             || self.at_event_occurrence_usage(n)
@@ -3846,8 +3847,8 @@ impl<'a> Parser<'a> {
     //     | PortUsage | ConnectionUsage | InterfaceUsage | AllocationUsage | Message
     //     | FlowUsage | SuccessionFlowUsage | BehaviorUsageElement   (SysML 8.2.2.6.4)
     //
-    // NOT marked for coverage: ViewUsage, AllocationUsage, Message and
-    // SuccessionFlowUsage are unimplemented, and so is most of BehaviorUsageElement.
+    // NOT marked for coverage: ViewUsage, AllocationUsage and SuccessionFlowUsage are
+    // unimplemented, and so is most of BehaviorUsageElement.
     //
     // It is UsageElement less three of NonOccurrenceUsageElement's alternatives (8.2.2.6.4):
     // DefaultReferenceUsage, replaced by VariantReference; EnumerationUsage; and
@@ -3940,6 +3941,10 @@ impl<'a> Parser<'a> {
         } else if self.at_flow_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), though its metaclass is an ActionUsage.
             self.flow_usage();
+            Some(UsageClass::Structure)
+        } else if self.at_message(0) {
+            // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
+            self.message();
             Some(UsageClass::Structure)
         } else if self.at_connection_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
@@ -8044,6 +8049,132 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    /// Whether a `Message` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix 'message'` (`SysML` 8.2.2.16). No `def` test, as for
+    /// `perform` and `event`: there is no message definition, a message being defined by
+    /// flow definitions (7.16.2).
+    fn at_message(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_occurrence_usage_prefix(n), "message")
+    }
+
+    // production: Message@sysml
+    //
+    // Message : FlowUsage =
+    //     OccurrenceUsagePrefix 'message'
+    //     MessageDeclaration DefinitionBody
+    //     { isAbstract = true }                                  (SysML 8.2.2.16)
+    //
+    // "A flow usage is declared as a message using the kind keyword message rather than
+    // flow ... A message is always abstract (whether or not the abstract keyword is
+    // included explicitly in its declaration)" (7.16.2, receipt 13d6f883). The metaclass is
+    // FlowUsage (8.3.16.3, receipt 92bc5ec5), as FlowUsage's own is; `isAbstract = true` is
+    // an assignment the text does not carry, so the tree records only what was written.
+    // The Pilot factors the keyword into MessageKeyword; deviation MessageKeyword
+    // (xtext_only, follow_spec) says to match the literal, so there is no production for it.
+    //
+    // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
+    //
+    // implied specialization: Flows::messages ("The base flow usages are also from the
+    //     Flows library model: messages for a message", 7.16.2)
+    // constraint: FlowUsage::checkFlowUsageSpecialization, `specializesFromLibrary(
+    //     'Flows::messages')` (8.3.16.3). An injection, so sv2-hir's (ADR-0002). A message
+    //     has no end features, so checkFlowUsageFlowSpecialization does not bite.
+    fn message(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Message);
+        self.occurrence_usage_prefix();
+        self.expect_keyword("message");
+        self.message_declaration();
+        self.definition_body();
+        self.finish_node();
+    }
+
+    // production: MessageDeclaration@sysml
+    //
+    // MessageDeclaration : FlowUsage =
+    //       UsageDeclaration ValuePart?
+    //       ( 'of' ownedRelationship += FlowPayloadFeatureMember )?
+    //       ( 'from' ownedRelationship += MessageEventMember
+    //         'to' ownedRelationship += MessageEventMember
+    //       )?
+    //     | ownedRelationship += MessageEventMember 'to'
+    //       ownedRelationship += MessageEventMember              (SysML 8.2.2.16)
+    //
+    // FlowDeclaration's shape with MessageEventMembers for its FlowEndMembers, and told
+    // apart the same way: both alternatives may open on a NAME, and only the second writes
+    // `to` straight after a whole reference, so the reference is looked past and the token
+    // after it decides. A MessageEvent is an OwnedReferenceSubsetting, a QualifiedName or a
+    // chain of them, which is the dotted run `flow_end_segments` walks; unlike a FlowEnd its
+    // segment count builds nothing different, so deviation FlowEndSubsetting is not
+    // FlowEnd's to lend here.
+    //
+    // The Pilot writes `UsageDeclaration?` (SysML.xtext:1250), which changes no text accepted
+    // since a UsageDeclaration may be empty, and `PayloadFeatureMember`, which DOES: its
+    // `Payload` fragment (SysML.xtext:1302) has a fourth alternative, `Identification?
+    // ValuePart`, that the specification's PayloadFeature (8.2.2.16) lacks, so `of p = x`
+    // is the Pilot's and not the specification's. Deviation Payload (xtext_only,
+    // follow_spec) settles it, and `flow_payload_feature_member` reads the specification's
+    // three alternatives, as it does for FlowDeclaration.
+    //
+    // 7.16.2 says the value is written "if the source and target event identification is
+    // not included", but the production admits both together, and the grammar decides.
+    fn message_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MessageDeclaration);
+        let events_first = self
+            .flow_end_segments(0)
+            .is_some_and(|(after, _)| self.nth_is_keyword(after, "to"));
+        if events_first {
+            self.message_event_member();
+            self.expect_keyword("to");
+            self.message_event_member();
+        } else {
+            self.usage_declaration();
+            if self.at_value_part() {
+                self.value_part();
+            }
+            if self.at_keyword("of") {
+                self.expect_keyword("of");
+                self.flow_payload_feature_member();
+            }
+            if self.at_keyword("from") {
+                self.expect_keyword("from");
+                self.message_event_member();
+                self.expect_keyword("to");
+                self.message_event_member();
+            }
+        }
+        self.finish_node();
+    }
+
+    // production: MessageEventMember@sysml
+    //
+    // MessageEventMember : ParameterMembership =
+    //     ownedRelatedElement += MessageEvent                    (SysML 8.2.2.16)
+    //
+    // production: MessageEvent@sysml
+    //
+    // MessageEvent : EventOccurrenceUsage =
+    //     ownedRelationship += OwnedReferenceSubsetting          (SysML 8.2.2.16)
+    //
+    // An EventOccurrenceUsage (8.3.9.2, receipt 9cf02679) written as `event`'s reference
+    // alternative less its `event` and its FeatureSpecializationPart: "a message declaration
+    // may identify the source and target events at which a transfer may be initiated and
+    // received, respectively" (7.16.2). No multiplicity, so `from a[1]` is reported.
+    //
+    // constraint: EventOccurrenceUsage::validateEventOccurrenceUsageReference (8.3.9.2):
+    //     the reference's target is an OccurrenceUsage. sv2-resolve's.
+    fn message_event_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MessageEventMember);
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MessageEvent);
+        self.owned_reference_subsetting();
+        self.finish_node();
+        self.finish_node();
+    }
+
     /// Whether a `ConnectionUsage` starts at the `n`th meaningful token.
     ///
     /// `OccurrenceUsagePrefix`, then `connection` with no `def` after it — the `def` makes
@@ -9530,6 +9661,7 @@ impl<'a> Parser<'a> {
             || self.at_case_usage(n).is_some()
             || self.at_include_use_case_usage(n)
             || self.at_flow_usage(n)
+            || self.at_message(n)
             || self.at_connection_usage(n)
             || self.at_interface_usage(n)
             || self.at_event_occurrence_usage(n)

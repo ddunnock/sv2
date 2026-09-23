@@ -309,6 +309,35 @@ NODES = [
         "FlowUsage",
         "`OccurrenceUsagePrefix 'flow' FlowDeclaration DefinitionBody`. `SysML` 8.2.2.16.",
     ),
+    # The message, `message of S from a.send to b.receive;`: a flow usage by the kind
+    # keyword `message`, whose ends are events rather than flow ends (7.16.2).
+    (
+        "Message",
+        (
+            "`OccurrenceUsagePrefix 'message' MessageDeclaration DefinitionBody`. "
+            "`SysML` 8.2.2.16 — the metaclass is `FlowUsage`."
+        ),
+    ),
+    (
+        "MessageDeclaration",
+        (
+            "`UsageDeclaration ValuePart? ( 'of' FlowPayloadFeatureMember )? "
+            "( 'from' MessageEventMember 'to' MessageEventMember )? "
+            "| MessageEventMember 'to' MessageEventMember`. `SysML` 8.2.2.16 — returns "
+            "`FlowUsage`."
+        ),
+    ),
+    (
+        "MessageEventMember",
+        "`ownedRelatedElement += MessageEvent`. `SysML` 8.2.2.16 — a `ParameterMembership`.",
+    ),
+    (
+        "MessageEvent",
+        (
+            "`ownedRelationship += OwnedReferenceSubsetting`. `SysML` 8.2.2.16 — the "
+            "metaclass is `EventOccurrenceUsage`."
+        ),
+    ),
     (
         "FlowDeclaration",
         (

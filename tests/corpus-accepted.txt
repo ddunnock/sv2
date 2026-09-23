@@ -28,6 +28,7 @@ vendor/corpus/sysml/src/examples/Analysis Examples/Turbojet Stage Analysis.sysml
 vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFCoreLib.sysml
 vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml
 vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFProfileLib.sysml
+vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml
 vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_N_ary.sysml
 vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_OwnedEnds.sysml
 vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_UnownedEnds.sysml
@@ -46,6 +47,7 @@ vendor/corpus/sysml/src/examples/Import Tests/PrivateImportTest.sysml
 vendor/corpus/sysml/src/examples/Import Tests/QualifiedNameImportTest.sysml
 vendor/corpus/sysml/src/examples/Individuals Examples/AnalysisIndividualExample.sysml
 vendor/corpus/sysml/src/examples/Individuals Examples/JohnIndividualExample.sysml
+vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModel.sysml
 vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModelOutside.sysml
 vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-2.sysml
 vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-3.sysml
@@ -69,6 +71,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CalculationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ConjugationTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ConstraintTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml
@@ -147,6 +150,11 @@ vendor/corpus/sysml/src/training/25. Transitions/Local Clock Example.sysml
 vendor/corpus/sysml/src/training/25. Transitions/Transition Actions.sysml
 vendor/corpus/sysml/src/training/26. State Exhibition/State Exhibition Example.sysml
 vendor/corpus/sysml/src/training/27. Occurrences/Event Occurrence Example.sysml
+vendor/corpus/sysml/src/training/27. Occurrences/Interaction Example-1.sysml
+vendor/corpus/sysml/src/training/27. Occurrences/Interaction Example-2.sysml
+vendor/corpus/sysml/src/training/27. Occurrences/Interaction Realization-1.sysml
+vendor/corpus/sysml/src/training/27. Occurrences/Interaction Realization-2.sysml
+vendor/corpus/sysml/src/training/27. Occurrences/Message Payload Example.sysml
 vendor/corpus/sysml/src/training/27. Occurrences/Time Slice and Snapshot Example.sysml
 vendor/corpus/sysml/src/training/28. Individuals/Individuals and Roles-1.sysml
 vendor/corpus/sysml/src/training/28. Individuals/Individuals and Snapshots Example.sysml
@@ -221,4 +229,6 @@ vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_12-Compou
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_13-Discretely Sampled Function Value.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_19-Materials with Properties.sysml
 vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_19a-Materials with Properties.sysml
+vendor/corpus/sysml/src/validation/17-Sequence Modeling/17a-Sequence-Modeling.sysml
+vendor/corpus/sysml/src/validation/17-Sequence Modeling/17b-Sequence-Modeling.sysml
 vendor/corpus/sysml/src/validation/18-Use Case/18-Use Case.sysml

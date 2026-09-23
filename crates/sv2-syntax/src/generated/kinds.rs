@@ -577,6 +577,14 @@ pub enum SyntaxKind {
     FlowDefinition,
     /// `OccurrenceUsagePrefix 'flow' FlowDeclaration DefinitionBody`. `SysML` 8.2.2.16.
     FlowUsage,
+    /// `OccurrenceUsagePrefix 'message' MessageDeclaration DefinitionBody`. `SysML` 8.2.2.16 — the metaclass is `FlowUsage`.
+    Message,
+    /// `UsageDeclaration ValuePart? ( 'of' FlowPayloadFeatureMember )? ( 'from' MessageEventMember 'to' MessageEventMember )? | MessageEventMember 'to' MessageEventMember`. `SysML` 8.2.2.16 — returns `FlowUsage`.
+    MessageDeclaration,
+    /// `ownedRelatedElement += MessageEvent`. `SysML` 8.2.2.16 — a `ParameterMembership`.
+    MessageEventMember,
+    /// `ownedRelationship += OwnedReferenceSubsetting`. `SysML` 8.2.2.16 — the metaclass is `EventOccurrenceUsage`.
+    MessageEvent,
     /// `UsageDeclaration ValuePart? ( 'of' FlowPayloadFeatureMember )? ( 'from' FlowEndMember 'to' FlowEndMember )? | FlowEndMember 'to' FlowEndMember`. `SysML` 8.2.2.16 — returns `FlowUsage`.
     FlowDeclaration,
     /// `FlowEnd`. `SysML` 8.2.2.16 — the metaclass is `EndFeatureMembership`.
@@ -1459,6 +1467,10 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ConnectionDefinition,
     SyntaxKind::FlowDefinition,
     SyntaxKind::FlowUsage,
+    SyntaxKind::Message,
+    SyntaxKind::MessageDeclaration,
+    SyntaxKind::MessageEventMember,
+    SyntaxKind::MessageEvent,
     SyntaxKind::FlowDeclaration,
     SyntaxKind::FlowEndMember,
     SyntaxKind::FlowEnd,
