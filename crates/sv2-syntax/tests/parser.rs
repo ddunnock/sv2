@@ -11168,3 +11168,64 @@ fn concerns_and_their_members_are_bounded_by_their_rules() {
     // SysML only.
     assert!(!parse("concern def C;", Language::KerMl).errors().is_empty());
 }
+
+// -- A reference's FeatureSpecializationPart may open on a multiplicity, SysML 8.2.2.6.5 ----
+//
+//   FeatureSpecializationPart = FeatureSpecialization+ MultiplicityPart? FeatureSpecialization*
+//                             | MultiplicityPart FeatureSpecialization*
+//
+// Every production that writes `OwnedReferenceSubsetting FeatureSpecializationPart?` admits
+// the second alternative, a multiplicity first. Four read only the first until pending
+// decision feature-specialization-multiplicity-gap was settled.
+
+#[test]
+fn a_reference_may_be_followed_by_a_multiplicity() {
+    // examples/Simple Tests/RequirementTest.sysml:33-37, whole.
+    let rendered = render(
+        &parse_accepted(
+            "requirement def R2 {\n\
+             \tassume c1 [0..*];\n\
+             \trequire c2 [0..*];\n\
+             \tframe c3[0..*];\n\
+             }",
+        )
+        .syntax(),
+    );
+    assert_eq!(nodes_named(&rendered, "MultiplicityPart"), 3, "{rendered}");
+    // One per production the decision named: RequirementConstraintUsage (8.2.2.21.1),
+    // AssertConstraintUsage (8.2.2.20), PerformActionUsageDeclaration (8.2.2.17.2) and
+    // ExhibitStateUsage (8.2.2.18.2), each with the multiplicity first and a
+    // specialization after it.
+    for source in [
+        "requirement def R { require c[1] :> d { } }",
+        "part p { assert c[1] :> d { } }",
+        "part p { assert not c[0..1]; }",
+        "part p { perform x[1] :> y; }",
+        "part p { exhibit s[1] :> t; }",
+        // StatePerformActionUsage = PerformActionUsageDeclaration ActionBody (8.2.2.18.1),
+        // which writes no `perform`.
+        "state def S { entry x[1]; }",
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            child_kinds(&rendered, "FeatureSpecializationPart")
+                .first()
+                .map(String::as_str),
+            Some("MultiplicityPart"),
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn a_reference_takes_one_multiplicity() {
+    // MultiplicityPart appears at most once in either alternative (8.2.2.6.5).
+    for source in [
+        "requirement def R { require c[1][2]; }",
+        "part p { assert c[1] :> d [2] { } }",
+        "part p { perform x[1][2]; }",
+        "part p { exhibit s[1][2]; }",
+    ] {
+        parse_rejected(source);
+    }
+}

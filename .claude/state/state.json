@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T14:12:13Z",
+    "regenerated_utc": "2026-09-23T14:29:26Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -23,7 +23,7 @@
       "percent": 65.5
     },
     "tests": {
-      "unit": 562,
+      "unit": 564,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 235,
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "5e3d072 Read concerns, stakeholders and framed concerns, and site deviation FramedConcernUsage",
       "fa3f315 Stop rejecting `frame` and `stakeholder` by absence: the next commit reads them",
       "38c8529 Read allocation usages, by declaration and by their ends alone",
       "789e8bd Read satisfy requirement usages, and site deviation SatisfyRequirementUsage",
       "2d3c97c Stop rejecting `satisfy` by absence: the next commit reads it",
       "4d3e06e Read messages, by declaration and by their events alone",
       "89457d7 Close the session: event occurrences and the keywordless occurrences recorded, messages next",
-      "468bea3 Read individual definitions, individual usages and portion usages",
-      "c92f41f Read event occurrence usages, by reference and by declaration"
+      "468bea3 Read individual definitions, individual usages and portion usages"
     ]
   },
   "authored": {
@@ -189,7 +189,7 @@
       },
       {
         "id": "feature-specialization-multiplicity-gap",
-        "question": "FeatureSpecializationPart may open on a MultiplicityPart (SysML 8.2.2.6.5), but PerformActionUsageDeclaration, ExhibitStateUsage, AssertConstraintUsage and RequirementConstraintUsage's reference alternatives ask only at_feature_specialization, so `perform x[1];`, `exhibit s[1];`, `assert c[1] {}` and `require c[1] {}` are rejected. IncludeUseCaseUsage asks at_multiplicity_part too (2296540). No corpus file writes the rejected forms. Found by the conformance review of 2296540.",
+        "question": "RESOLVED on 2026-09-23. FeatureSpecializationPart may open on a MultiplicityPart (SysML 8.2.2.6.5), and PerformActionUsageDeclaration, ExhibitStateUsage, AssertConstraintUsage and RequirementConstraintUsage asked only at_feature_specialization, so `perform x[1];`, `exhibit s[1];`, `assert c[1] {}` and `require c[1] {}` were rejected. The corpus did write one after all: examples/Simple Tests/RequirementTest.sysml:34-35, `assume c1 [0..*];` and `require c2 [0..*];`, reached once `concern` was read. Settled by one helper, optional_feature_specialization_part, which every one of the twelve `FeatureSpecializationPart?` sites now calls, so no production can ask half the question again; tests a_reference_may_be_followed_by_a_multiplicity and a_reference_takes_one_multiplicity hold it.",
         "blocks": []
       },
       {

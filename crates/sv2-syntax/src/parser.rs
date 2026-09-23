@@ -3020,9 +3020,7 @@ impl<'a> Parser<'a> {
         self.eat_optional_keyword("all");
         if self.at_name() || self.at(SyntaxKind::Lt) {
             self.feature_identification();
-            if self.at_feature_specialization() || self.at_multiplicity_part() {
-                self.feature_specialization_part();
-            }
+            self.optional_feature_specialization_part();
         } else {
             self.feature_specialization_part();
         }
@@ -4196,9 +4194,7 @@ impl<'a> Parser<'a> {
         self.ref_prefix();
         if self.at_name() || self.at(SyntaxKind::Lt) {
             self.identification();
-            if self.at_feature_specialization() || self.at_multiplicity_part() {
-                self.feature_specialization_part();
-            }
+            self.optional_feature_specialization_part();
         } else {
             self.feature_specialization_part();
         }
@@ -4366,9 +4362,7 @@ impl<'a> Parser<'a> {
             }
         } else {
             self.owned_reference_subsetting();
-            if self.at_feature_specialization() || self.at_multiplicity_part() {
-                self.feature_specialization_part();
-            }
+            self.optional_feature_specialization_part();
         }
         self.usage_completion();
         self.finish_node();
@@ -4657,9 +4651,7 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::UsageDeclaration);
         self.identification();
-        if self.at_feature_specialization() || self.at_multiplicity_part() {
-            self.feature_specialization_part();
-        }
+        self.optional_feature_specialization_part();
         self.finish_node();
     }
 
@@ -4953,6 +4945,21 @@ impl<'a> Parser<'a> {
     // FeatureSpecialization = Typings | Subsettings | References | Crosses
     //                       | Redefinitions                      (SysML 8.2.2.6.5)
     //
+    /// `FeatureSpecializationPart?`, read when one is written here.
+    ///
+    /// `FeatureSpecializationPart = FeatureSpecialization+ MultiplicityPart?
+    /// FeatureSpecialization* | MultiplicityPart FeatureSpecialization*` (`SysML` 8.2.2.6.5,
+    /// alike in `KerML`), so it opens on a specialization OR a multiplicity. ONE question,
+    /// so that no production asks half of it: four that wrote `OwnedReferenceSubsetting
+    /// FeatureSpecializationPart?` asked only for the specialization, and `assume c1
+    /// [0..*];` (examples/Simple Tests/RequirementTest.sysml:34) was rejected -- pending
+    /// decision feature-specialization-multiplicity-gap.
+    fn optional_feature_specialization_part(&mut self) {
+        if self.at_feature_specialization() || self.at_multiplicity_part() {
+            self.feature_specialization_part();
+        }
+    }
+
     // production: FeatureSpecializationPart
     //
     // The two alternatives differ only in where the MultiplicityPart may sit: the
@@ -8049,9 +8056,7 @@ impl<'a> Parser<'a> {
             self.usage_declaration();
         } else {
             self.owned_reference_subsetting();
-            if self.at_feature_specialization() {
-                self.feature_specialization_part();
-            }
+            self.optional_feature_specialization_part();
         }
         if self.at_value_part() {
             self.value_part();
@@ -9106,9 +9111,7 @@ impl<'a> Parser<'a> {
             self.usage_declaration();
         } else {
             self.owned_reference_subsetting();
-            if self.at_feature_specialization() {
-                self.feature_specialization_part();
-            }
+            self.optional_feature_specialization_part();
         }
         if self.at_value_part() {
             self.value_part();
@@ -9155,9 +9158,7 @@ impl<'a> Parser<'a> {
             self.usage_declaration();
         } else {
             self.owned_reference_subsetting();
-            if self.at_feature_specialization() || self.at_multiplicity_part() {
-                self.feature_specialization_part();
-            }
+            self.optional_feature_specialization_part();
         }
         if self.at_value_part() {
             self.value_part();
@@ -10406,9 +10407,7 @@ impl<'a> Parser<'a> {
             self.calculation_body();
         } else {
             self.owned_reference_subsetting();
-            if self.at_feature_specialization() {
-                self.feature_specialization_part();
-            }
+            self.optional_feature_specialization_part();
             self.requirement_body();
         }
         self.finish_node();
@@ -10620,9 +10619,7 @@ impl<'a> Parser<'a> {
             self.constraint_usage_declaration();
         } else {
             self.owned_reference_subsetting();
-            if self.at_feature_specialization() {
-                self.feature_specialization_part();
-            }
+            self.optional_feature_specialization_part();
         }
         self.calculation_body();
         self.finish_node();
@@ -10696,9 +10693,7 @@ impl<'a> Parser<'a> {
             self.usage_declaration();
         } else {
             self.owned_reference_subsetting();
-            if self.at_feature_specialization() || self.at_multiplicity_part() {
-                self.feature_specialization_part();
-            }
+            self.optional_feature_specialization_part();
         }
         if self.at_value_part() {
             self.value_part();
@@ -10909,9 +10904,7 @@ impl<'a> Parser<'a> {
             self.constraint_usage_declaration();
         } else {
             self.owned_reference_subsetting();
-            if self.at_feature_specialization() || self.at_multiplicity_part() {
-                self.feature_specialization_part();
-            }
+            self.optional_feature_specialization_part();
             self.framed_concern_body = Some(self.depth + 1);
         }
         self.requirement_body();
@@ -11751,9 +11744,7 @@ impl<'a> Parser<'a> {
             self.eat_optional_keyword("redefines");
         }
         self.owned_redefinition();
-        if self.at_feature_specialization() || self.at_multiplicity_part() {
-            self.feature_specialization_part();
-        }
+        self.optional_feature_specialization_part();
         if self.at_value_part() {
             self.value_part();
         }

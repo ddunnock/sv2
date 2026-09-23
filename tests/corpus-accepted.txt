@@ -89,6 +89,7 @@ vendor/corpus/sysml/src/examples/Simple Tests/MetadataTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/MultiplicityTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/OccurrenceTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/ParameterTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/RequirementTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/RootPackageTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/StateTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/TextualRepresentationTest.sysml
