@@ -5089,13 +5089,11 @@ fn a_feature_chain_owns_no_result_member() {
 #[test]
 fn a_dot_after_a_primary_is_not_always_a_chain() {
     // Three other productions put a `.` after a primary, and none is a chain
-    // (KerML 8.2.5.8.2, 8.2.5.8.3). All three are unimplemented, and must stay that way
-    // rather than be quietly accepted as chains. Held as files by
-    // tests/rejection/metadata-access-expression-is-not-implemented.sysml and
-    // tests/rejection/collect-expression-is-not-implemented.sysml.
+    // (KerML 8.2.5.8.2, 8.2.5.8.3). MetadataAccessExpression is unimplemented, and must
+    // stay that way rather than be quietly accepted as a chain. Held as a file by
+    // tests/rejection/metadata-access-expression-is-not-implemented.sysml. (Select and
+    // collect are read, and their own tests assert that neither builds a chain.)
     parse_rejected("constraint def C { E.metadata }");
-    parse_rejected("constraint def C { x.{ a } }");
-    parse_rejected("constraint def C { x.?{ a } }");
     // A chain needs a name after the dot; `a.` alone is neither.
     parse_rejected("constraint def C { a. }");
 }

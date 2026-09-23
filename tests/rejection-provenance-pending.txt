@@ -28,7 +28,6 @@ tests/rejection/bracket-expression-needs-an-operand.sysml
 tests/rejection/bracket-expression-unclosed.sysml
 tests/rejection/calculation-definition-missing-calculation-body.sysml
 tests/rejection/classification-expression-takes-a-type-not-a-literal.sysml
-tests/rejection/collect-expression-is-not-implemented.sysml
 tests/rejection/comment-about-requires-an-annotated-element.sysml
 tests/rejection/comment-never-closed.kerml
 tests/rejection/comment-never-closed.sysml
@@ -89,7 +88,6 @@ tests/rejection/reserved-word-as-short-name.sysml
 tests/rejection/return-parameter-member-is-not-a-definition-body-item.sysml
 tests/rejection/return-parameter-member-is-not-an-action-body-item.sysml
 tests/rejection/return-parameter-member-needs-a-usage.sysml
-tests/rejection/select-expression-is-not-implemented.sysml
 tests/rejection/short-name-unclosed.sysml
 tests/rejection/source-succession-member-is-not-a-package-body-element.sysml
 tests/rejection/source-succession-member-is-not-an-item.sysml
