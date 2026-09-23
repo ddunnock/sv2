@@ -834,6 +834,19 @@ NODES = [
             "`SysML` 8.2.2.13.1."
         ),
     ),
+    # The allocation usage, `allocate a to b;`: a connection usage by the kind keyword
+    # `allocation`, its shorthand `allocate` for `connect` (7.15.2).
+    (
+        "AllocationUsage",
+        ("`OccurrenceUsagePrefix AllocationUsageDeclaration UsageBody`. `SysML` 8.2.2.15."),
+    ),
+    (
+        "AllocationUsageDeclaration",
+        (
+            "`'allocation' UsageDeclaration ( 'allocate' ConnectorPart )? "
+            "| 'allocate' ConnectorPart`. `SysML` 8.2.2.15 — returns `AllocationUsage`."
+        ),
+    ),
     (
         "BinaryConnectorPart",
         "`ConnectorEndMember 'to' ConnectorEndMember`. `SysML` 8.2.2.13.1.",

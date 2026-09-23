@@ -1912,6 +1912,7 @@ impl<'a> Parser<'a> {
             || self.at_message(n)
             || self.at_connection_usage(n)
             || self.at_interface_usage(n)
+            || self.at_allocation_usage(n)
             || self.at_event_occurrence_usage(n)
             || self.at_individual_or_portion_usage(n).is_some()
             || self.at_succession_as_usage(n)
@@ -3848,8 +3849,8 @@ impl<'a> Parser<'a> {
     //     | PortUsage | ConnectionUsage | InterfaceUsage | AllocationUsage | Message
     //     | FlowUsage | SuccessionFlowUsage | BehaviorUsageElement   (SysML 8.2.2.6.4)
     //
-    // NOT marked for coverage: ViewUsage, AllocationUsage and SuccessionFlowUsage are
-    // unimplemented, and so is most of BehaviorUsageElement.
+    // NOT marked for coverage: ViewUsage and SuccessionFlowUsage are unimplemented, and so
+    // is most of BehaviorUsageElement.
     //
     // It is UsageElement less three of NonOccurrenceUsageElement's alternatives (8.2.2.6.4):
     // DefaultReferenceUsage, replaced by VariantReference; EnumerationUsage; and
@@ -3954,6 +3955,10 @@ impl<'a> Parser<'a> {
         } else if self.at_interface_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), as ConnectionUsage is.
             self.interface_usage();
+            Some(UsageClass::Structure)
+        } else if self.at_allocation_usage(0) {
+            // A StructureUsageElement (8.2.2.6.4), as ConnectionUsage is.
+            self.allocation_usage();
             Some(UsageClass::Structure)
         } else if self.at_event_occurrence_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), as OccurrenceUsage is.
@@ -8239,6 +8244,76 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    /// Whether an `AllocationUsage` starts at the `n`th meaningful token.
+    ///
+    /// `OccurrenceUsagePrefix`, then `allocation` with no `def` after it -- the `def` makes
+    /// it the `AllocationDefinition` -- or `allocate`, the shorthand with no declaration
+    /// (`SysML` 8.2.2.15), as `at_connection_usage` asks of `connection` and `connect`.
+    fn at_allocation_usage(&self, n: usize) -> bool {
+        let after = self.skip_occurrence_usage_prefix(n);
+        (self.nth_is_keyword(after, "allocation") && !self.nth_is_keyword(after + 1, "def"))
+            || self.nth_is_keyword(after, "allocate")
+    }
+
+    // production: AllocationUsage@sysml
+    //
+    // AllocationUsage =
+    //     OccurrenceUsagePrefix
+    //     AllocationUsageDeclaration UsageBody                   (SysML 8.2.2.15)
+    //
+    // production: AllocationUsageDeclaration@sysml
+    //
+    // AllocationUsageDeclaration : AllocationUsage =
+    //       'allocation' UsageDeclaration
+    //       ( 'allocate' ConnectorPart )?
+    //     | 'allocate' ConnectorPart                             (SysML 8.2.2.15)
+    //
+    // "An allocation definition or usage is declared like a connection definition or usage
+    // (see 7.13.2 ), but using the kind keyword allocation ... Shorthand notations similar
+    // to those for connection usages ... may also be used for allocation usages, but using
+    // the keyword allocate instead of connect. If the declaration part of the allocation
+    // usage is empty when using this notation, then the keyword allocation may be omitted"
+    // (7.15.2, receipt 546a588c). ConnectionUsage's shape, with two differences the
+    // grammar states: the declaration is a production and a node of its own, and it takes
+    // no ValuePart, so `allocation a = x;` is reported. The Pilot writes `UsageDeclaration?`
+    // (SysML.xtext:1219), which accepts the same text, a UsageDeclaration being nullable;
+    // its four keyword rules are deviations AllocationKeyword, AllocationUsageKeyword,
+    // AllocateKeyword and AllocationDefKeyword (xtext_only, follow_spec), so the literals
+    // are matched here.
+    //
+    // "Allocation definitions and usages are always binary, having exactly two end
+    // features, even if abstract" (7.15.2), but ConnectorPart admits NaryConnectorPart,
+    // and the one constraint of 8.3.15.3 says nothing of arity; the grammar is followed,
+    // and the arity is left to the layers above.
+    //
+    // The metaclass is AllocationUsage (8.3.15.3, receipt 13aa56df), a ConnectionUsage. A
+    // StructureUsageElement (8.2.2.6.4), as ConnectionUsage is.
+    //
+    // implied specialization: Allocations::allocations
+    // constraint: AllocationUsage::checkAllocationUsageSpecialization (8.3.15.3). An
+    //     injection, so sv2-hir's (ADR-0002).
+    fn allocation_usage(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::AllocationUsage);
+        self.occurrence_usage_prefix();
+        self.eat_trivia();
+        self.start_node(SyntaxKind::AllocationUsageDeclaration);
+        if self.at_keyword("allocation") {
+            self.expect_keyword("allocation");
+            self.usage_declaration();
+            if self.at_keyword("allocate") {
+                self.expect_keyword("allocate");
+                self.connector_part();
+            }
+        } else {
+            self.expect_keyword("allocate");
+            self.connector_part();
+        }
+        self.finish_node();
+        self.usage_body();
+        self.finish_node();
+    }
+
     /// Whether an `InterfaceDefinition` starts at the `n`th meaningful token.
     ///
     /// `OccurrenceDefinitionPrefix 'interface' 'def'` (`SysML` 8.2.2.14.1). Only the `def`
@@ -9670,6 +9745,7 @@ impl<'a> Parser<'a> {
             || self.at_message(n)
             || self.at_connection_usage(n)
             || self.at_interface_usage(n)
+            || self.at_allocation_usage(n)
             || self.at_event_occurrence_usage(n)
             || self.at_individual_or_portion_usage(n).is_some()
             || self

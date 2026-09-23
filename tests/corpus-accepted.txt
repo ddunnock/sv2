@@ -67,6 +67,7 @@ vendor/corpus/sysml/src/examples/Requirements Examples/RequirementDerivationExam
 vendor/corpus/sysml/src/examples/Requirements Examples/VehicleRequirementDerivation.sysml
 vendor/corpus/sysml/src/examples/Room Model/RoomModel.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/AliasTest.sysml
+vendor/corpus/sysml/src/examples/Simple Tests/AllocationTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/AnalysisTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml
 vendor/corpus/sysml/src/examples/Simple Tests/CalculationTest.sysml
@@ -187,6 +188,8 @@ vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Definitions.sysml
 vendor/corpus/sysml/src/training/36. Variability/Variation Usages.sysml
 vendor/corpus/sysml/src/training/37. Dependencies/Dependency Example.sysml
+vendor/corpus/sysml/src/training/38. Allocation/Allocation Definition Example.sysml
+vendor/corpus/sysml/src/training/38. Allocation/Allocation Usage Example.sysml
 vendor/corpus/sysml/src/training/39. Metadata/Metadata Example-1.sysml
 vendor/corpus/sysml/src/training/39. Metadata/Metadata Example-2.sysml
 vendor/corpus/sysml/src/training/40. Filtering/Filtering Example-1.sysml
@@ -215,6 +218,8 @@ vendor/corpus/sysml/src/validation/10-Analysis and Trades/10a-Analysis.sysml
 vendor/corpus/sysml/src/validation/10-Analysis and Trades/10b-Trade-off Among Alternative Configurations.sysml
 vendor/corpus/sysml/src/validation/10-Analysis and Trades/10c-Fuel Economy Analysis.sysml
 vendor/corpus/sysml/src/validation/12-Dependency Relationships/12a-Dependency.sysml
+vendor/corpus/sysml/src/validation/12-Dependency Relationships/12b-Allocation-1.sysml
+vendor/corpus/sysml/src/validation/12-Dependency Relationships/12b-Allocation.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13a-Model Containment.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group-1.sysml
 vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml

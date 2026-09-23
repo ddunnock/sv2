@@ -10705,3 +10705,214 @@ fn a_satisfy_requirement_usage_is_bounded_by_its_rules() {
             .is_empty()
     );
 }
+
+// -- AllocationUsage, SysML 8.2.2.15 -----------------------------------------------------
+//
+//   AllocationUsage            = OccurrenceUsagePrefix AllocationUsageDeclaration UsageBody
+//   AllocationUsageDeclaration = 'allocation' UsageDeclaration ( 'allocate' ConnectorPart )?
+//                              | 'allocate' ConnectorPart
+//
+// "Shorthand notations similar to those for connection usages ... may also be used for
+// allocation usages, but using the keyword allocate instead of connect. If the declaration
+// part of the allocation usage is empty when using this notation, then the keyword
+// allocation may be omitted" (7.15.2, receipt 546a588c).
+
+#[test]
+fn the_allocation_example_of_7_15_2_parses() {
+    // 7.15.2's example (receipt 546a588c), whole, in a package. Its only departures are
+    // recorded ones: the `allocation def` as a package member (deviation DefinitionElement)
+    // and its two `end part`s (deviation OccurrenceUsagePrefix).
+    let source = "package P {\n\
+         part def LogicalSystem {\n\
+         part component : LogicalComponent;\n\
+         }\n\
+         part def PhysicalDevice {\n\
+         part assembly : PhysicalAssembly;\n\
+         }\n\
+         allocation def LogicalToPhysicalAllocation {\n\
+         end part logical : LogicalSystem;\n\
+         end part physical : PhysicalDevice;\n\
+         // This is a nested sub-allocation.\n\
+         allocate logical.component to physical.assembly;\n\
+         }\n\
+         part system : LogicalSystem;\n\
+         part device : PhysicalDevice;\n\
+         allocation systemToDevice : LogicalToPhysicalAllocation\n\
+         allocate logical ::> system to physical ::> device;\n\
+         }";
+    let mut named = deviations_named(source);
+    named.sort();
+    assert_eq!(
+        named,
+        [
+            "DefinitionElement",
+            "OccurrenceUsagePrefix",
+            "OccurrenceUsagePrefix"
+        ],
+        "{source}"
+    );
+    let rendered = render(&parse_accepted(source).syntax());
+    assert_eq!(nodes_named(&rendered, "AllocationUsage"), 2, "{rendered}");
+    assert_eq!(
+        nodes_named(&rendered, "BinaryConnectorPart"),
+        2,
+        "{rendered}"
+    );
+}
+
+#[test]
+fn an_allocation_usage_declaration_is_one_of_two_alternatives() {
+    let rendered = render(&parse_accepted("part p { allocate a.b to c { } }").syntax());
+    assert_eq!(
+        child_kinds(&rendered, "AllocationUsage"),
+        [
+            "OccurrenceUsagePrefix",
+            "AllocationUsageDeclaration",
+            "UsageBody"
+        ],
+        "{rendered}"
+    );
+    for (source, kinds) in [
+        // The shorthand, with no declaration (validation/12-Dependency Relationships/
+        // 12b-Allocation.sysml:23).
+        (
+            "part p { allocate torqueGenerator to powerTrain { } }",
+            &["KwAllocate", "BinaryConnectorPart"][..],
+        ),
+        // A declaration and its ends (training/38. Allocation/Allocation Definition
+        // Example.sysml:36).
+        (
+            "part p { allocation torqueGenAlloc : LogicalToPhysical allocate t to p; }",
+            &[
+                "KwAllocation",
+                "UsageDeclaration",
+                "KwAllocate",
+                "BinaryConnectorPart",
+            ],
+        ),
+        // A declaration alone, and an empty one.
+        (
+            "part p { allocation a : A; }",
+            &["KwAllocation", "UsageDeclaration"],
+        ),
+        (
+            "part p { allocation; }",
+            &["KwAllocation", "UsageDeclaration"],
+        ),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            child_kinds(&rendered, "AllocationUsageDeclaration"),
+            kinds,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn an_allocation_usage_may_name_its_ends_in_parentheses() {
+    for (source, kinds) in [
+        // The parenthesised part, as examples/Simple Tests/AllocationTest.sysml:30 writes
+        // it, two named ends.
+        (
+            "part p { allocation allocation2 : Logical_to_Physical allocate (\n\
+             logical ::> l,\n\
+             physical ::> p\n\
+             ); }",
+            &[
+                "KwAllocation",
+                "UsageDeclaration",
+                "KwAllocate",
+                "NaryConnectorPart",
+            ],
+        ),
+        // Three ends, constructed from the production: 7.15.2 says allocations "are always
+        // binary", but ConnectorPart admits NaryConnectorPart and no constraint of 8.3.15.3
+        // says otherwise, so the grammar decides and the arity is left to the layers above.
+        (
+            "part p { allocation a2 : L allocate (l, p, q); }",
+            &[
+                "KwAllocation",
+                "UsageDeclaration",
+                "KwAllocate",
+                "NaryConnectorPart",
+            ],
+        ),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert_eq!(
+            child_kinds(&rendered, "AllocationUsageDeclaration"),
+            kinds,
+            "{source}\n{rendered}"
+        );
+    }
+}
+
+#[test]
+fn an_allocation_usage_is_a_structure_usage_element() {
+    // A StructureUsageElement (8.2.2.6.4), as ConnectionUsage is: a `then` may prefix it,
+    // it is a variant, an item of an interface body, and an item of a calculation body
+    // rather than its result. An `allocation def` is still a definition.
+    for (source, member) in [
+        (
+            "part c { allocate a to b; then allocation x allocate c to d; }",
+            "SourceSuccessionMember",
+        ),
+        (
+            "variation part def V { variant allocation a; }",
+            "VariantUsageMember",
+        ),
+        (
+            "interface def I { allocate a to b; }",
+            "InterfaceOccurrenceUsageMember",
+        ),
+        (
+            "calc def C { allocate a to b; x }",
+            "ResultExpressionMember",
+        ),
+        (
+            "action def A { individual allocate a to b; }",
+            "AllocationUsage",
+        ),
+    ] {
+        let rendered = render(&parse_accepted(source).syntax());
+        assert!(nodes_named(&rendered, member) >= 1, "{source}\n{rendered}");
+        assert!(
+            nodes_named(&rendered, "AllocationUsage") >= 1,
+            "{source}\n{rendered}"
+        );
+    }
+    let rendered = render(&parse_accepted("part def P { allocation def A; }").syntax());
+    assert_eq!(nodes_named(&rendered, "AllocationUsage"), 0, "{rendered}");
+    assert_eq!(
+        nodes_named(&rendered, "AllocationDefinition"),
+        1,
+        "{rendered}"
+    );
+}
+
+#[test]
+fn an_allocation_usage_is_bounded_by_its_rules() {
+    // Unlike ConnectionUsage's, the declaration takes no ValuePart (8.2.2.15). Held by
+    // tests/rejection/allocation-usage-takes-no-value.sysml.
+    parse_rejected("part p { allocation a : A = x; }");
+    parse_rejected("part p { allocation a = x allocate b to c; }");
+    // `allocate`, not `connect` (7.15.2: "using the keyword allocate instead of
+    // connect"). Held by tests/rejection/allocation-allocates-rather-than-connects.sysml.
+    parse_rejected("part p { allocation a : A connect b to c; }");
+    // A ConnectorPart names both ends. Held by tests/rejection/allocate-names-two-ends.sysml.
+    parse_rejected("part p { allocate a; }");
+    parse_rejected("part p { allocate; }");
+    parse_rejected("part p { allocation a allocate; }");
+    parse_rejected("part p { allocate a to b to c; }");
+    parse_rejected("part p { allocate (a); }");
+    // The declaration comes before `allocate`, and a UsageBody is not optional.
+    parse_rejected("part p { allocate a to b allocation x; }");
+    parse_rejected("part p { allocate a to b }");
+    // SysML only.
+    assert!(
+        !parse("allocate a to b;", Language::KerMl)
+            .errors()
+            .is_empty()
+    );
+}

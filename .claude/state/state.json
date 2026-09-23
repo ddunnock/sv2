@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-23T12:52:58Z",
+    "regenerated_utc": "2026-09-23T13:14:18Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 355,
-      "unimplemented": 199,
+      "implemented": 357,
+      "unimplemented": 197,
       "absent": 0,
-      "percent": 64.1
+      "percent": 64.4
     },
     "tests": {
-      "unit": 551,
+      "unit": 556,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 229,
+      "negative_cases": 232,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "789e8bd Read satisfy requirement usages, and site deviation SatisfyRequirementUsage",
       "2d3c97c Stop rejecting `satisfy` by absence: the next commit reads it",
       "4d3e06e Read messages, by declaration and by their events alone",
       "89457d7 Close the session: event occurrences and the keywordless occurrences recorded, messages next",
       "468bea3 Read individual definitions, individual usages and portion usages",
       "c92f41f Read event occurrence usages, by reference and by declaration",
       "fcb55c3 Regenerate state at session end: timestamp and commit list only",
-      "f422a16 Correct the objective: enumeration definitions and values now read their prefix metadata",
-      "87cb13a Close the session: `#`, interfaces and library packages recorded, event occurrences next"
+      "f422a16 Correct the objective: enumeration definitions and values now read their prefix metadata"
     ]
   },
   "authored": {
@@ -201,6 +201,13 @@
         "id": "shared-unit-kerml-prefix-gap",
         "question": "Package and LibraryPackage are each ONE shared unit (ADR-0015) and both are marked, while their PrefixMetadataMember* is read in SysML only: KerML's is PrefixMetadataMember@kerml over PrefixMetadataFeature (8.2.5.12), a separate unit tracked as unimplemented, so `#X package P;` and `library #X package L;` in a .kerml file are reported. The 2026-09-22 conformance review judged the markers honest because the gap is a unit of its own. Confirm that reading of the coverage model, or withhold shared markers until every language's references are read; revisit when PrefixMetadataFeature@kerml lands, which settles it either way.",
         "blocks": []
+      },
+      {
+        "id": "allocation-arity",
+        "question": "7.15.2 (receipt 546a588c) says \"Allocation definitions and usages are always binary, having exactly two end features, even if abstract\", but AllocationUsageDeclaration (SysML 8.2.2.15) writes ConnectorPart, which admits NaryConnectorPart, and the one constraint of AllocationUsage (checkAllocationUsageSpecialization, 8.3.15.3, receipt 13aa56df) says nothing of arity. The parser follows the grammar: `allocate (a, b, c);` parses (tests: an_allocation_usage_may_name_its_ends_in_parentheses), and examples/Simple Tests/AllocationTest.sysml:30 writes the parenthesised form with two ends. Where is the prose rule enforced, if anywhere: a diagnostic in sv2-resolve on an allocation with other than two ends, or nowhere until an OMG issue settles which of 7.15.2 and 8.2.2.15 is right? deviations.json does not fit: it records Pilot-versus-specification differences, and this is the specification's prose against its own grammar.",
+        "blocks": [
+          "nothing in sv2-syntax; the arity check, if any, when sv2-resolve exists"
+        ]
       }
     ],
     "log": [

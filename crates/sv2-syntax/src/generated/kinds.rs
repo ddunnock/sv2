@@ -753,6 +753,10 @@ pub enum SyntaxKind {
     OwnedCrossMultiplicity,
     /// `OccurrenceUsagePrefix ( 'connection' UsageDeclaration ValuePart? ( 'connect' ConnectorPart )? | 'connect' ConnectorPart ) UsageBody`. `SysML` 8.2.2.13.1.
     ConnectionUsage,
+    /// `OccurrenceUsagePrefix AllocationUsageDeclaration UsageBody`. `SysML` 8.2.2.15.
+    AllocationUsage,
+    /// `'allocation' UsageDeclaration ( 'allocate' ConnectorPart )? | 'allocate' ConnectorPart`. `SysML` 8.2.2.15 — returns `AllocationUsage`.
+    AllocationUsageDeclaration,
     /// `ConnectorEndMember 'to' ConnectorEndMember`. `SysML` 8.2.2.13.1.
     BinaryConnectorPart,
     /// `'(' ConnectorEndMember ',' ConnectorEndMember ( ',' ConnectorEndMember )* ')'`. `SysML` 8.2.2.13.1.
@@ -1565,6 +1569,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::OwnedCrossFeature,
     SyntaxKind::OwnedCrossMultiplicity,
     SyntaxKind::ConnectionUsage,
+    SyntaxKind::AllocationUsage,
+    SyntaxKind::AllocationUsageDeclaration,
     SyntaxKind::BinaryConnectorPart,
     SyntaxKind::NaryConnectorPart,
     SyntaxKind::CalculationDefinition,
