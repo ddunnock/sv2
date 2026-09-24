@@ -531,6 +531,22 @@ pub enum SyntaxKind {
     TypeBody,
     /// `SPECIALIZES OwnedSubclassification ( ',' OwnedSubclassification )*`. `KerML` 8.2.4.2.
     SuperclassingPart,
+    /// `'disjoint' 'from' OwnedDisjoining ( ',' OwnedDisjoining )*`. `KerML` 8.2.4.1.1.
+    DisjoiningPart,
+    /// `'unions' Unioning ( ',' Unioning )*`. `KerML` 8.2.4.1.1.
+    UnioningPart,
+    /// `'intersects' Intersecting ( ',' Intersecting )*`. `KerML` 8.2.4.1.1.
+    IntersectingPart,
+    /// `'differences' Differencing ( ',' Differencing )*`. `KerML` 8.2.4.1.1.
+    DifferencingPart,
+    /// `disjoiningType = [QualifiedName] | FeatureChain`. `KerML` 8.2.4.1.4.
+    OwnedDisjoining,
+    /// `unioningType = [QualifiedName] | OwnedFeatureChain`. `KerML` 8.2.4.1.5.
+    Unioning,
+    /// `intersectingType = [QualifiedName] | OwnedFeatureChain`. `KerML` 8.2.4.1.5.
+    Intersecting,
+    /// `differencingType = [QualifiedName] | OwnedFeatureChain`. `KerML` 8.2.4.1.5.
+    Differencing,
     /// `( FeaturePrefix ( 'feature' | PrefixMetadataMember ) FeatureDeclaration? | ( EndFeaturePrefix | BasicFeaturePrefix ) FeatureDeclaration ) ValuePart? TypeBody`. `KerML` 8.2.4.3.1.
     Feature,
     /// `( EndFeaturePrefix OwnedCrossFeatureMember? | BasicFeaturePrefix ) PrefixMetadataMember*`. `KerML` 8.2.4.3.1.
@@ -1560,6 +1576,14 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ClassifierDeclaration,
     SyntaxKind::TypeBody,
     SyntaxKind::SuperclassingPart,
+    SyntaxKind::DisjoiningPart,
+    SyntaxKind::UnioningPart,
+    SyntaxKind::IntersectingPart,
+    SyntaxKind::DifferencingPart,
+    SyntaxKind::OwnedDisjoining,
+    SyntaxKind::Unioning,
+    SyntaxKind::Intersecting,
+    SyntaxKind::Differencing,
     SyntaxKind::Feature,
     SyntaxKind::FeaturePrefix,
     SyntaxKind::BasicFeaturePrefix,

@@ -178,6 +178,32 @@ NODES = [
         "SuperclassingPart",
         "`SPECIALIZES OwnedSubclassification ( ',' OwnedSubclassification )*`. `KerML` 8.2.4.2.",
     ),
+    # TypeRelationshipPart's four alternatives, and the relationship each owns. The
+    # alternation itself builds no node; the part says which. KerML 8.2.4.1.1, 8.2.4.1.4,
+    # 8.2.4.1.5.
+    (
+        "DisjoiningPart",
+        "`'disjoint' 'from' OwnedDisjoining ( ',' OwnedDisjoining )*`. `KerML` 8.2.4.1.1.",
+    ),
+    ("UnioningPart", "`'unions' Unioning ( ',' Unioning )*`. `KerML` 8.2.4.1.1."),
+    ("IntersectingPart", "`'intersects' Intersecting ( ',' Intersecting )*`. `KerML` 8.2.4.1.1."),
+    (
+        "DifferencingPart",
+        "`'differences' Differencing ( ',' Differencing )*`. `KerML` 8.2.4.1.1.",
+    ),
+    (
+        "OwnedDisjoining",
+        "`disjoiningType = [QualifiedName] | FeatureChain`. `KerML` 8.2.4.1.4.",
+    ),
+    ("Unioning", "`unioningType = [QualifiedName] | OwnedFeatureChain`. `KerML` 8.2.4.1.5."),
+    (
+        "Intersecting",
+        "`intersectingType = [QualifiedName] | OwnedFeatureChain`. `KerML` 8.2.4.1.5.",
+    ),
+    (
+        "Differencing",
+        "`differencingType = [QualifiedName] | OwnedFeatureChain`. `KerML` 8.2.4.1.5.",
+    ),
     # KerML's Feature and the prefixes it carries. The largest production in the
     # language: FeatureElement's ten alternatives all reach it, and 33 of the 56 failing
     # KerML corpus files reported `feature` first.

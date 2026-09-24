@@ -886,10 +886,29 @@ fn a_connector_is_bounded_by_its_rules() {
     // TypeBody is not optional.
     kerml_rejected("struct S { connector a to b }");
     // `disjoint from` is a FeatureDeclaration's DisjoiningPart (KerML 8.2.4.1.1), not a
-    // binary connector's `from`: it is rejected by absence today, DisjoiningPart being
-    // unimplemented, and never begins a BinaryConnectorDeclaration.
-    let tree = render(&kerml_rejected("struct S { connector c disjoint from d; }").syntax());
+    // binary connector's `from`: the connector is the first alternative, a declaration
+    // alone, and never begins a BinaryConnectorDeclaration.
+    let tree = render(&kerml_accepted("struct S { connector c disjoint from d; }").syntax());
     assert!(!has_node(&tree, "BinaryConnectorDeclaration"), "{tree}");
+    assert_eq!(
+        child_kinds(&tree, "FeatureDeclaration"),
+        ["FeatureIdentification", "DisjoiningPart"],
+        "{tree}"
+    );
+    // A `from` after the part is the binary form's, and the part stays in its declaration.
+    let binary =
+        render(&kerml_accepted("struct S { connector c disjoint from d from a to b; }").syntax());
+    assert_eq!(
+        child_kinds(&binary, "BinaryConnectorDeclaration"),
+        [
+            "FeatureDeclaration",
+            "KwFrom",
+            "ConnectorEndMember",
+            "KwTo",
+            "ConnectorEndMember"
+        ],
+        "{binary}"
+    );
     // SysML's connector is `connection`; `connector` is KerML's (ADR-0014).
     assert!(
         !parse("part def P { connector a to b; }", Language::SysMl)
@@ -1105,6 +1124,149 @@ fn a_kerml_connector_end_takes_a_cross_multiplicity() {
     // The multiplicity AFTER an end is SysML's deviation ConnectorEnd-trailing-multiplicity
     // alone, not KerML's.
     kerml_rejected("class C { succession first a[1] then b; }");
+}
+
+// -- TypeRelationshipPart, KerML 8.2.4.1.1 ----------------------------------------
+
+#[test]
+fn a_classifier_takes_type_relationship_parts() {
+    // vendor/corpus/kerml/src/examples/Simple Tests/Classifiers.kerml:13-15, whole.
+    let tree = render(
+        &kerml_accepted(
+            "classifier D disjoint from C differences A, B;\n\
+             classifier E specializes C intersects A, B;\n\
+             classifier F unions A unions B;",
+        )
+        .syntax(),
+    );
+    // TypeRelationshipPart is an alternation and builds no node; the part says which.
+    assert!(!has_node(&tree, "TypeRelationshipPart"), "{tree}");
+    assert_eq!(
+        child_kinds(&tree, "ClassifierDeclaration"),
+        ["Identification", "DisjoiningPart", "DifferencingPart"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "DisjoiningPart"),
+        ["KwDisjoint", "KwFrom", "OwnedDisjoining"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "DifferencingPart"),
+        ["KwDifferences", "Differencing", "Comma", "Differencing"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "Differencing"),
+        ["QualifiedName"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "IntersectingPart"),
+        ["KwIntersects", "Intersecting", "Comma", "Intersecting"],
+        "{tree}"
+    );
+    // After a SuperclassingPart, and repeated: TypeRelationshipPart* (8.2.4.2.1).
+    assert!(has_node(&tree, "SuperclassingPart"), "{tree}");
+    assert_eq!(tree.matches("UnioningPart").count(), 2, "{tree}");
+    // KerML Spec Annex A Examples/A-2-ModelingInstances.kerml:9 and :32, after an
+    // OwnedMultiplicity and a SuperclassingPart.
+    kerml_accepted("classifier YourBike [1] specializes Bicycle disjoint from MyBike;");
+    kerml_accepted("classifier OurBicycle unions MyBike, YourBike;");
+    // Every classifier keyword reaches the one ClassifierDeclaration: A-3-5's `struct`.
+    kerml_accepted("struct MyBikeTimeCoincident unions MyWheel, MyBikeFork, MyBike;");
+}
+
+#[test]
+fn a_feature_takes_type_relationship_parts() {
+    // vendor/corpus/kerml/src/examples/Simple Tests/Features.kerml:20, 21 and 28.
+    let tree = render(
+        &kerml_accepted(
+            "feature z unions f, g disjoint from y;\n\
+             feature z1 intersects f,g differences y, y1, z;\n\
+             feature adult differences person, child;",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "FeatureDeclaration"),
+        ["FeatureIdentification", "UnioningPart", "DisjoiningPart"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "UnioningPart"),
+        ["KwUnions", "Unioning", "Comma", "Unioning"],
+        "{tree}"
+    );
+    // After a FeatureSpecializationPart, and in the declaration that is one alone.
+    kerml_accepted("feature x : T [1] unions a, b;");
+    kerml_accepted("feature : T disjoint from a;");
+}
+
+#[test]
+fn a_type_relationship_target_may_be_a_feature_chain() {
+    // Unioning, Intersecting and Differencing own an OwnedFeatureChain, and
+    // OwnedDisjoining a FeatureChain, in their second alternatives (8.2.4.1.4, 8.2.4.1.5).
+    // vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml:30-31.
+    let tree = render(
+        &kerml_accepted(
+            "feature h1 unions f, b.f, b.a;\n\
+             feature h2 differences b.f, b.a intersects f.a, g disjoint from h1;",
+        )
+        .syntax(),
+    );
+    assert_eq!(child_kinds(&tree, "Unioning"), ["QualifiedName"], "{tree}");
+    assert_eq!(
+        tree.lines()
+            .filter(|l| l.trim_start() == "OwnedFeatureChain")
+            .count(),
+        5,
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "Differencing"),
+        ["OwnedFeatureChain"],
+        "{tree}"
+    );
+    kerml_accepted("classifier C disjoint from a.b;");
+}
+
+#[test]
+fn a_type_relationship_part_is_bounded_by_its_rules() {
+    // `disjoint` alone is not the part: `'disjoint' 'from'`. Held as a file by
+    // tests/rejection/kerml-disjoining-part-needs-from.kerml.
+    kerml_rejected("classifier C disjoint A;");
+    // Each part names at least one type, and a comma one more. Held as a file by
+    // tests/rejection/kerml-type-relationship-part-needs-a-target.kerml.
+    kerml_rejected("classifier C unions;");
+    kerml_rejected("classifier C intersects A, ;");
+    kerml_rejected("feature f differences;");
+    // The parts follow the specialization, never precede it (8.2.4.2.1, 8.2.4.3.1). Held
+    // as a file by tests/rejection/kerml-type-relationship-part-follows-specialization.kerml.
+    kerml_rejected("classifier C unions A specializes B;");
+    kerml_rejected("feature f unions a : T;");
+    // A part cannot open a FeatureDeclaration: it needs a name, a specialization or a
+    // conjugation first (8.2.4.3.1).
+    kerml_rejected("feature disjoint from a;");
+    // SysML states no TypeRelationshipPart: its definitions and usages end their
+    // declarations elsewhere (ADR-0014). Held as a file by
+    // tests/rejection/type-relationship-part-is-not-sysml.sysml.
+    assert!(
+        !parse("part def P unions A, B;", Language::SysMl)
+            .errors()
+            .is_empty()
+    );
+}
+
+#[test]
+fn a_type_relationship_part_is_read_before_it_is_validated() {
+    // validateTypeOwnedUnioningNotOne, ...IntersectingNotOne, ...DifferencingNotOne and
+    // the three ...TypesNotSelf constraints (KerML 8.3.3.1.10, receipt 5200b0a5) are
+    // validity, not syntax: the text parses and the element carries its diagnostic
+    // downstream (ADR-0002).
+    kerml_accepted("classifier C unions A;");
+    kerml_accepted("classifier C intersects C, D;");
+    kerml_accepted("feature f differences f, g;");
 }
 
 // -- the invariants, under this grammar too ---------------------------------------

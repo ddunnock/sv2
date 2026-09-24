@@ -3171,9 +3171,10 @@ impl<'a> Parser<'a> {
     //     FeatureRelationshipPart*                                (KerML 8.2.4.3.1)
     //
     // NOT marked for coverage. ConjugationPart — the whole third alternative, and the
-    // second half of the first — is unimplemented, as is FeatureRelationshipPart, which
-    // reaches the chaining, inverting and featuring parts as well as the four
-    // TypeRelationshipParts. Each is held by a case in tests/rejection/.
+    // second half of the first — is unimplemented. So is FeatureRelationshipPart: of its
+    // four alternatives only TypeRelationshipPart, the one a classifier shares, is read,
+    // and ChainingPart, InvertingPart and TypeFeaturingPart are not. Each is held by a
+    // case in tests/rejection/.
     fn feature_declaration(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::FeatureDeclaration);
@@ -3184,6 +3185,7 @@ impl<'a> Parser<'a> {
         } else {
             self.feature_specialization_part();
         }
+        self.type_relationship_parts();
         self.finish_node();
     }
 
@@ -3367,9 +3369,8 @@ impl<'a> Parser<'a> {
     // in a FeatureDeclaration -- only a ValuePart's expression writes a `(`, and the
     // n-ary form has no ValuePart, so a `(` after `=` is the first alternative's. `from`
     // IS, in one place: FeatureRelationshipPart reaches DisjoiningPart, `'disjoint' 'from'
-    // OwnedDisjoining` (KerML 8.2.4.1.1), unimplemented today. So a `from` directly after
-    // `disjoint` is not counted, and `connector c disjoint from d;` stays the first
-    // alternative when that part lands.
+    // OwnedDisjoining` (KerML 8.2.4.1.1). So a `from` directly after `disjoint` is not
+    // counted, and `connector c disjoint from d;` is the first alternative.
     //
     // Marked although FeaturePrefix is not, for the reason Succession gives, and although
     // FeatureDeclaration is not: its implemented part is what is read here, as Feature
@@ -5198,7 +5199,9 @@ impl<'a> Parser<'a> {
         self.chainable_target(SyntaxKind::OwnedReferenceSubsetting);
     }
 
-    /// One of the five chainable targets of `SysML` 8.2.2.6.5, under `node`.
+    /// One of the chainable targets, under `node`: the five of `SysML` 8.2.2.6.5 below,
+    /// and `KerML`'s `OwnedDisjoining`, `Unioning`, `Intersecting` and `Differencing`
+    /// (8.2.4.1.4, 8.2.4.1.5), which state the same name-or-chain shape.
     ///
     /// `OwnedFeatureTyping`, `OwnedSubsetting`, `OwnedRedefinition`,
     /// `OwnedReferenceSubsetting` and `OwnedCrossSubsetting` are stated with one shape and
@@ -13861,17 +13864,14 @@ impl<'a> Parser<'a> {
     //     ( SuperclassingPart | ConjugationPart )?
     //     TypeRelationshipPart*                                   (KerML 8.2.4.2.1)
     //
-    // NOT marked for coverage. Two of its five parts are unimplemented, and each is a
-    // construct the language has rather than an optional slot left empty:
-    //
-    //   - ConjugationPart (`~` or `conjugates`), the second alternative of the one
-    //     alternation here, held by tests/rejection/conjugation-part-is-not-implemented.kerml.
-    //   - TypeRelationshipPart, the disjoining, unioning, intersecting and differencing
-    //     parts, held by tests/rejection/type-relationship-part-is-not-implemented.kerml.
+    // NOT marked for coverage. One of its parts is unimplemented, and it is a construct
+    // the language has rather than an optional slot left empty: ConjugationPart (`~` or
+    // `conjugates`), the second alternative of the one alternation here, held by
+    // tests/rejection/conjugation-part-is-not-implemented.kerml.
     //
     // `all`, Identification and the OwnedMultiplicity (`classifier MyBike [1]`, KerML Spec
-    // Annex A Examples/A-2-ModelingInstances.kerml:8) are read, and SuperclassingPart is
-    // fully implemented and marked on its own below.
+    // Annex A Examples/A-2-ModelingInstances.kerml:8) are read, SuperclassingPart is
+    // fully implemented and marked on its own below, and so is TypeRelationshipPart.
     fn classifier_declaration(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ClassifierDeclaration);
@@ -13882,6 +13882,133 @@ impl<'a> Parser<'a> {
         }
         if self.at_superclassing() {
             self.superclassing_part();
+        }
+        self.type_relationship_parts();
+        self.finish_node();
+    }
+
+    // production: TypeRelationshipPart@kerml
+    //
+    // TypeRelationshipPart : Type =
+    //     DisjoiningPart | UnioningPart | IntersectingPart | DifferencingPart
+    //                                                            (KerML 8.2.4.1.1)
+    //
+    // Scoped `kerml`: SysML states no such part, and a .sysml file never reaches this
+    // (ADR-0014). Read as the `TypeRelationshipPart*` that ends ClassifierDeclaration
+    // (8.2.4.2.1) and, through FeatureRelationshipPart's first alternative, FeatureDeclaration
+    // (8.2.4.3.1); TypeDeclaration's is the same star, and Type is unimplemented.
+    //
+    // An alternation with no node, as ConnectorDeclaration is; the part says which. The
+    // four open on four reserved keywords (8.2.2.6), `disjoint`, `unions`, `intersects`
+    // and `differences`, so one token chooses and none can be taken for a name. The star
+    // admits a part more than once and in any order: `classifier F unions A unions B;`
+    // (vendor/corpus/kerml/src/examples/Simple Tests/Classifiers.kerml:15).
+    //
+    // constraint: Type::validateTypeOwnedUnioningNotOne, validateTypeOwnedIntersectingNotOne,
+    //     validateTypeOwnedDifferencingNotOne, validateTypeUnioningTypesNotSelf,
+    //     validateTypeIntersectingTypesNotSelf and validateTypeDifferencingTypesNotSelf
+    //     (KerML 8.3.3.1.10, receipt 5200b0a5). Validity, not syntax: `unions A;` with one
+    //     target parses and carries its diagnostic downstream (ADR-0002). No implied
+    //     specialization attaches to any of the four relationships.
+    fn type_relationship_parts(&mut self) {
+        loop {
+            if self.at_keyword("disjoint") {
+                self.disjoining_part();
+            } else if self.at_keyword("unions") {
+                self.relationship_part(SyntaxKind::UnioningPart, "unions", SyntaxKind::Unioning);
+            } else if self.at_keyword("intersects") {
+                self.relationship_part(
+                    SyntaxKind::IntersectingPart,
+                    "intersects",
+                    SyntaxKind::Intersecting,
+                );
+            } else if self.at_keyword("differences") {
+                self.relationship_part(
+                    SyntaxKind::DifferencingPart,
+                    "differences",
+                    SyntaxKind::Differencing,
+                );
+            } else {
+                return;
+            }
+        }
+    }
+
+    // production: DisjoiningPart@kerml
+    //
+    // DisjoiningPart : Type =
+    //     'disjoint' 'from' ownedRelationship += OwnedDisjoining
+    //     ( ',' ownedRelationship += OwnedDisjoining )*          (KerML 8.2.4.1.1)
+    //
+    // The one part of two keywords. `from` is a binary connector's word too, which is
+    // why `connector_from_follows` does not count a `from` directly after `disjoint`.
+    fn disjoining_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::DisjoiningPart);
+        self.expect_keyword("disjoint");
+        self.expect_keyword("from");
+        self.owned_disjoining();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.owned_disjoining();
+        }
+        self.finish_node();
+    }
+
+    // production: OwnedDisjoining@kerml
+    //
+    // OwnedDisjoining : Disjoining =
+    //       disjoiningType = [QualifiedName]
+    //     | disjoiningType = FeatureChain
+    //       { ownedRelatedElement += disjoiningType }             (KerML 8.2.4.1.4)
+    //
+    // The metaclass is Disjoining (8.3.3.1.4, receipt 9029a37f), its typeDisjoined the
+    // declaring type. The chain is the same text as the OwnedFeatureChain the other three
+    // own (8.2.4.3.5 states `OwnedFeatureChain : Feature = FeatureChain`), and builds the
+    // same node, as `instantiated_type_member` explains for FeatureChain@kerml.
+    fn owned_disjoining(&mut self) {
+        self.chainable_target(SyntaxKind::OwnedDisjoining);
+    }
+
+    // production: UnioningPart@kerml
+    // production: IntersectingPart@kerml
+    // production: DifferencingPart@kerml
+    //
+    // UnioningPart : Type =
+    //     'unions' ownedRelationship += Unioning
+    //     ( ',' ownedRelationship += Unioning )*
+    // IntersectingPart : Type =
+    //     'intersects' ownedRelationship += Intersecting
+    //     ( ',' ownedRelationship += Intersecting )*
+    // DifferencingPart : Type =
+    //     'differences' ownedRelationship += Differencing
+    //     ( ',' ownedRelationship += Differencing )*              (KerML 8.2.4.1.1)
+    //
+    // production: Unioning@kerml
+    // production: Intersecting@kerml
+    // production: Differencing@kerml
+    //
+    // Unioning : Unioning =
+    //     unioningType = [QualifiedName] | ownedRelatedElement += OwnedFeatureChain
+    // Intersecting : Intersecting =
+    //     intersectingType = [QualifiedName] | ownedRelatedElement += OwnedFeatureChain
+    // Differencing : Differencing =
+    //     differencingType = [QualifiedName] | ownedRelatedElement += OwnedFeatureChain
+    //                                                            (KerML 8.2.4.1.5)
+    //
+    // Three productions of one shape, one method, as the eight classifiers share
+    // `classifier`: a keyword, then one or more targets. The metaclasses are Unioning
+    // (8.3.3.1.11, receipt bc28c9b0), Intersecting (8.3.3.1.7, receipt ebe08a05) and
+    // Differencing (8.3.3.1.3, receipt 631855b4), each a Relationship whose source is the
+    // declaring type. The target is `chainable_target`'s name-or-chain shape.
+    fn relationship_part(&mut self, part: SyntaxKind, word: &str, target: SyntaxKind) {
+        self.eat_trivia();
+        self.start_node(part);
+        self.expect_keyword(word);
+        self.chainable_target(target);
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.chainable_target(target);
         }
         self.finish_node();
     }
