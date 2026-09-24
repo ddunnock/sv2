@@ -309,18 +309,6 @@ fn a_classifier_is_not_reachable_from_the_sysml_start_symbol() {
 }
 
 #[test]
-fn the_unimplemented_halves_of_a_classifier_declaration_are_reported() {
-    // ConjugationPart is the other alternative of ClassifierDeclaration's one
-    // alternation. It is not implemented, and has a file in tests/rejection/ naming its
-    // clause. TypeRelationshipPart, the trailing star, is next (`classifier C unions A,
-    // B;` was here).
-    kerml_rejected("class B conjugates A;");
-    kerml_rejected("class B ~ A;");
-    // OwnedMultiplicity on a classifier, `classifier C [1..*];`, was here: rejected by
-    // absence until OwnedMultiplicity@kerml, which the next commit reads.
-}
-
-#[test]
 fn a_function_is_not_in_the_classifier_table() {
     // Function and Predicate share the keyword-and-declaration shape but take a
     // FunctionBody, so they are not the same spine and are not implemented. Reading
@@ -495,7 +483,7 @@ fn has_node(rendered: &str, kind: &str) -> bool {
 
 #[test]
 fn the_unimplemented_halves_of_a_feature_declaration_are_reported() {
-    kerml_rejected("feature f conjugates g;");
+    // ConjugationPart is next (`feature f conjugates g;` was here).
     kerml_rejected("feature f chains a.b;");
 }
 

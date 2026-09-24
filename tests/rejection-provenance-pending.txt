@@ -32,7 +32,6 @@ tests/rejection/comment-never-closed.kerml
 tests/rejection/comment-never-closed.sysml
 tests/rejection/comment-opener-is-not-its-own-terminator.sysml
 tests/rejection/conditional-expression-requires-an-else.sysml
-tests/rejection/conjugation-part-is-not-implemented.kerml
 tests/rejection/constraint-definition-missing-calculation-body.sysml
 tests/rejection/crosses-takes-one-target.sysml
 tests/rejection/definition-body-unclosed.sysml
