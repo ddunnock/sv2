@@ -311,11 +311,11 @@ fn a_classifier_is_not_reachable_from_the_sysml_start_symbol() {
 #[test]
 fn the_unimplemented_halves_of_a_classifier_declaration_are_reported() {
     // ConjugationPart is the other alternative of ClassifierDeclaration's one
-    // alternation, and TypeRelationshipPart is its trailing star. Neither is
-    // implemented, and each has a file in tests/rejection/ naming its clause.
+    // alternation. It is not implemented, and has a file in tests/rejection/ naming its
+    // clause. TypeRelationshipPart, the trailing star, is next (`classifier C unions A,
+    // B;` was here).
     kerml_rejected("class B conjugates A;");
     kerml_rejected("class B ~ A;");
-    kerml_rejected("classifier C unions A, B;");
     // OwnedMultiplicity on a classifier, `classifier C [1..*];`, was here: rejected by
     // absence until OwnedMultiplicity@kerml, which the next commit reads.
 }

@@ -101,7 +101,6 @@ tests/rejection/target-succession-member-does-not-skip-a-non-behavior-item.sysml
 tests/rejection/target-succession-member-needs-a-predecessor.sysml
 tests/rejection/target-succession-member-needs-a-usage-body.sysml
 tests/rejection/textual-representation-requires-a-language.sysml
-tests/rejection/type-relationship-part-is-not-implemented.kerml
 tests/rejection/unrestricted-name-unclosed.sysml
 tests/rejection/usage-body-is-not-optional.sysml
 tests/rejection/usage-prefix-keywords-are-not-repeatable.sysml
