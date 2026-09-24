@@ -178,6 +178,13 @@ NODES = [
         "SuperclassingPart",
         "`SPECIALIZES OwnedSubclassification ( ',' OwnedSubclassification )*`. `KerML` 8.2.4.2.",
     ),
+    # The conjugation a classifier or feature declaration may write in place of its
+    # specialization. KerML 8.2.4.1.1, 8.2.4.1.3.
+    ("ConjugationPart", "`CONJUGATES OwnedConjugation`. `KerML` 8.2.4.1.1."),
+    (
+        "OwnedConjugation",
+        "`originalType = [QualifiedName] | FeatureChain`. `KerML` 8.2.4.1.3.",
+    ),
     # TypeRelationshipPart's four alternatives, and the relationship each owns. The
     # alternation itself builds no node; the part says which. KerML 8.2.4.1.1, 8.2.4.1.4,
     # 8.2.4.1.5.

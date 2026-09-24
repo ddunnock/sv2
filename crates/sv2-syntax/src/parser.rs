@@ -3161,6 +3161,7 @@ impl<'a> Parser<'a> {
             || self.at(SyntaxKind::Lt)
             || self.at_feature_specialization()
             || self.at_multiplicity_part()
+            || self.at_conjugation_part()
     }
 
     // FeatureDeclaration : Feature =
@@ -3170,18 +3171,28 @@ impl<'a> Parser<'a> {
     //     | ConjugationPart )
     //     FeatureRelationshipPart*                                (KerML 8.2.4.3.1)
     //
-    // NOT marked for coverage. ConjugationPart — the whole third alternative, and the
-    // second half of the first — is unimplemented. So is FeatureRelationshipPart: of its
-    // four alternatives only TypeRelationshipPart, the one a classifier shares, is read,
-    // and ChainingPart, InvertingPart and TypeFeaturingPart are not. Each is held by a
-    // case in tests/rejection/.
+    // NOT marked for coverage. FeatureRelationshipPart is unimplemented: of its four
+    // alternatives only TypeRelationshipPart, the one a classifier shares, is read, and
+    // ChainingPart, InvertingPart and TypeFeaturingPart are not. Each is held by a case in
+    // tests/rejection/. All three alternatives of the group before it are read.
+    //
+    // A specialization OR a conjugation, never both: a conjugated type "may not also be
+    // the specific Type in any Specialization" (KerML 8.3.3.1.2, receipt eabb0d9b), and a
+    // MultiplicityPart is the FeatureSpecializationPart's, so `feature f [1] ~ g;` is
+    // rejected too. The two open on disjoint tokens, so one decides.
     fn feature_declaration(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::FeatureDeclaration);
         self.eat_optional_keyword("all");
         if self.at_name() || self.at(SyntaxKind::Lt) {
             self.feature_identification();
-            self.optional_feature_specialization_part();
+            if self.at_conjugation_part() {
+                self.conjugation_part();
+            } else {
+                self.optional_feature_specialization_part();
+            }
+        } else if self.at_conjugation_part() {
+            self.conjugation_part();
         } else {
             self.feature_specialization_part();
         }
@@ -5200,8 +5211,8 @@ impl<'a> Parser<'a> {
     }
 
     /// One of the chainable targets, under `node`: the five of `SysML` 8.2.2.6.5 below,
-    /// and `KerML`'s `OwnedDisjoining`, `Unioning`, `Intersecting` and `Differencing`
-    /// (8.2.4.1.4, 8.2.4.1.5), which state the same name-or-chain shape.
+    /// and `KerML`'s `OwnedConjugation`, `OwnedDisjoining`, `Unioning`, `Intersecting` and
+    /// `Differencing` (8.2.4.1.3 to 8.2.4.1.5), which state the same name-or-chain shape.
     ///
     /// `OwnedFeatureTyping`, `OwnedSubsetting`, `OwnedRedefinition`,
     /// `OwnedReferenceSubsetting` and `OwnedCrossSubsetting` are stated with one shape and
@@ -13858,20 +13869,27 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: ClassifierDeclaration@kerml
+    //
     // ClassifierDeclaration : Classifier =
     //     ( isSufficient ?= 'all' )? Identification
     //     ( ownedRelationship += OwnedMultiplicity )?
     //     ( SuperclassingPart | ConjugationPart )?
     //     TypeRelationshipPart*                                   (KerML 8.2.4.2.1)
     //
-    // NOT marked for coverage. One of its parts is unimplemented, and it is a construct
-    // the language has rather than an optional slot left empty: ConjugationPart (`~` or
-    // `conjugates`), the second alternative of the one alternation here, held by
-    // tests/rejection/conjugation-part-is-not-implemented.kerml.
+    // Scoped `kerml`: SysML's definitions declare through DefinitionDeclaration
+    // (8.2.2.6.1), which has no conjugation and no relationship parts. Every part is read:
+    // `all`, Identification, the OwnedMultiplicity (`classifier MyBike [1]`, KerML Spec
+    // Annex A Examples/A-2-ModelingInstances.kerml:8), the alternation of
+    // SuperclassingPart and ConjugationPart, and TypeRelationshipPart*.
     //
-    // `all`, Identification and the OwnedMultiplicity (`classifier MyBike [1]`, KerML Spec
-    // Annex A Examples/A-2-ModelingInstances.kerml:8) are read, SuperclassingPart is
-    // fully implemented and marked on its own below, and so is TypeRelationshipPart.
+    // The alternation takes one side at most: a conjugated type "may not also be the
+    // specific Type in any Specialization" (KerML 8.3.3.1.2, receipt eabb0d9b), so
+    // `class B :> A conjugates C;` is a syntax error, not a validity one.
+    //
+    // constraint: Type::validateTypeAtMostOneConjugator (KerML 8.3.3.1.10, receipt
+    //     5200b0a5). The grammar already admits one ConjugationPart of one target; the
+    //     constraint also reaches conjugations a type owns by other routes, for sv2-hir.
     fn classifier_declaration(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ClassifierDeclaration);
@@ -13882,9 +13900,54 @@ impl<'a> Parser<'a> {
         }
         if self.at_superclassing() {
             self.superclassing_part();
+        } else if self.at_conjugation_part() {
+            self.conjugation_part();
         }
         self.type_relationship_parts();
         self.finish_node();
+    }
+
+    /// Whether a `ConjugationPart` is written here: `CONJUGATES = '~' | 'conjugates'`
+    /// (`KerML` 8.2.2.7). The symbol has its own kind; the word arrives as a `BasicName`.
+    fn at_conjugation_part(&self) -> bool {
+        self.at(SyntaxKind::Tilde) || self.at_keyword("conjugates")
+    }
+
+    // production: ConjugationPart@kerml
+    //
+    // ConjugationPart : Type =
+    //     CONJUGATES ownedRelationship += OwnedConjugation       (KerML 8.2.4.1.1)
+    //
+    // One target, and no repetition: the part appears once in each declaration that
+    // reaches it. The Pilot splits this in two, ClassifierConjugationPart over a name
+    // alone and FeatureConjugationPart over a name or chain; both are deviations
+    // xtext_only, follow_spec, so the one production of the clause is read in both
+    // places, and a classifier may name a chain as the specification states.
+    //
+    // Scoped `kerml`: SysML writes a conjugation only as ConjugatedPortTyping's `~` after
+    // `:` (8.2.2.12), which is a typing, not this part, and is read in .sysml alone.
+    fn conjugation_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ConjugationPart);
+        self.terminal(SyntaxKind::Tilde, "conjugates", "`~` or `conjugates`");
+        self.owned_conjugation();
+        self.finish_node();
+    }
+
+    // production: OwnedConjugation@kerml
+    //
+    // OwnedConjugation : Conjugation =
+    //       originalType = [QualifiedName]
+    //     | originalType = FeatureChain
+    //       { ownedRelatedElement += originalType }                (KerML 8.2.4.1.3)
+    //
+    // The metaclass is Conjugation (8.3.3.1.2, receipt eabb0d9b): its conjugatedType is
+    // the declaring type, which "inherits all the Features of the originalType, but with
+    // all input and output Features reversed". A derivation, sv2-resolve's; no implied
+    // specialization attaches. The chain builds the OwnedFeatureChain node, as
+    // OwnedDisjoining's does.
+    fn owned_conjugation(&mut self) {
+        self.chainable_target(SyntaxKind::OwnedConjugation);
     }
 
     // production: TypeRelationshipPart@kerml

@@ -531,6 +531,10 @@ pub enum SyntaxKind {
     TypeBody,
     /// `SPECIALIZES OwnedSubclassification ( ',' OwnedSubclassification )*`. `KerML` 8.2.4.2.
     SuperclassingPart,
+    /// `CONJUGATES OwnedConjugation`. `KerML` 8.2.4.1.1.
+    ConjugationPart,
+    /// `originalType = [QualifiedName] | FeatureChain`. `KerML` 8.2.4.1.3.
+    OwnedConjugation,
     /// `'disjoint' 'from' OwnedDisjoining ( ',' OwnedDisjoining )*`. `KerML` 8.2.4.1.1.
     DisjoiningPart,
     /// `'unions' Unioning ( ',' Unioning )*`. `KerML` 8.2.4.1.1.
@@ -1576,6 +1580,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ClassifierDeclaration,
     SyntaxKind::TypeBody,
     SyntaxKind::SuperclassingPart,
+    SyntaxKind::ConjugationPart,
+    SyntaxKind::OwnedConjugation,
     SyntaxKind::DisjoiningPart,
     SyntaxKind::UnioningPart,
     SyntaxKind::IntersectingPart,

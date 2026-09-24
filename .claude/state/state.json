@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-24T14:44:45Z",
+    "regenerated_utc": "2026-09-24T17:30:19Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 431,
-      "unimplemented": 123,
+      "implemented": 434,
+      "unimplemented": 120,
       "absent": 0,
-      "percent": 77.8
+      "percent": 78.3
     },
     "tests": {
-      "unit": 644,
+      "unit": 646,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 260,
+      "negative_cases": 262,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "c76a452 Stop rejecting KerML conjugation parts by absence: the next commit reads them",
+      "5c5051a Read KerML type relationship parts, on classifiers and features",
       "7104086 Stop rejecting KerML type relationship parts by absence: the next commit reads them",
       "dcc50c3 Close the session: KerML multiplicity and the KerML connector recorded, the type relationship parts next",
       "04d0633 Record KerML Connector done in the handoff; the type relationship parts next",
       "1dd6dcd Read KerML connectors, binary, n-ary and by declaration alone",
       "de5f462 Stop rejecting `connector` by absence: the next commit reads it",
-      "fcf84d6 Record KerML multiplicity done in the handoff; KerML Connector next",
-      "136bbdb Read KerML multiplicities, on features, classifiers and connector ends",
-      "6eae9ee Stop rejecting KerML multiplicities by absence: the next commit reads them"
+      "fcf84d6 Record KerML multiplicity done in the handoff; KerML Connector next"
     ]
   },
   "authored": {

@@ -1257,6 +1257,121 @@ fn a_type_relationship_part_is_read_before_it_is_validated() {
     kerml_accepted("feature f differences f, g;");
 }
 
+// -- ConjugationPart, KerML 8.2.4.1.1 ---------------------------------------------
+
+#[test]
+fn a_classifier_takes_a_conjugation_part() {
+    // vendor/corpus/kerml/src/examples/Simple Tests/Conjugation.kerml:6.
+    let tree = render(&kerml_accepted("class B conjugates A;").syntax());
+    assert_eq!(
+        child_kinds(&tree, "ClassifierDeclaration"),
+        ["Identification", "ConjugationPart"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "ConjugationPart"),
+        ["KwConjugates", "OwnedConjugation"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "OwnedConjugation"),
+        ["QualifiedName"],
+        "{tree}"
+    );
+    // CONJUGATES = '~' | 'conjugates' (KerML 8.2.2.7).
+    let tilde = render(&kerml_accepted("class B ~ A;").syntax());
+    assert_eq!(
+        child_kinds(&tilde, "ConjugationPart"),
+        ["Tilde", "OwnedConjugation"],
+        "{tilde}"
+    );
+    // OwnedConjugation's FeatureChain alternative (8.2.4.1.3) on a classifier too: the
+    // specification states one OwnedConjugation for both declarations, where the Pilot's
+    // ClassifierConjugation takes a name alone (deviation ClassifierConjugation,
+    // follow_spec).
+    let chain = render(&kerml_accepted("class B conjugates a.b;").syntax());
+    assert_eq!(
+        child_kinds(&chain, "OwnedConjugation"),
+        ["OwnedFeatureChain"],
+        "{chain}"
+    );
+    // After an OwnedMultiplicity, and before TypeRelationshipPart* (8.2.4.2.1).
+    let tail = render(&kerml_accepted("classifier C [1] ~ A disjoint from D;").syntax());
+    assert_eq!(
+        child_kinds(&tail, "ClassifierDeclaration"),
+        [
+            "Identification",
+            "OwnedMultiplicity",
+            "ConjugationPart",
+            "DisjoiningPart"
+        ],
+        "{tail}"
+    );
+}
+
+#[test]
+fn a_feature_takes_a_conjugation_part() {
+    // vendor/corpus/kerml/src/examples/Simple Tests/Conjugation.kerml:8 and
+    // Features.kerml:36, after a FeatureIdentification.
+    let tree = render(&kerml_accepted("feature g ~ B::f;").syntax());
+    assert_eq!(
+        child_kinds(&tree, "FeatureDeclaration"),
+        ["FeatureIdentification", "ConjugationPart"],
+        "{tree}"
+    );
+    kerml_accepted("class C { feature fuelOutPort ~ fuelInPort; }");
+    // The third alternative, a ConjugationPart alone (8.2.4.3.1).
+    let alone = render(&kerml_accepted("feature conjugates g;").syntax());
+    assert_eq!(
+        child_kinds(&alone, "FeatureDeclaration"),
+        ["ConjugationPart"],
+        "{alone}"
+    );
+    kerml_accepted("feature ~ g;");
+    // OwnedConjugation's second alternative, a FeatureChain (8.2.4.1.3):
+    // vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml:35.
+    let chain = render(&kerml_accepted("feature x conjugates f.a;").syntax());
+    assert_eq!(
+        child_kinds(&chain, "OwnedConjugation"),
+        ["OwnedFeatureChain"],
+        "{chain}"
+    );
+    // FeatureRelationshipPart* follows it.
+    kerml_accepted("feature x ~ f unions a, b;");
+}
+
+#[test]
+fn a_conjugation_part_is_bounded_by_its_rules() {
+    // A conjugated type "may not also be the specific Type in any Specialization"
+    // (KerML 8.3.3.1.2, receipt eabb0d9b), and the grammar says so by alternation:
+    // ( SuperclassingPart | ConjugationPart )? on a classifier (8.2.4.2.1), and
+    // FeatureIdentification ( FeatureSpecializationPart | ConjugationPart )? on a feature
+    // (8.2.4.3.1). Held as a file by
+    // tests/rejection/kerml-conjugation-part-is-not-a-specialization.kerml.
+    kerml_rejected("class B :> A conjugates C;");
+    kerml_rejected("class B conjugates C :> A;");
+    kerml_rejected("feature f : T ~ g;");
+    kerml_rejected("feature f ~ g : T;");
+    // A multiplicity is a FeatureSpecializationPart's, so it cannot sit beside one either.
+    kerml_rejected("feature f [1] ~ g;");
+    // One conjugation, of one type: `CONJUGATES OwnedConjugation`, no list, no repeat
+    // ("at most one Conjugation", 8.3.3.1.2). Held as a file by
+    // tests/rejection/kerml-conjugation-part-names-one-type.kerml.
+    kerml_rejected("class B conjugates A, C;");
+    kerml_rejected("class B ~ A ~ C;");
+    kerml_rejected("class B conjugates;");
+    // A `~` after `:` is still SysML's ConjugatedPortTyping, not this part.
+    kerml_rejected("feature f : ~T;");
+    // SysML states no ConjugationPart on a definition: DefinitionDeclaration =
+    // Identification SubclassificationPart? (SysML 8.2.2.6.1). Held as a file by
+    // tests/rejection/conjugation-part-is-not-sysml.sysml.
+    assert!(
+        !parse("part def B conjugates A;", Language::SysMl)
+            .errors()
+            .is_empty()
+    );
+}
+
 // -- the invariants, under this grammar too ---------------------------------------
 
 #[test]
