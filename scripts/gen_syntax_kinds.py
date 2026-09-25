@@ -322,6 +322,15 @@ NODES = [
         "NamespaceFeatureMember",
         "`MemberPrefix FeatureElement`. `KerML` 8.2.3.4.1.",
     ),
+    # A TypeBody's two feature members, the FeatureMember alternation's sides.
+    (
+        "OwnedFeatureMember",
+        "`MemberPrefix FeatureElement`. `KerML` 8.2.4.1.6 — a `FeatureMembership`.",
+    ),
+    (
+        "TypeFeatureMember",
+        "`MemberPrefix 'member' FeatureElement`. `KerML` 8.2.4.1.6.",
+    ),
     (
         "NonFeatureMember",
         (

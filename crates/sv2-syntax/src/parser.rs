@@ -1008,11 +1008,11 @@ impl Body {
                 SyntaxKind::ActionNodeMember
             }
             (_, Language::SysMl, _) => SyntaxKind::PackageMember,
-            // Both KerML bodies own the same membership. `TypeBodyElement` is
-            // `NonFeatureMember | FeatureMember | AliasMember | Import` (8.2.4.1) and
-            // `NamespaceBodyElement` reaches `NonFeatureMember` too (8.2.3.4.1), so
-            // `Body::Type` needs no arm of its own. `FeatureMember` is unimplemented in
-            // both, which is what leaves them identical for now rather than by rule.
+            // Both KerML bodies own a non-feature through the same membership.
+            // `TypeBodyElement` is `NonFeatureMember | FeatureMember | AliasMember |
+            // Import` (8.2.4.1.1) and `NamespaceBodyElement` reaches `NonFeatureMember`
+            // too (8.2.3.4.1), so `Body::Type` needs no arm of its own here. Their features
+            // differ, and are dispatched before this is asked (`feature_member`).
             (_, Language::KerMl, _) => SyntaxKind::NonFeatureMember,
         }
     }
@@ -2669,6 +2669,12 @@ impl<'a> Parser<'a> {
             // tests/rejection/element-filter-member-is-not-a-definition-body-item.sysml
             // and element-filter-member-is-not-a-kerml-root-element.kerml hold those.
             self.element_filter_member();
+        } else if body == Body::Type
+            && self.language == Language::KerMl
+            && self.nth_is_keyword(usize::from(self.at_visibility()), "member")
+        {
+            // TypeFeatureMember, a TypeBody's alone (8.2.4.1.6).
+            self.feature_member();
         } else if self.language == Language::KerMl
             && (self.at_feature(usize::from(self.at_visibility()))
                 || self.at_kerml_succession(usize::from(self.at_visibility()))
@@ -2677,9 +2683,14 @@ impl<'a> Parser<'a> {
                 || self.at_kerml_step(usize::from(self.at_visibility())))
         {
             // NamespaceMember = NonFeatureMember | NamespaceFeatureMember
-            // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
-            // its own membership node rather than the one `membership` builds.
-            self.namespace_feature_member();
+            // (KerML 8.2.3.4.1), and TypeBodyElement's FeatureMember (8.2.4.1.1, defined 8.2.4.1.6). A
+            // feature is owned through one of those, so it gets its own membership node
+            // rather than the one `membership` builds.
+            if body == Body::Type {
+                self.feature_member();
+            } else {
+                self.namespace_feature_member();
+            }
         } else if body == Body::Interface && self.at_usage_no_interface_body_admits() {
             // InterfaceNonOccurrenceUsageElement lists ReferenceUsage, AttributeUsage,
             // EnumerationUsage, BindingConnectorAsUsage and SuccessionAsUsage and no
@@ -3451,6 +3462,52 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::NamespaceFeatureMember);
         self.member_prefix();
+        self.feature_element();
+        self.finish_node();
+    }
+
+    // production: FeatureMember@kerml
+    //
+    // FeatureMember : OwningMembership = TypeFeatureMember | OwnedFeatureMember
+    //                                                            (KerML 8.2.4.1.6)
+    //
+    // production: OwnedFeatureMember@kerml
+    //
+    // OwnedFeatureMember : FeatureMembership =
+    //     MemberPrefix ownedRelatedElement += FeatureElement
+    //
+    // production: TypeFeatureMember@kerml
+    //
+    // TypeFeatureMember : OwningMembership =
+    //     MemberPrefix 'member' ownedRelatedElement += FeatureElement
+    //
+    // A TypeBody's feature, where a namespace body's is a NamespaceFeatureMember
+    // (8.2.3.4.1): the same text, a different membership. OwnedFeatureMember is a
+    // FeatureMembership, making the feature an ownedFeature of the type;
+    // TypeFeatureMember's `member` makes it a member only, an OwningMembership, as
+    // `member feature isLicensed : Boolean [1] featured by Person_snapshots {`
+    // (Variable Feature Examples/TimeVaryingCarDriver.kerml:65) writes it. The alternation
+    // builds no node; the member says which. `member` is reserved (KerML 8.2.2.6), so it
+    // decides after the MemberPrefix.
+    fn feature_member(&mut self) {
+        self.eat_trivia();
+        let member = self.nth_is_keyword(usize::from(self.at_visibility()), "member");
+        self.start_node(if member {
+            SyntaxKind::TypeFeatureMember
+        } else {
+            SyntaxKind::OwnedFeatureMember
+        });
+        self.member_prefix();
+        if member {
+            self.expect_keyword("member");
+        }
+        self.feature_element();
+        self.finish_node();
+    }
+
+    /// The `FeatureElement` a feature member owns (`KerML` 8.2.3.4.3), over the
+    /// alternatives this parser reads.
+    fn feature_element(&mut self) {
         if self.at_kerml_succession(0) {
             self.kerml_succession();
         } else if self.at_kerml_binding_connector(0) {
@@ -3462,7 +3519,6 @@ impl<'a> Parser<'a> {
         } else {
             self.feature();
         }
-        self.finish_node();
     }
 
     /// Whether a `KerML` `Succession` starts at the `n`th meaningful token.
@@ -14450,8 +14506,15 @@ impl<'a> Parser<'a> {
     //
     // TypeBody : Type = ';' | '{' TypeBodyElement* '}'            (KerML 8.2.4.1)
     //
-    // TypeBodyElement is not marked: it is an alternation, read by `body_elements`, and
-    // one of its four alternatives — FeatureMember — is unimplemented.
+    // production: TypeBodyElement@kerml
+    //
+    // TypeBodyElement : Type =
+    //     ownedRelationship += NonFeatureMember | ownedRelationship += FeatureMember
+    //   | ownedRelationship += AliasMember | ownedRelationship += Import
+    //                                                            (KerML 8.2.4.1.1)
+    //
+    // An alternation, read by `body_elements` under `Body::Type`; all four alternatives
+    // are, FeatureMember through `feature_member`.
     fn type_body(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::TypeBody);

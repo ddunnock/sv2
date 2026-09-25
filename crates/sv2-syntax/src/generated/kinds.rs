@@ -585,6 +585,10 @@ pub enum SyntaxKind {
     BindingConnectorDeclaration,
     /// `MemberPrefix FeatureElement`. `KerML` 8.2.3.4.1.
     NamespaceFeatureMember,
+    /// `MemberPrefix FeatureElement`. `KerML` 8.2.4.1.6 — a `FeatureMembership`.
+    OwnedFeatureMember,
+    /// `MemberPrefix 'member' FeatureElement`. `KerML` 8.2.4.1.6.
+    TypeFeatureMember,
     /// `MemberPrefix MemberElement`. `KerML` 8.2.3.4.1 — what a `PackageMember` is in a `KerML` file, where the members are `MemberElement` and `FeatureElement` rather than `DefinitionElement` and `UsageElement`.
     NonFeatureMember,
     /// `( visibility = VisibilityIndicator )?`. `SysML` 8.2.2.5.1.
@@ -1615,6 +1619,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::BindingConnector,
     SyntaxKind::BindingConnectorDeclaration,
     SyntaxKind::NamespaceFeatureMember,
+    SyntaxKind::OwnedFeatureMember,
+    SyntaxKind::TypeFeatureMember,
     SyntaxKind::NonFeatureMember,
     SyntaxKind::MemberPrefix,
     SyntaxKind::AliasMember,

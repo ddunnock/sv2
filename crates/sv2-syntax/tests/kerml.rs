@@ -1704,6 +1704,79 @@ fn a_type_featuring_part_is_bounded_by_its_rules() {
     kerml_rejected("class C featured by D;");
 }
 
+// -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------
+//
+//   TypeBodyElement    = NonFeatureMember | FeatureMember | AliasMember | Import
+//   FeatureMember      = TypeFeatureMember | OwnedFeatureMember
+//   TypeFeatureMember  = MemberPrefix 'member' FeatureElement
+//   OwnedFeatureMember = MemberPrefix FeatureElement
+
+#[test]
+fn a_type_body_owns_a_feature_through_a_feature_member() {
+    // A TypeBody's feature is an OwnedFeatureMember (8.2.4.1.6), a FeatureMembership,
+    // not the namespace body's NamespaceFeatureMember (8.2.3.4.1): KerML Spec Annex A
+    // Examples/A-3-6-Sequences.kerml:8, in a behavior's body.
+    let tree = render(&kerml_accepted("behavior B {\n\tstep paint : Paint [1];\n}").syntax());
+    assert_eq!(
+        child_kinds(&tree, "OwnedFeatureMember"),
+        ["MemberPrefix", "Step"],
+        "{tree}"
+    );
+    assert!(!has_node(&tree, "NamespaceFeatureMember"), "{tree}");
+    // Every FeatureElement this parser reads, in every classifier's body.
+    let class = render(
+        &kerml_accepted(
+            "class C { feature f; private x : T; connector c from a to b; binding a = b; \
+             succession a then b; }",
+        )
+        .syntax(),
+    );
+    assert_eq!(class.matches("OwnedFeatureMember").count(), 5, "{class}");
+    // A package body keeps the namespace's member.
+    let package = render(&kerml_accepted("package P { feature f; }").syntax());
+    assert!(has_node(&package, "NamespaceFeatureMember"), "{package}");
+    assert!(!has_node(&package, "OwnedFeatureMember"), "{package}");
+}
+
+#[test]
+fn a_type_body_owns_a_feature_through_member_too() {
+    // Variable Feature Examples/TimeVaryingCarDriver.kerml:65, a TypeFeatureMember: the
+    // feature is a member of the type without being its owned feature (8.2.4.1.6).
+    let tree = render(
+        &kerml_accepted(
+            "struct Driver {\n\tmember feature isLicensed : Boolean [1] featured by \
+             Person_snapshots { }\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "TypeFeatureMember"),
+        ["MemberPrefix", "KwMember", "Feature"],
+        "{tree}"
+    );
+    // Variable Feature Examples/Enhancements/TimeVaryingSteps.kerml:11, a step, here after
+    // a visibility. (Its line 4, `member step merge : ...`, waits on pending decision
+    // keyword-table-per-language: `merge` is SysML's reserved word, not KerML's.)
+    kerml_accepted(
+        "behavior TakePicture { private member step focus [0..1] featured by \
+         TakePicture_snapshots { } }",
+    );
+}
+
+#[test]
+fn a_type_feature_member_is_bounded_by_its_rules() {
+    // `member` is a TypeBody's: NamespaceBodyElement reaches NamespaceMember, which has no
+    // such alternative (8.2.3.4.1). Held as a file by
+    // tests/rejection/kerml-type-feature-member-is-a-type-body-s.kerml.
+    kerml_rejected("package P { member feature x; }");
+    kerml_rejected("member feature x;");
+    // It owns a FeatureElement, not a classifier or a package. Held as a file by
+    // tests/rejection/kerml-type-feature-member-owns-a-feature-element.kerml.
+    kerml_rejected("class C { member class D; }");
+    // The MemberPrefix comes first.
+    kerml_rejected("class C { member private feature x; }");
+}
+
 // -- Step, KerML 8.2.5.6.2 ---------------------------------------------------------
 //
 //   Step = FeaturePrefix 'step' FeatureDeclaration ValuePart? TypeBody
@@ -1713,7 +1786,7 @@ fn a_type_featuring_part_is_bounded_by_its_rules() {
 fn a_step_is_a_feature_element() {
     // KerML Spec Annex A Examples/A-3-6-Sequences.kerml:8. In a package body it is owned
     // through a NamespaceFeatureMember (8.2.3.4.1); in a behavior's body, a TypeBody,
-    // through a FeatureMember instead (8.2.4.1.1), so the membership is asserted here.
+    // through a FeatureMember instead (8.2.4.1.1, 8.2.4.1.6), so the membership is asserted here.
     let tree = render(&kerml_accepted("package P {\n\tstep paint : Paint [1];\n}").syntax());
     assert_eq!(
         child_kinds(&tree, "NamespaceFeatureMember"),

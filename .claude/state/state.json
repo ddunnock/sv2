@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-25T22:11:31Z",
+    "regenerated_utc": "2026-09-25T22:22:27Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 446,
-      "unimplemented": 108,
+      "implemented": 450,
+      "unimplemented": 104,
       "absent": 0,
-      "percent": 80.5
+      "percent": 81.2
     },
     "tests": {
-      "unit": 658,
+      "unit": 661,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 271,
+      "negative_cases": 273,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "9a781ac Assert a step's NamespaceFeatureMember where the grammar puts one",
+      "63a27f3 Read KerML type featuring parts, `featured by`, on feature declarations",
       "f0d3e19 Read the owned cross feature of a KerML end feature; FeaturePrefix is whole",
       "6dbc5a8 Read a keywordless KerML feature declared by its specialization alone",
       "3f33afd Read KerML steps, and site the Step deviation where it admits text",
       "16f2ed7 Stop rejecting KerML steps by absence: the next commit reads them",
       "a6f42e3 Read KerML prefix metadata, on types, features, packages and dependencies",
-      "83d793a Stop rejecting KerML prefix metadata on packages and dependencies by absence",
-      "e0eb6de Stop rejecting KerML prefix metadata by absence: the next commit reads it",
-      "1c27fd4 Close the session: KerML type relationship and conjugation parts recorded, prefix metadata next"
+      "83d793a Stop rejecting KerML prefix metadata on packages and dependencies by absence"
     ]
   },
   "authored": {
