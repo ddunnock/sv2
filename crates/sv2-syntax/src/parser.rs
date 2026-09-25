@@ -176,6 +176,23 @@ const NON_FEATURE_CHAIN_PRIMARY_ARGUMENT: [SyntaxKind; 3] = [
 /// other keyword; this is only the list of which ones the production names.
 const VISIBILITY: [&str; 3] = ["public", "private", "protected"];
 
+/// The reserved words a `KerML` `FeaturePrefix` stands before, one per `FeatureElement`
+/// but `Feature`'s keywordless alternative (`KerML` 8.2.3.4.3, 8.2.4.3.1, 8.2.5): the
+/// keyword that ends an `end` feature's `OwnedCrossFeatureMember`
+/// (`skip_kerml_end_feature_prefix`). Listed whether implemented or not, since the
+/// cross feature ends at one either way.
+const KERML_FEATURE_ELEMENT_KEYWORDS: [&str; 9] = [
+    "feature",
+    "step",
+    "expr",
+    "bool",
+    "inv",
+    "connector",
+    "binding",
+    "succession",
+    "flow",
+];
+
 // -- the precedence table, KerML 8.2.5.8.1 table 6 -------------------------------
 //
 // PRECEDENCE IS NOT IN THE GRAMMAR AND CANNOT BE. KerML 8.2.5.8.1 note 2 states that
@@ -2279,14 +2296,6 @@ impl<'a> Parser<'a> {
     //     isEnd ?= 'end' ( ownedRelationship += OwnedCrossFeatureMember )?
     //                                                                (SysML 8.2.2.6.2)
     //
-    // production: OwnedCrossFeature@sysml
-    //
-    // OwnedCrossFeature : ReferenceUsage = BasicUsagePrefix UsageDeclaration
-    //                                                                (SysML 8.2.2.6.2)
-    //
-    // OwnedCrossFeatureMember is NOT marked: it is a shared unit, and KerML's
-    // OwnedCrossFeature (BasicFeaturePrefix FeatureDeclaration) is unimplemented.
-    //
     // "End features are declared as usages (see 7.6.3), prefixed by the keyword end"
     // (7.13.2, receipt 5a3a8867). The cross feature is present when anything stands
     // between `end` and the kind keyword; see `skip_end_usage_prefix`. Its BasicUsagePrefix
@@ -2297,14 +2306,52 @@ impl<'a> Parser<'a> {
         self.start_node(SyntaxKind::EndUsagePrefix);
         self.expect_keyword("end");
         if cross {
-            self.eat_trivia();
-            self.start_node(SyntaxKind::OwnedCrossFeatureMember);
-            self.start_node(SyntaxKind::OwnedCrossFeature);
-            self.basic_usage_prefix();
-            self.usage_declaration();
-            self.finish_node();
-            self.finish_node();
+            self.owned_cross_feature_member();
         }
+        self.finish_node();
+    }
+
+    // production: OwnedCrossFeatureMember
+    //
+    // OwnedCrossFeatureMember : OwningMembership =
+    //     ownedRelatedElement += OwnedCrossFeature     (SysML 8.2.2.6.2, KerML 8.2.4.3.1)
+    //
+    // production: OwnedCrossFeature@sysml
+    //
+    // OwnedCrossFeature : ReferenceUsage = BasicUsagePrefix UsageDeclaration
+    //                                                                (SysML 8.2.2.6.2)
+    //
+    // production: OwnedCrossFeature@kerml
+    //
+    // OwnedCrossFeature : Feature = BasicFeaturePrefix FeatureDeclaration
+    //                                                                (KerML 8.2.4.3.1)
+    //
+    // One shared member over each language's own feature: SysML's is a ReferenceUsage
+    // declared as a usage, KerML's a Feature declared as one. The caller has already
+    // found the kind keyword after it (`skip_end_usage_prefix`,
+    // `skip_kerml_end_feature_prefix`), so this reads what stands before it.
+    fn owned_cross_feature_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OwnedCrossFeatureMember);
+        self.start_node(SyntaxKind::OwnedCrossFeature);
+        match self.language {
+            Language::SysMl => {
+                self.basic_usage_prefix();
+                self.usage_declaration();
+            }
+            Language::KerMl => {
+                // The declaration is required, and `feature_declaration` reads an empty
+                // FeatureSpecializationPart rather than report one, so it is asked first:
+                // `end derived feature y;` is a prefix with nothing it declares.
+                self.basic_feature_prefix();
+                if self.at_feature_declaration() {
+                    self.feature_declaration();
+                } else {
+                    self.error_expected("the end feature's cross feature declaration");
+                }
+            }
+        }
+        self.finish_node();
         self.finish_node();
     }
 
@@ -3130,24 +3177,59 @@ impl<'a> Parser<'a> {
     /// The index just past a `FeaturePrefix` written from the `n`th token.
     ///
     /// `FeaturePrefix = ( EndFeaturePrefix OwnedCrossFeatureMember? | BasicFeaturePrefix )
-    /// PrefixMetadataMember*` (`KerML` 8.2.4.3.1). `OwnedCrossFeatureMember` is not looked
-    /// past: it is unimplemented, and leaving it to the enclosing body's recovery reports
-    /// it. The `PrefixMetadataMember`s are.
+    /// PrefixMetadataMember*` (`KerML` 8.2.4.3.1), every part looked past.
     fn skip_feature_prefix(&self, n: usize) -> usize {
         self.skip_prefix_metadata(self.skip_feature_prefix_keywords(n))
     }
 
-    /// The index just past a `FeaturePrefix`'s keywords, its `EndFeaturePrefix` or
-    /// `BasicFeaturePrefix`, before any `#`.
+    /// The index just past a `FeaturePrefix`'s keywords, its `EndFeaturePrefix` with any
+    /// `OwnedCrossFeatureMember` or its `BasicFeaturePrefix`, before any `#`.
     fn skip_feature_prefix_keywords(&self, n: usize) -> usize {
         // EndFeaturePrefix = 'const'? 'end'. Tried first: it may open with `const`,
         // which is also BasicFeaturePrefix's last slot, and only the `end` tells them
         // apart.
         let end = n + usize::from(self.nth_is_keyword(n, "const"));
         if self.nth_is_keyword(end, "end") {
-            return end + 1;
+            return self.skip_kerml_end_feature_prefix(end).unwrap_or(end + 1);
         }
         self.skip_basic_feature_prefix(n)
+    }
+
+    /// The index of the element's keyword (or first `#`) after a `KerML` `end` at the
+    /// `end`th token, or `None` when neither follows before the statement's `;`, brace,
+    /// `=` or `:=`.
+    ///
+    /// `FeaturePrefix = EndFeaturePrefix OwnedCrossFeatureMember? ...` (`KerML` 8.2.4.3.1),
+    /// and, as `SysML`'s end usages have it, the cross feature is everything between the
+    /// `end` and the element's keyword: a `BasicFeaturePrefix FeatureDeclaration`, which
+    /// writes no reserved word that begins a `FeatureElement`, and no `#`, `;`, brace or
+    /// value. So a keyword found is the one the prefix stands before, and the cross
+    /// feature is present when anything stands between. With none found the `end` is the
+    /// keywordless `Feature`'s `EndFeaturePrefix`, whose declaration is not a cross
+    /// feature: `end f : T;`.
+    fn skip_kerml_end_feature_prefix(&self, end: usize) -> Option<usize> {
+        let mut k = end + 1;
+        loop {
+            let token = self.peek_nth(k)?;
+            if matches!(
+                token.kind,
+                SyntaxKind::Semicolon
+                    | SyntaxKind::LBrace
+                    | SyntaxKind::RBrace
+                    | SyntaxKind::Eq
+                    | SyntaxKind::ColonEq
+            ) {
+                return None;
+            }
+            if token.kind == SyntaxKind::Hash
+                || KERML_FEATURE_ELEMENT_KEYWORDS
+                    .iter()
+                    .any(|word| self.nth_is_keyword(k, word))
+            {
+                return Some(k);
+            }
+            k += 1;
+        }
     }
 
     /// The index just past a `BasicFeaturePrefix` written from the `n`th token.
@@ -3176,8 +3258,13 @@ impl<'a> Parser<'a> {
     //     | BasicFeaturePrefix ) ownedRelationship += PrefixMetadataMember*
     //                                                            (KerML 8.2.4.3.1)
     //
-    // NOT marked: OwnedCrossFeatureMember is unimplemented. The node is built even when
-    // empty, as MemberPrefix's is.
+    // production: FeaturePrefix@kerml
+    //
+    // Every part read. The OwnedCrossFeatureMember is present when anything stands between
+    // the `end` and the element's keyword (`skip_kerml_end_feature_prefix`): `end [0..1]
+    // feature cart: ShoppingCart[1];` (Association Examples/ProductSelection_N_ary.kerml:9)
+    // crosses by the multiplicity alone. The node is built even when empty, as
+    // MemberPrefix's is.
     //
     // The PrefixMetadataMember* is read, all but one case: Feature writes `( 'feature' |
     // PrefixMetadataMember )` after this prefix, so in `#A #B f;` the `#B` is Feature's,
@@ -3190,7 +3277,14 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::FeaturePrefix);
         if self.at_end_feature_prefix() {
+            let end = usize::from(self.at_keyword("const"));
+            let cross = self
+                .skip_kerml_end_feature_prefix(end)
+                .is_some_and(|keyword| keyword > end + 1);
             self.end_feature_prefix();
+            if cross {
+                self.owned_cross_feature_member();
+            }
         } else {
             self.basic_feature_prefix();
         }
@@ -3392,9 +3486,7 @@ impl<'a> Parser<'a> {
     // UsagePrefix and UsageDeclaration, and a .sysml file never reaches this (ADR-0014).
     // The two share ConnectorEndMember and nothing else, so the Rust name is scoped too.
     //
-    // Marked although FeaturePrefix is not: this production's own four parts are read,
-    // and FeaturePrefix's two gaps (OwnedCrossFeatureMember, PrefixMetadataMember) are
-    // Feature's as much as this one's.
+    // FeaturePrefix is read whole (`feature_prefix`), as this production's own parts are.
     //
     // implied specialization: Occurrences::happensBeforeLinks
     // constraint: Succession::checkSuccessionSpecialization

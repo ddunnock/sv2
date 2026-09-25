@@ -1558,6 +1558,68 @@ fn a_keywordless_feature_still_needs_its_declaration() {
     kerml_rejected("class C { portion; }");
 }
 
+// -- the owned cross feature of an end feature, KerML 8.2.4.3.1 ---------------------
+//
+//   FeaturePrefix           = ( EndFeaturePrefix OwnedCrossFeatureMember?
+//                             | BasicFeaturePrefix ) PrefixMetadataMember*
+//   OwnedCrossFeatureMember = OwnedCrossFeature
+//   OwnedCrossFeature       = BasicFeaturePrefix FeatureDeclaration
+
+#[test]
+fn an_end_feature_may_own_a_cross_feature() {
+    // Association Examples/ProductSelection_N_ary.kerml:9: the cross feature is the
+    // multiplicity between `end` and `feature`.
+    let tree = render(
+        &kerml_accepted("assoc A {\n\tend [0..1] feature cart: ShoppingCart[1];\n}").syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "FeaturePrefix"),
+        ["EndFeaturePrefix", "OwnedCrossFeatureMember"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "OwnedCrossFeatureMember"),
+        ["OwnedCrossFeature"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "OwnedCrossFeature"),
+        ["BasicFeaturePrefix", "FeatureDeclaration"],
+        "{tree}"
+    );
+    // Simple Tests/Associations.kerml:6, a named cross feature; and Massed Thing
+    // Example/MassedThings.kerml:10, after a visibility.
+    kerml_accepted("assoc A { end x_cross [1..1] feature x : X; }");
+    kerml_accepted("assoc A { public end [0..1] feature assembly: MassedThing; }");
+    // Its own BasicFeaturePrefix, and the other FeatureElements' keywords and a `#`
+    // after it: FeaturePrefix is theirs too (8.2.5.5.1, 8.2.5.6.2).
+    kerml_accepted("assoc A { const end derived x : T feature y; }");
+    kerml_accepted("assoc A { end x step s; }");
+    kerml_accepted("assoc A { end x #M feature y; }");
+    // With nothing between `end` and the keyword there is no cross feature, and with no
+    // keyword the `end` is the keywordless Feature's EndFeaturePrefix, whose declaration
+    // follows it directly.
+    let plain = render(&kerml_accepted("assoc A { end feature f; }").syntax());
+    assert!(!has_node(&plain, "OwnedCrossFeatureMember"), "{plain}");
+    let keywordless = render(&kerml_accepted("assoc A { end f : T; }").syntax());
+    assert!(
+        !has_node(&keywordless, "OwnedCrossFeatureMember"),
+        "{keywordless}"
+    );
+}
+
+#[test]
+fn an_owned_cross_feature_is_bounded_by_its_rules() {
+    // A cross feature is a BasicFeaturePrefix AND a FeatureDeclaration: a prefix alone is
+    // none. EndFeaturePrefix is `'const'? 'end'` and writes no `derived`, so the word
+    // can only open a cross feature that then declares nothing. Held as a file by
+    // tests/rejection/kerml-owned-cross-feature-needs-a-declaration.kerml.
+    kerml_rejected("assoc A { end derived feature y; }");
+    // `const` is EndFeaturePrefix's before `end`, and the cross feature's own after it;
+    // it is not both at once before the `end`.
+    kerml_rejected("assoc A { const const end feature y; }");
+}
+
 // -- Step, KerML 8.2.5.6.2 ---------------------------------------------------------
 //
 //   Step = FeaturePrefix 'step' FeatureDeclaration ValuePart? TypeBody
