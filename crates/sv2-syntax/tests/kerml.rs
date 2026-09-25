@@ -1620,6 +1620,90 @@ fn an_owned_cross_feature_is_bounded_by_its_rules() {
     kerml_rejected("assoc A { const const end feature y; }");
 }
 
+// -- TypeFeaturingPart, KerML 8.2.4.3.1 ---------------------------------------------
+//
+//   TypeFeaturingPart  = 'featured' 'by' OwnedTypeFeaturing ( ',' OwnedTypeFeaturing )*
+//   OwnedTypeFeaturing = featuringType = [QualifiedName]        (8.2.4.3.7)
+
+#[test]
+fn a_feature_takes_a_type_featuring_part() {
+    // Variable Feature Examples/Enhancements/Moments.kerml:36-38, after a
+    // FeatureSpecializationPart whose subsetting names two features.
+    let tree = render(
+        &kerml_accepted(
+            "package P {\n\tfeature coincidentUEPortion : Occurrence [1] subsets \
+             spaceTimeCoincidentOccurrences,\n\t\tuniversalEternity.portions\n\t\tfeatured by \
+             Occurrence;\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "FeatureDeclaration"),
+        [
+            "FeatureIdentification",
+            "FeatureSpecializationPart",
+            "TypeFeaturingPart"
+        ],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "TypeFeaturingPart"),
+        ["KwFeatured", "KwBy", "OwnedTypeFeaturing"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "OwnedTypeFeaturing"),
+        ["QualifiedName"],
+        "{tree}"
+    );
+    // More than one featuring type, a qualified one: `featured by CC1::t::t1::startShot`
+    // (Variable Feature Examples/TimeVaryingFeatures.kerml).
+    let two = render(&kerml_accepted("feature x featured by A, CC1::t::t1::startShot;").syntax());
+    assert_eq!(
+        child_kinds(&two, "TypeFeaturingPart"),
+        [
+            "KwFeatured",
+            "KwBy",
+            "OwnedTypeFeaturing",
+            "Comma",
+            "OwnedTypeFeaturing"
+        ],
+        "{two}"
+    );
+    // FeatureRelationshipPart* takes its parts in any order and number (8.2.4.3.1).
+    kerml_accepted("feature f featured by A unions b, c featured by B;");
+    kerml_accepted("feature f unions b featured by A = 0;");
+    // Every FeatureDeclaration ends in the parts, a binary connector's before its `from`
+    // too (8.2.5.5.1): the text of the commented-out Variable Feature
+    // Examples/Enhancements/TimeVaryingFeaturesEnhanced.kerml:98, less its `member`.
+    let connector = render(
+        &kerml_accepted(
+            "struct Car { connector drive featured by Car_snapshots from engine to transmission; }",
+        )
+        .syntax(),
+    );
+    assert!(
+        has_node(&connector, "BinaryConnectorDeclaration"),
+        "{connector}"
+    );
+    assert!(has_node(&connector, "TypeFeaturingPart"), "{connector}");
+}
+
+#[test]
+fn a_type_featuring_part_is_bounded_by_its_rules() {
+    // `featured` alone is not the part: `'featured' 'by'`.
+    kerml_rejected("feature f featured A;");
+    // OwnedTypeFeaturing names its featuring type by QualifiedName alone: unlike the
+    // relationship parts, it has no feature chain alternative (8.2.4.3.7). Held as a
+    // file by tests/rejection/kerml-owned-type-featuring-names-a-qualified-name.kerml.
+    kerml_rejected("feature f featured by a.b;");
+    kerml_rejected("feature f featured by;");
+    // A feature's part, not a classifier's: ClassifierDeclaration ends in
+    // TypeRelationshipPart*, which does not reach it (8.2.4.2.1). Held as a file by
+    // tests/rejection/kerml-type-featuring-part-is-a-feature-s.kerml.
+    kerml_rejected("class C featured by D;");
+}
+
 // -- Step, KerML 8.2.5.6.2 ---------------------------------------------------------
 //
 //   Step = FeaturePrefix 'step' FeatureDeclaration ValuePart? TypeBody

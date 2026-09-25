@@ -3,7 +3,6 @@
 // four alternatives.
 // KerML 8.2.4.3.1 — FeatureRelationshipPart = TypeRelationshipPart | ChainingPart
 //                                           | InvertingPart | TypeFeaturingPart
-// TypeRelationshipPart, the one a classifier shares, is read; ChainingPart,
-// InvertingPart and TypeFeaturingPart are a feature's alone. Remove this case when
-// ChainingPart lands.
+// TypeRelationshipPart and TypeFeaturingPart are read; ChainingPart and InvertingPart
+// are not. Remove this case when ChainingPart lands.
 feature f chains a.b;

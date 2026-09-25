@@ -3383,9 +3383,9 @@ impl<'a> Parser<'a> {
     //     FeatureRelationshipPart*                                (KerML 8.2.4.3.1)
     //
     // NOT marked for coverage. FeatureRelationshipPart is unimplemented: of its four
-    // alternatives only TypeRelationshipPart, the one a classifier shares, is read, and
-    // ChainingPart, InvertingPart and TypeFeaturingPart are not. Each is held by a case in
-    // tests/rejection/. All three alternatives of the group before it are read.
+    // alternatives TypeRelationshipPart and TypeFeaturingPart are read, and ChainingPart
+    // and InvertingPart are not. Each is held by a case in tests/rejection/. All three
+    // alternatives of the group before it are read.
     //
     // A specialization OR a conjugation, never both: a conjugated type "may not also be
     // the specific Type in any Specialization" (KerML 8.3.3.1.2, receipt eabb0d9b), and a
@@ -3407,7 +3407,7 @@ impl<'a> Parser<'a> {
         } else {
             self.feature_specialization_part();
         }
-        self.type_relationship_parts();
+        self.feature_relationship_parts();
         self.finish_node();
     }
 
@@ -14242,27 +14242,95 @@ impl<'a> Parser<'a> {
     //     target parses and carries its diagnostic downstream (ADR-0002). No implied
     //     specialization attaches to any of the four relationships.
     fn type_relationship_parts(&mut self) {
-        loop {
-            if self.at_keyword("disjoint") {
-                self.disjoining_part();
-            } else if self.at_keyword("unions") {
-                self.relationship_part(SyntaxKind::UnioningPart, "unions", SyntaxKind::Unioning);
-            } else if self.at_keyword("intersects") {
-                self.relationship_part(
-                    SyntaxKind::IntersectingPart,
-                    "intersects",
-                    SyntaxKind::Intersecting,
-                );
-            } else if self.at_keyword("differences") {
-                self.relationship_part(
-                    SyntaxKind::DifferencingPart,
-                    "differences",
-                    SyntaxKind::Differencing,
-                );
-            } else {
-                return;
-            }
+        while self.type_relationship_part() {}
+    }
+
+    /// One `TypeRelationshipPart`, if one is written here. Returns whether it was.
+    fn type_relationship_part(&mut self) -> bool {
+        if self.at_keyword("disjoint") {
+            self.disjoining_part();
+        } else if self.at_keyword("unions") {
+            self.relationship_part(SyntaxKind::UnioningPart, "unions", SyntaxKind::Unioning);
+        } else if self.at_keyword("intersects") {
+            self.relationship_part(
+                SyntaxKind::IntersectingPart,
+                "intersects",
+                SyntaxKind::Intersecting,
+            );
+        } else if self.at_keyword("differences") {
+            self.relationship_part(
+                SyntaxKind::DifferencingPart,
+                "differences",
+                SyntaxKind::Differencing,
+            );
+        } else {
+            return false;
         }
+        true
+    }
+
+    // FeatureRelationshipPart : Feature =
+    //     TypeRelationshipPart | ChainingPart | InvertingPart | TypeFeaturingPart
+    //                                                            (KerML 8.2.4.3.1)
+    //
+    // `FeatureRelationshipPart*`, the end of a FeatureDeclaration. NOT marked: of its four
+    // alternatives TypeRelationshipPart and TypeFeaturingPart are read, and ChainingPart
+    // (`chains`) and InvertingPart (`inverse of`) are not, and are reported. The four
+    // open on four reserved words, so one token chooses, and the star takes them in any
+    // order and number: `feature f featured by A unions b featured by B;`.
+    fn feature_relationship_parts(&mut self) {
+        loop {
+            if self.type_relationship_part() {
+                continue;
+            }
+            if self.at_keyword("featured") {
+                self.type_featuring_part();
+                continue;
+            }
+            return;
+        }
+    }
+
+    // production: TypeFeaturingPart@kerml
+    //
+    // TypeFeaturingPart : Feature =
+    //     'featured' 'by' ownedRelationship += OwnedTypeFeaturing
+    //     ( ',' ownedTypeFeaturing += OwnedTypeFeaturing )*        (KerML 8.2.4.3.1)
+    //
+    // The clause names the repeated slot `ownedTypeFeaturing` and the first
+    // `ownedRelationship`; the Pilot writes `ownedRelationship` for both, and the text is
+    // the same either way. Each is a TypeFeaturing (8.3.3.3.11, receipt 8e4c93c3) whose
+    // featureOfType is the declared feature: `featured by Occurrence` (Variable Feature
+    // Examples/Enhancements/Moments.kerml:38).
+    //
+    // production: OwnedTypeFeaturing@kerml
+    //
+    // OwnedTypeFeaturing : TypeFeaturing =
+    //     featuringType = [QualifiedName]                          (KerML 8.2.4.3.7)
+    //
+    // A name only: unlike the relationship parts' targets (8.2.4.1.4, 8.2.4.1.5), no
+    // feature chain, so `featured by a.b` is reported.
+    //
+    // constraint: Feature::deriveFeatureOwnedTypeFeaturing and deriveFeatureFeaturingType
+    //     (KerML 8.3.3.3.4). Derivations, sv2-resolve's.
+    fn type_featuring_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TypeFeaturingPart);
+        self.expect_keyword("featured");
+        self.expect_keyword("by");
+        self.owned_type_featuring();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.owned_type_featuring();
+        }
+        self.finish_node();
+    }
+
+    fn owned_type_featuring(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OwnedTypeFeaturing);
+        self.qualified_name();
+        self.finish_node();
     }
 
     // production: DisjoiningPart@kerml

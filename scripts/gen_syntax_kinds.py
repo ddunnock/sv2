@@ -185,6 +185,13 @@ NODES = [
         "OwnedConjugation",
         "`originalType = [QualifiedName] | FeatureChain`. `KerML` 8.2.4.1.3.",
     ),
+    # A feature's TypeFeaturingPart and the TypeFeaturing each target is. KerML 8.2.4.3.1,
+    # 8.2.4.3.7.
+    (
+        "TypeFeaturingPart",
+        "`'featured' 'by' OwnedTypeFeaturing ( ',' OwnedTypeFeaturing )*`. `KerML` 8.2.4.3.1.",
+    ),
+    ("OwnedTypeFeaturing", "`featuringType = [QualifiedName]`. `KerML` 8.2.4.3.7."),
     # TypeRelationshipPart's four alternatives, and the relationship each owns. The
     # alternation itself builds no node; the part says which. KerML 8.2.4.1.1, 8.2.4.1.4,
     # 8.2.4.1.5.
