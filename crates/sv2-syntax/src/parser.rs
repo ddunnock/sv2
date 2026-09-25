@@ -2065,9 +2065,9 @@ impl<'a> Parser<'a> {
     ///
     /// Of `NonFeatureElement`, `Package` and `LibraryPackage` — shared units, the same
     /// productions in both grammars — and the eight classifiers of 8.2.4.2 are implemented. Of
-    /// `FeatureElement`'s ten alternatives, `Feature`, `Connector`, `BindingConnector` and
-    /// `Succession` are. The rest (`step`, `flow`, `succession flow`, …) are reported
-    /// rather than read.
+    /// `FeatureElement`'s ten alternatives, `Feature`, `Step`, `Connector`,
+    /// `BindingConnector` and `Succession` are. The rest (`expr`, `inv`, `flow`,
+    /// `succession flow`, …) are reported rather than read.
     ///
     /// This is the check that stops a `SysML` construct being read out of a `KerML`
     /// file. `part def` is not reachable from `NamespaceBodyElement`, so a `.kerml` file
@@ -2091,6 +2091,7 @@ impl<'a> Parser<'a> {
                     || self.at_kerml_succession(n)
                     || self.at_kerml_binding_connector(n)
                     || self.at_kerml_connector(n)
+                    || self.at_kerml_step(n)
             }
             Language::SysMl => {
                 self.at_sysml_keyword_member(n)
@@ -2625,7 +2626,8 @@ impl<'a> Parser<'a> {
             && (self.at_feature(usize::from(self.at_visibility()))
                 || self.at_kerml_succession(usize::from(self.at_visibility()))
                 || self.at_kerml_binding_connector(usize::from(self.at_visibility()))
-                || self.at_kerml_connector(usize::from(self.at_visibility())))
+                || self.at_kerml_connector(usize::from(self.at_visibility()))
+                || self.at_kerml_step(usize::from(self.at_visibility())))
         {
             // NamespaceMember = NonFeatureMember | NamespaceFeatureMember
             // (KerML 8.2.3.4.1). A feature is owned through the second, so it gets
@@ -2880,6 +2882,7 @@ impl<'a> Parser<'a> {
                         || self.at_kerml_succession(0)
                         || self.at_kerml_binding_connector(0)
                         || self.at_kerml_connector(0)
+                        || self.at_kerml_step(0)
                 }
                 Language::SysMl => {
                     self.at_definition_element(0)
@@ -3347,10 +3350,9 @@ impl<'a> Parser<'a> {
     //
     // FeatureElement's ten alternatives are Feature, Step, Expression,
     // BooleanExpression, Invariant, Connector, BindingConnector, Succession, Flow and
-    // SuccessionFlow. Four are implemented, Feature, Connector, BindingConnector and
-    // Succession; the
-    // member itself is, which is what this marks, exactly as NonFeatureMember marks its own
-    // shape rather than MemberElement's alternatives.
+    // SuccessionFlow. Five are implemented, Feature, Step, Connector, BindingConnector
+    // and Succession; the member itself is, which is what this marks, exactly as
+    // NonFeatureMember marks its own shape rather than MemberElement's alternatives.
     fn namespace_feature_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::NamespaceFeatureMember);
@@ -3361,6 +3363,8 @@ impl<'a> Parser<'a> {
             self.kerml_binding_connector();
         } else if self.at_kerml_connector(0) {
             self.kerml_connector();
+        } else if self.at_kerml_step(0) {
+            self.kerml_step();
         } else {
             self.feature();
         }
@@ -3457,6 +3461,59 @@ impl<'a> Parser<'a> {
                 self.connector_end_member();
             }
         }
+        self.finish_node();
+    }
+
+    /// Whether a `KerML` `Step` starts at the `n`th meaningful token.
+    ///
+    /// A `FeaturePrefix`, then `step`, reserved (`KerML` 8.2.2.6) and opening no other
+    /// production, so it decides on its own.
+    fn at_kerml_step(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_feature_prefix(n), "step")
+    }
+
+    // production: Step@kerml
+    //
+    // Step : Step =
+    //     FeaturePrefix
+    //     'step' FeatureDeclaration ValuePart?
+    //     TypeBody                                                (KerML 8.2.5.6.2)
+    //
+    // Scoped `kerml`: SysML has no `step`; its steps are ActionUsages (SysML 8.2.2.17),
+    // and a .sysml file never reaches this (ADR-0014). The metaclass is Step (8.3.4.6.3,
+    // receipt 873de1f5), a Feature typed by Behaviors, so the shape is Feature's first
+    // alternative with its own keyword: `step paint : Paint [1];` (KerML Spec Annex A
+    // Examples/A-3-6-Sequences.kerml:8).
+    //
+    // The FeatureDeclaration is optional here although the clause writes it bare: deviation
+    // Step (follow_xtext), extrapolated from Expression's KERML11-181 and from Connector's
+    // written `FeatureDeclaration?` (8.2.5.5.1). So `step;` parses, and carries a
+    // PARSE-DEVIATION note, since only the deviation admits it (ADR-0022).
+    //
+    // Marked although FeaturePrefix and FeatureDeclaration are not, as Connector is.
+    //
+    // implied specialization: Performances::performances, and
+    //     Performance::enclosedPerformance, Performance::subperformance or
+    //     Object::ownedPerformance by the step's owner
+    // constraint: Step::checkStepSpecialization, checkStepEnclosedPerformanceSpecialization,
+    //     checkStepSubperformanceSpecialization and checkStepOwnedPerformanceSpecialization
+    //     (KerML 8.3.4.6.3, receipt 873de1f5; semantics 8.4.4.7.2, receipt 390500e6).
+    //     Injections, so sv2-hir's; this layer builds the tree only (ADR-0002).
+    fn kerml_step(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Step);
+        self.feature_prefix();
+        self.expect_keyword("step");
+        if self.at_feature_declaration() {
+            self.feature_declaration();
+        } else {
+            // deviation: Step
+            self.note_deviation("Step", "a step with no declaration");
+        }
+        if self.at_value_part() {
+            self.value_part();
+        }
+        self.type_body();
         self.finish_node();
     }
 
@@ -13670,6 +13727,8 @@ impl<'a> Parser<'a> {
             self.kerml_binding_connector();
         } else if self.at_kerml_connector(0) {
             self.kerml_connector();
+        } else if self.at_kerml_step(0) {
+            self.kerml_step();
         } else if self.at_feature(0) {
             self.feature();
         } else {

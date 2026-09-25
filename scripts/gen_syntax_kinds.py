@@ -252,6 +252,11 @@ NODES = [
             "whose parts are both optional. A feature declaration must name something."
         ),
     ),
+    # KerML's Step, a Feature typed by Behaviors.
+    (
+        "Step",
+        "`FeaturePrefix 'step' FeatureDeclaration ValuePart? TypeBody`. `KerML` 8.2.5.6.2.",
+    ),
     # KerML's Connector, over its three declaration forms: a bare FeatureDeclaration and
     # value, the binary `from ... to ...`, and the n-ary parenthesised list. The
     # ConnectorDeclaration alternation between the last two builds no node.

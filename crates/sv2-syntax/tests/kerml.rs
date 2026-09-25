@@ -19,8 +19,9 @@
 //! Of `NonFeatureElement`'s alternatives, `Package`, `Dependency` and the eight
 //! classifiers of `KerML` 8.2.4.2 are implemented. `Package` is a shared unit — the same
 //! production in both grammars — `Dependency` is stated in each, and the classifiers are
-//! `KerML`'s alone. Of `FeatureElement`'s ten alternatives, `Feature`, `Succession` and
-//! `BindingConnector` are implemented; the other seven are not, nor are `Type`,
+//! `KerML`'s alone. Of `FeatureElement`'s ten alternatives, `Feature`, `Step`,
+//! `Connector`, `BindingConnector` and `Succession` are implemented; the other five are
+//! not, nor are `Type`,
 //! `Function` and `Predicate`, and the cases below say so rather than pretending they
 //! parse.
 
@@ -1507,6 +1508,78 @@ fn prefix_metadata_is_bounded_by_its_rules() {
     kerml_rejected("class C { #; }");
     // FeatureElements this parser does not read stay reported with a `#` before them.
     kerml_rejected("#M inv { true }");
+}
+
+// -- Step, KerML 8.2.5.6.2 ---------------------------------------------------------
+//
+//   Step = FeaturePrefix 'step' FeatureDeclaration ValuePart? TypeBody
+//   (FeatureDeclaration? by deviation Step, follow_xtext)
+
+#[test]
+fn a_step_is_a_feature_element() {
+    // KerML Spec Annex A Examples/A-3-6-Sequences.kerml:8, in a behavior's body.
+    let tree = render(&kerml_accepted("behavior B {\n\tstep paint : Paint [1];\n}").syntax());
+    assert_eq!(
+        child_kinds(&tree, "NamespaceFeatureMember"),
+        ["MemberPrefix", "Step"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "Step"),
+        ["FeaturePrefix", "KwStep", "FeatureDeclaration", "TypeBody"],
+        "{tree}"
+    );
+    // A-3-8-ChangingFeatureValues.kerml:12, with a body; and the declaration that is a
+    // FeatureSpecializationPart alone, `step redefines paint : MyPaint {` (A-3-8:155),
+    // here with the `;` TypeBody.
+    kerml_accepted("behavior B { step paint : Paint [1] { in x; } }");
+    kerml_accepted("behavior B { step redefines paint : MyPaint { } }");
+    kerml_accepted("behavior B { step redefines paint : MyPaint; }");
+    // Behavior Examples/TakePicture.kerml:11, no space before the `:`.
+    kerml_accepted("behavior TakePicture { step step1: Focus[1]; }");
+    // A FeaturePrefix and a ValuePart (8.2.5.6.2), and prefix metadata before the
+    // keyword: `#command step previousAction[1];` (7.4.13, receipt 5e755297).
+    kerml_accepted("in step s : S = t;");
+    kerml_accepted("#command step previousAction[1];");
+    // A step is a member of a namespace too, not only of a behavior (8.2.3.4.1).
+    kerml_accepted("package P { step s; }");
+}
+
+#[test]
+fn a_step_without_a_declaration_is_admitted_by_deviation() {
+    // The clause writes FeatureDeclaration without `?`; deviation Step (follow_xtext)
+    // makes it optional, as Connector's is (8.2.5.5.1). The text parses and carries a
+    // PARSE-DEVIATION note naming the entry (ADR-0022).
+    let parsed = kerml_accepted("behavior B { step; }");
+    let notes: Vec<String> = parsed
+        .deviations()
+        .iter()
+        .map(|d| d.message().to_owned())
+        .collect();
+    assert_eq!(notes.len(), 1, "{notes:?}");
+    assert!(notes[0].contains("deviation Step"), "{notes:?}");
+    // A declared step is the specification's, and carries none.
+    assert!(
+        kerml_accepted("behavior B { step s; }")
+            .deviations()
+            .is_empty()
+    );
+}
+
+#[test]
+fn a_step_is_bounded_by_its_rules() {
+    // TypeBody is not optional. Held as a file by
+    // tests/rejection/kerml-step-needs-a-type-body.kerml.
+    kerml_rejected("behavior B { step s : S }");
+    // The FeaturePrefix comes before `step`, never after it.
+    kerml_rejected("behavior B { step in s; }");
+    // SysML has no `step`: its steps are action usages (SysML 8.2.2.17). Held as a file
+    // by tests/rejection/step-is-not-sysml.sysml.
+    assert!(
+        !parse("action def A { step s; }", Language::SysMl)
+            .errors()
+            .is_empty()
+    );
 }
 
 // -- the invariants, under this grammar too ---------------------------------------

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-25T13:05:40Z",
+    "regenerated_utc": "2026-09-25T13:46:05Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 440,
-      "unimplemented": 114,
+      "implemented": 441,
+      "unimplemented": 113,
       "absent": 0,
-      "percent": 79.4
+      "percent": 79.6
     },
     "tests": {
-      "unit": 649,
+      "unit": 652,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 265,
+      "negative_cases": 267,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "16f2ed7 Stop rejecting KerML steps by absence: the next commit reads them",
+      "a6f42e3 Read KerML prefix metadata, on types, features, packages and dependencies",
       "83d793a Stop rejecting KerML prefix metadata on packages and dependencies by absence",
       "e0eb6de Stop rejecting KerML prefix metadata by absence: the next commit reads it",
       "1c27fd4 Close the session: KerML type relationship and conjugation parts recorded, prefix metadata next",
       "25e76b3 Read KerML conjugation parts; ClassifierDeclaration is whole",
       "c76a452 Stop rejecting KerML conjugation parts by absence: the next commit reads them",
-      "5c5051a Read KerML type relationship parts, on classifiers and features",
-      "7104086 Stop rejecting KerML type relationship parts by absence: the next commit reads them",
-      "dcc50c3 Close the session: KerML multiplicity and the KerML connector recorded, the type relationship parts next"
+      "5c5051a Read KerML type relationship parts, on classifiers and features"
     ]
   },
   "authored": {
