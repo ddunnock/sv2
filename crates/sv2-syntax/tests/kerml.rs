@@ -1372,6 +1372,143 @@ fn a_conjugation_part_is_bounded_by_its_rules() {
     );
 }
 
+// -- prefix metadata, KerML 8.2.5.12 ---------------------------------------------
+//
+//   PrefixMetadataMember     = '#' PrefixMetadataFeature
+//   PrefixMetadataAnnotation = '#' PrefixMetadataFeature
+//   PrefixMetadataFeature    = OwnedFeatureTyping
+
+#[test]
+fn a_classifier_takes_prefix_metadata() {
+    // KerML Spec Annex A Examples/A-2-ModelingInstances.kerml:22-23: the `#atom` on the
+    // line before the classifier's keyword, in its TypePrefix (8.2.4.1.1).
+    let tree = render(
+        &kerml_accepted("package P {\n\t#atom\n\tclassifier MyBike specializes Bicycle;\n}")
+            .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "TypePrefix"),
+        ["PrefixMetadataMember"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "PrefixMetadataMember"),
+        ["Hash", "PrefixMetadataFeature"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "PrefixMetadataFeature"),
+        ["OwnedFeatureTyping"],
+        "{tree}"
+    );
+    // KerML's element, not SysML's (ADR-0014).
+    assert!(!has_node(&tree, "PrefixMetadataUsage"), "{tree}");
+    // "It is also possible to include more than one user defined-keyword in a
+    // declaration" (7.4.13, receipt 5e755297), after `abstract`.
+    let two = render(&kerml_accepted("abstract #SecurityRelated #command behavior Save;").syntax());
+    assert_eq!(
+        child_kinds(&two, "TypePrefix"),
+        ["KwAbstract", "PrefixMetadataMember", "PrefixMetadataMember"],
+        "{two}"
+    );
+    // The type is a GeneralType, a name or a feature chain (8.2.4.1.2).
+    kerml_accepted("#Meta::tags.kind struct S;");
+}
+
+#[test]
+fn a_package_and_a_dependency_take_prefix_metadata() {
+    // Package and LibraryPackage own PrefixMetadataMembers (8.2.5.13); Dependency owns
+    // PrefixMetadataAnnotations (8.2.3.2).
+    let package = render(&kerml_accepted("#X package Q;").syntax());
+    assert_eq!(
+        child_kinds(&package, "Package"),
+        ["PrefixMetadataMember", "PackageDeclaration", "PackageBody"],
+        "{package}"
+    );
+    kerml_accepted("library #X package L;");
+    kerml_accepted("package P { #X package Q; }");
+    let dependency = render(&kerml_accepted("#X dependency a to b;").syntax());
+    assert_eq!(
+        child_kinds(&dependency, "PrefixMetadataAnnotation"),
+        ["Hash", "PrefixMetadataFeature"],
+        "{dependency}"
+    );
+}
+
+#[test]
+fn a_feature_takes_prefix_metadata() {
+    // FeaturePrefix ends in PrefixMetadataMember* (8.2.4.3.1): before `feature`, all of
+    // them are the prefix's.
+    let keyword = render(&kerml_accepted("#M feature f;").syntax());
+    assert_eq!(
+        child_kinds(&keyword, "FeaturePrefix"),
+        ["BasicFeaturePrefix", "PrefixMetadataMember"],
+        "{keyword}"
+    );
+    assert_eq!(
+        child_kinds(&keyword, "Feature"),
+        [
+            "FeaturePrefix",
+            "KwFeature",
+            "FeatureDeclaration",
+            "TypeBody"
+        ],
+        "{keyword}"
+    );
+    // Feature = FeaturePrefix ( 'feature' | PrefixMetadataMember ) FeatureDeclaration?
+    // ...: with no keyword the last `#` stands in its place, and the rest are the prefix's.
+    let replaced = render(&kerml_accepted("#A #B f : T;").syntax());
+    assert_eq!(
+        child_kinds(&replaced, "Feature"),
+        [
+            "FeaturePrefix",
+            "PrefixMetadataMember",
+            "FeatureDeclaration",
+            "TypeBody"
+        ],
+        "{replaced}"
+    );
+    assert_eq!(
+        child_kinds(&replaced, "FeaturePrefix"),
+        ["BasicFeaturePrefix", "PrefixMetadataMember"],
+        "{replaced}"
+    );
+    // The declaration is optional there, as after the keyword.
+    let bare = render(&kerml_accepted("class C { #M; }").syntax());
+    assert_eq!(
+        child_kinds(&bare, "Feature"),
+        ["FeaturePrefix", "PrefixMetadataMember", "TypeBody"],
+        "{bare}"
+    );
+    kerml_accepted("#M = 1;");
+    kerml_accepted("#M ~ g;");
+    // After a BasicFeaturePrefix, and before the other FeatureElements' keywords.
+    kerml_accepted("in #M feature x;");
+    kerml_accepted("struct S { #M connector c from a to b; }");
+    kerml_accepted("#M succession s first a then b;");
+    kerml_accepted("#M binding a = b;");
+}
+
+#[test]
+fn prefix_metadata_is_bounded_by_its_rules() {
+    // The `#` follows the prefix keywords, never precedes them: TypePrefix is
+    // `'abstract'? PrefixMetadataMember*` (8.2.4.1.1), FeaturePrefix puts its
+    // PrefixMetadataMember* after the Basic or End prefix (8.2.4.3.1). Held as files by
+    // tests/rejection/kerml-prefix-metadata-follows-abstract.kerml and
+    // kerml-prefix-metadata-follows-feature-direction.kerml.
+    kerml_rejected("#M abstract class C;");
+    kerml_rejected("#M in feature x;");
+    // PrefixMetadataFeature is an OwnedFeatureTyping: a `#` names a type. Held as a file
+    // by tests/rejection/kerml-prefix-metadata-names-a-type.kerml.
+    kerml_rejected("# class C;");
+    kerml_rejected("#1 class C;");
+    // A `#` alone is no feature: the Feature alternative wants a name after it, and a
+    // name is what makes it a PrefixMetadataMember at all.
+    kerml_rejected("class C { #; }");
+    // FeatureElements this parser does not read stay reported with a `#` before them.
+    kerml_rejected("#M step s;");
+}
+
 // -- the invariants, under this grammar too ---------------------------------------
 
 #[test]

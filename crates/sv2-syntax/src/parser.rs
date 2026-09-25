@@ -1551,32 +1551,47 @@ impl<'a> Parser<'a> {
     /// looks past it here and nowhere else. A `#` with no name after it is not looked
     /// past, and the member it would have opened is reported.
     ///
-    /// `SysML` only. `KerML`'s `#` opens `PrefixMetadataFeature` (8.2.5.12), a different
-    /// production and unimplemented, so a `.kerml` file's `#` is still reported.
+    /// Both languages. `KerML`'s `#` is `'#' PrefixMetadataFeature` with
+    /// `PrefixMetadataFeature = OwnedFeatureTyping` and `OwnedFeatureTyping = GeneralType`,
+    /// a `QualifiedName` or an `OwnedFeatureChain` (`KerML` 8.2.5.12, 8.2.4.3.2, 8.2.4.1.2):
+    /// the same text over a different element, so the same walk.
     fn skip_prefix_metadata(&self, n: usize) -> usize {
-        if self.language != Language::SysMl {
-            return n;
-        }
         let mut n = n;
-        while self.nth_is(n, SyntaxKind::Hash) {
-            let Some(mut k) = self.skip_qualified_name(n + 1) else {
-                break;
-            };
-            while self.nth_is(k, SyntaxKind::Dot) {
-                match self.skip_qualified_name(k + 1) {
-                    Some(next) => k = next,
-                    None => break,
-                }
-            }
+        while let Some(k) = self.skip_one_prefix_metadata(n) {
             n = k;
         }
         n
+    }
+
+    /// The index just past ONE `#` prefix metadata written at the `n`th token, if one is:
+    /// see `skip_prefix_metadata`.
+    fn skip_one_prefix_metadata(&self, n: usize) -> Option<usize> {
+        if !self.nth_is(n, SyntaxKind::Hash) {
+            return None;
+        }
+        let mut k = self.skip_qualified_name(n + 1)?;
+        while self.nth_is(k, SyntaxKind::Dot) {
+            match self.skip_qualified_name(k + 1) {
+                Some(next) => k = next,
+                None => break,
+            }
+        }
+        Some(k)
     }
 
     // production: PrefixMetadataMember@sysml
     //
     // PrefixMetadataMember : OwningMembership =
     //     '#' ownedRelatedElement = PrefixMetadataUsage            (SysML 8.2.2.27)
+    //
+    // production: PrefixMetadataMember@kerml
+    //
+    // PrefixMetadataMember : OwningMembership =
+    //     '#' ownedRelatedElement += PrefixMetadataFeature         (KerML 8.2.5.12)
+    //
+    // One method, two markers: the text is the same `#X` and the element differs, a
+    // MetadataUsage in SysML and a MetadataFeature in KerML, so the file's language
+    // chooses the child as `owned_multiplicity` chooses its range.
     //
     // production: PrefixMetadataUsage@sysml
     //
@@ -1599,7 +1614,43 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::PrefixMetadataMember);
         self.expect(SyntaxKind::Hash, "`#`");
-        self.prefix_metadata_usage();
+        self.prefix_metadata_element();
+        self.finish_node();
+    }
+
+    /// The element after a prefix `#`, in this file's language: `PrefixMetadataUsage` in
+    /// `SysML` (8.2.2.27), `PrefixMetadataFeature` in `KerML` (8.2.5.12).
+    fn prefix_metadata_element(&mut self) {
+        match self.language {
+            Language::SysMl => self.prefix_metadata_usage(),
+            Language::KerMl => self.prefix_metadata_feature(),
+        }
+    }
+
+    // production: PrefixMetadataFeature@kerml
+    //
+    // PrefixMetadataFeature : MetadataFeature =
+    //     ownedRelationship += OwnedFeatureTyping                  (KerML 8.2.5.12)
+    //
+    // "A user-defined keyword is a (possibly qualified) metaclass name or short name
+    // preceded by the symbol #. [It] is placed immediately before the language-defined
+    // (reserved) keyword for the declaration and specifies a metadata feature annotation
+    // of the declared element" (7.4.13, receipt 5e755297). The metaclass is
+    // MetadataFeature (8.3.4.12.3, receipt 2c4eda9f).
+    //
+    // KerML's OwnedFeatureTyping is `GeneralType` (8.2.4.3.2), `[QualifiedName] |
+    // OwnedFeatureChain` (8.2.4.1.2): the text `owned_feature_typing` reads, and the node it
+    // builds. That the type is a metaclass is validateMetadataFeatureMetaclass, not
+    // grammar, as deviation PrefixMetadataTyping-chain (follow_spec) records for SysML.
+    //
+    // implied specialization: Metaobjects::metaobjects (checkMetadataFeatureSpecialization),
+    //     and for SemanticMetadata the annotated type's specialization of its baseType
+    //     (checkMetadataFeatureSemanticSpecialization, 8.4.4.13.3, receipt 50b0d5ac).
+    //     Injections, sv2-hir's; this layer builds the tree only (ADR-0002).
+    fn prefix_metadata_feature(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PrefixMetadataFeature);
+        self.owned_feature_typing();
         self.finish_node();
     }
 
@@ -1705,8 +1756,8 @@ impl<'a> Parser<'a> {
     }
 
     /// Whether a `LibraryPackage` starts at the `n`th meaningful token: `'standard'?
-    /// 'library'`, its `PrefixMetadataMember*` looked past in `SysML` as `at_package` looks
-    /// past them, then `package` (`SysML` 8.2.2.5.1, `KerML` 8.2.5.13). The `standard` is
+    /// 'library'`, its `PrefixMetadataMember*` looked past as `at_package` looks past
+    /// them, then `package` (`SysML` 8.2.2.5.1, `KerML` 8.2.5.13). The `standard` is
     /// optional by deviation `LibraryPackage` (`follow_xtext`).
     fn at_library_package(&self, n: usize) -> bool {
         let k = n + usize::from(self.nth_is_keyword(n, "standard"));
@@ -2032,7 +2083,7 @@ impl<'a> Parser<'a> {
         }
         match self.language {
             Language::KerMl => {
-                self.nth_is_keyword(n, "package")
+                self.at_package(n)
                     || self.at_library_package(n)
                     || self.at_dependency(n)
                     || self.at_classifier(n).is_some()
@@ -2822,7 +2873,7 @@ impl<'a> Parser<'a> {
             || self.at_annotating_member(0)
             || match self.language {
                 Language::KerMl => {
-                    self.at_keyword("package")
+                    self.at_package(0)
                         || self.at_library_package(0)
                         || self.at_dependency(0)
                         || self.at_classifier(0).is_some()
@@ -2979,10 +3030,13 @@ impl<'a> Parser<'a> {
     //     | ( EndFeaturePrefix | BasicFeaturePrefix ) FeatureDeclaration
     //     ) ValuePart? TypeBody                                   (KerML 8.2.4.3.1)
     //
-    // NOT marked for coverage. Both alternatives are read; the PrefixMetadataMember
-    // alternative to the `feature` keyword is not. A feature may be introduced by a `#`
-    // prefix instead of the word, and prefix metadata is unimplemented everywhere in
-    // this parser.
+    // production: Feature@kerml
+    //
+    // Both alternatives are read, and the first in both its forms: a feature may be
+    // introduced by a `#` prefix instead of the word, `#M f;`, and then the declaration
+    // stays optional, since the `#` says a feature is here as the keyword would. Which
+    // `#` is that one is settled by `feature_prefix`: the last of a run that no keyword
+    // follows. Marked although FeaturePrefix is not, for the reason Succession gives.
     //
     // The two alternatives differ in exactly two things, and one method reads both:
     // whether the keyword is written, and whether the declaration is optional. It is
@@ -2997,6 +3051,13 @@ impl<'a> Parser<'a> {
             // The first alternative: the keyword carries it, so the declaration after
             // it is optional and `feature;` is a feature that declares nothing.
             self.bump_as(keyword("feature").unwrap_or(SyntaxKind::BasicName));
+            if self.at_feature_declaration() {
+                self.feature_declaration();
+            }
+        } else if self.at(SyntaxKind::Hash) {
+            // The first alternative's other form: a PrefixMetadataMember in the
+            // keyword's place, the one `feature_prefix` left.
+            self.prefix_metadata_member();
             if self.at_feature_declaration() {
                 self.feature_declaration();
             }
@@ -3024,14 +3085,48 @@ impl<'a> Parser<'a> {
     /// `ConjugationPart` with no name at all, are not recognised without a keyword:
     /// `: A;` alone at member position is left to recovery rather than read as an
     /// anonymous feature.
+    ///
+    /// A `#` in the keyword's place is the first alternative too, and there the
+    /// declaration is optional, so after a run of `#` anything `nth_continues_feature`
+    /// admits is a feature: `#M;` declares nothing and is one.
     fn at_feature(&self, n: usize) -> bool {
-        let after = self.skip_feature_prefix(n);
+        let keywords = self.skip_feature_prefix_keywords(n);
+        let after = self.skip_prefix_metadata(keywords);
         self.nth_is_keyword(after, "feature")
             || self.nth_is_keyword(after, "all")
             || self.nth_is_name(after)
             || self
                 .peek_nth(after)
                 .is_some_and(|t| t.kind == SyntaxKind::Lt)
+            || (after > keywords && self.nth_continues_feature(after))
+    }
+
+    /// Whether the `n`th token may follow the `PrefixMetadataMember` that stands in
+    /// `feature`'s place: `FeatureDeclaration? ValuePart? TypeBody` (`KerML` 8.2.4.3.1),
+    /// so the first tokens of any of the three.
+    ///
+    /// A `FeatureDeclaration` opens on `all`, a name, `<`, a `FeatureSpecializationPart` (a
+    /// specialization or a multiplicity) or a `ConjugationPart`; a `ValuePart` on `=`, `:=`
+    /// or `default`; a `TypeBody` on `;` or `{`. None of these is a reserved keyword that begins
+    /// another element, which is what lets `feature_prefix` tell a `#` that prefixes
+    /// `connector` or `feature` from the `#` that replaces `feature`.
+    fn nth_continues_feature(&self, n: usize) -> bool {
+        const OPENERS: [SyntaxKind; 8] = [
+            SyntaxKind::Lt,
+            SyntaxKind::LBracket,
+            SyntaxKind::Tilde,
+            SyntaxKind::Eq,
+            SyntaxKind::ColonEq,
+            SyntaxKind::Semicolon,
+            SyntaxKind::LBrace,
+            SyntaxKind::Colon,
+        ];
+        OPENERS.iter().any(|kind| self.nth_is(n, *kind))
+            || self.nth_is_name(n)
+            || self.nth_at_feature_specialization(n)
+            || ["all", "ordered", "nonunique", "conjugates", "default"]
+                .iter()
+                .any(|word| self.nth_is_keyword(n, word))
     }
 
     /// Whether the `n`th meaningful token is a NAME.
@@ -3042,10 +3137,16 @@ impl<'a> Parser<'a> {
     /// The index just past a `FeaturePrefix` written from the `n`th token.
     ///
     /// `FeaturePrefix = ( EndFeaturePrefix OwnedCrossFeatureMember? | BasicFeaturePrefix )
-    /// PrefixMetadataMember*` (`KerML` 8.2.4.3.1). Neither `OwnedCrossFeatureMember` nor
-    /// `PrefixMetadataMember` is looked past: both are unimplemented, and leaving them to
-    /// the enclosing body's recovery reports them.
+    /// PrefixMetadataMember*` (`KerML` 8.2.4.3.1). `OwnedCrossFeatureMember` is not looked
+    /// past: it is unimplemented, and leaving it to the enclosing body's recovery reports
+    /// it. The `PrefixMetadataMember`s are.
     fn skip_feature_prefix(&self, n: usize) -> usize {
+        self.skip_prefix_metadata(self.skip_feature_prefix_keywords(n))
+    }
+
+    /// The index just past a `FeaturePrefix`'s keywords, its `EndFeaturePrefix` or
+    /// `BasicFeaturePrefix`, before any `#`.
+    fn skip_feature_prefix_keywords(&self, n: usize) -> usize {
         // EndFeaturePrefix = 'const'? 'end'. Tried first: it may open with `const`,
         // which is also BasicFeaturePrefix's last slot, and only the `end` tells them
         // apart.
@@ -3082,9 +3183,16 @@ impl<'a> Parser<'a> {
     //     | BasicFeaturePrefix ) ownedRelationship += PrefixMetadataMember*
     //                                                            (KerML 8.2.4.3.1)
     //
-    // NOT marked: OwnedCrossFeatureMember and PrefixMetadataMember are unimplemented,
-    // the same two gaps UsagePrefix has one level up. The node is built even when empty,
-    // as MemberPrefix's is.
+    // NOT marked: OwnedCrossFeatureMember is unimplemented. The node is built even when
+    // empty, as MemberPrefix's is.
+    //
+    // The PrefixMetadataMember* is read, all but one case: Feature writes `( 'feature' |
+    // PrefixMetadataMember )` after this prefix, so in `#A #B f;` the `#B` is Feature's,
+    // in the keyword's place, and only `#A` is the prefix's. A `#` is left when it is the
+    // last of its run and what follows it continues a feature (`nth_continues_feature`)
+    // rather than being a keyword -- `feature`, `connector`, `succession`, `binding` --
+    // that the prefix stands before. The grammar is unambiguous: the star cannot take a
+    // `#` that the Feature alternative then lacks.
     fn feature_prefix(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::FeaturePrefix);
@@ -3092,6 +3200,12 @@ impl<'a> Parser<'a> {
             self.end_feature_prefix();
         } else {
             self.basic_feature_prefix();
+        }
+        while let Some(end) = self.skip_one_prefix_metadata(0) {
+            if !self.nth_is(end, SyntaxKind::Hash) && self.nth_continues_feature(end) {
+                break;
+            }
+            self.prefix_metadata_member();
         }
         self.finish_node();
     }
@@ -3934,9 +4048,8 @@ impl<'a> Parser<'a> {
 
     /// Whether a `Dependency` starts at the `n`th meaningful token.
     ///
-    /// `dependency`, reserved in both grammars, after its `PrefixMetadataAnnotation*`.
-    /// Those are looked past in `SysML` only: `KerML`'s are over `PrefixMetadataFeature`
-    /// (8.2.5.12), unimplemented, so a `.kerml` `#refinement dependency ...` is reported.
+    /// `dependency`, reserved in both grammars, after its `PrefixMetadataAnnotation*`,
+    /// looked past in both.
     fn at_dependency(&self, n: usize) -> bool {
         self.nth_is_keyword(self.skip_prefix_metadata(n), "dependency")
     }
@@ -3953,10 +4066,11 @@ impl<'a> Parser<'a> {
     //     RelationshipBody                                          (KerML 8.2.3.2)
     //
     // production: Dependency@sysml
+    // production: Dependency@kerml
     //
-    // Dependency@kerml is NOT marked: its PrefixMetadataAnnotation is over KerML's
-    // PrefixMetadataFeature (8.2.5.12), unimplemented. SysML's is read, and the corpus
-    // writes it: `#refinement dependency` (SimpleVehicleModel.sysml:937).
+    // Both read whole. The PrefixMetadataAnnotation is over each language's own element
+    // (`prefix_metadata_annotation`); the corpus writes SysML's, `#refinement dependency`
+    // (SimpleVehicleModel.sysml:937).
     //
     // The two languages state the same text: `Identification?` and `Identification`
     // accept the same strings, since every part of an Identification is optional. What
@@ -3974,10 +4088,8 @@ impl<'a> Parser<'a> {
     fn dependency(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::Dependency);
-        if self.language == Language::SysMl {
-            while self.at(SyntaxKind::Hash) {
-                self.prefix_metadata_annotation();
-            }
+        while self.at(SyntaxKind::Hash) {
+            self.prefix_metadata_annotation();
         }
         self.expect_keyword("dependency");
         match self.language {
@@ -3994,15 +4106,20 @@ impl<'a> Parser<'a> {
     //     '#' annotatingElement = PrefixMetadataUsage
     //     { ownedRelatedElement += annotatingElement }            (SysML 8.2.2.27)
     //
+    // production: PrefixMetadataAnnotation@kerml
+    //
+    // PrefixMetadataAnnotation : Annotation =
+    //     '#' ownedRelatedElement += PrefixMetadataFeature         (KerML 8.2.5.12)
+    //
     // An Annotation where Package's PrefixMetadataMember is an OwningMembership: the
     // Dependency is a Relationship (KerML 8.3.2.2.2, receipt ec1e3424), and the clause
     // owns the metadata through the annotation's ownedRelatedElement. The text is the same
-    // `#X`, read by the same PrefixMetadataUsage.
+    // `#X`, read by the same element as PrefixMetadataMember's in each language.
     fn prefix_metadata_annotation(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::PrefixMetadataAnnotation);
         self.expect(SyntaxKind::Hash, "`#`");
-        self.prefix_metadata_usage();
+        self.prefix_metadata_element();
         self.finish_node();
     }
 
@@ -12863,15 +12980,13 @@ impl<'a> Parser<'a> {
     //
     // The PrefixMetadataMembers stand directly in the package, with no extension-keyword
     // node between, as the clause writes them. KerML's Package states the same text over
-    // its own PrefixMetadataMember (8.2.3.4.1, 8.2.5.12), which is unimplemented, so a
-    // `.kerml` package's `#` is reported: `at_package` looks past `#` in SysML only.
+    // its own PrefixMetadataMember (8.2.5.13, 8.2.5.12), which `prefix_metadata_member`
+    // reads in the file's language.
     fn package(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::Package);
-        if self.language == Language::SysMl {
-            while self.at(SyntaxKind::Hash) {
-                self.prefix_metadata_member();
-            }
+        while self.at(SyntaxKind::Hash) {
+            self.prefix_metadata_member();
         }
         self.package_declaration();
         self.package_body();
@@ -12892,11 +13007,9 @@ impl<'a> Parser<'a> {
     // (8.3.4.13.3). So `library package` without `standard` is the text the deviation adds,
     // and it carries the note; the corpus writes nothing else.
     //
-    // One unit in both grammars, whose texts are the same (ADR-0015). Marked as Package is:
-    // the PrefixMetadataMember* is read in SysML, where it is PrefixMetadataMember@sysml,
-    // and left unread in KerML, where it is PrefixMetadataMember@kerml over
-    // PrefixMetadataFeature (8.2.5.12), a unit of its own tracked as unimplemented, so a
-    // `.kerml` `library #X package` is reported.
+    // One unit in both grammars, whose texts are the same (ADR-0015). The
+    // PrefixMetadataMember* is each language's own, PrefixMetadataMember@sysml or
+    // PrefixMetadataMember@kerml, read by `prefix_metadata_member`.
     fn library_package(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::LibraryPackage);
@@ -12907,10 +13020,8 @@ impl<'a> Parser<'a> {
             self.note_deviation("LibraryPackage", "a library package that is not `standard`");
         }
         self.expect_keyword("library");
-        if self.language == Language::SysMl {
-            while self.at(SyntaxKind::Hash) {
-                self.prefix_metadata_member();
-            }
+        while self.at(SyntaxKind::Hash) {
+            self.prefix_metadata_member();
         }
         self.package_declaration();
         self.package_body();
@@ -13545,7 +13656,7 @@ impl<'a> Parser<'a> {
     /// implements, in the order `membership` and `namespace_feature_member` ask: a
     /// succession and a binding connector before the keywordless-capable `Feature`.
     fn owned_related_element(&mut self) -> bool {
-        if self.at_keyword("package") {
+        if self.at_package(0) {
             self.package();
         } else if self.at_library_package(0) {
             self.library_package();
@@ -13850,22 +13961,28 @@ impl<'a> Parser<'a> {
 
     /// The index just past a `TypePrefix` written from the `n`th token.
     fn skip_type_prefix(&self, n: usize) -> usize {
-        n + usize::from(self.nth_is_keyword(n, "abstract"))
+        self.skip_prefix_metadata(n + usize::from(self.nth_is_keyword(n, "abstract")))
     }
 
-    // TypePrefix : Type = ( isAbstract ?= 'abstract' )?
-    //     ( ownedRelationship += PrefixMetadataMember )*          (KerML 8.2.4.1)
+    // production: TypePrefix@kerml
     //
-    // NOT marked for coverage. PrefixMetadataMember — `#` prefix metadata — is
-    // unimplemented, exactly as it is on OccurrenceDefinitionPrefix, and
-    // `at_classifier` does not look past a `#`, so a classifier carrying one never
-    // reaches here and is reported by the enclosing body instead.
+    // TypePrefix : Type = ( isAbstract ?= 'abstract' )?
+    //     ( ownedRelationship += PrefixMetadataMember )*          (KerML 8.2.4.1.1)
+    //
+    // `abstract`, then every `#X` "placed immediately before the language-defined
+    // (reserved) keyword for the declaration" (7.4.13, receipt 5e755297): KerML Spec
+    // Annex A Examples/A-2-ModelingInstances.kerml:22-23 writes `#atom` on the line
+    // before `classifier MyBike`. Never the other way about: `#X abstract class C;` is
+    // no TypePrefix.
     //
     // The node is built even when empty, as MemberPrefix's is.
     fn type_prefix(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::TypePrefix);
         self.eat_optional_keyword("abstract");
+        while self.at(SyntaxKind::Hash) {
+            self.prefix_metadata_member();
+        }
         self.finish_node();
     }
 
@@ -14216,6 +14333,18 @@ mod tests {
         "doc",
         "rep",
         "language",
+        // The keywords a KerML FeaturePrefix stands before. `nth_continues_feature`
+        // counts a NAME as continuing a feature, so `feature_prefix` tells the `#` before
+        // one of these from the `#` in `feature`'s place only while each is reserved
+        // (KerML 8.2.2.6) and so no NAME.
+        "feature",
+        "connector",
+        "succession",
+        "binding",
+        "step",
+        "expr",
+        "inv",
+        "flow",
     ];
 
     #[test]

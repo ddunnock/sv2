@@ -1279,6 +1279,8 @@ pub enum SyntaxKind {
     PrefixMetadataAnnotation,
     /// `ownedRelationship += OwnedFeatureTyping`. `SysML` 8.2.2.27 — a `MetadataUsage`.
     PrefixMetadataUsage,
+    /// `ownedRelationship += OwnedFeatureTyping`. `KerML` 8.2.5.12 — a `MetadataFeature`.
+    PrefixMetadataFeature,
     /// `ownedRelationship += PrefixMetadataMember`. `SysML` 8.2.2.6.2.
     UsageExtensionKeyword,
     /// `ownedRelationship += PrefixMetadataMember`. `SysML` 8.2.2.6.1.
@@ -1954,6 +1956,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::PrefixMetadataMember,
     SyntaxKind::PrefixMetadataAnnotation,
     SyntaxKind::PrefixMetadataUsage,
+    SyntaxKind::PrefixMetadataFeature,
     SyntaxKind::UsageExtensionKeyword,
     SyntaxKind::DefinitionExtensionKeyword,
     SyntaxKind::ExtendedDefinition,
