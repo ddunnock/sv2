@@ -11091,13 +11091,8 @@ fn a_library_package_is_bounded_by_its_rules() {
     // Prefix metadata follows `library` (8.2.2.5.1). Held by
     // tests/rejection/library-package-prefix-metadata-follows-library.sysml.
     parse_rejected("#X library package L;");
-    // KerML's PrefixMetadataMember is over PrefixMetadataFeature (8.2.5.12), unimplemented:
-    // REJECTED BY ABSENCE, removed when PrefixMetadataFeature@kerml lands.
-    assert!(
-        !parse("library #X package L;", Language::KerMl)
-            .errors()
-            .is_empty()
-    );
+    // KerML's `library #X package L;` was here, rejected by absence until
+    // PrefixMetadataFeature@kerml, which the next commit reads.
 }
 
 // -- EventOccurrenceUsage, SysML 8.2.2.9.2 ---------------------------------------------
