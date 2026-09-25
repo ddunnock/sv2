@@ -10785,19 +10785,6 @@ fn prefix_metadata_is_bounded_by_its_rules() {
     parse_rejected("part def P { variant #M x; }");
 }
 
-#[test]
-fn kerml_prefix_metadata_is_still_absent() {
-    // REJECTED BY ABSENCE. KerML's `#` is PrefixMetadataMember over PrefixMetadataFeature
-    // (8.2.5.12), a different production from SysML's and unimplemented. Removed when
-    // PrefixMetadataFeature@kerml lands.
-    for source in ["#X package Q;", "#X dependency a to b;"] {
-        assert!(
-            !parse(source, Language::KerMl).errors().is_empty(),
-            "{source}"
-        );
-    }
-}
-
 // -- Interfaces, SysML 8.2.2.14 -------------------------------------------------------
 //
 //   InterfaceDefinition = OccurrenceDefinitionPrefix 'interface' 'def'
