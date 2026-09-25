@@ -1711,8 +1711,10 @@ fn a_type_featuring_part_is_bounded_by_its_rules() {
 
 #[test]
 fn a_step_is_a_feature_element() {
-    // KerML Spec Annex A Examples/A-3-6-Sequences.kerml:8, in a behavior's body.
-    let tree = render(&kerml_accepted("behavior B {\n\tstep paint : Paint [1];\n}").syntax());
+    // KerML Spec Annex A Examples/A-3-6-Sequences.kerml:8. In a package body it is owned
+    // through a NamespaceFeatureMember (8.2.3.4.1); in a behavior's body, a TypeBody,
+    // through a FeatureMember instead (8.2.4.1.1), so the membership is asserted here.
+    let tree = render(&kerml_accepted("package P {\n\tstep paint : Paint [1];\n}").syntax());
     assert_eq!(
         child_kinds(&tree, "NamespaceFeatureMember"),
         ["MemberPrefix", "Step"],
