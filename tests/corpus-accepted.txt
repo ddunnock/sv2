@@ -17,6 +17,7 @@ vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_1.kerml
 vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_2.kerml
 vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_1.kerml
 vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_2.kerml
+vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_3.kerml
 vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml
 vendor/corpus/kerml/src/examples/Packet Example/PacketUsage.kerml
 vendor/corpus/kerml/src/examples/Packet Example/Packets.kerml
@@ -32,6 +33,7 @@ vendor/corpus/kerml/src/examples/Simple Tests/Imports.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Inheritance.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Redefinition.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Scoping.kerml
+vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/TimeVaryingFeaturesEnhanced.kerml
 vendor/corpus/kerml/src/examples/Vehicle Example/VehicleDefinitions.kerml
 vendor/corpus/kerml/src/examples/Vehicle Example/VehicleUsages.kerml
 vendor/corpus/omg/SimpleVehicleModel.sysml

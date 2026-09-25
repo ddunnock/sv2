@@ -3080,14 +3080,18 @@ impl<'a> Parser<'a> {
     /// Whether a `Feature` starts at the `n`th meaningful token, in either form.
     ///
     /// The keyword form is a prefix and then `feature`. The keywordless form is a prefix
-    /// and then a declaration, which opens with `all`, a name, or a short name — and a
-    /// keyword is not a name (`KerML` 8.2.2.6), so `package P;` and `class A;` are not
-    /// mistaken for features that happen to be called `package` and `class`.
+    /// and then a declaration (`nth_opens_feature_declaration`) -- and a keyword is not a
+    /// name (`KerML` 8.2.2.6), so `package P;` and `class A;` are not mistaken for
+    /// features that happen to be called `package` and `class`.
     ///
-    /// The declaration's two bare forms, a `FeatureSpecializationPart` or a
-    /// `ConjugationPart` with no name at all, are not recognised without a keyword:
-    /// `: A;` alone at member position is left to recovery rather than read as an
-    /// anonymous feature.
+    /// That includes the declaration's two bare forms, a `FeatureSpecializationPart` or a
+    /// `ConjugationPart` with no name: `:>> self : Timeslice;` (Variable Feature
+    /// Examples/Enhancements/ExtendedOccurrences.kerml:6) and `portion :>> startShot {`
+    /// are features. Nothing else a `KerML` member position admits opens on those
+    /// tokens, so they decide as a name does: the standalone relationship declarations
+    /// beside `Feature` there (`specialization`, `subtype`, `typing`, `subset`,
+    /// `redefinition`, `conjugation`, `disjoining`, `featuring`, `inverting`, `KerML`
+    /// 8.2.4) open on reserved words, which are no names.
     ///
     /// A `#` in the keyword's place is the first alternative too, and there the
     /// declaration is optional, so after a run of `#` anything `nth_continues_feature`
@@ -3096,11 +3100,7 @@ impl<'a> Parser<'a> {
         let keywords = self.skip_feature_prefix_keywords(n);
         let after = self.skip_prefix_metadata(keywords);
         self.nth_is_keyword(after, "feature")
-            || self.nth_is_keyword(after, "all")
-            || self.nth_is_name(after)
-            || self
-                .peek_nth(after)
-                .is_some_and(|t| t.kind == SyntaxKind::Lt)
+            || self.nth_opens_feature_declaration(after)
             || (after > keywords && self.nth_continues_feature(after))
     }
 
@@ -3114,22 +3114,12 @@ impl<'a> Parser<'a> {
     /// another element, which is what lets `feature_prefix` tell a `#` that prefixes
     /// `connector` or `feature` from the `#` that replaces `feature`.
     fn nth_continues_feature(&self, n: usize) -> bool {
-        const OPENERS: [SyntaxKind; 8] = [
-            SyntaxKind::Lt,
-            SyntaxKind::LBracket,
-            SyntaxKind::Tilde,
-            SyntaxKind::Eq,
-            SyntaxKind::ColonEq,
-            SyntaxKind::Semicolon,
-            SyntaxKind::LBrace,
-            SyntaxKind::Colon,
-        ];
-        OPENERS.iter().any(|kind| self.nth_is(n, *kind))
-            || self.nth_is_name(n)
-            || self.nth_at_feature_specialization(n)
-            || ["all", "ordered", "nonunique", "conjugates", "default"]
-                .iter()
-                .any(|word| self.nth_is_keyword(n, word))
+        self.nth_opens_feature_declaration(n)
+            || self.nth_is(n, SyntaxKind::Eq)
+            || self.nth_is(n, SyntaxKind::ColonEq)
+            || self.nth_is_keyword(n, "default")
+            || self.nth_is(n, SyntaxKind::Semicolon)
+            || self.nth_is(n, SyntaxKind::LBrace)
     }
 
     /// Whether the `n`th meaningful token is a NAME.
@@ -3273,12 +3263,22 @@ impl<'a> Parser<'a> {
     /// specialization or a conjugation. So `feature;` is a feature with no declaration,
     /// and `feature : A;` is one whose declaration is a bare specialization.
     fn at_feature_declaration(&self) -> bool {
-        self.at_keyword("all")
-            || self.at_name()
-            || self.at(SyntaxKind::Lt)
-            || self.at_feature_specialization()
-            || self.at_multiplicity_part()
-            || self.at_conjugation_part()
+        self.nth_opens_feature_declaration(0)
+    }
+
+    /// Whether a `FeatureDeclaration` starts at the `n`th meaningful token (`KerML`
+    /// 8.2.4.3.1): `all`, a `FeatureIdentification` (a name or `<`), a
+    /// `FeatureSpecializationPart` (a specialization, or a `MultiplicityPart`: `[`,
+    /// `ordered`, `nonunique`), or a `ConjugationPart` (`~`, `conjugates`).
+    fn nth_opens_feature_declaration(&self, n: usize) -> bool {
+        self.nth_is(n, SyntaxKind::Lt)
+            || self.nth_is(n, SyntaxKind::LBracket)
+            || self.nth_is(n, SyntaxKind::Tilde)
+            || self.nth_is_name(n)
+            || self.nth_at_feature_specialization(n)
+            || ["all", "ordered", "nonunique", "conjugates"]
+                .iter()
+                .any(|word| self.nth_is_keyword(n, word))
     }
 
     // FeatureDeclaration : Feature =

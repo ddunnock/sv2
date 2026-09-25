@@ -1510,6 +1510,54 @@ fn prefix_metadata_is_bounded_by_its_rules() {
     kerml_rejected("#M inv { true }");
 }
 
+// -- a keywordless feature declared by its specialization, KerML 8.2.4.3.1 ----------
+//
+//   Feature = ... | ( EndFeaturePrefix | BasicFeaturePrefix ) FeatureDeclaration ...
+//   FeatureDeclaration = 'all'? ( FeatureIdentification ... | FeatureSpecializationPart
+//                               | ConjugationPart ) FeatureRelationshipPart*
+
+#[test]
+fn a_keywordless_feature_may_be_declared_by_its_specialization_alone() {
+    // Variable Feature Examples/Enhancements/ExtendedOccurrences.kerml:6, with no prefix.
+    let tree = render(&kerml_accepted("class C {\n\t:>> self : Timeslice;\n}").syntax());
+    assert_eq!(
+        child_kinds(&tree, "Feature"),
+        ["FeaturePrefix", "FeatureDeclaration", "TypeBody"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "FeatureDeclaration"),
+        ["FeatureSpecializationPart"],
+        "{tree}"
+    );
+    // After a BasicFeaturePrefix: Variable Feature Examples/TimeVaryingFeatures.kerml:5
+    // and Mass Roll-up Example/Vehicles_3.kerml:34.
+    kerml_accepted("class C { portion :>> startShot { } }");
+    kerml_accepted("class C { composite :>> engine = e; }");
+    // The word forms: Variable Feature Examples/Enhancements/Moments.kerml:8 and KerML
+    // Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml:13.
+    kerml_accepted("class C { redefines predecessors [0]; }");
+    kerml_accepted("class C { redefines objectToPaint = objectToFinish; }");
+    // A FeatureSpecializationPart may open on its MultiplicityPart (8.2.4.3.1), and the
+    // declaration may be a ConjugationPart alone.
+    kerml_accepted("class C { [0..1] : T; }");
+    kerml_accepted("class C { ~ g; }");
+    kerml_accepted("class C { conjugates g; }");
+    // Still no feature called `package` or `class`: a keyword is not a name.
+    let package = render(&kerml_accepted("package P;").syntax());
+    assert!(!has_node(&package, "Feature"), "{package}");
+}
+
+#[test]
+fn a_keywordless_feature_still_needs_its_declaration() {
+    // With no `feature` and no `#` in its place, the FeatureDeclaration is what says a
+    // feature is here, and it is required (8.2.4.3.1). Held as a file by
+    // tests/rejection/kerml-keywordless-feature-needs-a-declaration.kerml.
+    kerml_rejected("class C { composite = e; }");
+    kerml_rejected("class C { portion { } }");
+    kerml_rejected("class C { portion; }");
+}
+
 // -- Step, KerML 8.2.5.6.2 ---------------------------------------------------------
 //
 //   Step = FeaturePrefix 'step' FeatureDeclaration ValuePart? TypeBody

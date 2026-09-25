@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-25T13:46:05Z",
+    "regenerated_utc": "2026-09-25T15:09:47Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -23,10 +23,10 @@
       "percent": 79.6
     },
     "tests": {
-      "unit": 652,
+      "unit": 654,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 267,
+      "negative_cases": 268,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "3f33afd Read KerML steps, and site the Step deviation where it admits text",
       "16f2ed7 Stop rejecting KerML steps by absence: the next commit reads them",
       "a6f42e3 Read KerML prefix metadata, on types, features, packages and dependencies",
       "83d793a Stop rejecting KerML prefix metadata on packages and dependencies by absence",
       "e0eb6de Stop rejecting KerML prefix metadata by absence: the next commit reads it",
       "1c27fd4 Close the session: KerML type relationship and conjugation parts recorded, prefix metadata next",
       "25e76b3 Read KerML conjugation parts; ClassifierDeclaration is whole",
-      "c76a452 Stop rejecting KerML conjugation parts by absence: the next commit reads them",
-      "5c5051a Read KerML type relationship parts, on classifiers and features"
+      "c76a452 Stop rejecting KerML conjugation parts by absence: the next commit reads them"
     ]
   },
   "authored": {
