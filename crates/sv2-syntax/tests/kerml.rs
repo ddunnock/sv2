@@ -484,8 +484,10 @@ fn has_node(rendered: &str, kind: &str) -> bool {
 
 #[test]
 fn the_unimplemented_halves_of_a_feature_declaration_are_reported() {
-    // ConjugationPart is next (`feature f conjugates g;` was here).
-    kerml_rejected("feature f chains a.b;");
+    // ChainingPart is next (`feature f chains a.b;` was here). InvertingPart, the
+    // other alternative of FeatureRelationshipPart this parser does not read, is still
+    // reported.
+    kerml_rejected("feature f inverse of g;");
 }
 
 // -- Succession, KerML 8.2.5.5.3 -------------------------------------------------

@@ -42,7 +42,6 @@ tests/rejection/element-filter-member-requires-a-semicolon.sysml
 tests/rejection/end-feature-requires-a-declaration.kerml
 tests/rejection/enumeration-usage-is-not-an-occurrence.sysml
 tests/rejection/feature-chain-needs-a-link-after-every-dot.sysml
-tests/rejection/feature-relationship-part-is-not-implemented.kerml
 tests/rejection/flow-end-needs-its-feature.sysml
 tests/rejection/flow-from-needs-to.sysml
 tests/rejection/flow-payload-multiplicity-needs-a-type.sysml
