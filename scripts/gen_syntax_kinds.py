@@ -192,6 +192,16 @@ NODES = [
         "ChainingPart",
         "`'chains' ( OwnedFeatureChaining | FeatureChain )`. `KerML` 8.2.4.3.1.",
     ),
+    # The standalone Specialization, a NonFeatureElement. Its SpecificType and GeneralType
+    # contribute to it and build no node, as FeatureInverting's targets build none.
+    # KerML 8.2.4.1.2.
+    (
+        "Specialization",
+        (
+            "`( 'specialization' Identification )? 'subtype' SpecificType SPECIALIZES "
+            "GeneralType RelationshipBody`. `KerML` 8.2.4.1.2."
+        ),
+    ),
     # The standalone FeatureInverting, a NonFeatureElement. Its two targets are a
     # QualifiedName or an OwnedFeatureChain each, told apart by the `of` between them.
     # KerML 8.2.4.3.6.

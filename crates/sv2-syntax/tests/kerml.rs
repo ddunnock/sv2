@@ -1987,6 +1987,93 @@ fn a_feature_inverting_is_bounded_by_its_rules() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// -- Specialization, KerML 8.2.4.1.2 ------------------------------------------------
+//
+//   Specialization = ( 'specialization' Identification )?
+//                    'subtype' SpecificType SPECIALIZES GeneralType RelationshipBody
+//   SpecificType   = [QualifiedName] | OwnedFeatureChain
+//   GeneralType    = [QualifiedName] | OwnedFeatureChain
+//   SPECIALIZES    = ':>' | 'specializes'                                   (8.2.2.7)
+//
+// A NonFeatureElement (8.2.3.4.3).
+
+#[test]
+fn a_specialization_reads_the_corpus_forms() {
+    // Simple Tests/Types.kerml:17-18: named with the word, then unnamed with the symbol.
+    let named = render(&kerml_accepted("specialization Gen subtype A specializes B;").syntax());
+    assert_eq!(
+        child_kinds(&named, "Specialization"),
+        [
+            "KwSpecialization",
+            "Identification",
+            "KwSubtype",
+            "QualifiedName",
+            "KwSpecializes",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{named}"
+    );
+    let unnamed = render(&kerml_accepted("specialization subtype x :> Base::things;").syntax());
+    assert_eq!(
+        child_kinds(&unnamed, "Specialization"),
+        [
+            "KwSpecialization",
+            "Identification",
+            "KwSubtype",
+            "QualifiedName",
+            "ColonGt",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{unnamed}"
+    );
+    // Simple Tests/FeatureChains.kerml:26: either type may be a feature chain.
+    let chained = render(&kerml_accepted("subtype g.g specializes b.f.a;").syntax());
+    assert_eq!(
+        child_kinds(&chained, "Specialization"),
+        [
+            "KwSubtype",
+            "OwnedFeatureChain",
+            "KwSpecializes",
+            "OwnedFeatureChain",
+            "RelationshipBody"
+        ],
+        "{chained}"
+    );
+    // KerML 7.3.2.3's examples: a body with an annotation, and the keyword omitted.
+    kerml_accepted(
+        "specialization subtype x :> Base::things {\n    doc /* This specialization is \
+         unnamed. */\n}",
+    );
+    kerml_accepted("package P { subtype C specializes A; subtype C specializes B; }");
+    // A member (8.2.3.4.1), of a type body too (8.2.4.1.1), and an owned related
+    // element (8.2.3.1).
+    kerml_accepted("package P { private specialization <s> S subtype A :> B; }");
+    kerml_accepted("class C { subtype a :> b; }");
+    kerml_accepted("dependency x to y { subtype a :> b; }");
+}
+
+#[test]
+fn a_specialization_is_bounded_by_its_rules() {
+    kerml_rejected("specialization Gen A specializes B;");
+    kerml_rejected("specialization;");
+    kerml_rejected("subtype A;");
+    kerml_rejected("subtype A specializes;");
+    kerml_rejected("subtype specializes B;");
+    // One general type, not a list: a list is a type declaration's owned
+    // specializations, `type C specializes A, B;` (7.3.2.3). Held as a file by
+    // tests/rejection/kerml-specialization-relates-one-general-type.kerml.
+    kerml_rejected("subtype C specializes A, B;");
+    // SPECIALIZES is `:>` or `specializes`; `subsets` is SUBSETS's word (8.2.2.7).
+    kerml_rejected("subtype A subsets B;");
+    kerml_rejected("subtype A :> B");
+    // SysML states no Specialization declaration (ADR-0014). Held as a file by
+    // tests/rejection/specialization-declaration-is-not-sysml.sysml.
+    let sysml = parse("subtype A :> B;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------
 //
 //   TypeBodyElement    = NonFeatureMember | FeatureMember | AliasMember | Import

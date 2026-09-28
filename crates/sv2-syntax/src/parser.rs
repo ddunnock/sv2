@@ -2081,8 +2081,8 @@ impl<'a> Parser<'a> {
     /// ```
     ///
     /// Of `NonFeatureElement`, `Package` and `LibraryPackage` — shared units, the same
-    /// productions in both grammars — `Dependency`, `FeatureInverting` and the eight
-    /// classifiers of 8.2.4.2 are implemented. Of
+    /// productions in both grammars — `Dependency`, `FeatureInverting`, `Specialization`
+    /// and the eight classifiers of 8.2.4.2 are implemented. Of
     /// `FeatureElement`'s ten alternatives, `Feature`, `Step`, `Connector`,
     /// `BindingConnector` and `Succession` are. The rest (`expr`, `inv`, `flow`,
     /// `succession flow`, …) are reported rather than read.
@@ -2111,6 +2111,7 @@ impl<'a> Parser<'a> {
                     || self.at_kerml_connector(n)
                     || self.at_kerml_step(n)
                     || self.at_feature_inverting(n)
+                    || self.at_specialization(n)
             }
             Language::SysMl => {
                 self.at_sysml_keyword_member(n)
@@ -2944,6 +2945,7 @@ impl<'a> Parser<'a> {
                         || self.at_kerml_connector(0)
                         || self.at_kerml_step(0)
                         || self.at_feature_inverting(0)
+                        || self.at_specialization(0)
                 }
                 Language::SysMl => {
                     self.at_definition_element(0)
@@ -4012,6 +4014,9 @@ impl<'a> Parser<'a> {
         } else if self.language == Language::KerMl && self.at_feature_inverting(0) {
             // A NonFeatureElement (KerML 8.2.3.4.3) SysML does not state at all.
             self.feature_inverting();
+        } else if self.language == Language::KerMl && self.at_specialization(0) {
+            // Another, as FeatureInverting is.
+            self.specialization();
         } else if self.language == Language::KerMl {
             self.error_expected("a package, a classifier or a dependency");
         } else if let Some(node) = self
@@ -13819,8 +13824,8 @@ impl<'a> Parser<'a> {
     //
     // Marked although RelationshipOwnedElement and OwnedRelatedElement are not: this
     // production's own parts are read, and the two alternations below it are read as far
-    // as NonFeatureElement and FeatureElement are — Package, Dependency, FeatureInverting
-    // and the eight classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
+    // as NonFeatureElement and FeatureElement are — Package, Dependency, FeatureInverting,
+    // Specialization and the eight classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
     // node, as FeatureSpecialization has none: the element read says which was taken.
     //
     // An owned related element is the relationship's ownedRelatedElement, with no
@@ -13890,6 +13895,8 @@ impl<'a> Parser<'a> {
             self.dependency();
         } else if self.at_feature_inverting(0) {
             self.feature_inverting();
+        } else if self.at_specialization(0) {
+            self.specialization();
         } else if let Some(classifier) = self.at_classifier(0) {
             self.classifier(classifier);
         } else if self.at_kerml_succession(0) {
@@ -14514,6 +14521,102 @@ impl<'a> Parser<'a> {
         self.name_or_owned_feature_chain();
         self.relationship_body();
         self.finish_node();
+    }
+
+    /// The index just past a `( 'specialization' Identification )?` written from the
+    /// `n`th meaningful token, or `n` itself when none is.
+    ///
+    /// The prefix the standalone `Specialization`, `Subclassification`, `FeatureTyping`,
+    /// `Subsetting` and `Redefinition` share (`KerML` 8.2.4.1.2, 8.2.4.2.2, 8.2.4.3.2-4): the
+    /// keyword after it is what says which, so a recogniser looks past it. Every part of
+    /// the `Identification` is optional (8.2.3.1): `<` NAME `>`, then NAME.
+    fn skip_specialization_prefix(&self, n: usize) -> usize {
+        if !self.nth_is_keyword(n, "specialization") {
+            return n;
+        }
+        let mut m = n + 1;
+        if self.nth_is(m, SyntaxKind::Lt) {
+            m += 3;
+        }
+        m + usize::from(self.nth_is_name(m))
+    }
+
+    /// Whether a `KerML` `Specialization` starts at the `n`th meaningful token: `subtype`,
+    /// reserved (`KerML` 8.2.2.6), after the optional prefix.
+    fn at_specialization(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_specialization_prefix(n), "subtype")
+    }
+
+    /// `( 'specialization' Identification )?`, read if written.
+    ///
+    /// Unlike `FeatureInverting`'s `( 'inverting' Identification? )?`, the `Identification`
+    /// is not itself optional here, which changes no text since it derives the empty
+    /// string, and it is built whenever the keyword is written either way.
+    fn specialization_prefix(&mut self) {
+        if self.at_keyword("specialization") {
+            self.expect_keyword("specialization");
+            self.identification();
+        }
+    }
+
+    // production: Specialization@kerml
+    //
+    // Specialization =
+    //     ( 'specialization' Identification )?
+    //     'subtype' SpecificType
+    //     SPECIALIZES GeneralType
+    //     RelationshipBody                                       (KerML 8.2.4.1.2)
+    //
+    // SPECIALIZES = ':>' | 'specializes'                        (KerML 8.2.2.7)
+    //
+    // A NonFeatureElement (8.2.3.4.3), KerML's alone, dispatched behind KerML guards as
+    // FeatureInverting is. The metaclass is Specialization (8.3.3.1.8, receipt
+    // dfc0f1ba), relating its specific type to its general one: `specialization Gen
+    // subtype A specializes B;` (KerML 7.3.2.3, receipt e72b8e89; Simple
+    // Tests/Types.kerml:17). One general type: a list is a type's owned specializations,
+    // written in its own declaration.
+    //
+    // constraint: Specialization::validateSpecificationSpecificNotConjugated (KerML
+    //     8.3.3.1.8). Validity, not syntax: `subtype A :> B;` parses whatever A is and
+    //     carries its diagnostic downstream (ADR-0002). No implied specialization
+    //     attaches: this IS the specialization, written out.
+    fn specialization(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Specialization);
+        self.specialization_prefix();
+        self.expect_keyword("subtype");
+        self.specific_type();
+        self.terminal(SyntaxKind::ColonGt, "specializes", "`:>` or `specializes`");
+        self.general_type();
+        self.relationship_body();
+        self.finish_node();
+    }
+
+    // production: SpecificType@kerml
+    //
+    // SpecificType : Specialization =
+    //       specific = [QualifiedName]
+    //     | specific += OwnedFeatureChain
+    //       { ownedRelatedElement += specific }                    (KerML 8.2.4.1.2)
+    //
+    // production: GeneralType@kerml
+    //
+    // GeneralType : Specialization =
+    //       general = [QualifiedName]
+    //     | general += OwnedFeatureChain
+    //       { ownedRelatedElement += general }                     (KerML 8.2.4.1.2)
+    //
+    // Called unassigned, so each contributes to the Specialization that calls it and
+    // builds no node: the SPECIALIZES between them says which is which, as the `of` does
+    // in FeatureInverting. The clause's SpecificType line is malformed; deviations.json
+    // records reading it as `SpecificType : Specialization =`, follow_spec, and GeneralType
+    // spec_only, follow_spec.
+    fn specific_type(&mut self) {
+        self.name_or_owned_feature_chain();
+    }
+
+    fn general_type(&mut self) {
+        self.name_or_owned_feature_chain();
     }
 
     // production: TypeFeaturingPart@kerml
