@@ -2081,7 +2081,8 @@ impl<'a> Parser<'a> {
     /// ```
     ///
     /// Of `NonFeatureElement`, `Package` and `LibraryPackage` — shared units, the same
-    /// productions in both grammars — and the eight classifiers of 8.2.4.2 are implemented. Of
+    /// productions in both grammars — `Dependency`, `FeatureInverting` and the eight
+    /// classifiers of 8.2.4.2 are implemented. Of
     /// `FeatureElement`'s ten alternatives, `Feature`, `Step`, `Connector`,
     /// `BindingConnector` and `Succession` are. The rest (`expr`, `inv`, `flow`,
     /// `succession flow`, …) are reported rather than read.
@@ -2109,6 +2110,7 @@ impl<'a> Parser<'a> {
                     || self.at_kerml_binding_connector(n)
                     || self.at_kerml_connector(n)
                     || self.at_kerml_step(n)
+                    || self.at_feature_inverting(n)
             }
             Language::SysMl => {
                 self.at_sysml_keyword_member(n)
@@ -2941,6 +2943,7 @@ impl<'a> Parser<'a> {
                         || self.at_kerml_binding_connector(0)
                         || self.at_kerml_connector(0)
                         || self.at_kerml_step(0)
+                        || self.at_feature_inverting(0)
                 }
                 Language::SysMl => {
                     self.at_definition_element(0)
@@ -4006,6 +4009,9 @@ impl<'a> Parser<'a> {
             // A NonFeatureElement (KerML 8.2.3.4.3). SysML reaches the same production
             // as a DefinitionElement, through `definition_element` below.
             self.dependency();
+        } else if self.language == Language::KerMl && self.at_feature_inverting(0) {
+            // A NonFeatureElement (KerML 8.2.3.4.3) SysML does not state at all.
+            self.feature_inverting();
         } else if self.language == Language::KerMl {
             self.error_expected("a package, a classifier or a dependency");
         } else if let Some(node) = self
@@ -5552,12 +5558,19 @@ impl<'a> Parser<'a> {
     fn chainable_target(&mut self, node: SyntaxKind) {
         self.eat_trivia();
         self.start_node(node);
+        self.name_or_owned_feature_chain();
+        self.finish_node();
+    }
+
+    /// `[QualifiedName] | OwnedFeatureChain`, the shape every chainable target writes,
+    /// with no node of its own: a name, or a chain of two or more.
+    fn name_or_owned_feature_chain(&mut self) {
+        self.eat_trivia();
         let start = self.builder.checkpoint();
         self.qualified_name();
         if self.at_feature_chain() {
             self.owned_feature_chain(start);
         }
-        self.finish_node();
     }
 
     // production: OwnedFeatureChain@sysml
@@ -13806,8 +13819,8 @@ impl<'a> Parser<'a> {
     //
     // Marked although RelationshipOwnedElement and OwnedRelatedElement are not: this
     // production's own parts are read, and the two alternations below it are read as far
-    // as NonFeatureElement and FeatureElement are — Package, Dependency and the eight
-    // classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
+    // as NonFeatureElement and FeatureElement are — Package, Dependency, FeatureInverting
+    // and the eight classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
     // node, as FeatureSpecialization has none: the element read says which was taken.
     //
     // An owned related element is the relationship's ownedRelatedElement, with no
@@ -13875,6 +13888,8 @@ impl<'a> Parser<'a> {
             self.library_package();
         } else if self.at_dependency(0) {
             self.dependency();
+        } else if self.at_feature_inverting(0) {
+            self.feature_inverting();
         } else if let Some(classifier) = self.at_classifier(0) {
             self.classifier(classifier);
         } else if self.at_kerml_succession(0) {
@@ -14438,6 +14453,67 @@ impl<'a> Parser<'a> {
     //     derivation, sv2-resolve's. No implied specialization attaches.
     fn owned_feature_inverting(&mut self) {
         self.chainable_target(SyntaxKind::OwnedFeatureInverting);
+    }
+
+    /// Whether a `FeatureInverting` starts at the `n`th meaningful token.
+    ///
+    /// `inverting` or `inverse`, both reserved (`KerML` 8.2.2.6); neither opens any other
+    /// element, and a `FeatureDeclaration`'s `InvertingPart` is reached only after one, so a
+    /// member position decides on the one token.
+    fn at_feature_inverting(&self, n: usize) -> bool {
+        self.nth_is_keyword(n, "inverting") || self.nth_is_keyword(n, "inverse")
+    }
+
+    // production: FeatureInverting@kerml
+    //
+    // FeatureInverting =
+    //     ( 'inverting' Identification? )?
+    //     'inverse'
+    //     ( featureInverted = [QualifiedName]
+    //     | featureInverted = OwnedFeatureChain
+    //       { ownedRelatedElement += featureInverted }
+    //     )
+    //     'of'
+    //     ( invertingFeature = [QualifiedName]
+    //     | ownedRelatedElement += OwnedFeatureChain
+    //       { ownedRelatedElement += invertingFeature }
+    //     )
+    //     RelationshipBody                                       (KerML 8.2.4.3.6)
+    //
+    // A NonFeatureElement (8.2.3.4.3), KerML's alone: SysML states no such production, and
+    // every dispatch to this is behind a KerML guard. The metaclass is FeatureInverting
+    // (8.3.3.3.6, receipt 13f1b52b), relating featureInverted, the first target, to
+    // invertingFeature, the second: `inverse Person::parents of Person::children;`
+    // (KerML 7.3.4.7, receipt f0f6593d; Simple Tests/Inverses.kerml:11).
+    //
+    // The two targets have no node of their own, as Dependency's clients and suppliers
+    // have none: the `of` between them says which is which. Each is a QualifiedName or an
+    // OwnedFeatureChain, told apart by whether a `.` follows the first name.
+    //
+    // The clause's second chain alternative assigns `ownedRelatedElement +=
+    // OwnedFeatureChain` and then `ownedRelatedElement += invertingFeature`, where the
+    // first writes `featureInverted = OwnedFeatureChain`; the Pilot writes
+    // `ownedRelatedElement += OwnedFeatureChain` on both sides (KerML.xtext:633-641). The
+    // TEXT is the same under all three readings, so this parser is unaffected; which
+    // element becomes invertingFeature is sv2-hir's to settle.
+    //
+    // Identification is optional after `inverting` and every part of it is optional
+    // (8.2.3.1), so it is built whenever `inverting` is written, empty in `inverting
+    // inverse a of b;`, as `payload_feature` builds its own: one shape is simpler to
+    // consume than two.
+    fn feature_inverting(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FeatureInverting);
+        if self.at_keyword("inverting") {
+            self.expect_keyword("inverting");
+            self.identification();
+        }
+        self.expect_keyword("inverse");
+        self.name_or_owned_feature_chain();
+        self.expect_keyword("of");
+        self.name_or_owned_feature_chain();
+        self.relationship_body();
+        self.finish_node();
     }
 
     // production: TypeFeaturingPart@kerml

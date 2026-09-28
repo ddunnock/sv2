@@ -36,6 +36,7 @@ vendor/corpus/kerml/src/examples/Simple Tests/Dependencies.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Imports.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Inheritance.kerml
+vendor/corpus/kerml/src/examples/Simple Tests/Inverses.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Redefinition.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Scoping.kerml
 vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/Moments.kerml

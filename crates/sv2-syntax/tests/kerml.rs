@@ -1864,6 +1864,129 @@ fn an_inverting_part_is_bounded_by_its_rules() {
     kerml_rejected("feature inverse of g;");
 }
 
+// -- FeatureInverting, KerML 8.2.4.3.6 ----------------------------------------------
+//
+//   FeatureInverting = ( 'inverting' Identification? )?
+//                      'inverse' ( [QualifiedName] | OwnedFeatureChain )
+//                      'of'      ( [QualifiedName] | OwnedFeatureChain )
+//                      RelationshipBody
+//
+// A NonFeatureElement (8.2.3.4.3): the standalone declaration of the relationship an
+// InvertingPart owns.
+
+#[test]
+fn a_feature_inverting_reads_the_corpus_forms() {
+    // Simple Tests/Inverses.kerml:11-12, in a package body: both targets names, then
+    // `inverting` with a name and a chain for the first target.
+    let tree = render(
+        &kerml_accepted(
+            "package Inverses {\n\tinverse B::g of A::f;\n\tinverting Invert inverse B::g.f of \
+             A::h;\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        tree.lines()
+            .filter(|l| l.trim() == "FeatureInverting")
+            .count(),
+        2,
+        "{tree}"
+    );
+    let bare = render(&kerml_accepted("inverse B::g of A::f;").syntax());
+    assert_eq!(
+        child_kinds(&bare, "FeatureInverting"),
+        [
+            "KwInverse",
+            "QualifiedName",
+            "KwOf",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{bare}"
+    );
+    // A target written as a chain is an OwnedFeatureChain, an ownedRelatedElement of
+    // the relationship (8.2.4.3.6), on either side.
+    let named = render(&kerml_accepted("inverting Invert inverse B::g.f of A::h;").syntax());
+    assert_eq!(
+        child_kinds(&named, "FeatureInverting"),
+        [
+            "KwInverting",
+            "Identification",
+            "KwInverse",
+            "OwnedFeatureChain",
+            "KwOf",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{named}"
+    );
+    let chained = render(&kerml_accepted("inverse a of b.c;").syntax());
+    assert_eq!(
+        child_kinds(&chained, "FeatureInverting"),
+        [
+            "KwInverse",
+            "QualifiedName",
+            "KwOf",
+            "OwnedFeatureChain",
+            "RelationshipBody"
+        ],
+        "{chained}"
+    );
+}
+
+#[test]
+fn a_feature_inverting_takes_the_optional_parts_and_positions_its_production_admits() {
+    // KerML 7.3.4.7's example: a short name is optional, and so is the whole
+    // Identification after `inverting` (8.2.3.1), and the body may hold an annotation.
+    kerml_accepted(
+        "inverting parent_child inverse Person::parent of Person::child {\n    doc /* A \
+         Person is the parent of their children. */\n}",
+    );
+    kerml_accepted("inverting <pc> parent_child inverse a of b;");
+    // `inverting` with nothing after it still has its Identification, empty, as a
+    // PayloadFeature's has: the production writes one whenever `inverting` is taken.
+    let anonymous = render(&kerml_accepted("inverting inverse a of b;").syntax());
+    assert_eq!(
+        child_kinds(&anonymous, "FeatureInverting"),
+        [
+            "KwInverting",
+            "Identification",
+            "KwInverse",
+            "QualifiedName",
+            "KwOf",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{anonymous}"
+    );
+    // A NonFeatureMember takes a MemberPrefix (8.2.3.4.1), and a type body and a
+    // relationship body reach NonFeatureElement too (8.2.4.1.1, 8.2.3.1).
+    kerml_accepted("package P { private inverse a of b; }");
+    kerml_accepted("class C { inverse a of b; }");
+    kerml_accepted("dependency x to y { inverse a of b; }");
+}
+
+#[test]
+fn a_feature_inverting_is_bounded_by_its_rules() {
+    // Both targets and both keywords.
+    kerml_rejected("inverse a;");
+    kerml_rejected("inverse of b;");
+    kerml_rejected("inverse a of;");
+    kerml_rejected("inverting x;");
+    // One feature on each side, not a list. Held as a file by
+    // tests/rejection/kerml-feature-inverting-relates-two-features.kerml.
+    kerml_rejected("inverse a, b of c;");
+    kerml_rejected("inverse a of b, c;");
+    // An Identification is one short name and one name, at most (8.2.3.1).
+    kerml_rejected("inverting a b inverse c of d;");
+    // A relationship ends in its RelationshipBody.
+    kerml_rejected("inverse a of b");
+    // SysML states no FeatureInverting: .sysml text never reaches it (ADR-0014). Held
+    // as a file by tests/rejection/feature-inverting-is-not-sysml.sysml.
+    let sysml = parse("inverse a of b;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------
 //
 //   TypeBodyElement    = NonFeatureMember | FeatureMember | AliasMember | Import

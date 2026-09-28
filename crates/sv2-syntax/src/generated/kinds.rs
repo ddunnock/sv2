@@ -537,6 +537,8 @@ pub enum SyntaxKind {
     OwnedConjugation,
     /// `'chains' ( OwnedFeatureChaining | FeatureChain )`. `KerML` 8.2.4.3.1.
     ChainingPart,
+    /// `( 'inverting' Identification? )? 'inverse' ... 'of' ... RelationshipBody`. `KerML` 8.2.4.3.6.
+    FeatureInverting,
     /// `'inverse' 'of' OwnedFeatureInverting`. `KerML` 8.2.4.3.1.
     InvertingPart,
     /// `invertingFeature = [QualifiedName] | OwnedFeatureChain`. `KerML` 8.2.4.3.6.
@@ -1601,6 +1603,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ConjugationPart,
     SyntaxKind::OwnedConjugation,
     SyntaxKind::ChainingPart,
+    SyntaxKind::FeatureInverting,
     SyntaxKind::InvertingPart,
     SyntaxKind::OwnedFeatureInverting,
     SyntaxKind::TypeFeaturingPart,
