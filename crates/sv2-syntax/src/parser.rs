@@ -3386,6 +3386,8 @@ impl<'a> Parser<'a> {
                 .any(|word| self.nth_is_keyword(n, word))
     }
 
+    // production: FeatureDeclaration@kerml
+    //
     // FeatureDeclaration : Feature =
     //     ( isSufficient ?= 'all' )?
     //     ( FeatureIdentification ( FeatureSpecializationPart | ConjugationPart )?
@@ -3393,10 +3395,8 @@ impl<'a> Parser<'a> {
     //     | ConjugationPart )
     //     FeatureRelationshipPart*                                (KerML 8.2.4.3.1)
     //
-    // NOT marked for coverage. FeatureRelationshipPart is unimplemented: of its four
-    // alternatives TypeRelationshipPart and TypeFeaturingPart are read, and ChainingPart
-    // and InvertingPart are not. Each is held by a case in tests/rejection/. All three
-    // alternatives of the group before it are read.
+    // Whole: all three alternatives of the group, and all four of FeatureRelationshipPart
+    // in `feature_relationship_parts`.
     //
     // A specialization OR a conjugation, never both: a conjugated type "may not also be
     // the specific Type in any Specialization" (KerML 8.3.3.1.2, receipt eabb0d9b), and a
@@ -5565,6 +5565,14 @@ impl<'a> Parser<'a> {
     // OwnedFeatureChain : Feature =
     //     ownedRelationship += OwnedFeatureChaining
     //     ( '.' ownedRelationship += OwnedFeatureChaining )+     (SysML 8.2.2.6.5)
+    //
+    // production: OwnedFeatureChain@kerml
+    //
+    // OwnedFeatureChain : Feature = FeatureChain                  (KerML 8.2.4.3.5)
+    //
+    // KerML states it through FeatureChain, whose body is SysML's text exactly, so this
+    // method reads both units. KerML reaches it by name from OwnedFeatureInverting
+    // (8.2.4.3.6), through `chainable_target`.
     //
     // production: OwnedFeatureChaining
     //
@@ -14325,15 +14333,15 @@ impl<'a> Parser<'a> {
         true
     }
 
+    // production: FeatureRelationshipPart@kerml
+    //
     // FeatureRelationshipPart : Feature =
     //     TypeRelationshipPart | ChainingPart | InvertingPart | TypeFeaturingPart
     //                                                            (KerML 8.2.4.3.1)
     //
-    // `FeatureRelationshipPart*`, the end of a FeatureDeclaration. NOT marked: of its four
-    // alternatives TypeRelationshipPart, ChainingPart and TypeFeaturingPart are read, and
-    // InvertingPart (`inverse of`) is not, and is reported. The four open on four
-    // reserved words, so one token chooses, and the star takes them in any order and
-    // number: `feature f featured by A unions b featured by B;`.
+    // `FeatureRelationshipPart*`, the end of a FeatureDeclaration, all four alternatives.
+    // They open on four reserved words, so one token chooses, and the star takes them in
+    // any order and number: `feature f featured by A unions b featured by B;`.
     fn feature_relationship_parts(&mut self) {
         loop {
             if self.type_relationship_part() {
@@ -14341,6 +14349,10 @@ impl<'a> Parser<'a> {
             }
             if self.at_keyword("chains") {
                 self.chaining_part();
+                continue;
+            }
+            if self.at_keyword("inverse") {
+                self.inverting_part();
                 continue;
             }
             if self.at_keyword("featured") {
@@ -14389,6 +14401,43 @@ impl<'a> Parser<'a> {
             self.owned_feature_chaining();
         }
         self.finish_node();
+    }
+
+    // production: InvertingPart@kerml
+    //
+    // InvertingPart : Feature =
+    //     'inverse' 'of' ownedRelationship += OwnedFeatureInverting
+    //                                                            (KerML 8.2.4.3.1)
+    //
+    // One target, not a list: "only a single feature identification is allowed after
+    // inverse of" (KerML 7.3.4.7, receipt f0f6593d). A second is a second part.
+    fn inverting_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::InvertingPart);
+        self.expect_keyword("inverse");
+        self.expect_keyword("of");
+        self.owned_feature_inverting();
+        self.finish_node();
+    }
+
+    // production: OwnedFeatureInverting@kerml
+    //
+    // OwnedFeatureInverting : FeatureInverting =
+    //       invertingFeature = [QualifiedName]
+    //     | invertingFeature = OwnedFeatureChain
+    //       { ownedRelatedElement += invertingFeature }            (KerML 8.2.4.3.6)
+    //
+    // The metaclass is FeatureInverting (8.3.3.3.6, receipt 13f1b52b): its featureInverted
+    // is the declared feature, which owns it, and its invertingFeature the target. The
+    // target has the shape every chainable relationship target has, so
+    // `chainable_target` reads it. Unlike a ChainingPart's links, the chain here is a
+    // Feature of its own, an ownedRelatedElement of the relationship, and so builds the
+    // OwnedFeatureChain node: `feature f inverse of a.b.c;`.
+    //
+    // constraint: Feature::deriveFeatureOwnedFeatureInverting (KerML 8.3.3.3.4). A
+    //     derivation, sv2-resolve's. No implied specialization attaches.
+    fn owned_feature_inverting(&mut self) {
+        self.chainable_target(SyntaxKind::OwnedFeatureInverting);
     }
 
     // production: TypeFeaturingPart@kerml

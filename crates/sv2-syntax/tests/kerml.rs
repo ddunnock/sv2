@@ -1775,6 +1775,98 @@ fn a_chaining_part_is_bounded_by_its_rules() {
     kerml_rejected("feature featured by A;");
 }
 
+// -- InvertingPart, KerML 8.2.4.3.1 -------------------------------------------------
+//
+//   InvertingPart         = 'inverse' 'of' OwnedFeatureInverting
+//   OwnedFeatureInverting = invertingFeature = [QualifiedName]
+//                         | invertingFeature = OwnedFeatureChain            (8.2.4.3.6)
+
+#[test]
+fn a_feature_takes_an_inverting_part() {
+    // Simple Tests/Inverses.kerml:3, before a DisjoiningPart.
+    let tree = render(&kerml_accepted("feature f : B inverse of B::g disjoint from h;").syntax());
+    assert_eq!(
+        child_kinds(&tree, "FeatureDeclaration"),
+        [
+            "FeatureIdentification",
+            "FeatureSpecializationPart",
+            "InvertingPart",
+            "DisjoiningPart"
+        ],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "InvertingPart"),
+        ["KwInverse", "KwOf", "OwnedFeatureInverting"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "OwnedFeatureInverting"),
+        ["QualifiedName"],
+        "{tree}"
+    );
+    // After a TypeFeaturingPart: Inverses.kerml:14.
+    kerml_accepted("feature gg : A featured by B inverse of A::f;");
+    // KerML 7.3.4.7's own examples, after a multiplicity and in nested bodies.
+    kerml_accepted(
+        "classifier Person {\n    feature children : Person[*];\n    feature parents : \
+         Person[*] inverse of children;\n}",
+    );
+    kerml_accepted("classifier C { feature b2: B { feature a2: A inverse of A::b1::c1; } }");
+    // The second alternative: the inverting feature is an OwnedFeatureChain, an owned
+    // related element of the FeatureInverting, so here the chain IS a node of its own,
+    // unlike a ChainingPart's links (8.2.4.3.6, 8.2.4.3.5).
+    let chain = render(&kerml_accepted("feature f inverse of a.b.c;").syntax());
+    assert_eq!(
+        child_kinds(&chain, "OwnedFeatureInverting"),
+        ["OwnedFeatureChain"],
+        "{chain}"
+    );
+    assert_eq!(
+        child_kinds(&chain, "OwnedFeatureChain"),
+        [
+            "OwnedFeatureChaining",
+            "Dot",
+            "OwnedFeatureChaining",
+            "Dot",
+            "OwnedFeatureChaining"
+        ],
+        "{chain}"
+    );
+    // FeatureRelationshipPart* admits the part more than once (8.2.4.3.1); KerML 7.3.4.7
+    // says it is "generally not useful", which is not a rule.
+    kerml_accepted("feature f inverse of g inverse of h chains a.b;");
+    // Every FeatureDeclaration ends in the parts, a binary connector's before its `from`
+    // too (8.2.5.5.1), and a keywordless feature's (8.2.4.3.1).
+    let connector = render(&kerml_accepted("connector c inverse of g from a to b;").syntax());
+    assert!(
+        has_node(&connector, "BinaryConnectorDeclaration"),
+        "{connector}"
+    );
+    assert!(has_node(&connector, "InvertingPart"), "{connector}");
+    kerml_accepted("class A { f : B inverse of B::g; }");
+}
+
+#[test]
+fn an_inverting_part_is_bounded_by_its_rules() {
+    // Both keywords: `'inverse' 'of'`.
+    kerml_rejected("feature f inverse g;");
+    kerml_rejected("feature f of g;");
+    kerml_rejected("feature f inverse of;");
+    // One inverting feature, not a list (8.2.4.3.6). Held as a file by
+    // tests/rejection/kerml-inverting-part-names-one-feature.kerml.
+    kerml_rejected("feature f inverse of g, h;");
+    kerml_rejected("feature f inverse of a.;");
+    // A feature's part, not a classifier's: ClassifierDeclaration ends in
+    // TypeRelationshipPart*, which does not reach it (8.2.4.2.1). Held as a file by
+    // tests/rejection/kerml-inverting-part-is-a-feature-s.kerml.
+    kerml_rejected("class C inverse of g;");
+    kerml_rejected("feature inverse of g;");
+    // The standalone FeatureInverting (8.2.4.3.6), `inverse B::g of A::f;`, is a
+    // different production, not read yet: Inverses.kerml:11.
+    kerml_rejected("inverse B::g of A::f;");
+}
+
 // -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------
 //
 //   TypeBodyElement    = NonFeatureMember | FeatureMember | AliasMember | Import

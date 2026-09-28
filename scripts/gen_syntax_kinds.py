@@ -192,6 +192,13 @@ NODES = [
         "ChainingPart",
         "`'chains' ( OwnedFeatureChaining | FeatureChain )`. `KerML` 8.2.4.3.1.",
     ),
+    # A feature's InvertingPart and the FeatureInverting it owns, whose inverting feature
+    # is a name or an OwnedFeatureChain. KerML 8.2.4.3.1, 8.2.4.3.6.
+    ("InvertingPart", "`'inverse' 'of' OwnedFeatureInverting`. `KerML` 8.2.4.3.1."),
+    (
+        "OwnedFeatureInverting",
+        "`invertingFeature = [QualifiedName] | OwnedFeatureChain`. `KerML` 8.2.4.3.6.",
+    ),
     # A feature's TypeFeaturingPart and the TypeFeaturing each target is. KerML 8.2.4.3.1,
     # 8.2.4.3.7.
     (

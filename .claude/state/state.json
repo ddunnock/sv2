@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-28T11:43:58Z",
+    "regenerated_utc": "2026-09-28T11:55:23Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 451,
-      "unimplemented": 103,
+      "implemented": 456,
+      "unimplemented": 98,
       "absent": 0,
-      "percent": 81.4
+      "percent": 82.3
     },
     "tests": {
-      "unit": 663,
+      "unit": 664,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 274,
+      "negative_cases": 276,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "aeabeb1 Stop rejecting KerML inverting parts by absence: the next commit reads them",
+      "6e2d3f8 Read the KerML chaining part, `chains`, on feature declarations",
       "487219b Stop rejecting KerML chaining parts by absence: the next commit reads them",
       "38c96aa Close the session: KerML prefix metadata, steps, cross features and feature membership recorded, chaining and inverting parts next",
       "bd0fc0c Own a KerML type body's features through FeatureMember, and read `member`",
       "9a781ac Assert a step's NamespaceFeatureMember where the grammar puts one",
       "63a27f3 Read KerML type featuring parts, `featured by`, on feature declarations",
-      "f0d3e19 Read the owned cross feature of a KerML end feature; FeaturePrefix is whole",
-      "6dbc5a8 Read a keywordless KerML feature declared by its specialization alone",
-      "3f33afd Read KerML steps, and site the Step deviation where it admits text"
+      "f0d3e19 Read the owned cross feature of a KerML end feature; FeaturePrefix is whole"
     ]
   },
   "authored": {
