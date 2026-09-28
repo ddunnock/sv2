@@ -1862,9 +1862,6 @@ fn an_inverting_part_is_bounded_by_its_rules() {
     // tests/rejection/kerml-inverting-part-is-a-feature-s.kerml.
     kerml_rejected("class C inverse of g;");
     kerml_rejected("feature inverse of g;");
-    // The standalone FeatureInverting (8.2.4.3.6), `inverse B::g of A::f;`, is a
-    // different production, not read yet: Inverses.kerml:11.
-    kerml_rejected("inverse B::g of A::f;");
 }
 
 // -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------
