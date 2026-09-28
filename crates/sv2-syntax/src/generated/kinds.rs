@@ -535,6 +535,8 @@ pub enum SyntaxKind {
     ConjugationPart,
     /// `originalType = [QualifiedName] | FeatureChain`. `KerML` 8.2.4.1.3.
     OwnedConjugation,
+    /// `'chains' ( OwnedFeatureChaining | FeatureChain )`. `KerML` 8.2.4.3.1.
+    ChainingPart,
     /// `'featured' 'by' OwnedTypeFeaturing ( ',' OwnedTypeFeaturing )*`. `KerML` 8.2.4.3.1.
     TypeFeaturingPart,
     /// `featuringType = [QualifiedName]`. `KerML` 8.2.4.3.7.
@@ -1594,6 +1596,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::SuperclassingPart,
     SyntaxKind::ConjugationPart,
     SyntaxKind::OwnedConjugation,
+    SyntaxKind::ChainingPart,
     SyntaxKind::TypeFeaturingPart,
     SyntaxKind::OwnedTypeFeaturing,
     SyntaxKind::DisjoiningPart,

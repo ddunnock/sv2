@@ -14330,13 +14330,17 @@ impl<'a> Parser<'a> {
     //                                                            (KerML 8.2.4.3.1)
     //
     // `FeatureRelationshipPart*`, the end of a FeatureDeclaration. NOT marked: of its four
-    // alternatives TypeRelationshipPart and TypeFeaturingPart are read, and ChainingPart
-    // (`chains`) and InvertingPart (`inverse of`) are not, and are reported. The four
-    // open on four reserved words, so one token chooses, and the star takes them in any
-    // order and number: `feature f featured by A unions b featured by B;`.
+    // alternatives TypeRelationshipPart, ChainingPart and TypeFeaturingPart are read, and
+    // InvertingPart (`inverse of`) is not, and is reported. The four open on four
+    // reserved words, so one token chooses, and the star takes them in any order and
+    // number: `feature f featured by A unions b featured by B;`.
     fn feature_relationship_parts(&mut self) {
         loop {
             if self.type_relationship_part() {
+                continue;
+            }
+            if self.at_keyword("chains") {
+                self.chaining_part();
                 continue;
             }
             if self.at_keyword("featured") {
@@ -14345,6 +14349,46 @@ impl<'a> Parser<'a> {
             }
             return;
         }
+    }
+
+    // production: ChainingPart@kerml
+    //
+    // ChainingPart : Feature =
+    //     'chains'
+    //     ( ownedRelationship += OwnedFeatureChaining
+    //     | FeatureChain )                                       (KerML 8.2.4.3.1)
+    //
+    // FeatureChain : Feature =
+    //     ownedRelationship += OwnedFeatureChaining
+    //     ( '.' ownedRelationship += OwnedFeatureChaining )+     (KerML 8.2.4.3.5)
+    //
+    // Both alternatives add FeatureChainings (8.3.3.3.5, receipt ed78282e) to the
+    // DECLARED feature's ownedRelationship: FeatureChain is called here unassigned, so it
+    // contributes to the Feature this part returns, where OwnedFeatureChainMember and the
+    // relationship targets assign it to a Feature of its own. So the links are this node's
+    // children, flat, with no OwnedFeatureChain between: `feature cousins chains
+    // parents.siblings.children;` (KerML 7.3.4.6, receipt 8cd4056a). The two alternatives
+    // share their first link and differ only in whether a `.` follows, so one loop reads
+    // both, as `owned_feature_chain` does for its own.
+    //
+    // constraint: Feature::validateFeatureChainingFeatureNotOne (KerML 8.3.3.3.4). A
+    //     single chainingFeature is invalid, and the first alternative writes exactly one:
+    //     `feature b_f_a chains b chains f.a;` (Simple Tests/FeatureChains.kerml:33).
+    //     Validity, not syntax, so it parses and carries its diagnostic downstream
+    //     (ADR-0002); likewise validateFeatureChainingFeaturesNotSelf and
+    //     validateFeatureChainingFeatureConformance. deriveFeatureChainingFeature and
+    //     deriveFeatureOwnedFeatureChaining are derivations, sv2-resolve's. No implied
+    //     specialization attaches.
+    fn chaining_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ChainingPart);
+        self.expect_keyword("chains");
+        self.owned_feature_chaining();
+        while self.at_feature_chain() {
+            self.bump();
+            self.owned_feature_chaining();
+        }
+        self.finish_node();
     }
 
     // production: TypeFeaturingPart@kerml

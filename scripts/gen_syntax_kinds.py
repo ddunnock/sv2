@@ -185,6 +185,13 @@ NODES = [
         "OwnedConjugation",
         "`originalType = [QualifiedName] | FeatureChain`. `KerML` 8.2.4.1.3.",
     ),
+    # A feature's ChainingPart. Its FeatureChainings are the declared feature's own, so
+    # they are the part's children and no OwnedFeatureChain node wraps them. KerML
+    # 8.2.4.3.1, 8.2.4.3.5.
+    (
+        "ChainingPart",
+        "`'chains' ( OwnedFeatureChaining | FeatureChain )`. `KerML` 8.2.4.3.1.",
+    ),
     # A feature's TypeFeaturingPart and the TypeFeaturing each target is. KerML 8.2.4.3.1,
     # 8.2.4.3.7.
     (

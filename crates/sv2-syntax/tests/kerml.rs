@@ -1706,6 +1706,83 @@ fn a_type_featuring_part_is_bounded_by_its_rules() {
     kerml_rejected("class C featured by D;");
 }
 
+// -- ChainingPart, KerML 8.2.4.3.1 --------------------------------------------------
+//
+//   ChainingPart         = 'chains' ( OwnedFeatureChaining | FeatureChain )
+//   FeatureChain         = OwnedFeatureChaining ( '.' OwnedFeatureChaining )+   (8.2.4.3.5)
+//   OwnedFeatureChaining = chainingFeature = [QualifiedName]                     (8.2.4.3.5)
+
+#[test]
+fn a_feature_takes_a_chaining_part() {
+    // KerML Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml:150, before a
+    // FeatureValue. Neither alternative assigns the chain to a feature of its own: both
+    // add the FeatureChainings to the declared feature's ownedRelationship, so the links
+    // are the part's children and no OwnedFeatureChain node stands between them.
+    let tree = render(
+        &kerml_accepted("feature obPiP chains objectToFinish.beforePaint.isPainted = false;")
+            .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "FeatureDeclaration"),
+        ["FeatureIdentification", "ChainingPart"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "ChainingPart"),
+        [
+            "KwChains",
+            "OwnedFeatureChaining",
+            "Dot",
+            "OwnedFeatureChaining",
+            "Dot",
+            "OwnedFeatureChaining"
+        ],
+        "{tree}"
+    );
+    assert!(!has_node(&tree, "OwnedFeatureChain"), "{tree}");
+    assert!(has_node(&tree, "FeatureValue"), "{tree}");
+    // The first alternative is one link. validateFeatureChainingFeatureNotOne
+    // (8.3.3.3.4) makes a single chainingFeature invalid, but validity gates writes, not
+    // reads (ADR-0002): it parses and carries its diagnostic downstream. The corpus
+    // writes it, twice in one declaration: Simple Tests/FeatureChains.kerml:33.
+    let two = render(&kerml_accepted("feature b_f_a chains b chains f.a;").syntax());
+    assert_eq!(
+        child_kinds(&two, "FeatureDeclaration"),
+        ["FeatureIdentification", "ChainingPart", "ChainingPart"],
+        "{two}"
+    );
+    // A link is a QualifiedName, so it may be qualified itself.
+    kerml_accepted("feature f chains P::a.Q::b;");
+    // After a FeatureSpecializationPart, across lines: A-3-8-ChangingFeatureValues.kerml
+    // :158-160, as a type body's feature.
+    kerml_accepted(
+        "behavior B {\n\tfeature subsets objectToFinish.beforePaint.immediateSuccessors,\n\t\t\
+         objectToFinish.whilePainting.startShot.timeCoincidentOccurrences\n\t\tchains \
+         paint.painting.endShot;\n}",
+    );
+    // FeatureRelationshipPart* takes its parts in any order (8.2.4.3.1).
+    kerml_accepted("feature f unions g chains a.b featured by A;");
+}
+
+#[test]
+fn a_chaining_part_is_bounded_by_its_rules() {
+    // `chains` needs at least one link.
+    kerml_rejected("feature f chains;");
+    // Every `.` is followed by a link (8.2.4.3.5). Held as a file by
+    // tests/rejection/kerml-feature-chain-needs-a-link-after-every-dot.kerml.
+    kerml_rejected("feature f chains a.;");
+    // One chain, not a list: FeatureChain is `.`-separated, never `,`-separated.
+    kerml_rejected("feature f chains a, b;");
+    // A feature's part, not a classifier's: ClassifierDeclaration ends in
+    // TypeRelationshipPart*, which does not reach it (8.2.4.2.1). Held as a file by
+    // tests/rejection/kerml-chaining-part-is-a-feature-s.kerml.
+    kerml_rejected("class C chains a.b;");
+    // A FeatureDeclaration opens on an identification, a specialization or a conjugation
+    // (8.2.4.3.1); FeatureRelationshipPart* only ends one, so a part cannot stand alone.
+    kerml_rejected("feature chains a.b;");
+    kerml_rejected("feature featured by A;");
+}
+
 // -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------
 //
 //   TypeBodyElement    = NonFeatureMember | FeatureMember | AliasMember | Import

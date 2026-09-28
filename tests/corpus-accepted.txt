@@ -16,6 +16,7 @@ vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-4-OneToUnrestri
 vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-5-TimingForStructures.kerml
 vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-6-Sequences.kerml
 vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-7-DecisionsAndMerges.kerml
+vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml
 vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_1.kerml
 vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_2.kerml
 vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_1.kerml
