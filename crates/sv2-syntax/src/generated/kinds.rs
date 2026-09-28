@@ -537,6 +537,8 @@ pub enum SyntaxKind {
     OwnedConjugation,
     /// `'chains' ( OwnedFeatureChaining | FeatureChain )`. `KerML` 8.2.4.3.1.
     ChainingPart,
+    /// `( 'specialization' Identification )? 'subclassifier' [QualifiedName] SPECIALIZES [QualifiedName] RelationshipBody`. `KerML` 8.2.4.2.2.
+    Subclassification,
     /// `( 'specialization' Identification )? 'subtype' SpecificType SPECIALIZES GeneralType RelationshipBody`. `KerML` 8.2.4.1.2.
     Specialization,
     /// `( 'inverting' Identification? )? 'inverse' ... 'of' ... RelationshipBody`. `KerML` 8.2.4.3.6.
@@ -1605,6 +1607,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ConjugationPart,
     SyntaxKind::OwnedConjugation,
     SyntaxKind::ChainingPart,
+    SyntaxKind::Subclassification,
     SyntaxKind::Specialization,
     SyntaxKind::FeatureInverting,
     SyntaxKind::InvertingPart,

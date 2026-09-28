@@ -30,6 +30,7 @@ vendor/corpus/kerml/src/examples/Simple Tests/ArgumentResolution.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Circular.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Classifications.kerml
+vendor/corpus/kerml/src/examples/Simple Tests/Classifiers.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Conjugation.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Dependencies.kerml

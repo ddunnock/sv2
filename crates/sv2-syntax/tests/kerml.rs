@@ -2074,6 +2074,85 @@ fn a_specialization_is_bounded_by_its_rules() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// -- Subclassification, KerML 8.2.4.2.2 ---------------------------------------------
+//
+//   Subclassification = ( 'specialization' Identification )?
+//                       'subclassifier' subclassifier = [QualifiedName]
+//                       SPECIALIZES superclassifier = [QualifiedName]
+//                       RelationshipBody
+//
+// A NonFeatureElement (8.2.3.4.3). Names only: no feature chain on either side.
+
+#[test]
+fn a_subclassification_reads_the_corpus_forms() {
+    // Simple Tests/Classifiers.kerml:5-9, the whole run.
+    let tree = render(
+        &kerml_accepted(
+            "package Classifiers {\n\tspecialization Super subclassifier A specializes B;\n\t\
+             specialization subclassifier B :> A;\n\t\n\tsubclassifier C specializes A;\n\t\
+             subclassifier C specializes B;\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        tree.lines()
+            .filter(|l| l.trim() == "Subclassification")
+            .count(),
+        4,
+        "{tree}"
+    );
+    let named =
+        render(&kerml_accepted("specialization Super subclassifier A specializes B;").syntax());
+    assert_eq!(
+        child_kinds(&named, "Subclassification"),
+        [
+            "KwSpecialization",
+            "Identification",
+            "KwSubclassifier",
+            "QualifiedName",
+            "KwSpecializes",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{named}"
+    );
+    let bare = render(&kerml_accepted("subclassifier C :> A;").syntax());
+    assert_eq!(
+        child_kinds(&bare, "Subclassification"),
+        [
+            "KwSubclassifier",
+            "QualifiedName",
+            "ColonGt",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{bare}"
+    );
+    // KerML 7.3.3.3's example, with a comment in the body.
+    kerml_accepted(
+        "specialization subclassifier B :> A {\n    /* This subclassification is unnamed. */\n}",
+    );
+    kerml_accepted("class K { subclassifier a::b :> c::d; }");
+}
+
+#[test]
+fn a_subclassification_is_bounded_by_its_rules() {
+    kerml_rejected("subclassifier C;");
+    kerml_rejected("subclassifier C specializes;");
+    kerml_rejected("specialization S C specializes A;");
+    // A classifier is named, never chained: `subclassifier = [QualifiedName]` on both
+    // sides (8.2.4.2.2). Held as a file by
+    // tests/rejection/kerml-subclassification-names-classifiers-not-feature-chains.kerml.
+    kerml_rejected("subclassifier C specializes a.b;");
+    kerml_rejected("subclassifier c.d specializes A;");
+    // One superclassifier: a list is a classifier's own SuperclassingPart (8.2.4.2.1).
+    kerml_rejected("subclassifier C specializes A, B;");
+    kerml_rejected("subclassifier C subsets A;");
+    // SysML states no Subclassification declaration (ADR-0014).
+    let sysml = parse("subclassifier C :> A;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------
 //
 //   TypeBodyElement    = NonFeatureMember | FeatureMember | AliasMember | Import

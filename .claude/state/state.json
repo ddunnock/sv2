@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-28T12:40:57Z",
+    "regenerated_utc": "2026-09-28T13:01:51Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 460,
-      "unimplemented": 94,
+      "implemented": 461,
+      "unimplemented": 93,
       "absent": 0,
-      "percent": 83.0
+      "percent": 83.2
     },
     "tests": {
-      "unit": 669,
+      "unit": 671,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 280,
+      "negative_cases": 281,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "a31ddec Read KerML's standalone specialization, `subtype A :> B;`",
       "fa4c9b6 Read KerML's standalone feature inverting, `inverse a of b;`",
       "50b84c5 Stop rejecting KerML's standalone feature inverting by absence: the next commit reads it",
       "f5f354f Read the KerML inverting part, `inverse of`, completing FeatureDeclaration",
       "aeabeb1 Stop rejecting KerML inverting parts by absence: the next commit reads them",
       "6e2d3f8 Read the KerML chaining part, `chains`, on feature declarations",
       "487219b Stop rejecting KerML chaining parts by absence: the next commit reads them",
-      "38c96aa Close the session: KerML prefix metadata, steps, cross features and feature membership recorded, chaining and inverting parts next",
-      "bd0fc0c Own a KerML type body's features through FeatureMember, and read `member`"
+      "38c96aa Close the session: KerML prefix metadata, steps, cross features and feature membership recorded, chaining and inverting parts next"
     ]
   },
   "authored": {

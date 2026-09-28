@@ -621,6 +621,22 @@ const CONTROL_NODES: [(&str, SyntaxKind); 4] = [
     ("fork", SyntaxKind::ForkNode),
 ];
 
+/// Which standalone `KerML` relationship declaration is written, of the
+/// `NonFeatureElement` alternatives that declare a relationship on its own
+/// (`KerML` 8.2.3.4.3) and that this parser reads.
+///
+/// Each opens on its own reserved word, looked past an optional `( 'specialization'
+/// Identification )?` for the ones that write it, so the word decides.
+#[derive(Clone, Copy)]
+enum RelationshipDeclaration {
+    /// `FeatureInverting`, `inverting` or `inverse` (8.2.4.3.6).
+    FeatureInverting,
+    /// `Specialization`, `subtype` (8.2.4.1.2).
+    Specialization,
+    /// `Subclassification`, `subclassifier` (8.2.4.2.2).
+    Subclassification,
+}
+
 /// Which of `KerML` `Connector`'s three declaration forms is written (`KerML` 8.2.5.5.1).
 #[derive(Clone, Copy)]
 enum ConnectorForm {
@@ -2081,8 +2097,8 @@ impl<'a> Parser<'a> {
     /// ```
     ///
     /// Of `NonFeatureElement`, `Package` and `LibraryPackage` — shared units, the same
-    /// productions in both grammars — `Dependency`, `FeatureInverting`, `Specialization`
-    /// and the eight classifiers of 8.2.4.2 are implemented. Of
+    /// productions in both grammars — `Dependency`, `FeatureInverting`, `Specialization`,
+    /// `Subclassification` and the eight classifiers of 8.2.4.2 are implemented. Of
     /// `FeatureElement`'s ten alternatives, `Feature`, `Step`, `Connector`,
     /// `BindingConnector` and `Succession` are. The rest (`expr`, `inv`, `flow`,
     /// `succession flow`, …) are reported rather than read.
@@ -2110,8 +2126,7 @@ impl<'a> Parser<'a> {
                     || self.at_kerml_binding_connector(n)
                     || self.at_kerml_connector(n)
                     || self.at_kerml_step(n)
-                    || self.at_feature_inverting(n)
-                    || self.at_specialization(n)
+                    || self.at_relationship_declaration(n).is_some()
             }
             Language::SysMl => {
                 self.at_sysml_keyword_member(n)
@@ -2944,8 +2959,7 @@ impl<'a> Parser<'a> {
                         || self.at_kerml_binding_connector(0)
                         || self.at_kerml_connector(0)
                         || self.at_kerml_step(0)
-                        || self.at_feature_inverting(0)
-                        || self.at_specialization(0)
+                        || self.at_relationship_declaration(0).is_some()
                 }
                 Language::SysMl => {
                     self.at_definition_element(0)
@@ -4011,12 +4025,12 @@ impl<'a> Parser<'a> {
             // A NonFeatureElement (KerML 8.2.3.4.3). SysML reaches the same production
             // as a DefinitionElement, through `definition_element` below.
             self.dependency();
-        } else if self.language == Language::KerMl && self.at_feature_inverting(0) {
-            // A NonFeatureElement (KerML 8.2.3.4.3) SysML does not state at all.
-            self.feature_inverting();
-        } else if self.language == Language::KerMl && self.at_specialization(0) {
-            // Another, as FeatureInverting is.
-            self.specialization();
+        } else if let Some(declaration) = self
+            .at_relationship_declaration(0)
+            .filter(|_| self.language == Language::KerMl)
+        {
+            // NonFeatureElements (KerML 8.2.3.4.3) SysML does not state at all.
+            self.relationship_declaration(declaration);
         } else if self.language == Language::KerMl {
             self.error_expected("a package, a classifier or a dependency");
         } else if let Some(node) = self
@@ -13825,7 +13839,7 @@ impl<'a> Parser<'a> {
     // Marked although RelationshipOwnedElement and OwnedRelatedElement are not: this
     // production's own parts are read, and the two alternations below it are read as far
     // as NonFeatureElement and FeatureElement are — Package, Dependency, FeatureInverting,
-    // Specialization and the eight classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
+    // Specialization, Subclassification and the eight classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
     // node, as FeatureSpecialization has none: the element read says which was taken.
     //
     // An owned related element is the relationship's ownedRelatedElement, with no
@@ -13893,10 +13907,8 @@ impl<'a> Parser<'a> {
             self.library_package();
         } else if self.at_dependency(0) {
             self.dependency();
-        } else if self.at_feature_inverting(0) {
-            self.feature_inverting();
-        } else if self.at_specialization(0) {
-            self.specialization();
+        } else if let Some(declaration) = self.at_relationship_declaration(0) {
+            self.relationship_declaration(declaration);
         } else if let Some(classifier) = self.at_classifier(0) {
             self.classifier(classifier);
         } else if self.at_kerml_succession(0) {
@@ -14462,6 +14474,32 @@ impl<'a> Parser<'a> {
         self.chainable_target(SyntaxKind::OwnedFeatureInverting);
     }
 
+    /// Which standalone relationship declaration starts at the `n`th meaningful token, if
+    /// one does. Asked by every site that asks for a `KerML` member element, and only by
+    /// those, so none is reached from a .sysml file.
+    fn at_relationship_declaration(&self, n: usize) -> Option<RelationshipDeclaration> {
+        if self.at_feature_inverting(n) {
+            return Some(RelationshipDeclaration::FeatureInverting);
+        }
+        let word = self.skip_specialization_prefix(n);
+        if self.nth_is_keyword(word, "subtype") {
+            Some(RelationshipDeclaration::Specialization)
+        } else if self.nth_is_keyword(word, "subclassifier") {
+            Some(RelationshipDeclaration::Subclassification)
+        } else {
+            None
+        }
+    }
+
+    /// The declaration `at_relationship_declaration` found.
+    fn relationship_declaration(&mut self, declaration: RelationshipDeclaration) {
+        match declaration {
+            RelationshipDeclaration::FeatureInverting => self.feature_inverting(),
+            RelationshipDeclaration::Specialization => self.specialization(),
+            RelationshipDeclaration::Subclassification => self.subclassification(),
+        }
+    }
+
     /// Whether a `FeatureInverting` starts at the `n`th meaningful token.
     ///
     /// `inverting` or `inverse`, both reserved (`KerML` 8.2.2.6); neither opens any other
@@ -14541,12 +14579,6 @@ impl<'a> Parser<'a> {
         m + usize::from(self.nth_is_name(m))
     }
 
-    /// Whether a `KerML` `Specialization` starts at the `n`th meaningful token: `subtype`,
-    /// reserved (`KerML` 8.2.2.6), after the optional prefix.
-    fn at_specialization(&self, n: usize) -> bool {
-        self.nth_is_keyword(self.skip_specialization_prefix(n), "subtype")
-    }
-
     /// `( 'specialization' Identification )?`, read if written.
     ///
     /// Unlike `FeatureInverting`'s `( 'inverting' Identification? )?`, the `Identification`
@@ -14588,6 +14620,38 @@ impl<'a> Parser<'a> {
         self.specific_type();
         self.terminal(SyntaxKind::ColonGt, "specializes", "`:>` or `specializes`");
         self.general_type();
+        self.relationship_body();
+        self.finish_node();
+    }
+
+    // production: Subclassification@kerml
+    //
+    // Subclassification =
+    //     ( 'specialization' Identification )?
+    //     'subclassifier' subclassifier = [QualifiedName]
+    //     SPECIALIZES superclassifier = [QualifiedName]
+    //     RelationshipBody                                       (KerML 8.2.4.2.2)
+    //
+    // A Specialization between two classifiers (8.3.3.2.3, receipt 3f715fda), its
+    // subclassifier and superclassifier redefining specific and general: `specialization
+    // Super subclassifier A specializes B;` (KerML 7.3.3.3, receipt b8c11363; Simple
+    // Tests/Classifiers.kerml:5). NAMES on both sides, where a Specialization takes a
+    // feature chain too: a Classifier is not a Feature, so there is nothing to chain.
+    // One superclassifier; a list is a classifier's own SuperclassingPart (8.2.4.2.1).
+    //
+    // constraint: none on Subclassification itself; Classifier::
+    //     deriveClassifierOwnedSubclassification (KerML 8.3.3.2.2) is a derivation,
+    //     sv2-resolve's. No implied specialization attaches to this declaration. The
+    //     one checkTypeSpecialization (KerML 8.3.3.1.10) implies, to Base::Anything, is
+    //     the subclassifier's, and only where it has no explicit specialization.
+    fn subclassification(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Subclassification);
+        self.specialization_prefix();
+        self.expect_keyword("subclassifier");
+        self.qualified_name();
+        self.terminal(SyntaxKind::ColonGt, "specializes", "`:>` or `specializes`");
+        self.qualified_name();
         self.relationship_body();
         self.finish_node();
     }

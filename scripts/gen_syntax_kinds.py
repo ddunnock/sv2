@@ -192,6 +192,15 @@ NODES = [
         "ChainingPart",
         "`'chains' ( OwnedFeatureChaining | FeatureChain )`. `KerML` 8.2.4.3.1.",
     ),
+    # The standalone Subclassification, a NonFeatureElement: two classifier names.
+    # KerML 8.2.4.2.2.
+    (
+        "Subclassification",
+        (
+            "`( 'specialization' Identification )? 'subclassifier' [QualifiedName] "
+            "SPECIALIZES [QualifiedName] RelationshipBody`. `KerML` 8.2.4.2.2."
+        ),
+    ),
     # The standalone Specialization, a NonFeatureElement. Its SpecificType and GeneralType
     # contribute to it and build no node, as FeatureInverting's targets build none.
     # KerML 8.2.4.1.2.
