@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-29T18:04:07Z",
+    "regenerated_utc": "2026-09-29T18:10:35Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,13 +17,13 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 510,
-      "unimplemented": 44,
+      "implemented": 512,
+      "unimplemented": 42,
       "absent": 0,
-      "percent": 92.1
+      "percent": 92.4
     },
     "tests": {
-      "unit": 721,
+      "unit": 722,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 296,
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "72cd82e Build KerML's TypedBy over OwnedFeatureTyping, with no FeatureTyping between",
       "b0fcd9f Mark KerML's AnnotatingElement whole, read by one method at every site",
       "a294ae4 Mark KerML's NonFeatureElement whole, read by one method at both sites",
       "d669e22 Read KerML's type featuring, `featuring F of y by C;`",
       "500e5b3 Close the session: TypeFeaturing follows the BNF's `by`, and is next",
       "6a99050 Record the next step: KerML's TypedBy owns its typing directly",
       "517a9f3 Mark KerML's owned subsettings, redefinitions, references and crosses",
-      "2b1db57 Read KerML's named multiplicity, `multiplicity zeroOrMore [0..*];`",
-      "7403e26 Close the session: KerML's declarations, bodies and flows recorded, multiplicity next"
+      "2b1db57 Read KerML's named multiplicity, `multiplicity zeroOrMore [0..*];`"
     ]
   },
   "authored": {

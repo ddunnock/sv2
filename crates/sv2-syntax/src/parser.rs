@@ -14664,10 +14664,8 @@ impl<'a> Parser<'a> {
     //
     // OwnedRelatedElement : Element = NonFeatureElement | FeatureElement
     //
-    // Marked although RelationshipOwnedElement and OwnedRelatedElement are not: this
-    // production's own parts are read, and the two alternations below it are read as far
-    // as NonFeatureElement and FeatureElement are, which is now wholly: every alternative
-    // of each (see `at_member_element`).
+    // RelationshipOwnedElement and OwnedRelatedElement are marked at
+    // `relationship_owned_elements` and `owned_related_element`.
     // Neither alternation has a node, as FeatureSpecialization has none: the element
     // read says which was taken.
     //
@@ -14696,6 +14694,18 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: RelationshipOwnedElement@kerml
+    //
+    // RelationshipOwnedElement : Relationship =
+    //       ownedRelatedElement += OwnedRelatedElement
+    //     | ownedRelationship += OwnedAnnotation                     (KerML 8.2.3.1)
+    //
+    // Both alternatives, asked once per item of the `*` in RelationshipBody: an
+    // annotation when one starts here with comments significant, since a bare
+    // REGULAR_COMMENT is a Comment in this position, and otherwise an owned related
+    // element. An alternation with no node: the OwnedAnnotation node, or the element
+    // itself, says which.
+    //
     /// `RelationshipOwnedElement*` in a `KerML` `RelationshipBody`, up to its `}`.
     fn relationship_owned_elements(&mut self) {
         loop {
@@ -14723,12 +14733,20 @@ impl<'a> Parser<'a> {
         }
     }
 
+    // production: OwnedRelatedElement@kerml
+    //
+    // OwnedRelatedElement : Element = NonFeatureElement | FeatureElement
+    //                                                            (KerML 8.2.3.1)
+    //
+    // Both alternatives, each whole: `kerml_non_feature_element` and `feature_element`.
+    // The non-feature elements are asked first;
+    // `body_element` asks a namespace body's feature member before its non-feature one,
+    // the other way round, so the order is not what tells them apart: each recogniser
+    // does. `feature_element` asks the keyword FeatureElements before the
+    // keywordless-capable Feature. No node: the element says which.
+    //
     /// An `OwnedRelatedElement` of `KerML`, with no `MemberPrefix`. Returns whether one
     /// was read.
-    ///
-    /// `NonFeatureElement | FeatureElement` (`KerML` 8.2.3.1), dispatched over what each
-    /// implements, in the order `membership` and `namespace_feature_member` ask: a
-    /// succession and a binding connector before the keywordless-capable `Feature`.
     fn owned_related_element(&mut self) -> bool {
         if self.kerml_non_feature_element() {
             // Read by the call.

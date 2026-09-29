@@ -3195,6 +3195,78 @@ fn every_non_feature_element_is_a_member_and_an_owned_related_element() {
     kerml_rejected("featuring y by C { private class K; }");
 }
 
+// -- RelationshipOwnedElement and OwnedRelatedElement, KerML 8.2.3.1 ---------------
+//
+//   RelationshipBody         = ';' | '{' RelationshipOwnedElement* '}'
+//   RelationshipOwnedElement = ownedRelatedElement += OwnedRelatedElement
+//                            | ownedRelationship += OwnedAnnotation
+//   OwnedRelatedElement      = NonFeatureElement | FeatureElement
+//
+// NonFeatureElement and AnnotatingElement are held at this site above
+// (`every_non_feature_element_is_a_member_and_an_owned_related_element`,
+// `every_annotating_element_is_a_member_and_an_owned_annotation`). The ten FeatureElements
+// (8.2.3.4.3) are held here, each with the node its production builds, and all three
+// kinds of item in one body.
+
+const FEATURE_ELEMENTS: [(&str, &str); 10] = [
+    ("feature f;", "Feature"),
+    ("step s;", "Step"),
+    ("expr e;", "Expression"),
+    ("bool b;", "BooleanExpression"),
+    ("inv i;", "Invariant"),
+    ("connector c;", "Connector"),
+    ("binding a = b;", "BindingConnector"),
+    ("succession a then b;", "Succession"),
+    ("flow a.y to b.x;", "Flow"),
+    ("succession flow a.y to b.x;", "SuccessionFlow"),
+];
+
+#[test]
+fn every_feature_element_is_an_owned_related_element() {
+    for (element, kind) in FEATURE_ELEMENTS {
+        let owned = render(&kerml_accepted(&format!("featuring y by C {{ {element} }}")).syntax());
+        assert!(has_node(&owned, kind), "{kind}: {owned}");
+        // Owned with no membership: neither a NamespaceFeatureMember nor a FeatureMember.
+        assert!(!has_node(&owned, "NamespaceFeatureMember"), "{owned}");
+        assert!(!has_node(&owned, "OwnedFeatureMember"), "{owned}");
+    }
+    let mixed = render(
+        &kerml_accepted("dependency a to b { class K; feature f; doc /* d */ @M; }").syntax(),
+    );
+    assert_eq!(
+        child_kinds(&mixed, "RelationshipBody"),
+        [
+            "LBrace",
+            "Class",
+            "Feature",
+            "OwnedAnnotation",
+            "OwnedAnnotation",
+            "RBrace"
+        ],
+        "{mixed}"
+    );
+    // The two dispatches' risky neighbours. A keywordless Feature opens on a name
+    // (8.2.4.3.1); a `#` run is a Feature's PrefixMetadataMember before `feature`, and a
+    // MetadataFeature's own prefix before `@` (8.2.5.12), an annotation.
+    let keywordless = render(&kerml_accepted("featuring y by C { f : T; }").syntax());
+    assert_eq!(
+        child_kinds(&keywordless, "RelationshipBody"),
+        ["LBrace", "Feature", "RBrace"],
+        "{keywordless}"
+    );
+    let prefixed = render(&kerml_accepted("featuring y by C { #M feature f; #M @N; }").syntax());
+    assert_eq!(
+        child_kinds(&prefixed, "RelationshipBody"),
+        ["LBrace", "Feature", "OwnedAnnotation", "RBrace"],
+        "{prefixed}"
+    );
+    // An owned related element takes no MemberPrefix (8.2.3.1), and a relationship body
+    // owns no Import or AliasMember, which are NamespaceBodyElements (8.2.3.4.1).
+    kerml_rejected("featuring y by C { public feature f; }");
+    kerml_rejected("featuring y by C { import A::*; }");
+    kerml_rejected("featuring y by C { alias X for Y; }");
+}
+
 // -- Conjugation, KerML 8.2.4.1.3 ---------------------------------------------------
 //
 //   Conjugation = ( 'conjugation' Identification )?
