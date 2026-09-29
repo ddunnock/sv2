@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-29T16:03:10Z",
+    "regenerated_utc": "2026-09-29T16:20:55Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 500,
-      "unimplemented": 54,
+      "implemented": 504,
+      "unimplemented": 50,
       "absent": 0,
-      "percent": 90.3
+      "percent": 91.0
     },
     "tests": {
-      "unit": 715,
+      "unit": 716,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 294,
+      "negative_cases": 295,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "2b1db57 Read KerML's named multiplicity, `multiplicity zeroOrMore [0..*];`",
       "7403e26 Close the session: KerML's declarations, bodies and flows recorded, multiplicity next",
       "d423f72 Mark KerML's FeatureElement whole, and read its namespace, `namespace N { }`",
       "c665231 Read KerML flows and succession flows, `flow a.y to b.x1;`",
       "8586cb6 Stop rejecting KerML flows by absence: the next commit reads them",
       "0877d3d Read KerML functions and predicates, `function Average { in x; f(x) }`",
       "8846ddc Stop rejecting KerML functions and predicates by absence: the next commit reads them",
-      "67c0034 Read KerML expression bodies, `x->collect {in xx; xx + 1}`",
-      "49f1c7f Stop rejecting KerML expression bodies by absence: the next commit reads them"
+      "67c0034 Read KerML expression bodies, `x->collect {in xx; xx + 1}`"
     ]
   },
   "authored": {

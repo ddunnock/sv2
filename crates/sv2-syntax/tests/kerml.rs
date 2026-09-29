@@ -1471,6 +1471,52 @@ fn a_multiplicity_is_bounded_by_its_rules() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// -- a feature's owned relationships, KerML 8.2.4.3.1-8.2.4.3.4 -----------------------
+//
+//   Subsets    = SUBSETS    OwnedSubsetting            OwnedSubsetting          = GeneralType
+//   Redefines  = REDEFINES  OwnedRedefinition          OwnedRedefinition        = GeneralType
+//   References = REFERENCES OwnedReferenceSubsetting   OwnedReferenceSubsetting = GeneralType
+//   Crosses    = CROSSES    OwnedCrossSubsetting       OwnedCrossSubsetting     = GeneralType
+//   GeneralType = [QualifiedName] | OwnedFeatureChain                          (8.2.4.1.2)
+
+#[test]
+fn a_kerml_feature_owns_its_specializations_over_a_general_type() {
+    // Each owned relationship is a GeneralType contributed into it: a name, or a feature
+    // chain, which is an ownedRelatedElement of the relationship.
+    for (source, part, owned) in [
+        ("feature f :> a.b;", "Subsets", "OwnedSubsetting"),
+        ("feature f subsets a;", "Subsets", "OwnedSubsetting"),
+        ("feature f :>> a.b;", "Redefines", "OwnedRedefinition"),
+        ("feature f redefines a;", "Redefines", "OwnedRedefinition"),
+        (
+            "feature f ::> a.b;",
+            "References",
+            "OwnedReferenceSubsetting",
+        ),
+        (
+            "feature f references a;",
+            "References",
+            "OwnedReferenceSubsetting",
+        ),
+        ("end feature f => a.b;", "Crosses", "OwnedCrossSubsetting"),
+        (
+            "end feature f crosses a;",
+            "Crosses",
+            "OwnedCrossSubsetting",
+        ),
+    ] {
+        let tree = render(&kerml_accepted(&format!("assoc A {{ {source} }}")).syntax());
+        assert!(has_node(&tree, part), "{source}\n{tree}");
+        let target = child_kinds(&tree, owned);
+        let expected = if source.contains('.') {
+            "OwnedFeatureChain"
+        } else {
+            "QualifiedName"
+        };
+        assert_eq!(target, [expected], "{source}\n{tree}");
+    }
+}
+
 // -- multiplicity, KerML 8.2.5.11 ------------------------------------------------
 //
 //   OwnedMultiplicity      = ownedRelatedElement += OwnedMultiplicityRange

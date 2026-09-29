@@ -5977,6 +5977,13 @@ impl<'a> Parser<'a> {
     //     subsettedFeature = [QualifiedName]
     //     | ownedRelatedElement += OwnedFeatureChain              (SysML 8.2.2.6.5)
     //
+    // production: OwnedSubsetting@kerml
+    //
+    // OwnedSubsetting : Subsetting = GeneralType                     (KerML 8.2.4.3.3)
+    //
+    // KerML's GeneralType, `[QualifiedName] | OwnedFeatureChain` (8.2.4.1.2), contributed
+    // into the relationship: the text and the tree `chainable_target` reads and builds, so
+    // one method carries both markers. KerML reaches it through its own Subsets.
     fn owned_subsetting(&mut self) {
         self.chainable_target(SyntaxKind::OwnedSubsetting);
     }
@@ -6016,6 +6023,14 @@ impl<'a> Parser<'a> {
     // OwnedRedefinition : Redefinition =
     //     redefinedFeature = [QualifiedName]
     //     | ownedRelatedElement += OwnedFeatureChain              (SysML 8.2.2.6.5)
+    //
+    // production: OwnedRedefinition@kerml
+    //
+    // OwnedRedefinition : Redefinition = GeneralType                     (KerML 8.2.4.3.4)
+    //
+    // KerML's GeneralType, `[QualifiedName] | OwnedFeatureChain` (8.2.4.1.2), contributed
+    // into the relationship: the text and the tree `chainable_target` reads and builds, so
+    // one method carries both markers. KerML reaches it through its own Redefines.
     fn owned_redefinition(&mut self) {
         self.chainable_target(SyntaxKind::OwnedRedefinition);
     }
@@ -6053,6 +6068,14 @@ impl<'a> Parser<'a> {
     // rejected while coverage counted the production as done. The corpus writes a chained
     // reference 60 times. A false `implemented` is the one kind of coverage error that
     // cannot be found by reading the report, which is why it survived.
+    //
+    // production: OwnedReferenceSubsetting@kerml
+    //
+    // OwnedReferenceSubsetting : ReferenceSubsetting = GeneralType                     (KerML 8.2.4.3.3)
+    //
+    // KerML's GeneralType, `[QualifiedName] | OwnedFeatureChain` (8.2.4.1.2), contributed
+    // into the relationship: the text and the tree `chainable_target` reads and builds, so
+    // one method carries both markers. KerML reaches it through its own References.
     fn owned_reference_subsetting(&mut self) {
         self.chainable_target(SyntaxKind::OwnedReferenceSubsetting);
     }
@@ -6164,6 +6187,14 @@ impl<'a> Parser<'a> {
     // OwnedCrossSubsetting : CrossSubsetting =
     //     crossedFeature = [QualifiedName]
     //     | ownedRelatedElement += OwnedFeatureChain              (SysML 8.2.2.6.5)
+    //
+    // production: OwnedCrossSubsetting@kerml
+    //
+    // OwnedCrossSubsetting : CrossSubsetting = GeneralType                     (KerML 8.2.4.3.3)
+    //
+    // KerML's GeneralType, `[QualifiedName] | OwnedFeatureChain` (8.2.4.1.2), contributed
+    // into the relationship: the text and the tree `chainable_target` reads and builds, so
+    // one method carries both markers. KerML reaches it through its own Crosses.
     fn owned_cross_subsetting(&mut self) {
         self.chainable_target(SyntaxKind::OwnedCrossSubsetting);
     }
@@ -11101,9 +11132,10 @@ impl<'a> Parser<'a> {
     // its OwnedReferenceSubsetting is a name or an OwnedFeatureChain (GeneralType,
     // 8.2.4.3.3), so an end of three or more segments subsets the chain of all but the
     // last, `a.b.c` being `a.b`, `.`, `c`. The segments are counted first, as SysML's end
-    // does, because a chain read greedily would take the last one too. The
-    // OwnedReferenceSubsetting node is SysML's production's; KerML's is unmarked, as its
-    // other GeneralType-owned relationships are.
+    // does, because a chain read greedily would take the last one too. So this end builds
+    // its OwnedReferenceSubsetting itself, in `flow_end_subsetting`, where References
+    // builds it through `owned_reference_subsetting`, which carries the @kerml marker: the
+    // same node, text and tree, bounded here to stop before the end's last segment.
     fn kerml_flow_end(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::FlowEnd);
