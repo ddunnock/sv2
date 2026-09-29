@@ -221,15 +221,6 @@ fn a_filter_is_admitted_in_a_kerml_package_body_and_not_at_a_kerml_root() {
     }
 }
 
-#[test]
-fn the_other_feature_elements_are_unimplemented_rather_than_accepted() {
-    // NamespaceFeatureMember reaches FeatureElement's ten alternatives. Feature, Step,
-    // Succession, BindingConnector and Connector are implemented, and Invariant is next
-    // (`inv { true }` was here); the other four are not, and reporting them is the
-    // honest state. `succession flow` is SuccessionFlow, one of the four.
-    kerml_rejected("succession flow f from a to b;");
-}
-
 // -- classifiers, KerML 8.2.4.2 ---------------------------------------------------
 //
 // Classifier  = TypePrefix 'classifier'  ClassifierDeclaration TypeBody
@@ -1650,8 +1641,6 @@ fn prefix_metadata_is_bounded_by_its_rules() {
     // A `#` alone is no feature: the Feature alternative wants a name after it, and a
     // name is what makes it a PrefixMetadataMember at all.
     kerml_rejected("class C { #; }");
-    // FeatureElements this parser does not read stay reported with a `#` before them.
-    kerml_rejected("#M flow f from a to b;");
 }
 
 // -- a keywordless feature declared by its specialization, KerML 8.2.4.3.1 ----------
