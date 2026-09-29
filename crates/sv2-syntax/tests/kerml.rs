@@ -3042,6 +3042,72 @@ fn a_type_featuring_is_bounded_by_its_rules() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// -- NonFeatureElement, KerML 8.2.3.4.3 ---------------------------------------------
+//
+//   NonFeatureElement = Dependency | Namespace | Type | Classifier | DataType | Class
+//                     | Structure | Metaclass | Association | AssociationStructure
+//                     | Interaction | Behavior | Function | Predicate | Multiplicity
+//                     | Package | LibraryPackage | Specialization | Conjugation
+//                     | Subclassification | Disjoining | FeatureInverting
+//                     | FeatureTyping | Subsetting | Redefinition | TypeFeaturing
+//
+// Owned two ways: as a NonFeatureMember's MemberElement (8.2.3.4.1), and with no
+// membership as a relationship's OwnedRelatedElement (8.2.3.1). One minimal instance of
+// each alternative, in the order the clause lists them, read at both.
+
+// Each with the node its production builds; Multiplicity is an alternation with no node,
+// and a bracket makes it a MultiplicityRange (8.2.5.11).
+const NON_FEATURE_ELEMENTS: [(&str, &str); 26] = [
+    ("dependency a to b;", "Dependency"),
+    ("namespace N;", "Namespace"),
+    // TypeDeclaration's `( SpecializationPart | ConjugationPart )+` (8.2.4.1.1).
+    ("type T :> A;", "Type"),
+    ("classifier K;", "Classifier"),
+    ("datatype D;", "DataType"),
+    ("class C;", "Class"),
+    ("struct S;", "Structure"),
+    ("metaclass M;", "Metaclass"),
+    ("assoc A;", "Association"),
+    ("assoc struct AS;", "AssociationStructure"),
+    ("interaction I;", "Interaction"),
+    ("behavior B;", "Behavior"),
+    ("function F;", "Function"),
+    ("predicate P;", "Predicate"),
+    ("multiplicity zeroOrMore [0..*];", "MultiplicityRange"),
+    ("package Q;", "Package"),
+    // `standard` optional by deviation LibraryPackage (follow_xtext); the clause
+    // writes it bare.
+    ("library package L;", "LibraryPackage"),
+    ("subtype A :> B;", "Specialization"),
+    ("conjugate A ~ B;", "Conjugation"),
+    ("subclassifier A :> B;", "Subclassification"),
+    ("disjoint A from B;", "Disjoining"),
+    ("inverse a of b;", "FeatureInverting"),
+    ("typing f : T;", "FeatureTyping"),
+    ("subset f :> g;", "Subsetting"),
+    ("redefinition f :>> g;", "Redefinition"),
+    ("featuring y by C;", "TypeFeaturing"),
+];
+
+#[test]
+fn every_non_feature_element_is_a_member_and_an_owned_related_element() {
+    for (element, kind) in NON_FEATURE_ELEMENTS {
+        let member = render(&kerml_accepted(&format!("package P {{ {element} }}")).syntax());
+        assert!(has_node(&member, kind), "{kind}: {member}");
+        // The package is the root's member, and the element the package's.
+        assert_eq!(member.matches("NonFeatureMember").count(), 2, "{member}");
+        let owned = render(&kerml_accepted(&format!("featuring y by C {{ {element} }}")).syntax());
+        assert!(has_node(&owned, kind), "{kind}: {owned}");
+        // The outer declaration is the root's one member; its body adds none.
+        assert_eq!(owned.matches("NonFeatureMember").count(), 1, "{owned}");
+    }
+    // A SysML definition is no NonFeatureElement (ADR-0014), at either site; and an
+    // owned related element takes no MemberPrefix (8.2.3.1).
+    kerml_rejected("package P { part def D; }");
+    kerml_rejected("featuring y by C { part def D; }");
+    kerml_rejected("featuring y by C { private class K; }");
+}
+
 // -- Conjugation, KerML 8.2.4.1.3 ---------------------------------------------------
 //
 //   Conjugation = ( 'conjugation' Identification )?

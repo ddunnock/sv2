@@ -4514,27 +4514,19 @@ impl<'a> Parser<'a> {
         let mut element = MemberElement::Other;
         if self.at_annotating_member(0) {
             self.annotating_element_at_member();
+        } else if self.language == Language::KerMl {
+            // MemberElement's other alternative (KerML 8.2.3.4.1). The guard is here
+            // rather than left to `at_member_element`'s caller, because a dispatch that
+            // is only correct when reached one way is a trap: every classifier unit is
+            // scoped `kerml`, and SysML reaches DefinitionElement instead, so `class
+            // Foo;` in a .sysml file is text SysML does not state.
+            if !self.kerml_non_feature_element() {
+                self.error_expected("a package, a classifier or a dependency");
+            }
         } else if self.at_package(0) {
             self.package();
         } else if self.at_library_package(0) {
             self.library_package();
-        } else if let Some(classifier) = self.at_classifier(0).filter(|_| {
-            // Every classifier unit is scoped `kerml`. SysML reaches DefinitionElement
-            // instead, so `class Foo;` in a .sysml file is text SysML does not state.
-            // The guard is here rather than left to `at_member_element`'s caller,
-            // because a dispatch that is only correct when reached one way is a trap.
-            self.language == Language::KerMl
-        }) {
-            self.classifier(classifier);
-        } else if self.language == Language::KerMl && self.at_dependency(0) {
-            // A NonFeatureElement (KerML 8.2.3.4.3). SysML reaches the same production
-            // as a DefinitionElement, through `definition_element` below.
-            self.dependency();
-        } else if self.language == Language::KerMl && self.kerml_only_non_feature_element() {
-            // NonFeatureElements (KerML 8.2.3.4.3) SysML does not state at all: read by
-            // the call, which answers whether it read one.
-        } else if self.language == Language::KerMl {
-            self.error_expected("a package, a classifier or a dependency");
         } else if let Some(node) = self
             .at_action_node(0)
             .filter(|_| body.admits_action_body_item())
@@ -14712,16 +14704,8 @@ impl<'a> Parser<'a> {
     /// implements, in the order `membership` and `namespace_feature_member` ask: a
     /// succession and a binding connector before the keywordless-capable `Feature`.
     fn owned_related_element(&mut self) -> bool {
-        if self.at_package(0) {
-            self.package();
-        } else if self.at_library_package(0) {
-            self.library_package();
-        } else if self.at_dependency(0) {
-            self.dependency();
-        } else if self.kerml_only_non_feature_element() {
+        if self.kerml_non_feature_element() {
             // Read by the call.
-        } else if let Some(classifier) = self.at_classifier(0) {
-            self.classifier(classifier);
         } else if self.at_kerml_keyword_feature_element(0) || self.at_feature(0) {
             self.feature_element();
         } else {
@@ -14730,13 +14714,39 @@ impl<'a> Parser<'a> {
         true
     }
 
-    /// A `KerML` `NonFeatureElement` that `SysML` states no production for, if one is
-    /// written here: a relationship declaration, a `Type`, a `Function` or `Predicate`, a
-    /// `Namespace`, or a named `Multiplicity` (8.2.3.4.3). Returns whether one was read.
-    /// Asked by `membership` and `owned_related_element`, the two places that read them,
-    /// so the list cannot drift between them. The caller guards the language.
-    fn kerml_only_non_feature_element(&mut self) -> bool {
-        if let Some(declaration) = self.at_relationship_declaration(0) {
+    // production: NonFeatureElement@kerml
+    //
+    // NonFeatureElement : Element =
+    //       Dependency | Namespace | Type | Classifier | DataType | Class | Structure
+    //     | Metaclass | Association | AssociationStructure | Interaction | Behavior
+    //     | Function | Predicate | Multiplicity | Package | LibraryPackage
+    //     | Specialization | Conjugation | Subclassification | Disjoining
+    //     | FeatureInverting | FeatureTyping | Subsetting | Redefinition
+    //     | TypeFeaturing                                          (KerML 8.2.3.4.3)
+    //
+    // All twenty-six alternatives, if one is written here. Returns whether one was read.
+    // Asked by `membership` for a MemberElement and by `owned_related_element` for an
+    // OwnedRelatedElement (8.2.3.1), the two places a NonFeatureElement is owned, so the
+    // list cannot drift between them. The caller guards the language. An alternation
+    // with no node, as FeatureElement has none: the element read says which.
+    //
+    // Package and LibraryPackage are shared units, and Dependency is stated in both
+    // grammars; SysML reaches those three by its own routes. The eight classifiers are
+    // `classifier`'s, the nine relationship declarations `relationship_declaration`'s.
+    // The order is the one `membership` asked in before this was one method.
+    // `owned_related_element` asked the classifiers after the KerML-only elements; no
+    // input reads differently, since each recogniser requires its own reserved word
+    // after the prefixes it skips, and no two share one.
+    fn kerml_non_feature_element(&mut self) -> bool {
+        if self.at_package(0) {
+            self.package();
+        } else if self.at_library_package(0) {
+            self.library_package();
+        } else if self.at_dependency(0) {
+            self.dependency();
+        } else if let Some(classifier) = self.at_classifier(0) {
+            self.classifier(classifier);
+        } else if let Some(declaration) = self.at_relationship_declaration(0) {
             self.relationship_declaration(declaration);
         } else if self.at_kerml_type(0) {
             self.kerml_type();
