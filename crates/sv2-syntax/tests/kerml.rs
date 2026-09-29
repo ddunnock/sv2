@@ -1093,6 +1093,85 @@ fn every_primary_expression_alternative_is_read_in_both_languages() {
     kerml_rejected("feature v = ->f();");
 }
 
+// -- the operator productions, KerML 8.2.5.8.1 ------------------------------------
+//
+//   BinaryOperator = '|' | '&' | 'xor' | '..' | '==' | '!=' | '===' | '!=='
+//                  | '<' | '>' | '<=' | '>=' | '+' | '-' | '*' | '/' | '%' | '^' | '**'
+//   ConditionalBinaryOperator      = '??' | 'or' | 'and' | 'implies'
+//   UnaryOperator                  = '+' | '-' | '~' | 'not'
+//   ClassificationTestOperator     = 'istype' | 'hastype' | '@'
+//   CastOperator                   = 'as'
+//   MetaclassificationTestOperator = '@@'
+//   MetaCastOperator               = 'meta'
+//
+// Every spelling each production lists, read as the operator of the expression its
+// production names, outermost in the feature value (8.2.4.3.1).
+
+const BINARY_OPERATORS: [&str; 19] = [
+    "|", "&", "xor", "..", "==", "!=", "===", "!==", "<", ">", "<=", ">=", "+", "-", "*", "/", "%",
+    "^", "**",
+];
+
+/// The outermost node of `feature v = <expression>;`'s value.
+fn value_kind(expression: &str) -> String {
+    let tree = render(&kerml_accepted(&format!("feature v = {expression};")).syntax());
+    let kinds = child_kinds(&tree, "FeatureValue");
+    assert_eq!(kinds.len(), 2, "{tree}");
+    kinds.last().cloned().unwrap_or_default()
+}
+
+#[test]
+fn every_operator_spelling_is_read_as_its_production() {
+    for op in BINARY_OPERATORS {
+        assert_eq!(
+            value_kind(&format!("a {op} b")),
+            "BinaryOperatorExpression",
+            "{op}"
+        );
+    }
+    for op in ["??", "or", "and", "implies"] {
+        assert_eq!(
+            value_kind(&format!("a {op} b")),
+            "ConditionalBinaryOperatorExpression",
+            "{op}"
+        );
+    }
+    for op in ["+", "-", "~", "not "] {
+        assert_eq!(
+            value_kind(&format!("{op}a")),
+            "UnaryOperatorExpression",
+            "{op}"
+        );
+    }
+    for op in ["istype", "hastype", "@", "as"] {
+        assert_eq!(
+            value_kind(&format!("a {op} T")),
+            "ClassificationExpression",
+            "{op}"
+        );
+    }
+    // The same four with no left operand, ClassificationExpression's optional
+    // ArgumentMember omitted.
+    for op in ["istype", "hastype", "@", "as"] {
+        assert_eq!(
+            value_kind(&format!("{op} T")),
+            "ClassificationExpression",
+            "{op}"
+        );
+    }
+    for op in ["@@", "meta"] {
+        assert_eq!(
+            value_kind(&format!("a {op} T")),
+            "MetaclassificationExpression",
+            "{op}"
+        );
+    }
+    // Spellings no operator production lists.
+    kerml_rejected("feature v = a && b;");
+    kerml_rejected("feature v = a <> b;");
+    kerml_rejected("feature v = !a;");
+}
+
 // -- ConstructorExpression, KerML 8.2.5.8.3 ----------------------------------------
 
 #[test]

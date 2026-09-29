@@ -6752,6 +6752,18 @@ impl<'a> Parser<'a> {
     // both of those are columns of the table. ClassificationExpression is reached
     // from here too, but has its own method because its left operand is optional.
     //
+    // production: BinaryOperator
+    // production: ConditionalBinaryOperator
+    //
+    // BinaryOperator = '|' | '&' | 'xor' | '..' | '==' | '!=' | '===' | '!=='
+    //     | '<' | '>' | '<=' | '>=' | '+' | '-' | '*' | '/' | '%' | '^' | '**'
+    // ConditionalBinaryOperator = '??' | 'or' | 'and' | 'implies'
+    //                                                            (KerML 8.2.5.8.1)
+    //
+    // Value productions, the `operator` of the two expressions above: every spelling of
+    // each is a row of INFIX, bumped here as the operator of the node its row names.
+    // They build no node, as BooleanValue builds none.
+    //
     /// Consume infix operators at `max_tier` or tighter, folding the expression that
     /// starts at `start` into each one's left operand.
     ///
@@ -6903,6 +6915,8 @@ impl<'a> Parser<'a> {
     }
 
     // production: MetaclassificationExpression
+    // production: MetaclassificationTestOperator
+    // production: MetaCastOperator
     //
     // MetaclassificationExpression : OperatorExpression =
     //     ownedRelationship += MetadataArgumentMember
@@ -6922,7 +6936,8 @@ impl<'a> Parser<'a> {
     // the left operand of `meta` is a reference, never an expression, and
     // `(a + b) meta T` is not something the clause can express. That also makes it
     // unchainable: `x meta A meta B` would need a MetaclassificationExpression where
-    // a QualifiedName is required, so it is reported.
+    // a QualifiedName is required, so it is reported. The two operators are value
+    // productions, read inline and building no node.
     fn metaclassification_expression(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::MetaclassificationExpression);
@@ -8348,6 +8363,17 @@ impl<'a> Parser<'a> {
         n
     }
 
+    // production: ClassificationTestOperator
+    // production: CastOperator
+    //
+    // ClassificationTestOperator = 'istype' | 'hastype' | '@'    (KerML 8.2.5.8.1)
+    // CastOperator              = 'as'                           (KerML 8.2.5.8.1)
+    //
+    // Value productions, no node. Every spelling of both is read in two places: here,
+    // when a ClassificationExpression opens with no left operand (`@T`, `istype T`,
+    // `as T`), and as a row of INFIX, bumped by `infix_tail`, when it has one. The
+    // marker sits here, where the productions are spelled out whole.
+    //
     /// Consume the operator token of a `ClassificationExpression`.
     fn bump_classification_operator(&mut self) {
         if self.at(SyntaxKind::At) {
@@ -8362,6 +8388,12 @@ impl<'a> Parser<'a> {
         }
     }
 
+    // production: UnaryOperator
+    //
+    // UnaryOperator = '+' | '-' | '~' | 'not'                    (KerML 8.2.5.8.1)
+    //
+    // A value production, every spelling a row of UNARY_OPERATORS; no node.
+    //
     /// Consume the operator token of a `UnaryOperatorExpression`.
     fn bump_unary_operator(&mut self) {
         match UNARY_OPERATORS.iter().find(|spelling| match spelling {

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-29T18:32:38Z",
+    "regenerated_utc": "2026-09-29T18:39:47Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,13 +17,13 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 519,
-      "unimplemented": 35,
+      "implemented": 526,
+      "unimplemented": 28,
       "absent": 0,
-      "percent": 93.7
+      "percent": 94.9
     },
     "tests": {
-      "unit": 725,
+      "unit": 726,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 296,
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "976182e Mark the primary expression alternations whole: primary, base, literal",
       "31022b0 Read metadata access, `feature sysMetadata = SecureSystem.metadata;`",
       "ce917d3 Stop rejecting metadata access by absence: the next commit reads it",
       "3a63f34 Record the next step: the bare-comment decision blocks three KerML units",
       "5fb8dd9 Mark KerML's RelationshipOwnedElement and OwnedRelatedElement whole",
       "72cd82e Build KerML's TypedBy over OwnedFeatureTyping, with no FeatureTyping between",
       "b0fcd9f Mark KerML's AnnotatingElement whole, read by one method at every site",
-      "a294ae4 Mark KerML's NonFeatureElement whole, read by one method at both sites",
-      "d669e22 Read KerML's type featuring, `featuring F of y by C;`"
+      "a294ae4 Mark KerML's NonFeatureElement whole, read by one method at both sites"
     ]
   },
   "authored": {
