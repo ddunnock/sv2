@@ -569,6 +569,8 @@ pub enum SyntaxKind {
     TypeFeaturingPart,
     /// `featuringType = [QualifiedName]`. `KerML` 8.2.4.3.7.
     OwnedTypeFeaturing,
+    /// `'featuring' ( Identification 'of' )? [QualifiedName] 'by' [QualifiedName] RelationshipBody`. `KerML` 8.2.4.3.7.
+    TypeFeaturing,
     /// `'disjoint' 'from' OwnedDisjoining ( ',' OwnedDisjoining )*`. `KerML` 8.2.4.1.1.
     DisjoiningPart,
     /// `'unions' Unioning ( ',' Unioning )*`. `KerML` 8.2.4.1.1.
@@ -1679,6 +1681,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::OwnedFeatureInverting,
     SyntaxKind::TypeFeaturingPart,
     SyntaxKind::OwnedTypeFeaturing,
+    SyntaxKind::TypeFeaturing,
     SyntaxKind::DisjoiningPart,
     SyntaxKind::UnioningPart,
     SyntaxKind::IntersectingPart,

@@ -43,6 +43,7 @@ vendor/corpus/kerml/src/examples/Simple Tests/Expansion.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Expressions.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml
+vendor/corpus/kerml/src/examples/Simple Tests/Features.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Filtering.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Imports.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Inheritance.kerml

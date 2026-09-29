@@ -645,6 +645,8 @@ enum RelationshipDeclaration {
     Disjoining,
     /// `Conjugation`, `conjugation` or `conjugate` (8.2.4.1.3).
     Conjugation,
+    /// `TypeFeaturing`, `featuring` (8.2.4.3.7).
+    TypeFeaturing,
 }
 
 /// Which of `KerML` `Connector`'s three declaration forms is written (`KerML` 8.2.5.5.1).
@@ -2154,11 +2156,11 @@ impl<'a> Parser<'a> {
     /// NamespaceFeatureMember = MemberPrefix FeatureElement
     /// ```
     ///
-    /// Of `NonFeatureElement`'s alternatives every one is implemented but `Multiplicity`
-    /// and `TypeFeaturing`: `Package` and `LibraryPackage`, shared units, the same
-    /// productions in both grammars, and `KerML`'s own `Dependency`, `Namespace`, `Type`,
-    /// the classifiers, `Function`, `Predicate` and the relationship declarations. All ten
-    /// of `FeatureElement`'s are.
+    /// Every one of `NonFeatureElement`'s alternatives is implemented: `Package` and
+    /// `LibraryPackage`, shared units, the same productions in both grammars, and
+    /// `KerML`'s own `Dependency`, `Namespace`, `Type`, the classifiers, `Function`,
+    /// `Predicate`, `Multiplicity` and the nine relationship declarations. All ten of
+    /// `FeatureElement`'s are.
     ///
     /// This is the check that stops a `SysML` construct being read out of a `KerML`
     /// file. `part def` is not reachable from `NamespaceBodyElement`, so a `.kerml` file
@@ -14646,8 +14648,8 @@ impl<'a> Parser<'a> {
     //
     // Marked although RelationshipOwnedElement and OwnedRelatedElement are not: this
     // production's own parts are read, and the two alternations below it are read as far
-    // as NonFeatureElement and FeatureElement are: every FeatureElement, and every
-    // NonFeatureElement but Multiplicity and TypeFeaturing (see `at_member_element`).
+    // as NonFeatureElement and FeatureElement are, which is now wholly: every alternative
+    // of each (see `at_member_element`).
     // Neither alternation has a node, as FeatureSpecialization has none: the element
     // read says which was taken.
     //
@@ -15592,6 +15594,11 @@ impl<'a> Parser<'a> {
         if self.nth_is_keyword(n, "conjugation") || self.nth_is_keyword(n, "conjugate") {
             return Some(RelationshipDeclaration::Conjugation);
         }
+        // `featuring` is reserved (8.2.2.6) and opens nothing else; a TypeFeaturingPart
+        // writes `featured`, and only after a declaration.
+        if self.nth_is_keyword(n, "featuring") {
+            return Some(RelationshipDeclaration::TypeFeaturing);
+        }
         let word = self.skip_specialization_prefix(n);
         if self.nth_is_keyword(word, "subtype") {
             Some(RelationshipDeclaration::Specialization)
@@ -15619,6 +15626,7 @@ impl<'a> Parser<'a> {
             RelationshipDeclaration::Redefinition => self.redefinition(),
             RelationshipDeclaration::Disjoining => self.disjoining(),
             RelationshipDeclaration::Conjugation => self.conjugation(),
+            RelationshipDeclaration::TypeFeaturing => self.type_featuring(),
         }
     }
 
@@ -16049,6 +16057,57 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(SyntaxKind::OwnedTypeFeaturing);
         self.qualified_name();
+        self.finish_node();
+    }
+
+    // production: TypeFeaturing@kerml
+    //
+    // TypeFeaturing =
+    //     'featuring' ( Identification 'of' )?
+    //     featureOfType = [QualifiedName]
+    //     'by' featuringType = [QualifiedName]
+    //     RelationshipBody                                       (KerML 8.2.4.3.7)
+    //
+    // A NonFeatureElement (8.2.3.4.3), KerML's alone, dispatched behind KerML guards as
+    // FeatureInverting is. The metaclass is TypeFeaturing (8.3.3.3.11, receipt 8e4c93c3),
+    // relating featureOfType, its source, to featuringType, its target: `featuring F of y
+    // by C;` (Simple Tests/Features.kerml:16). Both are names, as OwnedTypeFeaturing's
+    // target is: no feature chain on either side. One featuring type; a list is a
+    // feature's own TypeFeaturingPart.
+    //
+    // The keyword before the featuring type is the clause's bare `by`. KerML 7.3.4.8's
+    // examples (receipt 5065873b) write `featured by`, the owned form's pair; the clause,
+    // the Pilot and the corpus agree on `by`, and deviations.json entry TypeFeaturing
+    // records the examples as the error (conflict, follow_spec), so `featured by` here is
+    // reported, as tests/rejection/kerml-type-featuring-is-featuring-by.kerml holds.
+    //
+    // `( Identification 'of' )?` is decided by looking past an Identification, `<` NAME
+    // `>` then NAME, each optional (8.2.3.1), for `of`, which is reserved and so is never
+    // the featured feature's name. Without it the first QualifiedName is featureOfType.
+    // The Pilot writes `( Identification? 'of' )?` (KerML.xtext:651-656), the same text,
+    // since Identification derives the empty string.
+    // The Identification is built whenever the group is written, empty in `featuring of y
+    // by C;`, as `feature_inverting` builds its own.
+    //
+    // constraint: none on TypeFeaturing itself (8.3.3.3.11 lists none). No implied
+    //     specialization attaches.
+    fn type_featuring(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TypeFeaturing);
+        self.expect_keyword("featuring");
+        let mut m = 0;
+        if self.nth_is(m, SyntaxKind::Lt) {
+            m += 3;
+        }
+        m += usize::from(self.nth_is_name(m));
+        if self.nth_is_keyword(m, "of") {
+            self.identification();
+            self.expect_keyword("of");
+        }
+        self.qualified_name();
+        self.expect_keyword("by");
+        self.qualified_name();
+        self.relationship_body();
         self.finish_node();
     }
 

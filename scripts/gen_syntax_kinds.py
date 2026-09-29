@@ -287,6 +287,15 @@ NODES = [
         "`'featured' 'by' OwnedTypeFeaturing ( ',' OwnedTypeFeaturing )*`. `KerML` 8.2.4.3.1.",
     ),
     ("OwnedTypeFeaturing", "`featuringType = [QualifiedName]`. `KerML` 8.2.4.3.7."),
+    # The standalone declaration of the same metaclass, a NonFeatureElement. KerML
+    # 8.2.4.3.7, 8.2.3.4.3.
+    (
+        "TypeFeaturing",
+        (
+            "`'featuring' ( Identification 'of' )? [QualifiedName] 'by' [QualifiedName] "
+            "RelationshipBody`. `KerML` 8.2.4.3.7."
+        ),
+    ),
     # TypeRelationshipPart's four alternatives, and the relationship each owns. The
     # alternation itself builds no node; the part says which. KerML 8.2.4.1.1, 8.2.4.1.4,
     # 8.2.4.1.5.

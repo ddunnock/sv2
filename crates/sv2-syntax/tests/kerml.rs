@@ -16,14 +16,10 @@
 //! text is read against a different grammar, and constructs one language has are not
 //! silently borrowed by the other.
 //!
-//! Of `NonFeatureElement`'s alternatives, `Package`, `Dependency`, `Type`, the eight
-//! classifiers of `KerML` 8.2.4.2 and the standalone relationship declarations but
-//! `TypeFeaturing` are implemented. `Package` is a shared unit — the same production in
-//! both grammars — `Dependency` is stated in each, and the rest are `KerML`'s alone. Of
-//! `FeatureElement`'s ten alternatives, `Feature`, `Step`, `Connector`,
-//! `BindingConnector` and `Succession` are implemented; the other five are not, nor are
-//! `Function` and `Predicate`, and the cases below say so rather than pretending they
-//! parse.
+//! Every one of `NonFeatureElement`'s alternatives is implemented, the nine standalone
+//! relationship declarations `TypeFeaturing` last among them, and so is every one of
+//! `FeatureElement`'s ten. `Package` is a shared unit — the same production in both
+//! grammars — `Dependency` is stated in each, and the rest are `KerML`'s alone.
 
 use std::fmt::Write as _;
 
@@ -2956,6 +2952,93 @@ fn a_disjoining_is_bounded_by_its_rules() {
     kerml_rejected("disjoint A from B, C;");
     // SysML states no Disjoining declaration (ADR-0014).
     let sysml = parse("disjoint A from B;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
+// -- TypeFeaturing, KerML 8.2.4.3.7 -------------------------------------------------
+//
+//   TypeFeaturing = 'featuring' ( Identification 'of' )?
+//                   featureOfType = [QualifiedName]
+//                   'by' featuringType = [QualifiedName]
+//                   RelationshipBody
+//
+// A NonFeatureElement (8.2.3.4.3). NOT the TypeFeaturingPart a feature declaration ends
+// in, `feature y1 featured by C`, whose keywords are `featured by` (8.2.4.3.1). The
+// layer note's examples (7.3.4.8) write the standalone form with `featured by` too;
+// deviations.json entry TypeFeaturing records that as an editing error in the examples
+// (conflict, follow_spec), so they are read below REWRITTEN with the clause's bare `by`.
+
+#[test]
+fn a_type_featuring_reads_the_corpus_forms() {
+    // Simple Tests/Features.kerml:16, with an Identification before `of`.
+    let named = render(&kerml_accepted("featuring F of y by C;").syntax());
+    assert_eq!(
+        child_kinds(&named, "TypeFeaturing"),
+        [
+            "KwFeaturing",
+            "Identification",
+            "KwOf",
+            "QualifiedName",
+            "KwBy",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{named}"
+    );
+    // Without `( Identification 'of' )?` the first name is the featured feature.
+    let bare = render(&kerml_accepted("featuring y by C;").syntax());
+    assert_eq!(
+        child_kinds(&bare, "TypeFeaturing"),
+        [
+            "KwFeaturing",
+            "QualifiedName",
+            "KwBy",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{bare}"
+    );
+    // A qualified featured feature is no Identification: `::` follows the name, not `of`.
+    kerml_accepted("featuring P::y by Q::C;");
+    // Every part of Identification is optional (8.2.3.1), so `of` may follow at once.
+    kerml_accepted("featuring of y by C;");
+    kerml_accepted("featuring <tf1> F of y by C;");
+    // KerML 7.3.4.8's two examples, `featured by` rewritten to the clause's `by`.
+    kerml_accepted("featuring engine_by_Vehicle of engine by Vehicle;");
+    kerml_accepted(
+        "featuring power by engine {\n    doc /* The engine of a Vehicle has power. */\n}",
+    );
+    // The corpus file's own neighbourhood: a feature, then the declaration, then a
+    // feature ending in the owned form (Simple Tests/Features.kerml:15-18).
+    let both = render(
+        &kerml_accepted(
+            "package Features {\n\tclassifier C;\n\tfeature y;\n\tfeaturing F of y by C;\n\t\
+             feature y1 : A :> x featured by C;\n}",
+        )
+        .syntax(),
+    );
+    assert!(has_node(&both, "TypeFeaturing"), "{both}");
+    assert!(has_node(&both, "TypeFeaturingPart"), "{both}");
+}
+
+#[test]
+fn a_type_featuring_is_bounded_by_its_rules() {
+    // The standalone form's keyword is `by` alone (8.2.4.3.7); `featured by` belongs to
+    // the owned form. Held as a file by
+    // tests/rejection/kerml-type-featuring-is-featuring-by.kerml.
+    kerml_rejected("featuring engine_by_Vehicle of engine featured by Vehicle;");
+    kerml_rejected("featuring power featured by engine;");
+    kerml_rejected("featuring y;");
+    kerml_rejected("featuring y by;");
+    kerml_rejected("featuring by C;");
+    kerml_rejected("featuring F of by C;");
+    // One featuring type: a list is a feature's own TypeFeaturingPart (7.3.4.8).
+    kerml_rejected("featuring y by C, D;");
+    // Both targets are QualifiedNames; no feature chain is admitted on either side.
+    kerml_rejected("featuring a.b by C;");
+    kerml_rejected("featuring y by a.b;");
+    // SysML states no TypeFeaturing declaration (ADR-0014).
+    let sysml = parse("featuring F of y by C;", Language::SysMl);
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
