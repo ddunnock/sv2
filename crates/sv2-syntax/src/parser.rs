@@ -641,6 +641,8 @@ enum RelationshipDeclaration {
     Subsetting,
     /// `Redefinition`, `redefinition` (8.2.4.3.4).
     Redefinition,
+    /// `Disjoining`, `disjoining` or `disjoint` (8.2.4.1.4).
+    Disjoining,
 }
 
 /// Which of `KerML` `Connector`'s three declaration forms is written (`KerML` 8.2.5.5.1).
@@ -2104,8 +2106,8 @@ impl<'a> Parser<'a> {
     ///
     /// Of `NonFeatureElement`, `Package` and `LibraryPackage` — shared units, the same
     /// productions in both grammars — `Dependency`, `FeatureInverting`, `Specialization`,
-    /// `Subclassification`, `FeatureTyping`, `Subsetting`, `Redefinition` and the eight
-    /// classifiers of 8.2.4.2 are implemented. Of
+    /// `Subclassification`, `FeatureTyping`, `Subsetting`, `Redefinition`, `Disjoining`
+    /// and the eight classifiers of 8.2.4.2 are implemented. Of
     /// `FeatureElement`'s ten alternatives, `Feature`, `Step`, `Connector`,
     /// `BindingConnector` and `Succession` are. The rest (`expr`, `inv`, `flow`,
     /// `succession flow`, …) are reported rather than read.
@@ -13846,8 +13848,8 @@ impl<'a> Parser<'a> {
     // Marked although RelationshipOwnedElement and OwnedRelatedElement are not: this
     // production's own parts are read, and the two alternations below it are read as far
     // as NonFeatureElement and FeatureElement are — Package, Dependency, FeatureInverting,
-    // Specialization, Subclassification, FeatureTyping, Subsetting, Redefinition and the
-    // eight classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
+    // Specialization, Subclassification, FeatureTyping, Subsetting, Redefinition,
+    // Disjoining and the eight classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
     // node, as FeatureSpecialization has none: the element read says which was taken.
     //
     // An owned related element is the relationship's ownedRelatedElement, with no
@@ -14489,6 +14491,11 @@ impl<'a> Parser<'a> {
         if self.at_feature_inverting(n) {
             return Some(RelationshipDeclaration::FeatureInverting);
         }
+        // `disjoining` and `disjoint` are reserved (8.2.2.6), and a DisjoiningPart's
+        // `disjoint` only ever follows a declaration, never a member position.
+        if self.nth_is_keyword(n, "disjoining") || self.nth_is_keyword(n, "disjoint") {
+            return Some(RelationshipDeclaration::Disjoining);
+        }
         let word = self.skip_specialization_prefix(n);
         if self.nth_is_keyword(word, "subtype") {
             Some(RelationshipDeclaration::Specialization)
@@ -14514,6 +14521,7 @@ impl<'a> Parser<'a> {
             RelationshipDeclaration::FeatureTyping => self.kerml_feature_typing(),
             RelationshipDeclaration::Subsetting => self.subsetting(),
             RelationshipDeclaration::Redefinition => self.redefinition(),
+            RelationshipDeclaration::Disjoining => self.disjoining(),
         }
     }
 
@@ -14789,6 +14797,48 @@ impl<'a> Parser<'a> {
         self.specific_type();
         self.terminal(SyntaxKind::ColonGtGt, "redefines", "`:>>` or `redefines`");
         self.general_type();
+        self.relationship_body();
+        self.finish_node();
+    }
+
+    // production: Disjoining@kerml
+    //
+    // Disjoining =
+    //     ( 'disjoining' Identification )?
+    //     'disjoint'
+    //     ( typeDisjoined = [QualifiedName]
+    //     | typeDisjoined = FeatureChain
+    //       { ownedRelatedElement += typeDisjoined }
+    //     )
+    //     'from'
+    //     ( disjoiningType = [QualifiedName]
+    //     | disjoiningType = FeatureChain
+    //       { ownedRelatedElement += disjoiningType }
+    //     )
+    //     RelationshipBody                                       (KerML 8.2.4.1.4)
+    //
+    // A Relationship between two types that share no instances (8.3.3.1.4, receipt
+    // 9029a37f), typeDisjoined and disjoiningType: `disjoining Disj disjoint A from B;`
+    // (KerML 7.3.2.5, receipt 2c9c122c). Each side a name or a feature chain, and the
+    // chain, an ownedRelatedElement, builds the OwnedFeatureChain node as OwnedDisjoining's
+    // does: `disjoint b.f.a from b.a;` (Simple Tests/FeatureChains.kerml:28). One type on
+    // each side; a list is a type's own DisjoiningPart. Its prefix is `disjoining`, not
+    // `specialization`: Disjoining is no Specialization.
+    //
+    // constraint: none on Disjoining itself (8.3.3.1.4 lists none);
+    //     Type::deriveTypeOwnedDisjoining (KerML 8.3.3.1.10) is a derivation,
+    //     sv2-resolve's. No implied specialization attaches.
+    fn disjoining(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Disjoining);
+        if self.at_keyword("disjoining") {
+            self.expect_keyword("disjoining");
+            self.identification();
+        }
+        self.expect_keyword("disjoint");
+        self.name_or_owned_feature_chain();
+        self.expect_keyword("from");
+        self.name_or_owned_feature_chain();
         self.relationship_body();
         self.finish_node();
     }

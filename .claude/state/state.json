@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-29T12:52:03Z",
+    "regenerated_utc": "2026-09-29T12:59:52Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 464,
-      "unimplemented": 90,
+      "implemented": 465,
+      "unimplemented": 89,
       "absent": 0,
-      "percent": 83.8
+      "percent": 83.9
     },
     "tests": {
-      "unit": 677,
+      "unit": 679,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 284,
+      "negative_cases": 285,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "928b32d Read KerML's standalone redefinition, `redefinition a redefines b;`",
       "b5c1564 Read KerML's standalone subsetting, `subset g subsets f;`",
       "45a5fe7 Read KerML's standalone feature typing, `typing f : B;`",
       "f18566e Read KerML's standalone subclassification, `subclassifier C :> A;`",
       "a31ddec Read KerML's standalone specialization, `subtype A :> B;`",
       "fa4c9b6 Read KerML's standalone feature inverting, `inverse a of b;`",
       "50b84c5 Stop rejecting KerML's standalone feature inverting by absence: the next commit reads it",
-      "f5f354f Read the KerML inverting part, `inverse of`, completing FeatureDeclaration",
-      "aeabeb1 Stop rejecting KerML inverting parts by absence: the next commit reads them"
+      "f5f354f Read the KerML inverting part, `inverse of`, completing FeatureDeclaration"
     ]
   },
   "authored": {

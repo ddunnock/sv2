@@ -537,6 +537,8 @@ pub enum SyntaxKind {
     OwnedConjugation,
     /// `'chains' ( OwnedFeatureChaining | FeatureChain )`. `KerML` 8.2.4.3.1.
     ChainingPart,
+    /// `( 'disjoining' Identification )? 'disjoint' ... 'from' ... RelationshipBody`. `KerML` 8.2.4.1.4.
+    Disjoining,
     /// `( 'specialization' Identification )? 'redefinition' SpecificType REDEFINES GeneralType RelationshipBody`. `KerML` 8.2.4.3.4.
     Redefinition,
     /// `( 'specialization' Identification )? 'subset' SpecificType SUBSETS GeneralType RelationshipBody`. `KerML` 8.2.4.3.3.
@@ -1611,6 +1613,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ConjugationPart,
     SyntaxKind::OwnedConjugation,
     SyntaxKind::ChainingPart,
+    SyntaxKind::Disjoining,
     SyntaxKind::Redefinition,
     SyntaxKind::Subsetting,
     SyntaxKind::Subclassification,

@@ -2383,6 +2383,81 @@ fn a_redefinition_is_bounded_by_its_rules() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// -- Disjoining, KerML 8.2.4.1.4 ----------------------------------------------------
+//
+//   Disjoining = ( 'disjoining' Identification )?
+//                'disjoint' ( [QualifiedName] | FeatureChain )
+//                'from'     ( [QualifiedName] | FeatureChain )
+//                RelationshipBody
+//
+// A NonFeatureElement (8.2.3.4.3). NOT the DisjoiningPart a declaration ends in,
+// `classifier D disjoint from C`, which has no first target (8.2.4.1.1).
+
+#[test]
+fn a_disjoining_reads_the_corpus_forms() {
+    // Simple Tests/FeatureChains.kerml:28: a feature chain on both sides.
+    let chained = render(&kerml_accepted("disjoint b.f.a from b.a;").syntax());
+    assert_eq!(
+        child_kinds(&chained, "Disjoining"),
+        [
+            "KwDisjoint",
+            "OwnedFeatureChain",
+            "KwFrom",
+            "OwnedFeatureChain",
+            "RelationshipBody"
+        ],
+        "{chained}"
+    );
+    // KerML 7.3.2.5's examples, every one.
+    let named = render(&kerml_accepted("disjoining Disj disjoint A from B;").syntax());
+    assert_eq!(
+        child_kinds(&named, "Disjoining"),
+        [
+            "KwDisjoining",
+            "Identification",
+            "KwDisjoint",
+            "QualifiedName",
+            "KwFrom",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{named}"
+    );
+    kerml_accepted("disjoining disjoint Mammal from Mineral;");
+    kerml_accepted(
+        "disjoining disjoint Person::parents from Person::children {\n    doc /* No Person can \
+         have a parent as a child. */\n}",
+    );
+    kerml_accepted(
+        "package P {\n\tdisjoint A from B;\n\tdisjoint Mammal from Mineral;\n\tdisjoint \
+         Person::parents from Person::children;\n}",
+    );
+    // Beside a classifier's DisjoiningPart, which reads the same two words after a
+    // declaration: Simple Tests/Classifiers.kerml:13.
+    let both = render(
+        &kerml_accepted("classifier D disjoint from C differences A, B; disjoint C from D;")
+            .syntax(),
+    );
+    assert!(has_node(&both, "DisjoiningPart"), "{both}");
+    assert!(has_node(&both, "Disjoining"), "{both}");
+}
+
+#[test]
+fn a_disjoining_is_bounded_by_its_rules() {
+    kerml_rejected("disjoint A;");
+    kerml_rejected("disjoint A from;");
+    // The first type is written: `disjoint from B` is a DisjoiningPart's text, and a
+    // part only ends a declaration (8.2.4.1.1).
+    kerml_rejected("disjoint from B;");
+    kerml_rejected("disjoining D A from B;");
+    // One type on each side: a list is a type's own DisjoiningPart (7.3.2.5). Held as a
+    // file by tests/rejection/kerml-disjoining-relates-two-types.kerml.
+    kerml_rejected("disjoint A from B, C;");
+    // SysML states no Disjoining declaration (ADR-0014).
+    let sysml = parse("disjoint A from B;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------
 //
 //   TypeBodyElement    = NonFeatureMember | FeatureMember | AliasMember | Import

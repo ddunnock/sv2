@@ -34,6 +34,7 @@ vendor/corpus/kerml/src/examples/Simple Tests/Classifiers.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Conjugation.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Dependencies.kerml
+vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Imports.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Inheritance.kerml
