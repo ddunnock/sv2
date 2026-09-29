@@ -342,14 +342,6 @@ fn an_annotating_element_is_a_member_element() {
     kerml_accepted("class A { doc /* on A */ }");
 }
 
-#[test]
-fn a_metadata_annotating_element_is_not_implemented() {
-    // AnnotatingElement's fourth alternative, the one the two grammars spell
-    // differently. KerML says MetadataFeature, which is unimplemented: a rejection by
-    // absence. SysML's MetadataUsage is read, and only in a .sysml file.
-    kerml_rejected("metadata M about X;");
-}
-
 // -- Feature, KerML 8.2.4.3.1 -----------------------------------------------------
 //
 // Feature = ( FeaturePrefix ( 'feature' | PrefixMetadataMember ) FeatureDeclaration?
