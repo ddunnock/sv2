@@ -223,11 +223,11 @@ fn a_filter_is_admitted_in_a_kerml_package_body_and_not_at_a_kerml_root() {
 
 #[test]
 fn the_other_feature_elements_are_unimplemented_rather_than_accepted() {
-    // NamespaceFeatureMember reaches FeatureElement's ten alternatives. Feature,
-    // Succession, BindingConnector and Connector are implemented, and Step is next
-    // (`step s;` was here); the other five are not, and reporting them is the honest
-    // state. `succession flow` is SuccessionFlow, one of the five.
-    for source in ["succession flow f from a to b;", "inv { true }"] {
+    // NamespaceFeatureMember reaches FeatureElement's ten alternatives. Feature, Step,
+    // Succession, BindingConnector and Connector are implemented, and Invariant is next
+    // (`inv { true }` was here); the other four are not, and reporting them is the
+    // honest state. `succession flow` is SuccessionFlow, one of the four.
+    for source in ["succession flow f from a to b;"] {
         kerml_rejected(source);
     }
 }
@@ -1501,7 +1501,7 @@ fn prefix_metadata_is_bounded_by_its_rules() {
     // name is what makes it a PrefixMetadataMember at all.
     kerml_rejected("class C { #; }");
     // FeatureElements this parser does not read stay reported with a `#` before them.
-    kerml_rejected("#M inv { true }");
+    kerml_rejected("#M flow f from a to b;");
 }
 
 // -- a keywordless feature declared by its specialization, KerML 8.2.4.3.1 ----------
