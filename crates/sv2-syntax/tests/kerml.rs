@@ -1031,6 +1031,68 @@ fn a_metadata_access_is_bounded_by_its_rules() {
     kerml_rejected("feature f = .metadata;");
 }
 
+// -- the primary expression alternations, KerML 8.2.5.8.2-8.2.5.8.4 ---------------
+//
+//   PrimaryExpression                = FeatureChainExpression
+//                                    | NonFeatureChainPrimaryExpression
+//   NonFeatureChainPrimaryExpression = BracketExpression | IndexExpression
+//                                    | SequenceExpression | SelectExpression
+//                                    | CollectExpression | FunctionOperationExpression
+//                                    | BaseExpression
+//   BaseExpression                   = NullExpression | LiteralExpression
+//                                    | FeatureReferenceExpression
+//                                    | MetadataAccessExpression | InvocationExpression
+//                                    | ConstructorExpression | BodyExpression
+//   LiteralExpression                = LiteralBoolean | LiteralString | LiteralInteger
+//                                    | LiteralReal | LiteralInfinity
+//
+// One instance of every alternative of the four, as a feature value, with the node its
+// production builds, in both languages: every one is a shared unit.
+
+const PRIMARY_EXPRESSIONS: [(&str, &str); 22] = [
+    ("a.b", "FeatureChainExpression"),
+    ("a[1]", "BracketExpression"),
+    ("a#(1)", "IndexExpression"),
+    ("(1, 2)", "SequenceExpression"),
+    ("a.?{in x; true}", "SelectExpression"),
+    ("a.{in x; x}", "CollectExpression"),
+    ("a->f()", "FunctionOperationExpression"),
+    ("null", "NullExpression"),
+    ("()", "NullExpression"),
+    ("true", "LiteralBoolean"),
+    ("false", "LiteralBoolean"),
+    ("\"s\"", "LiteralString"),
+    ("1", "LiteralInteger"),
+    ("1.5", "LiteralReal"),
+    (".5", "LiteralReal"),
+    ("1E3", "LiteralReal"),
+    ("*", "LiteralInfinity"),
+    ("a", "FeatureReferenceExpression"),
+    ("E.metadata", "MetadataAccessExpression"),
+    ("f(1)", "InvocationExpression"),
+    ("new T()", "ConstructorExpression"),
+    ("{in x; x}", "BodyExpression"),
+];
+
+#[test]
+fn every_primary_expression_alternative_is_read_in_both_languages() {
+    for (expression, kind) in PRIMARY_EXPRESSIONS {
+        let kerml = render(&kerml_accepted(&format!("feature v = {expression};")).syntax());
+        assert!(has_node(&kerml, kind), "{kind}: {kerml}");
+        let sysml = parse(&format!("attribute v = {expression};"), Language::SysMl);
+        assert!(
+            sysml.errors().is_empty(),
+            "{expression}: {:?}",
+            sysml.errors()
+        );
+        assert!(has_node(&render(&sysml.syntax()), kind), "{kind} in SysML");
+    }
+    // No base expression opens a primary on a postfix: an operand comes first.
+    kerml_rejected("feature v = .b;");
+    kerml_rejected("feature v = #(1);");
+    kerml_rejected("feature v = ->f();");
+}
+
 // -- ConstructorExpression, KerML 8.2.5.8.3 ----------------------------------------
 
 #[test]

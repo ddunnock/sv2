@@ -6984,6 +6984,9 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: PrimaryExpression
+    // production: NonFeatureChainPrimaryExpression
+    //
     // PrimaryExpression = FeatureChainExpression
     //                   | NonFeatureChainPrimaryExpression       (KerML 8.2.5.8.2)
     //
@@ -6991,25 +6994,20 @@ impl<'a> Parser<'a> {
     //     | SequenceExpression | SelectExpression | CollectExpression
     //     | FunctionOperationExpression | BaseExpression         (KerML 8.2.5.8.2)
     //
-    // BaseExpression = NullExpression | LiteralExpression
-    //     | FeatureReferenceExpression | MetadataAccessExpression
-    //     | InvocationExpression | ConstructorExpression
-    //     | BodyExpression                                       (KerML 8.2.5.8.3)
+    // Both alternations, every alternative, read here as the Pilot reads them
+    // (KerMLExpressions.xtext:299-322): a SequenceExpression or a BaseExpression first,
+    // by `non_feature_chain_primary_expression`, and then `postfix_tail`'s left fold,
+    // which reads FeatureChainExpression, BracketExpression, IndexExpression,
+    // SelectExpression, CollectExpression and FunctionOperationExpression, each over the
+    // primary before it as its PrimaryArgument. Five of NonFeatureChainPrimaryExpression's
+    // seven and PrimaryExpression's first alternative open on an operand, so no method
+    // reads them before one; the fold is how the operand comes first. Each alternative
+    // carries its own marker; these two claim the alternations, which is why they sit on
+    // the one method that reads all of both.
     //
-    // NONE OF THE THREE IS MARKED FOR COVERAGE. Each is an alternation and each has
-    // alternatives that are absent, so marking any of them would claim a production
-    // this parser does not read. What is implemented is FeatureChainExpression from the
-    // first; BracketExpression, IndexExpression, SequenceExpression, SelectExpression,
-    // CollectExpression and FunctionOperationExpression from the middle one; and NullExpression, LiteralExpression, FeatureReferenceExpression,
-    // InvocationExpression, ConstructorExpression and BodyExpression from the last, the
-    // body in SysML only (see `body_expression`), and MetadataAccessExpression, the last
-    // of BaseExpression's to land. Whether the three can now be marked is its own
-    // question, asked of each alternative's own marker.
-    //
-    // No node of its own for any of the three, as DefinitionElement and
-    // FeatureSpecialization have none: an alternation's node would add a level
-    // carrying nothing, because the alternative that matched already says which was
-    // taken.
+    // No node of its own for either, as DefinitionElement and FeatureSpecialization
+    // have none: an alternation's node would add a level carrying nothing, because the
+    // alternative that matched already says which was taken.
     fn primary_expression(&mut self) {
         self.eat_trivia();
         let start = self.builder.checkpoint();
@@ -7500,13 +7498,30 @@ impl<'a> Parser<'a> {
 
     /// `PrimaryExpression`'s alternatives other than `FeatureChainExpression`.
     fn non_feature_chain_primary_expression(&mut self) {
-        // NullExpression = 'null' | '(' ')' — the empty pair is decided before
-        // SequenceExpression, which would otherwise read the '(' and find no
-        // expression.
+        // NullExpression's `'(' ')'` is decided before SequenceExpression, which would
+        // otherwise read the '(' and find no expression.
+        if self.at(SyntaxKind::LParen) && !self.at_empty_parentheses() {
+            self.sequence_expression();
+        } else {
+            self.base_expression();
+        }
+    }
+
+    // production: BaseExpression
+    //
+    // BaseExpression = NullExpression | LiteralExpression
+    //     | FeatureReferenceExpression | MetadataAccessExpression
+    //     | InvocationExpression | ConstructorExpression
+    //     | BodyExpression                                       (KerML 8.2.5.8.3)
+    //
+    // All seven, in both languages: the BodyExpression is each language's own (see
+    // `body_expression`). The Pilot adds `'(' SequenceExpression ')'` here
+    // (KerMLExpressions.xtext:356); the clause puts SequenceExpression in
+    // NonFeatureChainPrimaryExpression instead, the same text, and it is read there.
+    // An alternation with no node: the expression says which.
+    fn base_expression(&mut self) {
         if self.at_keyword("null") || self.at_empty_parentheses() {
             self.null_expression();
-        } else if self.at(SyntaxKind::LParen) {
-            self.sequence_expression();
         } else if self.at_literal_expression() {
             self.literal_expression();
         } else if self.at_metadata_access_expression() {
@@ -8013,11 +8028,13 @@ impl<'a> Parser<'a> {
             || self.at_keyword("false")
     }
 
+    // production: LiteralExpression
+    //
     // LiteralExpression = LiteralBoolean | LiteralString | LiteralInteger
     //                   | LiteralReal | LiteralInfinity          (KerML 8.2.5.8.4)
     //
-    // NOT marked for coverage: it is an alternation with no method that is it, as
-    // FeatureSpecialization is. All five alternatives below are marked.
+    // All five alternatives, each marked below. An alternation with no node: the
+    // literal says which.
     fn literal_expression(&mut self) {
         if self.at_keyword("true") || self.at_keyword("false") {
             self.literal_boolean();
@@ -8051,9 +8068,13 @@ impl<'a> Parser<'a> {
     }
 
     // production: LiteralBoolean
+    // production: BooleanValue
     //
     // LiteralBoolean : LiteralBoolean = value = BooleanValue     (KerML 8.2.5.8.4)
     // BooleanValue = 'true' | 'false'                            (KerML 8.2.5.8.4)
+    //
+    // BooleanValue is a value production, not an element: its keyword is the
+    // LiteralBoolean's only token, and it builds no node of its own.
     fn literal_boolean(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::LiteralBoolean);
@@ -8086,14 +8107,16 @@ impl<'a> Parser<'a> {
     }
 
     // production: LiteralReal
+    // production: RealValue
     //
     // LiteralReal : LiteralReal = value = RealValue              (KerML 8.2.5.8.4)
     //
     // RealValue = DECIMAL_VALUE? '.' ( DECIMAL_VALUE | EXPONENTIAL_VALUE )
     //           | EXPONENTIAL_VALUE                              (KerML 8.2.5.8.4)
     //
-    // RealValue is a production and not a terminal, so a real is up to three tokens
-    // and the node is what holds them together. The leading DECIMAL_VALUE is
+    // RealValue is a production and not a terminal, so a real is up to three tokens,
+    // and the LiteralReal node is what holds them together: RealValue, a value
+    // production like BooleanValue, builds none of its own. The leading DECIMAL_VALUE is
     // optional, which makes `.5` a real; the trailing part is not, which makes `1.`
     // a reported error rather than a real.
     fn literal_real(&mut self) {
