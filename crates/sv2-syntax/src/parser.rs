@@ -637,6 +637,8 @@ enum RelationshipDeclaration {
     Subclassification,
     /// `FeatureTyping`, `typing` (8.2.4.3.2).
     FeatureTyping,
+    /// `Subsetting`, `subset` (8.2.4.3.3).
+    Subsetting,
 }
 
 /// Which of `KerML` `Connector`'s three declaration forms is written (`KerML` 8.2.5.5.1).
@@ -2100,7 +2102,7 @@ impl<'a> Parser<'a> {
     ///
     /// Of `NonFeatureElement`, `Package` and `LibraryPackage` — shared units, the same
     /// productions in both grammars — `Dependency`, `FeatureInverting`, `Specialization`,
-    /// `Subclassification`, `FeatureTyping` and the eight classifiers of 8.2.4.2 are implemented. Of
+    /// `Subclassification`, `FeatureTyping`, `Subsetting` and the eight classifiers of 8.2.4.2 are implemented. Of
     /// `FeatureElement`'s ten alternatives, `Feature`, `Step`, `Connector`,
     /// `BindingConnector` and `Succession` are. The rest (`expr`, `inv`, `flow`,
     /// `succession flow`, …) are reported rather than read.
@@ -13841,7 +13843,8 @@ impl<'a> Parser<'a> {
     // Marked although RelationshipOwnedElement and OwnedRelatedElement are not: this
     // production's own parts are read, and the two alternations below it are read as far
     // as NonFeatureElement and FeatureElement are — Package, Dependency, FeatureInverting,
-    // Specialization, Subclassification, FeatureTyping and the eight classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
+    // Specialization, Subclassification, FeatureTyping, Subsetting and the eight
+    // classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
     // node, as FeatureSpecialization has none: the element read says which was taken.
     //
     // An owned related element is the relationship's ownedRelatedElement, with no
@@ -14490,6 +14493,8 @@ impl<'a> Parser<'a> {
             Some(RelationshipDeclaration::Subclassification)
         } else if self.nth_is_keyword(word, "typing") {
             Some(RelationshipDeclaration::FeatureTyping)
+        } else if self.nth_is_keyword(word, "subset") {
+            Some(RelationshipDeclaration::Subsetting)
         } else {
             None
         }
@@ -14502,6 +14507,7 @@ impl<'a> Parser<'a> {
             RelationshipDeclaration::Specialization => self.specialization(),
             RelationshipDeclaration::Subclassification => self.subclassification(),
             RelationshipDeclaration::FeatureTyping => self.kerml_feature_typing(),
+            RelationshipDeclaration::Subsetting => self.subsetting(),
         }
     }
 
@@ -14707,6 +14713,41 @@ impl<'a> Parser<'a> {
             self.expect_keyword("typed");
             self.expect_keyword("by");
         }
+        self.general_type();
+        self.relationship_body();
+        self.finish_node();
+    }
+
+    // production: Subsetting@kerml
+    //
+    // Subsetting =
+    //     ( 'specialization' Identification )?
+    //     'subset' SpecificType
+    //     SUBSETS GeneralType
+    //     RelationshipBody                                       (KerML 8.2.4.3.3)
+    //
+    // SUBSETS = ':>' | 'subsets'                                 (KerML 8.2.2.7)
+    //
+    // A Specialization between two features (8.3.3.3.10, receipt 4738b7f2), its
+    // subsettingFeature and subsettedFeature: `specialization Sub subset parent subsets
+    // person;` (KerML 7.3.4.4, receipt aa7a8838; Simple Tests/Features.kerml:45). Both
+    // sides a name or a feature chain, as a Specialization's are: `subset g.g subsets
+    // b.f.a;` (Simple Tests/FeatureChains.kerml:23). One subsetted feature; a list is a
+    // feature's own subsettings. `:>` is SPECIALIZES's symbol too, and the keyword before
+    // the first target, not the symbol, is what says which relationship this is.
+    //
+    // constraint: Subsetting::validateSubsettingConstantConformance,
+    //     validateSubsettingFeaturingTypes and validateSubsettingUniquenessConformance
+    //     (KerML 8.3.3.3.10). Validity, not syntax: they carry their diagnostics
+    //     downstream (ADR-0002). No implied specialization attaches: this IS the
+    //     subsetting, written out.
+    fn subsetting(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Subsetting);
+        self.specialization_prefix();
+        self.expect_keyword("subset");
+        self.specific_type();
+        self.terminal(SyntaxKind::ColonGt, "subsets", "`:>` or `subsets`");
         self.general_type();
         self.relationship_body();
         self.finish_node();

@@ -2237,6 +2237,70 @@ fn a_feature_typing_is_bounded_by_its_rules() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// -- Subsetting, KerML 8.2.4.3.3 ----------------------------------------------------
+//
+//   Subsetting = ( 'specialization' Identification )?
+//                'subset' SpecificType SUBSETS GeneralType RelationshipBody
+//   SUBSETS    = ':>' | 'subsets'                                        (8.2.2.7)
+//
+// A NonFeatureElement (8.2.3.4.3).
+
+#[test]
+fn a_subsetting_reads_the_corpus_forms() {
+    // Simple Tests/Features.kerml:45-46.
+    let named =
+        render(&kerml_accepted("specialization Sub subset parent subsets person;").syntax());
+    assert_eq!(
+        child_kinds(&named, "Subsetting"),
+        [
+            "KwSpecialization",
+            "Identification",
+            "KwSubset",
+            "QualifiedName",
+            "KwSubsets",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{named}"
+    );
+    kerml_accepted("specialization subset mother subsets parent;");
+    // Simple Tests/FeatureChains.kerml:23: feature chains on both sides.
+    let chained = render(&kerml_accepted("subset g.g subsets b.f.a;").syntax());
+    assert_eq!(
+        child_kinds(&chained, "Subsetting"),
+        [
+            "KwSubset",
+            "OwnedFeatureChain",
+            "KwSubsets",
+            "OwnedFeatureChain",
+            "RelationshipBody"
+        ],
+        "{chained}"
+    );
+    // KerML 7.3.4.4's examples, and the symbol.
+    kerml_accepted(
+        "specialization subset mother subsets parent {\n    doc /* All mothers are parents. */\n}",
+    );
+    kerml_accepted(
+        "package P { subset rearWheels subsets wheels; subset rearWheels :> driveWheels; }",
+    );
+}
+
+#[test]
+fn a_subsetting_is_bounded_by_its_rules() {
+    kerml_rejected("subset f;");
+    kerml_rejected("subset f subsets;");
+    kerml_rejected("specialization S f subsets g;");
+    // SUBSETS is `:>` or `subsets`; `specializes` is SPECIALIZES's word (8.2.2.7).
+    kerml_rejected("subset f specializes g;");
+    // One subsetted feature: a list is a feature's own subsettings (7.3.4.4). Held as a
+    // file by tests/rejection/kerml-subsetting-relates-one-subsetted-feature.kerml.
+    kerml_rejected("subset f subsets g, h;");
+    // SysML states no Subsetting declaration (ADR-0014).
+    let sysml = parse("subset f :> g;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------
 //
 //   TypeBodyElement    = NonFeatureMember | FeatureMember | AliasMember | Import

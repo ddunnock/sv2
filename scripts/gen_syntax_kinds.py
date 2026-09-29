@@ -192,6 +192,14 @@ NODES = [
         "ChainingPart",
         "`'chains' ( OwnedFeatureChaining | FeatureChain )`. `KerML` 8.2.4.3.1.",
     ),
+    # The standalone Subsetting, a NonFeatureElement. KerML 8.2.4.3.3.
+    (
+        "Subsetting",
+        (
+            "`( 'specialization' Identification )? 'subset' SpecificType SUBSETS "
+            "GeneralType RelationshipBody`. `KerML` 8.2.4.3.3."
+        ),
+    ),
     # The standalone Subclassification, a NonFeatureElement: two classifier names.
     # KerML 8.2.4.2.2.
     (
