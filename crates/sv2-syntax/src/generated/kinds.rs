@@ -659,11 +659,11 @@ pub enum SyntaxKind {
     MessageEventMember,
     /// `ownedRelationship += OwnedReferenceSubsetting`. `SysML` 8.2.2.16 — the metaclass is `EventOccurrenceUsage`.
     MessageEvent,
-    /// `UsageDeclaration ValuePart? ( 'of' FlowPayloadFeatureMember )? ( 'from' FlowEndMember 'to' FlowEndMember )? | FlowEndMember 'to' FlowEndMember`. `SysML` 8.2.2.16 — returns `FlowUsage`.
+    /// `UsageDeclaration ValuePart? ( 'of' FlowPayloadFeatureMember )? ( 'from' FlowEndMember 'to' FlowEndMember )? | FlowEndMember 'to' FlowEndMember`. `SysML` 8.2.2.16 — returns `FlowUsage`. Also `KerML` 8.2.5.9.2's, over `FeatureDeclaration` and `PayloadFeatureMember`, with `'all'?` before the ends.
     FlowDeclaration,
     /// `FlowEnd`. `SysML` 8.2.2.16 — the metaclass is `EndFeatureMembership`.
     FlowEndMember,
-    /// `FlowEndSubsetting? FlowFeatureMember`. `SysML` 8.2.2.16.
+    /// `FlowEndSubsetting? FlowFeatureMember`. `SysML` 8.2.2.16. Also `KerML` 8.2.5.9.2's, `( OwnedReferenceSubsetting '.' )? FlowFeatureMember`.
     FlowEnd,
     /// `[QualifiedName] '.' | FeatureChainPrefix`. `SysML` 8.2.2.16, with the '.' of deviation `FlowEndSubsetting` — the metaclass is `ReferenceSubsetting`.
     FlowEndSubsetting,
@@ -679,7 +679,7 @@ pub enum SyntaxKind {
     FlowPayloadFeatureMember,
     /// `PayloadFeature`. `SysML` 8.2.2.16 — the metaclass is `PayloadFeature`.
     FlowPayloadFeature,
-    /// `Identification? PayloadFeatureSpecializationPart ValuePart? | OwnedFeatureTyping OwnedMultiplicity? | OwnedMultiplicity OwnedFeatureTyping`. `SysML` 8.2.2.16.
+    /// `Identification? PayloadFeatureSpecializationPart ValuePart? | OwnedFeatureTyping OwnedMultiplicity? | OwnedMultiplicity OwnedFeatureTyping`. `SysML` 8.2.2.16. Also `KerML` 8.2.5.9.2's, with an `Identification ValuePart` alternative.
     PayloadFeature,
     /// `FeatureSpecialization+ MultiplicityPart? FeatureSpecialization* | MultiplicityPart FeatureSpecialization+`. `SysML` 8.2.2.16.
     PayloadFeatureSpecializationPart,
@@ -1307,6 +1307,12 @@ pub enum SyntaxKind {
     MetadataUsage,
     /// `( Identification ( ':' | 'defined' 'by' ) )? OwnedFeatureTyping`. `SysML` 8.2.2.27, as deviation `MetadataUsageDeclaration` reads it.
     MetadataUsageDeclaration,
+    /// `FeaturePrefix 'flow' FlowDeclaration TypeBody`. `KerML` 8.2.5.9.2.
+    Flow,
+    /// `FeaturePrefix 'succession' 'flow' FlowDeclaration TypeBody`. `KerML` 8.2.5.9.2.
+    SuccessionFlow,
+    /// `ownedRelatedElement = PayloadFeature`. `KerML` 8.2.5.9.2.
+    PayloadFeatureMember,
     /// `TypePrefix 'function' ClassifierDeclaration FunctionBody`. `KerML` 8.2.5.7.1.
     Function,
     /// `TypePrefix 'predicate' ClassifierDeclaration FunctionBody`. `KerML` 8.2.5.7.3.
@@ -2034,6 +2040,9 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::MetadataDefinition,
     SyntaxKind::MetadataUsage,
     SyntaxKind::MetadataUsageDeclaration,
+    SyntaxKind::Flow,
+    SyntaxKind::SuccessionFlow,
+    SyntaxKind::PayloadFeatureMember,
     SyntaxKind::Function,
     SyntaxKind::Predicate,
     SyntaxKind::Invariant,

@@ -1155,6 +1155,153 @@ fn a_function_is_bounded_by_its_rules() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// -- Flow and SuccessionFlow, KerML 8.2.5.9.2 ---------------------------------------
+//
+//   Flow            = FeaturePrefix 'flow' FlowDeclaration TypeBody
+//   SuccessionFlow  = FeaturePrefix 'succession' 'flow' FlowDeclaration TypeBody
+//   FlowDeclaration = FeatureDeclaration? ValuePart? ( 'of' PayloadFeatureMember )?
+//                     ( 'from' FlowEndMember 'to' FlowEndMember )?
+//                   | 'all'? FlowEndMember 'to' FlowEndMember
+//   FlowEnd         = ( OwnedReferenceSubsetting '.' )? FlowFeatureMember
+//
+// The first alternative's `?` is deviation FlowDeclaration's (follow_xtext).
+
+#[test]
+fn a_flow_reads_the_corpus_forms() {
+    // Simple Tests/Behaviors.kerml:18, the second alternative with two-segment ends,
+    // and :20, a declared flow with a payload typing alone.
+    let ends = render(&kerml_accepted("behavior B { flow a.y to b.x1; }").syntax());
+    assert_eq!(
+        child_kinds(&ends, "FlowDeclaration"),
+        ["FlowEndMember", "KwTo", "FlowEndMember"],
+        "{ends}"
+    );
+    assert_eq!(
+        child_kinds(&ends, "FlowEnd"),
+        ["OwnedReferenceSubsetting", "Dot", "FlowFeatureMember"],
+        "{ends}"
+    );
+    let payload = render(&kerml_accepted("behavior B { abstract flow msg of C; }").syntax());
+    assert_eq!(
+        child_kinds(&payload, "FlowDeclaration"),
+        ["FeatureDeclaration", "KwOf", "PayloadFeatureMember"],
+        "{payload}"
+    );
+    assert_eq!(
+        child_kinds(&payload, "PayloadFeatureMember"),
+        ["PayloadFeature"],
+        "{payload}"
+    );
+    // Behavior Examples/TakePicture.kerml:14, a succession flow with everything.
+    let succession = render(
+        &kerml_accepted(
+            "behavior TakePicture {\n\tsuccession flow exposure[1] of Exposure from step1.xrsl \
+             to step2.xsf;\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&succession, "SuccessionFlow"),
+        [
+            "FeaturePrefix",
+            "KwSuccession",
+            "KwFlow",
+            "FlowDeclaration",
+            "TypeBody"
+        ],
+        "{succession}"
+    );
+}
+
+#[test]
+fn a_flow_reads_the_examples_of_7_4_10_3() {
+    kerml_accepted(
+        "struct Vehicle {\n    composite feature fuelTank[1] {\n        out var feature \
+         fuelOut[1] : Fuel;\n    }\n    composite feature engine {\n        in var feature \
+         fuelIn[1] : Fuel;\n    }\n    // The flow actually connects the fuelTank to the \
+         engine.\n    // The transfer moves Fuel from fuelOut to fuelIn.\n    flow fuelFlow from \
+         fuelTank::fuelOut to engine::fuelIn;\n}",
+    );
+    kerml_accepted(
+        "feature vehicle : Vehicle {\n    // The flow actually connects the inherited \
+         fuelTank\n    // feature to the inherited engine feature.\n    flow fuelFlow from \
+         fuelTank.fuelOut to engine.fuelIn;\n}",
+    );
+    kerml_accepted("flow fuelTank.fuelOut to engine.fuelIn;");
+    kerml_accepted(
+        "behavior TakePicture {\n    composite step focus : Focus { out image[1] : Image; }\n    \
+         composite step shoot : Shoot { in image[1] : Image; }\n    // The use of a succession \
+         flow means that focus must complete before\n    // the image is transferred, after \
+         which shoot can begin.\n    succession flow focus.image to shoot.image;\n}",
+    );
+}
+
+#[test]
+fn a_flow_end_of_three_segments_subsets_a_feature_chain() {
+    // KerML's FlowEnd has no FeatureChainPrefix: its OwnedReferenceSubsetting is a name
+    // or an OwnedFeatureChain (8.2.4.3.3), so `a.b.c` is the chain `a.b`, a `.`, and `c`.
+    let tree = render(&kerml_accepted("flow a.b.c to d.e;").syntax());
+    assert_eq!(
+        child_kinds(&tree, "OwnedReferenceSubsetting"),
+        ["OwnedFeatureChain"],
+        "{tree}"
+    );
+    assert!(!has_node(&tree, "FeatureChainPrefix"), "{tree}");
+    // And `all` before the ends, the second alternative's `isSufficient`.
+    kerml_accepted("flow all a.b to c.d;");
+    // A payload's KerML-only alternative, `Identification ValuePart` (8.2.5.9.2), with
+    // every Identification and every FeatureValue spelling; a short name opens it as
+    // well as the declared alternative, `<p> : T`.
+    for payload in [
+        "p = 1",
+        "<p> = 1",
+        "<p> q := 1",
+        "p default 1",
+        "<p> : T = 1",
+    ] {
+        kerml_accepted(&format!("flow f of {payload} from a.b to c.d;"));
+    }
+}
+
+#[test]
+fn a_flow_without_a_declaration_is_admitted_by_deviation() {
+    // 7.4.10.3's `flow of flowingFuel : Fuel from ...` writes no FeatureDeclaration
+    // before its payload: deviation FlowDeclaration (follow_xtext), noted (ADR-0022).
+    let parsed =
+        kerml_accepted("flow of flowingFuel : Fuel from fuelTank.fuelOut to engine.fuelIn;");
+    let notes: Vec<String> = parsed
+        .deviations()
+        .iter()
+        .map(|d| d.message().to_owned())
+        .collect();
+    assert_eq!(notes.len(), 1, "{notes:?}");
+    assert!(notes[0].contains("deviation FlowDeclaration"), "{notes:?}");
+    // The second alternative writes no declaration by its own text, and a declared flow
+    // is the specification's: neither carries a note.
+    assert!(kerml_accepted("flow a.b to c.d;").deviations().is_empty());
+    assert!(
+        kerml_accepted("flow f from a.b to c.d;")
+            .deviations()
+            .is_empty()
+    );
+}
+
+#[test]
+fn a_flow_is_bounded_by_its_rules() {
+    // `from` needs `to` (8.2.5.9.2). Held as a file by
+    // tests/rejection/kerml-flow-from-needs-to.kerml.
+    kerml_rejected("flow f from a.b;");
+    kerml_rejected("flow a.b;");
+    // The payload's multiplicity alone is no PayloadFeature (deviation PayloadFeature).
+    kerml_rejected("flow of [2] from a.b to c.d;");
+    // TypeBody is not optional.
+    kerml_rejected("flow a.b to c.d");
+    // SysML's is FlowUsage, over its own productions; `flow` in .sysml reads that, and
+    // KerML's `all` before the ends is not SysML's (8.2.2.16).
+    let sysml = parse("flow all a.b to c.d;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- multiplicity, KerML 8.2.5.11 ------------------------------------------------
 //
 //   OwnedMultiplicity      = ownedRelatedElement += OwnedMultiplicityRange

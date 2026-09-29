@@ -8,6 +8,7 @@ vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_N_ary.ker
 vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml
 vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_UnownedEnds.kerml
 vendor/corpus/kerml/src/examples/Behavior Examples/Camera.kerml
+vendor/corpus/kerml/src/examples/Behavior Examples/TakePicture.kerml
 vendor/corpus/kerml/src/examples/Individuals Examples/JohnIndividualExample.kerml
 vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-Atoms.kerml
 vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-ModelingInstances.kerml
@@ -29,6 +30,7 @@ vendor/corpus/kerml/src/examples/Packet Example/PacketUsage.kerml
 vendor/corpus/kerml/src/examples/Packet Example/Packets.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/ArgumentResolution.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Associations.kerml
+vendor/corpus/kerml/src/examples/Simple Tests/Behaviors.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Circular.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Classifications.kerml

@@ -537,14 +537,22 @@ NODES = [
         (
             "`UsageDeclaration ValuePart? ( 'of' FlowPayloadFeatureMember )? "
             "( 'from' FlowEndMember 'to' FlowEndMember )? "
-            "| FlowEndMember 'to' FlowEndMember`. `SysML` 8.2.2.16 — returns `FlowUsage`."
+            "| FlowEndMember 'to' FlowEndMember`. `SysML` 8.2.2.16 — returns `FlowUsage`. "
+            "Also `KerML` 8.2.5.9.2's, over `FeatureDeclaration` and `PayloadFeatureMember`, "
+            "with `'all'?` before the ends."
         ),
     ),
     (
         "FlowEndMember",
         "`FlowEnd`. `SysML` 8.2.2.16 — the metaclass is `EndFeatureMembership`.",
     ),
-    ("FlowEnd", "`FlowEndSubsetting? FlowFeatureMember`. `SysML` 8.2.2.16."),
+    (
+        "FlowEnd",
+        (
+            "`FlowEndSubsetting? FlowFeatureMember`. `SysML` 8.2.2.16. Also `KerML` "
+            "8.2.5.9.2's, `( OwnedReferenceSubsetting '.' )? FlowFeatureMember`."
+        ),
+    ),
     (
         "FlowEndSubsetting",
         (
@@ -581,7 +589,8 @@ NODES = [
         (
             "`Identification? PayloadFeatureSpecializationPart ValuePart? "
             "| OwnedFeatureTyping OwnedMultiplicity? "
-            "| OwnedMultiplicity OwnedFeatureTyping`. `SysML` 8.2.2.16."
+            "| OwnedMultiplicity OwnedFeatureTyping`. `SysML` 8.2.2.16. Also `KerML` "
+            "8.2.5.9.2's, with an `Identification ValuePart` alternative."
         ),
     ),
     (
@@ -2018,6 +2027,15 @@ NODES = [
             "8.2.2.27, as deviation `MetadataUsageDeclaration` reads it."
         ),
     ),
+    # KerML's Flow and SuccessionFlow, and the PayloadFeatureMember its FlowDeclaration
+    # owns. The FlowDeclaration, FlowEnd and PayloadFeature nodes are SysML's too.
+    # KerML 8.2.5.9.2.
+    ("Flow", "`FeaturePrefix 'flow' FlowDeclaration TypeBody`. `KerML` 8.2.5.9.2."),
+    (
+        "SuccessionFlow",
+        "`FeaturePrefix 'succession' 'flow' FlowDeclaration TypeBody`. `KerML` 8.2.5.9.2.",
+    ),
+    ("PayloadFeatureMember", "`ownedRelatedElement = PayloadFeature`. `KerML` 8.2.5.9.2."),
     # KerML's Function and Predicate, the classifiers' spine with a FunctionBody.
     # KerML 8.2.5.7.1, 8.2.5.7.3.
     (

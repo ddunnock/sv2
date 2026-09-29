@@ -3623,6 +3623,8 @@ impl<'a> Parser<'a> {
             self.kerml_expression();
         } else if self.at_kerml_boolean_expression(0) {
             self.kerml_boolean_expression();
+        } else if let Some(flow) = self.at_kerml_flow(0) {
+            self.kerml_flow(flow);
         } else {
             self.feature();
         }
@@ -3639,6 +3641,7 @@ impl<'a> Parser<'a> {
             || self.at_kerml_invariant(n)
             || self.at_kerml_expression(n)
             || self.at_kerml_boolean_expression(n)
+            || self.at_kerml_flow(n).is_some()
     }
 
     /// Whether a `KerML` `Succession` starts at the `n`th meaningful token.
@@ -3919,6 +3922,186 @@ impl<'a> Parser<'a> {
         }
         self.function_body();
         self.finish_node();
+    }
+
+    /// Which of `KerML`'s `Flow` and `SuccessionFlow` starts at the `n`th meaningful
+    /// token, if either does: `flow`, or `succession flow`, after a `FeaturePrefix`. Its
+    /// node, and whether it is the succession. `at_kerml_succession` declines the pair.
+    fn at_kerml_flow(&self, n: usize) -> Option<(SyntaxKind, bool)> {
+        let after = self.skip_feature_prefix(n);
+        if self.nth_is_keyword(after, "flow") {
+            Some((SyntaxKind::Flow, false))
+        } else if self.nth_is_keyword(after, "succession") && self.nth_is_keyword(after + 1, "flow")
+        {
+            Some((SyntaxKind::SuccessionFlow, true))
+        } else {
+            None
+        }
+    }
+
+    // production: Flow@kerml
+    // production: SuccessionFlow@kerml
+    //
+    // Flow           = FeaturePrefix 'flow' FlowDeclaration TypeBody
+    // SuccessionFlow = FeaturePrefix 'succession' 'flow' FlowDeclaration TypeBody
+    //                                                            (KerML 8.2.5.9.2)
+    //
+    // "A flow declaration is syntactically similar to a binary connector declaration ...,
+    // using the keyword flow, or succession flow for a succession flow" (7.4.10.3,
+    // receipt 95392e97). A Flow is a Step and a Connector (8.3.4.9.2, receipt 2be03181);
+    // a SuccessionFlow a Flow and a Succession (8.3.4.9.6, receipt cc36307d). One shape,
+    // one method, as SysML's FlowUsage and SuccessionFlowUsage share `flow_declaration`.
+    // The Pilot factors the keywords (FlowKeyword, SuccessionFlowKeyword); both are
+    // xtext_only, follow_spec, so the literals are matched here.
+    //
+    // implied specialization: Transfers::transfers; Transfers::flowTransfers when the flow
+    //     has owned end features; Transfers::flowTransfersBefore for a succession flow.
+    //     7.4.10.3's prose names the default subsetting `transfersBefore`; the constraints
+    //     name the library element, and are what sv2-hir reads.
+    // constraint: Flow::checkFlowSpecialization (Transfers::transfers) and
+    //     checkFlowWithEndsSpecialization (Transfers::flowTransfers, KerML 8.3.4.9.2);
+    //     SuccessionFlow::checkSuccessionFlowSpecialization (Transfers::flowTransfersBefore,
+    //     8.3.4.9.6). Injections, sv2-hir's; nothing is written into the tree.
+    fn kerml_flow(&mut self, (node, succession): (SyntaxKind, bool)) {
+        self.eat_trivia();
+        self.start_node(node);
+        self.feature_prefix();
+        if succession {
+            self.expect_keyword("succession");
+        }
+        self.expect_keyword("flow");
+        self.kerml_flow_declaration();
+        self.type_body();
+        self.finish_node();
+    }
+
+    // production: FlowDeclaration@kerml
+    //
+    // FlowDeclaration : Flow =
+    //       FeatureDeclaration ValuePart?
+    //       ( 'of'  ownedRelationship += PayloadFeatureMember )?
+    //       ( 'from' ownedRelationship += FlowEndMember
+    //         'to'   ownedRelationship += FlowEndMember )?
+    //     | ( isSufficient ?= 'all' )?
+    //       ownedRelationship += FlowEndMember 'to'
+    //       ownedRelationship += FlowEndMember                    (KerML 8.2.5.9.2)
+    //
+    // The same node as SysML's FlowDeclaration (8.2.2.16), a production of the same name
+    // over UsageDeclaration and FlowPayloadFeatureMember, and with no `all`. The
+    // alternatives are told apart as SysML's are, by looking past a whole flow end, after
+    // any `all`, for the `to` only the second writes there.
+    //
+    // The first alternative's FeatureDeclaration is optional although the clause writes
+    // it bare: deviation FlowDeclaration (follow_xtext), which the register records as
+    // extrapolated from KERML11-181. 7.4.10.3's own example writes one without it, `flow
+    // of flowingFuel : Fuel from fuelTank.fuelOut to engine.fuelIn;` (receipt
+    // 95392e97). Such text parses and carries a PARSE-DEVIATION note (ADR-0022).
+    fn kerml_flow_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FlowDeclaration);
+        let n = usize::from(self.at_keyword("all"));
+        let ends_first = self
+            .flow_end_segments(n)
+            .is_some_and(|(after, _)| self.nth_is_keyword(after, "to"));
+        if ends_first {
+            self.eat_optional_keyword("all");
+            self.flow_end_member();
+            self.expect_keyword("to");
+            self.flow_end_member();
+        } else {
+            if self.at_feature_declaration() {
+                self.feature_declaration();
+            } else {
+                // deviation: FlowDeclaration
+                self.note_deviation("FlowDeclaration", "a flow with no declaration");
+            }
+            if self.at_value_part() {
+                self.value_part();
+            }
+            if self.at_keyword("of") {
+                self.expect_keyword("of");
+                self.payload_feature_member();
+            }
+            if self.at_keyword("from") {
+                self.expect_keyword("from");
+                self.flow_end_member();
+                self.expect_keyword("to");
+                self.flow_end_member();
+            }
+        }
+        self.finish_node();
+    }
+
+    // production: PayloadFeatureMember@kerml
+    //
+    // PayloadFeatureMember : FeatureMembership =
+    //     ownedRelatedElement = PayloadFeature                   (KerML 8.2.5.9.2)
+    //
+    // KerML's, with no FlowPayloadFeature between, where SysML's FlowPayloadFeatureMember
+    // has one.
+    fn payload_feature_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PayloadFeatureMember);
+        self.kerml_payload_feature();
+        self.finish_node();
+    }
+
+    // production: PayloadFeature@kerml
+    //
+    // PayloadFeature : PayloadFeature =
+    //       Identification PayloadFeatureSpecializationPart ValuePart?
+    //     | Identification ValuePart
+    //     | ownedRelationship += OwnedFeatureTyping
+    //       ( ownedRelationship += OwnedMultiplicity )?
+    //     | ownedRelationship += OwnedMultiplicity
+    //       ownedRelationship += OwnedFeatureTyping             (KerML 8.2.5.9.2)
+    //
+    // As the pinned transcription and SysML 8.2.2.16 state it, by deviation
+    // PayloadFeature (follow_spec), with the KerML-only second alternative kept: SysML's
+    // three and `Identification ValuePart`, a payload named and valued with no typing,
+    // `of p = 1`. The first two open alike and are told apart by what follows the
+    // Identification: a FeatureSpecialization (`payload_feature_is_declared`, as SysML's)
+    // or a value. The metaclass is PayloadFeature (8.3.4.9.5, receipt d49a93fa).
+    //
+    // The valued alternative is asked FIRST: `payload_feature_is_declared` answers yes on
+    // any leading `<`, which is sound in SysML, where only the declared alternative opens
+    // on a short name, and not here, where `of <p> = 1` is the valued one.
+    fn kerml_payload_feature(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::PayloadFeature);
+        if self.payload_feature_is_valued() {
+            self.identification();
+            self.value_part();
+        } else if self.payload_feature_is_declared() {
+            self.identification();
+            self.payload_feature_specialization_part();
+            if self.at_value_part() {
+                self.value_part();
+            }
+        } else if self.at(SyntaxKind::LBracket) {
+            self.owned_multiplicity();
+            self.owned_feature_typing();
+        } else {
+            self.owned_feature_typing();
+            if self.at(SyntaxKind::LBracket) {
+                self.owned_multiplicity();
+            }
+        }
+        self.finish_node();
+    }
+
+    /// Whether the payload here is `KerML`'s `Identification ValuePart` alternative: an
+    /// optional `<short name>` and a name, then a `FeatureValue`'s `=`, `:=` or
+    /// `default` (8.2.5.10).
+    fn payload_feature_is_valued(&self) -> bool {
+        let mut n = 0;
+        if self.nth_is(n, SyntaxKind::Lt) {
+            n += 3;
+        }
+        n += usize::from(self.nth_is_name(n));
+        self.nth_is(n, SyntaxKind::Eq)
+            || self.nth_is(n, SyntaxKind::ColonEq)
+            || self.nth_is_keyword(n, "default")
     }
 
     // production: FunctionBody@kerml
@@ -10878,6 +11061,10 @@ impl<'a> Parser<'a> {
     // put every segment but the last in a FeatureChainPrefix, whose `+` is what makes
     // its minimum two.
     fn flow_end(&mut self) {
+        if self.language == Language::KerMl {
+            self.kerml_flow_end();
+            return;
+        }
         self.eat_trivia();
         self.start_node(SyntaxKind::FlowEnd);
         match self.flow_end_segments(0) {
@@ -10904,6 +11091,52 @@ impl<'a> Parser<'a> {
                 self.finish_node();
                 self.flow_feature_member();
             }
+        }
+        self.finish_node();
+    }
+
+    // production: FlowEnd@kerml
+    //
+    // FlowEnd = ( ownedRelationship += OwnedReferenceSubsetting '.' )?
+    //           ownedRelationship += FlowFeatureMember           (KerML 8.2.5.9.2)
+    //
+    // KerML's states the `.` SysML's needs a deviation for, and has no FeatureChainPrefix:
+    // its OwnedReferenceSubsetting is a name or an OwnedFeatureChain (GeneralType,
+    // 8.2.4.3.3), so an end of three or more segments subsets the chain of all but the
+    // last, `a.b.c` being `a.b`, `.`, `c`. The segments are counted first, as SysML's end
+    // does, because a chain read greedily would take the last one too. The
+    // OwnedReferenceSubsetting node is SysML's production's; KerML's is unmarked, as its
+    // other GeneralType-owned relationships are.
+    fn kerml_flow_end(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FlowEnd);
+        match self.flow_end_segments(0) {
+            None => self.error_expected("a flow end"),
+            Some((_, 1)) => self.flow_feature_member(),
+            Some((_, segments)) => {
+                self.flow_end_subsetting(segments - 1);
+                self.expect(SyntaxKind::Dot, "`.`");
+                self.flow_feature_member();
+            }
+        }
+        self.finish_node();
+    }
+
+    /// A `KerML` flow end's `OwnedReferenceSubsetting` of `links` segments: a name, or an
+    /// `OwnedFeatureChain` of exactly that many, stopping before the end's last segment.
+    fn flow_end_subsetting(&mut self, links: usize) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OwnedReferenceSubsetting);
+        let start = self.builder.checkpoint();
+        self.qualified_name();
+        if links > 1 {
+            self.start_node_at(start, SyntaxKind::OwnedFeatureChain);
+            self.wrap_at(start, &[SyntaxKind::OwnedFeatureChaining]);
+            for _ in 1..links {
+                self.bump();
+                self.owned_feature_chaining();
+            }
+            self.finish_node();
         }
         self.finish_node();
     }
