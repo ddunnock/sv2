@@ -982,6 +982,55 @@ fn a_connection_usage_is_not_kerml() {
     kerml_rejected("package P { connect a to b; }");
 }
 
+// -- MetadataAccessExpression, KerML 8.2.5.8.3 ------------------------------------
+//
+//   MetadataAccessExpression = ownedRelationship += ElementReferenceMember '.' 'metadata'
+//   ElementReferenceMember   = memberElement = [QualifiedName]
+//
+// A BaseExpression: the qualified name of any element, then `.metadata` (7.4.9.4). The
+// reference is a QualifiedName alone, never a feature chain, and no postfix production
+// takes `.metadata`, so it does not follow a chain.
+
+#[test]
+fn a_metadata_access_reads_the_example_of_7_4_9_4() {
+    let example = render(
+        &kerml_accepted(
+            "metaclass SecurityAnnotation;\nclass SecureSystem {\n    metadata \
+             SecurityAnnotation;\n}\n\n// Two values: an instance of SecurityAnnotation\n// \
+             and an instance of type KerML::Class.\nfeature sysMetadata = \
+             SecureSystem.metadata;\n",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&example, "MetadataAccessExpression"),
+        ["ElementReferenceMember", "Dot", "KwMetadata"],
+        "{example}"
+    );
+    assert_eq!(
+        child_kinds(&example, "ElementReferenceMember"),
+        ["QualifiedName"],
+        "{example}"
+    );
+    // A qualified name, and a postfix after the access: it is a primary like any other.
+    kerml_accepted("feature f = P::SecureSystem.metadata;");
+    let chained = render(&kerml_accepted("feature f = E.metadata.x;").syntax());
+    assert!(has_node(&chained, "FeatureChainExpression"), "{chained}");
+    assert!(has_node(&chained, "MetadataAccessExpression"), "{chained}");
+    kerml_accepted("feature f = E.metadata#(1);");
+}
+
+#[test]
+fn a_metadata_access_is_bounded_by_its_rules() {
+    // `.metadata` after a feature chain: the reference is a QualifiedName alone.
+    kerml_rejected("feature f = a.b.metadata;");
+    // After any other primary, likewise.
+    kerml_rejected("feature f = (E).metadata;");
+    kerml_rejected("feature f = E().metadata;");
+    // The reference is written.
+    kerml_rejected("feature f = .metadata;");
+}
+
 // -- ConstructorExpression, KerML 8.2.5.8.3 ----------------------------------------
 
 #[test]

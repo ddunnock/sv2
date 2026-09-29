@@ -5751,8 +5751,18 @@ fn a_feature_chain_owns_no_result_member() {
 fn a_dot_after_a_primary_is_not_always_a_chain() {
     // Three other productions put a `.` after a primary, and none is a chain
     // (KerML 8.2.5.8.2, 8.2.5.8.3). Select and collect are read, and their own tests
-    // assert that neither builds a chain; MetadataAccessExpression lands next, with its
-    // own. (`E.metadata` was here, rejected by absence.)
+    // assert that neither builds a chain; a metadata access builds none either.
+    let access = render(&parse_accepted("constraint def C { E.metadata }").syntax());
+    assert_eq!(
+        nodes_named(&access, "MetadataAccessExpression"),
+        1,
+        "{access}"
+    );
+    assert_eq!(
+        nodes_named(&access, "FeatureChainExpression"),
+        0,
+        "{access}"
+    );
     //
     // A chain needs a name after the dot; `a.` alone is neither.
     parse_rejected("constraint def C { a. }");

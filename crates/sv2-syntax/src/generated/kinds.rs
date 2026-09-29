@@ -1241,6 +1241,8 @@ pub enum SyntaxKind {
     MetadataReference,
     /// `memberElement = [QualifiedName]`. `KerML` 8.2.5.8.3.
     ElementReferenceMember,
+    /// `ownedRelationship += ElementReferenceMember '.' 'metadata'`. `KerML` 8.2.5.8.3.
+    MetadataAccessExpression,
     /// `ownedRelatedElement += EmptyFeature`. `KerML` 8.2.5.8.1.
     EmptyResultMember,
     /// `{ }`, a Feature that consumes no tokens. `KerML` 8.2.5.8.1.
@@ -2017,6 +2019,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::MetadataValue,
     SyntaxKind::MetadataReference,
     SyntaxKind::ElementReferenceMember,
+    SyntaxKind::MetadataAccessExpression,
     SyntaxKind::EmptyResultMember,
     SyntaxKind::EmptyFeature,
     SyntaxKind::TypeReferenceMember,

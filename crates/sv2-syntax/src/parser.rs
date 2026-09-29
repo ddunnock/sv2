@@ -7002,10 +7002,9 @@ impl<'a> Parser<'a> {
     // first; BracketExpression, IndexExpression, SequenceExpression, SelectExpression,
     // CollectExpression and FunctionOperationExpression from the middle one; and NullExpression, LiteralExpression, FeatureReferenceExpression,
     // InvocationExpression, ConstructorExpression and BodyExpression from the last, the
-    // body in SysML only (see `body_expression`). What is not, each with a rejection case
-    // naming the clause:
-    //
-    //   MetadataAccessExpression   `E.metadata`
+    // body in SysML only (see `body_expression`), and MetadataAccessExpression, the last
+    // of BaseExpression's to land. Whether the three can now be marked is its own
+    // question, asked of each alternative's own marker.
     //
     // No node of its own for any of the three, as DefinitionElement and
     // FeatureSpecialization have none: an alternation's node would add a level
@@ -7470,10 +7469,10 @@ impl<'a> Parser<'a> {
     /// `FeatureChainMember` reaches a `QualifiedName`, which opens on a NAME — and a
     /// keyword is not a name (`KerML` 8.2.2.6), so asking for a name excludes both.
     ///
-    /// Select and collect are read, by `select_expression` and `collect_expression`;
-    /// the metadata access is unimplemented. This check is what keeps it that way rather
-    /// than letting a chain quietly accept text it is not: `E.metadata` reads as a
-    /// metadata access or not at all, never as a feature called `metadata`.
+    /// Select and collect are read, by `select_expression` and `collect_expression`, and
+    /// the metadata access by `metadata_access_expression`, as a base expression before
+    /// any postfix. This check is what keeps a chain from quietly accepting text it is
+    /// not: `a.b.metadata` is reported, never read as a feature called `metadata`.
     fn at_feature_chain(&self) -> bool {
         self.at(SyntaxKind::Dot) && self.nth_is_name(1)
     }
@@ -7510,6 +7509,10 @@ impl<'a> Parser<'a> {
             self.sequence_expression();
         } else if self.at_literal_expression() {
             self.literal_expression();
+        } else if self.at_metadata_access_expression() {
+            // BEFORE the invocation and the feature reference, which open on the same
+            // QualifiedName; the `.` and the reserved `metadata` after it decide.
+            self.metadata_access_expression();
         } else if self.at_keyword("new") {
             // In the keyword table, so never a name here and nothing else can open on it.
             // See `constructor_expression` for why that holds in KerML only by the table.
@@ -7527,6 +7530,45 @@ impl<'a> Parser<'a> {
         } else {
             self.error_expected("an expression");
         }
+    }
+
+    /// Whether a `MetadataAccessExpression` starts here: a `QualifiedName`, then `'.'`
+    /// and the reserved `metadata` (`KerML` 8.2.5.8.3).
+    fn at_metadata_access_expression(&self) -> bool {
+        self.skip_qualified_name(0).is_some_and(|n| {
+            self.nth_is(n, SyntaxKind::Dot) && self.nth_is_keyword(n + 1, "metadata")
+        })
+    }
+
+    // production: MetadataAccessExpression
+    //
+    // MetadataAccessExpression =
+    //     ownedRelationship += ElementReferenceMember '.' 'metadata'
+    //                                                            (KerML 8.2.5.8.3)
+    //
+    // A BaseExpression, shared by both languages: "suffixing the qualified name of any
+    // kind of element with the notation .metadata" (7.4.9.4, receipt f77ceb64), `feature
+    // sysMetadata = SecureSystem.metadata;`. The metaclass is MetadataAccessExpression
+    // (8.3.4.8.15, receipt 284d137d), whose referencedElement is the ElementReferenceMember's
+    // memberElement. The reference is a QualifiedName alone, and `.metadata` is no
+    // postfix, so it follows no chain and no other primary: `a.b.metadata` and
+    // `(E).metadata` are reported. A postfix may follow the access, as it may any
+    // primary: `E.metadata.x`. No EmptyResultMember: the BNF writes none here.
+    //
+    // constraint: MetadataAccessExpression::validateMetadataAccessExpressionReferencedElement
+    //     and deriveMetadataAccessExpressionReferencdElement (8.3.4.8.15), sv2-resolve's;
+    //     the ElementReferenceMember is the Membership both read.
+    // implied specialization: Performances::metadataAccessEvaluations
+    //     (checkMetadataAccessExpressionSpecialization, 8.3.4.8.15), sv2-hir's.
+    fn metadata_access_expression(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MetadataAccessExpression);
+        self.start_node(SyntaxKind::ElementReferenceMember);
+        self.qualified_name();
+        self.finish_node();
+        self.expect(SyntaxKind::Dot, "`.`");
+        self.expect_keyword("metadata");
+        self.finish_node();
     }
 
     /// Whether a `'('` here is immediately closed, making it a `NullExpression`.

@@ -1934,6 +1934,10 @@ NODES = [
     ("MetadataValue", "`value = MetadataReference`. `KerML` 8.2.5.8.1."),
     ("MetadataReference", "`ownedRelationship += ElementReferenceMember`. `KerML` 8.2.5.8.1."),
     ("ElementReferenceMember", "`memberElement = [QualifiedName]`. `KerML` 8.2.5.8.3."),
+    (
+        "MetadataAccessExpression",
+        "`ownedRelationship += ElementReferenceMember '.' 'metadata'`. `KerML` 8.2.5.8.3.",
+    ),
     # The result parameter every OperatorExpression owns, and which consumes no tokens.
     ("EmptyResultMember", "`ownedRelatedElement += EmptyFeature`. `KerML` 8.2.5.8.1."),
     ("EmptyFeature", "`{ }`, a Feature that consumes no tokens. `KerML` 8.2.5.8.1."),
