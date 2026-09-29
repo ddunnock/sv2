@@ -397,6 +397,30 @@ fn every_usage_element_is_read_in_its_class() {
 }
 
 #[test]
+fn every_interface_occurrence_usage_element_is_read() {
+    // InterfaceOccurrenceUsageElement = DefaultInterfaceEnd | StructureUsageElement
+    //                                 | BehaviorUsageElement      (SysML 8.2.2.14.1)
+    // Every alternative, each owned by an InterfaceOccurrenceUsageMember.
+    let mut occurrences: Vec<&str> = vec!["end supplierPort : FuelOutPort;"];
+    occurrences.extend(
+        USAGE_ELEMENTS
+            .iter()
+            .filter(|(_, class)| *class != Class::NonOccurrence)
+            .map(|(usage, _)| *usage),
+    );
+    for usage in occurrences {
+        let tree = render(&parse_accepted(&format!("interface def I {{ {usage} }}")).syntax());
+        assert_eq!(
+            nodes_named(&tree, "InterfaceOccurrenceUsageMember"),
+            1,
+            "{usage}: {tree}"
+        );
+    }
+    let end = render(&parse_accepted("interface def I { end p : P; }").syntax());
+    assert_eq!(nodes_named(&end, "DefaultInterfaceEnd"), 1, "{end}");
+}
+
+#[test]
 fn every_portion_kind_before_a_kind_keyword_is_that_usage_s_prefix() {
     // OccurrenceUsagePrefix = BasicUsagePrefix 'individual'? PortionKind?
     // UsageExtensionKeyword* (SysML 8.2.2.9.2): before a kind keyword, `individual`,

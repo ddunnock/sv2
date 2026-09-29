@@ -10900,16 +10900,19 @@ impl<'a> Parser<'a> {
     // InterfaceOccurrenceUsageMember : FeatureMembership =
     //     MemberPrefix ownedRelatedElement += InterfaceOccurrenceUsageElement
     //
+    // production: InterfaceOccurrenceUsageElement@sysml
+    //
     // InterfaceOccurrenceUsageElement : Usage =
     //     DefaultInterfaceEnd | StructureUsageElement | BehaviorUsageElement
     //                                                            (SysML 8.2.2.14.1)
     //
     // None has a method: `membership` builds the member node from `Body::member`, and the
-    // element is read by `usage_element_of_class` or `default_interface_end`.
-    // InterfaceNonOccurrenceUsageElement is marked because all five alternatives are read
-    // and `at_usage_no_interface_body_admits` refuses the two NonOccurrenceUsageElements
-    // it leaves out. InterfaceOccurrenceUsageElement is NOT: StructureUsageElement and
-    // BehaviorUsageElement are unmarked, several of their alternatives unimplemented.
+    // element is read by `default_interface_end`, asked first in an interface body, or
+    // by `usage_element_of_class`. InterfaceNonOccurrenceUsageElement is marked because
+    // all five alternatives are read and `at_usage_no_interface_body_admits` refuses the
+    // two NonOccurrenceUsageElements it leaves out; InterfaceOccurrenceUsageElement
+    // because all three are, the last two whole (StructureUsageElement@sysml,
+    // BehaviorUsageElement@sysml at `occurrence_usage_element`).
 
     /// Whether a usage `InterfaceNonOccurrenceUsageElement` leaves out starts here.
     ///

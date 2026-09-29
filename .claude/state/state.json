@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-29T19:19:52Z",
+    "regenerated_utc": "2026-09-29T19:22:06Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,13 +17,13 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 534,
-      "unimplemented": 20,
+      "implemented": 535,
+      "unimplemented": 19,
       "absent": 0,
-      "percent": 96.4
+      "percent": 96.6
     },
     "tests": {
-      "unit": 731,
+      "unit": 732,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 296,
@@ -37,7 +37,7 @@
       "vendor_total": 332
     },
     "commits": [
-      "a28ab5b Mark SysML's usage element alternations, one method for each class",
+      "904b153 Mark SysML's usage element alternations, one method for each class",
       "1f049c7 Record the next step: the SysML body-item alternations, and two decisions for the author",
       "4574fcd Mark SysML's AnnotatingElement whole: its MetadataUsage reads `#` too",
       "1ef1784 Mark FeatureSpecialization whole, the one method that reads all five",
