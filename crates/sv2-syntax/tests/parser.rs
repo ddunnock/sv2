@@ -300,6 +300,148 @@ fn every_annotating_element_is_a_member_and_an_owned_annotation() {
     parse_rejected("package P { #S rep language \"x\" /* d */ }");
 }
 
+// -- the usage element alternations, SysML 8.2.2.6.4 and 8.2.2.5.2 ----------------
+//
+//   UsageElement              = NonOccurrenceUsageElement | OccurrenceUsageElement
+//   OccurrenceUsageElement    = StructureUsageElement | BehaviorUsageElement
+//   NonOccurrenceUsageElement = DefaultReferenceUsage | ReferenceUsage | AttributeUsage
+//                             | EnumerationUsage | BindingConnectorAsUsage
+//                             | SuccessionAsUsage | ExtendedUsage
+//   StructureUsageElement     = fifteen alternatives, BehaviorUsageElement sixteen
+//   VariantUsageElement       = VariantReference | UsageElement less DefaultReferenceUsage,
+//                               EnumerationUsage and ExtendedUsage
+//
+// One instance of every alternative, with the class 8.2.2.6.4 puts it in. Which class
+// a usage is in says which membership owns it: an action body tells structure from
+// behaviour (8.2.2.17.1), and a definition body occurrence from non-occurrence
+// (8.2.2.6.1).
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Class {
+    NonOccurrence,
+    Structure,
+    Behavior,
+}
+
+const USAGE_ELEMENTS: [(&str, Class); 38] = [
+    // A DefaultReferenceUsage with its RefPrefix written, so that it is not also a
+    // VariantReference (`variant x : T;` is one, 8.2.2.6.3).
+    ("in x : T;", Class::NonOccurrence),
+    ("ref r;", Class::NonOccurrence),
+    ("attribute a;", Class::NonOccurrence),
+    ("enum e;", Class::NonOccurrence),
+    ("bind a = b;", Class::NonOccurrence),
+    ("first a then b;", Class::NonOccurrence),
+    ("#M x;", Class::NonOccurrence),
+    ("occurrence o;", Class::Structure),
+    ("individual i;", Class::Structure),
+    ("snapshot s;", Class::Structure),
+    ("timeslice t;", Class::Structure),
+    ("event occurrence e;", Class::Structure),
+    ("item i;", Class::Structure),
+    ("part p;", Class::Structure),
+    ("view v;", Class::Structure),
+    ("rendering r;", Class::Structure),
+    ("port p;", Class::Structure),
+    ("connection c;", Class::Structure),
+    ("interface i;", Class::Structure),
+    ("allocation a;", Class::Structure),
+    ("message m;", Class::Structure),
+    ("flow f;", Class::Structure),
+    ("succession flow f;", Class::Structure),
+    ("action a;", Class::Behavior),
+    ("calc c;", Class::Behavior),
+    ("state s;", Class::Behavior),
+    ("constraint c;", Class::Behavior),
+    ("requirement r;", Class::Behavior),
+    ("concern c;", Class::Behavior),
+    ("case c;", Class::Behavior),
+    ("analysis a;", Class::Behavior),
+    ("verification v;", Class::Behavior),
+    ("use case u;", Class::Behavior),
+    ("viewpoint v;", Class::Behavior),
+    ("perform a;", Class::Behavior),
+    ("exhibit s;", Class::Behavior),
+    ("include u;", Class::Behavior),
+    ("assert constraint c;", Class::Behavior),
+];
+
+#[test]
+fn every_usage_element_is_read_in_its_class() {
+    for (usage, class) in USAGE_ELEMENTS {
+        let action = render(&parse_accepted(&format!("action def A {{ {usage} }}")).syntax());
+        let member = match class {
+            Class::NonOccurrence => "NonOccurrenceUsageMember",
+            Class::Structure => "StructureUsageMember",
+            Class::Behavior => "BehaviorUsageMember",
+        };
+        assert_eq!(nodes_named(&action, member), 1, "{usage}: {action}");
+        let part = render(&parse_accepted(&format!("part def P {{ {usage} }}")).syntax());
+        let member = if class == Class::NonOccurrence {
+            "NonOccurrenceUsageMember"
+        } else {
+            "OccurrenceUsageMember"
+        };
+        assert_eq!(nodes_named(&part, member), 1, "{usage}: {part}");
+    }
+    // SatisfyRequirementUsage, the sixteenth BehaviorUsageElement, in both spellings:
+    // `assert` optional by deviation SatisfyRequirementUsage (follow_xtext).
+    for usage in ["satisfy r;", "assert satisfy r;"] {
+        let action = render(&parse_accepted(&format!("action def A {{ {usage} }}")).syntax());
+        assert_eq!(
+            nodes_named(&action, "BehaviorUsageMember"),
+            1,
+            "{usage}: {action}"
+        );
+    }
+}
+
+#[test]
+fn every_portion_kind_before_a_kind_keyword_is_that_usage_s_prefix() {
+    // OccurrenceUsagePrefix = BasicUsagePrefix 'individual'? PortionKind?
+    // UsageExtensionKeyword* (SysML 8.2.2.9.2): before a kind keyword, `individual`,
+    // `snapshot` and `timeslice` are that usage's prefix, not an IndividualUsage or a
+    // PortionUsage of their own.
+    for (usage, node) in [
+        ("snapshot allocation a;", "AllocationUsage"),
+        ("snapshot flow f;", "FlowUsage"),
+        ("timeslice connection c;", "ConnectionUsage"),
+        ("individual message m;", "Message"),
+        ("individual part p;", "PartUsage"),
+        ("snapshot event occurrence e;", "EventOccurrenceUsage"),
+    ] {
+        let tree = render(&parse_accepted(&format!("action def A {{ {usage} }}")).syntax());
+        assert_eq!(nodes_named(&tree, node), 1, "{usage}: {tree}");
+        assert_eq!(nodes_named(&tree, "PortionUsage"), 0, "{usage}: {tree}");
+        assert_eq!(nodes_named(&tree, "IndividualUsage"), 0, "{usage}: {tree}");
+    }
+}
+
+#[test]
+fn every_variant_usage_element_is_read_and_the_three_exclusions_are_not() {
+    for (usage, _) in USAGE_ELEMENTS {
+        let excluded = matches!(usage, "in x : T;" | "enum e;" | "#M x;");
+        let source = format!("variation part def V {{ variant {usage} }}");
+        if excluded {
+            parse_rejected(&source);
+        } else {
+            let tree = render(&parse_accepted(&source).syntax());
+            assert_eq!(
+                nodes_named(&tree, "VariantUsageMember"),
+                1,
+                "{usage}: {tree}"
+            );
+        }
+    }
+    // VariantReference, the alternative only a variant has.
+    for reference in ["x;", "x : T;"] {
+        let tree = render(
+            &parse_accepted(&format!("variation part def V {{ variant {reference} }}")).syntax(),
+        );
+        assert_eq!(nodes_named(&tree, "VariantReference"), 1, "{tree}");
+    }
+}
+
 // -- the definitions, SysML 8.2.2 -------------------------------------------------
 //
 // Eight productions of one shape, `<prefix> KEYWORD 'def' Definition`, differing in

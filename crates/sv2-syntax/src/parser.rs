@@ -5083,8 +5083,7 @@ impl<'a> Parser<'a> {
     // A VariantMembership, which is an OwningMembership and NOT a FeatureMembership, so a
     // variant is an ownedMember but not an ownedFeature of its owner (8.4.2.3, receipt
     // 4ad35baf) — which is why it has a node of its own rather than the body's usage
-    // member. Marked although VariantUsageElement is not: this production's own three
-    // parts are read. The element takes no MemberPrefix of its own, and the usage inside
+    // member. VariantUsageElement is marked at `variant_usage_element`. The element takes no MemberPrefix of its own, and the usage inside
     // keeps its own prefix: `variant part p;`, `variant attribute a = 70[mm];`.
     //
     // constraint: VariantMembership::validateVariantMembershipOwningNamespace (8.3.6.5,
@@ -5099,6 +5098,8 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: VariantUsageElement@sysml
+    //
     // VariantUsageElement : Usage =
     //       VariantReference | ReferenceUsage | AttributeUsage | BindingConnectorAsUsage
     //     | SuccessionAsUsage | OccurrenceUsage | IndividualUsage | PortionUsage
@@ -5106,8 +5107,8 @@ impl<'a> Parser<'a> {
     //     | PortUsage | ConnectionUsage | InterfaceUsage | AllocationUsage | Message
     //     | FlowUsage | SuccessionFlowUsage | BehaviorUsageElement   (SysML 8.2.2.6.4)
     //
-    // NOT marked for coverage while the StructureUsageElement and BehaviorUsageElement
-    // alternations it lists are not (see `usage_element_of_class`).
+    // All twenty-one alternatives: VariantReference on a NAME, and the rest through
+    // `usage_element_of_class` with the three exclusions below refused first.
     //
     // It is UsageElement less three of NonOccurrenceUsageElement's alternatives (8.2.2.6.4):
     // DefaultReferenceUsage, replaced by VariantReference; EnumerationUsage; and
@@ -5185,61 +5186,99 @@ impl<'a> Parser<'a> {
         self.usage_element_of_class().is_some()
     }
 
-    /// `usage_element`, answering which of 8.2.2.6.4's classes the usage read is in.
-    ///
-    /// `ActionUsage` and `PerformActionUsage` are `BehaviorUsageElement`s, `FlowUsage` a
-    /// `StructureUsageElement`;
-    /// `SuccessionAsUsage`, `BindingConnectorAsUsage`, `ReferenceUsage` and
-    /// `DefaultReferenceUsage` are `NonOccurrenceUsageElement`s; the seven `SIMPLE_USAGES`
-    /// carry their own.
+    // production: UsageElement@sysml
+    //
+    // UsageElement : Usage =
+    //     NonOccurrenceUsageElement | OccurrenceUsageElement      (SysML 8.2.2.5.2)
+    //
+    // `usage_element`, answering which of 8.2.2.6.4's classes the usage read is in. Both
+    // alternatives, the occurrence usages first: the order constraints above all hold
+    // within `non_occurrence_usage_element`, whose ReferenceUsage, ExtendedUsage and
+    // DefaultReferenceUsage are asked after every keyword usage of both classes.
     fn usage_element_of_class(&mut self) -> Option<UsageClass> {
+        self.occurrence_usage_element().or_else(|| {
+            self.non_occurrence_usage_element()
+                .then_some(UsageClass::NonOccurrence)
+        })
+    }
+
+    // production: OccurrenceUsageElement@sysml
+    //
+    // OccurrenceUsageElement : Usage =
+    //     StructureUsageElement | BehaviorUsageElement           (SysML 8.2.2.6.4)
+    //
+    // Both, returning which was read.
+    fn occurrence_usage_element(&mut self) -> Option<UsageClass> {
         if self.behavior_usage_element() {
-            // Every usage `behavior_usage_element` reads is a BehaviorUsageElement
-            // (8.2.2.6.4).
             Some(UsageClass::Behavior)
         } else if self.structure_usage_element() {
-            // FlowUsage, SuccessionFlowUsage, Message, ConnectionUsage, InterfaceUsage, AllocationUsage,
-            // ViewUsage and EventOccurrenceUsage, each a StructureUsageElement.
             Some(UsageClass::Structure)
-        } else if self.at_succession_as_usage(0) {
-            // A NonOccurrenceUsageElement (8.2.2.6.4): "a succession is not a kind of
-            // occurrence usage" (7.13.5, receipt 2abd302c).
-            self.succession_as_usage();
-            Some(UsageClass::NonOccurrence)
-        } else if self.at_binding_connector_as_usage(0) {
-            // A NonOccurrenceUsageElement (8.2.2.6.4): "a binding is not a kind of
-            // occurrence usage" (7.13.3, receipt 6db87b41).
-            self.binding_connector_as_usage();
-            Some(UsageClass::NonOccurrence)
-        } else if let Some(usage) = self.at_simple_usage(0) {
-            self.simple_usage(usage);
-            Some(usage.class)
-        } else if let Some(node) = self.at_individual_or_portion_usage(0) {
-            // StructureUsageElements (8.2.2.6.4), as OccurrenceUsage is. Before
-            // `at_reference_usage`, which sees the `ref` in `ref individual x;` too, and that
-            // `ref` is this usage's BasicUsagePrefix.
-            self.individual_or_portion_usage(node);
-            Some(UsageClass::Structure)
-        } else if self.at_reference_usage(0) {
-            self.reference_usage();
-            Some(UsageClass::NonOccurrence)
-        } else if self.at_extended_usage(0) {
-            // A NonOccurrenceUsageElement (8.2.2.6.4).
-            self.extended_usage();
-            Some(UsageClass::NonOccurrence)
-        } else if self.at_default_reference_usage(0) {
-            self.default_reference_usage();
-            Some(UsageClass::NonOccurrence)
         } else {
             None
         }
     }
 
-    /// The keyword-led `StructureUsageElement`s of `usage_element_of_class` (`SysML`
-    /// 8.2.2.6.4), returning whether one was read. Split out for clippy's complexity
-    /// budget, as `behavior_usage_element` is; the order is the one the dispatch had.
+    // production: NonOccurrenceUsageElement@sysml
+    //
+    // NonOccurrenceUsageElement : Usage =
+    //       DefaultReferenceUsage | ReferenceUsage | AttributeUsage | EnumerationUsage
+    //     | BindingConnectorAsUsage | SuccessionAsUsage | ExtendedUsage
+    //                                                            (SysML 8.2.2.6.4)
+    //
+    // All seven, returning whether one was read. The keyword usages first, then the
+    // three that must follow every keyword usage (see `usage_element`): ReferenceUsage,
+    // whose `ref` is a keyword usage's BasicUsagePrefix too; ExtendedUsage, which needs a
+    // `#` and no kind keyword after it; and DefaultReferenceUsage, which has no keyword.
+    fn non_occurrence_usage_element(&mut self) -> bool {
+        if self.at_succession_as_usage(0) {
+            // "a succession is not a kind of occurrence usage" (7.13.5, receipt 2abd302c).
+            self.succession_as_usage();
+        } else if self.at_binding_connector_as_usage(0) {
+            // "a binding is not a kind of occurrence usage" (7.13.3, receipt 6db87b41).
+            self.binding_connector_as_usage();
+        } else if let Some(usage) = self
+            .at_simple_usage(0)
+            .filter(|usage| usage.class == UsageClass::NonOccurrence)
+        {
+            // AttributeUsage and EnumerationUsage.
+            self.simple_usage(usage);
+        } else if self.at_reference_usage(0) {
+            self.reference_usage();
+        } else if self.at_extended_usage(0) {
+            self.extended_usage();
+        } else if self.at_default_reference_usage(0) {
+            self.default_reference_usage();
+        } else {
+            return false;
+        }
+        true
+    }
+
+    // production: StructureUsageElement@sysml
+    //
+    // StructureUsageElement : Usage =
+    //       OccurrenceUsage | IndividualUsage | PortionUsage | EventOccurrenceUsage
+    //     | ItemUsage | PartUsage | ViewUsage | RenderingUsage | PortUsage
+    //     | ConnectionUsage | InterfaceUsage | AllocationUsage | Message | FlowUsage
+    //     | SuccessionFlowUsage                                   (SysML 8.2.2.6.4)
+    //
+    // All fifteen, returning whether one was read: five from SIMPLE_USAGES, then
+    // IndividualUsage and PortionUsage together, then eight by keyword. The order within
+    // decides nothing, because each recogniser requires its own kind keyword or, for
+    // IndividualUsage and PortionUsage, a Usage opening with none (see
+    // `at_individual_or_portion_usage`). IndividualUsage and PortionUsage are asked before
+    // `non_occurrence_usage_element`'s ReferenceUsage, which sees the `ref` in `ref
+    // individual x;` too, and that `ref` is their BasicUsagePrefix.
     fn structure_usage_element(&mut self) -> bool {
-        if self.at_flow_usage(0) {
+        if let Some(usage) = self
+            .at_simple_usage(0)
+            .filter(|usage| usage.class == UsageClass::Structure)
+        {
+            // OccurrenceUsage, ItemUsage, PartUsage, PortUsage and RenderingUsage.
+            self.simple_usage(usage);
+        } else if let Some(node) = self.at_individual_or_portion_usage(0) {
+            self.individual_or_portion_usage(node);
+        } else if self.at_flow_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), though its metaclass is an ActionUsage.
             self.flow_usage();
         } else if self.at_succession_flow_usage(0) {
@@ -5269,9 +5308,16 @@ impl<'a> Parser<'a> {
         true
     }
 
-    /// The `BehaviorUsageElement`s of `usage_element_of_class`, returning whether one was
-    /// read. Split out so each function stays within clippy's complexity budget; the order
-    /// is the one the dispatch always had.
+    // production: BehaviorUsageElement@sysml
+    //
+    // BehaviorUsageElement : Usage =
+    //       ActionUsage | CalculationUsage | StateUsage | ConstraintUsage
+    //     | RequirementUsage | ConcernUsage | CaseUsage | AnalysisCaseUsage
+    //     | VerificationCaseUsage | UseCaseUsage | ViewpointUsage | PerformActionUsage
+    //     | ExhibitStateUsage | IncludeUseCaseUsage | AssertConstraintUsage
+    //     | SatisfyRequirementUsage                               (SysML 8.2.2.6.4)
+    //
+    // All sixteen, returning whether one was read; the four cases through CASES.
     fn behavior_usage_element(&mut self) -> bool {
         if self.at_perform_action_usage(0) {
             self.perform_action_usage();
@@ -5658,12 +5704,14 @@ impl<'a> Parser<'a> {
     /// `Usage` rather than a kind keyword: before `part`, the same keywords are that
     /// usage's `OccurrenceUsagePrefix`.
     ///
-    /// `usage_element_of_class` asks every keyword usage first, so there the
-    /// `nth_opens_usage` test changes nothing today, and a mutation removing it survives
-    /// the suite as an equivalent mutant. It stays because the recogniser is also asked
-    /// where order does not protect it, by `at_sysml_keyword_member` and
-    /// `at_source_succession_member`, and before kind keywords not yet read at all
-    /// (`snapshot allocation a;`), where claiming the text would be a false answer.
+    /// The `nth_opens_usage` test is LOAD-BEARING. `structure_usage_element` asks this
+    /// before the keyword `StructureUsageElement`s (`FlowUsage`, `Message`,
+    /// `ConnectionUsage`, `InterfaceUsage`, `AllocationUsage`, `ViewUsage`,
+    /// `EventOccurrenceUsage` and the rest), so without it `snapshot allocation a;` would
+    /// be claimed as a `PortionUsage` where it is an `AllocationUsage` whose
+    /// `OccurrenceUsagePrefix` carries the `snapshot` (8.2.2.9.2);
+    /// `every_portion_kind_before_a_kind_keyword_is_that_usage_s_prefix` holds it. It is
+    /// also asked by `at_sysml_keyword_member` and `at_source_succession_member`.
     fn at_individual_or_portion_usage(&self, n: usize) -> Option<SyntaxKind> {
         let k = self.skip_basic_usage_prefix(n);
         let individual = self.nth_is_keyword(k, "individual");

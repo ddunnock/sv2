@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-29T18:51:44Z",
+    "regenerated_utc": "2026-09-29T19:19:52Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,13 +17,13 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 528,
-      "unimplemented": 26,
+      "implemented": 534,
+      "unimplemented": 20,
       "absent": 0,
-      "percent": 95.3
+      "percent": 96.4
     },
     "tests": {
-      "unit": 728,
+      "unit": 731,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 296,
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "a28ab5b Mark SysML's usage element alternations, one method for each class",
+      "1f049c7 Record the next step: the SysML body-item alternations, and two decisions for the author",
       "4574fcd Mark SysML's AnnotatingElement whole: its MetadataUsage reads `#` too",
       "1ef1784 Mark FeatureSpecialization whole, the one method that reads all five",
       "0bce6fd Mark the operator value productions on the methods that read them",
       "976182e Mark the primary expression alternations whole: primary, base, literal",
       "31022b0 Read metadata access, `feature sysMetadata = SecureSystem.metadata;`",
-      "ce917d3 Stop rejecting metadata access by absence: the next commit reads it",
-      "3a63f34 Record the next step: the bare-comment decision blocks three KerML units",
-      "5fb8dd9 Mark KerML's RelationshipOwnedElement and OwnedRelatedElement whole"
+      "ce917d3 Stop rejecting metadata access by absence: the next commit reads it"
     ]
   },
   "authored": {
