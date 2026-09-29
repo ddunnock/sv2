@@ -587,6 +587,7 @@
     "TriggerFeatureKind",
     "TypeBodyElement",
     "TypeDeclaration",
+    "TypeFeaturing",
     "UnaryExpression",
     "UnaryOperatorExpression",
     "UseCaseDefKeyword",

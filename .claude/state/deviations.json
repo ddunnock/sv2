@@ -7107,6 +7107,41 @@
           "note": "The SysML Tier A pin the governing clause belongs to."
         }
       ]
+    },
+    {
+      "production": "TypeFeaturing",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/KerML.xtext (lines 651-656) writes TypeFeaturing as `'featuring' ( Identification? 'of' )? featureOfType = [QualifiedName] 'by' featuringType = [QualifiedName] RelationshipBody`: bare `by`, as the clause does.",
+      "problem": "KerML 8.2.4.3.7 states TypeFeaturing = 'featuring' ( Identification 'of' )? featureOfType = [QualifiedName] 'by' featuringType = [QualifiedName] RelationshipBody. The layer note for the same construct, KerML 7.3.4.8 Type-Featuring, writes both of its examples with `featured by`: `featuring engine_by_Vehicle of engine featured by Vehicle;` and `featuring power featured by engine { ... }`, and its prose says the featuring type is given 'after the keyword featured by'. The BNF, the Pilot and the corpus write bare `by`; the layer note's examples and prose write `featured by`.",
+      "decision": "follow_spec",
+      "rationale": "Follow the BNF clause, which is the normative statement of the syntax, and read the layer note's `featured by` as an editing error in its examples. Three sources agree on bare `by`: the clause, the Pilot, and the only corpus instance, Simple Tests/Features.kerml line 16 (`featuring F of y by C;`). The layer note's wording has a visible origin: `featured by` is the keyword pair of the OWNED form, TypeFeaturingPart = 'featured' 'by' OwnedTypeFeaturing (KerML 8.2.4.3.1), which the same layer note shows one paragraph later (`feature engine : Engine featured by Vehicle, PoweredComponent;`), so the standalone examples borrowed the owned form's keywords. Admitting both spellings would add syntax the clause does not state, with no corpus text to stay compatible with. A rejection case for `featuring ... featured by` holds the decision. Decided by the author on 2026-09-29, choosing option 1 of pending decision typefeaturing-featured-by. The OMG KerML issue tracker has NOT been searched for a report of this; revisit if one is found either way.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.4.3.7 TypeFeaturing (unit TypeFeaturing@kerml)",
+          "note": "`'featuring' ( Identification 'of' )? featureOfType = [QualifiedName] 'by' featuringType = [QualifiedName] RelationshipBody`"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 7.3.4.8 Type-Featuring (region_sha256 5065873b63c440ba)",
+          "note": "`featuring engine_by_Vehicle of engine featured by Vehicle;` and `featuring power featured by engine { ... }`; also the owned form `feature engine : Engine featured by Vehicle, PoweredComponent;`"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.4.3.1 Features",
+          "note": "TypeFeaturingPart = 'featured' 'by' ownedRelationship += OwnedTypeFeaturing ( ',' ownedTypeFeaturing += OwnedTypeFeaturing )*"
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Features.kerml",
+          "note": "line 16: `featuring F of y by C;`"
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "The KerML Tier A pin the governing clause belongs to."
+        }
+      ]
     }
   ],
   "unpatched": []
