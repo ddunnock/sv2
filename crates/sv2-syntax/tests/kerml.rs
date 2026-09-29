@@ -2301,6 +2301,88 @@ fn a_subsetting_is_bounded_by_its_rules() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// -- Redefinition, KerML 8.2.4.3.4 --------------------------------------------------
+//
+//   Redefinition = ( 'specialization' Identification )?
+//                  'redefinition' SpecificType REDEFINES GeneralType RelationshipBody
+//   REDEFINES    = ':>>' | 'redefines'                                   (8.2.2.7)
+//
+// A NonFeatureElement (8.2.3.4.3).
+
+#[test]
+fn a_redefinition_reads_the_corpus_forms() {
+    // Simple Tests/Features.kerml:68-71.
+    let named = render(
+        &kerml_accepted(
+            "specialization Redef redefinition LegalRecord::guardian redefines parent;",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&named, "Redefinition"),
+        [
+            "KwSpecialization",
+            "Identification",
+            "KwRedefinition",
+            "QualifiedName",
+            "KwRedefines",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{named}"
+    );
+    kerml_accepted(
+        "specialization redefinition Vehicle::vin redefines RegisteredAsset::identifier;",
+    );
+    kerml_accepted("redefinition Vehicle::vin redefines legalIdentification;");
+    // Simple Tests/FeatureChains.kerml:24: feature chains on both sides.
+    let chained = render(&kerml_accepted("redefinition b.f redefines b.a;").syntax());
+    assert_eq!(
+        child_kinds(&chained, "Redefinition"),
+        [
+            "KwRedefinition",
+            "OwnedFeatureChain",
+            "KwRedefines",
+            "OwnedFeatureChain",
+            "RelationshipBody"
+        ],
+        "{chained}"
+    );
+    // KerML 7.3.4.5's example with its body, and the symbol.
+    kerml_accepted(
+        "specialization redefinition Vehicle::vin redefines RegisteredAsset::identifier {\n    \
+         doc /* A \"vin\" is a Vehicle Identification Number. */\n}",
+    );
+    let symbol = render(&kerml_accepted("redefinition a :>> b;").syntax());
+    assert_eq!(
+        child_kinds(&symbol, "Redefinition"),
+        [
+            "KwRedefinition",
+            "QualifiedName",
+            "ColonGtGt",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{symbol}"
+    );
+}
+
+#[test]
+fn a_redefinition_is_bounded_by_its_rules() {
+    kerml_rejected("redefinition f;");
+    kerml_rejected("redefinition f redefines;");
+    kerml_rejected("specialization R f redefines g;");
+    // REDEFINES is `:>>` or `redefines`; `:>` is SUBSETS's and SPECIALIZES's (8.2.2.7).
+    // Held as a file by tests/rejection/kerml-redefinition-is-written-with-redefines.kerml.
+    kerml_rejected("redefinition f :> g;");
+    kerml_rejected("redefinition f subsets g;");
+    // One redefined feature: a list is a feature's own redefinitions (7.3.4.5).
+    kerml_rejected("redefinition f redefines g, h;");
+    // SysML states no Redefinition declaration (ADR-0014).
+    let sysml = parse("redefinition f :>> g;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------
 //
 //   TypeBodyElement    = NonFeatureMember | FeatureMember | AliasMember | Import

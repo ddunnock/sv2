@@ -639,6 +639,8 @@ enum RelationshipDeclaration {
     FeatureTyping,
     /// `Subsetting`, `subset` (8.2.4.3.3).
     Subsetting,
+    /// `Redefinition`, `redefinition` (8.2.4.3.4).
+    Redefinition,
 }
 
 /// Which of `KerML` `Connector`'s three declaration forms is written (`KerML` 8.2.5.5.1).
@@ -2102,7 +2104,8 @@ impl<'a> Parser<'a> {
     ///
     /// Of `NonFeatureElement`, `Package` and `LibraryPackage` — shared units, the same
     /// productions in both grammars — `Dependency`, `FeatureInverting`, `Specialization`,
-    /// `Subclassification`, `FeatureTyping`, `Subsetting` and the eight classifiers of 8.2.4.2 are implemented. Of
+    /// `Subclassification`, `FeatureTyping`, `Subsetting`, `Redefinition` and the eight
+    /// classifiers of 8.2.4.2 are implemented. Of
     /// `FeatureElement`'s ten alternatives, `Feature`, `Step`, `Connector`,
     /// `BindingConnector` and `Succession` are. The rest (`expr`, `inv`, `flow`,
     /// `succession flow`, …) are reported rather than read.
@@ -13843,8 +13846,8 @@ impl<'a> Parser<'a> {
     // Marked although RelationshipOwnedElement and OwnedRelatedElement are not: this
     // production's own parts are read, and the two alternations below it are read as far
     // as NonFeatureElement and FeatureElement are — Package, Dependency, FeatureInverting,
-    // Specialization, Subclassification, FeatureTyping, Subsetting and the eight
-    // classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
+    // Specialization, Subclassification, FeatureTyping, Subsetting, Redefinition and the
+    // eight classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
     // node, as FeatureSpecialization has none: the element read says which was taken.
     //
     // An owned related element is the relationship's ownedRelatedElement, with no
@@ -14495,6 +14498,8 @@ impl<'a> Parser<'a> {
             Some(RelationshipDeclaration::FeatureTyping)
         } else if self.nth_is_keyword(word, "subset") {
             Some(RelationshipDeclaration::Subsetting)
+        } else if self.nth_is_keyword(word, "redefinition") {
+            Some(RelationshipDeclaration::Redefinition)
         } else {
             None
         }
@@ -14508,6 +14513,7 @@ impl<'a> Parser<'a> {
             RelationshipDeclaration::Subclassification => self.subclassification(),
             RelationshipDeclaration::FeatureTyping => self.kerml_feature_typing(),
             RelationshipDeclaration::Subsetting => self.subsetting(),
+            RelationshipDeclaration::Redefinition => self.redefinition(),
         }
     }
 
@@ -14748,6 +14754,40 @@ impl<'a> Parser<'a> {
         self.expect_keyword("subset");
         self.specific_type();
         self.terminal(SyntaxKind::ColonGt, "subsets", "`:>` or `subsets`");
+        self.general_type();
+        self.relationship_body();
+        self.finish_node();
+    }
+
+    // production: Redefinition@kerml
+    //
+    // Redefinition =
+    //     ( 'specialization' Identification )?
+    //     'redefinition' SpecificType
+    //     REDEFINES GeneralType
+    //     RelationshipBody                                       (KerML 8.2.4.3.4)
+    //
+    // REDEFINES = ':>>' | 'redefines'                            (KerML 8.2.2.7)
+    //
+    // A Subsetting whose two features have the same values (8.3.3.3.8, receipt 7b56885c),
+    // its redefiningFeature and redefinedFeature: `specialization Redef redefinition
+    // LegalRecord::guardian redefines parent;` (KerML 7.3.4.5, receipt 8d8e645c; Simple
+    // Tests/Features.kerml:68). Both sides a name or a feature chain: `redefinition b.f
+    // redefines b.a;` (Simple Tests/FeatureChains.kerml:24). One redefined feature; a
+    // list is a feature's own redefinitions.
+    //
+    // constraint: Redefinition::validateRedefinitionDirectionConformance,
+    //     validateRedefinitionEndConformance and validateRedefinitionFeaturingTypes
+    //     (KerML 8.3.3.3.8). Validity, not syntax: they carry their diagnostics
+    //     downstream (ADR-0002). No implied specialization attaches: this IS the
+    //     redefinition, written out.
+    fn redefinition(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Redefinition);
+        self.specialization_prefix();
+        self.expect_keyword("redefinition");
+        self.specific_type();
+        self.terminal(SyntaxKind::ColonGtGt, "redefines", "`:>>` or `redefines`");
         self.general_type();
         self.relationship_body();
         self.finish_node();

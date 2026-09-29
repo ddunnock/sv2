@@ -192,6 +192,14 @@ NODES = [
         "ChainingPart",
         "`'chains' ( OwnedFeatureChaining | FeatureChain )`. `KerML` 8.2.4.3.1.",
     ),
+    # The standalone Redefinition, a NonFeatureElement. KerML 8.2.4.3.4.
+    (
+        "Redefinition",
+        (
+            "`( 'specialization' Identification )? 'redefinition' SpecificType REDEFINES "
+            "GeneralType RelationshipBody`. `KerML` 8.2.4.3.4."
+        ),
+    ),
     # The standalone Subsetting, a NonFeatureElement. KerML 8.2.4.3.3.
     (
         "Subsetting",
