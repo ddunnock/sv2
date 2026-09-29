@@ -1172,6 +1172,43 @@ fn every_operator_spelling_is_read_as_its_production() {
     kerml_rejected("feature v = !a;");
 }
 
+// -- FeatureSpecialization, KerML 8.2.4.3.1 and SysML 8.2.2.6.5 -------------------
+//
+//   FeatureSpecialization = Typings | Subsettings | References | Crosses | Redefinitions
+//
+// The same production in both grammars, each alternative spelled with its symbol and
+// its keyword (KerML 8.2.2.7; SysML's typing keyword is `defined by`, 8.2.2.1.2).
+// Syntax only: `=> g` on a feature that is no end is read here, and whatever the
+// constraints say of a crossing feature is checked downstream (ADR-0002).
+
+const FEATURE_SPECIALIZATIONS: [(&str, &str, &str); 10] = [
+    (": T", ": T", "Typings"),
+    ("typed by T", "defined by T", "Typings"),
+    (":> g", ":> g", "Subsettings"),
+    ("subsets g", "subsets g", "Subsettings"),
+    ("::> g", "::> g", "References"),
+    ("references g", "references g", "References"),
+    ("=> g", "=> g", "Crosses"),
+    ("crosses g", "crosses g", "Crosses"),
+    (":>> g", ":>> g", "Redefinitions"),
+    ("redefines g", "redefines g", "Redefinitions"),
+];
+
+#[test]
+fn every_feature_specialization_is_read_in_both_languages() {
+    for (kerml, sysml, kind) in FEATURE_SPECIALIZATIONS {
+        let tree = render(&kerml_accepted(&format!("feature f {kerml};")).syntax());
+        assert!(has_node(&tree, kind), "{kind}: {tree}");
+        let parsed = parse(&format!("attribute f {sysml};"), Language::SysMl);
+        assert!(parsed.errors().is_empty(), "{sysml}: {:?}", parsed.errors());
+        assert!(has_node(&render(&parsed.syntax()), kind), "{kind} in SysML");
+    }
+    // Each language's own typing keyword only.
+    kerml_rejected("feature f defined by T;");
+    let sysml = parse("attribute f typed by T;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- ConstructorExpression, KerML 8.2.5.8.3 ----------------------------------------
 
 #[test]

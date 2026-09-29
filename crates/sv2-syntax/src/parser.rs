@@ -5915,13 +5915,16 @@ impl<'a> Parser<'a> {
             ) && self.nth_is_keyword(n + 1, "by"))
     }
 
-    // FeatureSpecialization = Typings | Subsettings | References | Crosses
-    //                       | Redefinitions                      (SysML 8.2.2.6.5)
+    // production: FeatureSpecialization
     //
-    // No node of its own, as DefinitionElement and UsageElement have none: it is an
-    // alternation, and the alternative that matched already says which was taken, so
-    // a node here would add a level carrying nothing. It is not marked for coverage
-    // for the same reason — there is no method that is it.
+    // FeatureSpecialization = Typings | Subsettings | References | Crosses
+    //                       | Redefinitions        (SysML 8.2.2.6.5, KerML 8.2.4.3.1)
+    //
+    // A shared unit, the same five alternatives in both grammars, every one read here:
+    // `typings` reads each language's own TypedBy. No node of its own, as
+    // DefinitionElement and UsageElement have none: it is an alternation, and the
+    // alternative that matched already says which was taken, so a node here would add
+    // a level carrying nothing.
     fn feature_specialization(&mut self) {
         if self.at(SyntaxKind::ColonGt) || self.at_keyword("subsets") {
             self.subsettings();
