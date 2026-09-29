@@ -379,6 +379,58 @@ fn a_feature_reads_its_declaration_and_body() {
     kerml_accepted("feature all f : A;");
 }
 
+// Typings            = TypedBy ( ',' ownedRelationship += OwnedFeatureTyping )*
+// TypedBy            = TYPED_BY ownedRelationship += OwnedFeatureTyping      (8.2.4.3.1)
+// OwnedFeatureTyping = GeneralType                                           (8.2.4.3.2)
+//
+// KerML's TypedBy owns its OwnedFeatureTyping directly. SysML's owns a FeatureTyping,
+// `OwnedFeatureTyping | ConjugatedPortTyping` (SysML 8.2.2.6.5), an alternation KerML
+// does not state, so no FeatureTyping node stands between them in a .kerml file.
+
+#[test]
+fn a_kerml_typed_by_owns_its_feature_typing_directly() {
+    // Simple Tests/Features.kerml:8, both spellings of TYPED_BY and a second typing.
+    let words = render(&kerml_accepted("feature x typed by A, B;").syntax());
+    assert_eq!(
+        child_kinds(&words, "Typings"),
+        ["TypedBy", "Comma", "OwnedFeatureTyping"],
+        "{words}"
+    );
+    assert_eq!(
+        child_kinds(&words, "TypedBy"),
+        ["KwTyped", "KwBy", "OwnedFeatureTyping"],
+        "{words}"
+    );
+    let colon = render(&kerml_accepted("feature parent[1..2] : Person;").syntax());
+    assert_eq!(
+        child_kinds(&colon, "TypedBy"),
+        ["Colon", "OwnedFeatureTyping"],
+        "{colon}"
+    );
+    // OwnedFeatureTyping = GeneralType, a name or an OwnedFeatureChain (8.2.4.1.2).
+    let chained = render(&kerml_accepted("feature f : a.b;").syntax());
+    assert_eq!(
+        child_kinds(&chained, "OwnedFeatureTyping"),
+        ["OwnedFeatureChain"],
+        "{chained}"
+    );
+    // The standalone declaration keeps its FeatureTyping node (8.2.4.3.2).
+    assert!(has_node(
+        &render(&kerml_accepted("typing f : T;").syntax()),
+        "FeatureTyping"
+    ));
+    // SysML's TypedBy owns a FeatureTyping (SysML 8.2.2.6.5).
+    let sysml = parse("part p : P;", Language::SysMl);
+    assert!(sysml.errors().is_empty(), "{:?}", sysml.errors());
+    assert_eq!(
+        child_kinds(&render(&sysml.syntax()), "TypedBy"),
+        ["Colon", "FeatureTyping"]
+    );
+    // A ConjugatedPortTyping is SysML's alone (8.2.2.12).
+    kerml_rejected("feature f : ~T;");
+    kerml_rejected("feature f : A, ~T;");
+}
+
 #[test]
 fn a_feature_declaration_is_optional_after_the_keyword() {
     // FeatureDeclaration? — the `?` is on the keyword alternative and nowhere else.

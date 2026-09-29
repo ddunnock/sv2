@@ -6265,24 +6265,45 @@ impl<'a> Parser<'a> {
     }
 
     // production: Typings@sysml
+    // production: Typings@kerml
     //
     // Typings : Feature = TypedBy ( ',' ownedRelationship += FeatureTyping )*
     //                                                            (SysML 8.2.2.6.5)
+    // Typings : Feature = TypedBy ( ',' ownedRelationship += OwnedFeatureTyping )*
+    //                                                            (KerML 8.2.4.3.1)
+    //
+    // Two units, and this reads both: each language's typing after the `,` is
+    // `typing_target`'s.
     fn typings(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::Typings);
         self.typed_by();
         while self.at(SyntaxKind::Comma) {
             self.bump();
-            self.feature_typing();
+            self.typing_target();
         }
         self.finish_node();
     }
 
+    /// The typing a `TypedBy` or `Typings` owns, which the two languages state
+    /// differently: `SysML`'s `FeatureTyping`, `OwnedFeatureTyping | ConjugatedPortTyping`
+    /// (8.2.2.6.5), and `KerML`'s `OwnedFeatureTyping` itself (8.2.4.3.1), with no
+    /// alternation around it and so no `FeatureTyping` node. A .kerml `feature f : ~T;`
+    /// is therefore reported: `~` opens no `GeneralType`.
+    fn typing_target(&mut self) {
+        match self.language {
+            Language::SysMl => self.feature_typing(),
+            Language::KerMl => self.owned_feature_typing(),
+        }
+    }
+
     // production: TypedBy@sysml
+    // production: TypedBy@kerml
     //
     // TypedBy : Feature = DEFINED_BY ownedRelationship += FeatureTyping
     //                                                            (SysML 8.2.2.6.5)
+    // TypedBy : Feature = TYPED_BY ownedRelationship += OwnedFeatureTyping
+    //                                                            (KerML 8.2.4.3.1)
     //
     // DEFINED_BY = ':' | 'defined' 'by'                          (SysML 8.2.2.1.2)
     //
@@ -6305,7 +6326,7 @@ impl<'a> Parser<'a> {
             });
             self.expect_keyword("by");
         }
-        self.feature_typing();
+        self.typing_target();
         self.finish_node();
     }
 
@@ -6314,13 +6335,12 @@ impl<'a> Parser<'a> {
     // FeatureTyping = OwnedFeatureTyping | ConjugatedPortTyping  (SysML 8.2.2.6.5)
     //
     // Both alternatives are read, and the `~` decides between them: an OwnedFeatureTyping
-    // opens on a name. This method serves KerML's typings too, and KerML's TypedBy takes
-    // an OwnedFeatureTyping alone (KerML 8.2.4.3.1), so the `~` arm is SysML's only and a
-    // .kerml `feature f : ~T;` is reported.
+    // opens on a name. SysML's alone: KerML's TypedBy owns an OwnedFeatureTyping with no
+    // alternation around it (see `typing_target`).
     fn feature_typing(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::FeatureTyping);
-        if self.language == Language::SysMl && self.at(SyntaxKind::Tilde) {
+        if self.at(SyntaxKind::Tilde) {
             self.conjugated_port_typing();
         } else {
             self.owned_feature_typing();
@@ -6360,10 +6380,16 @@ impl<'a> Parser<'a> {
     }
 
     // production: OwnedFeatureTyping@sysml
+    // production: OwnedFeatureTyping@kerml
     //
     // OwnedFeatureTyping : FeatureTyping =
     //     type = [QualifiedName] | ownedRelatedElement += OwnedFeatureChain
     //                                                            (SysML 8.2.2.6.5)
+    // OwnedFeatureTyping : FeatureTyping = GeneralType           (KerML 8.2.4.3.2)
+    //
+    // The same text in both: KerML's GeneralType is `[QualifiedName] | OwnedFeatureChain`
+    // (8.2.4.1.2), SysML's alternatives written out, so one method reads both units and
+    // builds the one node, as `owned_subsetting` does for Subsetting's pair.
     //
     // OwnedFeatureChain needs two or more segments joined by '.', and a FeatureChain has
     // at least two by construction, so a bare QualifiedName is never ambiguous with one.
