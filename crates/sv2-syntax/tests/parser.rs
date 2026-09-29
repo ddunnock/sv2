@@ -230,8 +230,7 @@ fn parsing_never_panics_on_truncated_input() {
 //
 // DefinitionElement's third alternative is AnnotatingElement, so an annotating
 // element is a PackageMember and a DefinitionMember without any production of its
-// own. AnnotatingMember exists in the grammar but is referenced only by
-// EnumerationBody, which is not implemented, so it is not built here.
+// own. AnnotatingMember is referenced only by EnumerationBody, and built there.
 
 #[test]
 fn an_annotating_element_is_a_definition_element() {
@@ -257,6 +256,48 @@ fn a_metadata_annotating_element_is_the_fourth_alternative() {
     // annotations are spec-conformant.
     let parsed = parse_accepted("package P { metadata Safety about Q; }");
     assert!(parsed.is_spec_conformant(), "{:?}", parsed.deviations());
+}
+
+// AnnotatingElement = Comment | Documentation | TextualRepresentation | MetadataUsage
+//                                                     (SysML 8.2.2.4.1, by deviation
+//                                                      AnnotatingElement)
+// MetadataUsage = UsageExtensionKeyword* ( '@' | 'metadata' ) ...    (SysML 8.2.2.27)
+//
+// Every alternative, the MetadataUsage with its `#` extension keywords, at a member
+// position and in a relationship body, with the node its production builds.
+#[test]
+fn every_annotating_element_is_a_member_and_an_owned_annotation() {
+    for (element, kind) in [
+        ("comment C about X /* on X */", "Comment"),
+        ("doc /* on the owner */", "Documentation"),
+        ("rep r language \"alf\" /* f(); */", "TextualRepresentation"),
+        ("metadata m : M;", "MetadataUsage"),
+        ("@M;", "MetadataUsage"),
+        ("#S #T metadata m : M;", "MetadataUsage"),
+        ("#S @M;", "MetadataUsage"),
+        // Comment's keyword group is optional, `locale` is not part of it (8.2.2.4.2);
+        // TextualRepresentation's `rep Identification` likewise (8.2.2.4.3).
+        ("locale \"en\" /* x */", "Comment"),
+        ("language \"alf\" /* f(); */", "TextualRepresentation"),
+        ("metadata m : M about X, Y { }", "MetadataUsage"),
+    ] {
+        let member = render(&parse_accepted(&format!("package P {{ {element} }}")).syntax());
+        assert_eq!(nodes_named(&member, kind), 1, "{kind}: {member}");
+        let owned =
+            render(&parse_accepted(&format!("public import A::* {{ {element} }}")).syntax());
+        assert_eq!(nodes_named(&owned, "OwnedAnnotation"), 1, "{owned}");
+        assert_eq!(nodes_named(&owned, kind), 1, "{kind}: {owned}");
+    }
+    let extended = render(&parse_accepted("package P { #S #T metadata m : M; }").syntax());
+    assert_eq!(
+        nodes_named(&extended, "UsageExtensionKeyword"),
+        2,
+        "{extended}"
+    );
+    // Documentation takes no extension keyword (8.2.2.4.2).
+    parse_rejected("package P { #S doc /* d */ }");
+    parse_rejected("package P { #S comment c /* d */ }");
+    parse_rejected("package P { #S rep language \"x\" /* d */ }");
 }
 
 // -- the definitions, SysML 8.2.2 -------------------------------------------------

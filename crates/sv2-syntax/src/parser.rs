@@ -5057,8 +5057,8 @@ impl<'a> Parser<'a> {
     //     MemberPrefix ownedRelatedElement += AnnotatingElement       (SysML 8.2.2.4.1)
     //
     // Referenced by EnumerationBody alone, which is why it had no caller until now.
-    // Marked although AnnotatingElement is not -- its MetadataUsage alternative is read
-    // less the `#` extension keywords -- because this production's own two parts are.
+    // Its own two parts are read, and AnnotatingElement@sysml is marked at
+    // `annotating_element`.
     fn annotating_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::AnnotatingMember);
@@ -14942,8 +14942,9 @@ impl<'a> Parser<'a> {
     //                   | MetadataUsage
     //
     // The fourth alternative is MetadataUsage by deviation AnnotatingElement
-    // (follow_xtext); the clause prints MetadataFeature. MetadataUsage is read less its
-    // `#` extension keywords, so AnnotatingElement@sysml gets no marker, and it gets no node —
+    // (follow_xtext); the clause prints MetadataFeature. MetadataUsage is read whole, its
+    // `#` extension keywords included, and AnnotatingElement@sysml is marked at
+    // `annotating_element`. It gets no node —
     // like DefinitionElement it is an alternation whose matched element already says
     // which alternative was taken; `annotating_element` reads it.
     //
@@ -14963,6 +14964,7 @@ impl<'a> Parser<'a> {
     }
 
     // production: AnnotatingElement@kerml
+    // production: AnnotatingElement@sysml
     //
     // AnnotatingElement : AnnotatingElement =
     //     Comment | Documentation | TextualRepresentation | MetadataFeature
@@ -14974,10 +14976,11 @@ impl<'a> Parser<'a> {
     // Writing it twice is how they would drift apart. No node: the element read says
     // which alternative was taken.
     //
-    // Marked in KerML only. KerML's fourth alternative is the clause's own
-    // MetadataFeature, whole (MetadataFeature@kerml); SysML's is a MetadataUsage by
-    // deviation AnnotatingElement, read less its `#` extension keywords, so
-    // AnnotatingElement@sysml stays unmarked.
+    // Two units, both read here. KerML's fourth alternative is the clause's own
+    // MetadataFeature (MetadataFeature@kerml); SysML's is a MetadataUsage by deviation
+    // AnnotatingElement (follow_xtext), read whole with its `UsageExtensionKeyword`s
+    // (MetadataUsage@sysml). The deviation changes the element kind, not the text, and
+    // was adjudicated to need no site (see `metadata_annotating_element`).
     //
     // The three comment-bodied alternatives read their body as a TOKEN, so they run with
     // comments significant. A metadata element has no such body, and inside that mode an
@@ -14986,8 +14989,8 @@ impl<'a> Parser<'a> {
     //
     // A bare REGULAR_COMMENT at member position is still trivia (see
     // `at_annotating_member`): MemberElement's gap, since it is MemberElement that asks
-    // whether an annotating element starts there, and MemberElement@kerml stays unmarked
-    // for it. This alternation reads a bare Comment wherever it is asked to, as it is in
+    // whether an annotating element starts there, and MemberElement@kerml, with SysML's
+    // DefinitionElement@sysml and PackageBodyElement@sysml, stays unmarked for it. This alternation reads a bare Comment wherever it is asked to, as it is in
     // a relationship body.
     fn annotating_element(&mut self) {
         if self.at_metadata_element(0) {
