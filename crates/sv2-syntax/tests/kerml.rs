@@ -983,35 +983,6 @@ fn a_kerml_filter_package_takes_its_declaration_directly() {
     kerml_rejected("package P { private import A::**[]; }");
 }
 
-#[test]
-fn a_kerml_expression_body_is_not_read_yet() {
-    // KerML's ExpressionBody is `'{' FunctionBodyPart '}'` (8.2.5.8.3), whose
-    // FunctionBodyPart@kerml is unimplemented. SysML's reading, CalculationBody, is SysML's
-    // alone (deviation ExpressionBody), so a .kerml body is reported rather than read as
-    // SysML's. Expressions.kerml:15 writes `x->collect {in xx; xx + 1}`. Held as a file by
-    // tests/rejection/kerml-expression-body-is-not-implemented.kerml.
-    kerml_rejected("package P { feature c = x->collect {in xx; xx + 1}; }");
-    // A body SysML's CalculationBody would read whole, in both positions that reach one,
-    // so what rejects it is the `{` and not an item inside: the report is AT the brace.
-    for source in [
-        "package P { feature c = x->collect { 1 }; }",
-        "package P { feature c = { 1 }; }",
-        // Expressions.kerml:18 writes a select, `x.?{in xx; xx != null}`.
-        "package P { feature d = x.?{ 1 }; }",
-        // Expressions.kerml:16 writes a collect, `x.{in xx; xx + 1}`.
-        "package P { feature c1 = x.{ 1 }; }",
-    ] {
-        let parsed = kerml_rejected(source);
-        // The second `{`: the first is the package body's.
-        let brace = source.match_indices('{').nth(1).map(|(at, _)| at);
-        let first = parsed
-            .errors()
-            .first()
-            .map(|d| usize::from(d.range().start()));
-        assert_eq!(first, brace, "{source}: {:?}", parsed.errors());
-    }
-}
-
 // -- multiplicity, KerML 8.2.5.11 ------------------------------------------------
 //
 //   OwnedMultiplicity      = ownedRelatedElement += OwnedMultiplicityRange

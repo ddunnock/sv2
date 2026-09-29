@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-29T14:34:54Z",
+    "regenerated_utc": "2026-09-29T14:38:58Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -23,10 +23,10 @@
       "percent": 87.4
     },
     "tests": {
-      "unit": 700,
+      "unit": 699,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 291,
+      "negative_cases": 290,
       "known_permissive": 0
     },
     "pins": {
@@ -37,7 +37,7 @@
       "vendor_total": 332
     },
     "commits": [
-      "adfa861 Read KerML expressions and boolean expressions, `expr e { 1 }` and `bool b;`",
+      "6361cf2 Read KerML expressions and boolean expressions, `expr e { 1 }` and `bool b;`",
       "8492e0c Read KerML invariants and the function body they end in, `inv { age >= 35 }`",
       "283460b Stop rejecting KerML invariants by absence: the next commit reads them",
       "2985af3 Read KerML's metadata features, `@M { x = 1; }` and `metadata m : M about a;`",
