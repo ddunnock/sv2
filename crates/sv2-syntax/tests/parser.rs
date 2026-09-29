@@ -183,21 +183,23 @@ fn text_no_implemented_production_accepts_becomes_an_error_node() {
     // `attribute mass : Real;`, `item wheel : Wheel;`, `connection fuelLine connect a
     // to b;`, `satisfy vehicleSpecification by vehicle_design;`, `view vehicleView :
     // VehicleView { expose Vehicle::*; }` and `succession flow fuelFlow from tank.fuelOut
-    // to engine.fuelIn;`. Each stopped being a rejection when its production landed, and
-    // the positive cases hold all eight. The property the test protects never changes:
-    // text this parser cannot read is reported, not silently accepted. Only the example
-    // moves.
+    // to engine.fuelIn;`, then `attribute m = x.metadata;`. Each stopped being a
+    // rejection when its production landed, and the positive cases hold all nine. The
+    // property the test protects never changes: text this parser cannot read is
+    // reported, not silently accepted. Only the example moves.
     //
-    // It is deliberately not a usage of the `<prefix> KEYWORD Usage` shape. Those arrive
-    // in batches -- seven of them are one table -- so any of them would be a placeholder
-    // with a short life. The SysML members still unread are the action control nodes,
-    // which are next in line, so the example moves inside a member: a metadata access
-    // in a feature value. `metadata` is reserved (SysML 8.2.2.1.2), so the postfix `.`
-    // cannot take it as a feature name; it lands only with MetadataAccessExpression.
+    // It now moves for the last time. With MetadataAccessExpression next, no probe of
+    // the well-formed constructs this parser was known not to read finds one left, so
+    // the example is text that is ILL-FORMED BY RULE, which stays reported whatever
+    // lands after it: a metadata access after a feature chain. `.metadata` follows an
+    // ElementReferenceMember, a QualifiedName alone (KerML 8.2.5.8.3), `x.y` is a
+    // FeatureChainExpression (8.2.5.8.2), and no postfix production takes `.metadata`
+    // after one. `metadata` is reserved (SysML 8.2.2.1.2), so the chain cannot take it
+    // as a feature name either.
     //
     // KerML 8.2.5.8.3 — MetadataAccessExpression =
     //                   ownedRelationship += ElementReferenceMember '.' 'metadata'
-    let parsed = parse_rejected("attribute m = x.metadata;");
+    let parsed = parse_rejected("attribute m = x.y.metadata;");
     assert!(render(&parsed.syntax()).contains("Error"));
 }
 
@@ -5748,11 +5750,10 @@ fn a_feature_chain_owns_no_result_member() {
 #[test]
 fn a_dot_after_a_primary_is_not_always_a_chain() {
     // Three other productions put a `.` after a primary, and none is a chain
-    // (KerML 8.2.5.8.2, 8.2.5.8.3). MetadataAccessExpression is unimplemented, and must
-    // stay that way rather than be quietly accepted as a chain. Held as a file by
-    // tests/rejection/metadata-access-expression-is-not-implemented.sysml. (Select and
-    // collect are read, and their own tests assert that neither builds a chain.)
-    parse_rejected("constraint def C { E.metadata }");
+    // (KerML 8.2.5.8.2, 8.2.5.8.3). Select and collect are read, and their own tests
+    // assert that neither builds a chain; MetadataAccessExpression lands next, with its
+    // own. (`E.metadata` was here, rejected by absence.)
+    //
     // A chain needs a name after the dot; `a.` alone is neither.
     parse_rejected("constraint def C { a. }");
 }
@@ -7311,11 +7312,12 @@ fn unimplemented_definition_body_items_are_reported_at_the_body() {
     // to the same construct: the usages it previously held are all read now, and each
     // is exercised inside a definition body as a positive case below. It held a
     // SuccessionFlowUsage (SysML 8.2.2.16), which replaced a ViewUsage with an `expose`,
-    // that a SatisfyRequirementUsage and that a ConnectionUsage. It is now an attribute
-    // whose feature value is not read, a MetadataAccessExpression (KerML 8.2.5.8.3). It
-    // must be reported, and the definition after it must still parse — recovery happens
-    // at the enclosing body.
-    let parsed = parse_rejected("part def Vehicle { attribute m = x.metadata; part def Wheel; }");
+    // that a SatisfyRequirementUsage and that a ConnectionUsage, and then a
+    // MetadataAccessExpression, which lands next. It is now an attribute whose feature
+    // value is ill-formed by rule, a metadata access after a feature chain (see the case
+    // above, KerML 8.2.5.8.3). It must be reported, and the definition after it must
+    // still parse — recovery happens at the enclosing body.
+    let parsed = parse_rejected("part def Vehicle { attribute m = x.y.metadata; part def Wheel; }");
     let rendered = render(&parsed.syntax());
     assert_eq!(nodes_named(&rendered, "PartDefinition"), 2, "{rendered}");
 }
