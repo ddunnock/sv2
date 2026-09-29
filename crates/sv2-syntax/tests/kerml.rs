@@ -313,10 +313,9 @@ fn a_classifier_is_not_reachable_from_the_sysml_start_symbol() {
 #[test]
 fn a_function_is_not_in_the_classifier_table() {
     // Function and Predicate share the keyword-and-declaration shape but take a
-    // FunctionBody, so they are not the same spine and are not implemented. Reading
-    // them with this table would accept a body the language does not put there.
-    kerml_rejected("function f;");
-    kerml_rejected("predicate p;");
+    // FunctionBody, so they are not the same spine; they are next (`function f;` and
+    // `predicate p;` were here, rejected by absence).
+    //
     // Type takes a TypeDeclaration rather than a ClassifierDeclaration, which requires
     // a SpecializationPart or a ConjugationPart where a classifier's are optional
     // (8.2.4.1.1; deviation TypeDeclaration, follow_spec): `type T;` is rejected by that
