@@ -2726,6 +2726,167 @@ fn an_association_structure_is_bounded_by_its_rules() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// -- MetadataFeature, KerML 8.2.5.12 ------------------------------------------------
+//
+//   MetadataFeature = PrefixMetadataMember* ( '@' | 'metadata' ) MetadataFeatureDeclaration
+//                     ( 'about' Annotation ( ',' Annotation )* )? MetadataBody
+//   MetadataFeatureDeclaration = ( Identification ( ':' | 'typed' 'by' ) )?
+//                                OwnedFeatureTyping
+//   MetadataBody        = ';' | '{' MetadataBodyElement* '}'
+//   MetadataBodyElement = NonFeatureMember | MetadataBodyFeatureMember
+//                       | AliasMember | Import
+//   MetadataBodyFeature = 'feature'? ( ':>>' | 'redefines' )? OwnedRedefinition
+//                         FeatureSpecializationPart? ValuePart? MetadataBody
+//
+// AnnotatingElement's fourth alternative in KerML (8.2.3.3.1). SysML's is MetadataUsage.
+
+#[test]
+fn a_metadata_feature_reads_the_corpus_forms() {
+    // Simple Tests/MetadataTest.kerml:19-31, both spellings, bodies and none.
+    let tree = render(
+        &kerml_accepted(
+            "feature x {\n\tmetadata Classified {\n\t\tclassificationLevel = conf;\n\t}\n\t\
+             metadata : Security;\n}\nfeature y {\n\t@Classified {\n\t\tclassificationLevel = \
+             conf;\n\t}\n\t@ : Security;\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        tree.lines()
+            .filter(|l| l.trim() == "MetadataFeature")
+            .count(),
+        4,
+        "{tree}"
+    );
+    assert!(!has_node(&tree, "MetadataUsage"), "{tree}");
+    let colon = render(&kerml_accepted("@ : Security;").syntax());
+    assert_eq!(
+        child_kinds(&colon, "MetadataFeature"),
+        ["At", "MetadataFeatureDeclaration", "MetadataBody"],
+        "{colon}"
+    );
+    assert_eq!(
+        child_kinds(&colon, "MetadataFeatureDeclaration"),
+        ["Identification", "Colon", "OwnedFeatureTyping"],
+        "{colon}"
+    );
+    // Its body's feature redefines a feature of the metaclass, with no keyword.
+    let body = render(&kerml_accepted("@Classified { classificationLevel = conf; }").syntax());
+    assert_eq!(
+        child_kinds(&body, "MetadataFeatureDeclaration"),
+        ["OwnedFeatureTyping"],
+        "{body}"
+    );
+    assert_eq!(
+        child_kinds(&body, "MetadataBody"),
+        ["LBrace", "MetadataBodyFeatureMember", "RBrace"],
+        "{body}"
+    );
+    assert_eq!(
+        child_kinds(&body, "MetadataBodyFeatureMember"),
+        ["MetadataBodyFeature"],
+        "{body}"
+    );
+}
+
+#[test]
+fn a_metadata_feature_is_written_where_an_annotating_element_is() {
+    // MetadataTest.kerml:37-39: prefix metadata before the keyword.
+    let prefixed = render(
+        &kerml_accepted(
+            "feature z {\n    #Security #Classified metadata Classified {\n        \
+             classificationLevel = secret;\n    }\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&prefixed, "MetadataFeature"),
+        [
+            "PrefixMetadataMember",
+            "PrefixMetadataMember",
+            "KwMetadata",
+            "MetadataFeatureDeclaration",
+            "MetadataBody"
+        ],
+        "{prefixed}"
+    );
+    // Simple Tests/Associations.kerml:22-24 and Filtering.kerml:15-19.
+    kerml_accepted("assoc XY {\n\tend [0..1] feature x : X {\n\t\t@M;\n\t}\n}");
+    kerml_accepted(
+        "struct System {\n     @ApprovalAnnotation {\n        approved = true;\n        \
+         approver = \"John Smith\";\n        level = 2;\n    }\n}",
+    );
+}
+
+#[test]
+fn a_metadata_feature_reads_the_examples_of_7_4_13() {
+    let about = render(
+        &kerml_accepted(
+            "metadata securityDesignAnnotation : SecurityRelated about SecurityDesign;",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&about, "MetadataFeature"),
+        [
+            "KwMetadata",
+            "MetadataFeatureDeclaration",
+            "KwAbout",
+            "Annotation",
+            "MetadataBody"
+        ],
+        "{about}"
+    );
+    let keywords = render(
+        &kerml_accepted(
+            "metadata ApprovalAnnotation about Design {\n    feature redefines approved = true;\n    \
+             feature redefines approver = \"John Smith\";\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&keywords, "MetadataBodyFeature")[..3],
+        ["KwFeature", "KwRedefines", "OwnedRedefinition"],
+        "{keywords}"
+    );
+    kerml_accepted(
+        "metadata ApprovalAnnotation about Design {\n    approved = true;\n    approver = \"John \
+         Smith\";\n}",
+    );
+    kerml_accepted(
+        "class Design {\n    // This metadata feature is implicitly about the class Design.\n    \
+         @ApprovalAnnotation {\n        approved = true;\n        approver = \"John Smith\";\n    \
+         }\n}",
+    );
+    // KerML spells TYPED_BY `typed by` (8.2.2.7), and `:>>` is REDEFINES's symbol.
+    kerml_accepted("metadata m typed by T;");
+    kerml_accepted("metadata m : T about a, b { :>> x = 1; }");
+    // A NonFeatureMember is a MetadataBodyElement: a nested annotation, a class.
+    kerml_accepted("metadata M { doc /* d */ @N; private class C; }");
+    // A nested body on a body feature.
+    kerml_accepted("metadata M { x { y = 1; } }");
+}
+
+#[test]
+fn a_metadata_feature_is_bounded_by_its_rules() {
+    // A typing is required (8.2.5.12).
+    kerml_rejected("metadata;");
+    kerml_rejected("metadata M about;");
+    // `defined by` is SysML's spelling, deviation MetadataUsageDeclaration's; KerML's
+    // is `typed by`.
+    kerml_rejected("metadata m defined by T;");
+    // A FeatureElement is no MetadataBodyElement: a body's features are redefinitions
+    // (8.2.5.12). Held as a file by
+    // tests/rejection/kerml-metadata-body-owns-no-feature-element.kerml.
+    kerml_rejected("metadata M { step s; }");
+    kerml_rejected("metadata M { connector a to b; }");
+    // A MetadataBodyFeatureMember has no MemberPrefix.
+    kerml_rejected("metadata M { private x = 1; }");
+    // SysML's usages are not KerML's.
+    kerml_rejected("metadata M { ref x = 1; }");
+    kerml_rejected("metadata M { part p; }");
+}
+
 // -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------
 //
 //   TypeBodyElement    = NonFeatureMember | FeatureMember | AliasMember | Import

@@ -1307,7 +1307,15 @@ pub enum SyntaxKind {
     MetadataUsage,
     /// `( Identification ( ':' | 'defined' 'by' ) )? OwnedFeatureTyping`. `SysML` 8.2.2.27, as deviation `MetadataUsageDeclaration` reads it.
     MetadataUsageDeclaration,
-    /// `';' | '{' ( DefinitionMember | MetadataBodyUsageMember | AliasMember | Import )* '}'`. `SysML` 8.2.2.27.
+    /// `PrefixMetadataMember* ( '@' | 'metadata' ) MetadataFeatureDeclaration ( 'about' Annotation ( ',' Annotation )* )? MetadataBody`. `KerML` 8.2.5.12.
+    MetadataFeature,
+    /// `( Identification ( ':' | 'typed' 'by' ) )? OwnedFeatureTyping`. `KerML` 8.2.5.12.
+    MetadataFeatureDeclaration,
+    /// `ownedMemberFeature = MetadataBodyFeature`. `KerML` 8.2.5.12.
+    MetadataBodyFeatureMember,
+    /// `'feature'? ( ':>>' | 'redefines' )? OwnedRedefinition FeatureSpecializationPart? ValuePart? MetadataBody`. `KerML` 8.2.5.12.
+    MetadataBodyFeature,
+    /// `';' | '{' ( DefinitionMember | MetadataBodyUsageMember | AliasMember | Import )* '}'`. `SysML` 8.2.2.27. Also `KerML` 8.2.5.12's, whose items are `NonFeatureMember | MetadataBodyFeatureMember | AliasMember | Import`.
     MetadataBody,
     /// `ownedMemberFeature = MetadataBodyUsage`. `SysML` 8.2.2.27.
     MetadataBodyUsageMember,
@@ -2010,6 +2018,10 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::MetadataDefinition,
     SyntaxKind::MetadataUsage,
     SyntaxKind::MetadataUsageDeclaration,
+    SyntaxKind::MetadataFeature,
+    SyntaxKind::MetadataFeatureDeclaration,
+    SyntaxKind::MetadataBodyFeatureMember,
+    SyntaxKind::MetadataBodyFeature,
     SyntaxKind::MetadataBody,
     SyntaxKind::MetadataBodyUsageMember,
     SyntaxKind::MetadataBodyUsage,

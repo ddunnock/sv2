@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-29T13:35:41Z",
+    "regenerated_utc": "2026-09-29T13:51:45Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 471,
-      "unimplemented": 83,
+      "implemented": 477,
+      "unimplemented": 77,
       "absent": 0,
-      "percent": 85.0
+      "percent": 86.1
     },
     "tests": {
-      "unit": 687,
+      "unit": 690,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 288,
+      "negative_cases": 289,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "4fc20df Stop rejecting KerML metadata features by absence: the next commit reads them",
+      "172e492 Read KerML's association structure, `assoc struct C { ... }`",
       "a60652a Read KerML's type declaration, `type A specializes Base::Anything;`",
       "fbeaf55 Read KerML's standalone conjugation, `conjugate A ~ B;`",
       "d46b17c Read KerML's standalone disjoining, `disjoint A from B;`",
       "928b32d Read KerML's standalone redefinition, `redefinition a redefines b;`",
       "b5c1564 Read KerML's standalone subsetting, `subset g subsets f;`",
-      "45a5fe7 Read KerML's standalone feature typing, `typing f : B;`",
-      "f18566e Read KerML's standalone subclassification, `subclassifier C :> A;`",
-      "a31ddec Read KerML's standalone specialization, `subtype A :> B;`"
+      "45a5fe7 Read KerML's standalone feature typing, `typing f : B;`"
     ]
   },
   "authored": {

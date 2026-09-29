@@ -10456,12 +10456,21 @@ fn a_metadata_usage_is_bounded_by_its_rules() {
     // The prefix is `abstract` alone, not DefinitionPrefix's `variation` (8.2.2.27).
     parse_rejected("variation metadata def M;");
     // KerML's fourth AnnotatingElement is MetadataFeature (8.2.5.12), a different
-    // production and unimplemented: valid KerML, rejected by absence. SysML's MetadataUsage
-    // must not stand in for it in a .kerml file (ADR-0014).
+    // production. SysML's MetadataUsage must not stand in for it in a .kerml file
+    // (ADR-0014): the same text builds KerML's element there.
+    let kerml = parse("package P { @M; }", Language::KerMl);
+    assert!(kerml.errors().is_empty(), "{:?}", kerml.errors());
+    let tree = render(&kerml.syntax());
     assert!(
-        !parse("package P { @M; }", Language::KerMl)
-            .errors()
-            .is_empty()
+        tree.lines()
+            .any(|l| l.trim().split(' ').next() == Some("MetadataFeature")),
+        "{tree}"
+    );
+    assert!(
+        !tree
+            .lines()
+            .any(|l| l.trim().split(' ').next() == Some("MetadataUsage")),
+        "{tree}"
     );
 }
 

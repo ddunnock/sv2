@@ -2134,17 +2134,12 @@ impl<'a> Parser<'a> {
         }
         match self.language {
             Language::KerMl => {
-                self.at_package(n)
-                    || self.at_library_package(n)
-                    || self.at_dependency(n)
-                    || self.at_classifier(n).is_some()
+                self.at_kerml_non_feature_element(n)
                     || self.at_feature(n)
                     || self.at_kerml_succession(n)
                     || self.at_kerml_binding_connector(n)
                     || self.at_kerml_connector(n)
                     || self.at_kerml_step(n)
-                    || self.at_relationship_declaration(n).is_some()
-                    || self.at_kerml_type(n)
             }
             Language::SysMl => {
                 self.at_sysml_keyword_member(n)
@@ -2152,6 +2147,19 @@ impl<'a> Parser<'a> {
                     || self.at_default_reference_usage(n)
             }
         }
+    }
+
+    /// Whether an implemented `KerML` `NonFeatureElement` starts at the `n`th meaningful
+    /// token (8.2.3.4.3): the `MemberElement`s that are no `AnnotatingElement` and no
+    /// `FeatureElement`. A `MetadataBody` asks this alone, since its members are
+    /// `NonFeatureMember`s and its features are its own (8.2.5.12).
+    fn at_kerml_non_feature_element(&self, n: usize) -> bool {
+        self.at_package(n)
+            || self.at_library_package(n)
+            || self.at_dependency(n)
+            || self.at_classifier(n).is_some()
+            || self.at_relationship_declaration(n).is_some()
+            || self.at_kerml_type(n)
     }
 
     /// Whether a `SysML` member that opens on a KEYWORD starts at the `n`th token.
@@ -2395,33 +2403,35 @@ impl<'a> Parser<'a> {
     ///
     /// `Comment` may open with `comment`, `locale` or its bare `REGULAR_COMMENT` body;
     /// `Documentation` with `doc`; `TextualRepresentation` with `rep` or `language`;
-    /// `MetadataUsage` with `@` or `metadata`, or the `#` extension keywords before either,
-    /// `SysML` only (see `at_metadata_usage`).
+    /// `MetadataUsage` in `SysML` and `MetadataFeature` in `KerML` with `@` or `metadata`,
+    /// or the `#` prefix metadata before either (see `at_metadata_element`).
     fn at_annotating_element(&self) -> bool {
         self.at(SyntaxKind::RegularComment)
             || ["comment", "locale", "doc", "rep", "language"]
                 .iter()
                 .any(|word| self.at_keyword(word))
-            || self.at_metadata_usage(0)
+            || self.at_metadata_element(0)
     }
 
-    /// Whether a `MetadataUsage` starts at the `n`th meaningful token.
+    /// Whether `AnnotatingElement`'s fourth alternative starts at the `n`th meaningful
+    /// token, in this file's language.
     ///
-    /// `UsageExtensionKeyword* ( '@' | 'metadata' )` (`SysML` 8.2.2.27). `metadata def` is
-    /// the `MetadataDefinition` beside it, and `#X metadata def` too, the extension
-    /// keywords being looked past for both. `SysML` only: `KerML`'s fourth `AnnotatingElement` is `MetadataFeature`
-    /// (8.2.5.12), a different production, unimplemented, and this one is reached in
-    /// `SysML` only by deviation `AnnotatingElement`.
+    /// `SysML`'s `MetadataUsage` opens `UsageExtensionKeyword* ( '@' | 'metadata' )`
+    /// (8.2.2.27), reached by deviation `AnnotatingElement`; `KerML`'s `MetadataFeature`
+    /// opens `PrefixMetadataMember* ( '@' | 'metadata' )` (8.2.5.12). The same text, a
+    /// `#X` run then the symbol or the word, so one recogniser serves both, and
+    /// `metadata_annotating_element` builds the file's language's element. `metadata def`
+    /// is `SysML`'s `MetadataDefinition` beside it, and `#X metadata def` too; `def` is
+    /// reserved, so in `KerML` it cannot be a typing's name either.
     ///
     /// `@` also opens an expression: a `ClassificationExpression` with no left operand
     /// (`KerML` 8.2.5.8.1). The two never meet at member position, but they do where a
     /// calculation body's items end in its result expression; `at_result_expression`
     /// settles that one.
-    fn at_metadata_usage(&self, n: usize) -> bool {
+    fn at_metadata_element(&self, n: usize) -> bool {
         let n = self.skip_prefix_metadata(n);
-        self.language == Language::SysMl
-            && (self.nth_is(n, SyntaxKind::At)
-                || (self.nth_is_keyword(n, "metadata") && !self.nth_is_keyword(n + 1, "def")))
+        self.nth_is(n, SyntaxKind::At)
+            || (self.nth_is_keyword(n, "metadata") && !self.nth_is_keyword(n + 1, "def"))
     }
 
     fn at_end(&self) -> bool {
@@ -13431,6 +13441,9 @@ impl<'a> Parser<'a> {
     /// Whether `MetadataUsageDeclaration`'s optional `Identification ( ':' | 'defined'
     /// 'by' )` group is written here: an optional `<short name>` and name, then `:` or
     /// `defined by`.
+    ///
+    /// `KerML`'s `MetadataFeatureDeclaration` writes `typed by` there (8.2.5.12), so the
+    /// word asked for is the file's language's.
     fn at_metadata_identification(&self) -> bool {
         let mut n = 0;
         if self.nth_is(n, SyntaxKind::Lt) {
@@ -13439,8 +13452,12 @@ impl<'a> Parser<'a> {
         if self.peek_nth(n).is_some_and(|token| self.is_name(token)) {
             n += 1;
         }
+        let word = match self.language {
+            Language::SysMl => "defined",
+            Language::KerMl => "typed",
+        };
         self.nth_is(n, SyntaxKind::Colon)
-            || (self.nth_is_keyword(n, "defined") && self.nth_is_keyword(n + 1, "by"))
+            || (self.nth_is_keyword(n, word) && self.nth_is_keyword(n + 1, "by"))
     }
 
     // production: MetadataBody@sysml
@@ -13548,6 +13565,200 @@ impl<'a> Parser<'a> {
             self.value_part();
         }
         self.metadata_body();
+        self.finish_node();
+        self.finish_node();
+    }
+
+    // production: MetadataFeature@kerml
+    //
+    // MetadataFeature : MetadataFeature =
+    //     ( ownedRelationship += PrefixMetadataMember )*
+    //     ( '@' | 'metadata' )
+    //     MetadataFeatureDeclaration
+    //     ( 'about' ownedRelationship += Annotation
+    //       ( ',' ownedRelationship += Annotation )*
+    //     )?
+    //     MetadataBody                                           (KerML 8.2.5.12)
+    //
+    // AnnotatingElement's fourth alternative in KerML (8.2.3.3.1), the clause's own. "A
+    // metadata feature is declared using the keyword metadata (or the symbol @), optionally
+    // followed by a short name and/or name, followed by the keyword typed by (or the
+    // symbol :) and the qualified name of exactly one metaclass" (7.4.13, receipt
+    // 5e755297). The metaclass is MetadataFeature (8.3.4.12.3, receipt 2c4eda9f). SysML's
+    // MetadataUsage is the same text over its own productions; the file's language
+    // chooses (`metadata_annotating_element`).
+    //
+    // With no `about`, the annotated element "is implicitly the containing namespace"
+    // (7.4.13): a derivation over the owner, not text.
+    //
+    // implied specialization: Metaobjects::metaobjects (checkMetadataFeatureSpecialization,
+    //     KerML 8.3.4.12.3), as for a PrefixMetadataFeature. sv2-hir's to inject; nothing
+    //     is written into the tree.
+    // constraint: MetadataFeature::validateMetadataFeatureMetaclass and
+    //     validateMetadataFeatureBody (8.3.4.12.3): the typing names a metaclass, and the
+    //     body's features redefine its features. Validity, not syntax (ADR-0002).
+    fn metadata_feature(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MetadataFeature);
+        while self.at(SyntaxKind::Hash) {
+            self.prefix_metadata_member();
+        }
+        if self.at(SyntaxKind::At) {
+            self.bump();
+        } else {
+            self.expect_keyword("metadata");
+        }
+        self.metadata_feature_declaration();
+        if self.at_keyword("about") {
+            self.bump_as(keyword("about").unwrap_or(SyntaxKind::BasicName));
+            self.annotation();
+            while self.at(SyntaxKind::Comma) {
+                self.bump();
+                self.annotation();
+            }
+        }
+        self.kerml_metadata_body();
+        self.finish_node();
+    }
+
+    // production: MetadataFeatureDeclaration@kerml
+    //
+    // MetadataFeatureDeclaration : MetadataFeature =
+    //     ( Identification ( ':' | 'typed' 'by' ) )?
+    //     ownedRelationship += OwnedFeatureTyping                (KerML 8.2.5.12)
+    //
+    // SysML's MetadataUsageDeclaration less its deviation: `typed by` is KerML's own
+    // TYPED_BY word, so it is read with no note. The group is decided as SysML's is, by
+    // looking past an Identification for the `:` or `typed` after it
+    // (`at_metadata_identification`); Identification may be empty, so `@ : T;` takes it
+    // with nothing before the `:`. The typing reads `owned_feature_typing`, whose text is
+    // KerML's OwnedFeatureTyping, `GeneralType` (8.2.4.3.2), as `prefix_metadata_feature`
+    // says.
+    fn metadata_feature_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MetadataFeatureDeclaration);
+        if self.at_metadata_identification() {
+            self.identification();
+            if self.at(SyntaxKind::Colon) {
+                self.bump();
+            } else {
+                self.expect_keyword("typed");
+                self.expect_keyword("by");
+            }
+        }
+        self.owned_feature_typing();
+        self.finish_node();
+    }
+
+    // production: MetadataBody@kerml
+    //
+    // MetadataBody : Type =
+    //     ';' | '{' ( ownedRelationship += MetadataBodyElement )* '}'
+    //                                                            (KerML 8.2.5.12)
+    //
+    // production: MetadataBodyElement@kerml
+    //
+    // MetadataBodyElement : Membership =
+    //       NonFeatureMember
+    //     | MetadataBodyFeatureMember
+    //     | AliasMember
+    //     | Import                                               (KerML 8.2.5.12)
+    //
+    // The same node as SysML's MetadataBody (8.2.2.27), a production of the same name
+    // with a different item set: NonFeatureMember where SysML writes DefinitionMember, and
+    // KerML's feature member. MetadataBodyElement is an alternation with no node, as
+    // TypeBodyElement is. A NonFeatureMember is any KerML member element but a
+    // FeatureElement (`at_kerml_non_feature_element`), an AnnotatingElement included, so
+    // `step s;` here is reported: a body's features are its own redefinitions.
+    // NonFeatureMembers are asked first, as they open on keywords and a keyword is not a
+    // name (8.2.2.6).
+    fn kerml_metadata_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MetadataBody);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.kerml_metadata_body_elements();
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.error_expected("`;` or `{` after a metadata feature declaration");
+        }
+        self.finish_node();
+    }
+
+    /// The elements of a braced `KerML` `MetadataBody`, up to its `}` or end of input.
+    fn kerml_metadata_body_elements(&mut self) {
+        while !self.at_end() && !self.at(SyntaxKind::RBrace) {
+            let start = self.pos;
+            let n = usize::from(self.at_visibility());
+            if self.depth >= MAX_DEPTH {
+                self.report_too_deep();
+                self.error_token();
+            } else if self.at_import() {
+                self.import();
+            } else if self.at_element_keyword("alias") {
+                self.alias_member();
+            } else if self.at_annotating_member(n) || self.at_kerml_non_feature_element(n) {
+                // Body::Type builds a NonFeatureMember in KerML (see `Body::member`).
+                self.membership(Body::Type);
+            } else if self.at_metadata_body_feature() {
+                self.metadata_body_feature_member();
+            } else {
+                self.recover_statement();
+            }
+            if self.pos == start {
+                self.error_token();
+            }
+        }
+    }
+
+    /// Whether a `MetadataBodyFeature` starts here: `'feature'? ( ':>>' | 'redefines' )?`
+    /// and then the name its `OwnedRedefinition` opens on (`KerML` 8.2.5.12).
+    fn at_metadata_body_feature(&self) -> bool {
+        let mut n = usize::from(self.nth_is_keyword(0, "feature"));
+        if self.nth_is(n, SyntaxKind::ColonGtGt) || self.nth_is_keyword(n, "redefines") {
+            n += 1;
+        }
+        self.nth_is_name(n)
+    }
+
+    // production: MetadataBodyFeatureMember@kerml
+    //
+    // MetadataBodyFeatureMember : FeatureMembership =
+    //     ownedMemberFeature = MetadataBodyFeature               (KerML 8.2.5.12)
+    //
+    // production: MetadataBodyFeature@kerml
+    //
+    // MetadataBodyFeature : Feature =
+    //     'feature'? ( ':>>' | 'redefines')? ownedRelationship += OwnedRedefinition
+    //     FeatureSpecializationPart? ValuePart?
+    //     MetadataBody                                           (KerML 8.2.5.12)
+    //
+    // "The keywords feature and/or redefines (or the equivalent symbol :>>) may be
+    // omitted in the declaration of a metadata feature" (7.4.13, receipt 5e755297), so
+    // `approved = true;` redefines `approved`. SysML's MetadataBodyUsage writes `ref`
+    // where this writes `feature`. The redefinition reads `owned_redefinition`, whose
+    // text is KerML's OwnedRedefinition, `GeneralType` (8.2.4.3.4). The member has no
+    // MemberPrefix: `private x = 1;` is reported.
+    fn metadata_body_feature_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::MetadataBodyFeatureMember);
+        self.start_node(SyntaxKind::MetadataBodyFeature);
+        self.eat_optional_keyword("feature");
+        if self.at(SyntaxKind::ColonGtGt) {
+            self.bump();
+        } else {
+            self.eat_optional_keyword("redefines");
+        }
+        self.owned_redefinition();
+        self.optional_feature_specialization_part();
+        if self.at_value_part() {
+            self.value_part();
+        }
+        self.kerml_metadata_body();
         self.finish_node();
         self.finish_node();
     }
@@ -13994,7 +14205,7 @@ impl<'a> Parser<'a> {
     // which alternative was taken. A MetadataUsage is dispatched before the
     // comment-significant mode the other three need; see `annotating_element_at_member`.
     fn owned_annotation(&mut self) {
-        if self.at_metadata_usage(0) {
+        if self.at_metadata_element(0) {
             self.eat_trivia();
             self.start_node(SyntaxKind::OwnedAnnotation);
             self.metadata_annotating_element();
@@ -14017,7 +14228,7 @@ impl<'a> Parser<'a> {
     /// its tokens would be read as a stray token, so it is dispatched before the mode is
     /// entered rather than inside `annotating_element`.
     fn annotating_element_at_member(&mut self) {
-        if self.at_metadata_usage(0) {
+        if self.at_metadata_element(0) {
             self.metadata_annotating_element();
         } else {
             self.with_significant_comments(Self::annotating_element);
@@ -14037,8 +14248,14 @@ impl<'a> Parser<'a> {
     /// the declaration IS a textual departure, deviation `MetadataUsageDeclaration`'s,
     /// noted where it is read. Adjudicated 2026-09-22; the entry is listed as needing no
     /// site.
+    ///
+    /// In `KerML` the alternative is the clause's own, `MetadataFeature`, and needs no
+    /// deviation.
     fn metadata_annotating_element(&mut self) {
-        self.metadata_usage();
+        match self.language {
+            Language::SysMl => self.metadata_usage(),
+            Language::KerMl => self.metadata_feature(),
+        }
     }
 
     /// The `AnnotatingElement` alternation, shared by every place one may appear.
@@ -14047,7 +14264,7 @@ impl<'a> Parser<'a> {
     /// MetadataUsage` in `SysML` 8.2.2.4.1, and the same with `MetadataFeature` in
     /// `KerML` 8.2.3.3.1 — the one difference is the fourth alternative. `SysML`'s is
     /// read, by `metadata_annotating_element` and not here (see
-    /// `annotating_element_at_member`); `KerML`'s is unimplemented.
+    /// `annotating_element_at_member`), and so is `KerML`'s.
     ///
     /// An annotating element is reached three ways, and this is the one dispatch for all
     /// of them: `OwnedAnnotation` in a relationship body, `MemberElement` in `KerML`
@@ -14088,7 +14305,7 @@ impl<'a> Parser<'a> {
         ["comment", "locale", "doc", "rep", "language"]
             .iter()
             .any(|word| self.nth_is_keyword(n, word))
-            || self.at_metadata_usage(n)
+            || self.at_metadata_element(n)
     }
 
     // production: Comment

@@ -2018,11 +2018,33 @@ NODES = [
             "8.2.2.27, as deviation `MetadataUsageDeclaration` reads it."
         ),
     ),
+    # KerML's MetadataFeature, AnnotatingElement's fourth alternative there, its
+    # declaration, and the feature its MetadataBody owns. KerML 8.2.5.12.
+    (
+        "MetadataFeature",
+        (
+            "`PrefixMetadataMember* ( '@' | 'metadata' ) MetadataFeatureDeclaration "
+            "( 'about' Annotation ( ',' Annotation )* )? MetadataBody`. `KerML` 8.2.5.12."
+        ),
+    ),
+    (
+        "MetadataFeatureDeclaration",
+        ("`( Identification ( ':' | 'typed' 'by' ) )? OwnedFeatureTyping`. `KerML` 8.2.5.12."),
+    ),
+    ("MetadataBodyFeatureMember", "`ownedMemberFeature = MetadataBodyFeature`. `KerML` 8.2.5.12."),
+    (
+        "MetadataBodyFeature",
+        (
+            "`'feature'? ( ':>>' | 'redefines' )? OwnedRedefinition "
+            "FeatureSpecializationPart? ValuePart? MetadataBody`. `KerML` 8.2.5.12."
+        ),
+    ),
     (
         "MetadataBody",
         (
             "`';' | '{' ( DefinitionMember | MetadataBodyUsageMember | AliasMember "
-            "| Import )* '}'`. `SysML` 8.2.2.27."
+            "| Import )* '}'`. `SysML` 8.2.2.27. Also `KerML` 8.2.5.12's, whose items are "
+            "`NonFeatureMember | MetadataBodyFeatureMember | AliasMember | Import`."
         ),
     ),
     ("MetadataBodyUsageMember", "`ownedMemberFeature = MetadataBodyUsage`. `SysML` 8.2.2.27."),
