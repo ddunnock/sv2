@@ -16,12 +16,12 @@
 //! text is read against a different grammar, and constructs one language has are not
 //! silently borrowed by the other.
 //!
-//! Of `NonFeatureElement`'s alternatives, `Package`, `Dependency` and the eight
-//! classifiers of `KerML` 8.2.4.2 are implemented. `Package` is a shared unit — the same
-//! production in both grammars — `Dependency` is stated in each, and the classifiers are
-//! `KerML`'s alone. Of `FeatureElement`'s ten alternatives, `Feature`, `Step`,
-//! `Connector`, `BindingConnector` and `Succession` are implemented; the other five are
-//! not, nor are `Type`,
+//! Of `NonFeatureElement`'s alternatives, `Package`, `Dependency`, `Type`, the eight
+//! classifiers of `KerML` 8.2.4.2 and the standalone relationship declarations but
+//! `TypeFeaturing` are implemented. `Package` is a shared unit — the same production in
+//! both grammars — `Dependency` is stated in each, and the rest are `KerML`'s alone. Of
+//! `FeatureElement`'s ten alternatives, `Feature`, `Step`, `Connector`,
+//! `BindingConnector` and `Succession` are implemented; the other five are not, nor are
 //! `Function` and `Predicate`, and the cases below say so rather than pretending they
 //! parse.
 
@@ -316,7 +316,12 @@ fn a_function_is_not_in_the_classifier_table() {
     // them with this table would accept a body the language does not put there.
     kerml_rejected("function f;");
     kerml_rejected("predicate p;");
-    // Type takes a TypeDeclaration rather than a ClassifierDeclaration.
+    // Type takes a TypeDeclaration rather than a ClassifierDeclaration, which requires
+    // a SpecializationPart or a ConjugationPart where a classifier's are optional
+    // (8.2.4.1.1; deviation TypeDeclaration, follow_spec): `type T;` is rejected by that
+    // rule, and read by
+    // `a_type_declaration_takes_its_parts_as_its_production_writes_them` once it writes
+    // one.
     kerml_rejected("type T;");
 }
 
@@ -2543,6 +2548,131 @@ fn a_conjugation_is_bounded_by_its_rules() {
     kerml_rejected("conjugate A :> B;");
     // SysML states no Conjugation declaration (ADR-0014).
     let sysml = parse("conjugate A ~ B;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
+// -- Type, KerML 8.2.4.1.1 ----------------------------------------------------------
+//
+//   Type               = TypePrefix 'type' TypeDeclaration TypeBody
+//   TypeDeclaration    = 'all'? Identification OwnedMultiplicity?
+//                        ( SpecializationPart | ConjugationPart )+ TypeRelationshipPart*
+//   SpecializationPart = SPECIALIZES OwnedSpecialization ( ',' OwnedSpecialization )*
+//   OwnedSpecialization = GeneralType                                  (8.2.4.1.2)
+
+#[test]
+fn a_type_reads_the_corpus_forms() {
+    // Simple Tests/Types.kerml:1-15, 28-29, 31 and 33: every type form it writes, less the
+    // repeats at 20-24 and 34-35 and the relationship declarations at 17-18 and 25-26,
+    // which have their own tests.
+    let tree = render(
+        &kerml_accepted(
+            "package Types {\n\tabstract type A specializes Base::Anything;\n\ttype all x \
+             specializes A, Base::things;\n\t\n\t// This Type has exactly one instance.\n\t\
+             type Singleton[1] specializes Base::Anything;\n\t\n\ttype Super specializes \
+             Base::Anything {\n\t    private package P {\n\t        type Sub specializes \
+             Super;\n\t    }\n\t    protected feature f : P::Sub;\n\t}\n\t\n\ttype B :> \
+             Base::Anything;\n\ttype Conjugate3 conjugates Original;\n\ttype Conjugate4 ~ \
+             Conjugate1;\n\ttype C :> B disjoint from A;\n\ttype D :> Base::Anything unions \
+             A, B;\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        tree.lines().filter(|l| l.trim() == "Type").count(),
+        10,
+        "{tree}"
+    );
+    let abstract_type =
+        render(&kerml_accepted("abstract type A specializes Base::Anything;").syntax());
+    assert_eq!(
+        child_kinds(&abstract_type, "Type"),
+        ["TypePrefix", "KwType", "TypeDeclaration", "TypeBody"],
+        "{abstract_type}"
+    );
+    let all = render(&kerml_accepted("type all x specializes A, Base::things;").syntax());
+    assert_eq!(
+        child_kinds(&all, "TypeDeclaration"),
+        ["KwAll", "Identification", "SpecializationPart"],
+        "{all}"
+    );
+    assert_eq!(
+        child_kinds(&all, "SpecializationPart"),
+        [
+            "KwSpecializes",
+            "OwnedSpecialization",
+            "Comma",
+            "OwnedSpecialization"
+        ],
+        "{all}"
+    );
+    let singleton =
+        render(&kerml_accepted("type Singleton[1] specializes Base::Anything;").syntax());
+    assert_eq!(
+        child_kinds(&singleton, "TypeDeclaration"),
+        ["Identification", "OwnedMultiplicity", "SpecializationPart"],
+        "{singleton}"
+    );
+}
+
+#[test]
+fn a_type_declaration_owns_the_parts_it_writes() {
+    // Simple Tests/Types.kerml:29, a conjugation in place of a specialization.
+    let conjugate = render(&kerml_accepted("type Conjugate4 ~ Conjugate1;").syntax());
+    assert_eq!(
+        child_kinds(&conjugate, "TypeDeclaration"),
+        ["Identification", "ConjugationPart"],
+        "{conjugate}"
+    );
+    // KerML 7.3.2.2's first example: a part after the specialization.
+    let disjoint =
+        render(&kerml_accepted("type A specializes Base::Anything disjoint from B;").syntax());
+    assert_eq!(
+        child_kinds(&disjoint, "TypeDeclaration"),
+        ["Identification", "SpecializationPart", "DisjoiningPart"],
+        "{disjoint}"
+    );
+    // An OwnedSpecialization's general type may be a feature chain (8.2.4.1.2).
+    let chained = render(&kerml_accepted("type T :> a.b;").syntax());
+    assert_eq!(
+        child_kinds(&chained, "OwnedSpecialization"),
+        ["OwnedFeatureChain"],
+        "{chained}"
+    );
+}
+
+#[test]
+fn a_type_declaration_takes_its_parts_as_its_production_writes_them() {
+    // `( SpecializationPart | ConjugationPart )+`: the clause's `+`, kept where the
+    // Pilot writes the group once (deviation TypeDeclaration, follow_spec), so two parts
+    // and both kinds parse, and the rules against them are validation's:
+    // validateTypeAtMostOneConjugator (8.3.3.1.10) and a conjugated type being no
+    // Specialization's specific (8.3.3.1.2).
+    let two = render(&kerml_accepted("type T :> A specializes B;").syntax());
+    assert_eq!(
+        child_kinds(&two, "TypeDeclaration"),
+        ["Identification", "SpecializationPart", "SpecializationPart"],
+        "{two}"
+    );
+    kerml_accepted("type T :> A conjugates B;");
+    // Identification may be empty (8.2.3.1).
+    kerml_accepted("type :> A;");
+    kerml_accepted("#M type T :> A;");
+    kerml_accepted("class C { type T :> A; }");
+}
+
+#[test]
+fn a_type_is_bounded_by_its_rules() {
+    // A part is required. Held as a file by
+    // tests/rejection/kerml-type-declaration-requires-a-specialization-or-conjugation.kerml.
+    kerml_rejected("type T;");
+    kerml_rejected("type T { }");
+    kerml_rejected("type T specializes;");
+    // `:` is TYPED_BY, a feature's; a type specializes (8.2.2.7).
+    kerml_rejected("type T : A;");
+    // TypeRelationshipPart* follows the required part and is not one (8.2.4.1.1).
+    kerml_rejected("type T disjoint from A;");
+    // SysML states no Type (ADR-0014).
+    let sysml = parse("type T :> A;", Language::SysMl);
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 

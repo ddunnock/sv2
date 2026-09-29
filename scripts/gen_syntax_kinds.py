@@ -192,6 +192,22 @@ NODES = [
         "ChainingPart",
         "`'chains' ( OwnedFeatureChaining | FeatureChain )`. `KerML` 8.2.4.3.1.",
     ),
+    # KerML's Type, which declares through TypeDeclaration rather than a classifier's
+    # ClassifierDeclaration, and the SpecializationPart and OwnedSpecialization it owns.
+    # KerML 8.2.4.1.1, 8.2.4.1.2.
+    ("Type", "`TypePrefix 'type' TypeDeclaration TypeBody`. `KerML` 8.2.4.1.1."),
+    (
+        "TypeDeclaration",
+        (
+            "`'all'? Identification OwnedMultiplicity? ( SpecializationPart | "
+            "ConjugationPart )+ TypeRelationshipPart*`. `KerML` 8.2.4.1.1."
+        ),
+    ),
+    (
+        "SpecializationPart",
+        ("`SPECIALIZES OwnedSpecialization ( ',' OwnedSpecialization )*`. `KerML` 8.2.4.1.1."),
+    ),
+    ("OwnedSpecialization", "`GeneralType`. `KerML` 8.2.4.1.2."),
     # The standalone Conjugation, a NonFeatureElement. KerML 8.2.4.1.3.
     (
         "Conjugation",

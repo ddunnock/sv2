@@ -537,6 +537,14 @@ pub enum SyntaxKind {
     OwnedConjugation,
     /// `'chains' ( OwnedFeatureChaining | FeatureChain )`. `KerML` 8.2.4.3.1.
     ChainingPart,
+    /// `TypePrefix 'type' TypeDeclaration TypeBody`. `KerML` 8.2.4.1.1.
+    Type,
+    /// `'all'? Identification OwnedMultiplicity? ( SpecializationPart | ConjugationPart )+ TypeRelationshipPart*`. `KerML` 8.2.4.1.1.
+    TypeDeclaration,
+    /// `SPECIALIZES OwnedSpecialization ( ',' OwnedSpecialization )*`. `KerML` 8.2.4.1.1.
+    SpecializationPart,
+    /// `GeneralType`. `KerML` 8.2.4.1.2.
+    OwnedSpecialization,
     /// `( 'conjugation' Identification )? 'conjugate' ... CONJUGATES ... RelationshipBody`. `KerML` 8.2.4.1.3.
     Conjugation,
     /// `( 'disjoining' Identification )? 'disjoint' ... 'from' ... RelationshipBody`. `KerML` 8.2.4.1.4.
@@ -1615,6 +1623,10 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::ConjugationPart,
     SyntaxKind::OwnedConjugation,
     SyntaxKind::ChainingPart,
+    SyntaxKind::Type,
+    SyntaxKind::TypeDeclaration,
+    SyntaxKind::SpecializationPart,
+    SyntaxKind::OwnedSpecialization,
     SyntaxKind::Conjugation,
     SyntaxKind::Disjoining,
     SyntaxKind::Redefinition,

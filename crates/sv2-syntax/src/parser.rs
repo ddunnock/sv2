@@ -2138,6 +2138,7 @@ impl<'a> Parser<'a> {
                     || self.at_kerml_connector(n)
                     || self.at_kerml_step(n)
                     || self.at_relationship_declaration(n).is_some()
+                    || self.at_kerml_type(n)
             }
             Language::SysMl => {
                 self.at_sysml_keyword_member(n)
@@ -2971,6 +2972,7 @@ impl<'a> Parser<'a> {
                         || self.at_kerml_connector(0)
                         || self.at_kerml_step(0)
                         || self.at_relationship_declaration(0).is_some()
+                        || self.at_kerml_type(0)
                 }
                 Language::SysMl => {
                     self.at_definition_element(0)
@@ -4042,6 +4044,9 @@ impl<'a> Parser<'a> {
         {
             // NonFeatureElements (KerML 8.2.3.4.3) SysML does not state at all.
             self.relationship_declaration(declaration);
+        } else if self.language == Language::KerMl && self.at_kerml_type(0) {
+            // Another: SysML has no Type production.
+            self.kerml_type();
         } else if self.language == Language::KerMl {
             self.error_expected("a package, a classifier or a dependency");
         } else if let Some(node) = self
@@ -13921,6 +13926,8 @@ impl<'a> Parser<'a> {
             self.dependency();
         } else if let Some(declaration) = self.at_relationship_declaration(0) {
             self.relationship_declaration(declaration);
+        } else if self.at_kerml_type(0) {
+            self.kerml_type();
         } else if let Some(classifier) = self.at_classifier(0) {
             self.classifier(classifier);
         } else if self.at_kerml_succession(0) {
@@ -14220,6 +14227,115 @@ impl<'a> Parser<'a> {
             .find(|c| self.nth_is_keyword(after, c.keyword))
     }
 
+    /// Whether a `KerML` `Type` starts at the `n`th meaningful token: `type`, reserved
+    /// (`KerML` 8.2.2.6), after a `TypePrefix`.
+    fn at_kerml_type(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_type_prefix(n), "type")
+    }
+
+    // production: Type@kerml
+    //
+    // Type = TypePrefix 'type' TypeDeclaration TypeBody          (KerML 8.2.4.1.1)
+    //
+    // A NonFeatureElement (8.2.3.4.3), KerML's alone, and NOT a Classifier: it declares
+    // through TypeDeclaration, whose part is required, where the eight classifiers
+    // declare through ClassifierDeclaration, whose part is optional and is a
+    // SuperclassingPart. So it has its own recogniser beside `at_classifier` rather than a
+    // row in CLASSIFIERS. The metaclass is Type (8.3.3.1.10, receipt 5200b0a5):
+    // `abstract type A specializes Base::Anything;` (KerML 7.3.2.2, receipt 632d1e41;
+    // Simple Tests/Types.kerml:2).
+    //
+    // implied specialization: none. checkTypeSpecialization (KerML 8.3.3.1.10) requires
+    //     every Type to specialize Base::Anything, but "no implied relationship shall be
+    //     inserted to satisfy this constraint for a Type that is not a Classifier or a
+    //     Feature" (KerML 8.4.3.2, receipt fd895569): a bare Type satisfies it by what it
+    //     writes or not at all. Checking it is sv2-resolve's, which does not do so yet.
+    fn kerml_type(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Type);
+        self.type_prefix();
+        self.expect_keyword("type");
+        self.type_declaration();
+        self.type_body();
+        self.finish_node();
+    }
+
+    // production: TypeDeclaration@kerml
+    //
+    // TypeDeclaration : Type =
+    //     ( isSufficient ?= 'all' )? Identification
+    //     ( ownedRelationship += OwnedMultiplicity )?
+    //     ( SpecializationPart | ConjugationPart )+
+    //     TypeRelationshipPart*                                   (KerML 8.2.4.1.1)
+    //
+    // The clause's `+`, where the Pilot writes the group once (KerML.xtext:323-328):
+    // deviation TypeDeclaration, follow_spec, keeps it and leaves the rules against two
+    // conjugations, or a conjugation beside a specialization, to validation. So `type T
+    // :> A conjugates B;` parses and `type T;` does not: "a type declaration defines
+    // either one or more owned specializations ... or a conjugator" (7.3.2.2).
+    //
+    // constraint: Type::validateTypeAtMostOneConjugator (KerML 8.3.3.1.10), and
+    //     Conjugation's rule that a conjugated type is no Specialization's specific
+    //     (8.3.3.1.2, receipt eabb0d9b). Validity, not syntax (ADR-0002).
+    fn type_declaration(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::TypeDeclaration);
+        self.eat_optional_keyword("all");
+        self.identification();
+        if self.at(SyntaxKind::LBracket) {
+            self.owned_multiplicity();
+        }
+        if !self.at_superclassing() && !self.at_conjugation_part() {
+            self.error_expected("`specializes`, `:>`, `conjugates` or `~`");
+        }
+        loop {
+            if self.at_superclassing() {
+                self.specialization_part();
+            } else if self.at_conjugation_part() {
+                self.conjugation_part();
+            } else {
+                break;
+            }
+        }
+        self.type_relationship_parts();
+        self.finish_node();
+    }
+
+    // production: SpecializationPart@kerml
+    //
+    // SpecializationPart : Type =
+    //     SPECIALIZES ownedRelationship += OwnedSpecialization
+    //     ( ',' ownedRelationship += OwnedSpecialization )*      (KerML 8.2.4.1.1)
+    //
+    // A type's, where a classifier writes a SuperclassingPart of the same text over
+    // OwnedSubclassifications, names only. `at_superclassing` asks for SPECIALIZES, which
+    // both open on.
+    fn specialization_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::SpecializationPart);
+        self.terminal(SyntaxKind::ColonGt, "specializes", "`:>` or `specializes`");
+        self.owned_specialization();
+        while self.at(SyntaxKind::Comma) {
+            self.bump();
+            self.owned_specialization();
+        }
+        self.finish_node();
+    }
+
+    // production: OwnedSpecialization@kerml
+    //
+    // OwnedSpecialization : Specialization = GeneralType         (KerML 8.2.4.1.2)
+    //
+    // A Specialization the type owns, its general a name or a feature chain: `type T :>
+    // a.b;`. GeneralType contributes to it, so the node wraps what `general_type` reads,
+    // as `chainable_target` wraps the other owned relationships' targets.
+    fn owned_specialization(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::OwnedSpecialization);
+        self.general_type();
+        self.finish_node();
+    }
+
     /// The index just past a `TypePrefix` written from the `n`th token.
     fn skip_type_prefix(&self, n: usize) -> usize {
         self.skip_prefix_metadata(n + usize::from(self.nth_is_keyword(n, "abstract")))
@@ -14337,7 +14453,7 @@ impl<'a> Parser<'a> {
     // Scoped `kerml`: SysML states no such part, and a .sysml file never reaches this
     // (ADR-0014). Read as the `TypeRelationshipPart*` that ends ClassifierDeclaration
     // (8.2.4.2.1) and, through FeatureRelationshipPart's first alternative, FeatureDeclaration
-    // (8.2.4.3.1); TypeDeclaration's is the same star, and Type is unimplemented.
+    // (8.2.4.3.1), and TypeDeclaration (8.2.4.1.1).
     //
     // An alternation with no node, as ConnectorDeclaration is; the part says which. The
     // four open on four reserved keywords (8.2.2.6), `disjoint`, `unions`, `intersects`
