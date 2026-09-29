@@ -2075,11 +2075,12 @@ impl<'a> Parser<'a> {
     /// body, which is why it is asked for by name rather than by the token alone. Tokens
     /// before `n` are never looked at; they belong to whatever encloses this construct.
     ///
-    /// `KerML` never answers yes, because its bodies are not read (see `body_expression`).
+    /// Both languages ask it: the positions are `KerML`'s own clauses, and each language
+    /// reads its own body there (`body_expression`). Inside a `KerML` function or
+    /// expression body the collision it settles is `at_kerml_result_expression`'s:
+    /// `x->collect { in xx; y->select { in z; z } }` has a nested body in its result
+    /// expression, and that `{` completes nothing.
     fn opens_body_expression(&self, n: usize, i: usize) -> bool {
-        if self.language != Language::SysMl {
-            return false;
-        }
         let Some(prev) = i.checked_sub(1).filter(|&p| p >= n) else {
             return false;
         };
@@ -6880,7 +6881,7 @@ impl<'a> Parser<'a> {
         self.wrap_at(start, &PRIMARY_ARGUMENT);
         self.bump();
         self.eat_trivia();
-        if self.at(SyntaxKind::LBrace) && self.language == Language::SysMl {
+        if self.at(SyntaxKind::LBrace) {
             self.body_argument_member();
         } else {
             self.error_expected("a `{` body after `.`");
@@ -6893,8 +6894,8 @@ impl<'a> Parser<'a> {
     /// A `BodyArgumentMember` reaches `BodyExpression`, which opens on `{`
     /// (`ExpressionBody`, `KerML` 8.2.5.8.3), so a `.` with a `{` after it is a collect. A
     /// chain asks for a name after its `.` (`at_feature_chain`), and a `{` is not one, so
-    /// the two never both answer. Asked in both languages, so that a `.kerml` collect is
-    /// reported at its body rather than at its dot.
+    /// the two never both answer. Asked in both languages, each of which reads its own
+    /// `ExpressionBody` (`body_expression`).
     fn at_collect_expression(&self) -> bool {
         self.at(SyntaxKind::Dot) && self.nth_is(1, SyntaxKind::LBrace)
     }
@@ -6914,14 +6915,13 @@ impl<'a> Parser<'a> {
     // EmptyResultMember, as the clause names none. `.?` lexes as a single DotQuestion, so
     // neither the feature chain nor anything else that reads a `.` can take it.
     //
-    // A .kerml body is reported at its `{`, for the reason `function_operation_expression`
-    // gives: KerML's ExpressionBody reaches FunctionBodyPart@kerml, which is unimplemented.
+    // The body is each language's own ExpressionBody: see `body_expression`.
     fn select_expression(&mut self, start: rowan::Checkpoint) {
         self.start_node_at(start, SyntaxKind::SelectExpression);
         self.wrap_at(start, &PRIMARY_ARGUMENT);
         self.bump();
         self.eat_trivia();
-        if self.at(SyntaxKind::LBrace) && self.language == Language::SysMl {
+        if self.at(SyntaxKind::LBrace) {
             self.body_argument_member();
         } else {
             self.error_expected("a `{` body after `.?`");
@@ -6994,9 +6994,7 @@ impl<'a> Parser<'a> {
     // QualifiedName (ReferenceTyping, 8.2.5.8.1). None is optional, so anything else is
     // reported, and the EmptyResultMember is still built so the node is whole.
     //
-    // A KerML body is reported rather than read: KerML's ExpressionBody is
-    // `'{' FunctionBodyPart '}'` and FunctionBodyPart@kerml is unimplemented. Reading
-    // SysML's CalculationBody there instead would give a .kerml file SysML's elements.
+    // The body is each language's own ExpressionBody: see `body_expression`.
     fn function_operation_expression(&mut self, start: rowan::Checkpoint) {
         self.start_node_at(start, SyntaxKind::FunctionOperationExpression);
         self.wrap_at(start, &PRIMARY_ARGUMENT);
@@ -7004,7 +7002,7 @@ impl<'a> Parser<'a> {
         self.instantiated_type_member();
         if self.at(SyntaxKind::LParen) {
             self.argument_list();
-        } else if self.at(SyntaxKind::LBrace) && self.language == Language::SysMl {
+        } else if self.at(SyntaxKind::LBrace) {
             self.body_argument_member();
         } else if self.at_feature_reference() {
             self.function_reference_argument_member();
@@ -7112,8 +7110,16 @@ impl<'a> Parser<'a> {
     // expression body in the corpus is braced. The callers dispatch on `{`, which is the
     // narrowing; tests/rejection/expression-body-is-braced.sysml holds it.
     //
-    // ExpressionBody@kerml, `'{' FunctionBodyPart '}'`, is NOT marked and not read at all:
-    // the callers do not reach here from a .kerml file.
+    // production: ExpressionBody@kerml
+    //
+    // ExpressionBody : Expression = '{' FunctionBodyPart '}'     (KerML 8.2.5.8.3)
+    //
+    // KerML's own, read in a .kerml file with no deviation: the FunctionBodyPart a
+    // function's body has (8.2.5.7.1), so `x->collect {in xx; xx + 1}` owns a parameter
+    // and a result expression (Simple Tests/Expressions.kerml:15). Braced only, as
+    // SysML's is by the narrowing above, but here because the clause writes no `;`
+    // alternative. Reading SysML's CalculationBody in a .kerml file would give it SysML's
+    // elements, which is why the language decides.
     //
     // The CalculationBody node is inside an ExpressionBody node because the Pilot's
     // ExpressionBody is an Expression whose content IS a CalculationBody fragment
@@ -7123,14 +7129,26 @@ impl<'a> Parser<'a> {
         self.start_node(SyntaxKind::BodyExpression);
         self.start_node(SyntaxKind::ExpressionBodyMember);
         self.start_node(SyntaxKind::ExpressionBody);
-        // Every SysML expression body is read by the deviation: under the printed
-        // grammar SysML has no ExpressionBody of its own and would reach KerML's.
-        // deviation: ExpressionBody
-        self.note_deviation(
-            "ExpressionBody",
-            "an expression body read as a calculation body",
-        );
-        self.calculation_body();
+        match self.language {
+            Language::SysMl => {
+                // Every SysML expression body is read by the deviation: under the
+                // printed grammar SysML has no ExpressionBody of its own and would reach
+                // KerML's.
+                // deviation: ExpressionBody
+                self.note_deviation(
+                    "ExpressionBody",
+                    "an expression body read as a calculation body",
+                );
+                self.calculation_body();
+            }
+            Language::KerMl => {
+                self.expect(SyntaxKind::LBrace, "`{`");
+                self.depth += 1;
+                self.function_body_part();
+                self.depth -= 1;
+                self.expect(SyntaxKind::RBrace, "`}`");
+            }
+        }
         self.finish_node();
         self.finish_node();
         self.finish_node();
@@ -7263,9 +7281,9 @@ impl<'a> Parser<'a> {
             self.invocation_expression();
         } else if self.at_feature_reference() {
             self.feature_reference_expression();
-        } else if self.at(SyntaxKind::LBrace) && self.language == Language::SysMl {
-            // BaseExpression's BodyExpression alternative (8.2.5.8.3). SysML only, for
-            // the reason `function_operation_expression` gives.
+        } else if self.at(SyntaxKind::LBrace) {
+            // BaseExpression's BodyExpression alternative (8.2.5.8.3), each language's
+            // own body: see `body_expression`.
             self.body_expression();
         } else {
             self.error_expected("an expression");

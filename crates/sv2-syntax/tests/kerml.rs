@@ -983,6 +983,91 @@ fn a_kerml_filter_package_takes_its_declaration_directly() {
     kerml_rejected("package P { private import A::**[]; }");
 }
 
+// -- ExpressionBody, KerML 8.2.5.8.3 -------------------------------------------------
+//
+//   BodyExpression       = ownedRelationship += ExpressionBodyMember
+//   ExpressionBodyMember = ownedMemberFeature = ExpressionBody
+//   ExpressionBody       = '{' FunctionBodyPart '}'
+//
+// KerML's own, over the FunctionBodyPart of 8.2.5.7.1. SysML states none and reads a
+// CalculationBody by deviation ExpressionBody; a .kerml body is read as KerML's, with no
+// deviation note.
+
+#[test]
+fn a_kerml_expression_body_reads_the_corpus_forms() {
+    // Simple Tests/Expressions.kerml:15, a collect: a parameter, then the result.
+    let parsed = kerml_accepted("package P { c = x->collect {in xx; xx + 1}; }");
+    assert!(parsed.deviations().is_empty(), "{:?}", parsed.deviations());
+    let tree = render(&parsed.syntax());
+    assert_eq!(
+        child_kinds(&tree, "ExpressionBody"),
+        ["LBrace", "FunctionBodyPart", "RBrace"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "FunctionBodyPart"),
+        ["OwnedFeatureMember", "ResultExpressionMember"],
+        "{tree}"
+    );
+    assert!(!has_node(&tree, "CalculationBody"), "{tree}");
+    // Expressions.kerml:16-19: the collect and select shorthands, a select, and a
+    // reduce whose body is followed by a second reduce by function reference.
+    kerml_accepted(
+        "package P {\n\tc1 = x.{in xx; xx + 1}; \n\td = x->select {in xx; xx != null};\n\t\
+         d1 = x.?{in xx; xx != null};\n\te = x->reduce {in s; in t; s + t}->reduce '+';\n}",
+    );
+    // Expansion.kerml:3: three parameters.
+    kerml_accepted("package Expansion { feature x = x->select {in y; in w; in z; w+1}; }");
+    // BaseExpression's BodyExpression alternative (8.2.5.8.3), where an operand is.
+    let base = render(&kerml_accepted("feature c = { 1 };").syntax());
+    assert!(has_node(&base, "BodyExpression"), "{base}");
+}
+
+#[test]
+fn a_kerml_expression_body_nests_in_a_result_expression() {
+    // A result expression may hold a body of its own: the inner `{` opens a
+    // BodyExpression after `->select` (8.2.5.8.2), and completes no feature, so `y` is
+    // the select's operand and not a keywordless feature named `y`.
+    let tree = render(
+        &kerml_accepted("package P { feature c = x->collect { in xx; y->select { in z; z } }; }")
+            .syntax(),
+    );
+    assert_eq!(
+        tree.lines()
+            .filter(|l| l.trim() == "ExpressionBody")
+            .count(),
+        2,
+        "{tree}"
+    );
+    assert_eq!(
+        tree.lines()
+            .filter(|l| l.trim() == "ResultExpressionMember")
+            .count(),
+        2,
+        "{tree}"
+    );
+    // And a keywordless feature valued by a body is still an item, not the result: its
+    // `;` completes it after the body closes.
+    let item = render(&kerml_accepted("inv { c = { 1 }; c }").syntax());
+    assert_eq!(
+        child_kinds(&item, "FunctionBodyPart"),
+        ["OwnedFeatureMember", "ResultExpressionMember"],
+        "{item}"
+    );
+}
+
+#[test]
+fn a_kerml_expression_body_is_bounded_by_its_rules() {
+    // Its items are KerML's: no SysML usage (ADR-0014). Held as a file by
+    // tests/rejection/kerml-expression-body-owns-kerml-elements.kerml.
+    kerml_rejected("feature c = x->collect { part p; 1 };");
+    // The result expression takes no `;` (8.2.5.7.1).
+    kerml_rejected("feature c = x->collect { in xx; xx + 1; };");
+    kerml_rejected("feature c = x->collect { in xx; xx + 1 ;");
+    // Braced only: `;` is FunctionBody's other form, not ExpressionBody's (8.2.5.8.3).
+    kerml_rejected("feature c = x->collect ;;");
+}
+
 // -- multiplicity, KerML 8.2.5.11 ------------------------------------------------
 //
 //   OwnedMultiplicity      = ownedRelatedElement += OwnedMultiplicityRange
