@@ -519,6 +519,8 @@ pub enum SyntaxKind {
     Metaclass,
     /// `TypePrefix 'assoc' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2.
     Association,
+    /// `TypePrefix 'assoc' 'struct' ClassifierDeclaration TypeBody`. `KerML` 8.2.5.4.
+    AssociationStructure,
     /// `TypePrefix 'behavior' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2.
     Behavior,
     /// `TypePrefix 'interaction' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2.
@@ -1614,6 +1616,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::DataType,
     SyntaxKind::Metaclass,
     SyntaxKind::Association,
+    SyntaxKind::AssociationStructure,
     SyntaxKind::Behavior,
     SyntaxKind::Interaction,
     SyntaxKind::TypePrefix,

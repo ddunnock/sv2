@@ -162,6 +162,10 @@ NODES = [
     ("DataType", "`TypePrefix 'datatype' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2."),
     ("Metaclass", "`TypePrefix 'metaclass' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2."),
     ("Association", "`TypePrefix 'assoc' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2."),
+    (
+        "AssociationStructure",
+        "`TypePrefix 'assoc' 'struct' ClassifierDeclaration TypeBody`. `KerML` 8.2.5.4.",
+    ),
     ("Behavior", "`TypePrefix 'behavior' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2."),
     ("Interaction", "`TypePrefix 'interaction' ClassifierDeclaration TypeBody`. `KerML` 8.2.4.2."),
     ("TypePrefix", "`'abstract'? PrefixMetadataMember*`. `KerML` 8.2.4.1."),

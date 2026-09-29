@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-29T13:31:19Z",
+    "regenerated_utc": "2026-09-29T13:35:41Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 470,
-      "unimplemented": 84,
+      "implemented": 471,
+      "unimplemented": 83,
       "absent": 0,
-      "percent": 84.8
+      "percent": 85.0
     },
     "tests": {
-      "unit": 685,
+      "unit": 687,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 287,
+      "negative_cases": 288,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "a60652a Read KerML's type declaration, `type A specializes Base::Anything;`",
       "fbeaf55 Read KerML's standalone conjugation, `conjugate A ~ B;`",
       "d46b17c Read KerML's standalone disjoining, `disjoint A from B;`",
       "928b32d Read KerML's standalone redefinition, `redefinition a redefines b;`",
       "b5c1564 Read KerML's standalone subsetting, `subset g subsets f;`",
       "45a5fe7 Read KerML's standalone feature typing, `typing f : B;`",
       "f18566e Read KerML's standalone subclassification, `subclassifier C :> A;`",
-      "a31ddec Read KerML's standalone specialization, `subtype A :> B;`",
-      "fa4c9b6 Read KerML's standalone feature inverting, `inverse a of b;`"
+      "a31ddec Read KerML's standalone specialization, `subtype A :> B;`"
     ]
   },
   "authored": {

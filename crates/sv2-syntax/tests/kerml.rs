@@ -240,18 +240,21 @@ fn the_other_feature_elements_are_unimplemented_rather_than_accepted() {
 // DataType    = TypePrefix 'datatype'    ClassifierDeclaration TypeBody
 // Metaclass   = TypePrefix 'metaclass'   ClassifierDeclaration TypeBody
 // Association = TypePrefix 'assoc'       ClassifierDeclaration TypeBody
+// AssociationStructure = TypePrefix 'assoc' 'struct' ClassifierDeclaration TypeBody
+//                                                                     (8.2.5.4)
 // Behavior    = TypePrefix 'behavior'    ClassifierDeclaration TypeBody
 // Interaction = TypePrefix 'interaction' ClassifierDeclaration TypeBody
 
 /// Every keyword of the shared spine, taken from the derived units rather than from
 /// the clause prose, because the units are what the parser's table transcribes.
-const CLASSIFIER_KEYWORDS: [&str; 8] = [
+const CLASSIFIER_KEYWORDS: [&str; 9] = [
     "classifier",
     "class",
     "struct",
     "datatype",
     "metaclass",
     "assoc",
+    "assoc struct",
     "behavior",
     "interaction",
 ];
@@ -2673,6 +2676,61 @@ fn a_type_is_bounded_by_its_rules() {
     kerml_rejected("type T disjoint from A;");
     // SysML states no Type (ADR-0014).
     let sysml = parse("type T :> A;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
+// -- AssociationStructure, KerML 8.2.5.4 --------------------------------------------
+//
+//   AssociationStructure = TypePrefix 'assoc' 'struct' ClassifierDeclaration TypeBody
+//
+// One of the classifiers, and the one of two keywords: `assoc` alone is Association.
+
+#[test]
+fn an_association_structure_reads_the_corpus_forms() {
+    // Simple Tests/Associations.kerml:15-18.
+    let tree = render(
+        &kerml_accepted(
+            "assoc struct C {\n\t\tconst end [1] feature a;\n\t\tconst end feature b;\n\t}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "AssociationStructure"),
+        [
+            "TypePrefix",
+            "KwAssoc",
+            "KwStruct",
+            "ClassifierDeclaration",
+            "TypeBody"
+        ],
+        "{tree}"
+    );
+    assert!(!has_node(&tree, "Association"), "{tree}");
+    // KerML 7.4.5.3's example, after the two structs it names.
+    kerml_accepted(
+        "struct LegalEntity {\n    var feature assetsOwned [*] ordered : Asset;\n}\nstruct \
+         Asset {\n    var feature owningEntities [1..*] : LegalEntity;\n}\nassoc struct \
+         ExtendedAssetOwnership { // Specializes Objects::BinaryLinkObject by default.\n    end \
+         feature owner : LegalEntity crosses ownedAsset.owningEntities;\n    end feature \
+         ownedAsset : Asset crosses owner.assetsOwned;\n    feature valuationOnPurchase : \
+         MonetaryValue;\n    // The values of the feature \"revaluations\" may change over \
+         time.\n    var feature revaluations[*] ordered : MonetaryValue;\n}",
+    );
+    // `assoc` alone is still an Association, and `struct` alone a Structure.
+    let assoc = render(&kerml_accepted("assoc A;").syntax());
+    assert!(has_node(&assoc, "Association"), "{assoc}");
+    assert!(!has_node(&assoc, "AssociationStructure"), "{assoc}");
+}
+
+#[test]
+fn an_association_structure_is_bounded_by_its_rules() {
+    // The two words in that order (8.2.5.4). Held as a file by
+    // tests/rejection/kerml-association-structure-is-assoc-then-struct.kerml.
+    kerml_rejected("struct assoc C;");
+    // TypePrefix before both words, never between.
+    kerml_rejected("assoc abstract struct C;");
+    // SysML's definitions are not KerML classifiers (ADR-0014).
+    let sysml = parse("assoc struct C;", Language::SysMl);
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 

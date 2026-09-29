@@ -1368,59 +1368,65 @@ const SIMPLE_DEFINITIONS: [SimpleDefinition; 8] = [
     },
 ];
 
-/// A `KerML` classifier production: one keyword over a shared spine.
+/// A `KerML` classifier production: its keywords over a shared spine.
 ///
-/// Eight productions of `KerML` 8.2.4.2 are stated as `TypePrefix KEYWORD
-/// ClassifierDeclaration TypeBody`, differing in the keyword and nothing else. The
+/// Nine productions of `KerML` 8.2.4.2 and 8.2.5.4 are stated as `TypePrefix KEYWORDS
+/// ClassifierDeclaration TypeBody`, differing in the keywords and nothing else. The
 /// derived units say so mechanically, so this table is a transcription rather than a
-/// judgment, and writing eight near-identical methods would hide that they agree.
+/// judgment, and writing nine near-identical methods would hide that they agree.
 ///
-/// `Function` and `Predicate` share the shape but take a `FunctionBody`, and `Type`
-/// takes a `TypeDeclaration` rather than a `ClassifierDeclaration`. None of those three
-/// is implemented, and none is in this table, because the table is exactly the set whose
-/// spine is shared.
+/// `Function` and `Predicate` share the shape but take a `FunctionBody`, and are not
+/// implemented; `Type` takes a `TypeDeclaration` rather than a `ClassifierDeclaration`,
+/// and is read by `kerml_type`. None is in this table, because the table is exactly the
+/// set whose spine is shared.
 #[derive(Clone, Copy)]
 struct Classifier {
-    /// The one keyword that says which production this is.
-    keyword: &'static str,
+    /// The keywords that say which production this is, in order: one, or `assoc
+    /// struct`'s two.
+    keywords: &'static [&'static str],
     /// The node the production builds.
     node: SyntaxKind,
 }
 
 /// Every classifier production sharing the `ClassifierDeclaration TypeBody` spine.
 ///
-/// The keywords are disjoint, so the order decides nothing.
-const CLASSIFIERS: [Classifier; 8] = [
+/// ORDER MATTERS once: `assoc struct` is before `assoc`, whose one keyword is its first,
+/// so the first match is the longest. Every other first keyword is its own.
+const CLASSIFIERS: [Classifier; 9] = [
     Classifier {
-        keyword: "classifier",
+        keywords: &["classifier"],
         node: SyntaxKind::Classifier,
     },
     Classifier {
-        keyword: "class",
+        keywords: &["class"],
         node: SyntaxKind::Class,
     },
     Classifier {
-        keyword: "struct",
+        keywords: &["struct"],
         node: SyntaxKind::Structure,
     },
     Classifier {
-        keyword: "datatype",
+        keywords: &["datatype"],
         node: SyntaxKind::DataType,
     },
     Classifier {
-        keyword: "metaclass",
+        keywords: &["metaclass"],
         node: SyntaxKind::Metaclass,
     },
     Classifier {
-        keyword: "assoc",
+        keywords: &["assoc", "struct"],
+        node: SyntaxKind::AssociationStructure,
+    },
+    Classifier {
+        keywords: &["assoc"],
         node: SyntaxKind::Association,
     },
     Classifier {
-        keyword: "behavior",
+        keywords: &["behavior"],
         node: SyntaxKind::Behavior,
     },
     Classifier {
-        keyword: "interaction",
+        keywords: &["interaction"],
         node: SyntaxKind::Interaction,
     },
 ];
@@ -14193,6 +14199,7 @@ impl<'a> Parser<'a> {
     // production: Association
     // production: Behavior
     // production: Interaction
+    // production: AssociationStructure
     //
     // Classifier  = TypePrefix 'classifier'  ClassifierDeclaration TypeBody
     // Class       = TypePrefix 'class'       ClassifierDeclaration TypeBody
@@ -14203,8 +14210,21 @@ impl<'a> Parser<'a> {
     // Behavior    = TypePrefix 'behavior'    ClassifierDeclaration TypeBody
     // Interaction = TypePrefix 'interaction' ClassifierDeclaration TypeBody
     //                                                            (KerML 8.2.4.2)
+    // AssociationStructure =
+    //     TypePrefix 'assoc' 'struct' ClassifierDeclaration TypeBody (KerML 8.2.5.4)
     //
-    // Eight productions, one method, as the seven usages share `simple_usage`. Each is
+    // AssociationStructure is both an Association and a Structure (8.3.4.4.3, receipt
+    // 544b43ab), declared "like a regular association ..., but using the keyword assoc
+    // struct" (7.4.5.3, receipt ae11cb00).
+    //
+    // implied specialization: Objects::BinaryLinkObject for a binary AssociationStructure,
+    //     else Objects::LinkObject, where its own superclassifications do not reach one
+    //     (checkAssociationStructureBinarySpecialization,
+    //     checkAssociationStructureSpecialization, KerML 8.3.4.4.3), "implicitly given a
+    //     default superclassification" (7.4.5.3). sv2-hir's to inject; nothing is written
+    //     into the tree.
+    //
+    // Nine productions, one method, as the seven usages share `simple_usage`. Each is
     // marked separately because each IS fully implemented: what none of them implements
     // lives below, in ClassifierDeclaration's optional parts and in TypePrefix, and is
     // recorded there.
@@ -14212,7 +14232,9 @@ impl<'a> Parser<'a> {
         self.eat_trivia();
         self.start_node(classifier.node);
         self.type_prefix();
-        self.expect_keyword(classifier.keyword);
+        for word in classifier.keywords {
+            self.expect_keyword(word);
+        }
         self.classifier_declaration();
         self.type_body();
         self.finish_node();
@@ -14221,10 +14243,12 @@ impl<'a> Parser<'a> {
     /// Which of `CLASSIFIERS` starts at the `n`th meaningful token, if any.
     fn at_classifier(&self, n: usize) -> Option<Classifier> {
         let after = self.skip_type_prefix(n);
-        CLASSIFIERS
-            .iter()
-            .copied()
-            .find(|c| self.nth_is_keyword(after, c.keyword))
+        CLASSIFIERS.iter().copied().find(|c| {
+            c.keywords
+                .iter()
+                .enumerate()
+                .all(|(i, word)| self.nth_is_keyword(after + i, word))
+        })
     }
 
     /// Whether a `KerML` `Type` starts at the `n`th meaningful token: `type`, reserved
