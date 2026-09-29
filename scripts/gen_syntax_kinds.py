@@ -192,6 +192,14 @@ NODES = [
         "ChainingPart",
         "`'chains' ( OwnedFeatureChaining | FeatureChain )`. `KerML` 8.2.4.3.1.",
     ),
+    # The standalone Conjugation, a NonFeatureElement. KerML 8.2.4.1.3.
+    (
+        "Conjugation",
+        (
+            "`( 'conjugation' Identification )? 'conjugate' ... CONJUGATES ... "
+            "RelationshipBody`. `KerML` 8.2.4.1.3."
+        ),
+    ),
     # The standalone Disjoining, a NonFeatureElement. KerML 8.2.4.1.4.
     (
         "Disjoining",

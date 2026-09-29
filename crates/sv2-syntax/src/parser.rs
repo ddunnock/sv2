@@ -643,6 +643,8 @@ enum RelationshipDeclaration {
     Redefinition,
     /// `Disjoining`, `disjoining` or `disjoint` (8.2.4.1.4).
     Disjoining,
+    /// `Conjugation`, `conjugation` or `conjugate` (8.2.4.1.3).
+    Conjugation,
 }
 
 /// Which of `KerML` `Connector`'s three declaration forms is written (`KerML` 8.2.5.5.1).
@@ -2106,8 +2108,8 @@ impl<'a> Parser<'a> {
     ///
     /// Of `NonFeatureElement`, `Package` and `LibraryPackage` — shared units, the same
     /// productions in both grammars — `Dependency`, `FeatureInverting`, `Specialization`,
-    /// `Subclassification`, `FeatureTyping`, `Subsetting`, `Redefinition`, `Disjoining`
-    /// and the eight classifiers of 8.2.4.2 are implemented. Of
+    /// `Subclassification`, `FeatureTyping`, `Subsetting`, `Redefinition`, `Disjoining`,
+    /// `Conjugation` and the eight classifiers of 8.2.4.2 are implemented. Of
     /// `FeatureElement`'s ten alternatives, `Feature`, `Step`, `Connector`,
     /// `BindingConnector` and `Succession` are. The rest (`expr`, `inv`, `flow`,
     /// `succession flow`, …) are reported rather than read.
@@ -13849,7 +13851,7 @@ impl<'a> Parser<'a> {
     // production's own parts are read, and the two alternations below it are read as far
     // as NonFeatureElement and FeatureElement are — Package, Dependency, FeatureInverting,
     // Specialization, Subclassification, FeatureTyping, Subsetting, Redefinition,
-    // Disjoining and the eight classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
+    // Disjoining, Conjugation and the eight classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
     // node, as FeatureSpecialization has none: the element read says which was taken.
     //
     // An owned related element is the relationship's ownedRelatedElement, with no
@@ -14496,6 +14498,11 @@ impl<'a> Parser<'a> {
         if self.nth_is_keyword(n, "disjoining") || self.nth_is_keyword(n, "disjoint") {
             return Some(RelationshipDeclaration::Disjoining);
         }
+        // `conjugation` and `conjugate` likewise; a ConjugationPart writes `conjugates` or
+        // `~`, and only after a declaration.
+        if self.nth_is_keyword(n, "conjugation") || self.nth_is_keyword(n, "conjugate") {
+            return Some(RelationshipDeclaration::Conjugation);
+        }
         let word = self.skip_specialization_prefix(n);
         if self.nth_is_keyword(word, "subtype") {
             Some(RelationshipDeclaration::Specialization)
@@ -14522,6 +14529,7 @@ impl<'a> Parser<'a> {
             RelationshipDeclaration::Subsetting => self.subsetting(),
             RelationshipDeclaration::Redefinition => self.redefinition(),
             RelationshipDeclaration::Disjoining => self.disjoining(),
+            RelationshipDeclaration::Conjugation => self.conjugation(),
         }
     }
 
@@ -14838,6 +14846,49 @@ impl<'a> Parser<'a> {
         self.expect_keyword("disjoint");
         self.name_or_owned_feature_chain();
         self.expect_keyword("from");
+        self.name_or_owned_feature_chain();
+        self.relationship_body();
+        self.finish_node();
+    }
+
+    // production: Conjugation@kerml
+    //
+    // Conjugation =
+    //     ( 'conjugation' Identification )?
+    //     'conjugate'
+    //     ( conjugatedType = [QualifiedName]
+    //     | conjugatedType = FeatureChain
+    //       { ownedRelatedElement += conjugatedType }
+    //     )
+    //     CONJUGATES
+    //     ( originalType = [QualifiedName]
+    //     | originalType = FeatureChain
+    //       { ownedRelatedElement += originalType }
+    //     )
+    //     RelationshipBody                                       (KerML 8.2.4.1.3)
+    //
+    // CONJUGATES = '~' | 'conjugates'                            (KerML 8.2.2.7)
+    //
+    // A Relationship whose conjugatedType inherits the originalType's features with
+    // their directions reversed (8.3.3.1.2, receipt eabb0d9b): `conjugation c1 conjugate
+    // Conjugate1 conjugates Original;` (KerML 7.3.2.4, receipt 2107419a; Simple
+    // Tests/Types.kerml:25). Each side a name or a feature chain, as Disjoining's are.
+    // One original type: the production writes no list.
+    //
+    // constraint: none on Conjugation itself (8.3.3.1.2 lists none);
+    //     Type::validateTypeAtMostOneConjugator (KerML 8.3.3.1.10) limits a type's OWNED
+    //     conjugations, a validity check downstream (ADR-0002). No implied specialization
+    //     attaches.
+    fn conjugation(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Conjugation);
+        if self.at_keyword("conjugation") {
+            self.expect_keyword("conjugation");
+            self.identification();
+        }
+        self.expect_keyword("conjugate");
+        self.name_or_owned_feature_chain();
+        self.terminal(SyntaxKind::Tilde, "conjugates", "`~` or `conjugates`");
         self.name_or_owned_feature_chain();
         self.relationship_body();
         self.finish_node();

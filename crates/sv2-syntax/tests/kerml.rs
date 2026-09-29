@@ -2458,6 +2458,94 @@ fn a_disjoining_is_bounded_by_its_rules() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// -- Conjugation, KerML 8.2.4.1.3 ---------------------------------------------------
+//
+//   Conjugation = ( 'conjugation' Identification )?
+//                 'conjugate' ( [QualifiedName] | FeatureChain )
+//                 CONJUGATES  ( [QualifiedName] | FeatureChain )
+//                 RelationshipBody
+//   CONJUGATES  = '~' | 'conjugates'                                      (8.2.2.7)
+//
+// A NonFeatureElement (8.2.3.4.3). NOT the ConjugationPart a declaration may write,
+// `feature f conjugates g`, which has no first target (8.2.4.1.1).
+
+#[test]
+fn a_conjugation_reads_the_corpus_forms() {
+    // Simple Tests/Types.kerml:25-26, one of each CONJUGATES spelling.
+    let word = render(
+        &kerml_accepted("conjugation c1 conjugate Conjugate1 conjugates Original;").syntax(),
+    );
+    assert_eq!(
+        child_kinds(&word, "Conjugation"),
+        [
+            "KwConjugation",
+            "Identification",
+            "KwConjugate",
+            "QualifiedName",
+            "KwConjugates",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{word}"
+    );
+    let tilde = render(&kerml_accepted("conjugation c2 conjugate Conjugate2 ~ Original;").syntax());
+    assert_eq!(
+        child_kinds(&tilde, "Conjugation"),
+        [
+            "KwConjugation",
+            "Identification",
+            "KwConjugate",
+            "QualifiedName",
+            "Tilde",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{tilde}"
+    );
+    // KerML 7.3.2.4's examples: a body, and the keyword omitted.
+    kerml_accepted(
+        "conjugation c2 conjugate Conjugate2 ~ Original {\n    doc /* This conjugation is \
+         equivalent to c1. */\n}",
+    );
+    kerml_accepted(
+        "package P { conjugate Conjugate1 conjugates Original; conjugate Conjugate2 ~ Original; }",
+    );
+    // Either type may be a feature chain (8.2.4.1.3).
+    let chained = render(&kerml_accepted("conjugate a.b ~ c.d;").syntax());
+    assert_eq!(
+        child_kinds(&chained, "Conjugation"),
+        [
+            "KwConjugate",
+            "OwnedFeatureChain",
+            "Tilde",
+            "OwnedFeatureChain",
+            "RelationshipBody"
+        ],
+        "{chained}"
+    );
+}
+
+#[test]
+fn a_conjugation_is_bounded_by_its_rules() {
+    kerml_rejected("conjugate A;");
+    kerml_rejected("conjugate A ~;");
+    kerml_rejected("conjugation c A ~ B;");
+    // `conjugates B;` is not a Conjugation missing its first type but a keywordless
+    // Feature whose FeatureDeclaration is a bare ConjugationPart: `( EndFeaturePrefix |
+    // BasicFeaturePrefix ) FeatureDeclaration`, the prefix empty (8.2.4.3.1).
+    let feature = render(&kerml_accepted("conjugates B;").syntax());
+    assert!(has_node(&feature, "ConjugationPart"), "{feature}");
+    assert!(!has_node(&feature, "Conjugation"), "{feature}");
+    // One original type: the production writes no list (8.2.4.1.3). Held as a file by
+    // tests/rejection/kerml-conjugation-relates-two-types.kerml.
+    kerml_rejected("conjugate A ~ B, C;");
+    // CONJUGATES is `~` or `conjugates`; `:>` is SPECIALIZES's (8.2.2.7).
+    kerml_rejected("conjugate A :> B;");
+    // SysML states no Conjugation declaration (ADR-0014).
+    let sysml = parse("conjugate A ~ B;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------
 //
 //   TypeBodyElement    = NonFeatureMember | FeatureMember | AliasMember | Import
