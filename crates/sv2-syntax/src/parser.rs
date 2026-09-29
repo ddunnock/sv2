@@ -3616,6 +3616,10 @@ impl<'a> Parser<'a> {
             self.kerml_step();
         } else if self.at_kerml_invariant(0) {
             self.kerml_invariant();
+        } else if self.at_kerml_expression(0) {
+            self.kerml_expression();
+        } else if self.at_kerml_boolean_expression(0) {
+            self.kerml_boolean_expression();
         } else {
             self.feature();
         }
@@ -3630,6 +3634,8 @@ impl<'a> Parser<'a> {
             || self.at_kerml_connector(n)
             || self.at_kerml_step(n)
             || self.at_kerml_invariant(n)
+            || self.at_kerml_expression(n)
+            || self.at_kerml_boolean_expression(n)
     }
 
     /// Whether a `KerML` `Succession` starts at the `n`th meaningful token.
@@ -3816,6 +3822,94 @@ impl<'a> Parser<'a> {
         } else {
             // deviation: Invariant
             self.note_deviation("Invariant", "an invariant with no declaration");
+        }
+        if self.at_value_part() {
+            self.value_part();
+        }
+        self.function_body();
+        self.finish_node();
+    }
+
+    /// Whether a `KerML` `Expression` starts at the `n`th meaningful token: a
+    /// `FeaturePrefix`, then `expr`, reserved (`KerML` 8.2.2.6).
+    fn at_kerml_expression(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_feature_prefix(n), "expr")
+    }
+
+    /// Whether a `KerML` `BooleanExpression` starts at the `n`th meaningful token: a
+    /// `FeaturePrefix`, then `bool`, reserved (`KerML` 8.2.2.6).
+    fn at_kerml_boolean_expression(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_feature_prefix(n), "bool")
+    }
+
+    // production: Expression@kerml
+    //
+    // Expression : Expression =
+    //     FeaturePrefix
+    //     'expr' FeatureDeclaration ValuePart?
+    //     FunctionBody                                           (KerML 8.2.5.7.2)
+    //
+    // A Step typed by Functions (8.3.4.7.3, receipt 9df44f16), "declared as a step ...
+    // using the keyword expr" with a function's body (7.4.8.3, receipt a4252270):
+    // `expr totalMass: TotalMass { in mass; in sub; }` (Simple Tests/Expressions.kerml:50).
+    //
+    // The FeatureDeclaration is optional although the clause writes it bare: deviation
+    // Expression (follow_xtext), KERML11-181, which names this clause. So `expr { 1 }`
+    // parses and carries a PARSE-DEVIATION note (ADR-0022), as Invariant's does.
+    //
+    // implied specialization: Performances::evaluations
+    // constraint: Expression::checkExpressionSpecialization and the result constraints
+    //     of 8.3.4.7.3 (checkExpressionResultBindingConnector,
+    //     validateExpressionResultExpressionMembership,
+    //     validateExpressionResultParameterMembership). Injections and validity,
+    //     sv2-hir's and sv2-resolve's; nothing is written into the tree.
+    fn kerml_expression(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Expression);
+        self.feature_prefix();
+        self.expect_keyword("expr");
+        if self.at_feature_declaration() {
+            self.feature_declaration();
+        } else {
+            // deviation: Expression
+            self.note_deviation("Expression", "an expression with no declaration");
+        }
+        if self.at_value_part() {
+            self.value_part();
+        }
+        self.function_body();
+        self.finish_node();
+    }
+
+    // production: BooleanExpression@kerml
+    //
+    // BooleanExpression : BooleanExpression =
+    //     FeaturePrefix
+    //     'bool' FeatureDeclaration ValuePart?
+    //     FunctionBody                                           (KerML 8.2.5.7.4)
+    //
+    // "A boolean expression is declared as an expression ..., using the keyword bool"
+    // (7.4.8.5, receipt 1dd5b04f); the metaclass is BooleanExpression (8.3.4.7.2,
+    // receipt fe24fc2f). Invariant's shape less its `true`/`false`. The declaration's `?`
+    // is deviation BooleanExpression's (follow_xtext, KERML11-181), noted as Expression's
+    // is; the register records that no corpus file exercises the anonymous form.
+    //
+    // implied specialization: Performances::booleanEvaluations
+    // constraint: BooleanExpression::checkBooleanExpressionSpecialization (KerML
+    //     8.3.4.7.2). An injection, sv2-hir's.
+    fn kerml_boolean_expression(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::BooleanExpression);
+        self.feature_prefix();
+        self.expect_keyword("bool");
+        if self.at_feature_declaration() {
+            self.feature_declaration();
+        } else {
+            // deviation: BooleanExpression
+            self.note_deviation(
+                "BooleanExpression",
+                "a boolean expression with no declaration",
+            );
         }
         if self.at_value_part() {
             self.value_part();

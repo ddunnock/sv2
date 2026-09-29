@@ -1309,6 +1309,10 @@ pub enum SyntaxKind {
     MetadataUsageDeclaration,
     /// `FeaturePrefix 'inv' ( 'true' | 'false' )? FeatureDeclaration? ValuePart? FunctionBody`. `KerML` 8.2.5.7.4.
     Invariant,
+    /// `FeaturePrefix 'expr' FeatureDeclaration? ValuePart? FunctionBody`. `KerML` 8.2.5.7.2.
+    Expression,
+    /// `FeaturePrefix 'bool' FeatureDeclaration? ValuePart? FunctionBody`. `KerML` 8.2.5.7.4.
+    BooleanExpression,
     /// `';' | '{' FunctionBodyPart '}'`. `KerML` 8.2.5.7.1.
     FunctionBody,
     /// `( TypeBodyElement | ReturnFeatureMember )* ResultExpressionMember?`. `KerML` 8.2.5.7.1.
@@ -2027,6 +2031,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::MetadataUsage,
     SyntaxKind::MetadataUsageDeclaration,
     SyntaxKind::Invariant,
+    SyntaxKind::Expression,
+    SyntaxKind::BooleanExpression,
     SyntaxKind::FunctionBody,
     SyntaxKind::FunctionBodyPart,
     SyntaxKind::ReturnFeatureMember,

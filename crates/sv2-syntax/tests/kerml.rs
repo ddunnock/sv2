@@ -3035,6 +3035,137 @@ fn an_invariant_is_bounded_by_its_rules() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// -- Expression and BooleanExpression, KerML 8.2.5.7.2, 8.2.5.7.4 -------------------
+//
+//   Expression        = FeaturePrefix 'expr' FeatureDeclaration? ValuePart? FunctionBody
+//   BooleanExpression = FeaturePrefix 'bool' FeatureDeclaration? ValuePart? FunctionBody
+//
+// The declarations' `?` are deviations Expression and BooleanExpression's (follow_xtext,
+// KERML11-181), as Invariant's is.
+
+#[test]
+fn an_expression_reads_the_corpus_forms() {
+    // Simple Tests/Expressions.kerml:50 and :53, and :23 with a direction.
+    let tree = render(&kerml_accepted("expr totalMass: TotalMass { in mass; in sub; }").syntax());
+    assert_eq!(
+        child_kinds(&tree, "Expression"),
+        [
+            "FeaturePrefix",
+            "KwExpr",
+            "FeatureDeclaration",
+            "FunctionBody"
+        ],
+        "{tree}"
+    );
+    // :53 is in a feature's body; here in a class's, the same TypeBody (8.2.4.1.1).
+    kerml_accepted("class C { expr s { in x; return : Boolean; } }");
+    let directed = render(&kerml_accepted("behavior B { in expr whileTest {v > 3} }").syntax());
+    assert!(has_node(&directed, "Expression"), "{directed}");
+    assert!(has_node(&directed, "ResultExpressionMember"), "{directed}");
+    // Variable Feature Examples/Enhancements/ExtendedOccurrences.kerml:16-23: a
+    // redefinition, parameters, and bindings in the body, no result expression. Its name
+    // `at` is written `'at'`, and :25's `while` `'while'`: neither is a KerML reserved
+    // word (8.2.2.6), but SysML's are reserved in a .kerml file too until pending decision
+    // keyword-table-per-language splits the table, as `'state'` is below.
+    kerml_accepted(
+        "class C {\n        expr 'at' {\n        \t:>> that : Timeslice;\n            in interval : \
+         Interval;\n            return result : Timeslice;\n\n            binding \
+         result.portionOf = that;\n            binding result.interval = interval;\n        }\n}",
+    );
+    // :25-26, whose parameter `timeslice` is SysML's portion keyword and no KerML one:
+    // quoted the same way.
+    kerml_accepted("class C { expr 'while' { in 'timeslice' : Timeslice; } }");
+}
+
+#[test]
+fn an_expression_reads_the_examples_of_7_4_8_3() {
+    // `state` is written `'state'`: it is no KerML reserved word (8.2.2.6), but SysML's
+    // are reserved in a .kerml file too until pending decision keyword-table-per-language
+    // splits the table, as the_while_until_example_of_7_17_12_parses writes `'step'`.
+    kerml_accepted(
+        "expr computation : ComputeDynamics {\n    // Parameters redefined parameters of \
+         ComputeDynamics.\n    in 'state';\n    in dt;\n    return result;\n}\nexpr \
+         vehicleComputation subsets computation {\n    // Input parameters are inherited, \
+         result is redefined.\n    return : VehicleState;\n}",
+    );
+    let result = render(
+        &kerml_accepted(
+            "expr : VehicleDynamics {\n    in initialState;\n    in time;\n    return \
+             result;\n\n    vehicleComputation(initialState, time)\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&result, "FunctionBodyPart"),
+        [
+            "OwnedFeatureMember",
+            "OwnedFeatureMember",
+            "ReturnFeatureMember",
+            "ResultExpressionMember"
+        ],
+        "{result}"
+    );
+    kerml_accepted(
+        "expr : Dynamics {\n    in initialState;\n    in time;\n    return result : \
+         VehicleState =\n        vehicleComputation(initialState, time);\n}",
+    );
+}
+
+#[test]
+fn a_boolean_expression_reads_the_examples_of_7_4_8_5() {
+    // `bool assemblyChecks[*] : isAssembled;`, and FuelTank's `bool isFull`, less the
+    // `readonly` feature (see `an_invariant_reads_the_examples_of_7_4_8_5`).
+    let checks = render(&kerml_accepted("bool assemblyChecks[*] : isAssembled;").syntax());
+    assert_eq!(
+        child_kinds(&checks, "BooleanExpression"),
+        [
+            "FeaturePrefix",
+            "KwBool",
+            "FeatureDeclaration",
+            "FunctionBody"
+        ],
+        "{checks}"
+    );
+    kerml_accepted(
+        "class FuelTank {\n    feature fuelLevel : Real;\n    bool isFull { fuelLevel == \
+         maxFuelLevel }\n}",
+    );
+}
+
+#[test]
+fn an_expression_without_a_declaration_is_admitted_by_deviation() {
+    // KERML11-181 names both clauses. Each form carries its own entry's note.
+    for (source, entry) in [
+        ("expr { 1 }", "deviation Expression"),
+        ("bool { true }", "deviation BooleanExpression"),
+    ] {
+        let notes: Vec<String> = kerml_accepted(source)
+            .deviations()
+            .iter()
+            .map(|d| d.message().to_owned())
+            .collect();
+        assert_eq!(notes.len(), 1, "{source}: {notes:?}");
+        assert!(notes[0].contains(entry), "{source}: {notes:?}");
+    }
+    assert!(kerml_accepted("expr e { 1 }").deviations().is_empty());
+    // `expr : T { }` declares by its typing, a FeatureSpecializationPart: no deviation.
+    assert!(kerml_accepted("expr : T { 1 }").deviations().is_empty());
+}
+
+#[test]
+fn an_expression_is_bounded_by_its_rules() {
+    // `true`/`false` are Invariant's alone (8.2.5.7.4).
+    kerml_rejected("bool true { x }");
+    kerml_rejected("expr false { x }");
+    // FunctionBody is `;` or braced (8.2.5.7.1). Held as a file by
+    // tests/rejection/kerml-expression-ends-in-a-function-body.kerml.
+    kerml_rejected("expr e");
+    kerml_rejected("expr e { 1; }");
+    // SysML's expressions are usages: `calc`, not `expr` (ADR-0014).
+    let sysml = parse("expr e { 1 }", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------
 //
 //   TypeBodyElement    = NonFeatureMember | FeatureMember | AliasMember | Import
