@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-29T16:59:50Z",
+    "regenerated_utc": "2026-09-29T17:57:40Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,13 +17,13 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 506,
-      "unimplemented": 48,
+      "implemented": 507,
+      "unimplemented": 47,
       "absent": 0,
-      "percent": 91.3
+      "percent": 91.5
     },
     "tests": {
-      "unit": 719,
+      "unit": 720,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 296,
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "a294ae4 Mark KerML's NonFeatureElement whole, read by one method at both sites",
       "d669e22 Read KerML's type featuring, `featuring F of y by C;`",
       "500e5b3 Close the session: TypeFeaturing follows the BNF's `by`, and is next",
       "6a99050 Record the next step: KerML's TypedBy owns its typing directly",
       "517a9f3 Mark KerML's owned subsettings, redefinitions, references and crosses",
       "2b1db57 Read KerML's named multiplicity, `multiplicity zeroOrMore [0..*];`",
       "7403e26 Close the session: KerML's declarations, bodies and flows recorded, multiplicity next",
-      "d423f72 Mark KerML's FeatureElement whole, and read its namespace, `namespace N { }`",
-      "c665231 Read KerML flows and succession flows, `flow a.y to b.x1;`"
+      "d423f72 Mark KerML's FeatureElement whole, and read its namespace, `namespace N { }`"
     ]
   },
   "authored": {

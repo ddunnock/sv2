@@ -326,6 +326,41 @@ fn an_annotating_element_is_a_member_element() {
     kerml_accepted("class A { doc /* on A */ }");
 }
 
+// AnnotatingElement = Comment | Documentation | TextualRepresentation | MetadataFeature
+//                                                                     (KerML 8.2.3.3.1)
+//
+// Reached as a MemberElement (8.2.3.4.1) and as a relationship body's OwnedAnnotation
+// (8.2.3.1). One instance of each alternative, with the node its production builds, at
+// both. The Comment is written with its keyword: a bare REGULAR_COMMENT at member
+// position is still trivia here (see `at_annotating_member` in the parser), which is
+// MemberElement's gap, not this alternation's.
+const ANNOTATING_ELEMENTS: [(&str, &str); 4] = [
+    ("comment C about X /* on X */", "Comment"),
+    ("doc /* on the owner */", "Documentation"),
+    ("rep r language \"alf\" /* f(); */", "TextualRepresentation"),
+    // KerML's fourth alternative is the clause's own MetadataFeature (8.2.5.12); SysML's
+    // is a MetadataUsage by deviation AnnotatingElement.
+    ("metadata m : M;", "MetadataFeature"),
+];
+
+#[test]
+fn every_annotating_element_is_a_member_and_an_owned_annotation() {
+    for (element, kind) in ANNOTATING_ELEMENTS {
+        let member = render(&kerml_accepted(&format!("package P {{ {element} }}")).syntax());
+        assert!(has_node(&member, kind), "{kind}: {member}");
+        let owned = render(&kerml_accepted(&format!("featuring y by C {{ {element} }}")).syntax());
+        assert!(has_node(&owned, "OwnedAnnotation"), "{owned}");
+        assert!(has_node(&owned, kind), "{kind}: {owned}");
+    }
+    // `@` is MetadataFeature's other keyword (8.2.5.12), at both sites.
+    kerml_accepted("package P { @M; }");
+    kerml_accepted("featuring y by C { @M; }");
+    // Of the four only MetadataFeature takes PrefixMetadataMembers (8.2.5.12);
+    // Documentation opens on `doc` (8.2.3.3.2).
+    kerml_accepted("featuring y by C { #S metadata m : M; }");
+    kerml_rejected("featuring y by C { #S doc /* d */ }");
+}
+
 // -- Feature, KerML 8.2.4.3.1 -----------------------------------------------------
 //
 // Feature = ( FeaturePrefix ( 'feature' | PrefixMetadataMember ) FeatureDeclaration?

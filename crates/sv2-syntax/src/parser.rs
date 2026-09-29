@@ -4513,7 +4513,7 @@ impl<'a> Parser<'a> {
         self.member_prefix();
         let mut element = MemberElement::Other;
         if self.at_annotating_member(0) {
-            self.annotating_element_at_member();
+            self.annotating_element();
         } else if self.language == Language::KerMl {
             // MemberElement's other alternative (KerML 8.2.3.4.1). The guard is here
             // rather than left to `at_member_element`'s caller, because a dispatch that
@@ -5070,7 +5070,7 @@ impl<'a> Parser<'a> {
             );
         }
         self.member_prefix();
-        self.annotating_element_at_member();
+        self.annotating_element();
         self.finish_node();
     }
 
@@ -14799,38 +14799,57 @@ impl<'a> Parser<'a> {
     //
     // The fourth alternative is MetadataUsage by deviation AnnotatingElement
     // (follow_xtext); the clause prints MetadataFeature. MetadataUsage is read less its
-    // `#` extension keywords, so AnnotatingElement gets no marker, and it gets no node —
+    // `#` extension keywords, so AnnotatingElement@sysml gets no marker, and it gets no node —
     // like DefinitionElement it is an alternation whose matched element already says
-    // which alternative was taken. A MetadataUsage is dispatched before the
-    // comment-significant mode the other three need; see `annotating_element_at_member`.
+    // which alternative was taken; `annotating_element` reads it.
+    //
+    // The trivia before the node is eaten in the mode the element will be read in: with
+    // comments significant for the three comment-bodied alternatives, whose body may be
+    // the very next comment, and without for a metadata element, which
+    // `annotating_element` asks about with the same peek.
     fn owned_annotation(&mut self) {
         if self.at_metadata_element(0) {
             self.eat_trivia();
-            self.start_node(SyntaxKind::OwnedAnnotation);
-            self.metadata_annotating_element();
-            self.finish_node();
-            return;
+        } else {
+            self.with_significant_comments(Self::eat_trivia);
         }
-        self.with_significant_comments(|p| {
-            p.eat_trivia();
-            p.start_node(SyntaxKind::OwnedAnnotation);
-            p.annotating_element();
-            p.finish_node();
-        });
+        self.start_node(SyntaxKind::OwnedAnnotation);
+        self.annotating_element();
+        self.finish_node();
     }
 
-    /// An `AnnotatingElement` at member position: a `MetadataUsage`, or one of the three
-    /// whose body is a `REGULAR_COMMENT`.
-    ///
-    /// Those three read their body as a TOKEN, so they run with comments significant. A
-    /// metadata usage has no such body, and inside that mode an ordinary `/* */` between
-    /// its tokens would be read as a stray token, so it is dispatched before the mode is
-    /// entered rather than inside `annotating_element`.
-    fn annotating_element_at_member(&mut self) {
+    // production: AnnotatingElement@kerml
+    //
+    // AnnotatingElement : AnnotatingElement =
+    //     Comment | Documentation | TextualRepresentation | MetadataFeature
+    //                                                            (KerML 8.2.3.3.1)
+    //
+    // The alternation, all four alternatives, and the one dispatch for every place an
+    // annotating element is reached: `OwnedAnnotation` in a relationship body,
+    // `MemberElement` in KerML (8.2.3.4.1), and `DefinitionElement` in SysML (8.2.2.6.1).
+    // Writing it twice is how they would drift apart. No node: the element read says
+    // which alternative was taken.
+    //
+    // Marked in KerML only. KerML's fourth alternative is the clause's own
+    // MetadataFeature, whole (MetadataFeature@kerml); SysML's is a MetadataUsage by
+    // deviation AnnotatingElement, read less its `#` extension keywords, so
+    // AnnotatingElement@sysml stays unmarked.
+    //
+    // The three comment-bodied alternatives read their body as a TOKEN, so they run with
+    // comments significant. A metadata element has no such body, and inside that mode an
+    // ordinary `/* */` between its tokens would be read as a stray token, so it is
+    // dispatched before the mode is entered.
+    //
+    // A bare REGULAR_COMMENT at member position is still trivia (see
+    // `at_annotating_member`): MemberElement's gap, since it is MemberElement that asks
+    // whether an annotating element starts there, and MemberElement@kerml stays unmarked
+    // for it. This alternation reads a bare Comment wherever it is asked to, as it is in
+    // a relationship body.
+    fn annotating_element(&mut self) {
         if self.at_metadata_element(0) {
             self.metadata_annotating_element();
         } else {
-            self.with_significant_comments(Self::annotating_element);
+            self.with_significant_comments(Self::comment_bodied_annotating_element);
         }
     }
 
@@ -14857,27 +14876,14 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// The `AnnotatingElement` alternation, shared by every place one may appear.
+    /// `Comment | Documentation | TextualRepresentation`, the three of `AnnotatingElement`'s
+    /// alternatives whose body is a `REGULAR_COMMENT` (`KerML` 8.2.3.3.1, `SysML`
+    /// 8.2.2.4.1). Read only by `annotating_element`, which dispatches the fourth first.
     ///
-    /// `AnnotatingElement = Comment | Documentation | TextualRepresentation |
-    /// MetadataUsage` in `SysML` 8.2.2.4.1, and the same with `MetadataFeature` in
-    /// `KerML` 8.2.3.3.1 — the one difference is the fourth alternative. `SysML`'s is
-    /// read, by `metadata_annotating_element` and not here (see
-    /// `annotating_element_at_member`), and so is `KerML`'s.
-    ///
-    /// An annotating element is reached three ways, and this is the one dispatch for all
-    /// of them: `OwnedAnnotation` in a relationship body, `MemberElement` in `KerML`
-    /// (8.2.3.4.1), and `DefinitionElement` in `SysML` (8.2.2.6.1). Writing the
-    /// alternation twice is how the three would drift apart.
-    ///
-    /// The caller enters only on `at_annotating_element` or `at_annotating_member`, less
-    /// the metadata usages it dispatched first, so the `else` never sees a metadata
-    /// element.
-    ///
-    /// The caller is also responsible for `with_significant_comments`: every one of
-    /// these productions ends in a `REGULAR_COMMENT` body, which is trivia unless the
-    /// enclosing context has made it a token.
-    fn annotating_element(&mut self) {
+    /// The caller is responsible for `with_significant_comments`: every one of these
+    /// productions ends in a `REGULAR_COMMENT` body, which is trivia unless the enclosing
+    /// context has made it a token.
+    fn comment_bodied_annotating_element(&mut self) {
         if self.at_keyword("doc") {
             self.documentation();
         } else if self.at_keyword("rep") || self.at_keyword("language") {
