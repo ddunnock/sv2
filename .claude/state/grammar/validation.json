@@ -13,14 +13,11 @@
   },
   "accepted": 311,
   "missed": 0,
-  "caught": 268,
-  "leaked": 5,
+  "caught": 291,
+  "leaked": 2,
   "missed_detail": [],
   "leaked_detail": [
     "tests/rejection/expression-body-is-braced.sysml",
-    "tests/rejection/feature-relationship-part-is-not-implemented.kerml",
-    "tests/rejection/kerml-expression-body-is-not-implemented.kerml",
-    "tests/rejection/kerml-succession-flow-is-not-implemented.kerml",
     "tests/rejection/metadata-access-expression-is-not-implemented.sysml"
   ]
 }
