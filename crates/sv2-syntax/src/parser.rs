@@ -635,6 +635,8 @@ enum RelationshipDeclaration {
     Specialization,
     /// `Subclassification`, `subclassifier` (8.2.4.2.2).
     Subclassification,
+    /// `FeatureTyping`, `typing` (8.2.4.3.2).
+    FeatureTyping,
 }
 
 /// Which of `KerML` `Connector`'s three declaration forms is written (`KerML` 8.2.5.5.1).
@@ -2098,7 +2100,7 @@ impl<'a> Parser<'a> {
     ///
     /// Of `NonFeatureElement`, `Package` and `LibraryPackage` — shared units, the same
     /// productions in both grammars — `Dependency`, `FeatureInverting`, `Specialization`,
-    /// `Subclassification` and the eight classifiers of 8.2.4.2 are implemented. Of
+    /// `Subclassification`, `FeatureTyping` and the eight classifiers of 8.2.4.2 are implemented. Of
     /// `FeatureElement`'s ten alternatives, `Feature`, `Step`, `Connector`,
     /// `BindingConnector` and `Succession` are. The rest (`expr`, `inv`, `flow`,
     /// `succession flow`, …) are reported rather than read.
@@ -13839,7 +13841,7 @@ impl<'a> Parser<'a> {
     // Marked although RelationshipOwnedElement and OwnedRelatedElement are not: this
     // production's own parts are read, and the two alternations below it are read as far
     // as NonFeatureElement and FeatureElement are — Package, Dependency, FeatureInverting,
-    // Specialization, Subclassification and the eight classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
+    // Specialization, Subclassification, FeatureTyping and the eight classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
     // node, as FeatureSpecialization has none: the element read says which was taken.
     //
     // An owned related element is the relationship's ownedRelatedElement, with no
@@ -14486,6 +14488,8 @@ impl<'a> Parser<'a> {
             Some(RelationshipDeclaration::Specialization)
         } else if self.nth_is_keyword(word, "subclassifier") {
             Some(RelationshipDeclaration::Subclassification)
+        } else if self.nth_is_keyword(word, "typing") {
+            Some(RelationshipDeclaration::FeatureTyping)
         } else {
             None
         }
@@ -14497,6 +14501,7 @@ impl<'a> Parser<'a> {
             RelationshipDeclaration::FeatureInverting => self.feature_inverting(),
             RelationshipDeclaration::Specialization => self.specialization(),
             RelationshipDeclaration::Subclassification => self.subclassification(),
+            RelationshipDeclaration::FeatureTyping => self.kerml_feature_typing(),
         }
     }
 
@@ -14652,6 +14657,57 @@ impl<'a> Parser<'a> {
         self.qualified_name();
         self.terminal(SyntaxKind::ColonGt, "specializes", "`:>` or `specializes`");
         self.qualified_name();
+        self.relationship_body();
+        self.finish_node();
+    }
+
+    // production: FeatureTyping@kerml
+    //
+    // FeatureTyping =
+    //     ( 'specialization' Identification )?
+    //     'typing' typedFeature = [QualifiedName]
+    //     TYPED_BY GeneralType
+    //     RelationshipBody                                       (KerML 8.2.4.3.2)
+    //
+    // TYPED_BY = ':' | 'typed' 'by'                              (KerML 8.2.2.7)
+    //
+    // A Specialization whose specific is a Feature and whose general its type (8.3.3.3.7,
+    // receipt a58abb3e): `specialization t1 typing customer typed by Person;` (KerML
+    // 7.3.4.3, receipt de9b153b; Simple Tests/Features.kerml:42). The typed feature is a
+    // name, the type a GeneralType, so a name or a feature chain. One type; a list is a
+    // feature's own typings. The Pilot writes `FeatureType` for GeneralType
+    // (KerML.xtext:664-669); deviations.json records FeatureType xtext_only,
+    // follow_spec, so no production is added for it.
+    //
+    // SCOPED IN THE NAME because SysML states a production of the same name, `FeatureTyping
+    // = OwnedFeatureTyping | ConjugatedPortTyping` (8.2.2.6.5), read by `feature_typing`
+    // (ADR-0015). The NODE is shared, a decision taken knowingly against the nearest
+    // precedent: OwnedMultiplicityRange got a kind of its own beside MultiplicityRange,
+    // but that production has a name of its own, and every node kind here is a
+    // production's name. Two productions of ONE name have no second name to give, and
+    // both are the metaclass FeatureTyping. The first child says which built the node:
+    // `specialization` or `typing` here, where the first QualifiedName is the
+    // typedFeature, and an OwnedFeatureTyping or ConjugatedPortTyping there, whose name
+    // is the type. A typed accessor in sv2-ast reads that child before any other; the
+    // kind's entry in scripts/gen_syntax_kinds.py states both shapes.
+    //
+    // constraint: none on FeatureTyping itself (8.3.3.3.7 lists none); those it inherits
+    //     from Specialization still apply downstream, among them
+    //     validateSpecificationSpecificNotConjugated (8.3.3.1.8). No implied
+    //     specialization attaches: this IS the typing, written out.
+    fn kerml_feature_typing(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FeatureTyping);
+        self.specialization_prefix();
+        self.expect_keyword("typing");
+        self.qualified_name();
+        if self.at(SyntaxKind::Colon) {
+            self.bump();
+        } else {
+            self.expect_keyword("typed");
+            self.expect_keyword("by");
+        }
+        self.general_type();
         self.relationship_body();
         self.finish_node();
     }

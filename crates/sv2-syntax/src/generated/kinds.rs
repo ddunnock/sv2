@@ -1045,7 +1045,7 @@ pub enum SyntaxKind {
     OwnedCrossSubsetting,
     /// `( ':' | 'defined' 'by' ) FeatureTyping`. `SysML` 8.2.2.6.5.
     TypedBy,
-    /// `OwnedFeatureTyping | ConjugatedPortTyping`. `SysML` 8.2.2.6.5.
+    /// `OwnedFeatureTyping | ConjugatedPortTyping`. `SysML` 8.2.2.6.5. Also `KerML` 8.2.4.3.2's `( 'specialization' Identification )? 'typing' [QualifiedName] TYPED_BY GeneralType RelationshipBody`.
     FeatureTyping,
     /// `QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5.
     OwnedFeatureTyping,

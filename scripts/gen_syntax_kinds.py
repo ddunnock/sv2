@@ -1502,7 +1502,19 @@ NODES = [
     ),
     ("OwnedCrossSubsetting", "`QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5."),
     ("TypedBy", "`( ':' | 'defined' 'by' ) FeatureTyping`. `SysML` 8.2.2.6.5."),
-    ("FeatureTyping", "`OwnedFeatureTyping | ConjugatedPortTyping`. `SysML` 8.2.2.6.5."),
+    # TWO productions of one name build this node, both the metaclass FeatureTyping
+    # (KerML 8.3.3.3.7): SysML's, the typing a feature's `:` owns, and KerML's standalone
+    # declaration, `typing f : T;`. The first child tells them apart: an
+    # OwnedFeatureTyping or ConjugatedPortTyping in SysML's, `specialization` or `typing`
+    # in KerML's, whose first QualifiedName is the typedFeature and not the type.
+    (
+        "FeatureTyping",
+        (
+            "`OwnedFeatureTyping | ConjugatedPortTyping`. `SysML` 8.2.2.6.5. Also `KerML` "
+            "8.2.4.3.2's `( 'specialization' Identification )? 'typing' [QualifiedName] "
+            "TYPED_BY GeneralType RelationshipBody`."
+        ),
+    ),
     ("OwnedFeatureTyping", "`QualifiedName | OwnedFeatureChain`. `SysML` 8.2.2.6.5."),
     # The state layer, SysML 8.2.2.18: states, transitions, and the accepter a transition
     # is triggered by. One construct: a state definition that cannot read its body's

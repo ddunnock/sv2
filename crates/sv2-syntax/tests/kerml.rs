@@ -2153,6 +2153,90 @@ fn a_subclassification_is_bounded_by_its_rules() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// -- FeatureTyping, KerML 8.2.4.3.2 -------------------------------------------------
+//
+//   FeatureTyping = ( 'specialization' Identification )?
+//                   'typing' typedFeature = [QualifiedName]
+//                   TYPED_BY GeneralType RelationshipBody
+//   TYPED_BY      = ':' | 'typed' 'by'                                    (8.2.2.7)
+//
+// A NonFeatureElement (8.2.3.4.3). NOT SysML's FeatureTyping (8.2.2.6.5), the typing a
+// feature's `:` owns; the node is the same metaclass's, and its children tell them apart.
+
+#[test]
+fn a_feature_typing_reads_the_corpus_forms() {
+    // Simple Tests/Features.kerml:42-43, one of each TYPED_BY spelling.
+    let words = render(&kerml_accepted("specialization t1 typing f typed by B;").syntax());
+    assert_eq!(
+        child_kinds(&words, "FeatureTyping"),
+        [
+            "KwSpecialization",
+            "Identification",
+            "KwTyping",
+            "QualifiedName",
+            "KwTyped",
+            "KwBy",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{words}"
+    );
+    let colon = render(&kerml_accepted("specialization t2 typing g : A;").syntax());
+    assert_eq!(
+        child_kinds(&colon, "FeatureTyping"),
+        [
+            "KwSpecialization",
+            "Identification",
+            "KwTyping",
+            "QualifiedName",
+            "Colon",
+            "QualifiedName",
+            "RelationshipBody"
+        ],
+        "{colon}"
+    );
+    // The type is a GeneralType, so a feature chain too (8.2.4.1.2); the typed feature
+    // is a name.
+    let chained = render(&kerml_accepted("typing f : a.b;").syntax());
+    assert_eq!(
+        child_kinds(&chained, "FeatureTyping"),
+        [
+            "KwTyping",
+            "QualifiedName",
+            "Colon",
+            "OwnedFeatureChain",
+            "RelationshipBody"
+        ],
+        "{chained}"
+    );
+    // KerML 7.3.4.3's examples.
+    kerml_accepted(
+        "specialization t2 typing employer : Organization {\n    doc /* An employer is an \
+         Organization. */\n}",
+    );
+    kerml_accepted(
+        "package P { typing customer typed by Person; typing employer : Organization; }",
+    );
+    kerml_accepted("class C { private typing f : T; }");
+}
+
+#[test]
+fn a_feature_typing_is_bounded_by_its_rules() {
+    kerml_rejected("typing f;");
+    kerml_rejected("typing f :;");
+    kerml_rejected("typing f typed B;");
+    // KerML spells it `typed by`; `defined by` is SysML's DEFINED_BY (8.2.2.1.2).
+    kerml_rejected("typing f defined by B;");
+    // The typed feature is `[QualifiedName]` alone (8.2.4.3.2). Held as a file by
+    // tests/rejection/kerml-feature-typing-names-its-typed-feature.kerml.
+    kerml_rejected("typing a.b : B;");
+    // One type: a list is a feature's own typings (7.3.4.3).
+    kerml_rejected("typing f : A, B;");
+    // SysML states no FeatureTyping declaration (ADR-0014).
+    let sysml = parse("typing f : B;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------
 //
 //   TypeBodyElement    = NonFeatureMember | FeatureMember | AliasMember | Import
