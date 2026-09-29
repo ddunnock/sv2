@@ -1834,7 +1834,8 @@ NODES = [
         "MultiplicityRange",
         (
             "`'[' ( MultiplicityExpressionMember '..' )? MultiplicityExpressionMember ']'`. "
-            "`SysML` 8.2.2.6.6."
+            "`SysML` 8.2.2.6.6. Also `KerML` 8.2.5.11's named declaration, `'multiplicity' "
+            "Identification MultiplicityBounds TypeBody`."
         ),
     ),
     # KerML's OwnedMultiplicity owns an OwnedMultiplicityRange, whose body is the
@@ -2026,6 +2027,12 @@ NODES = [
             "`( Identification ( ':' | 'defined' 'by' ) )? OwnedFeatureTyping`. `SysML` "
             "8.2.2.27, as deviation `MetadataUsageDeclaration` reads it."
         ),
+    ),
+    # KerML's named multiplicity subsetting another; its range form builds the shared
+    # MultiplicityRange node. KerML 8.2.5.11.
+    (
+        "MultiplicitySubset",
+        "`'multiplicity' Identification Subsets TypeBody`. `KerML` 8.2.5.11.",
     ),
     # KerML's plain Namespace, its declaration and its body. KerML 8.2.3.4.1.
     (

@@ -2199,6 +2199,7 @@ impl<'a> Parser<'a> {
             || self.at_kerml_type(n)
             || self.at_kerml_function(n).is_some()
             || self.at_kerml_namespace(n)
+            || self.nth_is_keyword(n, "multiplicity")
     }
 
     /// Whether a `SysML` member that opens on a KEYWORD starts at the `n`th token.
@@ -3042,6 +3043,7 @@ impl<'a> Parser<'a> {
                         || self.at_kerml_type(0)
                         || self.at_kerml_function(0).is_some()
                         || self.at_kerml_namespace(0)
+                        || self.nth_is_keyword(0, "multiplicity")
                 }
                 Language::SysMl => {
                     self.at_definition_element(0)
@@ -4526,24 +4528,9 @@ impl<'a> Parser<'a> {
             // A NonFeatureElement (KerML 8.2.3.4.3). SysML reaches the same production
             // as a DefinitionElement, through `definition_element` below.
             self.dependency();
-        } else if let Some(declaration) = self
-            .at_relationship_declaration(0)
-            .filter(|_| self.language == Language::KerMl)
-        {
-            // NonFeatureElements (KerML 8.2.3.4.3) SysML does not state at all.
-            self.relationship_declaration(declaration);
-        } else if self.language == Language::KerMl && self.at_kerml_type(0) {
-            // Another: SysML has no Type production.
-            self.kerml_type();
-        } else if let Some(function) = self
-            .at_kerml_function(0)
-            .filter(|_| self.language == Language::KerMl)
-        {
-            // Two more; SysML's are `calc def` and `constraint def`.
-            self.kerml_function(function);
-        } else if self.language == Language::KerMl && self.at_kerml_namespace(0) {
-            // And a plain Namespace, which SysML declares only as a package.
-            self.kerml_namespace();
+        } else if self.language == Language::KerMl && self.kerml_only_non_feature_element() {
+            // NonFeatureElements (KerML 8.2.3.4.3) SysML does not state at all: read by
+            // the call, which answers whether it read one.
         } else if self.language == Language::KerMl {
             self.error_expected("a package, a classifier or a dependency");
         } else if let Some(node) = self
@@ -14697,7 +14684,25 @@ impl<'a> Parser<'a> {
             self.library_package();
         } else if self.at_dependency(0) {
             self.dependency();
-        } else if let Some(declaration) = self.at_relationship_declaration(0) {
+        } else if self.kerml_only_non_feature_element() {
+            // Read by the call.
+        } else if let Some(classifier) = self.at_classifier(0) {
+            self.classifier(classifier);
+        } else if self.at_kerml_keyword_feature_element(0) || self.at_feature(0) {
+            self.feature_element();
+        } else {
+            return false;
+        }
+        true
+    }
+
+    /// A `KerML` `NonFeatureElement` that `SysML` states no production for, if one is
+    /// written here: a relationship declaration, a `Type`, a `Function` or `Predicate`, a
+    /// `Namespace`, or a named `Multiplicity` (8.2.3.4.3). Returns whether one was read.
+    /// Asked by `membership` and `owned_related_element`, the two places that read them,
+    /// so the list cannot drift between them. The caller guards the language.
+    fn kerml_only_non_feature_element(&mut self) -> bool {
+        if let Some(declaration) = self.at_relationship_declaration(0) {
             self.relationship_declaration(declaration);
         } else if self.at_kerml_type(0) {
             self.kerml_type();
@@ -14705,10 +14710,8 @@ impl<'a> Parser<'a> {
             self.kerml_function(function);
         } else if self.at_kerml_namespace(0) {
             self.kerml_namespace();
-        } else if let Some(classifier) = self.at_classifier(0) {
-            self.classifier(classifier);
-        } else if self.at_kerml_keyword_feature_element(0) || self.at_feature(0) {
-            self.feature_element();
+        } else if self.at_keyword("multiplicity") {
+            self.kerml_multiplicity();
         } else {
             return false;
         }
@@ -15074,6 +15077,48 @@ impl<'a> Parser<'a> {
             self.error_expected("`;` or `{` after a namespace declaration");
         }
         self.finish_node();
+        self.finish_node();
+    }
+
+    // production: Multiplicity@kerml
+    // production: MultiplicitySubset@kerml
+    // production: MultiplicityRange@kerml
+    //
+    // Multiplicity       = MultiplicitySubset | MultiplicityRange
+    // MultiplicitySubset = 'multiplicity' Identification Subsets TypeBody
+    // MultiplicityRange  = 'multiplicity' Identification MultiplicityBounds TypeBody
+    //                                                            (KerML 8.2.5.11)
+    //
+    // "A multiplicity feature [is declared] using the keyword multiplicity, optionally
+    // followed by a short name and/or name, and including either a multiplicity range or
+    // a subsetting of another multiplicity" (7.4.12, receipt a672468d). `multiplicity`
+    // is reserved (8.2.2.6) and no prefix precedes it, so the keyword decides; the token
+    // after the Identification decides which: a `[`, or SUBSETS. The alternation builds no
+    // node, as FeatureElement builds none. The metaclasses are Multiplicity (8.3.3.1.9,
+    // receipt 46f724a5), a Feature, and MultiplicityRange (8.3.4.11.2, receipt 4c789163).
+    //
+    // MultiplicityRange@kerml is KerML's name for this declaration, and SysML's for the
+    // bracket a feature writes (8.2.2.6.6); the node is shared, as FeatureTyping's is.
+    // MultiplicityBounds is a fragment and builds no node, so its tokens are this one's.
+    // Subsets is the shared `SUBSETS OwnedSubsetting` a feature specialization reads.
+    //
+    // implied specialization: Base::naturals for a Multiplicity
+    //     (checkMultiplicitySpecialization, KerML 8.3.3.1.9), sv2-hir's; nothing is
+    //     written into the tree.
+    fn kerml_multiplicity(&mut self) {
+        self.eat_trivia();
+        let start = self.builder.checkpoint();
+        self.expect_keyword("multiplicity");
+        self.identification();
+        let node = if self.at(SyntaxKind::LBracket) {
+            self.multiplicity_bounds();
+            SyntaxKind::MultiplicityRange
+        } else {
+            self.subsets();
+            SyntaxKind::MultiplicitySubset
+        };
+        self.type_body();
+        self.start_node_at(start, node);
         self.finish_node();
     }
 

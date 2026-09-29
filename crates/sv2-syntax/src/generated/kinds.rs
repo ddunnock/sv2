@@ -1187,7 +1187,7 @@ pub enum SyntaxKind {
     MultiplicityPart,
     /// `ownedRelatedElement += MultiplicityRange`. `SysML` 8.2.2.6.6.
     OwnedMultiplicity,
-    /// `'[' ( MultiplicityExpressionMember '..' )? MultiplicityExpressionMember ']'`. `SysML` 8.2.2.6.6.
+    /// `'[' ( MultiplicityExpressionMember '..' )? MultiplicityExpressionMember ']'`. `SysML` 8.2.2.6.6. Also `KerML` 8.2.5.11's named declaration, `'multiplicity' Identification MultiplicityBounds TypeBody`.
     MultiplicityRange,
     /// `MultiplicityBounds`, `'[' ( MultiplicityExpressionMember '..' )? MultiplicityExpressionMember ']'`. `KerML` 8.2.5.11 — returns `MultiplicityRange`.
     OwnedMultiplicityRange,
@@ -1307,6 +1307,8 @@ pub enum SyntaxKind {
     MetadataUsage,
     /// `( Identification ( ':' | 'defined' 'by' ) )? OwnedFeatureTyping`. `SysML` 8.2.2.27, as deviation `MetadataUsageDeclaration` reads it.
     MetadataUsageDeclaration,
+    /// `'multiplicity' Identification Subsets TypeBody`. `KerML` 8.2.5.11.
+    MultiplicitySubset,
     /// `PrefixMetadataMember* NamespaceDeclaration NamespaceBody`. `KerML` 8.2.3.4.1.
     Namespace,
     /// `'namespace' Identification`. `KerML` 8.2.3.4.1.
@@ -2046,6 +2048,7 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::MetadataDefinition,
     SyntaxKind::MetadataUsage,
     SyntaxKind::MetadataUsageDeclaration,
+    SyntaxKind::MultiplicitySubset,
     SyntaxKind::Namespace,
     SyntaxKind::NamespaceDeclaration,
     SyntaxKind::NamespaceBody,

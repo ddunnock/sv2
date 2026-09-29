@@ -1408,6 +1408,69 @@ fn a_namespace_is_bounded_by_its_rules() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// -- Multiplicity declarations, KerML 8.2.5.11 --------------------------------------
+//
+//   Multiplicity       = MultiplicitySubset | MultiplicityRange
+//   MultiplicitySubset = 'multiplicity' Identification Subsets TypeBody
+//   MultiplicityRange  = 'multiplicity' Identification MultiplicityBounds TypeBody
+//
+// A NonFeatureElement (8.2.3.4.3). KerML's MultiplicityRange is this named declaration;
+// the bracketed range a feature writes is OwnedMultiplicityRange (see below).
+
+#[test]
+fn a_multiplicity_reads_the_examples_of_7_4_12() {
+    let range = render(&kerml_accepted("multiplicity zeroOrMore [0..*];").syntax());
+    assert_eq!(
+        child_kinds(&range, "MultiplicityRange"),
+        // MultiplicityBounds is a fragment and builds no node (KerML.xtext:774).
+        [
+            "KwMultiplicity",
+            "Identification",
+            "LBracket",
+            "MultiplicityExpressionMember",
+            "DotDot",
+            "MultiplicityExpressionMember",
+            "RBracket",
+            "TypeBody"
+        ],
+        "{range}"
+    );
+    let subset = render(&kerml_accepted("multiplicity m subsets zeroOrMore;").syntax());
+    assert_eq!(
+        child_kinds(&subset, "MultiplicitySubset"),
+        ["KwMultiplicity", "Identification", "Subsets", "TypeBody"],
+        "{subset}"
+    );
+    // In a feature's body, with no name: the multiplicity of the feature (7.4.12).
+    let body = render(
+        &kerml_accepted(
+            "feature driveWheels subsets wheels {\n    multiplicity [2..n];\n}\nfeature \
+             autoCollection {\n    multiplicity subsets zeroOrMore;\n}",
+        )
+        .syntax(),
+    );
+    assert!(has_node(&body, "MultiplicityRange"), "{body}");
+    assert!(has_node(&body, "MultiplicitySubset"), "{body}");
+    assert!(has_node(&body, "NonFeatureMember"), "{body}");
+    // `:>` is SUBSETS's symbol too, and a body is a TypeBody.
+    kerml_accepted("multiplicity <m> m :> zeroOrMore { doc /* d */ }");
+    kerml_accepted("multiplicity one [1] { }");
+}
+
+#[test]
+fn a_multiplicity_is_bounded_by_its_rules() {
+    // A range or a subsetting, one of them (8.2.5.11). Held as a file by
+    // tests/rejection/kerml-multiplicity-needs-a-range-or-a-subsetting.kerml.
+    kerml_rejected("multiplicity m;");
+    kerml_rejected("multiplicity m [1] subsets n;");
+    // Subsets is one subsetting, not a list (SysML 8.2.2.6.5, shared).
+    kerml_rejected("multiplicity m subsets a, b;");
+    kerml_rejected("multiplicity m [1]");
+    // SysML's multiplicity is the bracket alone (ADR-0014).
+    let sysml = parse("multiplicity m [1];", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- multiplicity, KerML 8.2.5.11 ------------------------------------------------
 //
 //   OwnedMultiplicity      = ownedRelatedElement += OwnedMultiplicityRange
