@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-09-29T15:23:23Z",
+    "regenerated_utc": "2026-09-29T15:33:46Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,16 +17,16 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 493,
-      "unimplemented": 61,
+      "implemented": 497,
+      "unimplemented": 57,
       "absent": 0,
-      "percent": 89.0
+      "percent": 89.7
     },
     "tests": {
-      "unit": 710,
+      "unit": 713,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 292,
+      "negative_cases": 293,
       "known_permissive": 0
     },
     "pins": {
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "c665231 Read KerML flows and succession flows, `flow a.y to b.x1;`",
       "8586cb6 Stop rejecting KerML flows by absence: the next commit reads them",
       "0877d3d Read KerML functions and predicates, `function Average { in x; f(x) }`",
       "8846ddc Stop rejecting KerML functions and predicates by absence: the next commit reads them",
       "67c0034 Read KerML expression bodies, `x->collect {in xx; xx + 1}`",
       "49f1c7f Stop rejecting KerML expression bodies by absence: the next commit reads them",
       "6361cf2 Read KerML expressions and boolean expressions, `expr e { 1 }` and `bool b;`",
-      "8492e0c Read KerML invariants and the function body they end in, `inv { age >= 35 }`",
-      "283460b Stop rejecting KerML invariants by absence: the next commit reads them"
+      "8492e0c Read KerML invariants and the function body they end in, `inv { age >= 35 }`"
     ]
   },
   "authored": {

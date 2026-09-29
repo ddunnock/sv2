@@ -1302,6 +1302,112 @@ fn a_flow_is_bounded_by_its_rules() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// -- FeatureElement, KerML 8.2.3.4.3 -------------------------------------------------
+
+#[test]
+fn every_feature_element_is_read_as_a_member_and_in_a_type_body() {
+    // FeatureElement's ten alternatives (8.2.3.4.3), each after a FeaturePrefix, each as
+    // a NamespaceFeatureMember in a package body and a FeatureMember in a type body.
+    let elements = [
+        ("feature f;", "Feature"),
+        ("step s;", "Step"),
+        ("expr e { 1 }", "Expression"),
+        ("bool b { true }", "BooleanExpression"),
+        ("inv i { true }", "Invariant"),
+        ("connector c from a to b;", "Connector"),
+        ("binding b of a = b;", "BindingConnector"),
+        ("succession s first a then b;", "Succession"),
+        ("flow f from a.x to b.y;", "Flow"),
+        ("succession flow f from a.x to b.y;", "SuccessionFlow"),
+    ];
+    for (element, node) in elements {
+        for (source, member) in [
+            (
+                format!("package P {{ abstract {element} }}"),
+                "NamespaceFeatureMember",
+            ),
+            (
+                format!("behavior B {{ abstract {element} }}"),
+                "OwnedFeatureMember",
+            ),
+            // An owned related element of a relationship body (8.2.3.1), and a
+            // function's result parameter (8.2.5.7.1): the other two sites that read one.
+            (
+                format!("dependency a to b {{ abstract {element} }}"),
+                "RelationshipBody",
+            ),
+            (
+                format!("function F {{ return abstract {element} }}"),
+                "ReturnFeatureMember",
+            ),
+        ] {
+            let tree = render(&kerml_accepted(&source).syntax());
+            assert!(has_node(&tree, node), "{source}\n{tree}");
+            assert!(has_node(&tree, member), "{source}\n{tree}");
+        }
+    }
+}
+
+// -- Namespace, KerML 8.2.3.4.1 ----------------------------------------------------
+//
+//   Namespace            = PrefixMetadataMember* NamespaceDeclaration NamespaceBody
+//   NamespaceDeclaration = 'namespace' Identification
+//   NamespaceBody        = ';' | '{' NamespaceBodyElement* '}'
+
+#[test]
+fn a_namespace_reads_the_examples_of_7_2_5_2() {
+    let tree = render(
+        &kerml_accepted(
+            "namespace <'1.1'> N1; // This is an empty namespace.\nnamespace <'1.2'> N2 {\n    \
+             doc /* This is an example of a namespace body. */\n    class C;\n    datatype D;\n    \
+             feature f : C;\n    namespace N3; // This is a nested namespace.\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        tree.lines().filter(|l| l.trim() == "Namespace").count(),
+        3,
+        "{tree}"
+    );
+    let empty = render(&kerml_accepted("namespace <'1.1'> N1;").syntax());
+    assert_eq!(
+        child_kinds(&empty, "Namespace"),
+        ["NamespaceDeclaration", "NamespaceBody"],
+        "{empty}"
+    );
+    assert_eq!(
+        child_kinds(&empty, "NamespaceDeclaration"),
+        ["KwNamespace", "Identification"],
+        "{empty}"
+    );
+    // Its body's feature is a NamespaceFeatureMember, as a package's is, and a
+    // non-feature a NonFeatureMember, visibility and all.
+    let body = render(
+        &kerml_accepted(
+            "namespace N3 {\n    public class C;\n    private datatype D;\n    feature f : C; \
+             // public by default\n}",
+        )
+        .syntax(),
+    );
+    assert!(has_node(&body, "NamespaceFeatureMember"), "{body}");
+    assert!(has_node(&body, "NonFeatureMember"), "{body}");
+    // Prefix metadata before the keyword, an alias and an import in the body.
+    kerml_accepted("#M namespace N { alias X for Y; private import A::*; }");
+}
+
+#[test]
+fn a_namespace_is_bounded_by_its_rules() {
+    // NamespaceBody writes no ElementFilterMember, a package body's alone (8.2.5.13). Held
+    // as a file by tests/rejection/kerml-namespace-body-admits-no-filter.kerml.
+    kerml_rejected("namespace N { filter true; }");
+    kerml_rejected("namespace N");
+    // TypePrefix's `abstract` is a type's, not a namespace's.
+    kerml_rejected("abstract namespace N;");
+    // SysML states no `namespace` declaration (ADR-0014).
+    let sysml = parse("namespace N;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- multiplicity, KerML 8.2.5.11 ------------------------------------------------
 //
 //   OwnedMultiplicity      = ownedRelatedElement += OwnedMultiplicityRange

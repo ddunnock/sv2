@@ -1307,6 +1307,12 @@ pub enum SyntaxKind {
     MetadataUsage,
     /// `( Identification ( ':' | 'defined' 'by' ) )? OwnedFeatureTyping`. `SysML` 8.2.2.27, as deviation `MetadataUsageDeclaration` reads it.
     MetadataUsageDeclaration,
+    /// `PrefixMetadataMember* NamespaceDeclaration NamespaceBody`. `KerML` 8.2.3.4.1.
+    Namespace,
+    /// `'namespace' Identification`. `KerML` 8.2.3.4.1.
+    NamespaceDeclaration,
+    /// `';' | '{' NamespaceBodyElement* '}'`. `KerML` 8.2.3.4.1.
+    NamespaceBody,
     /// `FeaturePrefix 'flow' FlowDeclaration TypeBody`. `KerML` 8.2.5.9.2.
     Flow,
     /// `FeaturePrefix 'succession' 'flow' FlowDeclaration TypeBody`. `KerML` 8.2.5.9.2.
@@ -2040,6 +2046,9 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::MetadataDefinition,
     SyntaxKind::MetadataUsage,
     SyntaxKind::MetadataUsageDeclaration,
+    SyntaxKind::Namespace,
+    SyntaxKind::NamespaceDeclaration,
+    SyntaxKind::NamespaceBody,
     SyntaxKind::Flow,
     SyntaxKind::SuccessionFlow,
     SyntaxKind::PayloadFeatureMember,

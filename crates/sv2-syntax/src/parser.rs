@@ -2154,13 +2154,11 @@ impl<'a> Parser<'a> {
     /// NamespaceFeatureMember = MemberPrefix FeatureElement
     /// ```
     ///
-    /// Of `NonFeatureElement`, `Package` and `LibraryPackage` — shared units, the same
-    /// productions in both grammars — `Dependency`, `FeatureInverting`, `Specialization`,
-    /// `Subclassification`, `FeatureTyping`, `Subsetting`, `Redefinition`, `Disjoining`,
-    /// `Conjugation` and the eight classifiers of 8.2.4.2 are implemented. Of
-    /// `FeatureElement`'s ten alternatives, `Feature`, `Step`, `Connector`,
-    /// `BindingConnector` and `Succession` are. The rest (`expr`, `inv`, `flow`,
-    /// `succession flow`, …) are reported rather than read.
+    /// Of `NonFeatureElement`'s alternatives every one is implemented but `Multiplicity`
+    /// and `TypeFeaturing`: `Package` and `LibraryPackage`, shared units, the same
+    /// productions in both grammars, and `KerML`'s own `Dependency`, `Namespace`, `Type`,
+    /// the classifiers, `Function`, `Predicate` and the relationship declarations. All ten
+    /// of `FeatureElement`'s are.
     ///
     /// This is the check that stops a `SysML` construct being read out of a `KerML`
     /// file. `part def` is not reachable from `NamespaceBodyElement`, so a `.kerml` file
@@ -2200,6 +2198,7 @@ impl<'a> Parser<'a> {
             || self.at_relationship_declaration(n).is_some()
             || self.at_kerml_type(n)
             || self.at_kerml_function(n).is_some()
+            || self.at_kerml_namespace(n)
     }
 
     /// Whether a `SysML` member that opens on a KEYWORD starts at the `n`th token.
@@ -3042,6 +3041,7 @@ impl<'a> Parser<'a> {
                         || self.at_relationship_declaration(0).is_some()
                         || self.at_kerml_type(0)
                         || self.at_kerml_function(0).is_some()
+                        || self.at_kerml_namespace(0)
                 }
                 Language::SysMl => {
                     self.at_definition_element(0)
@@ -3606,8 +3606,15 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    /// The `FeatureElement` a feature member owns (`KerML` 8.2.3.4.3), over the
-    /// alternatives this parser reads.
+    // production: FeatureElement@kerml
+    //
+    // FeatureElement : Feature =
+    //       Feature | Step | Expression | BooleanExpression | Invariant | Connector
+    //     | BindingConnector | Succession | Flow | SuccessionFlow  (KerML 8.2.3.4.3)
+    //
+    // The `FeatureElement` a feature member owns, all ten alternatives. Nine open on a
+    // reserved word after a FeaturePrefix and are asked first; Feature, whose keyword is
+    // optional, is what is left. An alternation with no node: the element says which.
     fn feature_element(&mut self) {
         if self.at_kerml_succession(0) {
             self.kerml_succession();
@@ -4534,6 +4541,9 @@ impl<'a> Parser<'a> {
         {
             // Two more; SysML's are `calc def` and `constraint def`.
             self.kerml_function(function);
+        } else if self.language == Language::KerMl && self.at_kerml_namespace(0) {
+            // And a plain Namespace, which SysML declares only as a package.
+            self.kerml_namespace();
         } else if self.language == Language::KerMl {
             self.error_expected("a package, a classifier or a dependency");
         } else if let Some(node) = self
@@ -14617,10 +14627,10 @@ impl<'a> Parser<'a> {
     //
     // Marked although RelationshipOwnedElement and OwnedRelatedElement are not: this
     // production's own parts are read, and the two alternations below it are read as far
-    // as NonFeatureElement and FeatureElement are — Package, Dependency, FeatureInverting,
-    // Specialization, Subclassification, FeatureTyping, Subsetting, Redefinition,
-    // Disjoining, Conjugation and the eight classifiers; Feature, Connector, Succession and BindingConnector. Neither alternation has a
-    // node, as FeatureSpecialization has none: the element read says which was taken.
+    // as NonFeatureElement and FeatureElement are: every FeatureElement, and every
+    // NonFeatureElement but Multiplicity and TypeFeaturing (see `at_member_element`).
+    // Neither alternation has a node, as FeatureSpecialization has none: the element
+    // read says which was taken.
     //
     // An owned related element is the relationship's ownedRelatedElement, with no
     // Membership between them, so no MemberPrefix is read: `private feature e;` is
@@ -14693,6 +14703,8 @@ impl<'a> Parser<'a> {
             self.kerml_type();
         } else if let Some(function) = self.at_kerml_function(0) {
             self.kerml_function(function);
+        } else if self.at_kerml_namespace(0) {
+            self.kerml_namespace();
         } else if let Some(classifier) = self.at_classifier(0) {
             self.classifier(classifier);
         } else if self.at_kerml_keyword_feature_element(0) || self.at_feature(0) {
@@ -15006,6 +15018,63 @@ impl<'a> Parser<'a> {
                 .enumerate()
                 .all(|(i, word)| self.nth_is_keyword(after + i, word))
         })
+    }
+
+    /// Whether a `KerML` `Namespace` starts at the `n`th meaningful token: `namespace`,
+    /// reserved (`KerML` 8.2.2.6), after any `PrefixMetadataMember`s.
+    fn at_kerml_namespace(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_prefix_metadata(n), "namespace")
+    }
+
+    // production: Namespace@kerml
+    //
+    // Namespace = ( ownedRelationship += PrefixMetadataMember )*
+    //             NamespaceDeclaration NamespaceBody             (KerML 8.2.3.4.1)
+    //
+    // production: NamespaceDeclaration@kerml
+    //
+    // NamespaceDeclaration : Namespace = 'namespace' Identification
+    //
+    // production: NamespaceBody@kerml
+    //
+    // NamespaceBody : Namespace = ';' | '{' NamespaceBodyElement* '}'
+    //
+    // "A namespace that is not a root namespace ..., and does not represent any more
+    // specialized modeling construct ... is declared using the keyword namespace,
+    // optionally followed by a short name and/or name" (7.2.5.2, receipt 5a18c1e2); the
+    // metaclass is Namespace (8.3.2.4.5, receipt 8d19e03e). Its body's elements are the
+    // root's, NamespaceBodyElement (8.2.3.4.1), so Body::Root reads them: no
+    // ElementFilterMember, which is a package body's alone (8.2.5.13).
+    // NamespaceBodyElement is not marked, as NonFeatureElement, which it reaches, is not.
+    //
+    // constraint: Namespace::validateNamespaceDistinguishibility, and the derivations of
+    //     8.3.2.4.5. Validity and derivation, sv2-resolve's.
+    fn kerml_namespace(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Namespace);
+        while self.at(SyntaxKind::Hash) {
+            self.prefix_metadata_member();
+        }
+        self.eat_trivia();
+        self.start_node(SyntaxKind::NamespaceDeclaration);
+        self.expect_keyword("namespace");
+        self.identification();
+        self.finish_node();
+        self.eat_trivia();
+        self.start_node(SyntaxKind::NamespaceBody);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.body_elements(Some(SyntaxKind::RBrace), Body::Root);
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.error_expected("`;` or `{` after a namespace declaration");
+        }
+        self.finish_node();
+        self.finish_node();
     }
 
     /// Which of `KerML`'s `Function` and `Predicate` starts at the `n`th meaningful token,

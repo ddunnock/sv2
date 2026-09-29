@@ -2027,6 +2027,13 @@ NODES = [
             "8.2.2.27, as deviation `MetadataUsageDeclaration` reads it."
         ),
     ),
+    # KerML's plain Namespace, its declaration and its body. KerML 8.2.3.4.1.
+    (
+        "Namespace",
+        "`PrefixMetadataMember* NamespaceDeclaration NamespaceBody`. `KerML` 8.2.3.4.1.",
+    ),
+    ("NamespaceDeclaration", "`'namespace' Identification`. `KerML` 8.2.3.4.1."),
+    ("NamespaceBody", "`';' | '{' NamespaceBodyElement* '}'`. `KerML` 8.2.3.4.1."),
     # KerML's Flow and SuccessionFlow, and the PayloadFeatureMember its FlowDeclaration
     # owns. The FlowDeclaration, FlowEnd and PayloadFeature nodes are SysML's too.
     # KerML 8.2.5.9.2.
