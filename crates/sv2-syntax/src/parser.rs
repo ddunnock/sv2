@@ -2199,6 +2199,7 @@ impl<'a> Parser<'a> {
             || self.at_classifier(n).is_some()
             || self.at_relationship_declaration(n).is_some()
             || self.at_kerml_type(n)
+            || self.at_kerml_function(n).is_some()
     }
 
     /// Whether a `SysML` member that opens on a KEYWORD starts at the `n`th token.
@@ -3040,6 +3041,7 @@ impl<'a> Parser<'a> {
                         || self.at_kerml_keyword_feature_element(0)
                         || self.at_relationship_declaration(0).is_some()
                         || self.at_kerml_type(0)
+                        || self.at_kerml_function(0).is_some()
                 }
                 Language::SysMl => {
                     self.at_definition_element(0)
@@ -4343,6 +4345,12 @@ impl<'a> Parser<'a> {
         } else if self.language == Language::KerMl && self.at_kerml_type(0) {
             // Another: SysML has no Type production.
             self.kerml_type();
+        } else if let Some(function) = self
+            .at_kerml_function(0)
+            .filter(|_| self.language == Language::KerMl)
+        {
+            // Two more; SysML's are `calc def` and `constraint def`.
+            self.kerml_function(function);
         } else if self.language == Language::KerMl {
             self.error_expected("a package, a classifier or a dependency");
         } else if let Some(node) = self
@@ -14450,6 +14458,8 @@ impl<'a> Parser<'a> {
             self.relationship_declaration(declaration);
         } else if self.at_kerml_type(0) {
             self.kerml_type();
+        } else if let Some(function) = self.at_kerml_function(0) {
+            self.kerml_function(function);
         } else if let Some(classifier) = self.at_classifier(0) {
             self.classifier(classifier);
         } else if self.at_kerml_keyword_feature_element(0) || self.at_feature(0) {
@@ -14763,6 +14773,52 @@ impl<'a> Parser<'a> {
                 .enumerate()
                 .all(|(i, word)| self.nth_is_keyword(after + i, word))
         })
+    }
+
+    /// Which of `KerML`'s `Function` and `Predicate` starts at the `n`th meaningful token,
+    /// if either does: `function` or `predicate`, reserved (`KerML` 8.2.2.6), after a
+    /// `TypePrefix`. The keyword and the node it builds.
+    fn at_kerml_function(&self, n: usize) -> Option<(&'static str, SyntaxKind)> {
+        let after = self.skip_type_prefix(n);
+        [
+            ("function", SyntaxKind::Function),
+            ("predicate", SyntaxKind::Predicate),
+        ]
+        .into_iter()
+        .find(|(word, _)| self.nth_is_keyword(after, word))
+    }
+
+    // production: Function@kerml
+    // production: Predicate@kerml
+    //
+    // Function  = TypePrefix 'function'  ClassifierDeclaration FunctionBody
+    //                                                            (KerML 8.2.5.7.1)
+    // Predicate = TypePrefix 'predicate' ClassifierDeclaration FunctionBody
+    //                                                            (KerML 8.2.5.7.3)
+    //
+    // The classifiers' spine with a FunctionBody where theirs has a TypeBody, so one
+    // method reads both, as `classifier` reads the nine, and neither is in CLASSIFIERS.
+    // A Function is a Behavior whose result is its evaluation (8.3.4.7.4, receipt
+    // 0346a271), "declared as a behavior ..., using the keyword function" (7.4.8.2,
+    // receipt 29d9c85d); a Predicate is a Function with a Boolean result (8.3.4.7.6,
+    // receipt 38521fba), whose "body ... is the same as a function body" (7.4.8.4,
+    // receipt 0dccac6d).
+    //
+    // implied specialization: Performances::Evaluation for a Function,
+    //     Performances::BooleanEvaluation for a Predicate
+    // constraint: Function::checkFunctionSpecialization (KerML 8.3.4.7.4) and
+    //     Predicate::checkPredicateSpecialization (8.3.4.7.6). Injections, sv2-hir's;
+    //     nothing is written into the tree. The result constraints of 8.3.4.7.4
+    //     (validateFunctionResultExpressionMembership and its kin) are validity, not
+    //     syntax (ADR-0002).
+    fn kerml_function(&mut self, (word, node): (&'static str, SyntaxKind)) {
+        self.eat_trivia();
+        self.start_node(node);
+        self.type_prefix();
+        self.expect_keyword(word);
+        self.classifier_declaration();
+        self.function_body();
+        self.finish_node();
     }
 
     /// Whether a `KerML` `Type` starts at the `n`th meaningful token: `type`, reserved

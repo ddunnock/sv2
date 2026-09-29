@@ -1067,6 +1067,103 @@ fn a_kerml_expression_body_is_bounded_by_its_rules() {
     kerml_rejected("feature c = x->collect ;;");
 }
 
+// -- Function and Predicate, KerML 8.2.5.7.1, 8.2.5.7.3 ------------------------------
+//
+//   Function  = TypePrefix 'function'  ClassifierDeclaration FunctionBody
+//   Predicate = TypePrefix 'predicate' ClassifierDeclaration FunctionBody
+
+#[test]
+fn a_function_reads_the_corpus_forms() {
+    // Simple Tests/Expressions.kerml:46-48: parameters, then a result expression whose
+    // collect body nests in it.
+    let tree = render(
+        &kerml_accepted(
+            "function TotalMass { in partMass; in subparts;\n\t\tpartMass + (subparts->collect \
+             {in p; totalMass(partMass, subparts)}->reduce '+' ?? 0.0)\n\t}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "Function"),
+        [
+            "TypePrefix",
+            "KwFunction",
+            "ClassifierDeclaration",
+            "FunctionBody"
+        ],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "FunctionBodyPart")[2..],
+        ["ResultExpressionMember"],
+        "{tree}"
+    );
+}
+
+#[test]
+fn a_function_reads_the_examples_of_7_4_8_2() {
+    kerml_accepted(
+        "// Specializes Performances::Evaluation by default.\nfunction Velocity {\n    in v_i : \
+         VelocityValue;\n    in a : AccelerationValue;\n    in dt : TimeValue;\n    return v_f : \
+         VelocityValue;\n}",
+    );
+    kerml_accepted(
+        "abstract function Dynamics {\n    in initialState : DynamicState;\n    in time : \
+         TimeValue;\n    return : DynamicState;\n}\nfunction VehicleDynamics specializes \
+         Dynamics {\n    // Each parameter redefines the corresponding superclassifier \
+         parameter\n    in initialState : VehicleState;\n    in time : TimeValue;\n    return : \
+         VehicleState;\n}",
+    );
+    kerml_accepted(
+        "function Average {\n    in scores[1..*] : Rational;\n    return : Rational;\n\n    \
+         sum(scores) / size(scores)\n}",
+    );
+    kerml_accepted(
+        "function Average {\n    in scores[1..*] : Rational;\n    return : Rational = \
+         sum(scores) / size(scores);\n}",
+    );
+}
+
+#[test]
+fn a_predicate_reads_the_examples_of_7_4_8_4() {
+    let tree = render(
+        &kerml_accepted(
+            "predicate isAssembled {\n    in assembly : Assembly;\n    in subassemblies[*] : \
+             Assembly;\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "Predicate"),
+        [
+            "TypePrefix",
+            "KwPredicate",
+            "ClassifierDeclaration",
+            "FunctionBody"
+        ],
+        "{tree}"
+    );
+    kerml_accepted(
+        "predicate isFull {\n    in tank : FuelTank;\n    tank.fuelLevel == tank.maxFuelLevel\n}",
+    );
+    // A predicate is a Function (8.3.4.7.6); both are NonFeatureElements, owned as
+    // members and in a type body alike.
+    kerml_accepted("package P { abstract #M function f; class C { private predicate p; } }");
+}
+
+#[test]
+fn a_function_is_bounded_by_its_rules() {
+    // A FunctionBody, `;` or braced (8.2.5.7.1). Held as a file by
+    // tests/rejection/kerml-function-ends-in-a-function-body.kerml.
+    kerml_rejected("function f");
+    kerml_rejected("function f { 1; }");
+    // ClassifierDeclaration, not FeatureDeclaration: a classifier's part, not a typing.
+    kerml_rejected("function f : T;");
+    // SysML's are `calc def` and `constraint def` (ADR-0014).
+    let sysml = parse("function f;", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
+}
+
 // -- multiplicity, KerML 8.2.5.11 ------------------------------------------------
 //
 //   OwnedMultiplicity      = ownedRelatedElement += OwnedMultiplicityRange

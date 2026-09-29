@@ -2018,6 +2018,16 @@ NODES = [
             "8.2.2.27, as deviation `MetadataUsageDeclaration` reads it."
         ),
     ),
+    # KerML's Function and Predicate, the classifiers' spine with a FunctionBody.
+    # KerML 8.2.5.7.1, 8.2.5.7.3.
+    (
+        "Function",
+        "`TypePrefix 'function' ClassifierDeclaration FunctionBody`. `KerML` 8.2.5.7.1.",
+    ),
+    (
+        "Predicate",
+        "`TypePrefix 'predicate' ClassifierDeclaration FunctionBody`. `KerML` 8.2.5.7.3.",
+    ),
     # KerML's Invariant and the FunctionBody it ends in, with the body's two members of
     # its own. KerML 8.2.5.7.1, 8.2.5.7.4.
     (

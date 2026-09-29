@@ -1307,6 +1307,10 @@ pub enum SyntaxKind {
     MetadataUsage,
     /// `( Identification ( ':' | 'defined' 'by' ) )? OwnedFeatureTyping`. `SysML` 8.2.2.27, as deviation `MetadataUsageDeclaration` reads it.
     MetadataUsageDeclaration,
+    /// `TypePrefix 'function' ClassifierDeclaration FunctionBody`. `KerML` 8.2.5.7.1.
+    Function,
+    /// `TypePrefix 'predicate' ClassifierDeclaration FunctionBody`. `KerML` 8.2.5.7.3.
+    Predicate,
     /// `FeaturePrefix 'inv' ( 'true' | 'false' )? FeatureDeclaration? ValuePart? FunctionBody`. `KerML` 8.2.5.7.4.
     Invariant,
     /// `FeaturePrefix 'expr' FeatureDeclaration? ValuePart? FunctionBody`. `KerML` 8.2.5.7.2.
@@ -2030,6 +2034,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::MetadataDefinition,
     SyntaxKind::MetadataUsage,
     SyntaxKind::MetadataUsageDeclaration,
+    SyntaxKind::Function,
+    SyntaxKind::Predicate,
     SyntaxKind::Invariant,
     SyntaxKind::Expression,
     SyntaxKind::BooleanExpression,
