@@ -949,6 +949,10 @@ enum Body {
     View,
     /// The braced form of `TypeBody`. `KerML` only — what a classifier holds.
     Type,
+    /// The item run of `KerML`'s `FunctionBodyPart` (8.2.5.7.1): a `TypeBody`'s items,
+    /// `TypeBodyElement`, and `ReturnFeatureMember`, then a `ResultExpressionMember`.
+    /// Everything `Type` answers this answers the same way but for those two.
+    Function,
 }
 
 impl Body {
@@ -1058,7 +1062,8 @@ impl Body {
             | Self::Action
             | Self::State
             | Self::Interface
-            | Self::Type => false,
+            | Self::Type
+            | Self::Function => false,
         }
     }
 
@@ -1217,7 +1222,7 @@ impl Body {
     /// loop has to stop before it, because an expression is not a member and the loop
     /// would otherwise recover over it one token at a time.
     fn ends_in_result_expression(self) -> bool {
-        matches!(self, Self::Calculation | Self::Case)
+        matches!(self, Self::Calculation | Self::Case | Self::Function)
     }
 
     /// Whether `ReturnParameterMember` is one of this body's alternatives.
@@ -1923,6 +1928,9 @@ impl<'a> Parser<'a> {
     /// and so does an expression. That single collision is what
     /// `usage_completion_follows` resolves.
     fn at_result_expression(&self) -> bool {
+        if self.language == Language::KerMl {
+            return self.at_kerml_result_expression();
+        }
         let n = usize::from(self.at_visibility());
         if self.nth_is(n, SyntaxKind::At) {
             // `@T` is both a MetadataUsage (8.2.2.27) and a ClassificationExpression with
@@ -1972,6 +1980,39 @@ impl<'a> Parser<'a> {
         // Not an item at all: a literal, a parenthesis, a prefix operator. Without this
         // the body loop would recover over it, which is how `{ 1 + 1 }` became three
         // errors instead of one expression.
+        true
+    }
+
+    /// `KerML`'s answer to `at_result_expression`, for `FunctionBodyPart`
+    /// (8.2.5.7.1): whether what is here ends the `( TypeBodyElement |
+    /// ReturnFeatureMember )*` run and is the `ResultExpressionMember`.
+    ///
+    /// Every item but one opens on something no expression opens on: `import`, `alias`,
+    /// `member`, `return`, an annotating keyword, a `NonFeatureElement`'s keyword, a
+    /// `FeaturePrefix` keyword or `#`, a feature element's reserved word (8.2.2.6). The
+    /// one that does not is a keywordless `Feature` (8.2.4.3.1) opening on a NAME, as an
+    /// expression may, or on `~`, its `ConjugationPart` and the unary operator of table 6
+    /// (8.2.5.8.1). A feature ends in a `TypeBody`, `;` or braced, before the function
+    /// body closes, and an expression reaches its `}`: `usage_completion_follows`,
+    /// `SysML`'s same test for the same collision. `@` is a `MetadataFeature` and a
+    /// `ClassificationExpression` alike, settled the same way.
+    fn at_kerml_result_expression(&self) -> bool {
+        let n = usize::from(self.at_visibility());
+        if self.nth_is(n, SyntaxKind::At) {
+            return !self.usage_completion_follows(n);
+        }
+        if self.nth_is_keyword(n, "member")
+            || self.nth_is_keyword(n, "return")
+            || self.at_annotating_member(n)
+            || self.at_kerml_non_feature_element(n)
+            || self.at_kerml_keyword_feature_element(n)
+        {
+            return false;
+        }
+        if self.at_feature(n) {
+            return (self.nth_is_name(n) || self.nth_is(n, SyntaxKind::Tilde))
+                && !self.usage_completion_follows(n);
+        }
         true
     }
 
@@ -2136,10 +2177,7 @@ impl<'a> Parser<'a> {
             Language::KerMl => {
                 self.at_kerml_non_feature_element(n)
                     || self.at_feature(n)
-                    || self.at_kerml_succession(n)
-                    || self.at_kerml_binding_connector(n)
-                    || self.at_kerml_connector(n)
-                    || self.at_kerml_step(n)
+                    || self.at_kerml_keyword_feature_element(n)
             }
             Language::SysMl => {
                 self.at_sysml_keyword_member(n)
@@ -2694,6 +2732,33 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// A `KerML` body's feature item, if one is written here. Returns whether it was.
+    ///
+    /// `NamespaceMember = NonFeatureMember | NamespaceFeatureMember` (`KerML` 8.2.3.4.1),
+    /// and `TypeBodyElement`'s `FeatureMember` (8.2.4.1.1, defined 8.2.4.1.6), which a
+    /// `FunctionBodyPart` reads too (8.2.5.7.1) with its own `ReturnFeatureMember`. A
+    /// feature is owned through one of those, so it gets its own membership node rather
+    /// than the one `membership` builds. `member`, a `TypeFeatureMember`, is a type
+    /// body's alone.
+    fn kerml_feature_item(&mut self, body: Body) -> bool {
+        let n = usize::from(self.at_visibility());
+        let type_body = matches!(body, Body::Type | Body::Function);
+        if body == Body::Function && self.nth_is_keyword(n, "return") {
+            self.return_feature_member();
+        } else if type_body && self.nth_is_keyword(n, "member") {
+            self.feature_member();
+        } else if self.at_feature(n) || self.at_kerml_keyword_feature_element(n) {
+            if type_body {
+                self.feature_member();
+            } else {
+                self.namespace_feature_member();
+            }
+        } else {
+            return false;
+        }
+        true
+    }
+
     /// One element of `body`, as `body_elements` describes them. Returns `false` when
     /// what is left is the body's trailing result expression, which ends the item run.
     fn body_element(&mut self, body: Body) -> bool {
@@ -2715,28 +2780,16 @@ impl<'a> Parser<'a> {
             // tests/rejection/element-filter-member-is-not-a-definition-body-item.sysml
             // and element-filter-member-is-not-a-kerml-root-element.kerml hold those.
             self.element_filter_member();
-        } else if body == Body::Type
-            && self.language == Language::KerMl
-            && self.nth_is_keyword(usize::from(self.at_visibility()), "member")
-        {
-            // TypeFeatureMember, a TypeBody's alone (8.2.4.1.6).
-            self.feature_member();
         } else if self.language == Language::KerMl
-            && (self.at_feature(usize::from(self.at_visibility()))
-                || self.at_kerml_succession(usize::from(self.at_visibility()))
-                || self.at_kerml_binding_connector(usize::from(self.at_visibility()))
-                || self.at_kerml_connector(usize::from(self.at_visibility()))
-                || self.at_kerml_step(usize::from(self.at_visibility())))
+            && body.ends_in_result_expression()
+            && self.at_result_expression()
         {
-            // NamespaceMember = NonFeatureMember | NamespaceFeatureMember
-            // (KerML 8.2.3.4.1), and TypeBodyElement's FeatureMember (8.2.4.1.1, defined 8.2.4.1.6). A
-            // feature is owned through one of those, so it gets its own membership node
-            // rather than the one `membership` builds.
-            if body == Body::Type {
-                self.feature_member();
-            } else {
-                self.namespace_feature_member();
-            }
+            // A KerML function body's item run is over, and what is left is its result
+            // expression. Asked BEFORE the features, because a keywordless feature opens
+            // on a name as `age >= 35` does, and the feature branch would take it.
+            return false;
+        } else if self.language == Language::KerMl && self.kerml_feature_item(body) {
+            // Read by the call, which answers whether it read one.
         } else if body == Body::Interface && self.at_usage_no_interface_body_admits() {
             // InterfaceNonOccurrenceUsageElement lists ReferenceUsage, AttributeUsage,
             // EnumerationUsage, BindingConnectorAsUsage and SuccessionAsUsage and no
@@ -2983,10 +3036,7 @@ impl<'a> Parser<'a> {
                         || self.at_library_package(0)
                         || self.at_dependency(0)
                         || self.at_classifier(0).is_some()
-                        || self.at_kerml_succession(0)
-                        || self.at_kerml_binding_connector(0)
-                        || self.at_kerml_connector(0)
-                        || self.at_kerml_step(0)
+                        || self.at_kerml_keyword_feature_element(0)
                         || self.at_relationship_declaration(0).is_some()
                         || self.at_kerml_type(0)
                 }
@@ -3564,9 +3614,22 @@ impl<'a> Parser<'a> {
             self.kerml_connector();
         } else if self.at_kerml_step(0) {
             self.kerml_step();
+        } else if self.at_kerml_invariant(0) {
+            self.kerml_invariant();
         } else {
             self.feature();
         }
+    }
+
+    /// Whether a `KerML` `FeatureElement` that opens on its own reserved word, after a
+    /// `FeaturePrefix`, starts at the `n`th meaningful token: every implemented one but
+    /// `Feature`, whose keyword is optional and which `at_feature` asks about.
+    fn at_kerml_keyword_feature_element(&self, n: usize) -> bool {
+        self.at_kerml_succession(n)
+            || self.at_kerml_binding_connector(n)
+            || self.at_kerml_connector(n)
+            || self.at_kerml_step(n)
+            || self.at_kerml_invariant(n)
     }
 
     /// Whether a `KerML` `Succession` starts at the `n`th meaningful token.
@@ -3710,6 +3773,128 @@ impl<'a> Parser<'a> {
             self.value_part();
         }
         self.type_body();
+        self.finish_node();
+    }
+
+    /// Whether a `KerML` `Invariant` starts at the `n`th meaningful token: a
+    /// `FeaturePrefix`, then `inv`, reserved (`KerML` 8.2.2.6).
+    fn at_kerml_invariant(&self, n: usize) -> bool {
+        self.nth_is_keyword(self.skip_feature_prefix(n), "inv")
+    }
+
+    // production: Invariant@kerml
+    //
+    // Invariant : Invariant =
+    //     FeaturePrefix
+    //     'inv' ( 'true' | isNegated ?= 'false' )?
+    //     FeatureDeclaration ValuePart?
+    //     FunctionBody                                           (KerML 8.2.5.7.4)
+    //
+    // A BooleanExpression asserted true, or with `false` negated (8.3.4.7.5, receipt
+    // 45001822): "declared like any other boolean expression, except using the keyword
+    // inv instead of bool, and, additionally, this keyword may be optionally followed by
+    // one of the keywords true or false" (7.4.8.5, receipt 1dd5b04f).
+    //
+    // The FeatureDeclaration is optional although the clause writes it bare: deviation
+    // Invariant (follow_xtext), OMG issue KERML11-181, which names this clause, and the
+    // corpus writes `inv { age >= 35 }` (Individuals
+    // Examples/JohnIndividualExample.kerml:89). So that text parses and carries a
+    // PARSE-DEVIATION note, since only the deviation admits it (ADR-0022).
+    //
+    // implied specialization: Performances::trueEvaluations, or falseEvaluations when
+    //     negated
+    // constraint: Invariant::checkInvariantSpecialization (KerML 8.3.4.7.5). An
+    //     injection, so sv2-hir's; nothing is written into the tree.
+    fn kerml_invariant(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::Invariant);
+        self.feature_prefix();
+        self.expect_keyword("inv");
+        self.eat_one_of(&["true", "false"]);
+        if self.at_feature_declaration() {
+            self.feature_declaration();
+        } else {
+            // deviation: Invariant
+            self.note_deviation("Invariant", "an invariant with no declaration");
+        }
+        if self.at_value_part() {
+            self.value_part();
+        }
+        self.function_body();
+        self.finish_node();
+    }
+
+    // production: FunctionBody@kerml
+    //
+    // FunctionBody : Type = ';' | '{' FunctionBodyPart '}'       (KerML 8.2.5.7.1)
+    //
+    // The body of a Function, a Predicate, an Expression, a BooleanExpression and an
+    // Invariant; the Invariant reaches it here. "The body of a function is like the body
+    // of a behavior ..., with the optional addition of the declaration of a result
+    // expression at the end" (7.4.8.2, receipt 29d9c85d).
+    fn function_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FunctionBody);
+        if self.at(SyntaxKind::Semicolon) {
+            self.bump();
+        } else if self.at(SyntaxKind::LBrace) {
+            self.bump();
+            self.depth += 1;
+            self.function_body_part();
+            self.depth -= 1;
+            self.expect(SyntaxKind::RBrace, "`}`");
+        } else {
+            self.error_expected("`;` or `{` to open a function body");
+        }
+        self.finish_node();
+    }
+
+    // production: FunctionBodyPart@kerml
+    //
+    // FunctionBodyPart : Type =
+    //     ( TypeBodyElement
+    //     | ownedRelationship += ReturnFeatureMember
+    //     )*
+    //     ( ownedRelationship += ResultExpressionMember )?       (KerML 8.2.5.7.1)
+    //
+    // SysML's CalculationBodyPart in KerML's items: the star is greedy and the expression
+    // is last, with no `;` ("A result expression is written without a final semicolon",
+    // 7.4.8.2), so the one question is where the run ends, and `at_kerml_result_expression`
+    // answers it. Body::Function reads the items.
+    fn function_body_part(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::FunctionBodyPart);
+        self.body_elements(Some(SyntaxKind::RBrace), Body::Function);
+        if !self.at_end() && !self.at(SyntaxKind::RBrace) {
+            self.result_expression_member();
+        }
+        self.finish_node();
+    }
+
+    // production: ReturnFeatureMember@kerml
+    //
+    // ReturnFeatureMember : ReturnParameterMembership =
+    //     MemberPrefix 'return'
+    //     ownedRelatedElement += FeatureElement                  (KerML 8.2.5.7.1)
+    //
+    // The result parameter, "declared in its body by beginning the declaration with the
+    // keyword return (instead of a direction keyword)" (7.4.8.2, receipt 29d9c85d):
+    // `return : Rational;`, a keywordless Feature declared by its typing. SysML's
+    // ReturnParameterMember owns a UsageElement where this owns a FeatureElement.
+    //
+    // constraint: ReturnParameterMembership::validateReturnParameterMembershipOwningType
+    //     (KerML 8.3.4.7.8, receipt 259909e5), and the parameter's direction `out`, which
+    //     the text does not write: an injection, sv2-hir's, as for SysML's member.
+    fn return_feature_member(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::ReturnFeatureMember);
+        self.member_prefix();
+        self.expect_keyword("return");
+        if self.at_kerml_keyword_feature_element(0) || self.at_feature(0) {
+            self.feature_element();
+        } else {
+            self.error_expected("a feature after `return`");
+        }
         self.finish_node();
     }
 
@@ -12087,6 +12272,14 @@ impl<'a> Parser<'a> {
     // ResultExpressionMember : ResultExpressionMembership =
     //     MemberPrefix? ownedRelatedElement += OwnedExpression   (SysML 8.2.2.19)
     //
+    // production: ResultExpressionMember@kerml
+    //
+    // ResultExpressionMember : ResultExpressionMembership =
+    //     MemberPrefix ownedRelatedElement += OwnedExpression    (KerML 8.2.5.7.1)
+    //
+    // One method, two markers: KerML writes no `?`, and MemberPrefix derives the empty
+    // string either way, so the text is the same. KerML reaches it from FunctionBodyPart.
+    //
     // The metaclass is KerML's ResultExpressionMembership (8.3.4.7.7), a
     // FeatureMembership. validateResultExpressionMembershipOwningType says its owningType
     // must be a Function or an Expression; that is a constraint and not this layer's
@@ -14147,16 +14340,8 @@ impl<'a> Parser<'a> {
             self.kerml_type();
         } else if let Some(classifier) = self.at_classifier(0) {
             self.classifier(classifier);
-        } else if self.at_kerml_succession(0) {
-            self.kerml_succession();
-        } else if self.at_kerml_binding_connector(0) {
-            self.kerml_binding_connector();
-        } else if self.at_kerml_connector(0) {
-            self.kerml_connector();
-        } else if self.at_kerml_step(0) {
-            self.kerml_step();
-        } else if self.at_feature(0) {
-            self.feature();
+        } else if self.at_kerml_keyword_feature_element(0) || self.at_feature(0) {
+            self.feature_element();
         } else {
             return false;
         }

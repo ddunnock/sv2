@@ -227,9 +227,7 @@ fn the_other_feature_elements_are_unimplemented_rather_than_accepted() {
     // Succession, BindingConnector and Connector are implemented, and Invariant is next
     // (`inv { true }` was here); the other four are not, and reporting them is the
     // honest state. `succession flow` is SuccessionFlow, one of the four.
-    for source in ["succession flow f from a to b;"] {
-        kerml_rejected(source);
-    }
+    kerml_rejected("succession flow f from a to b;");
 }
 
 // -- classifiers, KerML 8.2.4.2 ---------------------------------------------------
@@ -2885,6 +2883,156 @@ fn a_metadata_feature_is_bounded_by_its_rules() {
     // SysML's usages are not KerML's.
     kerml_rejected("metadata M { ref x = 1; }");
     kerml_rejected("metadata M { part p; }");
+}
+
+// -- Invariant and FunctionBody, KerML 8.2.5.7 --------------------------------------
+//
+//   Invariant        = FeaturePrefix 'inv' ( 'true' | 'false' )?
+//                      FeatureDeclaration? ValuePart? FunctionBody        (8.2.5.7.4)
+//   FunctionBody     = ';' | '{' FunctionBodyPart '}'                     (8.2.5.7.1)
+//   FunctionBodyPart = ( TypeBodyElement | ReturnFeatureMember )*
+//                      ResultExpressionMember?
+//   ReturnFeatureMember    = MemberPrefix 'return' FeatureElement
+//   ResultExpressionMember = MemberPrefix OwnedExpression
+//
+// The declaration's `?` is deviation Invariant's (follow_xtext, KERML11-181).
+
+#[test]
+fn an_invariant_reads_the_corpus_forms() {
+    // Individuals Examples/JohnIndividualExample.kerml:88-90: no declaration, a result
+    // expression alone.
+    let tree = render(
+        &kerml_accepted(
+            "class C {\n  \tfeature presidentOfUS[1] redefines presidentOfCountry {\n   \t\tinv \
+             { age >= 35 } \n  \t}\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "Invariant"),
+        ["FeaturePrefix", "KwInv", "FunctionBody"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "FunctionBody"),
+        ["LBrace", "FunctionBodyPart", "RBrace"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "FunctionBodyPart"),
+        ["ResultExpressionMember"],
+        "{tree}"
+    );
+    // Simple Tests/TextualRepresentation.kerml:4-10: a declaration, and a body holding
+    // an annotation and no result expression.
+    let rep = render(
+        &kerml_accepted(
+            "class C {\n    feature x: Real;\n    inv x_constraint {\n\t    rep inOCL language \
+             \"ocl\" \n\t        /* self.x > 0.0 */\n    }\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        child_kinds(&rep, "Invariant"),
+        [
+            "FeaturePrefix",
+            "KwInv",
+            "FeatureDeclaration",
+            "FunctionBody"
+        ],
+        "{rep}"
+    );
+    assert!(!has_node(&rep, "ResultExpressionMember"), "{rep}");
+}
+
+#[test]
+fn an_invariant_reads_the_examples_of_7_4_8_5() {
+    // KerML 7.4.8.5's FuelTank, less its `feature readonly maxFuelLevel`: `readonly` is no
+    // KerML reserved word (8.2.2.6), so that line declares a feature named `readonly`
+    // followed by a stray name.
+    let tree = render(
+        &kerml_accepted(
+            "class FuelTank {\n    feature fuelLevel : Real;\n    // The invariant is asserted \
+             true by default.\n    inv { fuelLevel >= 0 & fuelLevel <= maxFuelLevel }\n    // \
+             The invariant is explicitly asserted false, that is, it is negated.\n    inv false \
+             { fuelLevel > maxFuelLevel }\n}",
+        )
+        .syntax(),
+    );
+    assert_eq!(
+        tree.lines().filter(|l| l.trim() == "Invariant").count(),
+        2,
+        "{tree}"
+    );
+    let negated = render(&kerml_accepted("inv false { a > b }").syntax());
+    assert_eq!(
+        child_kinds(&negated, "Invariant"),
+        ["FeaturePrefix", "KwInv", "KwFalse", "FunctionBody"],
+        "{negated}"
+    );
+    kerml_accepted("inv true i : B;");
+}
+
+#[test]
+fn a_function_body_reads_items_then_its_result_expression() {
+    // TypeBodyElements, a ReturnFeatureMember, then the expression, which has no `;`
+    // (7.4.8.2). A TypeBodyElement's feature is a FeatureMember, an alternation with no
+    // node, and a feature with no `member` is its OwnedFeatureMember (8.2.4.1.6). A keywordless feature and an expression both open on a name; the
+    // feature reaches a `;` or `{` before the body's `}`, and the expression does not.
+    let tree = render(
+        &kerml_accepted("inv i { in x : Real; y : Real; return r : Boolean; x > y }").syntax(),
+    );
+    assert_eq!(
+        child_kinds(&tree, "FunctionBodyPart"),
+        [
+            "OwnedFeatureMember",
+            "OwnedFeatureMember",
+            "ReturnFeatureMember",
+            "ResultExpressionMember"
+        ],
+        "{tree}"
+    );
+    // `~` opens a keywordless feature's ConjugationPart and a unary expression alike.
+    let tilde = render(&kerml_accepted("inv { ~ T; }").syntax());
+    assert!(!has_node(&tilde, "ResultExpressionMember"), "{tilde}");
+    let not = render(&kerml_accepted("inv { ~x }").syntax());
+    assert!(has_node(&not, "ResultExpressionMember"), "{not}");
+    // An invocation is an expression, not a feature named `sum`.
+    let call = render(&kerml_accepted("inv { sum(scores) / size(scores) > 0 }").syntax());
+    assert!(has_node(&call, "ResultExpressionMember"), "{call}");
+    // Nested bodies and a MemberPrefix on the result.
+    kerml_accepted("inv { class K { feature f; } private true }");
+}
+
+#[test]
+fn an_invariant_without_a_declaration_is_admitted_by_deviation() {
+    // Deviation Invariant (follow_xtext): the clause writes FeatureDeclaration bare, and
+    // KERML11-181 says it should be optional. The text parses and carries a
+    // PARSE-DEVIATION note naming the entry (ADR-0022).
+    let parsed = kerml_accepted("inv { true }");
+    let notes: Vec<String> = parsed
+        .deviations()
+        .iter()
+        .map(|d| d.message().to_owned())
+        .collect();
+    assert_eq!(notes.len(), 1, "{notes:?}");
+    assert!(notes[0].contains("deviation Invariant"), "{notes:?}");
+    assert!(kerml_accepted("inv i { true }").deviations().is_empty());
+}
+
+#[test]
+fn an_invariant_is_bounded_by_its_rules() {
+    // The result expression takes no `;` (7.4.8.2). Held as a file by
+    // tests/rejection/kerml-result-expression-takes-no-semicolon.kerml.
+    kerml_rejected("inv { true; }");
+    kerml_rejected("inv { a b }");
+    kerml_rejected("inv true false { x }");
+    kerml_rejected("inv { true }  }");
+    // FunctionBody is `;` or braced (8.2.5.7.1).
+    kerml_rejected("inv i");
+    // SysML has no `inv`; it asserts with AssertConstraintUsage (ADR-0014).
+    let sysml = parse("inv { true }", Language::SysMl);
+    assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
 // -- FeatureMember, KerML 8.2.4.1.6 -----------------------------------------------

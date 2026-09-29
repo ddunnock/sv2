@@ -2018,6 +2018,27 @@ NODES = [
             "8.2.2.27, as deviation `MetadataUsageDeclaration` reads it."
         ),
     ),
+    # KerML's Invariant and the FunctionBody it ends in, with the body's two members of
+    # its own. KerML 8.2.5.7.1, 8.2.5.7.4.
+    (
+        "Invariant",
+        (
+            "`FeaturePrefix 'inv' ( 'true' | 'false' )? FeatureDeclaration? ValuePart? "
+            "FunctionBody`. `KerML` 8.2.5.7.4."
+        ),
+    ),
+    ("FunctionBody", "`';' | '{' FunctionBodyPart '}'`. `KerML` 8.2.5.7.1."),
+    (
+        "FunctionBodyPart",
+        (
+            "`( TypeBodyElement | ReturnFeatureMember )* ResultExpressionMember?`. "
+            "`KerML` 8.2.5.7.1."
+        ),
+    ),
+    (
+        "ReturnFeatureMember",
+        "`MemberPrefix 'return' FeatureElement`. `KerML` 8.2.5.7.1.",
+    ),
     # KerML's MetadataFeature, AnnotatingElement's fourth alternative there, its
     # declaration, and the feature its MetadataBody owns. KerML 8.2.5.12.
     (

@@ -8,6 +8,7 @@ vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_N_ary.ker
 vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml
 vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_UnownedEnds.kerml
 vendor/corpus/kerml/src/examples/Behavior Examples/Camera.kerml
+vendor/corpus/kerml/src/examples/Individuals Examples/JohnIndividualExample.kerml
 vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-Atoms.kerml
 vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-ModelingInstances.kerml
 vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-2-WithoutConnectors.kerml
@@ -45,6 +46,7 @@ vendor/corpus/kerml/src/examples/Simple Tests/Inverses.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/MetadataTest.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Redefinition.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Scoping.kerml
+vendor/corpus/kerml/src/examples/Simple Tests/TextualRepresentation.kerml
 vendor/corpus/kerml/src/examples/Simple Tests/Types.kerml
 vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/Moments.kerml
 vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/TimeVaryingFeaturesEnhanced.kerml
