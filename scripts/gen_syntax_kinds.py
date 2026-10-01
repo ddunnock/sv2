@@ -1342,7 +1342,18 @@ NODES = [
     ),
     (
         "NonFeatureChainPrimaryArgumentMember",
-        "`ownedMemberParameter = PrimaryArgument`. `KerML` 8.2.5.8.2.",
+        (
+            "`ownedMemberParameter = NonFeatureChainPrimaryArgument`, by deviation "
+            "`NonFeatureChainPrimaryArgumentMember`. `KerML` 8.2.5.8.2."
+        ),
+    ),
+    (
+        "NonFeatureChainPrimaryArgument",
+        "`ownedRelationship += NonFeatureChainPrimaryArgumentValue`. `KerML` 8.2.5.8.2.",
+    ),
+    (
+        "NonFeatureChainPrimaryArgumentValue",
+        "`value = NonFeatureChainPrimaryExpression`. `KerML` 8.2.5.8.2.",
     ),
     (
         "BracketExpression",

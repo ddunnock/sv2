@@ -5,3 +5,4 @@
 # commit that implements what its deviation adds.
 AnnotatingElement  # adds no text: under ADR-0015's resolution SysML's literal MetadataFeature reads SysML's PrefixMetadataMember and MetadataBody, and MetadataFeatureDeclaration prints MetadataUsageDeclaration's text; the deviation changes the element kind only, so SysML needs no site (adjudicated 2026-09-22)
 ForVariableDeclarationMember  # adds no text: the register's own rationale, "Both readings accept identical text"; the deviation makes the member own a ForVariableDeclaration (a ReferenceUsage, as validateForLoopActionUsageLoopVariable requires, 8.3.17.9) rather than the bare UsageDeclaration fragment, so SysML needs no site (ForLoopNode read)
+NonFeatureChainPrimaryArgumentMember  # adds no text: both associations of `a.b.c` accept the same text, and the deviation changes only the tree, `a . (b.c)` with the chain an OwnedFeatureChainMember, so it needs no site (adjudicated 2026-10-01)

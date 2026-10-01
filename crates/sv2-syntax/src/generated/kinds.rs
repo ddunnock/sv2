@@ -933,8 +933,12 @@ pub enum SyntaxKind {
     IncludeUseCaseUsage,
     /// `NonFeatureChainPrimaryArgumentMember '.' FeatureChainMember`. `KerML` 8.2.5.8.2 — the metaclass is an `OperatorExpression`, 8.3.4.8.4.
     FeatureChainExpression,
-    /// `ownedMemberParameter = PrimaryArgument`. `KerML` 8.2.5.8.2.
+    /// `ownedMemberParameter = NonFeatureChainPrimaryArgument`, by deviation `NonFeatureChainPrimaryArgumentMember`. `KerML` 8.2.5.8.2.
     NonFeatureChainPrimaryArgumentMember,
+    /// `ownedRelationship += NonFeatureChainPrimaryArgumentValue`. `KerML` 8.2.5.8.2.
+    NonFeatureChainPrimaryArgument,
+    /// `value = NonFeatureChainPrimaryExpression`. `KerML` 8.2.5.8.2.
+    NonFeatureChainPrimaryArgumentValue,
     /// `PrimaryArgumentMember '[' SequenceExpressionListMember ']'`. `KerML` 8.2.5.8.2 — the quantity form, `1200 [kg]`.
     BracketExpression,
     /// `ownedMemberParameter = PrimaryArgument`. `KerML` 8.2.5.8.2.
@@ -1866,6 +1870,8 @@ pub const ALL: &[SyntaxKind] = &[
     SyntaxKind::IncludeUseCaseUsage,
     SyntaxKind::FeatureChainExpression,
     SyntaxKind::NonFeatureChainPrimaryArgumentMember,
+    SyntaxKind::NonFeatureChainPrimaryArgument,
+    SyntaxKind::NonFeatureChainPrimaryArgumentValue,
     SyntaxKind::BracketExpression,
     SyntaxKind::PrimaryArgumentMember,
     SyntaxKind::PrimaryArgument,

@@ -4250,16 +4250,21 @@
     },
     {
       "production": "NonFeatureChainPrimaryArgumentMember",
-      "bucket": "spec_only",
-      "upstream": "The Pilot Xtext declares no rule named `NonFeatureChainPrimaryArgumentMember`. Either it inlines this production into the rule that uses it, or it reaches the same construct under a different name.",
-      "problem": "The specification states `NonFeatureChainPrimaryArgumentMember` as a production of its own at KerML 8.2.5.8.2. A parser written from the Xtext inventory alone would not know this production exists, and its absence is invisible to a corpus sweep for as long as no pinned file exercises it.",
-      "decision": "follow_spec",
-      "rationale": "Implement it. docs/DERIVATION.md states the resolution for this bucket: a specification-only production is usually one the Pilot has not implemented, and the specification is the normative source. Expect the corpus not to exercise it, which is exactly why it needs a rejection test rather than reliance on the sweep: a positive-only corpus cannot tell a production that is implemented from one that is missing.",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/KerMLExpressions.xtext:299-322 states PrimaryExpression as `BaseExpression ( '.' FeatureChainMember )? ( <postfix operator> ( '.' FeatureChainMember )? )*`, the bare `.` chain optional after the base and after each other postfix operator and never repeated on its own, over FeatureChainMember = `[QualifiedName] | OwnedFeatureChain` (:337-340; the FeatureChain fragment, `OwnedFeatureChaining ( '.' OwnedFeatureChaining )+`, at KerMLExpressions.xtext:442-445). So the Pilot cannot build `(a.b).c`: it reads `a.b.c` as one FeatureChainExpression whose member owns the chain `b.c`.",
+      "problem": "KerML 8.2.5.8.2, in Tier B' (KerML-textual-bnf.kebnf 1090-1097), writes `NonFeatureChainPrimaryArgumentMember : ParameterMembership = ownedMemberParameter = PrimaryArgument`, a copy of the sibling PrimaryArgumentMember (lines 1074-1079) whose body was not renamed. Taken literally the left operand of `.` may itself be a FeatureChainExpression, so `a.b.c` is ambiguous between `(a.b).c` and `a.(b.c)`; NonFeatureChainPrimaryArgument and NonFeatureChainPrimaryArgumentValue, defined beside it, are referenced by no production; the PrimaryExpression = FeatureChainExpression | NonFeatureChainPrimaryExpression split loses its purpose; and OwnedFeatureChainMember, FeatureChainMember's second alternative, is unreachable after a chain. The text accepted is the same under both readings: the difference is the tree.",
+      "decision": "follow_xtext",
+      "rationale": "Read the member as `ownedMemberParameter = NonFeatureChainPrimaryArgument`, the evident intent and the Pilot's grammar: the left operand of a bare `.` is a NonFeatureChainPrimaryExpression, and the feature after it is a FeatureChainMember that is an OwnedFeatureChainMember when it is two or more links, so `a.b.c` is `a . (b.c)`. This makes the grammar unambiguous, gives the two orphans their caller, and makes OwnedFeatureChainMember reachable. The metaclass is neutral (FeatureChainExpression 8.3.4.8.4: targetFeature is the first non-parameter member, featured within the argument's result), and the corpus cannot distinguish the readings, since both accept the same text. The derived unit had adjudicated the opposite on the claim that the Pilot left-folds `{FeatureChainExpression.operand += current}` inside a repetition at :301 and :319; both actions sit in `( ... )?` groups, so the claim was false. Adjudicated by the grammar-adjudicator on 2026-10-01 at the author's request. The OMG tracker's text search returned nothing for these names and is believed not to index them, so no issue is known either way; revisit if one is found. No PARSE-DEVIATION site: the departure is in the tree, not the accepted text (ADR-0022 notes text).",
       "evidence": [
         {
           "kind": "spec_clause",
           "ref": "KerML 8.2.5.8.2 (PrimaryExpressions), PDF p.125",
-          "note": "CLAUSE-LOCATED. Retrieved as wiki production atom PrimaryExpressions, region_sha256 9ec248984ce84ebf\u2026 Located by finding the definition of `NonFeatureChainPrimaryArgumentMember` in the clause body, not by matching its name against a clause title."
+          "note": "Tier B' lines 1090-1097: NonFeatureChainPrimaryArgumentValue and NonFeatureChainPrimaryArgument defined and referenced by no production; NonFeatureChainPrimaryArgumentMember's body PrimaryArgument, a copy of PrimaryArgumentMember's (1074-1079). OwnedFeatureChainMember (1169-1175) is otherwise unreachable after a chain."
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.3.4.8.4 FeatureChainExpression",
+          "note": "deriveFeatureChainExpressionTargetFeature and validateFeatureChainExpressionConformance: consistent with a FeatureChain as the target feature; neutral on the association."
         },
         {
           "kind": "file_id",

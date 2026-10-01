@@ -1314,6 +1314,48 @@ fn every_feature_specialization_is_read_in_both_languages() {
     assert!(!sysml.errors().is_empty(), "{:?}", sysml.errors());
 }
 
+// FeatureChainExpression = NonFeatureChainPrimaryArgumentMember '.' FeatureChainMember
+// FeatureChainMember     = FeatureReferenceMember | OwnedFeatureChainMember (8.2.5.8.2)
+//
+// By deviation NonFeatureChainPrimaryArgumentMember (follow_xtext) the left operand is a
+// NonFeatureChainPrimaryArgument, so `a.b.c` is `a . (b.c)`: one expression whose member
+// owns the chain, FeatureChainMember's second alternative.
+#[test]
+fn a_kerml_feature_chain_owns_its_chain_as_one_member() {
+    let tree = render(&kerml_accepted("feature v = a.b.c;").syntax());
+    assert_eq!(
+        child_kinds(&tree, "FeatureChainExpression"),
+        [
+            "NonFeatureChainPrimaryArgumentMember",
+            "Dot",
+            "OwnedFeatureChainMember"
+        ],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "NonFeatureChainPrimaryArgumentMember"),
+        ["NonFeatureChainPrimaryArgument"],
+        "{tree}"
+    );
+    assert_eq!(
+        child_kinds(&tree, "NonFeatureChainPrimaryArgument"),
+        ["NonFeatureChainPrimaryArgumentValue"],
+        "{tree}"
+    );
+    let one = render(&kerml_accepted("feature v = a.b;").syntax());
+    assert_eq!(
+        child_kinds(&one, "FeatureChainExpression"),
+        [
+            "NonFeatureChainPrimaryArgumentMember",
+            "Dot",
+            "FeatureReferenceMember"
+        ],
+        "{one}"
+    );
+    // A `.` with no name after it is no link (KerML 8.2.4.3.5, FeatureChain).
+    kerml_rejected("feature v = a.b.;");
+}
+
 // -- ConstructorExpression, KerML 8.2.5.8.3 ----------------------------------------
 
 #[test]

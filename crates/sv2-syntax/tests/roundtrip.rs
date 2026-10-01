@@ -213,14 +213,15 @@ fn deeply_nested_input_is_reported_and_not_a_stack_overflow() {
                 "}".repeat(50_000)
             ),
         ),
-        // Feature chains are the fourth, and the one that shows depth is a property of
-        // the TREE and not of the parser's recursion. The fold that builds them is a
-        // loop and uses no stack at all, and a 50000-link chain still overflowed a test
-        // thread — because each link wraps the last, so the tree is as deep as the
-        // chain is long. It is counted against the same budget for that reason.
+        // Feature chains broken by brackets are the fourth, and the one that shows depth
+        // is a property of the TREE and not of the parser's recursion. The fold that
+        // builds them is a loop and uses no stack at all, and such a chain still
+        // overflowed a test thread — because each link wraps the last, so the tree is as
+        // deep as the chain is long. It is counted against the same budget for that
+        // reason. (A bare `a.b.b...` is one flat OwnedFeatureChain and nests not at all.)
         (
             "feature chains",
-            format!("attribute x = a{};", ".b".repeat(50_000)),
+            format!("attribute x = a{};", ".b[1]".repeat(50_000)),
         ),
         // The `->` operation folds as a chain link does, and for the same reason.
         (

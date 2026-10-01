@@ -1109,15 +1109,17 @@ fn a_reference_chain_is_flat_where_an_expression_chain_folds() {
         "{reference}"
     );
 
+    // By deviation NonFeatureChainPrimaryArgumentMember, an expression's `a.b.c` is one
+    // FeatureChainExpression whose member owns the chain `b.c`.
     let expression = render(&parse_accepted("constraint def C { a.b.c }").syntax());
     assert_eq!(
         nodes_named(&expression, "FeatureChainExpression"),
-        2,
+        1,
         "{expression}"
     );
     assert_eq!(
         nodes_named(&expression, "OwnedFeatureChain"),
-        0,
+        1,
         "{expression}"
     );
 }
@@ -6237,24 +6239,57 @@ fn a_feature_chain_reads_the_postfix_dot() {
 }
 
 #[test]
-fn a_feature_chain_folds_to_the_left() {
-    // `a.b.c` is `(a.b).c`, NOT `a.(b.c)`. The member is called
-    // NonFeatureChainPrimaryArgumentMember but its body is PrimaryArgument, which
-    // reaches PrimaryExpression and so admits a chain on the left — both the clause and
-    // Tier B' state it that way, and the Pilot builds the same association with a
-    // repetition that folds (KerMLExpressions.xtext:301, :319).
+fn a_feature_chain_nests_to_the_right() {
+    // `a.b.c` is `a . (b.c)`: one FeatureChainExpression whose left operand is `a` and
+    // whose member is an OwnedFeatureChainMember over the chain `b.c`. By deviation
+    // NonFeatureChainPrimaryArgumentMember (follow_xtext): the left operand is a
+    // NonFeatureChainPrimaryArgument, as the Pilot's grammar has it, where the BNF's
+    // member body is a copy of PrimaryArgumentMember's (KerML 8.2.5.8.2).
     let rendered = render(&parse_accepted("constraint def C { a.b.c }").syntax());
     assert_eq!(
         nodes_named(&rendered, "FeatureChainExpression"),
+        1,
+        "{rendered}"
+    );
+    let left = subtree(&rendered, "NonFeatureChainPrimaryArgumentMember");
+    assert!(left.contains(r#""a""#), "{left}");
+    assert!(!left.contains(r#""b""#), "{left}");
+    assert_eq!(
+        child_kinds(&rendered, "FeatureChainExpression"),
+        [
+            "NonFeatureChainPrimaryArgumentMember",
+            "Dot",
+            "OwnedFeatureChainMember"
+        ],
+        "{rendered}"
+    );
+    assert_eq!(
+        nodes_named(&rendered, "OwnedFeatureChaining"),
         2,
         "{rendered}"
     );
-    // The OUTERMOST chain's left operand holds `a` and `b`; `c` is its member. Under a
-    // right fold the left operand would hold only `a`.
-    let left = subtree(&rendered, "NonFeatureChainPrimaryArgumentMember");
-    assert!(left.contains(r#""a""#), "{left}");
-    assert!(left.contains(r#""b""#), "{left}");
-    assert!(!left.contains(r#""c""#), "{left}");
+    // One link after the dot is a FeatureReferenceMember, as before.
+    let one = render(&parse_accepted("constraint def C { a.b }").syntax());
+    assert_eq!(
+        child_kinds(&one, "FeatureChainExpression"),
+        [
+            "NonFeatureChainPrimaryArgumentMember",
+            "Dot",
+            "FeatureReferenceMember"
+        ],
+        "{one}"
+    );
+    // After another postfix operator the chain starts again: `a.b[1].c` is
+    // FCE(BracketExpression(FCE(a, b), 1), c), and `a[1].b.c` one FCE over the bracket.
+    let bracketed = render(&parse_accepted("constraint def C { a.b[1].c }").syntax());
+    assert_eq!(
+        nodes_named(&bracketed, "FeatureChainExpression"),
+        2,
+        "{bracketed}"
+    );
+    let after = render(&parse_accepted("constraint def C { a[1].b.c }").syntax());
+    assert_eq!(nodes_named(&after, "FeatureChainExpression"), 1, "{after}");
+    assert_eq!(nodes_named(&after, "OwnedFeatureChainMember"), 1, "{after}");
 }
 
 #[test]
@@ -6448,15 +6483,20 @@ fn a_bracket_expression_owns_no_result_member() {
 
 #[test]
 fn a_feature_chain_is_bounded_by_the_depth_limit() {
-    // Each link WRAPS the last, so the tree is as deep as the chain is long even though
-    // the fold is a loop and uses no stack. The first draft of this test asserted the
-    // opposite — that chain length was free — and a 50000-link chain aborted the test
-    // thread, which is what invariant 3 forbids. Chains are counted against MAX_DEPTH
-    // like any other nesting.
-    //
-    // Losslessness at that length is asserted in tests/roundtrip.rs beside the three
-    // other constructs the same guard covers.
-    let source = format!("constraint def C {{ a{} }}", ".b".repeat(50_000));
+    // A bare chain is ONE FeatureChainExpression over a flat OwnedFeatureChain, read by a
+    // loop: `a.b.b...` of 50000 links nests no deeper than `a.b`, and reports nothing.
+    // As a feature value: a calculation body's recognisers still look ahead over a long
+    // expression by index before it is read, which is quadratic and a separate defect
+    // (recorded in .claude/state/state.json); the expression itself reads in one pass.
+    let flat = format!("attribute x = a{};", ".b".repeat(50_000));
+    let parsed = parse(&flat, Language::SysMl);
+    assert!(parsed.errors().is_empty(), "{:?}", parsed.errors());
+    assert_eq!(parsed.text(), flat);
+    // A chain broken by another postfix operator does nest, each link wrapping the last
+    // (`a.b[1].b[1]...`), so the tree is as deep as the expression is long even though
+    // the fold is a loop, and it is counted against MAX_DEPTH like any other nesting.
+    // Losslessness at that length is asserted in tests/roundtrip.rs.
+    let source = format!("attribute x = a{};", ".b[1]".repeat(50_000));
     let parsed = parse(&source, Language::SysMl);
     assert!(
         parsed
@@ -6466,8 +6506,8 @@ fn a_feature_chain_is_bounded_by_the_depth_limit() {
         "expected a depth diagnostic, got {:?}",
         parsed.errors()
     );
-    // A chain shorter than the limit is read whole and reports nothing.
-    parse_accepted(&format!("constraint def C {{ a{} }}", ".b".repeat(100)));
+    // Shorter than the limit, it is read whole and reports nothing.
+    parse_accepted(&format!("constraint def C {{ a{} }}", ".b[1]".repeat(100)));
 }
 
 #[test]
@@ -9322,7 +9362,7 @@ fn a_function_operation_folds_with_the_other_postfix_forms() {
     );
     let over = render(&parse_accepted("calc def C { a->head().b }").syntax());
     assert_eq!(
-        child_kinds(&over, "PrimaryArgumentValue"),
+        child_kinds(&over, "NonFeatureChainPrimaryArgumentValue"),
         ["FunctionOperationExpression"],
         "{over}"
     );
@@ -9498,7 +9538,7 @@ fn an_index_expression_folds_with_the_other_postfix_forms() {
     );
     let under_chain = render(&parse_accepted("calc def C { a#(1).b }").syntax());
     assert_eq!(
-        child_kinds(&under_chain, "PrimaryArgumentValue"),
+        child_kinds(&under_chain, "NonFeatureChainPrimaryArgumentValue"),
         ["IndexExpression"],
         "{under_chain}"
     );
@@ -9652,7 +9692,7 @@ fn a_collect_expression_folds_with_the_other_postfix_forms() {
     // And a chain after a collect.
     let under = render(&parse_accepted("calc def C { xs.{in x; x}.b }").syntax());
     assert_eq!(
-        child_kinds(&under, "PrimaryArgumentValue"),
+        child_kinds(&under, "NonFeatureChainPrimaryArgumentValue"),
         ["CollectExpression"],
         "{under}"
     );

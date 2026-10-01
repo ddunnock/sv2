@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-10-01T22:43:32Z",
+    "regenerated_utc": "2026-10-01T23:05:16Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -17,13 +17,13 @@
     },
     "coverage": {
       "declared": 554,
-      "implemented": 550,
-      "unimplemented": 4,
+      "implemented": 553,
+      "unimplemented": 1,
       "absent": 0,
-      "percent": 99.3
+      "percent": 99.8
     },
     "tests": {
-      "unit": 737,
+      "unit": 738,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 298,
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "9588d10 Mark every body's item production, read by one parameterised dispatcher",
       "ebd150f Read a bare `/* */` at a member position as a Comment, and report it elsewhere",
       "d89ae2b Correct thirty-three tests that wrote `/* */` mid-declaration as trivia",
       "c259462 Record the next step: every remaining unit waits on one of two author decisions",
       "f3af5a2 Mark InterfaceOccurrenceUsageElement, its three alternatives now whole",
       "904b153 Mark SysML's usage element alternations, one method for each class",
       "1f049c7 Record the next step: the SysML body-item alternations, and two decisions for the author",
-      "4574fcd Mark SysML's AnnotatingElement whole: its MetadataUsage reads `#` too",
-      "1ef1784 Mark FeatureSpecialization whole, the one method that reads all five"
+      "4574fcd Mark SysML's AnnotatingElement whole: its MetadataUsage reads `#` too"
     ]
   },
   "authored": {
@@ -258,6 +258,11 @@
           "OwnedExpressionReferenceMember@kerml",
           "FeatureChainMember@kerml"
         ]
+      },
+      {
+        "id": "quadratic-lookahead",
+        "question": "Some recognisers look ahead over a whole expression by index (`nth_is(n)` / `peek_nth(n)`, which re-filters from the cursor), which is quadratic in the expression's length. Measured 2026-10-01 in release: a calculation body whose result expression is a 20000-link chain takes ~0.5 s (`.b`), ~1 s (`::b`) and ~3.5 s (`.b[1]`), where the same expression as an attribute value is linear; and a long `a::b::...` is quadratic anywhere (`after_qualified_name` steps by index). `skip_qualified_name` and `skip_instantiated_type_member` were made one-pass in the feature-chain commit; the rest is not yet found. Not a correctness or invariant-3 issue, a performance one on pathological input. Next: profile `calc def C { a.b.b... }` (valgrind is installed) and make the walking recognisers one-pass over `meaningful_from`.",
+        "blocks": []
       }
     ],
     "log": [

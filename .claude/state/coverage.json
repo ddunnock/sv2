@@ -2,14 +2,11 @@
   "_generated_by": "scripts/bnf_coverage.py",
   "_note": "Counted in live grammar units (ADR-0015), not names: a production the two languages state differently is two units, `Name@kerml` and `Name@sysml`. `unimplemented` is a tracked state, not a failure. `absent` is a defect.",
   "declared": 554,
-  "implemented": 550,
-  "unimplemented": 4,
+  "implemented": 553,
+  "unimplemented": 1,
   "absent": 0,
-  "percent": 99.3,
+  "percent": 99.8,
   "unimplemented_productions": [
-    "FeatureChainMember@kerml",
-    "NonFeatureChainPrimaryArgument@kerml",
-    "NonFeatureChainPrimaryArgumentValue@kerml",
     "OwnedExpressionReferenceMember@kerml"
   ],
   "absent_productions": []

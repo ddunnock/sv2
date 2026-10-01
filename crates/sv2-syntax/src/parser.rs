@@ -167,8 +167,8 @@ const PRIMARY_ARGUMENT: [SyntaxKind; 3] = [
 /// `feature_chain_expression`.
 const NON_FEATURE_CHAIN_PRIMARY_ARGUMENT: [SyntaxKind; 3] = [
     SyntaxKind::NonFeatureChainPrimaryArgumentMember,
-    SyntaxKind::PrimaryArgument,
-    SyntaxKind::PrimaryArgumentValue,
+    SyntaxKind::NonFeatureChainPrimaryArgument,
+    SyntaxKind::NonFeatureChainPrimaryArgumentValue,
 ];
 
 /// The three `VisibilityIndicator` keywords, in the order the specification
@@ -7192,7 +7192,8 @@ impl<'a> Parser<'a> {
     // production: NonFeatureChainPrimaryArgumentMember
     //
     // NonFeatureChainPrimaryArgumentMember =
-    //     ownedMemberParameter = PrimaryArgument                  (KerML 8.2.5.8.2)
+    //     ownedMemberParameter = NonFeatureChainPrimaryArgument   (KerML 8.2.5.8.2,
+    //                                   by deviation NonFeatureChainPrimaryArgumentMember)
     //
     // production: PrimaryArgument
     // production: PrimaryArgumentValue
@@ -7200,16 +7201,20 @@ impl<'a> Parser<'a> {
     // PrimaryArgument      = ownedRelationship += PrimaryArgumentValue
     // PrimaryArgumentValue = value = PrimaryExpression            (KerML 8.2.5.8.2)
     //
-    // FOLDS LEFT, so `a.b.c` is `(a.b).c`. The member is named
-    // NonFeatureChainPrimaryArgumentMember and its body is `PrimaryArgument`, NOT
-    // NonFeatureChainPrimaryArgument — both the clause and Tier B' state it that way,
-    // and the derived unit adjudicates it: the Pilot builds the same association with
-    // `{FeatureChainExpression.operand += current}` inside a repetition
-    // (KerMLExpressions.xtext:301, :319), which is the Xtext idiom for a left fold. A
-    // left operand restricted to non-chains would forbid `a.b.c` outright.
+    // NESTS RIGHT, so `a.b.c` is `a . (b.c)`: one FeatureChainExpression whose member is an
+    // OwnedFeatureChainMember over the chain, as the Pilot's grammar reads it
+    // (KerMLExpressions.xtext:299-322, the chain `( '.' FeatureChainMember )?` after the
+    // base and after each other postfix operator, never repeated on its own). The BNF's
+    // member body, `PrimaryArgument`, is a copy of PrimaryArgumentMember's that admits a
+    // chain on the left and makes `a.b.c` ambiguous; deviation
+    // NonFeatureChainPrimaryArgumentMember (follow_xtext) reads it as the
+    // NonFeatureChainPrimaryArgument the clause defines beside it and nothing references.
+    // PrimaryArgument and PrimaryArgumentValue are what a bracket, an index, an operation,
+    // a select and a collect wrap their operand in. A chain after one of those starts a
+    // new FeatureChainExpression over it: `a.b[1].c` is FCE([](FCE(a, b), 1), c).
     //
-    // The loop is why this is iterative rather than recursive: a chain of ten thousand
-    // links is one stack frame, and invariant 3 is that no input kills the parser.
+    // The postfix loop is why this is iterative rather than recursive, and a bare chain
+    // of ten thousand links is one flat OwnedFeatureChain (invariant 3).
     //
     // NO EmptyResultMember, although the metaclass IS an OperatorExpression (8.3.4.8.4)
     // and every operator in the infix table owns one. The BNF writes EmptyResultMember
@@ -7217,10 +7222,7 @@ impl<'a> Parser<'a> {
     // FeatureReferenceExpression both name it — and this production does not. Adding one
     // by analogy would put an element in the tree that the grammar does not state.
     //
-    // FeatureChainMember = FeatureReferenceMember | OwnedFeatureChainMember, and is NOT
-    // marked: the second alternative, a FeatureChain of two or more links, is absent.
-    // With the left fold it is also unreachable here — every member this loop reads is a
-    // single link, because the accumulated chain is the LEFT operand. SysML's
+    // FeatureChainMember@kerml is marked at `kerml_feature_chain_member`. SysML's
     // AssignmentNodeDeclaration (8.2.2.17.5) reaches SysML's own FeatureChainMember, a
     // different unit; see `sysml_feature_chain_member`.
     // production: BracketExpression
@@ -7257,7 +7259,22 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    /// One `FeatureChainExpression`, folded over what is already at `start`.
+    // production: NonFeatureChainPrimaryArgument@kerml
+    // production: NonFeatureChainPrimaryArgumentValue@kerml
+    //
+    // NonFeatureChainPrimaryArgument : Feature =
+    //     ownedRelationship += NonFeatureChainPrimaryArgumentValue
+    // NonFeatureChainPrimaryArgumentValue : FeatureValue =
+    //     value = NonFeatureChainPrimaryExpression                (KerML 8.2.5.8.2)
+    //
+    // The left operand, wrapped retroactively as PRIMARY_ARGUMENT's three are for a
+    // bracket. By deviation NonFeatureChainPrimaryArgumentMember (follow_xtext) the member
+    // owns these two, which the BNF defines and no production references: the clause's
+    // `ownedMemberParameter = PrimaryArgument` is a copy of PrimaryArgumentMember's. What
+    // is at `start` is never a FeatureChainExpression, because `kerml_feature_chain_member`
+    // reads every `.name` after the `.` into one member, so a bare chain cannot fold.
+    //
+    /// One `FeatureChainExpression`, over what is already at `start`.
     fn feature_chain_expression(&mut self, start: rowan::Checkpoint) {
         self.start_node_at(start, SyntaxKind::FeatureChainExpression);
         self.wrap_at(start, &NON_FEATURE_CHAIN_PRIMARY_ARGUMENT);
@@ -7643,25 +7660,39 @@ impl<'a> Parser<'a> {
         self.at(SyntaxKind::Dot) && self.nth_is_name(1)
     }
 
-    /// `KerML`'s `FeatureChainMember` after the dot, in its `FeatureReferenceMember` form.
-    ///
-    /// SCOPED IN THE NAME because `SysML` states a production of the same name with a
-    /// different body — `memberElement = [QualifiedName] | OwnedFeatureChainMember`
-    /// (8.2.2.17.5), read by `sysml_feature_chain_member` — where `KerML`'s is
-    /// `FeatureReferenceMember | OwnedFeatureChainMember` (8.2.5.8.2). Two units, not one
-    /// (ADR-0015), and one Rust name for both would hide that.
-    ///
-    /// The nodes are `FeatureReferenceMember` and `FeatureReference`, both of which
-    /// `feature_reference_expression` also builds and marks. They are built here without
-    /// the `FeatureReferenceExpression` around them and without the `EmptyResultMember`
-    /// after them, because neither is in this production.
+    // production: FeatureChainMember@kerml
+    //
+    // FeatureChainMember : Membership =
+    //     FeatureReferenceMember | OwnedFeatureChainMember         (KerML 8.2.5.8.2)
+    //
+    // `KerML`'s `FeatureChainMember` after the dot. SCOPED IN THE NAME because `SysML`
+    // states a production of the same name with a different body — `memberElement =
+    // [QualifiedName] | OwnedFeatureChainMember` (8.2.2.17.5), read by
+    // `sysml_feature_chain_member` — and one Rust name for both would hide that.
+    //
+    // Both alternatives. A name with `.name` after it is an OwnedFeatureChainMember over
+    // the whole chain, so `a.b.c` is `a . (b.c)`, one FeatureChainExpression whose target
+    // is the chain, as the Pilot reads it (deviation NonFeatureChainPrimaryArgumentMember,
+    // follow_xtext). A lone name is a FeatureReferenceMember: its nodes are
+    // `FeatureReferenceMember` and `FeatureReference`, built without the
+    // `FeatureReferenceExpression` around them and the `EmptyResultMember` after them,
+    // because neither is in this production. A `.` before `{`, `?` or `metadata` is not
+    // a link: `at_feature_chain` asks for a name after it.
     fn kerml_feature_chain_member(&mut self) {
         self.eat_trivia();
-        self.start_node(SyntaxKind::FeatureReferenceMember);
-        self.start_node(SyntaxKind::FeatureReference);
-        self.qualified_name();
-        self.finish_node();
-        self.finish_node();
+        if self.at_owned_feature_chain() {
+            self.start_node(SyntaxKind::OwnedFeatureChainMember);
+            let start = self.builder.checkpoint();
+            self.qualified_name();
+            self.owned_feature_chain(start);
+            self.finish_node();
+        } else {
+            self.start_node(SyntaxKind::FeatureReferenceMember);
+            self.start_node(SyntaxKind::FeatureReference);
+            self.qualified_name();
+            self.finish_node();
+            self.finish_node();
+        }
     }
 
     /// `PrimaryExpression`'s alternatives other than `FeatureChainExpression`.
@@ -7849,26 +7880,60 @@ impl<'a> Parser<'a> {
     /// `::` belongs to the name only when a NAME follows it, so `A::*` ends at `A`.
     /// A recogniser that walked it differently from the parser would accept a prefix the
     /// parser then failed to read.
+    ///
+    /// One pass over the tokens, not `nth_is` per step: `peek_nth(n)` filters from the
+    /// cursor, so a walk that asked it at every step was quadratic in the name's length.
     fn skip_qualified_name(&self, n: usize) -> Option<usize> {
-        let mut n = n;
-        if self
-            .peek_nth(n)
-            .is_some_and(|t| t.kind == SyntaxKind::Dollar)
+        let mut tokens = self.meaningful_from(n);
+        Some(n + self.qualified_name_length(&mut tokens)?)
+    }
+
+    /// The meaningful tokens from the `n`th on, lazily: what `peek_nth` sees, without
+    /// re-filtering from the cursor for every index.
+    fn meaningful_from(&self, n: usize) -> impl Iterator<Item = Token> + Clone + '_ {
+        self.tokens
+            .get(self.pos..)
+            .unwrap_or(&[])
+            .iter()
+            .copied()
+            .filter(move |token| !self.skippable(token.kind))
+            .skip(n)
+    }
+
+    /// How many tokens a `QualifiedName` at the head of `tokens` takes, consuming them,
+    /// or `None` if none is written there. The rules are `skip_qualified_name`'s.
+    fn qualified_name_length(
+        &self,
+        tokens: &mut (impl Iterator<Item = Token> + Clone),
+    ) -> Option<usize> {
+        let mut length = 0;
+        if tokens
+            .clone()
+            .next()
+            .is_some_and(|token| token.kind == SyntaxKind::Dollar)
         {
-            n += 1;
-            if !self.nth_is(n, SyntaxKind::ColonColon) {
+            tokens.next();
+            if tokens.next()?.kind != SyntaxKind::ColonColon {
                 return None;
             }
-            n += 1;
+            length = 2;
         }
-        if !self.nth_is_name(n) {
+        if !self.is_name(tokens.next()?) {
             return None;
         }
-        n += 1;
-        while self.nth_is(n, SyntaxKind::ColonColon) && self.nth_is_name(n + 1) {
-            n += 2;
+        length += 1;
+        loop {
+            let mut ahead = tokens.clone();
+            let separator = ahead
+                .next()
+                .is_some_and(|t| t.kind == SyntaxKind::ColonColon);
+            if !(separator && ahead.next().is_some_and(|t| self.is_name(t))) {
+                return Some(length);
+            }
+            tokens.next();
+            tokens.next();
+            length += 2;
         }
-        Some(n)
     }
 
     /// Whether an `InvocationExpression` starts here.
@@ -7891,12 +7956,21 @@ impl<'a> Parser<'a> {
     /// The index just past an `InstantiatedTypeMember` written at the `n`th meaningful
     /// token: a `QualifiedName`, and any `'.'`-joined names after it, as
     /// `instantiated_type_member` reads them.
+    ///
+    /// One pass, as `skip_qualified_name` is: it walks a whole `a.b.c...` chain at every
+    /// base expression, so a walk by index was quadratic in the chain's length.
     fn skip_instantiated_type_member(&self, n: usize) -> Option<usize> {
-        let mut n = self.skip_qualified_name(n)?;
-        while self.nth_is(n, SyntaxKind::Dot) && self.nth_is_name(n + 1) {
-            n = self.skip_qualified_name(n + 1)?;
+        let mut tokens = self.meaningful_from(n);
+        let mut length = self.qualified_name_length(&mut tokens)?;
+        loop {
+            let mut ahead = tokens.clone();
+            let dot = ahead.next().is_some_and(|t| t.kind == SyntaxKind::Dot);
+            if !(dot && ahead.next().is_some_and(|t| self.is_name(t))) {
+                return Some(n + length);
+            }
+            tokens.next();
+            length += 1 + self.qualified_name_length(&mut tokens)?;
         }
-        Some(n)
     }
 
     // production: InvocationExpression
