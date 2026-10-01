@@ -1463,9 +1463,10 @@ struct Parser<'a> {
     /// `KerML` 8.2.2.2 makes `/* ... */` a token, and `Comment`, `Documentation` and
     /// `TextualRepresentation` take it as their body (`SysML` 8.2.2.4.2, 8.2.2.4.3).
     /// Inside a braced `RelationshipBody` every regular comment is therefore either an
-    /// annotation's body or an error, never text to skip past. Elsewhere this parser
-    /// still attaches it as trivia, because the `AnnotatingMember` that would own it
-    /// as an element in a package or definition body is not implemented.
+    /// annotation's body or an error, never text to skip past. At a member position a
+    /// bare one is a `Comment` member (see `at_bare_comment_member`), and anywhere else
+    /// `eat_trivia` reports it: the Pilot hides only `WS`, `ML_NOTE` and `SL_NOTE`
+    /// (KerMLExpressions.xtext:29), never `REGULAR_COMMENT`.
     comments_significant: bool,
     /// The `depth` of the `RequirementBody` a `FramedConcernUsage`'s reference alternative
     /// is reading, while it reads it, and `None` otherwise.
@@ -2491,13 +2492,68 @@ impl<'a> Parser<'a> {
     }
 
     /// Attach pending trivia to the tree. Never skipped — losslessness depends on it.
+    ///
+    /// A `REGULAR_COMMENT` reaching here as trivia is in no position a `Comment` may
+    /// stand, so it is reported, and still kept in the tree. `KerML` 8.2.2.2 makes `/* ...
+    /// */` a token, not a note: the notes are `//* ... */` and `// ...`, which the Pilot
+    /// hides with whitespace (KerMLExpressions.xtext:29) and this does too.
     fn eat_trivia(&mut self) {
         while let Some(token) = self.tokens.get(self.pos).copied() {
             if !self.skippable(token.kind) {
                 break;
             }
+            if token.kind == SyntaxKind::RegularComment {
+                self.emit(
+                    DiagnosticCode::Unexpected,
+                    Self::range_of(token),
+                    "a `/* ... */` comment is an element, and no element may stand here; \
+                     write `//* ... */` for a note"
+                        .to_owned(),
+                );
+            }
             self.push(token, token.kind);
         }
+    }
+
+    /// Whether a bare `REGULAR_COMMENT` opens the next member, after an optional
+    /// visibility: a `Comment` with none of its optional parts (`KerML` 8.2.3.3.2, `SysML`
+    /// 8.2.2.4.2), and so an `AnnotatingElement` wherever a member may stand. Asked by
+    /// every member loop before anything that would eat it as trivia; the member is then
+    /// read with comments significant, so `membership` sees the comment and reads it as
+    /// the `Comment` it is. A visibility before it is that `Comment`'s `MemberPrefix`, so in
+    /// `private /* a */ part x;` the `part` after it is a member of its own, and public.
+    fn at_bare_comment_member(&self) -> bool {
+        let mut meaningful = self
+            .tokens
+            .get(self.pos..)
+            .unwrap_or(&[])
+            .iter()
+            .filter(|token| !is_trivia(token.kind) || token.kind == SyntaxKind::RegularComment);
+        match meaningful.next() {
+            Some(token) if token.kind == SyntaxKind::RegularComment => true,
+            Some(token) if VISIBILITY.contains(&self.text_of(*token)) => meaningful
+                .next()
+                .is_some_and(|token| token.kind == SyntaxKind::RegularComment),
+            _ => false,
+        }
+    }
+
+    /// The `Comment` member `at_bare_comment_member` found, owned through the membership
+    /// `body` gives its other members, read with comments significant.
+    fn bare_comment_member(&mut self, body: Body) {
+        self.with_significant_comments(|p| {
+            p.membership(body);
+        });
+    }
+
+    /// Whether a metadata element opens here with comments significant, so that a
+    /// regular comment before it is seen as the `Comment` it is rather than looked past.
+    fn at_metadata_element_significantly(&mut self) -> bool {
+        let outer = self.comments_significant;
+        self.comments_significant = true;
+        let metadata = self.at_metadata_element(0);
+        self.comments_significant = outer;
+        metadata
     }
 
     /// Every token enters the tree here exactly once, which is why the
@@ -2718,7 +2774,9 @@ impl<'a> Parser<'a> {
     /// the enclosing body: an editor reparses invalid text constantly, and a body
     /// that vanishes on one bad token blanks the diagram on every keystroke.
     fn body_elements(&mut self, until: Option<SyntaxKind>, body: Body) {
-        while !self.at_end() && !until.is_some_and(|kind| self.at(kind)) {
+        while self.at_bare_comment_member()
+            || (!self.at_end() && !until.is_some_and(|kind| self.at(kind)))
+        {
             let start = self.pos;
             if !self.body_element(body) {
                 return;
@@ -2772,6 +2830,11 @@ impl<'a> Parser<'a> {
             // still reaches the tree, and the stack does not grow (invariant 3).
             self.report_too_deep();
             self.error_token();
+        } else if self.at_bare_comment_member() {
+            // A Comment member, AnnotatingElement being a MemberElement in KerML
+            // (8.2.3.4.3) and a DefinitionElement in SysML (8.2.2.5.2). Before the result
+            // expression too: `calc def C { /* c */ x + 1 }` is an item, then the result.
+            self.bare_comment_member(body);
         } else if self.at_import() {
             self.import();
         } else if self.at_element_keyword("alias") {
@@ -4153,7 +4216,8 @@ impl<'a> Parser<'a> {
     // 7.4.8.2), so the one question is where the run ends, and `at_kerml_result_expression`
     // answers it. Body::Function reads the items.
     fn function_body_part(&mut self) {
-        self.eat_trivia();
+        // A leading `/* ... */` is the run's first member, so it is left for the loop.
+        self.with_significant_comments(Self::eat_trivia);
         self.start_node(SyntaxKind::FunctionBodyPart);
         self.body_elements(Some(SyntaxKind::RBrace), Body::Function);
         if !self.at_end() && !self.at(SyntaxKind::RBrace) {
@@ -4968,10 +5032,12 @@ impl<'a> Parser<'a> {
 
     /// The items of an `EnumerationBody`, up to its `}` or end of input.
     fn enumeration_body_items(&mut self) {
-        while !self.at_end() && !self.at(SyntaxKind::RBrace) {
+        while self.at_bare_comment_member() || (!self.at_end() && !self.at(SyntaxKind::RBrace)) {
             let start = self.pos;
             let n = usize::from(self.at_visibility());
-            if self.at_annotating_member(n) {
+            if self.at_bare_comment_member() {
+                self.with_significant_comments(Self::annotating_member);
+            } else if self.at_annotating_member(n) {
                 self.annotating_member();
             } else if self.at_enumerated_value(n) {
                 self.enumeration_usage_member();
@@ -12808,7 +12874,8 @@ impl<'a> Parser<'a> {
     // The star is greedy and the expression is last; `at_result_expression` is where
     // that boundary is decided, and it is the whole of the difficulty here.
     fn calculation_body_part(&mut self) {
-        self.eat_trivia();
+        // A leading `/* ... */` is the run's first member, so it is left for the loop.
+        self.with_significant_comments(Self::eat_trivia);
         self.start_node(SyntaxKind::CalculationBodyPart);
         self.body_elements(Some(SyntaxKind::RBrace), Body::Calculation);
         // `body_elements` returns either at the `}` or because the item run ended. The
@@ -14241,12 +14308,14 @@ impl<'a> Parser<'a> {
 
     /// The items of a braced `MetadataBody`, up to its `}` or end of input.
     fn metadata_body_items(&mut self) {
-        while !self.at_end() && !self.at(SyntaxKind::RBrace) {
+        while self.at_bare_comment_member() || (!self.at_end() && !self.at(SyntaxKind::RBrace)) {
             let start = self.pos;
             let n = usize::from(self.at_visibility());
             if self.depth >= MAX_DEPTH {
                 self.report_too_deep();
                 self.error_token();
+            } else if self.at_bare_comment_member() {
+                self.bare_comment_member(Body::Definition);
             } else if self.at_import() {
                 self.import();
             } else if self.at_element_keyword("alias") {
@@ -14437,12 +14506,14 @@ impl<'a> Parser<'a> {
 
     /// The elements of a braced `KerML` `MetadataBody`, up to its `}` or end of input.
     fn kerml_metadata_body_elements(&mut self) {
-        while !self.at_end() && !self.at(SyntaxKind::RBrace) {
+        while self.at_bare_comment_member() || (!self.at_end() && !self.at(SyntaxKind::RBrace)) {
             let start = self.pos;
             let n = usize::from(self.at_visibility());
             if self.depth >= MAX_DEPTH {
                 self.report_too_deep();
                 self.error_token();
+            } else if self.at_bare_comment_member() {
+                self.bare_comment_member(Body::Type);
             } else if self.at_import() {
                 self.import();
             } else if self.at_element_keyword("alias") {
@@ -15004,7 +15075,7 @@ impl<'a> Parser<'a> {
     // the very next comment, and without for a metadata element, which
     // `annotating_element` asks about with the same peek.
     fn owned_annotation(&mut self) {
-        if self.at_metadata_element(0) {
+        if self.at_metadata_element_significantly() {
             self.eat_trivia();
         } else {
             self.with_significant_comments(Self::eat_trivia);
@@ -15044,7 +15115,7 @@ impl<'a> Parser<'a> {
     // DefinitionElement@sysml and PackageBodyElement@sysml, stays unmarked for it. This alternation reads a bare Comment wherever it is asked to, as it is in
     // a relationship body.
     fn annotating_element(&mut self) {
-        if self.at_metadata_element(0) {
+        if self.at_metadata_element_significantly() {
             self.metadata_annotating_element();
         } else {
             self.with_significant_comments(Self::comment_bodied_annotating_element);
@@ -15109,6 +15180,9 @@ impl<'a> Parser<'a> {
             .iter()
             .any(|word| self.nth_is_keyword(n, word))
             || self.at_metadata_element(n)
+            // Only ever true with comments significant, which is how a member loop reads
+            // the member `at_bare_comment_member` found.
+            || self.nth_is(n, SyntaxKind::RegularComment)
     }
 
     // production: Comment

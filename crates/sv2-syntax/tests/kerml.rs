@@ -23,7 +23,7 @@
 
 use std::fmt::Write as _;
 
-use sv2_syntax::{Language, Parse, SyntaxElement, SyntaxNode, parse};
+use sv2_syntax::{DiagnosticCode, Language, Parse, SyntaxElement, SyntaxNode, parse};
 
 /// Parse text the `KerML` grammar accepts, asserting that nothing was reported.
 fn kerml_accepted(source: &str) -> Parse {
@@ -359,6 +359,54 @@ fn every_annotating_element_is_a_member_and_an_owned_annotation() {
     // Documentation opens on `doc` (8.2.3.3.2).
     kerml_accepted("featuring y by C { #S metadata m : M; }");
     kerml_rejected("featuring y by C { #S doc /* d */ }");
+}
+
+// A bare REGULAR_COMMENT is a Comment (8.2.3.3.2), so a MemberElement wherever a member
+// may stand, and reported anywhere else: the Pilot hides only WS, ML_NOTE and SL_NOTE
+// (KerMLExpressions.xtext:29).
+#[test]
+fn a_bare_comment_at_a_kerml_member_position_is_a_comment_member() {
+    for source in [
+        "/* file */ package P;",
+        "package P { /* c */ classifier A; }",
+        "package P { classifier A; /* last */ }",
+        "classifier A { /* c */ feature f; }",
+        "function F { /* c */ in x; x }",
+        "metadata m : M { /* c */ }",
+        "namespace N { private /* c */ }",
+    ] {
+        let tree = render(&kerml_accepted(source).syntax());
+        assert_eq!(
+            child_kinds(&tree, "Comment"),
+            ["RegularComment"],
+            "{source}: {tree}"
+        );
+        assert_eq!(
+            parent_kind(&tree, "Comment").as_deref(),
+            Some("NonFeatureMember"),
+            "{source}: {tree}"
+        );
+    }
+    for source in [
+        "feature f : /* c */ T;",
+        "classifier A /* c */ ;",
+        // Nothing follows a result expression (8.2.5.7.1, FunctionBodyPart).
+        "function F { in x; x /* c */ }",
+    ] {
+        let parsed = parse(source, Language::KerMl);
+        assert!(
+            parsed
+                .errors()
+                .iter()
+                .any(|e| e.code() == DiagnosticCode::Unexpected
+                    && source.get(usize::from(e.range().start())..usize::from(e.range().end()))
+                        == Some("/* c */")),
+            "{source}: {:?}",
+            parsed.errors()
+        );
+        assert_eq!(parsed.text(), source);
+    }
+    kerml_accepted("feature f : //* note */ T;");
 }
 
 // -- Feature, KerML 8.2.4.3.1 -----------------------------------------------------
@@ -4403,4 +4451,21 @@ fn write_element(out: &mut String, element: SyntaxElement, depth: usize) {
             let _ = writeln!(out, "{pad}{:?} {:?}", token.kind(), token.text());
         }
     }
+}
+
+/// The kind of the node that owns the first `kind` node in a rendered tree.
+fn parent_kind(rendered: &str, kind: &str) -> Option<String> {
+    let lines: Vec<&str> = rendered.lines().collect();
+    let indent = |line: &str| line.len() - line.trim_start().len();
+    let at = lines
+        .iter()
+        .position(|line| line.trim().split(' ').next() == Some(kind))?;
+    let depth = indent(lines.get(at)?);
+    lines
+        .get(..at)?
+        .iter()
+        .rev()
+        .find(|line| indent(line) < depth)
+        .and_then(|line| line.trim().split(' ').next())
+        .map(str::to_owned)
 }

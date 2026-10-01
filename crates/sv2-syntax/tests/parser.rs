@@ -466,6 +466,81 @@ fn every_variant_usage_element_is_read_and_the_three_exclusions_are_not() {
     }
 }
 
+// -- a bare REGULAR_COMMENT is a Comment element, SysML 8.2.2.4.2 -----------------
+//
+//   Comment = ( 'comment' Identification ( 'about' Annotation ( ',' Annotation )* )? )?
+//             ( 'locale' STRING_VALUE )? REGULAR_COMMENT
+//
+// Every part before the body is optional, so a bare `/* ... */` IS a Comment, and so a
+// DefinitionElement wherever a member may stand. Nowhere else is it anything: the Pilot
+// hides WS, ML_NOTE and SL_NOTE and never REGULAR_COMMENT (KerMLExpressions.xtext:29),
+// so one written inside a declaration or an expression is reported. The two notes,
+// `//* ... */` and `// ...`, stay legal anywhere.
+
+#[test]
+fn a_bare_comment_at_a_member_position_is_a_comment_member() {
+    for (source, member) in [
+        ("/* file */ package P;", "PackageMember"),
+        ("package P; /* tail */", "PackageMember"),
+        ("package P { /* c */ part def A; }", "PackageMember"),
+        ("package P { part def A; /* last */ }", "PackageMember"),
+        ("package P { private /* hidden */ }", "PackageMember"),
+        ("part def A { /* c */ part p; }", "DefinitionMember"),
+        ("part def A { part p; /* last */ }", "DefinitionMember"),
+        ("action def A { /* c */ action a; }", "DefinitionMember"),
+        ("calc def C { /* c */ x + 1 }", "DefinitionMember"),
+        ("state def S { /* c */ }", "DefinitionMember"),
+        ("@M { /* c */ }", "DefinitionMember"),
+        ("enum def E { /* c */ enum a; }", "AnnotatingMember"),
+    ] {
+        let tree = render(&parse_accepted(source).syntax());
+        assert_eq!(nodes_named(&tree, "Comment"), 1, "{source}: {tree}");
+        assert_eq!(
+            child_kinds(&tree, "Comment"),
+            ["RegularComment"],
+            "{source}: {tree}"
+        );
+        assert_eq!(
+            parent_kind(&tree, "Comment").as_deref(),
+            Some(member),
+            "{source}: {tree}"
+        );
+    }
+    // Two in a row are two Comments.
+    let two = render(&parse_accepted("package P { /* a */ /* b */ }").syntax());
+    assert_eq!(nodes_named(&two, "Comment"), 2, "{two}");
+}
+
+#[test]
+fn a_bare_comment_anywhere_else_is_reported() {
+    for source in [
+        "part def A /* c */ ;",
+        "part p : /* c */ T;",
+        "attribute x = 1 /* c */ + 2;",
+        "part def A :> /* c */ B;",
+        // Nothing follows a result expression (8.2.2.19, CalculationBodyPart).
+        "calc def C { x + 1 /* c */ }",
+        // A Comment member ends the target successions an InitialNodeMember takes
+        // (8.2.2.17.1), so the `then` after it has nothing to follow.
+        "action def A { first start; /* c */ then b; }",
+    ] {
+        let parsed = parse_rejected(source);
+        assert!(
+            parsed
+                .errors()
+                .iter()
+                .any(|e| e.code() == DiagnosticCode::Unexpected
+                    && source.get(usize::from(e.range().start())..usize::from(e.range().end()))
+                        == Some("/* c */")),
+            "{source}: {:?}",
+            parsed.errors()
+        );
+    }
+    // The notes are hidden everywhere, as the Pilot hides them.
+    parse_accepted("part p : //* note */ T;");
+    parse_accepted("attribute x = 1 // note\n + 2;");
+}
+
 // -- the definitions, SysML 8.2.2 -------------------------------------------------
 //
 // Eight productions of one shape, `<prefix> KEYWORD 'def' Definition`, differing in
@@ -13326,4 +13401,21 @@ fn an_expose_is_bounded_by_its_rules() {
     // It names what it exposes, and ends in a RelationshipBody.
     parse_rejected("view v { expose; }");
     parse_rejected("view v { expose vehicle }");
+}
+
+/// The kind of the node that owns the first `kind` node in a rendered tree.
+fn parent_kind(rendered: &str, kind: &str) -> Option<String> {
+    let lines: Vec<&str> = rendered.lines().collect();
+    let indent = |line: &str| line.len() - line.trim_start().len();
+    let at = lines
+        .iter()
+        .position(|line| line.trim().split(' ').next() == Some(kind))?;
+    let depth = indent(lines.get(at)?);
+    lines
+        .get(..at)?
+        .iter()
+        .rev()
+        .find(|line| indent(line) < depth)
+        .and_then(|line| line.trim().split(' ').next())
+        .map(str::to_owned)
 }
