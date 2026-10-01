@@ -17,14 +17,19 @@
   },
   "rule": {
     "k": "ref",
-    "name": "PrimaryArgument"
+    "name": "NonFeatureChainPrimaryArgument"
   },
-  "decision": "`ownedMemberParameter = PrimaryArgument`, as both sources state it, and NOT NonFeatureChainPrimaryArgument despite this production's name. Derived as written for two reasons. The clause and Tier B' agree. And the reading is defensible on its own terms: FeatureChainExpression is the only production that uses this member, and allowing its left operand to be a chain is what makes `a.b.c` group as `(a.b).c`. The Pilot builds exactly that association, with `{FeatureChainExpression.operand += current}` inside a repetition (KerMLExpressions.xtext:301, :319), which is the Xtext idiom for a left-associative fold. A restriction to non-chain operands would forbid it.",
+  "decision": "`ownedMemberParameter = NonFeatureChainPrimaryArgument`, by deviation NonFeatureChainPrimaryArgumentMember (conflict, follow_xtext), re-derived 2026-10-01 on a grammar-adjudicator ruling. The clause and Tier B' write `PrimaryArgument`, a copy of the sibling PrimaryArgumentMember's body: it admits a chain as the left operand, makes `a.b.c` ambiguous, and leaves NonFeatureChainPrimaryArgument and its Value, defined beside it, referenced by nothing. The Pilot reads the bare `.` chain once after the base and after each other postfix operator, never repeated (KerMLExpressions.xtext:299-322), so `a.b.c` is `a . (b.c)`. This unit's earlier decision said the Pilot left-folds inside a repetition at :301 and :319; both actions sit in `( ... )?` groups, so that was false.",
   "evidence": [
     {
       "kind": "clause",
       "ref": "kerml clause 8.2.5.8.2",
       "note": "NonFeatureChainPrimaryArgumentMember is stated there"
+    },
+    {
+      "kind": "deviation",
+      "ref": "NonFeatureChainPrimaryArgumentMember",
+      "note": "conflict/follow_xtext: the body is NonFeatureChainPrimaryArgument."
     }
   ],
   "acceptance": {
@@ -37,5 +42,5 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-16T20:37:07Z"
+  "verified_utc": "2026-10-01T23:51:03Z"
 }

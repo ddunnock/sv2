@@ -204,6 +204,16 @@ def test_a_production_no_grammar_reaches_keeps_the_language_that_states_it():
     assert scopes["Orphan"] == ("sysml",)
 
 
+def test_a_repaired_body_is_read_by_both_languages_and_splits_nothing():
+    # A deviation that repairs a printed body for both languages: reach follows the
+    # repair, so the production it now references is reached by both and shared.
+    rules = [*MINI, rule("Orphan", K, "'orphan'")]
+    assert production_scopes(rules, {}, {})["Orphan"] == ("kerml",)
+    scopes = production_scopes(rules, {}, {"Expr": "Expr | Orphan"})
+    assert scopes["Orphan"] == (None,)
+    assert scopes["Expr"] == (None,)
+
+
 def test_rescoping_carries_the_work_and_re_checks_it(tmp_path, monkeypatch):
     monkeypatch.setattr(_grammar, "UNITS", tmp_path)
     fp = {"combined": "same", "spec_clause": "a", "xtext_rule": "b"}

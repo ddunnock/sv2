@@ -1,11 +1,11 @@
 {
   "_generated_by": ".claude/scripts/grammar_freeze.py",
   "_note": "The reference grammar: a machine-readable definition of the SysML v2 / KerML textual notation, derived clause by clause with traceable evidence. The Rust parser is checked against it; it is not generated from it.",
-  "frozen_utc": "2026-10-01T23:27:04Z",
+  "frozen_utc": "2026-10-01T23:51:52Z",
   "omg_namespace": "20250201",
   "pilot_revision": "5cca16d846016e62bb1e54e0e50e675254a022ef",
   "productions": 554,
-  "grammar_sha256": "74c2155238ac40e722598da82a0ba9e4cefaeeebe5e816617b81aec9a687bd93",
+  "grammar_sha256": "0106d7b30a895307d314703f7e766ca107bcf1097553faaaa1c0e667ce4ce523",
   "oracle": {
     "accepted": 311,
     "missed": 0,
@@ -9204,30 +9204,30 @@
       "metaclass": "",
       "fingerprint": "04c8cfd0f8ce950b3a9b2777a22a346a59028003a0fe2c5b094d49a5c97bf7ec"
     },
-    "NonFeatureChainPrimaryArgument@kerml": {
+    "NonFeatureChainPrimaryArgument": {
       "rule": {
         "k": "ref",
         "name": "NonFeatureChainPrimaryArgumentValue"
       },
-      "decision": "`ownedRelationship += NonFeatureChainPrimaryArgumentValue`.",
+      "decision": "`ownedRelationship += NonFeatureChainPrimaryArgumentValue`, as KerML 8.2.5.8.2 states it, the same shape as PrimaryArgument over PrimaryArgumentValue. Shared: reached by both grammars through NonFeatureChainPrimaryArgumentMember, whose printed body names PrimaryArgument instead and which deviation NonFeatureChainPrimaryArgumentMember repairs (REPAIRED_BODIES in _grammar.py).",
       "metaclass": "",
       "fingerprint": "edb0f28727605b0382fbc53e1e49ed74825df2e2c87cf1e3c51604fa2213ece5"
     },
     "NonFeatureChainPrimaryArgumentMember": {
       "rule": {
         "k": "ref",
-        "name": "PrimaryArgument"
+        "name": "NonFeatureChainPrimaryArgument"
       },
-      "decision": "`ownedMemberParameter = PrimaryArgument`, as both sources state it, and NOT NonFeatureChainPrimaryArgument despite this production's name. Derived as written for two reasons. The clause and Tier B' agree. And the reading is defensible on its own terms: FeatureChainExpression is the only production that uses this member, and allowing its left operand to be a chain is what makes `a.b.c` group as `(a.b).c`. The Pilot builds exactly that association, with `{FeatureChainExpression.operand += current}` inside a repetition (KerMLExpressions.xtext:301, :319), which is the Xtext idiom for a left-associative fold. A restriction to non-chain operands would forbid it.",
+      "decision": "`ownedMemberParameter = NonFeatureChainPrimaryArgument`, by deviation NonFeatureChainPrimaryArgumentMember (conflict, follow_xtext), re-derived 2026-10-01 on a grammar-adjudicator ruling. The clause and Tier B' write `PrimaryArgument`, a copy of the sibling PrimaryArgumentMember's body: it admits a chain as the left operand, makes `a.b.c` ambiguous, and leaves NonFeatureChainPrimaryArgument and its Value, defined beside it, referenced by nothing. The Pilot reads the bare `.` chain once after the base and after each other postfix operator, never repeated (KerMLExpressions.xtext:299-322), so `a.b.c` is `a . (b.c)`. This unit's earlier decision said the Pilot left-folds inside a repetition at :301 and :319; both actions sit in `( ... )?` groups, so that was false.",
       "metaclass": "",
       "fingerprint": "edb0f28727605b0382fbc53e1e49ed74825df2e2c87cf1e3c51604fa2213ece5"
     },
-    "NonFeatureChainPrimaryArgumentValue@kerml": {
+    "NonFeatureChainPrimaryArgumentValue": {
       "rule": {
         "k": "ref",
         "name": "NonFeatureChainPrimaryExpression"
       },
-      "decision": "`value = NonFeatureChainPrimaryExpression`.",
+      "decision": "`value = NonFeatureChainPrimaryExpression`, as KerML 8.2.5.8.2 states it, the same shape as PrimaryArgumentValue over PrimaryExpression: the left operand of a `.` is no FeatureChainExpression, which is what makes `a.b.c` read `a . (b.c)`. Shared, reached through NonFeatureChainPrimaryArgument.",
       "metaclass": "",
       "fingerprint": "edb0f28727605b0382fbc53e1e49ed74825df2e2c87cf1e3c51604fa2213ece5"
     },

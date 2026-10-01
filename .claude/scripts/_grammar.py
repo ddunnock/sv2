@@ -253,6 +253,18 @@ SYSML_BOUNDARY: dict[str, str] = {
 }
 
 
+#: Where BOTH languages read a body other than the Tier B' text, because a recorded
+#: deviation repairs a defect in it. Unlike SYSML_BOUNDARY this splits nothing: the two
+#: languages still read one body, only not the printed one. Reach follows the repair, so a
+#: production the printed text leaves unreferenced is reached through it.
+REPAIRED_BODIES: dict[str, str] = {
+    # deviation NonFeatureChainPrimaryArgumentMember (conflict, follow_xtext): the printed
+    # body, PrimaryArgument, is a copy of PrimaryArgumentMember's, and leaves
+    # NonFeatureChainPrimaryArgument referenced by nothing (KerML 8.2.5.8.2).
+    "NonFeatureChainPrimaryArgumentMember": "NonFeatureChainPrimaryArgument",
+}
+
+
 def body_references(body: str, known: set[str]) -> set[str]:
     """The productions a Tier B' body references, restricted to ``known`` non-terminals."""
     text = _LITERAL.sub(" ", re.sub(r"//[^\n]*", " ", body))
@@ -268,7 +280,11 @@ def _language_definitions(rules: list[Json]) -> dict[str, dict[str, list[str]]]:
 
 
 def reachable(
-    rules: list[Json], scope: str, boundary: dict[str, str], root: str = "RootNamespace"
+    rules: list[Json],
+    scope: str,
+    boundary: dict[str, str],
+    root: str = "RootNamespace",
+    repaired: dict[str, str] | None = None,
 ) -> set[str]:
     """Every production one language's grammar reaches from its root.
 
@@ -277,6 +293,7 @@ def reachable(
     the notes that cite [KerML, 8.2.5.8]). The boundary replaces a production's body in
     SysML where that fallback is recorded as wrong.
     """
+    repaired = REPAIRED_BODIES if repaired is None else repaired
     defs = _language_definitions(rules)
     known = set(defs["kerml"]) | set(defs["sysml"])
     seen: set[str] = set()
@@ -288,6 +305,8 @@ def reachable(
         seen.add(name)
         if scope == "sysml" and name in boundary:
             bodies = [boundary[name]]
+        elif name in repaired:
+            bodies = [repaired[name]]
         else:
             bodies = defs[scope].get(name) or (
                 defs["kerml"].get(name, []) if scope == "sysml" else []
@@ -298,7 +317,9 @@ def reachable(
 
 
 def production_scopes(
-    rules: list[Json], boundary: dict[str, str] | None = None
+    rules: list[Json],
+    boundary: dict[str, str] | None = None,
+    repaired: dict[str, str] | None = None,
 ) -> dict[str, tuple[str | None, ...]]:
     """The unit scopes the plan gives each production: (None,) shared, one language, or both.
 
@@ -313,7 +334,7 @@ def production_scopes(
     boundary = SYSML_BOUNDARY if boundary is None else boundary
     defs = _language_definitions(rules)
     divergent = divergent_productions(rules) | set(boundary)
-    reach = {scope: reachable(rules, scope, boundary) for scope in SCOPES}
+    reach = {scope: reachable(rules, scope, boundary, repaired=repaired) for scope in SCOPES}
     scopes: dict[str, tuple[str | None, ...]] = {}
     for name in sorted(set(defs["kerml"]) | set(defs["sysml"])):
         stated = tuple(scope for scope in SCOPES if name in defs[scope])

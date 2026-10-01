@@ -7259,8 +7259,8 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
-    // production: NonFeatureChainPrimaryArgument@kerml
-    // production: NonFeatureChainPrimaryArgumentValue@kerml
+    // production: NonFeatureChainPrimaryArgument
+    // production: NonFeatureChainPrimaryArgumentValue
     //
     // NonFeatureChainPrimaryArgument : Feature =
     //     ownedRelationship += NonFeatureChainPrimaryArgumentValue
