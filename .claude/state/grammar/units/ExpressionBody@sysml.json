@@ -17,10 +17,23 @@
     "metaclass": "SysML::Expression"
   },
   "rule": {
-    "k": "ref",
-    "name": "CalculationBody"
+    "k": "seq",
+    "items": [
+      {
+        "k": "kw",
+        "text": "{"
+      },
+      {
+        "k": "ref",
+        "name": "CalculationBodyPart"
+      },
+      {
+        "k": "kw",
+        "text": "}"
+      }
+    ]
   },
-  "decision": "SysML states no ExpressionBody clause; the pack reports none. The SysML reading is fixed by deviation ExpressionBody (follow_xtext): SysML expression bodies read SysML's CalculationBody rather than KerML's '{' FunctionBodyPart '}', decided on corpus lines that put the SysML prefix `ref` inside forAll bodies. The SysML Xtext states exactly that override. The rule is the deviation's reading and nothing more.",
+  "decision": "SysML states no ExpressionBody clause; the pack reports none. The SysML reading is fixed by deviation ExpressionBody (follow_xtext): SysML expression bodies read SysML's CalculationBody rather than KerML's '{' FunctionBodyPart '}', decided on corpus lines that put the SysML prefix `ref` inside forAll bodies. Re-derived 2026-10-01 to the deviation's record as the author narrowed it on 2026-09-23 (decision expression-body-semicolon): CalculationBody's braced alternative alone, '{' CalculationBodyPart '}'. Taken whole, the ';' alternative makes `a->f;` a complete operation and `attribute x = ;;` an attribute, and the corpus writes 17 expression bodies, all braced. The oracle leaked tests/rejection/expression-body-is-braced.sysml until this unit said so.",
   "evidence": [
     {
       "kind": "deviation",
@@ -31,6 +44,11 @@
       "kind": "xtext",
       "ref": "SysML.xtext ExpressionBody",
       "note": "ExpressionBody returns SysML::Expression : CalculationBody"
+    },
+    {
+      "kind": "deviation",
+      "ref": "ExpressionBody",
+      "note": "Narrowed by the author on 2026-09-23 (decision expression-body-semicolon): CalculationBody's braced alternative alone."
     }
   ],
   "notes": "One of the two SysML boundary deviations (ADR-0015). Without it SysML expression bodies would reach the KerML kernel.",
@@ -45,5 +63,5 @@
     "no_unmarked_left_recursion": "pass",
     "normalizes": "pass"
   },
-  "verified_utc": "2026-09-17T14:38:53Z"
+  "verified_utc": "2026-10-01T23:22:41Z"
 }

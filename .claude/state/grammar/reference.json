@@ -1,15 +1,15 @@
 {
   "_generated_by": ".claude/scripts/grammar_freeze.py",
   "_note": "The reference grammar: a machine-readable definition of the SysML v2 / KerML textual notation, derived clause by clause with traceable evidence. The Rust parser is checked against it; it is not generated from it.",
-  "frozen_utc": "2026-09-17T19:52:58Z",
+  "frozen_utc": "2026-10-01T23:27:04Z",
   "omg_namespace": "20250201",
   "pilot_revision": "5cca16d846016e62bb1e54e0e50e675254a022ef",
   "productions": 554,
-  "grammar_sha256": "0b9abe64f1f3ce2b7506663be561283741fedf2623c6c8a91821b0969598dd8c",
+  "grammar_sha256": "74c2155238ac40e722598da82a0ba9e4cefaeeebe5e816617b81aec9a687bd93",
   "oracle": {
     "accepted": 311,
     "missed": 0,
-    "caught": 37,
+    "caught": 298,
     "leaked": 0
   },
   "grammar": {
@@ -4719,10 +4719,23 @@
     },
     "ExpressionBody@sysml": {
       "rule": {
-        "k": "ref",
-        "name": "CalculationBody"
+        "k": "seq",
+        "items": [
+          {
+            "k": "kw",
+            "text": "{"
+          },
+          {
+            "k": "ref",
+            "name": "CalculationBodyPart"
+          },
+          {
+            "k": "kw",
+            "text": "}"
+          }
+        ]
       },
-      "decision": "SysML states no ExpressionBody clause; the pack reports none. The SysML reading is fixed by deviation ExpressionBody (follow_xtext): SysML expression bodies read SysML's CalculationBody rather than KerML's '{' FunctionBodyPart '}', decided on corpus lines that put the SysML prefix `ref` inside forAll bodies. The SysML Xtext states exactly that override. The rule is the deviation's reading and nothing more.",
+      "decision": "SysML states no ExpressionBody clause; the pack reports none. The SysML reading is fixed by deviation ExpressionBody (follow_xtext): SysML expression bodies read SysML's CalculationBody rather than KerML's '{' FunctionBodyPart '}', decided on corpus lines that put the SysML prefix `ref` inside forAll bodies. Re-derived 2026-10-01 to the deviation's record as the author narrowed it on 2026-09-23 (decision expression-body-semicolon): CalculationBody's braced alternative alone, '{' CalculationBodyPart '}'. Taken whole, the ';' alternative makes `a->f;` a complete operation and `attribute x = ;;` an attribute, and the corpus writes 17 expression bodies, all braced. The oracle leaked tests/rejection/expression-body-is-braced.sysml until this unit said so.",
       "metaclass": "SysML::Expression",
       "fingerprint": "c5fbd617308ce08d83466d487875b18284ce1fa3832deba26d18e0ffbc2cb3bd"
     },

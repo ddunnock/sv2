@@ -13,11 +13,8 @@
   },
   "accepted": 311,
   "missed": 0,
-  "caught": 291,
-  "leaked": 2,
+  "caught": 298,
+  "leaked": 0,
   "missed_detail": [],
-  "leaked_detail": [
-    "tests/rejection/expression-body-is-braced.sysml",
-    "tests/rejection/metadata-access-expression-is-not-implemented.sysml"
-  ]
+  "leaked_detail": []
 }
