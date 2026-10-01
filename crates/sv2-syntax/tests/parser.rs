@@ -1528,7 +1528,7 @@ fn a_payload_feature_reads_all_three_alternatives() {
 
 #[test]
 fn a_flow_usage_keeps_every_byte() {
-    let source = "part def P {\n\tflow /* c */ of Fuel // n\n\t  from a . b\n\t\tto c.d.e ;\n}\n";
+    let source = "part def P {\n\tflow //* c */ of Fuel // n\n\t  from a . b\n\t\tto c.d.e ;\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -1824,7 +1824,7 @@ fn a_target_succession_takes_every_form_its_productions_state() {
 fn a_target_succession_keeps_every_byte() {
     // Invariant 1: the empty SourceEnd is built from no tokens, and the trivia around
     // it must still reach the tree in order.
-    let source = "action def A {\n\tfirst start; // s\n\n\tthen /* t */ a . done ;\n}\n";
+    let source = "action def A {\n\tfirst start; // s\n\n\tthen //* t */ a . done ;\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -2003,7 +2003,7 @@ fn target_successions_follow_a_behaviour_usage() {
 
 #[test]
 fn a_source_succession_keeps_every_byte() {
-    let source = "action def A {\n\tthen /* s */ [ 1 ] // n\n\t\taction a;\n}\n";
+    let source = "action def A {\n\tthen //* s */ [ 1 ] // n\n\t\taction a;\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -2189,7 +2189,7 @@ fn a_control_node_needs_its_action_body() {
 
 #[test]
 fn a_control_node_keeps_every_byte() {
-    let source = "action def A {\n\tthen /* s */ merge // n\n\t\tm { }\n\tthen b;\n}\n";
+    let source = "action def A {\n\tthen //* s */ merge // n\n\t\tm { }\n\tthen b;\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -2582,8 +2582,7 @@ fn a_guarded_succession_is_an_item_with_no_suffix() {
 
 #[test]
 fn a_guarded_succession_keeps_every_byte() {
-    let source =
-        "action def A {\n\tsuccession /* d */ S // n\n\t\tfirst a.b\n\t\tif x == 1 then c { }\n}\n";
+    let source = "action def A {\n\tsuccession //* d */ S // n\n\t\tfirst a.b\n\t\tif x == 1 then c { }\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -2739,7 +2738,7 @@ fn a_succession_as_usage_is_bounded_by_its_rules() {
 #[test]
 fn a_succession_as_usage_keeps_every_byte() {
     let source =
-        "part def P {\n\tsuccession /* d */ s // n\n\t\tfirst a.b\n\t\tthen x ::> c { }\n}\n";
+        "part def P {\n\tsuccession //* d */ s // n\n\t\tfirst a.b\n\t\tthen x ::> c { }\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -2952,7 +2951,7 @@ fn a_connection_usage_is_bounded_by_its_rules() {
 
 #[test]
 fn a_connection_usage_keeps_every_byte() {
-    let source = "part def P {\n\tconnection /* c */ c : T connect [ 1 ] a ::> x . y to b references z ;\n\tconnect ( a , b ) { }\n}\n";
+    let source = "part def P {\n\tconnection //* c */ c : T connect [ 1 ] a ::> x . y to b references z ;\n\tconnect ( a , b ) { }\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -3090,7 +3089,7 @@ fn an_end_usage_prefix_is_bounded_by_its_rules() {
 
 #[test]
 fn an_end_usage_prefix_keeps_every_byte() {
-    let source = "connection def D {\n\tend /* e */ n [ 0 .. 1 ] ordered part p : P;\n\tend [*] ref r : R;\n}\n";
+    let source = "connection def D {\n\tend //* e */ n [ 0 .. 1 ] ordered part p : P;\n\tend [*] ref r : R;\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -3243,7 +3242,7 @@ fn a_binding_connector_as_usage_is_bounded_by_its_rules() {
 
 #[test]
 fn a_binding_connector_as_usage_keeps_every_byte() {
-    let source = "part def P {\n\tbinding /* d */ b // n\n\t\tbind a.b\n\t\t= x ::> c { }\n}\n";
+    let source = "part def P {\n\tbinding //* d */ b // n\n\t\tbind a.b\n\t\t= x ::> c { }\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -3395,7 +3394,7 @@ fn an_assert_constraint_usage_is_bounded_by_its_rules() {
 #[test]
 fn an_assert_constraint_usage_keeps_every_byte() {
     let source =
-        "part def P {\n\tassert /* n */ not constraint c // d\n\t\t: C {\n\t\tx > 0\n\t}\n}\n";
+        "part def P {\n\tassert //* n */ not constraint c // d\n\t\t: C {\n\t\tx > 0\n\t}\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -3530,7 +3529,7 @@ fn a_calculation_usage_is_bounded_by_its_rules() {
 
 #[test]
 fn a_calculation_usage_keeps_every_byte() {
-    let source = "part def P {\n\tcalc /* n */ c // d\n\t\t: C {\n\t\tin x;\n\t\tx + 1\n\t}\n}\n";
+    let source = "part def P {\n\tcalc //* n */ c // d\n\t\t: C {\n\t\tin x;\n\t\tx + 1\n\t}\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -3656,7 +3655,7 @@ fn a_constraint_usage_is_bounded_by_its_rules() {
 #[test]
 fn a_constraint_usage_keeps_every_byte() {
     let source =
-        "part def P {\n\tconstraint /* n */ c // d\n\t\t: C {\n\t\tin x;\n\t\tx > 0\n\t}\n}\n";
+        "part def P {\n\tconstraint //* n */ c // d\n\t\t: C {\n\t\tin x;\n\t\tx > 0\n\t}\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -3786,7 +3785,7 @@ fn a_requirement_usage_is_bounded_by_its_rules() {
 #[test]
 fn a_requirement_usage_keeps_every_byte() {
     let source =
-        "part def P {\n\trequirement /* n */ <'1'> r // d\n\t\t: R {\n\t\tsubject s;\n\t}\n}\n";
+        "part def P {\n\trequirement //* n */ <'1'> r // d\n\t\t: R {\n\t\tsubject s;\n\t}\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -3912,7 +3911,7 @@ fn an_enumeration_definition_is_bounded_by_its_rules() {
 
 #[test]
 fn an_enumeration_definition_keeps_every_byte() {
-    let source = "enum /* n */ def E // d\n\t:> A {\n\tdoc /* v */\n\tenum a = 1;\n\tb { }\n}\n";
+    let source = "enum //* n */ def E // d\n\t:> A {\n\tdoc /* v */\n\tenum a = 1;\n\tb { }\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -4197,7 +4196,7 @@ fn a_dependency_is_bounded_by_its_rules() {
 
 #[test]
 fn a_dependency_keeps_every_byte() {
-    let source = "dependency /* n */ Use // d\n\tfrom a ,b\n\tto c::d {\n\t/* why */\n}\n";
+    let source = "dependency //* n */ Use // d\n\tfrom a ,b\n\tto c::d {\n\t/* why */\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -4261,7 +4260,7 @@ fn a_conjugated_port_typing_is_bounded_by_its_rules() {
 
 #[test]
 fn a_conjugated_port_typing_keeps_every_byte() {
-    let source = "port p : ~ /* c */ 'P-1' , ~ Q;\n";
+    let source = "port p : ~ //* c */ 'P-1' , ~ Q;\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -4524,7 +4523,7 @@ fn a_state_definition_is_bounded_by_its_rules() {
 
 #[test]
 fn a_state_definition_keeps_every_byte() {
-    let source = "state /* s */ def D parallel {\n\tstate a; // x\n\taccept S via p\n\t\tif g then b;\n\ttransition t first a then b { }\n}\n";
+    let source = "state //* s */ def D parallel {\n\tstate a; // x\n\taccept S via p\n\t\tif g then b;\n\ttransition t first a then b { }\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -4782,7 +4781,7 @@ fn a_state_action_is_bounded_by_its_rules() {
 
 #[test]
 fn a_state_action_keeps_every_byte() {
-    let source = "state def D {\n\tentry /* e */ ; then a;\n\tdo action d { }\n\tstate a;\n\taccept after 5 [s] do e then a;\n}\n";
+    let source = "state def D {\n\tentry //* e */ ; then a;\n\tdo action d { }\n\tstate a;\n\taccept after 5 [s] do e then a;\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -5147,7 +5146,7 @@ fn send_assign_and_accept_nodes_are_bounded_by_their_rules() {
 
 #[test]
 fn send_and_assignment_nodes_keep_every_byte() {
-    let source = "action def A {\n\tthen /* s */ send new S ( 1 ) via p /* v */ to q ;\n\tassign a . b . c := 1 { }\n\taction x send { }\n}\n";
+    let source = "action def A {\n\tthen //* s */ send new S ( 1 ) via p //* v */ to q ;\n\tassign a . b . c := 1 { }\n\taction x send { }\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -5291,7 +5290,7 @@ fn a_terminate_node_owns_what_its_production_writes() {
 #[test]
 fn a_terminate_node_keeps_every_byte() {
     let source =
-        "action def A {\n\tthen /* t */ terminate ;\n\taction x terminate a . b // n\n\t{ }\n}\n";
+        "action def A {\n\tthen //* t */ terminate ;\n\taction x terminate a . b // n\n\t{ }\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -5484,7 +5483,7 @@ fn a_while_loop_node_reads_the_corpus_forms() {
 
 #[test]
 fn a_while_loop_node_keeps_every_byte() {
-    let source = "action def A {\n\tthen /* w */ while i > 0 // n\n\t{ assign i := i - 1 ; }\n\tuntil b ;\n\tloop action x { }\n}\n";
+    let source = "action def A {\n\tthen //* w */ while i > 0 // n\n\t{ assign i := i - 1 ; }\n\tuntil b ;\n\tloop action x { }\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -5659,7 +5658,7 @@ fn an_else_with_no_else_clause_after_it_is_not_the_if_nodes() {
 
 #[test]
 fn an_if_node_keeps_every_byte() {
-    let source = "action def A {\n\tthen /* i */ if a < b // n\n\t{ } else\n\tif c { assign x := 1 ; }\n\telse action e { }\n}\n";
+    let source = "action def A {\n\tthen //* i */ if a < b // n\n\t{ } else\n\tif c { assign x := 1 ; }\n\telse action e { }\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -5772,7 +5771,7 @@ fn a_for_loop_variable_is_a_for_variable_declaration() {
 
 #[test]
 fn a_for_loop_node_keeps_every_byte() {
-    let source = "action def A {\n\tthen /* f */ for i : I // n\n\tin ( 1 , 2 ) action b { }\n}\n";
+    let source = "action def A {\n\tthen //* f */ for i : I // n\n\tin ( 1 , 2 ) action b { }\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -5874,7 +5873,7 @@ fn a_default_target_succession_is_a_suffix_and_nothing_else() {
 
 #[test]
 fn a_guarded_target_succession_keeps_every_byte() {
-    let source = "action def A {\n\tfirst start;\n\tif /* g */ x == 1 // n\n\t\tthen b;\n}\n";
+    let source = "action def A {\n\tfirst start;\n\tif //* g */ x == 1 // n\n\t\tthen b;\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -9984,7 +9983,7 @@ fn a_use_case_is_not_read_as_a_case() {
 
 #[test]
 fn a_case_keeps_every_byte() {
-    let source = "analysis def /* n */ A // d\n{\n\tsubject v : V;\n\tobjective {\n\t\trequire constraint { v > 0 }\n\t}\n\treturn r;\n\tr\n}\n";
+    let source = "analysis def //* n */ A // d\n{\n\tsubject v : V;\n\tobjective {\n\t\trequire constraint { v > 0 }\n\t}\n\treturn r;\n\tr\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -10051,7 +10050,7 @@ fn an_actor_member_owns_what_its_production_writes() {
 
 #[test]
 fn an_actor_member_keeps_every_byte() {
-    let source = "requirement def R {\n\tactor /* n */ e // d\n\t\t: E[0..1];\n}\n";
+    let source = "requirement def R {\n\tactor //* n */ e // d\n\t\t: E[0..1];\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -10161,7 +10160,7 @@ fn a_use_case_is_bounded_by_its_rules() {
 
 #[test]
 fn a_use_case_keeps_every_byte() {
-    let source = "use /* n */ case\n\tdef U // d\n{\n\tsubject s;\n\tactor a [0..1];\n}\n";
+    let source = "use //* n */ case\n\tdef U // d\n{\n\tsubject s;\n\tactor a [0..1];\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -10292,7 +10291,7 @@ fn an_include_use_case_usage_is_bounded_by_its_rules() {
 
 #[test]
 fn an_include_use_case_usage_keeps_every_byte() {
-    let source = "use case def U {\n\tinclude /* n */ 'a b' // d\n\t\t[0..*] { subject; }\n}\n";
+    let source = "use case def U {\n\tinclude //* n */ 'a b' // d\n\t\t[0..*] { subject; }\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -10514,7 +10513,7 @@ fn a_requirement_verification_member_is_read_wherever_a_requirement_body_is() {
 
 #[test]
 fn a_requirement_verification_member_keeps_every_byte() {
-    let source = "requirement def R {\n\tverify /* n */ requirement r // d\n\t\t: T;\n}\n";
+    let source = "requirement def R {\n\tverify //* n */ requirement r // d\n\t\t: T;\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
@@ -10713,20 +10712,21 @@ fn a_metadata_usage_and_a_classification_expression_share_the_at() {
 #[test]
 fn a_metadata_usage_keeps_every_byte() {
     let source =
-        "part def P {\n\t@M /* c */ { x = 1; } // d\n\tmetadata m defined by M about a;\n}\n";
+        "part def P {\n\t@M //* c */ { x = 1; } // d\n\tmetadata m defined by M about a;\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 
 #[test]
 fn a_metadata_usage_is_read_wherever_an_annotating_element_is() {
     // A relationship body scopes comment significance per annotation, so a metadata
-    // usage there reads ordinary comments between its tokens and Comment members in its
-    // body, as it does at member position.
+    // usage there reads notes between its tokens and Comment members in its body, as it
+    // does at member position. A `/* */` between its tokens would be no Comment's place
+    // (KerML 8.2.2.2; the Pilot hides only the notes, KerMLExpressions.xtext:29).
     for source in [
         "public import A::* { @R { /* c */ x = 1; } }",
-        "public import A::* { @R /* c */ ; }",
-        "public import A::* { metadata /* c */ R; }",
-        "public import A::* { @R; /* a comment annotation after it */ }",
+        "public import A::* { @R //* c */ ; }",
+        "public import A::* { metadata //* c */ R; }",
+        "public import A::* { @R; //* a comment annotation after it */ }",
     ] {
         parse_accepted(source);
     }
@@ -12045,8 +12045,7 @@ fn a_succession_flow_usage_is_a_structure_usage_element() {
 
 #[test]
 fn a_succession_flow_usage_keeps_every_byte() {
-    let source =
-        "part def P {\n\tsuccession /* c */ flow // n\n\t  of Fuel from a . b\n\t\tto c.d.e ;\n}\n";
+    let source = "part def P {\n\tsuccession //* c */ flow // n\n\t  of Fuel from a . b\n\t\tto c.d.e ;\n}\n";
     assert_eq!(parse_accepted(source).text(), source);
 }
 

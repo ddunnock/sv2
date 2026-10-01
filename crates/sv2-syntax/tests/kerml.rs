@@ -923,7 +923,7 @@ fn a_connector_with_no_connector_declaration_is_a_feature_declaration_and_value(
 
 #[test]
 fn a_connector_keeps_every_byte() {
-    let source = "struct S {\n\tconnector /* c */ m[2] : M\n\t\tfrom [1] a . b // n\n\t\tto b ;\n\tconnector ( a , b , c ) { }\n}\n";
+    let source = "struct S {\n\tconnector //* c */ m[2] : M\n\t\tfrom [1] a . b // n\n\t\tto b ;\n\tconnector ( a , b , c ) { }\n}\n";
     assert_eq!(kerml_accepted(source).text(), source);
 }
 
