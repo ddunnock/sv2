@@ -61,7 +61,8 @@ production its unit scopes from the Tier B′ inventory and the boundary, determ
 - stated identically in both: shared
 - stated in one language: shared if both grammars reach it from `RootNamespace`,
   otherwise that language's variant alone. A production neither grammar reaches keeps
-  the language that states it.
+  the language that states it (and, if ADR-0023 is accepted, leaves the coverage count
+  when the register records it `unreachable`).
 
 **Reach follows the text.** KerML reads only KerML's productions. SysML reads its own,
 and KerML's for any it does not state. References are taken from Tier B′ bodies with

@@ -7,7 +7,8 @@
     "0017",
     "0019",
     "0020",
-    "0021"
+    "0021",
+    "0023"
   ],
   "decisions": [
     {
@@ -165,6 +166,13 @@
       "status": "accepted",
       "date": "2026-09-22",
       "file": "docs/adr/0022-deviations-are-reported-and-strict-conformance-promotes-them.md"
+    },
+    {
+      "id": "0023",
+      "title": "A production no grammar reaches is recorded as unreachable and leaves the coverage count",
+      "status": "proposed",
+      "date": "2026-10-01",
+      "file": "docs/adr/0023-a-production-no-grammar-reaches-leaves-the-coverage-count.md"
     }
   ]
 }

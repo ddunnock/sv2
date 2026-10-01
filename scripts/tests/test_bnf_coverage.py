@@ -218,3 +218,30 @@ def test_build_report_counts_what_it_was_given():
     assert report["implemented"] == 1
     assert report["percent"] == 25.0
     assert report["unimplemented_productions"] == ["B", "C"]
+
+
+def test_only_unreachable_entries_leave_the_denominator(tmp_path):
+    # ADR-0023: the register's `unreachable` decision, and no other, excludes a production.
+    register = tmp_path / "deviations.json"
+    register.write_text(
+        json.dumps(
+            {
+                "deviations": [
+                    {"production": "Orphan", "decision": "unreachable"},
+                    {"production": "Spec", "decision": "follow_spec"},
+                    {"production": "Pilot", "decision": "follow_xtext"},
+                ]
+            }
+        )
+    )
+    assert bnf_coverage.unreachable_productions(register) == {"Orphan"}
+
+
+def test_a_missing_register_excludes_nothing(tmp_path):
+    assert bnf_coverage.unreachable_productions(tmp_path / "absent.json") == set()
+
+
+def test_the_report_lists_what_it_left_out():
+    report = bnf_coverage.build_report({"A"}, ["A"], [], [], ["Orphan@kerml"])
+    assert report["excluded_unreachable"] == ["Orphan@kerml"]
+    assert report["declared"] == 1

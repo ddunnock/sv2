@@ -46,6 +46,7 @@ INVENTORY = Path(".claude/state/grammar/bnf-productions.json")
 XTEXT_INVENTORY = Path(".claude/state/grammar/productions.json")
 UNITS = Path(".claude/state/grammar/units")
 REPORT = Path(".claude/state/coverage.json")
+DEVIATIONS = Path(".claude/state/deviations.json")
 MARKER = re.compile(r"//\s*production:\s*([A-Za-z_][A-Za-z0-9_]*(?:@(?:kerml|sysml))?)")
 
 #: Each production's live unit scopes: ``None`` for its shared unit, else the languages.
@@ -74,6 +75,19 @@ def live_units(directory: Path | None = None) -> Live:
         if unit.get("status") != "retired":
             live.setdefault(str(unit["production"]), set()).add(unit.get("scope"))
     return live
+
+
+def unreachable_productions(path: Path | None = None) -> set[str]:
+    """Productions the register records `unreachable` (ADR-0023).
+
+    Each is defined by the specification and reached by neither grammar, so it is left
+    out of the denominator.
+    """
+    register = DEVIATIONS if path is None else path
+    if not register.is_file():
+        return set()
+    entries = json.loads(register.read_text()).get("deviations", [])
+    return {str(e["production"]) for e in entries if e.get("decision") == "unreachable"}
 
 
 def unit_keys(live: Live) -> set[str]:
@@ -106,7 +120,11 @@ def xtext_only() -> set[str]:
 
 
 def build_report(
-    declared: set[str], implemented: list[str], unimplemented: list[str], absent: list[str]
+    declared: set[str],
+    implemented: list[str],
+    unimplemented: list[str],
+    absent: list[str],
+    excluded: list[str] | None = None,
 ) -> dict[str, object]:
     """The report as it should be on disk for these units and these markers."""
     percent = 100.0 * len(implemented) / len(declared) if declared else 0.0
@@ -124,6 +142,7 @@ def build_report(
         "percent": round(percent, 1),
         "unimplemented_productions": unimplemented,
         "absent_productions": absent,
+        "excluded_unreachable": excluded or [],
     }
 
 
@@ -225,15 +244,20 @@ def main(argv: list[str] | None = None) -> int:
         print(f"no live grammar units — run the derive-grammar pipeline, which writes {UNITS}")
         return 0
 
-    declared = unit_keys(live)
+    unreachable = unreachable_productions()
+    every_unit = unit_keys(live)
+    excluded = sorted(u for u in every_unit if u.partition("@")[0] in unreachable)
+    declared = every_unit - set(excluded)
     claims = claimed_productions()
     resolved = {claim: resolve(claim, live) for claim in claims}
 
-    implemented = sorted({unit for unit in resolved.values() if unit is not None})
+    # A marker on an excluded unit still names a unit, so it is not absent; it is simply
+    # not counted, as the unit is not.
+    implemented = sorted({unit for unit in resolved.values() if unit in declared})
     unimplemented = sorted(declared - set(implemented))
     absent = sorted(claim for claim, unit in resolved.items() if unit is None)
 
-    report = build_report(declared, implemented, unimplemented, absent)
+    report = build_report(declared, implemented, unimplemented, absent, excluded)
 
     if args.check:
         return _check(absent, report, live)
@@ -241,6 +265,10 @@ def main(argv: list[str] | None = None) -> int:
     REPORT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.write_text(json.dumps(report, indent=2) + "\n")
     print(f"wrote {REPORT} ({len(implemented)}/{len(declared)} grammar units implemented)")
+    if excluded:
+        print(
+            f"  {len(excluded)} unit(s) left out as unreachable (ADR-0023): {', '.join(excluded)}"
+        )
     return 0
 
 

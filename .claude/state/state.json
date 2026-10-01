@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-10-01T23:05:16Z",
+    "regenerated_utc": "2026-10-01T23:10:25Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "dd339cc Nest feature chains to the right, `a.b.c` as `a . (b.c)`, as the Pilot does",
       "9588d10 Mark every body's item production, read by one parameterised dispatcher",
       "ebd150f Read a bare `/* */` at a member position as a Comment, and report it elsewhere",
       "d89ae2b Correct thirty-three tests that wrote `/* */` mid-declaration as trivia",
       "c259462 Record the next step: every remaining unit waits on one of two author decisions",
       "f3af5a2 Mark InterfaceOccurrenceUsageElement, its three alternatives now whole",
       "904b153 Mark SysML's usage element alternations, one method for each class",
-      "1f049c7 Record the next step: the SysML body-item alternations, and two decisions for the author",
-      "4574fcd Mark SysML's AnnotatingElement whole: its MetadataUsage reads `#` too"
+      "1f049c7 Record the next step: the SysML body-item alternations, and two decisions for the author"
     ]
   },
   "authored": {
