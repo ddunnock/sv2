@@ -409,6 +409,63 @@ fn a_bare_comment_at_a_kerml_member_position_is_a_comment_member() {
     kerml_accepted("feature f : //* note */ T;");
 }
 
+// NamespaceBodyElement = NamespaceMember | AliasMember | Import          (8.2.3.4.1)
+// NamespaceMember      = NonFeatureMember | NamespaceFeatureMember
+// MemberElement        = AnnotatingElement | NonFeatureElement
+// PackageBody          = ';' | '{' ( NamespaceBodyElement | ElementFilterMember )* '}'
+// TypeBodyElement      = NonFeatureMember | FeatureMember | AliasMember | Import
+//                                                                          (8.2.4.1.1)
+// One instance of every alternative in every KerML body, admitted with the membership
+// its body names exactly where its production lists it.
+#[test]
+fn every_kerml_body_admits_exactly_its_elements() {
+    let bodies = [
+        ("Root", "ITEM"),
+        ("Package", "package P { ITEM }"),
+        ("Namespace", "namespace N { ITEM }"),
+        ("Type", "classifier C { ITEM }"),
+    ];
+    let namespaces = ["Root", "Package", "Namespace"];
+    let every = ["Root", "Package", "Namespace", "Type"];
+    let items: [(&str, &[&str], &str); 8] = [
+        ("class K;", &every, "NonFeatureMember"),
+        ("/* c */", &every, "NonFeatureMember"),
+        ("doc /* d */", &every, "NonFeatureMember"),
+        ("feature f;", &namespaces, "NamespaceFeatureMember"),
+        ("feature g;", &["Type"], "OwnedFeatureMember"),
+        ("member feature f;", &["Type"], "TypeFeatureMember"),
+        ("alias X for Y;", &every, "AliasMember"),
+        ("private import A::*;", &every, "NamespaceImport"),
+    ];
+    let mut wrong = Vec::new();
+    for (item, admitted, node) in items {
+        for (body, template) in bodies {
+            let source = template.replace("ITEM", item);
+            let parsed = parse(&source, Language::KerMl);
+            assert_eq!(parsed.text(), source);
+            let tree = render(&parsed.syntax());
+            let ok = parsed.errors().is_empty()
+                && tree
+                    .lines()
+                    .any(|line| line.trim().split(' ').next() == Some(node));
+            if admitted.contains(&body) != ok {
+                wrong.push(format!("{body}: `{item}` ({node}): {:?}", parsed.errors()));
+            }
+        }
+    }
+    // A filter is a package body's alone (8.2.3.4.1, 8.2.3.5).
+    let filter = render(&kerml_accepted("package P { filter true; }").syntax());
+    assert!(filter.contains("ElementFilterMember"), "{filter}");
+    for source in [
+        "filter true;",
+        "namespace N { filter true; }",
+        "classifier C { filter true; }",
+    ] {
+        kerml_rejected(source);
+    }
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+}
+
 // -- Feature, KerML 8.2.4.3.1 -----------------------------------------------------
 //
 // Feature = ( FeaturePrefix ( 'feature' | PrefixMetadataMember ) FeatureDeclaration?

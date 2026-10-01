@@ -1838,7 +1838,7 @@ impl<'a> Parser<'a> {
     /// Whether an `ActionDefinition` starts at the `n`th meaningful token.
     ///
     /// `OccurrenceDefinitionPrefix 'action' 'def'` (`SysML` 8.2.2.17.1). Only the `def`
-    /// separates it from an `ActionUsage`, which is unimplemented.
+    /// separates it from an `ActionUsage`.
     fn at_action_definition(&self, n: usize) -> bool {
         let after = self.skip_occurrence_definition_prefix(n);
         self.nth_is_keyword(after, "action") && self.nth_is_keyword(after + 1, "def")
@@ -1847,7 +1847,7 @@ impl<'a> Parser<'a> {
     /// Whether a `ConstraintDefinition` starts at the `n`th meaningful token.
     ///
     /// `OccurrenceDefinitionPrefix 'constraint' 'def'` (`SysML` 8.2.2.20). Only the
-    /// `def` separates it from a `ConstraintUsage`, which is unimplemented.
+    /// `def` separates it from a `ConstraintUsage`.
     fn at_constraint_definition(&self, n: usize) -> bool {
         let after = self.skip_occurrence_definition_prefix(n);
         self.nth_is_keyword(after, "constraint") && self.nth_is_keyword(after + 1, "def")
@@ -1856,8 +1856,7 @@ impl<'a> Parser<'a> {
     /// Whether a `CalculationDefinition` starts at the `n`th meaningful token.
     ///
     /// `OccurrenceDefinitionPrefix 'calc' 'def'` (`SysML` 8.2.2.19). Only the `def`
-    /// separates it from a `CalculationUsage`, which is unimplemented and which the
-    /// corpus writes.
+    /// separates it from a `CalculationUsage`.
     fn at_calculation_definition(&self, n: usize) -> bool {
         let after = self.skip_occurrence_definition_prefix(n);
         self.nth_is_keyword(after, "calc") && self.nth_is_keyword(after + 1, "def")
@@ -2823,6 +2822,33 @@ impl<'a> Parser<'a> {
 
     /// One element of `body`, as `body_elements` describes them. Returns `false` when
     /// what is left is the body's trailing result expression, which ends the item run.
+    // production: NamespaceBodyElement@kerml
+    // production: NamespaceMember@kerml
+    // production: PackageBodyElement@sysml
+    // production: DefinitionBodyItem@sysml
+    // production: RequirementBodyItem@sysml
+    // production: ViewDefinitionBodyItem@sysml
+    // production: ViewBodyItem@sysml
+    // production: NonBehaviorBodyItem@sysml
+    // production: ActionBodyItem@sysml
+    // production: CalculationBodyItem@sysml
+    // production: CaseBodyItem@sysml
+    // production: StateBodyItem@sysml
+    //
+    // Every body's item production is an alternation over memberships, and this one
+    // dispatcher reads each of them whole, parameterised by `body`: `Body::member` names
+    // the membership a member is owned through, and the `admits_*` questions which of a
+    // production's extra alternatives the body has. The productions are quoted at each
+    // `Body` variant, and the alternations build no node: the membership says which. Two
+    // tests hold the whole matrix, every alternative tried in every body, admitted with
+    // its membership exactly where its production lists it and reported elsewhere:
+    // `every_body_admits_exactly_its_item_production` (SysML) and
+    // `every_kerml_body_admits_exactly_its_elements` (KerML).
+    //
+    // NonBehaviorBodyItem is reached as the first alternative of ActionBodyItem (8.2.2.17.1)
+    // and StateBodyItem (8.2.2.18.1), never alone; NamespaceMember is
+    // `NonFeatureMember | NamespaceFeatureMember` (KerML 8.2.3.4.1), the first read by
+    // `membership`, the second by `kerml_feature_item`.
     fn body_element(&mut self, body: Body) -> bool {
         if self.depth >= MAX_DEPTH {
             // Too deeply nested to recurse into another body. Recover one token
@@ -4538,8 +4564,7 @@ impl<'a> Parser<'a> {
     // decides. NamespaceMember gets no node, as DefinitionElement and UsageElement get
     // none: it is an alternation, and the alternative that matched says which was taken.
     //
-    // NamespaceFeatureMember, its sibling, is NOT implemented: every one of
-    // FeatureElement's ten alternatives is unimplemented, so there is nothing to own.
+    // NamespaceFeatureMember, its sibling, is marked at `namespace_feature_member`.
     //
     // production: NonOccurrenceUsageMember
     // production: OccurrenceUsageMember
@@ -4552,9 +4577,9 @@ impl<'a> Parser<'a> {
     // The four usage memberships, with the same shape again. Which one a member is
     // depends on the element after the MemberPrefix, so the node is opened at a
     // checkpoint once the element has said what it is — `Body::member` maps the two to
-    // the node. Each is marked as the member it is, as DefinitionMember is: the
-    // <kind>UsageElement alternations are not, most of their alternatives being
-    // unimplemented. BehaviorUsageMember is reached only from ActionBodyItem's third
+    // the node. Each is marked as the member it is, as DefinitionMember is; the
+    // <kind>UsageElement alternations are marked at the methods that read them
+    // (`usage_element_of_class` and its class methods). BehaviorUsageMember is reached only from ActionBodyItem's third
     // alternative, whose `then` prefix and trailing target successions its callers read.
     //
     // production: ActionNodeMember@sysml
@@ -4571,6 +4596,17 @@ impl<'a> Parser<'a> {
     //
     // An alternation with no node, marked because both of its alternatives are read —
     // the convention OwnedExpression follows. Which one was taken is the member node.
+    // production: MemberElement@kerml
+    // production: DefinitionElement@sysml
+    //
+    // MemberElement = AnnotatingElement | NonFeatureElement          (KerML 8.2.3.4.3)
+    // DefinitionElement = Package | LibraryPackage | AnnotatingElement | Dependency
+    //     | the twenty-five definitions                            (SysML 8.2.2.5.2)
+    //
+    // Both alternations, read here: the annotating element first in either language, a
+    // bare REGULAR_COMMENT among them (see `at_bare_comment_member`); then KerML's
+    // NonFeatureElement whole, by `kerml_non_feature_element`; and SysML's packages here
+    // and the rest by `definition_element`. No node: the element says which.
     fn membership(&mut self, body: Body) -> MemberElement {
         self.eat_trivia();
         let start = self.builder.checkpoint();
@@ -4579,7 +4615,7 @@ impl<'a> Parser<'a> {
         if self.at_annotating_member(0) {
             self.annotating_element();
         } else if self.language == Language::KerMl {
-            // MemberElement's other alternative (KerML 8.2.3.4.1). The guard is here
+            // MemberElement's other alternative (KerML 8.2.3.4.3). The guard is here
             // rather than left to `at_member_element`'s caller, because a dispatch that
             // is only correct when reached one way is a trap: every classifier unit is
             // scoped `kerml`, and SysML reaches DefinitionElement instead, so `class
@@ -8773,9 +8809,9 @@ impl<'a> Parser<'a> {
     // ViewDefinitionBody : ViewDefinition = ';' | '{' ViewDefinitionBodyItem* '}'
     //                                                            (SysML 8.2.2.26.1)
     //
-    // ViewDefinitionBodyItem is NOT marked: its first alternative is DefinitionBodyItem,
-    // which is not marked either. What it adds, ElementFilterMember and
-    // ViewRenderingMember, is read; see `Body::ViewDefinition`.
+    // ViewDefinitionBodyItem is marked at `body_element`: DefinitionBodyItem's six
+    // alternatives and ElementFilterMember and ViewRenderingMember; see
+    // `Body::ViewDefinition`.
     fn view_definition_body(&mut self) {
         self.braced_body(
             SyntaxKind::ViewDefinitionBody,
@@ -8788,9 +8824,8 @@ impl<'a> Parser<'a> {
     //
     // ViewBody : ViewUsage = ';' | '{' ViewBodyItem* '}'         (SysML 8.2.2.26.2)
     //
-    // ViewBodyItem is NOT marked, for ViewDefinitionBodyItem's reason: its first
-    // alternative is DefinitionBodyItem. The other three, ElementFilterMember,
-    // ViewRenderingMember and Expose, are read; see `Body::View`.
+    // ViewBodyItem is marked at `body_element`: ViewDefinitionBodyItem's alternatives and
+    // Expose; see `Body::View`.
     fn view_body(&mut self) {
         self.braced_body(
             SyntaxKind::ViewBody,
@@ -8919,19 +8954,15 @@ impl<'a> Parser<'a> {
     // RequirementBody : Type = ';' | '{' RequirementBodyItem* '}'
     //                                                            (SysML 8.2.2.21.1)
     //
-    // RequirementBodyItem is NOT marked. It is
+    // RequirementBodyItem is marked at `body_element`. It is
     //
     //     DefinitionBodyItem | SubjectMember | RequirementConstraintMember
     //     | FramedConcernMember | RequirementVerificationMember | ActorMember
     //     | StakeholderMember
     //
     // — a SUPERSET of DefinitionBodyItem, and that is the whole reason this body is
-    // reachable at the cost of one method. All six extra members are read, each through a
-    // membership of its own, in `body_specific_item`. It stays unmarked because its first
-    // alternative is DefinitionBodyItem, itself unmarked while usages it reaches (the view
-    // layer among them) are unread. (This comment once named rejection files for `subject`
-    // and `require`, then listed `frame` and `stakeholder` as unread; each was retired as
-    // its member landed.)
+    // reachable at the cost of one method. The six extra members are read, each through a
+    // membership of its own, in `body_specific_item`.
     //
     // `Body::Requirement`, which when this production landed was `Body::Definition` on
     // the argument that the two would differ in nothing. They differ in one thing, and
@@ -8982,24 +9013,15 @@ impl<'a> Parser<'a> {
     //
     // ActionBody : Type = ';' | '{' ActionBodyItem* '}'          (SysML 8.2.2.17.1)
     //
-    // ActionBodyItem is NOT marked, and it is the largest unimplemented thing left in
-    // this grammar:
+    // ActionBodyItem is marked at `body_element`, which reads every one of its
+    // alternatives under Body::Action (`every_body_admits_exactly_its_item_production`
+    // holds them):
     //
     //     ActionBodyItem = NonBehaviorBodyItem
     //                    | InitialNodeMember ActionTargetSuccessionMember*
     //                    | SourceSuccessionMember? ActionBehaviorMember
     //                      ActionTargetSuccessionMember*
     //                    | GuardedSuccessionMember
-    //
-    // The first alternative is read in the part this parser already had:
-    // NonBehaviorBodyItem is Import | AliasMember | DefinitionMember | VariantUsageMember
-    // | NonOccurrenceUsageMember | SourceSuccessionMember? StructureUsageMember
-    // (8.2.2.17.1), and the first three are the three a definition body reads. The
-    // second is read whole in its TargetSuccession form. The third is read over the
-    // behaviour usages that exist and over the ActionNodes that do: ControlNode (`merge`,
-    // `decide`, `join`, `fork`), AcceptNode, SendNode, AssignmentNode, TerminateNode,
-    // WhileLoopNode, IfNode and ForLoopNode. The fourth, GuardedSuccessionMember, is read
-    // too.
     fn action_body(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ActionBody);
@@ -9119,9 +9141,8 @@ impl<'a> Parser<'a> {
     // node. `parallel` stands "just before the body part" (7.18.2, receipt 42b13f63) and
     // only before braces: `state def D parallel;` is reported.
     //
-    // Marked although StateBodyItem is not: its first alternative, NonBehaviorBodyItem, is
-    // read only in part, as it is for an action body. The items are read by
-    // `body_elements` under `Body::State`, which says what the rest are.
+    // StateBodyItem is marked at `body_element`, which reads its items under
+    // `Body::State`; `Body`'s State variant says which they are.
     fn state_body_part(&mut self, node: SyntaxKind) {
         self.eat_trivia();
         self.start_node(node);
@@ -11742,10 +11763,8 @@ impl<'a> Parser<'a> {
     // RequirementConstraintMember: MemberPrefix is itself `VisibilityIndicator?` and
     // already derives the empty string. Kept because the clause writes it.
     //
-    // UsageElement is the FULL alternation (8.2.2.5.2) and only part of it is
-    // implemented, so UsageElement is NOT marked for coverage — `usage_element` returns
-    // whether it read one. This member IS marked, because its own shape is complete,
-    // which is the same line NonFeatureMember and PackageMember draw.
+    // UsageElement (8.2.2.5.2) is read by `usage_element`, which returns whether it read
+    // one, and is marked at `usage_element_of_class`.
     fn return_parameter_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::ReturnParameterMember);
@@ -11805,8 +11824,8 @@ impl<'a> Parser<'a> {
     // `first X;` names the SOURCE of a succession separately from its target, which a
     // following `then` supplies (SysML 7.17.4); `first start;` — the start snapshot every
     // action inherits from Actions::Action — is 15 of the corpus's 16. The succession it
-    // opens is ActionTargetSuccessionMember, which is unimplemented, so today the member
-    // stands alone: every corpus file that writes it goes on to `then`.
+    // opens is ActionTargetSuccessionMember, read after it by the body: every corpus file
+    // that writes it goes on to `then`.
     //
     // The memberFeature is a REFERENCE, `[QualifiedName]`, not an ownedRelatedElement:
     // the member owns no element, which is why the tree holds a QualifiedName and no
@@ -12818,12 +12837,8 @@ impl<'a> Parser<'a> {
     //     `Performances::Performance`). All three are injections, so they belong in
     //     sv2-hir, which does not exist yet; this layer builds the tree only (ADR-0002).
     //
-    // This production buys NO corpus file on its own, and that was measured before it
-    // was written: all thirteen .sysml files that write `calc def` also write `return`,
-    // and ReturnParameterMember (8.2.2.19) is unimplemented. It is here because the
-    // keyword is a prerequisite for that member having a caller, not because a
-    // first-error histogram put `calc` near the top — see the lesson recorded under the
-    // action layer in .claude/state/state.json.
+    // All thirteen .sysml files that write `calc def` also write `return`, a
+    // ReturnParameterMember (8.2.2.19), read in a calculation body by `body_specific_item`.
     fn calculation_definition(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::CalculationDefinition);
@@ -12855,21 +12870,15 @@ impl<'a> Parser<'a> {
         self.finish_node();
     }
 
+    // production: CalculationBodyPart@sysml
+    //
     // CalculationBodyPart : Type =
     //     CalculationBodyItem* ( ownedRelationship += ResultExpressionMember )?
     //                                                            (SysML 8.2.2.19)
     //
-    // NOT marked for coverage, and neither is CalculationBodyItem. The item is
-    //
-    //     CalculationBodyItem = ActionBodyItem | ReturnParameterMember
-    //
-    // and ReturnParameterMember is unimplemented, as are three of ActionBodyItem's four
-    // alternatives — the initial nodes, successions and guards that are the action layer.
-    // What IS reached is ActionBodyItem's first alternative, NonBehaviorBodyItem
-    // (8.2.2.17.1), whose Import, AliasMember and DefinitionMember are the same three a
-    // definition body reads. So `calc def C { return x; }` is reported and
-    // `constraint def C { doc /* why */ a <= b }` is read, which is the shape the corpus
-    // writes constraints in.
+    // CalculationBodyItem = ActionBodyItem | ReturnParameterMember is read by
+    // `body_elements` under Body::Calculation, and marked at `body_element`; the
+    // ResultExpressionMember after the run is read here.
     //
     // The star is greedy and the expression is last; `at_result_expression` is where
     // that boundary is decided, and it is the whole of the difficulty here.
@@ -13770,13 +13779,12 @@ impl<'a> Parser<'a> {
     // which says what they are; the trailing expression as `calculation_body_part` reads
     // its own.
     //
-    // CaseBodyItem is NOT marked:
+    // CaseBodyItem is marked at `body_element`:
     //
     //     CaseBodyItem = ActionBodyItem | SubjectMember | ActorMember | ObjectiveMember
     //
-    // ActionBodyItem carries the action layer's own gaps (`if`, loops, `terminate`), which
-    // is what keeps this unmarked now that all three of the case's own members are read. `return` IS read, by
-    // deviation CaseBodyItem; see `Body::admits_return_parameter`.
+    // all four read under Body::Case, and `return` too, by deviation CaseBodyItem; see
+    // `Body::admits_return_parameter`.
     fn case_body(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::CaseBody);
@@ -14027,8 +14035,8 @@ impl<'a> Parser<'a> {
     //
     // DefinitionBody : Type = ';' | '{' DefinitionBodyItem* '}'  (SysML 8.2.2.6.1)
     //
-    // DefinitionBodyItem is not marked: three of its six alternatives are
-    // implemented (see body_elements).
+    // DefinitionBodyItem is marked at `body_element`, which reads all six of its
+    // alternatives under Body::Definition.
     fn definition_body(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::DefinitionBody);
@@ -15109,11 +15117,8 @@ impl<'a> Parser<'a> {
     // ordinary `/* */` between its tokens would be read as a stray token, so it is
     // dispatched before the mode is entered.
     //
-    // A bare REGULAR_COMMENT at member position is still trivia (see
-    // `at_annotating_member`): MemberElement's gap, since it is MemberElement that asks
-    // whether an annotating element starts there, and MemberElement@kerml, with SysML's
-    // DefinitionElement@sysml and PackageBodyElement@sysml, stays unmarked for it. This alternation reads a bare Comment wherever it is asked to, as it is in
-    // a relationship body.
+    // A bare REGULAR_COMMENT is a Comment wherever it is asked to be one: at a member
+    // position, which `at_bare_comment_member` finds, and in a relationship body.
     fn annotating_element(&mut self) {
         if self.at_metadata_element_significantly() {
             self.metadata_annotating_element();
@@ -15370,7 +15375,7 @@ impl<'a> Parser<'a> {
     // metaclass is Namespace (8.3.2.4.5, receipt 8d19e03e). Its body's elements are the
     // root's, NamespaceBodyElement (8.2.3.4.1), so Body::Root reads them: no
     // ElementFilterMember, which is a package body's alone (8.2.5.13).
-    // NamespaceBodyElement is not marked, as NonFeatureElement, which it reaches, is not.
+    // NamespaceBodyElement@kerml is marked at `body_element`.
     //
     // constraint: Namespace::validateNamespaceDistinguishibility, and the derivations of
     //     8.3.2.4.5. Validity and derivation, sv2-resolve's.

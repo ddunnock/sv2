@@ -541,6 +541,273 @@ fn a_bare_comment_anywhere_else_is_reported() {
     parse_accepted("attribute x = 1 // note\n + 2;");
 }
 
+// -- every body's item production, SysML 8.2.2 --------------------------------------
+//
+//   PackageBodyElement     = PackageMember | ElementFilterMember | AliasMember | Import
+//   DefinitionBodyItem     = DefinitionMember | VariantUsageMember
+//                          | NonOccurrenceUsageMember
+//                          | SourceSuccessionMember? OccurrenceUsageMember
+//                          | AliasMember | Import                             (8.2.2.6.1)
+//   RequirementBodyItem    = DefinitionBodyItem | SubjectMember
+//                          | RequirementConstraintMember | FramedConcernMember
+//                          | RequirementVerificationMember | ActorMember
+//                          | StakeholderMember                                (8.2.2.21.1)
+//   ViewDefinitionBodyItem = DefinitionBodyItem | ElementFilterMember
+//                          | ViewRenderingMember                              (8.2.2.26.1)
+//   ViewBodyItem           = ViewDefinitionBodyItem's three | Expose          (8.2.2.26.2)
+//   NonBehaviorBodyItem    = Import | AliasMember | DefinitionMember | VariantUsageMember
+//                          | NonOccurrenceUsageMember
+//                          | SourceSuccessionMember? StructureUsageMember     (8.2.2.17.1)
+//   ActionBodyItem         = NonBehaviorBodyItem
+//                          | InitialNodeMember ActionTargetSuccessionMember*
+//                          | SourceSuccessionMember? ActionBehaviorMember
+//                            ActionTargetSuccessionMember*
+//                          | GuardedSuccessionMember                          (8.2.2.17.1)
+//   CalculationBodyItem    = ActionBodyItem | ReturnParameterMember           (8.2.2.19)
+//   CaseBodyItem           = ActionBodyItem | SubjectMember | ActorMember
+//                          | ObjectiveMember, ReturnParameterMember by deviation
+//                            CaseBodyItem                                     (8.2.2.22)
+//   StateBodyItem          = NonBehaviorBodyItem
+//                          | SourceSuccessionMember? BehaviorUsageMember
+//                            TargetTransitionUsageMember*
+//                          | TransitionUsageMember | EntryActionMember
+//                            EntryTransitionMember* | DoActionMember
+//                          | ExitActionMember                                 (8.2.2.18.1)
+//   InterfaceBodyItem      = DefinitionMember | VariantUsageMember
+//                          | InterfaceNonOccurrenceUsageMember
+//                          | SourceSuccessionMember? InterfaceOccurrenceUsageMember
+//                          | AliasMember | Import                             (8.2.2.14.1)
+//
+// One instance of every alternative, tried in every body: admitted, with the membership
+// its body's production names, exactly where that production lists it, and reported
+// everywhere else.
+
+const BODIES: [(&str, &str); 10] = [
+    ("Package", "package P { ITEM }"),
+    ("Definition", "part def D { ITEM }"),
+    ("Requirement", "requirement def R { ITEM }"),
+    ("ViewDefinition", "view def V { ITEM }"),
+    ("View", "view v { ITEM }"),
+    ("Action", "action def A { ITEM }"),
+    ("Calculation", "calc def C { ITEM }"),
+    ("Case", "case def K { ITEM }"),
+    ("State", "state def S { ITEM }"),
+    ("Interface", "interface def I { ITEM }"),
+];
+
+/// Every body that has a `DefinitionMember`, the bodies other than a package's.
+const MEMBER_BODIES: [&str; 9] = [
+    "Definition",
+    "Requirement",
+    "ViewDefinition",
+    "View",
+    "Action",
+    "Calculation",
+    "Case",
+    "State",
+    "Interface",
+];
+
+/// Each of `bodies` admitting an item through `node`.
+fn admitted(node: &'static str, bodies: &[&'static str]) -> Vec<(&'static str, &'static str)> {
+    bodies.iter().map(|body| (*body, node)).collect()
+}
+
+/// The usage members, whose membership depends on the body and the usage's class.
+fn usage_items() -> Vec<(&'static str, Vec<(&'static str, &'static str)>)> {
+    let def = ["Definition", "Requirement", "ViewDefinition", "View"];
+    let act = ["Action", "Calculation", "Case", "State"];
+    let mut rows = Vec::new();
+    for (item, definition, action, interface) in [
+        (
+            "attribute a;",
+            "NonOccurrenceUsageMember",
+            "NonOccurrenceUsageMember",
+            "InterfaceNonOccurrenceUsageMember",
+        ),
+        (
+            "part p;",
+            "OccurrenceUsageMember",
+            "StructureUsageMember",
+            "InterfaceOccurrenceUsageMember",
+        ),
+        (
+            "action a;",
+            "OccurrenceUsageMember",
+            "BehaviorUsageMember",
+            "InterfaceOccurrenceUsageMember",
+        ),
+    ] {
+        let mut row = admitted(definition, &def);
+        row.extend(admitted(action, &act));
+        row.extend([("Interface", interface), ("Package", "PackageMember")]);
+        rows.push((item, row));
+    }
+    let mut definition = admitted("DefinitionMember", &MEMBER_BODIES);
+    definition.push(("Package", "PackageMember"));
+    let mut alias = admitted("AliasMember", &MEMBER_BODIES);
+    alias.push(("Package", "AliasMember"));
+    let mut import = admitted("NamespaceImport", &MEMBER_BODIES);
+    import.push(("Package", "NamespaceImport"));
+    rows.extend([
+        ("part def E;", definition.clone()),
+        ("/* c */", definition),
+        ("alias X for Y;", alias),
+        // Import's VisibilityIndicator is not optional (8.2.2.5.1).
+        ("private import A::*;", import),
+        (
+            "variant part v;",
+            admitted("VariantUsageMember", &MEMBER_BODIES),
+        ),
+        (
+            "then part q;",
+            admitted("SourceSuccessionMember", &MEMBER_BODIES),
+        ),
+        // Before a behaviour usage too: OccurrenceUsageMember in a definition body,
+        // ActionBehaviorMember in the action family, BehaviorUsageMember in a state body.
+        (
+            "then action r;",
+            admitted("SourceSuccessionMember", &MEMBER_BODIES),
+        ),
+    ]);
+    rows
+}
+
+/// The members one or a few item productions add, each with its own membership.
+fn extra_items() -> Vec<(&'static str, Vec<(&'static str, &'static str)>)> {
+    vec![
+        (
+            "filter true;",
+            admitted(
+                "ElementFilterMember",
+                &["Package", "ViewDefinition", "View"],
+            ),
+        ),
+        (
+            "render r;",
+            admitted("ViewRenderingMember", &["ViewDefinition", "View"]),
+        ),
+        ("expose A::*;", admitted("NamespaceExpose", &["View"])),
+        (
+            "subject s;",
+            admitted("SubjectMember", &["Requirement", "Case"]),
+        ),
+        (
+            "require constraint c;",
+            admitted("RequirementConstraintMember", &["Requirement"]),
+        ),
+        (
+            "frame c;",
+            admitted("FramedConcernMember", &["Requirement"]),
+        ),
+        (
+            "verify r;",
+            admitted("RequirementVerificationMember", &["Requirement"]),
+        ),
+        (
+            "actor a;",
+            admitted("ActorMember", &["Requirement", "Case"]),
+        ),
+        (
+            "stakeholder s;",
+            admitted("StakeholderMember", &["Requirement"]),
+        ),
+        ("objective;", admitted("ObjectiveMember", &["Case"])),
+        (
+            "return r;",
+            admitted("ReturnParameterMember", &["Calculation", "Case"]),
+        ),
+    ]
+}
+
+/// The action and state layers' own members, and the members that trail them.
+fn behavior_items() -> Vec<(&'static str, Vec<(&'static str, &'static str)>)> {
+    let act = ["Action", "Calculation", "Case"];
+    vec![
+        ("first start;", admitted("InitialNodeMember", &act)),
+        ("merge m;", admitted("ActionNodeMember", &act)),
+        (
+            "first a if g then b;",
+            admitted("GuardedSuccessionMember", &act),
+        ),
+        (
+            "transition first a then b;",
+            admitted("TransitionUsageMember", &["State"]),
+        ),
+        // The trailing members: InitialNodeMember and ActionBehaviorMember take
+        // ActionTargetSuccessionMember* (8.2.2.17.1), BehaviorUsageMember in a state body
+        // TargetTransitionUsageMember*, EntryActionMember EntryTransitionMember*
+        // (8.2.2.18.1).
+        (
+            "first start; then a;",
+            admitted("ActionTargetSuccessionMember", &act),
+        ),
+        (
+            "action a; then b;",
+            // In a state body `then b;` is a TargetTransitionUsage, every part before
+            // its `then` optional (8.2.2.18.3).
+            {
+                let mut row = admitted("ActionTargetSuccessionMember", &act);
+                row.push(("State", "TargetTransitionUsageMember"));
+                row
+            },
+        ),
+        (
+            "merge m; then b;",
+            admitted("ActionTargetSuccessionMember", &act),
+        ),
+        (
+            "action a; accept S then b;",
+            admitted("TargetTransitionUsageMember", &["State"]),
+        ),
+        (
+            "entry; then b;",
+            admitted("EntryTransitionMember", &["State"]),
+        ),
+        // Expose in both forms (8.2.2.26.2).
+        ("expose A;", admitted("MembershipExpose", &["View"])),
+        ("entry;", admitted("EntryActionMember", &["State"])),
+        ("do action d;", admitted("DoActionMember", &["State"])),
+        ("exit;", admitted("ExitActionMember", &["State"])),
+    ]
+}
+
+/// What is wrong with `item` in `body`, if anything: it should build `node` there, or
+/// be reported when `node` is `None`.
+fn body_cell(body: &str, template: &str, item: &str, node: Option<&str>) -> Option<String> {
+    let source = template.replace("ITEM", item);
+    let parsed = parse(&source, Language::SysMl);
+    assert_eq!(parsed.text(), source);
+    let built = node.is_some_and(|node| nodes_named(&render(&parsed.syntax()), node) > 0);
+    match node {
+        Some(node) if !parsed.errors().is_empty() || !built => Some(format!(
+            "{body}: `{item}` should build {node}: {:?}",
+            parsed.errors()
+        )),
+        None if parsed.errors().is_empty() => Some(format!("{body}: `{item}` should be reported")),
+        _ => None,
+    }
+}
+
+#[test]
+fn every_body_admits_exactly_its_item_production() {
+    let mut wrong = Vec::new();
+    for (item, admitting) in usage_items()
+        .into_iter()
+        .chain(extra_items())
+        .chain(behavior_items())
+    {
+        for (body, template) in BODIES {
+            let node = admitting
+                .iter()
+                .find(|(b, _)| *b == body)
+                .map(|(_, node)| *node);
+            wrong.extend(body_cell(body, template, item, node));
+        }
+    }
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+}
+
 // -- the definitions, SysML 8.2.2 -------------------------------------------------
 //
 // Eight productions of one shape, `<prefix> KEYWORD 'def' Definition`, differing in
@@ -1748,10 +2015,9 @@ fn a_succession_that_opens_on_first_is_not_an_initial_node_member() {
 // ConnectorEnd = OwnedCrossMultiplicityMember? ( NAME REFERENCES )?
 //                OwnedReferenceSubsetting                               (8.2.2.13.1)
 //
-// Only the TargetSuccession form: GuardedTargetSuccession (`then` behind `if`) and
-// DefaultTargetSuccession (`else`) are unimplemented, as is OwnedCrossMultiplicityMember.
-// And only after InitialNodeMember — the other predecessor ActionBodyItem gives it,
-// ActionBehaviorMember, is unimplemented.
+// The TargetSuccession form here; GuardedTargetSuccession (`if ... then`) and
+// DefaultTargetSuccession (`else`) have tests of their own, as does the other predecessor
+// ActionBodyItem gives a target succession, ActionBehaviorMember.
 
 #[test]
 fn a_target_succession_reads_the_corpus_form() {
@@ -4364,7 +4630,7 @@ fn a_conjugated_port_typing_keeps_every_byte() {
 //
 // Entry, do and exit actions (EntryActionMember, DoActionMember, ExitActionMember,
 // EntryTransitionMember), a transition's `do` effect, and the time and change triggers
-// (`at`, `after`, `when`) are NOT implemented, and are reported.
+// (`at`, `after`, `when`) are read; their tests follow.
 
 #[test]
 fn a_state_definition_reads_the_corpus_forms() {
