@@ -245,3 +245,59 @@ def test_the_report_lists_what_it_left_out():
     report = bnf_coverage.build_report({"A"}, ["A"], [], [], ["Orphan@kerml"])
     assert report["excluded_unreachable"] == ["Orphan@kerml"]
     assert report["declared"] == 1
+
+
+def _tree(root, units, markers, unreachable):
+    """A repository in miniature: unit files, one Rust file of markers, a register."""
+    (root / "units").mkdir()
+    for key in units:
+        production, _, scope = key.partition("@")
+        body = {"production": production, "status": "verified"}
+        if scope:
+            body["scope"] = scope
+        (root / "units" / f"{key}.json").write_text(json.dumps(body))
+    (root / "crates").mkdir()
+    (root / "crates" / "p.rs").write_text("".join(f"// production: {m}\n" for m in markers))
+    entries = [{"production": n, "decision": "unreachable"} for n in unreachable]
+    (root / "deviations.json").write_text(json.dumps({"deviations": entries}))
+
+
+def _run_main(tmp_path, monkeypatch, argv):
+    # main() changes directory to ROOT; monkeypatch.chdir first so teardown restores it.
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(bnf_coverage, "ROOT", tmp_path)
+    monkeypatch.setattr(bnf_coverage, "UNITS", tmp_path / "units")
+    monkeypatch.setattr(bnf_coverage, "DEVIATIONS", tmp_path / "deviations.json")
+    monkeypatch.setattr(bnf_coverage, "REPORT", tmp_path / "coverage.json")
+    monkeypatch.setattr(bnf_coverage, "INVENTORY", tmp_path / "absent.json")
+    monkeypatch.setattr(bnf_coverage, "XTEXT_INVENTORY", tmp_path / "absent.json")
+    return bnf_coverage.main(argv)
+
+
+def test_main_leaves_an_unreachable_unit_out_of_the_denominator(tmp_path, monkeypatch, capsys):
+    _tree(tmp_path, ["A", "B", "Orphan@kerml"], ["A"], ["Orphan"])
+    assert _run_main(tmp_path, monkeypatch, []) == 0
+    report = json.loads((tmp_path / "coverage.json").read_text())
+    assert report["declared"] == 2
+    assert report["unimplemented_productions"] == ["B"]
+    assert report["excluded_unreachable"] == ["Orphan@kerml"]
+    assert "1 unit(s) left out as unreachable (ADR-0023): Orphan@kerml" in capsys.readouterr().out
+
+
+def test_main_neither_counts_nor_rejects_a_marker_on_an_excluded_unit(tmp_path, monkeypatch):
+    _tree(tmp_path, ["A", "Orphan@kerml"], ["A", "Orphan"], ["Orphan"])
+    assert _run_main(tmp_path, monkeypatch, []) == 0
+    report = json.loads((tmp_path / "coverage.json").read_text())
+    assert (report["declared"], report["implemented"], report["absent"]) == (1, 1, 0)
+    assert _run_main(tmp_path, monkeypatch, ["--check"]) == 0
+
+
+def test_main_counts_the_unit_again_once_the_register_drops_it(tmp_path, monkeypatch):
+    _tree(tmp_path, ["A", "Orphan@kerml"], ["A"], ["Orphan"])
+    assert _run_main(tmp_path, monkeypatch, []) == 0
+    (tmp_path / "deviations.json").write_text(json.dumps({"deviations": []}))
+    assert _run_main(tmp_path, monkeypatch, ["--check"]) == 1  # the report is now stale
+    assert _run_main(tmp_path, monkeypatch, []) == 0
+    report = json.loads((tmp_path / "coverage.json").read_text())
+    assert report["declared"] == 2
+    assert report["excluded_unreachable"] == []
