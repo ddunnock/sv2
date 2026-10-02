@@ -34,4 +34,4 @@ silently is not.
 | [0020](0020-sysand-is-the-package-manager-and-sv2-toml-configures-the-tool.md) | sysand is the package manager; sv2.toml configures only the tool | **proposed** |
 | [0021](0021-security-markings-are-model-metadata.md) | Security markings are model metadata; diagrams derive their banners | **proposed** |
 | [0022](0022-deviations-are-reported-and-strict-conformance-promotes-them.md) | Deviations are reported as diagnostics; strict conformance promotes them | accepted |
-| [0023](0023-a-production-no-grammar-reaches-leaves-the-coverage-count.md) | A production no grammar reaches is recorded as unreachable and leaves the coverage count | **proposed** |
+| [0023](0023-a-production-no-grammar-reaches-leaves-the-coverage-count.md) | A production no grammar reaches is recorded as unreachable and leaves the coverage count | accepted |

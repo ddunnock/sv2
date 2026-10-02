@@ -7,8 +7,7 @@
     "0017",
     "0019",
     "0020",
-    "0021",
-    "0023"
+    "0021"
   ],
   "decisions": [
     {
@@ -170,7 +169,7 @@
     {
       "id": "0023",
       "title": "A production no grammar reaches is recorded as unreachable and leaves the coverage count",
-      "status": "proposed",
+      "status": "accepted",
       "date": "2026-10-01",
       "file": "docs/adr/0023-a-production-no-grammar-reaches-leaves-the-coverage-count.md"
     }

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-10-01T23:54:11Z",
+    "regenerated_utc": "2026-10-02T12:04:14Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "2e3f9b1 Re-derive the chain units to the repaired member body, and re-freeze",
       "3b3e4dd Re-derive ExpressionBody@sysml to the braced body, and re-freeze",
       "424c4c5 Record the next step: the schema edit ADR-0023 needs, then the last unit and the re-freeze",
       "94b3e35 Propose ADR-0023: an unreachable production leaves the coverage count",
       "dd339cc Nest feature chains to the right, `a.b.c` as `a . (b.c)`, as the Pilot does",
       "9588d10 Mark every body's item production, read by one parameterised dispatcher",
       "ebd150f Read a bare `/* */` at a member position as a Comment, and report it elsewhere",
-      "d89ae2b Correct thirty-three tests that wrote `/* */` mid-declaration as trivia",
-      "c259462 Record the next step: every remaining unit waits on one of two author decisions"
+      "d89ae2b Correct thirty-three tests that wrote `/* */` mid-declaration as trivia"
     ]
   },
   "authored": {

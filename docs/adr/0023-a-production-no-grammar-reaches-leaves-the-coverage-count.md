@@ -1,6 +1,6 @@
 ---
 title: "A production no grammar reaches is recorded as unreachable and leaves the coverage count"
-status: proposed
+status: accepted
 date: 2026-10-01
 deciders: [David]
 ---
