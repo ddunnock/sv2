@@ -15,7 +15,7 @@
     "xtext_rule_text": "",
     "metaclass": ""
   },
-  "notes": "declared again after retirement\nre-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in NonFeatureChainPrimaryArgument@kerml\nDEFINED AND NEVER REFERENCED. The only production that could plausibly reference it, NonFeatureChainPrimaryArgumentMember, references PrimaryArgument instead. That is not a transcription artifact: the specification clause and Tier B' agree (KerML-textual-bnf.kebnf:1097), and nothing in the SysML grammar references it either. Derived as stated rather than repaired, because both pinned sources say the same thing and inventing a reference would be writing a rule the language does not have. grammar_consistency.py will report this production as unreachable before freeze, which is the right moment for it to become a question.",
+  "notes": "History: re-scoped @kerml-only under ADR-0015 while the printed text left it referenced by nothing, and declared shared again on 2026-10-01. NonFeatureChainPrimaryArgumentMember's Tier B' body names PrimaryArgument (KerML-textual-bnf.kebnf:1097), a copy of its sibling's. Deviation NonFeatureChainPrimaryArgumentMember (conflict, follow_xtext) repairs that member's body to name this production, and REPAIRED_BODIES in _grammar.py makes reach follow the repair, so both grammars reach it. This unit itself is derived as the clause states it.",
   "rule": {
     "k": "ref",
     "name": "NonFeatureChainPrimaryArgumentValue"

@@ -39,6 +39,19 @@
         "caught": 298,
         "leaked": 0
       }
+    },
+    {
+      "frozen_utc": "2026-10-02T21:18:04Z",
+      "omg_namespace": "20250201",
+      "pilot_revision": "5cca16d846016e62bb1e54e0e50e675254a022ef",
+      "productions": 554,
+      "grammar_sha256": "0106d7b30a895307d314703f7e766ca107bcf1097553faaaa1c0e667ce4ce523",
+      "oracle": {
+        "accepted": 311,
+        "missed": 0,
+        "caught": 298,
+        "leaked": 0
+      }
     }
   ]
 }

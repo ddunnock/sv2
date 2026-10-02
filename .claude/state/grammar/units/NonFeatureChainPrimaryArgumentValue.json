@@ -15,7 +15,7 @@
     "xtext_rule_text": "",
     "metaclass": ""
   },
-  "notes": "declared again after retirement\nre-scoped (ADR-0015): only the kerml grammar reaches this production, so its work now lives in NonFeatureChainPrimaryArgumentValue@kerml\nTogether with NonFeatureChainPrimaryArgument, this production is defined by the clause and referenced by nothing: see that unit's notes.",
+  "notes": "History: re-scoped @kerml-only under ADR-0015 alongside NonFeatureChainPrimaryArgument, and declared shared again on 2026-10-01. Reached through NonFeatureChainPrimaryArgument once deviation NonFeatureChainPrimaryArgumentMember repaired the member body (REPAIRED_BODIES in _grammar.py). Derived as the clause states it.",
   "rule": {
     "k": "ref",
     "name": "NonFeatureChainPrimaryExpression"

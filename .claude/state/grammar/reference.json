@@ -1,7 +1,7 @@
 {
   "_generated_by": ".claude/scripts/grammar_freeze.py",
   "_note": "The reference grammar: a machine-readable definition of the SysML v2 / KerML textual notation, derived clause by clause with traceable evidence. The Rust parser is checked against it; it is not generated from it.",
-  "frozen_utc": "2026-10-01T23:51:52Z",
+  "frozen_utc": "2026-10-02T21:18:04Z",
   "omg_namespace": "20250201",
   "pilot_revision": "5cca16d846016e62bb1e54e0e50e675254a022ef",
   "productions": 554,
