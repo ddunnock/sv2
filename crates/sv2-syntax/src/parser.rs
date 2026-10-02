@@ -7528,8 +7528,9 @@ impl<'a> Parser<'a> {
     // `';' | '{' CalculationBodyPart '}'` (8.2.2.19), NARROWED on 2026-09-23 (decision
     // expression-body-semicolon) to the braced alternative alone: taken literally the `;`
     // form makes `attribute x = ;;` an attribute valued by an empty body, and every
-    // expression body in the corpus is braced. The callers dispatch on `{`, which is the
-    // narrowing; tests/rejection/expression-body-is-braced.sysml holds it.
+    // expression body in the corpus is braced. `braced_calculation_body` offers only the
+    // braced alternative, so the narrowing is held here and not by the callers' dispatch
+    // on `{`; tests/rejection/expression-body-is-braced.sysml holds it from the text.
     //
     // production: ExpressionBody@kerml
     //
@@ -7560,7 +7561,7 @@ impl<'a> Parser<'a> {
                     "ExpressionBody",
                     "an expression body read as a calculation body",
                 );
-                self.calculation_body();
+                self.braced_calculation_body();
             }
             Language::KerMl => {
                 self.expect(SyntaxKind::LBrace, "`{`");
@@ -12929,18 +12930,30 @@ impl<'a> Parser<'a> {
     // CalculationBody : Type = ';' | '{' CalculationBodyPart '}'    (SysML 8.2.2.19)
     fn calculation_body(&mut self) {
         self.eat_trivia();
-        self.start_node(SyntaxKind::CalculationBody);
         if self.at(SyntaxKind::Semicolon) {
+            self.start_node(SyntaxKind::CalculationBody);
             self.bump();
+            self.finish_node();
         } else if self.at(SyntaxKind::LBrace) {
-            self.bump();
-            self.depth += 1;
-            self.calculation_body_part();
-            self.depth -= 1;
-            self.expect(SyntaxKind::RBrace, "`}`");
+            self.braced_calculation_body();
         } else {
+            self.start_node(SyntaxKind::CalculationBody);
             self.error_expected("`;` or `{` after a calculation or constraint declaration");
+            self.finish_node();
         }
+    }
+
+    /// `CalculationBody`'s second alternative alone, `'{' CalculationBodyPart '}'`: what
+    /// `SysML`'s `ExpressionBody` reads under its narrowing (see `body_expression`). The
+    /// `;` is not offered here, so the narrowing holds whatever the caller dispatched on.
+    fn braced_calculation_body(&mut self) {
+        self.eat_trivia();
+        self.start_node(SyntaxKind::CalculationBody);
+        self.expect(SyntaxKind::LBrace, "`{`");
+        self.depth += 1;
+        self.calculation_body_part();
+        self.depth -= 1;
+        self.expect(SyntaxKind::RBrace, "`}`");
         self.finish_node();
     }
 
@@ -16672,7 +16685,7 @@ pub fn parse(source: &str, language: Language) -> Parse {
 
 #[cfg(test)]
 mod tests {
-    use super::{SyntaxKind, VISIBILITY, keyword};
+    use super::{Language, Parser, SyntaxKind, VISIBILITY, keyword};
 
     /// Every keyword this parser looks up by text must exist in the pinned token set.
     ///
@@ -16743,5 +16756,25 @@ mod tests {
     fn the_package_keyword_is_not_tagged_as_a_name() {
         // The property the snapshots pin as a side effect, stated directly.
         assert_ne!(keyword("package"), Some(SyntaxKind::BasicName));
+    }
+
+    /// `SysML`'s `ExpressionBody` is `CalculationBody`'s braced alternative alone
+    /// (decision expression-body-semicolon). Every caller dispatches on `{`, so no text reaches
+    /// `body_expression` at a `;`; this drives it there directly, so the narrowing is
+    /// held by the production and not only by its callers.
+    #[test]
+    fn a_sysml_expression_body_does_not_take_the_semicolon_alternative() {
+        let mut braced = Parser::new("{ x }", Language::SysMl);
+        braced.body_expression();
+        assert!(braced.errors.is_empty());
+
+        let mut bare = Parser::new(";", Language::SysMl);
+        bare.body_expression();
+        assert!(!bare.errors.is_empty());
+
+        // The calculation body a `calc def` owns still takes it (SysML 8.2.2.19).
+        let mut calc = Parser::new(";", Language::SysMl);
+        calc.calculation_body();
+        assert!(calc.errors.is_empty());
     }
 }

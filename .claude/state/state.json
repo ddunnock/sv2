@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-10-02T21:13:35Z",
+    "regenerated_utc": "2026-10-02T21:21:31Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -23,7 +23,7 @@
       "percent": 100.0
     },
     "tests": {
-      "unit": 738,
+      "unit": 739,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 298,
@@ -37,14 +37,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "d5374b4 Rewrite the stale notes of the two NonFeatureChainPrimaryArgument units, and re-freeze",
+      "cf2025c Record OwnedExpressionReferenceMember unreachable: coverage reads 553 of 553",
+      "79173cb Admit `unreachable` as a deviation decision, the schema prerequisite of ADR-0023",
       "94b3592 Drive bnf_coverage.main through the ADR-0023 exclusion",
       "cd57bc4 Tie the body overrides to recorded conflict deviations, and say so in ADR-0015",
       "ddcccb6 Close the session: 553 of 554, the last unit waiting on the author's schema edit",
       "857fb4c Accept ADR-0023: an unreachable production leaves the coverage count",
-      "2e3f9b1 Re-derive the chain units to the repaired member body, and re-freeze",
-      "3b3e4dd Re-derive ExpressionBody@sysml to the braced body, and re-freeze",
-      "424c4c5 Record the next step: the schema edit ADR-0023 needs, then the last unit and the re-freeze",
-      "94b3e35 Propose ADR-0023: an unreachable production leaves the coverage count"
+      "2e3f9b1 Re-derive the chain units to the repaired member body, and re-freeze"
     ]
   },
   "authored": {
