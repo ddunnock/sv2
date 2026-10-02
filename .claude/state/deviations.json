@@ -4642,9 +4642,9 @@
       "production": "OwnedExpressionReferenceMember",
       "bucket": "spec_only",
       "upstream": "The Pilot Xtext declares no rule named `OwnedExpressionReferenceMember`. Either it inlines this production into the rule that uses it, or it reaches the same construct under a different name.",
-      "problem": "The specification states `OwnedExpressionReferenceMember` as a production of its own at KerML 8.2.5.8.1. A parser written from the Xtext inventory alone would not know this production exists, and its absence is invisible to a corpus sweep for as long as no pinned file exercises it.",
-      "decision": "follow_spec",
-      "rationale": "Implement it. docs/DERIVATION.md states the resolution for this bucket: a specification-only production is usually one the Pilot has not implemented, and the specification is the normative source. Expect the corpus not to exercise it, which is exactly why it needs a rejection test rather than reliance on the sweep: a positive-only corpus cannot tell a production that is implemented from one that is missing.",
+      "problem": "KerML 8.2.5.8.1 defines `OwnedExpressionReferenceMember : FeatureMembership = ownedRelationship += OwnedExpressionReference` (KerML-textual-bnf.kebnf 923-924), and no production in either Tier B' BNF references it. OwnedExpressionReference itself is reached through ArgumentExpressionValue (KerML-textual-bnf.kebnf 1019; SysML-textual-bnf.kebnf 1066), so the construct is parsed; only this member wrapper is reached by neither grammar.",
+      "decision": "unreachable",
+      "rationale": "Recorded unreachable under ADR-0023, which leaves it out of the coverage count. There is no reference to it in KerML-textual-bnf.kebnf or SysML-textual-bnf.kebnf and no Pilot rule of the name, and the grammar-adjudicator (2026-10-01) found no production it could be a typo for. Revisit if a re-pinned BNF references it.",
       "evidence": [
         {
           "kind": "spec_clause",
