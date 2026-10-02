@@ -7,6 +7,7 @@ standing in for the other's. These tests are about the ways that could still hap
 """
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -319,3 +320,47 @@ def test_a_split_variant_with_the_shared_units_inputs_carries_its_work(tmp_path,
     assert _rescope(shared, kerml, single=False) == "rescoped"
     assert _rescope(shared, sysml, single=False) is None
     assert set(_grammar.load_units()) == {"ExpressionBody@kerml"}
+
+
+def test_in_sysml_a_boundary_entry_takes_precedence_over_a_repaired_body():
+    # `reachable` tests the boundary first; unrecorded_overrides refuses a name in both,
+    # so this order is never load-bearing in the real constants.
+    rules = [*MINI, rule("Orphan", K, "'orphan'")]
+    boundary, repaired = {"ExprBody": "Calc"}, {"ExprBody": "Orphan"}
+    sysml = reachable(rules, "sysml", boundary, repaired=repaired)
+    kerml = reachable(rules, "kerml", boundary, repaired=repaired)
+    assert "Calc" in sysml
+    assert "Orphan" not in sysml
+    assert "Orphan" in kerml
+    assert "Calc" not in kerml
+
+
+def dev(production, bucket="conflict", decision="follow_xtext"):
+    return {"production": production, "bucket": bucket, "decision": decision}
+
+
+def test_an_override_without_a_conflict_deviation_is_reported():
+    deviations = [dev("A"), dev("B", bucket="spec_only", decision="follow_spec"), dev("C")]
+    problems = _grammar.unrecorded_overrides(deviations, {"A": "x", "B": "y"}, {"C": "z", "D": "w"})
+    assert problems == [
+        "B: in SYSML_BOUNDARY, but its deviation is spec_only/follow_spec, not conflict/follow_*",
+        "D: in REPAIRED_BODIES with no deviation recorded",
+    ]
+
+
+def test_an_override_named_in_both_constants_is_reported():
+    problems = _grammar.unrecorded_overrides([dev("A")], {"A": "x"}, {"A": "y"})
+    assert problems == ["A: in both SYSML_BOUNDARY and REPAIRED_BODIES"]
+
+
+def test_every_real_override_is_a_recorded_conflict():
+    document = json.loads(Path(".claude/state/deviations.json").read_text())
+    assert _grammar.unrecorded_overrides(document["deviations"]) == []
+
+
+def test_every_real_override_names_a_production_and_references_known_ones():
+    rules = json.loads(Path(".claude/state/grammar/bnf-productions.json").read_text())["rules"]
+    known = {r["name"] for r in rules}
+    for name, body in {**_grammar.SYSML_BOUNDARY, **_grammar.REPAIRED_BODIES}.items():
+        assert name in known, name
+        assert body_references(body, known), name

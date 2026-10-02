@@ -81,6 +81,16 @@ production's body in SysML, and each entry names its deviation in `deviations.js
 Both were adjudicated, and both agree with the pilot SysML grammar. Neither is filed with
 OMG.
 
+**A repaired body is followed in both languages.** Added 2026-10-02. `REPAIRED_BODIES` in
+`_grammar.py` replaces a production's printed body for KerML and SysML alike, where a
+recorded deviation repairs a defect in the Tier B′ text. Unlike the boundary it splits
+nothing: both languages still read one body, only not the printed one, and reach follows
+it. Its one entry is `NonFeatureChainPrimaryArgumentMember`, whose printed body is a copy
+of its sibling's and leaves `NonFeatureChainPrimaryArgument` referenced by nothing (KerML
+8.2.5.8.2). In SysML a boundary entry is read before a repaired body, and no production
+may be named in both. Every key of either list must be a `conflict` deviation with a
+`follow_*` decision; `unrecorded_overrides` checks that against `deviations.json`.
+
 **Re-scoping carries work.** When a shared unit gives way to a variant whose inputs hash
 the same, its rule, decision and evidence carry over, and it is verified again against its
 own grammar. A single-language variant whose inputs differ keeps its rule as the previous
@@ -97,7 +107,8 @@ through `derived` first. The one that did not carry is `AnnotatingElement`. The 
 split it, and its KerML variant's inputs, the KerML clause alone, differ from the shared
 unit's, which had both clauses. Both of its variants are pending.
 
-Bad: the boundary is a hand-maintained list, and reach is only as good as the Tier B′
+Bad: the boundary is a hand-maintained list (since 2026-10-02 each entry is at least
+checked to name a recorded conflict deviation), and reach is only as good as the Tier B′
 bodies and the reference extraction. A third leak would show up as a KerML-only production
 turning shared. `grammar_plan.py` prints the counts on every run, and a jump in the shared
 count is the signal. Retired units now outnumber live ones: every re-scoped unit leaves its

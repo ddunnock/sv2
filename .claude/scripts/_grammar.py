@@ -265,6 +265,40 @@ REPAIRED_BODIES: dict[str, str] = {
 }
 
 
+def unrecorded_overrides(
+    deviations: list[Json],
+    boundary: dict[str, str] | None = None,
+    repaired: dict[str, str] | None = None,
+) -> list[str]:
+    """Why each body override is not backed by a recorded deviation; empty when all are.
+
+    Both constants are hand-maintained, and each entry claims a recorded deviation that
+    replaces a printed body. That deviation is a conflict whose decision follows some
+    source other than the printed text; a production named in both constants would leave
+    precedence to the order of the tests in ``reachable``, so that is refused too.
+    """
+    boundary = SYSML_BOUNDARY if boundary is None else boundary
+    repaired = REPAIRED_BODIES if repaired is None else repaired
+    recorded = {str(d["production"]): d for d in deviations}
+    problems = [
+        f"{name}: in both SYSML_BOUNDARY and REPAIRED_BODIES"
+        for name in sorted(set(boundary) & set(repaired))
+    ]
+    for constant, overrides in (("SYSML_BOUNDARY", boundary), ("REPAIRED_BODIES", repaired)):
+        for name in sorted(overrides):
+            entry = recorded.get(name)
+            if entry is None:
+                problems.append(f"{name}: in {constant} with no deviation recorded")
+                continue
+            bucket, decision = entry.get("bucket"), str(entry.get("decision", ""))
+            if bucket != "conflict" or not decision.startswith("follow_"):
+                problems.append(
+                    f"{name}: in {constant}, but its deviation is "
+                    f"{bucket}/{decision}, not conflict/follow_*"
+                )
+    return problems
+
+
 def body_references(body: str, known: set[str]) -> set[str]:
     """The productions a Tier B' body references, restricted to ``known`` non-terminals."""
     text = _LITERAL.sub(" ", re.sub(r"//[^\n]*", " ", body))
