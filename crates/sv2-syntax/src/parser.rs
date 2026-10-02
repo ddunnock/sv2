@@ -51,6 +51,8 @@
 //! production accepts becomes an `Error` node that still carries its bytes, so the
 //! round-trip holds for malformed input.
 
+use std::cell::Cell;
+
 use rowan::{GreenNode, GreenNodeBuilder, Language as _};
 use text_size::{TextRange, TextSize};
 
@@ -1443,6 +1445,18 @@ struct Parser<'a> {
     /// The grammar this text is read against, chosen once by the caller (ADR-0014).
     language: Language,
     tokens: Vec<Token>,
+    /// The indices into `tokens` of every token lookahead sees while comments are trivia,
+    /// ascending. `peek_nth` finds the cursor in it by binary search and steps `n` from
+    /// there, so asking for the `n`th meaningful token costs O(log len) rather than a
+    /// filter from the cursor. A recogniser that walks by index was quadratic in the
+    /// length of what it walked while it did not.
+    meaningful: Vec<usize>,
+    /// The same, while `REGULAR_COMMENT` is significant (`with_significant_comments`).
+    meaningful_with_comments: Vec<usize>,
+    /// The last cursor located in an index: `(pos, comments_significant, position)`.
+    /// Most lookahead asks a step or two ahead many times at one cursor, and the binary
+    /// search alone made error recovery several times slower than the filter it replaced.
+    cursor: Cell<(usize, bool, usize)>,
     pos: usize,
     builder: GreenNodeBuilder<'static>,
     errors: Vec<Diagnostic>,
@@ -1481,10 +1495,25 @@ struct Parser<'a> {
 
 impl<'a> Parser<'a> {
     fn new(source: &'a str, language: Language) -> Self {
+        let tokens = tokenize(source);
+        let indices = |keep: fn(SyntaxKind) -> bool| -> Vec<usize> {
+            tokens
+                .iter()
+                .enumerate()
+                .filter(|(_, token)| keep(token.kind))
+                .map(|(i, _)| i)
+                .collect()
+        };
+        let meaningful = indices(|kind| !is_trivia(kind));
+        let meaningful_with_comments =
+            indices(|kind| !is_trivia(kind) || kind == SyntaxKind::RegularComment);
         Self {
             source,
             language,
-            tokens: tokenize(source),
+            tokens,
+            meaningful,
+            meaningful_with_comments,
+            cursor: Cell::new((0, false, 0)),
             pos: 0,
             builder: GreenNodeBuilder::new(),
             errors: Vec::new(),
@@ -1513,12 +1542,33 @@ impl<'a> Parser<'a> {
     /// and the `::` belongs to the `QualifiedName` in one and to the import in the
     /// other.
     fn peek_nth(&self, n: usize) -> Option<Token> {
-        self.tokens
-            .get(self.pos..)?
-            .iter()
-            .filter(|token| !self.skippable(token.kind))
-            .nth(n)
-            .copied()
+        let at = self
+            .meaningful_index()
+            .get(self.cursor_position().checked_add(n)?)?;
+        self.tokens.get(*at).copied()
+    }
+
+    /// Where the cursor falls in `meaningful_index`: the position of the first meaningful
+    /// token at or after `pos`.
+    fn cursor_position(&self) -> usize {
+        let (pos, significant, position) = self.cursor.get();
+        if pos == self.pos && significant == self.comments_significant {
+            return position;
+        }
+        let position = self.meaningful_index().partition_point(|&i| i < self.pos);
+        self.cursor
+            .set((self.pos, self.comments_significant, position));
+        position
+    }
+
+    /// The meaningful-token index for the current comment mode: the tokens `skippable`
+    /// does not skip.
+    fn meaningful_index(&self) -> &[usize] {
+        if self.comments_significant {
+            &self.meaningful_with_comments
+        } else {
+            &self.meaningful
+        }
     }
 
     /// Whether `kind` is trivia in the current context, and so skipped by lookahead.
@@ -7882,23 +7932,23 @@ impl<'a> Parser<'a> {
     /// A recogniser that walked it differently from the parser would accept a prefix the
     /// parser then failed to read.
     ///
-    /// One pass over the tokens, not `nth_is` per step: `peek_nth(n)` filters from the
-    /// cursor, so a walk that asked it at every step was quadratic in the name's length.
+    /// One pass over the tokens, not `nth_is` per step. Written when `peek_nth` filtered
+    /// from the cursor and such a walk was quadratic; `peek_nth` is now a lookup in the
+    /// meaningful-token index, and the single pass stays the plainer statement of it.
     fn skip_qualified_name(&self, n: usize) -> Option<usize> {
         let mut tokens = self.meaningful_from(n);
         Some(n + self.qualified_name_length(&mut tokens)?)
     }
 
-    /// The meaningful tokens from the `n`th on, lazily: what `peek_nth` sees, without
-    /// re-filtering from the cursor for every index.
+    /// The meaningful tokens from the `n`th on, lazily: what `peek_nth` sees, read from
+    /// the meaningful-token index rather than asked for one index at a time.
     fn meaningful_from(&self, n: usize) -> impl Iterator<Item = Token> + Clone + '_ {
-        self.tokens
-            .get(self.pos..)
+        let start = self.cursor_position().saturating_add(n);
+        self.meaningful_index()
+            .get(start..)
             .unwrap_or(&[])
             .iter()
-            .copied()
-            .filter(move |token| !self.skippable(token.kind))
-            .skip(n)
+            .filter_map(|&i| self.tokens.get(i).copied())
     }
 
     /// How many tokens a `QualifiedName` at the head of `tokens` takes, consuming them,
@@ -7959,7 +8009,7 @@ impl<'a> Parser<'a> {
     /// `instantiated_type_member` reads them.
     ///
     /// One pass, as `skip_qualified_name` is: it walks a whole `a.b.c...` chain at every
-    /// base expression, so a walk by index was quadratic in the chain's length.
+    /// base expression, which was quadratic by index while `peek_nth` filtered.
     fn skip_instantiated_type_member(&self, n: usize) -> Option<usize> {
         let mut tokens = self.meaningful_from(n);
         let mut length = self.qualified_name_length(&mut tokens)?;
@@ -16776,5 +16826,40 @@ mod tests {
         let mut calc = Parser::new(";", Language::SysMl);
         calc.calculation_body();
         assert!(calc.errors.is_empty());
+    }
+
+    /// The meaningful-token index answers exactly what filtering the tokens from the
+    /// cursor answered, at every cursor, every distance and in both comment modes,
+    /// including past the end. Text with both comment forms, a note, whitespace runs and
+    /// an unterminated comment, so every kind of trivia sits somewhere in it.
+    #[test]
+    fn the_meaningful_index_agrees_with_filtering_from_the_cursor() {
+        let source = "package /* c */ P { // n\n  part   a : A; /* d */ doc /* e */ } /* open";
+        let mut parser = Parser::new(source, Language::SysMl);
+        let total = parser.tokens.len();
+        for significant in [false, true] {
+            parser.comments_significant = significant;
+            for pos in 0..=total + 1 {
+                parser.pos = pos;
+                assert_lookahead_matches_filter(&parser);
+            }
+        }
+    }
+
+    /// Every distance from the parser's cursor, against the filter `peek_nth` replaced.
+    fn assert_lookahead_matches_filter(parser: &Parser<'_>) {
+        let expected: Vec<_> = parser
+            .tokens
+            .get(parser.pos..)
+            .unwrap_or(&[])
+            .iter()
+            .copied()
+            .filter(|token| !parser.skippable(token.kind))
+            .collect();
+        for n in 0..=expected.len() + 1 {
+            assert_eq!(parser.peek_nth(n), expected.get(n).copied());
+            let from: Vec<_> = parser.meaningful_from(n).collect();
+            assert_eq!(from, expected.get(n..).unwrap_or(&[]));
+        }
     }
 }
