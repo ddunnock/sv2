@@ -119,8 +119,11 @@ node with its production and clause, then regenerate:
 python3.12 scripts/gen_syntax_kinds.py
 ```
 
-Then the parser. Productions are methods on `Parser` in `crates/sv2-syntax/src/parser.rs`,
-each carrying the coverage marker the gate reads:
+Then the parser. Productions are methods on `Parser`, one `impl Parser` block per area of
+the grammar in `crates/sv2-syntax/src/parser/<area>.rs` (the module map is in `parser.rs`'s
+doc). Put the production in the area its clause belongs to, and its `at_*` recogniser next
+to it, `pub(super)` only if a sibling module calls it. Each carries the coverage marker the
+gate reads:
 
 ```rust
 // production: Import
