@@ -32,6 +32,41 @@ cargo flamegraph -p sv2-syntax --bench parse -- --bench simple_vehicle_model
 Write down what the profile says before changing anything. A change made without a
 profile is a guess, and guesses are what enabling steps get abused for.
 
+### Deeper, per platform
+
+These are for diagnosis only. Nothing here feeds a verdict, and the gate must give the
+same answer on both machines.
+
+**macOS: Instruments.** `cargo flamegraph` already records through `xctrace`, but the
+Instruments app shows more. Build the bench with symbols, then record one of its cases:
+
+```bash
+CARGO_PROFILE_BENCH_DEBUG=true cargo bench -p sv2-syntax --bench parse --no-run  # prints the binary
+xcrun xctrace record --template 'Time Profiler' --output /tmp/parse.trace \
+  --launch -- target/release/deps/parse-<hash> --bench simple_vehicle_model
+open /tmp/parse.trace
+```
+
+| Template | Use it for |
+|---|---|
+| Time Profiler | Invert the call tree to walk from a hot leaf (`memcmp`) back to its callers; time per source line |
+| Allocations | *Where* allocations happen, for an `allocations` / `allocated_bytes` series; the probe only says how many |
+| CPU Counters | Instructions, cycles, branch mispredictions: *why* a hot path is slow. Steadier than time, but not a gate |
+| Processor Trace | Instruction-level trace; needs an M4-generation chip or later |
+
+**RHEL 9: perf and callgrind.** `cargo flamegraph` uses `perf` there. For counts close to
+exact on one function, run `valgrind --tool=callgrind` on the bench binary and read it with
+`callgrind_annotate`. Instruction counts from Linux are not comparable with the Mac's.
+
+### Which machine
+
+Counters and the output fingerprint are the same on both machines, so a series can move
+between them. **Time is not.** Each measurement records its host. A step taken on another
+machine is judged on counters alone, and its verdict says the time was not compared.
+
+A series opened with `--primary time` must step and close on the machine it was opened on.
+Open it where you will finish it.
+
 ## 3. Open the series
 
 The working tree must be clean in `crates/sv2-syntax/src`.

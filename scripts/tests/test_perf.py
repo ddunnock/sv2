@@ -29,6 +29,7 @@ DEFAULTS: dict[str, int | str] = {
     "source": "s",
     "outcome": "improved",
     "fingerprint": "f0",
+    "host": "Darwin arm64 mac",
 }
 
 
@@ -44,6 +45,7 @@ def step(**changes: int | str) -> Doc:
         "time_ns": v["time_ns"],
         "source": v["source"],
         "fingerprint": v["fingerprint"],
+        "host": v["host"],
         "outcome": v["outcome"],
         "notes": [],
         "commit": "abc",
@@ -172,6 +174,46 @@ def test_time_within_noise_does_not_veto_a_counter_win():
 def test_a_time_primary_needs_more_than_its_noise_to_count():
     assert perf.step_verdict(step(), step(time_ns=980_000), "time", None, 0).outcome == "rejected"
     assert perf.step_verdict(step(), step(time_ns=960_000), "time", None, 0).outcome == "improved"
+
+
+RHEL = "Linux x86_64 workspace"
+
+
+def test_time_from_another_machine_does_not_veto_a_counter_win():
+    after = step(peeked=5_000, time_ns=3_000_000, host=RHEL)
+    verdict = perf.step_verdict(step(), after, "peeked", None, 0)
+    assert verdict.outcome == "improved"
+    assert verdict.reasons[-1] == (
+        f"median time not compared: measured on {DEFAULTS['host']}, now on {RHEL}"
+    )
+
+
+def test_counters_still_judge_a_step_on_another_machine():
+    after = step(peeked=5_000, allocations=1100, host=RHEL)
+    assert perf.step_verdict(step(), after, "peeked", None, 0).outcome == "rejected"
+
+
+def test_the_output_fingerprint_still_judges_a_step_on_another_machine():
+    after = step(peeked=5_000, fingerprint="f1", host=RHEL)
+    assert perf.step_verdict(step(), after, "peeked", None, 0).outcome == "rejected"
+
+
+def test_a_time_series_cannot_step_on_another_machine():
+    verdict = perf.step_verdict(step(), step(time_ns=500_000, host=RHEL), "time", None, 0)
+    assert verdict.outcome == "rejected"
+    assert "judged on one machine" in verdict.reasons[0]
+
+
+def test_a_time_series_cannot_close_on_another_machine():
+    verdict = perf.close_verdict(step(), step(time_ns=500_000, host=RHEL), "time")
+    assert verdict.outcome == "rejected"
+
+
+def test_a_measurement_with_no_host_is_never_the_same_machine():
+    unrecorded = step()
+    del unrecorded["host"]
+    assert not perf.same_host(unrecorded, unrecorded)
+    assert perf.same_host(step(), step())
 
 
 def test_the_enabling_run_counts_only_the_trailing_enabling_steps():

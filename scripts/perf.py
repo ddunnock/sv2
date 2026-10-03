@@ -40,6 +40,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import platform
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -118,6 +119,15 @@ def source_digest(root: Path = PARSER_SOURCE) -> str:
 def shown(path: Path) -> str:
     """`path` for a message: repository-relative when it is inside the repository."""
     return rel(path) if path.resolve().is_relative_to(ROOT) else str(path)
+
+
+def host() -> str:
+    """The machine a measurement was taken on: OS, architecture, and host name.
+
+    Timing is only comparable on one machine. Counters and the output fingerprint come
+    from this workspace's code paths, so they compare across machines; time does not.
+    """
+    return f"{platform.system()} {platform.machine()} {platform.node()}"
 
 
 def head() -> str:
@@ -221,6 +231,35 @@ def metric(measurement: Doc, name: str) -> float:
     return float(measurement["time_ns"] if name == "time" else measurement["totals"][name])
 
 
+def same_host(before: Doc, after: Doc) -> bool:
+    """Whether two measurements were timed on the same machine, so their times compare."""
+    return before.get("host") is not None and before.get("host") == after.get("host")
+
+
+def time_note(before: Doc, after: Doc) -> list[str]:
+    """The note a verdict carries when it could not compare time across machines."""
+    if same_host(before, after):
+        return []
+    was = before.get("host") or "an unrecorded host"
+    return [f"median time not compared: measured on {was}, now on {after.get('host')}"]
+
+
+def other_host_for_time(before: Doc, after: Doc, primary: str) -> Verdict | None:
+    """A rejection when a time-primary series is judged off the machine that timed it."""
+    if primary != "time" or same_host(before, after):
+        return None
+    return Verdict(
+        "rejected",
+        [
+            (
+                f"a series judged on time is judged on one machine: it was measured on "
+                f"{before.get('host') or 'an unrecorded host'}, and this is {after.get('host')}; "
+                "continue there, or abandon it"
+            )
+        ],
+    )
+
+
 def regressions(before: Doc, after: Doc) -> list[str]:
     """Every way `after` is worse than `before`: different output, or slower past noise.
 
@@ -237,8 +276,9 @@ def regressions(before: Doc, after: Doc) -> list[str]:
         g = growth(metric(before, name), metric(after, name))
         if g > COUNTER_REGRESSION:
             found.append(f"{name} worse by {g:+.1%} (limit {COUNTER_REGRESSION:.0%})")
+    # Time has a veto only over a comparison it can make: the same machine, both times.
     g = growth(metric(before, "time"), metric(after, "time"))
-    if g > TIME_REGRESSION:
+    if same_host(before, after) and g > TIME_REGRESSION:
         found.append(f"median time worse by {g:+.1%} (limit {TIME_REGRESSION:.0%})")
     return found
 
@@ -257,12 +297,16 @@ def step_verdict(
 
     `enabling_run` is how many enabling steps immediately precede this one.
     """
+    elsewhere = other_host_for_time(before, after, primary)
+    if elsewhere:
+        return elsewhere
     worse = regressions(before, after)
     if worse:
         return Verdict("rejected", worse)
     better, g = improved(before, after, primary)
+    note = time_note(before, after)
     if better:
-        return Verdict("improved", [f"{primary} {g:+.1%}"])
+        return Verdict("improved", [f"{primary} {g:+.1%}", *note])
     if enabling is None:
         return Verdict(
             "rejected",
@@ -283,18 +327,21 @@ def step_verdict(
                 )
             ],
         )
-    return Verdict("enabling", [f"{primary} {g:+.1%}", enabling])
+    return Verdict("enabling", [f"{primary} {g:+.1%}", enabling, *note])
 
 
 def close_verdict(opening: Doc, final: Doc, primary: str) -> Verdict:
     """Whether a series may close: a net win on `primary`, nothing else worse."""
+    elsewhere = other_host_for_time(opening, final, primary)
+    if elsewhere:
+        return elsewhere
     worse = regressions(opening, final)
     better, g = improved(opening, final, primary)
     if worse:
         return Verdict("rejected", worse)
     if not better:
         return Verdict("rejected", [f"{primary} moved {g:+.1%} over the series, not a net win"])
-    return Verdict("improved", [f"{primary} {g:+.1%} over the series"])
+    return Verdict("improved", [f"{primary} {g:+.1%} over the series", *time_note(opening, final)])
 
 
 def enabling_run(steps: list[Doc]) -> int:
@@ -363,6 +410,7 @@ def series_measurement(probes: Probes, files: list[Path]) -> Doc:
         "scaling": counted["scaling"],
         "fingerprint": counted["fingerprint"],
         **measure_timing(probes.timing, files),
+        "host": host(),
         "source": source_digest(),
         "commit": head(),
     }

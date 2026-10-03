@@ -70,6 +70,10 @@ recorded act, like the corpus ledger's `--record`.
 | A series closes | on a net win over its opening, nothing else worse | the enabling steps have to have paid off |
 | Closing | re-records the baseline | the ratchet tightens to where the work ended |
 | While open | the gate fails if the parser source differs from the last step's | no change goes unmeasured |
+| Across machines | counters and the output fingerprint judge every step; time is compared only between measurements from the same host, and a series whose primary is `time` steps and closes only on the host it opened on | development moves between a MacBook and a RHEL 9 Workspace; counts come from this workspace's code paths, while time is the machine's |
+
+Every series measurement records its host (OS, architecture, host name). A verdict that
+could not compare time says so, naming both machines.
 
 A rejected step is not recorded; the change is reworked or reverted. A series with no
 win is abandoned with a reason, and its commits reverted.
