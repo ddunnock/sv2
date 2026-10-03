@@ -52,6 +52,7 @@
 //! round-trip holds for malformed input.
 
 mod lookahead;
+mod tree;
 
 use std::cell::Cell;
 
@@ -62,7 +63,7 @@ use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use crate::generated::kinds::{OPERATORS, SyntaxKind};
 use crate::grammar::Language;
 use crate::language::{Sv2Language, SyntaxNode};
-use crate::lexer::{Token, is_trivia, is_unterminated_comment, tokenize};
+use crate::lexer::{Token, is_trivia, tokenize};
 use crate::parser::lookahead::{VISIBILITY, keyword};
 
 /// The result of parsing: a tree, plus what went wrong.
@@ -2390,40 +2391,6 @@ impl<'a> Parser<'a> {
             || (self.nth_is_keyword(n, "metadata") && !self.nth_is_keyword(n + 1, "def"))
     }
 
-    // -- building the tree ------------------------------------------------------
-
-    fn start_node(&mut self, kind: SyntaxKind) {
-        self.builder.start_node(Sv2Language::kind_to_raw(kind));
-    }
-
-    fn finish_node(&mut self) {
-        self.builder.finish_node();
-    }
-
-    /// Attach pending trivia to the tree. Never skipped — losslessness depends on it.
-    ///
-    /// A `REGULAR_COMMENT` reaching here as trivia is in no position a `Comment` may
-    /// stand, so it is reported, and still kept in the tree. `KerML` 8.2.2.2 makes `/* ...
-    /// */` a token, not a note: the notes are `//* ... */` and `// ...`, which the Pilot
-    /// hides with whitespace (KerMLExpressions.xtext:29) and this does too.
-    fn eat_trivia(&mut self) {
-        while let Some(token) = self.tokens.get(self.pos).copied() {
-            if !self.skippable(token.kind) {
-                break;
-            }
-            if token.kind == SyntaxKind::RegularComment {
-                self.emit(
-                    DiagnosticCode::Unexpected,
-                    Self::range_of(token),
-                    "a `/* ... */` comment is an element, and no element may stand here; \
-                     write `//* ... */` for a note"
-                        .to_owned(),
-                );
-            }
-            self.push(token, token.kind);
-        }
-    }
-
     /// Whether a bare `REGULAR_COMMENT` opens the next member, after an optional
     /// visibility: a `Comment` with none of its optional parts (`KerML` 8.2.3.3.2, `SysML`
     /// 8.2.2.4.2), and so an `AnnotatingElement` wherever a member may stand. Asked by
@@ -2463,40 +2430,6 @@ impl<'a> Parser<'a> {
         let metadata = self.at_metadata_element(0);
         self.comments_significant = outer;
         metadata
-    }
-
-    /// Every token enters the tree here exactly once, which is why the
-    /// unterminated-comment diagnostic is raised here: a regular comment may arrive
-    /// as trivia or as an annotation's body, and both must report it.
-    fn push(&mut self, token: Token, kind: SyntaxKind) {
-        if is_unterminated_comment(token.kind, self.text_of(token)) {
-            self.emit(
-                DiagnosticCode::UnterminatedComment,
-                Self::range_of(token),
-                "comment is never closed: expected `*/`".to_owned(),
-            );
-        }
-        self.builder
-            .token(Sv2Language::kind_to_raw(kind), self.text_of(token));
-        self.pos += 1;
-    }
-
-    /// Consume the next non-trivia token, with the trivia before it.
-    fn bump(&mut self) {
-        if let Some(token) = self.peek() {
-            self.bump_as(token.kind);
-        }
-    }
-
-    /// Consume the next non-trivia token, tagged as `kind` rather than as it lexed.
-    ///
-    /// Keywords reach the parser as `BasicName`; the production that recognises one
-    /// says so here, and the tree records the keyword the token set names.
-    fn bump_as(&mut self, kind: SyntaxKind) {
-        self.eat_trivia();
-        if let Some(token) = self.tokens.get(self.pos).copied() {
-            self.push(token, kind);
-        }
     }
 
     // -- diagnostics and recovery -----------------------------------------------
@@ -8462,28 +8395,6 @@ impl<'a> Parser<'a> {
         match spelling {
             Spelling::Symbol(_) => self.bump(),
             Spelling::Word(word) => self.bump_as(keyword(word).unwrap_or(SyntaxKind::BasicName)),
-        }
-    }
-
-    // -- retroactive nodes -------------------------------------------------------
-
-    /// Open `kind` retroactively at `start`, over what is already in the tree.
-    fn start_node_at(&mut self, start: rowan::Checkpoint, kind: SyntaxKind) {
-        self.builder
-            .start_node_at(start, Sv2Language::kind_to_raw(kind));
-    }
-
-    /// Wrap what is already in the tree at `start` in `kinds`, outermost first.
-    ///
-    /// rowan's parent stack finishes in reverse, so the first kind opened is the
-    /// outermost one and `&[ArgumentMember, Argument, ArgumentValue]` nests in the
-    /// order the clause writes them.
-    fn wrap_at(&mut self, start: rowan::Checkpoint, kinds: &[SyntaxKind]) {
-        for kind in kinds {
-            self.start_node_at(start, *kind);
-        }
-        for _ in kinds {
-            self.finish_node();
         }
     }
 
