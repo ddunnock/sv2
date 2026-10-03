@@ -5,7 +5,8 @@
 //! `KerML` namespace.
 
 use crate::generated::kinds::SyntaxKind;
-use crate::parser::{Body, Parser};
+use crate::parser::Parser;
+use crate::parser::body::Body;
 
 /// Which standalone `KerML` relationship declaration is written, of the
 /// `NonFeatureElement` alternatives that declare a relationship on its own

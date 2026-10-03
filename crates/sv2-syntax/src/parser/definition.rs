@@ -5,8 +5,9 @@
 
 use crate::generated::kinds::SyntaxKind;
 use crate::grammar::Language;
+use crate::parser::Parser;
+use crate::parser::body::Body;
 use crate::parser::lookahead::keyword;
-use crate::parser::{Body, Parser};
 
 /// A `SysML` definition production: one keyword over a shared spine.
 ///

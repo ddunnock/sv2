@@ -6,9 +6,10 @@
 
 use crate::generated::kinds::SyntaxKind;
 use crate::grammar::Language;
+use crate::parser::Parser;
+use crate::parser::body::Body;
 use crate::parser::kernel::KERML_FEATURE_ELEMENT_KEYWORDS;
 use crate::parser::lookahead::keyword;
-use crate::parser::{Body, Parser};
 
 impl Parser<'_> {
     /// Whether a `UsageCompletion` closes the construct that starts at the `n`th token.

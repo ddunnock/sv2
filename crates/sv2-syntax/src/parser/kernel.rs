@@ -4,8 +4,9 @@
 //! expressions, invariants, functions, connectors, binding connectors, successions and flows.
 
 use crate::generated::kinds::SyntaxKind;
+use crate::parser::Parser;
+use crate::parser::body::Body;
 use crate::parser::lookahead::keyword;
-use crate::parser::{Body, Parser};
 
 /// The reserved words a `KerML` `FeaturePrefix` stands before, one per `FeatureElement`
 /// but `Feature`'s keywordless alternative (`KerML` 8.2.3.4.3, 8.2.4.3.1, 8.2.5): the

@@ -6,8 +6,9 @@
 use crate::generated::kinds::SyntaxKind;
 use crate::grammar::Language;
 use crate::lexer::is_trivia;
+use crate::parser::body::Body;
 use crate::parser::lookahead::{VISIBILITY, keyword};
-use crate::parser::{Body, MAX_DEPTH, Parser};
+use crate::parser::{MAX_DEPTH, Parser};
 
 impl Parser<'_> {
     /// Whether an implemented `KerML` `NonFeatureElement` starts at the `n`th meaningful

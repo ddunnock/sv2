@@ -5,8 +5,9 @@
 
 use crate::generated::kinds::SyntaxKind;
 use crate::grammar::Language;
+use crate::parser::body::Body;
 use crate::parser::lookahead::keyword;
-use crate::parser::{Body, MAX_DEPTH, Parser};
+use crate::parser::{MAX_DEPTH, Parser};
 
 impl Parser<'_> {
     /// The index just past a run of `#` prefix metadata written from the `n`th token, or
