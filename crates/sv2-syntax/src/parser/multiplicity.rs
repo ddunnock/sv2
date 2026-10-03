@@ -7,8 +7,6 @@ use crate::grammar::Language;
 use crate::parser::Parser;
 
 impl Parser<'_> {
-    // -- multiplicity, SysML 8.2.2.6.6 ------------------------------------------
-
     /// Whether a `MultiplicityPart` is written here (`SysML` 8.2.2.6.6).
     ///
     /// Either the `'['` of its `OwnedMultiplicity` or one of the two keywords its

@@ -13,8 +13,6 @@ use crate::parser::lookahead::keyword;
 use crate::parser::{MAX_DEPTH, Parser};
 
 impl Parser<'_> {
-    // -- diagnostics and recovery -----------------------------------------------
-
     /// Consume the next token as `kind`, or record an error without consuming.
     pub(super) fn expect(&mut self, kind: SyntaxKind, what: &str) {
         if self.at(kind) {

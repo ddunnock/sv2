@@ -30,8 +30,6 @@ pub(super) fn keyword(text: &str) -> Option<SyntaxKind> {
 pub(super) const VISIBILITY: [&str; 3] = ["public", "private", "protected"];
 
 impl Parser<'_> {
-    // -- looking ahead ----------------------------------------------------------
-
     /// The next non-trivia token, without consuming anything.
     pub(super) fn peek(&self) -> Option<Token> {
         self.peek_nth(0)

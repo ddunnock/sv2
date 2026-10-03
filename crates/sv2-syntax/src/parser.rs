@@ -1,51 +1,32 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
-//! A parser for the package declaration, written from `SysML` 8.2.2.5.1.
+//! The parser: a hand-written recursive descent over the `KerML` and `SysML` v2
+//! productions, building a lossless `rowan` tree.
 //!
-//! The productions it implements, as the specification states them:
+//! `Parser` and its state live here; its methods are spread across the child modules,
+//! each an `impl Parser` block for one area of the grammar. A production is the method
+//! carrying its `// production: <Name>` marker, which the coverage gate reads.
 //!
-//! ```text
-//! RootNamespace      = PackageBodyElement*
-//! PackageBodyElement = PackageMember | ElementFilterMember | AliasMember | Import
-//! PackageMember      = MemberPrefix ( DefinitionElement | UsageElement )
-//! MemberPrefix       = ( visibility = VisibilityIndicator )?
-//! Package            = ( ownedRelationship += PrefixMetadataMember )*
-//!                      PackageDeclaration PackageBody
-//! PackageDeclaration = 'package' Identification
-//! PackageBody        = ';' | '{' PackageBodyElement* '}'
-//! Identification     = ( '<' declaredShortName = NAME '>' )? ( declaredName = NAME )?
-//! Import             = VisibilityIndicator 'import' 'all'?
-//!                      ImportDeclaration RelationshipBody
-//! AliasMember        = MemberPrefix 'alias' ( '<' NAME '>' )? NAME?
-//!                      'for' [QualifiedName] RelationshipBody
-//! RelationshipBody   = ';' | '{' OwnedAnnotation* '}'
-//! PartDefinition     = OccurrenceDefinitionPrefix 'part' 'def' Definition
-//! ElementFilterMember = MemberPrefix 'filter' OwnedExpression ';'
-//! OwnedExpression    = ConditionalExpression | ConditionalBinaryOperatorExpression
-//!                    | BinaryOperatorExpression | UnaryOperatorExpression
-//!                    | ClassificationExpression | MetaclassificationExpression
-//!                    | ExtentExpression | PrimaryExpression
-//! ValuePart          = FeatureValue
-//! MultiplicityPart   = OwnedMultiplicity
-//!                    | OwnedMultiplicity? ( 'ordered' 'nonunique'?
-//!                                         | 'nonunique' 'ordered'? )
-//! ```
+//! The machinery every production uses:
+//!
+//! - `lookahead` — the meaningful-token index, `peek`, and the generic recognisers.
+//! - `tree` — opening and closing nodes, consuming tokens, attaching trivia.
+//! - `recovery` — diagnostics, `PARSE-DEVIATION` notes, statement-bounded recovery.
+//! - `operator` — the precedence table of `KerML` 8.2.5.8.1.
+//!
+//! The productions, by area:
+//!
+//! - Namespaces and their contents: `namespace`, `import`, `annotation`, `metadata`.
+//! - Expressions: `expression`, `primary`, `invocation`, `literal`.
+//! - `KerML` core and kernel: `classifier`, `feature`, `multiplicity`, `kernel`.
+//! - `SysML` definitions and usages: `definition`, `usage`, `body`.
+//! - `SysML` structure and behaviour: `connection`, `flow`, `action`, `action_node`,
+//!   `succession`, `state`, `calculation`, `requirement`, `case`, `view`.
 //!
 //! `OwnedExpression` carries no precedence and cannot: `KerML` 8.2.5.8.1 note 2 states
 //! that the grouping of nested `OperatorExpression`s is not expressed in the
 //! productions and is given by that clause's table 6. The table is data at
-//! `docs/operator-precedence.toml`, and `INFIX` below is what the parser reads. The
-//! operator core reads all fifteen tiers, and the postfix layer of 8.2.5.8.2 reads
-//! all six of its forms: `a.b`, `x[kg]`, `x#(1)`, `x->f()`, `x.?{ ... }` and `x.{ ... }`.
-//!
-//! All four `PackageBodyElement` alternatives are handled: `PackageMember`, `Import`,
-//! `AliasMember` and `ElementFilterMember`, the last of which waited on the expression
-//! layer and needs only a bare classification operator (`filter @Safety;`).
-//! `Package` and `PartDefinition` are the two `DefinitionElement`s of thirty, and
-//! `Comment`, `Documentation` and `TextualRepresentation` the three `AnnotatingElement`s
-//! of four that a `RelationshipBody` may own. Everything else is unimplemented and
-//! reports as such in the coverage report, which is the honest state of a parser this
-//! young.
+//! `docs/operator-precedence.toml`, and `operator::INFIX` is what the parser reads.
 //!
 //! Every token the lexer produced ends up in the tree, in source order. Text that no
 //! production accepts becomes an `Error` node that still carries its bytes, so the

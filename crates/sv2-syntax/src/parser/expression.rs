@@ -11,8 +11,6 @@ use crate::parser::operator::{
 use crate::parser::{MAX_DEPTH, Parser};
 
 impl Parser<'_> {
-    // -- the expression layer, KerML 8.2.5.8 -------------------------------------
-
     // production: OwnedExpression
     //
     // OwnedExpression : Expression =

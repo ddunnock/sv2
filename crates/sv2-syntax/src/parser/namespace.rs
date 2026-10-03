@@ -141,8 +141,6 @@ impl Parser<'_> {
             || self.at_extended_usage(n)
     }
 
-    // -- productions ------------------------------------------------------------
-
     // production: RootNamespace@kerml
     // production: RootNamespace@sysml
     //

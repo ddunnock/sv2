@@ -12,8 +12,6 @@ use crate::lexer::{Token, is_unterminated_comment};
 use crate::parser::Parser;
 
 impl Parser<'_> {
-    // -- building the tree ------------------------------------------------------
-
     pub(super) fn start_node(&mut self, kind: SyntaxKind) {
         self.builder.start_node(Sv2Language::kind_to_raw(kind));
     }
