@@ -36,6 +36,8 @@ def test_repo_relative_normalizes_every_path_form(path, expected):
         (".claude/state/decisions.json", "Script-owned. Regenerate"),
         (".claude/state/wiki-receipts.json", "Wiki receipts"),
         (".claude/state/schema/state.schema.json", "State schema"),
+        ("tests/perf-baseline.json", "Performance ratchet"),
+        (".claude/state/perf-series.json", "Performance ratchet"),
         ("docs/conformance-target.toml", "Conformance pin"),
     ],
 )
@@ -47,7 +49,13 @@ def test_protected_paths_are_blocked(path, blocked_by):
 
 @pytest.mark.parametrize(
     "path",
-    [".claude/state/grammar/units/Name.json", "crates/sv2-syntax/src/lib.rs", "/etc/vendor/omg/x"],
+    [
+        ".claude/state/grammar/units/Name.json",
+        "crates/sv2-syntax/src/lib.rs",
+        "/etc/vendor/omg/x",
+        "scripts/perf.py",
+        "tests/perf-baseline.md",
+    ],
 )
 def test_ordinary_paths_are_allowed(path):
     assert decide({"file_path": path}, ROOT) == (path, None)

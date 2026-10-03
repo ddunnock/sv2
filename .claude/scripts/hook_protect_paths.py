@@ -91,6 +91,14 @@ RULES: list[tuple[tuple[str, ...], str | None]] = [
         ),
     ),
     (
+        ("tests/perf-baseline.json", ".claude/state/perf-series.json"),
+        (
+            "Performance ratchet and series ledger (ADR-0024), written only by scripts/perf.sh.\n"
+            "Re-baseline with scripts/perf.sh record --reason; step a series with\n"
+            "scripts/perf.sh series step. A hand edit makes an unmeasured number look measured."
+        ),
+    ),
+    (
         (".claude/state/schema/*",),
         (
             "State schema. Changing it changes what a valid handoff is — edit deliberately,\n"

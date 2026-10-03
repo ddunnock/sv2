@@ -119,6 +119,8 @@ main() {
 
   # --- corpus and state ---
   run_check "corpus sweep" scripts/corpus-sweep.sh
+  # Counters only, from a dev build: deterministic, so it can gate (ADR-0024).
+  run_check "perf ratchet" scripts/perf.sh check
   # Under ${tools} so jsonschema is there for the full check when .venv is; the
   # script falls back to a structural check when it is not.
   run_check "state schema" "${tools}" .claude/scripts/validate_state.py

@@ -1,0 +1,24 @@
+{
+ "history": [
+  {
+   "closed_at": "415ff27",
+   "name": "control",
+   "notes": [
+    "control: negative-control run of ADR-0024's series rules, not optimization work"
+   ],
+   "opened_at": "415ff27",
+   "outcome": "abandoned",
+   "primary": "peeked",
+   "steps": [
+    {
+     "notes": [
+      "peeked +0.0%",
+      "control: proves the enabling path"
+     ],
+     "outcome": "enabling"
+    }
+   ]
+  }
+ ],
+ "open": null
+}

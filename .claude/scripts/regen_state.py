@@ -35,6 +35,7 @@ GATES: dict[str, list[str]] = {
     "grammar_diff": [PY, "scripts/grammar_diff.py", "--check"],
     "coverage": [PY, "scripts/bnf_coverage.py", "--check"],
     "corpus": ["./scripts/corpus-sweep.sh"],
+    "perf": ["./scripts/perf.sh", "check"],
 }
 # The same commands scripts/gate.sh runs, so the two cannot report different results.
 # `cargo-deny` rather than `cargo deny`: a missing binary then fails to start, which is
