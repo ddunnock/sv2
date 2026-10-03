@@ -9,6 +9,7 @@
 //!
 //! Nothing here does I/O, and nothing here panics on any input.
 
+mod counter;
 mod diagnostic;
 pub mod generated;
 mod grammar;
@@ -17,6 +18,7 @@ mod lexer;
 mod offset;
 mod parser;
 
+pub use crate::counter::{Counters, counters_enabled, take_counters};
 pub use crate::diagnostic::{Diagnostic, DiagnosticCode, Severity};
 pub use crate::generated::kinds::SyntaxKind;
 pub use crate::grammar::Language;

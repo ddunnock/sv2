@@ -6,6 +6,10 @@ rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
 
+[features]
+# Work counters for the performance probe (ADR-0024). Off in every shipped build.
+counters = []
+
 [dependencies]
 rowan = { workspace = true }
 text-size = { workspace = true }
@@ -13,6 +17,12 @@ text-size = { workspace = true }
 [dev-dependencies]
 insta = { workspace = true }
 proptest = { workspace = true }
+divan = { workspace = true }
+stats_alloc = { workspace = true }
+
+[[bench]]
+name = "parse"
+harness = false
 
 [lints]
 workspace = true

@@ -52,6 +52,11 @@ thiserror = "2"
 insta = { version = "1", features = ["glob"] }
 proptest = "1"
 
+# Benchmarking (ADR-0024), dev-only. divan times; stats_alloc counts allocations
+# without this workspace writing the `unsafe` a counting GlobalAlloc needs.
+divan = "0.1"
+stats_alloc = "0.1"
+
 [workspace.lints.rust]
 unsafe_code = "forbid"          # §6.1: forbid, so no attribute can re-allow it
 missing_docs = "warn"           # §11

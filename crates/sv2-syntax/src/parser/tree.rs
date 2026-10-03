@@ -74,6 +74,7 @@ impl Parser<'_> {
     pub(super) fn bump_as(&mut self, kind: SyntaxKind) {
         self.eat_trivia();
         if let Some(token) = self.tokens.get(self.pos).copied() {
+            crate::counter::consumed();
             self.push(token, kind);
         }
     }

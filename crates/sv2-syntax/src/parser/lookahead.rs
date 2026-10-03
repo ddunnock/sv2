@@ -41,6 +41,7 @@ impl Parser<'_> {
     /// and the `::` belongs to the `QualifiedName` in one and to the import in the
     /// other.
     pub(super) fn peek_nth(&self, n: usize) -> Option<Token> {
+        crate::counter::peeked();
         let at = self
             .meaningful_index()
             .get(self.cursor_position().checked_add(n)?)?;
@@ -197,6 +198,7 @@ impl Parser<'_> {
             .unwrap_or(&[])
             .iter()
             .filter_map(|&i| self.tokens.get(i).copied())
+            .inspect(|_| crate::counter::peeked())
     }
 
     /// How many tokens a `QualifiedName` at the head of `tokens` takes, consuming them,
