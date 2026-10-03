@@ -12,6 +12,10 @@
 //! measures the scaling case: the first file repeated `SCALE` times in one input, whose
 //! work per byte against one copy's is the quadratic detector.
 //!
+//! The counters mode also prints a fingerprint of every parse's output — tree, errors and
+//! deviation notes — so an optimization series can require that nothing it did changed
+//! what the parser produces.
+//!
 //! The JSON is written by hand because the workspace has no serializer as a dependency,
 //! and the shape is flat: names, integers, and one ratio.
 
@@ -41,13 +45,34 @@ struct Work {
     consumed: u64,
 }
 
-fn work_of(text: &str, language: Language) -> Work {
+/// FNV-1a, 64-bit: a fingerprint that is the same on every machine and toolchain, which
+/// the standard library's hasher does not promise.
+fn fnv1a(mut hash: u64, bytes: &[u8]) -> u64 {
+    for byte in bytes {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    hash
+}
+
+const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+
+/// `work`'s cost, and the parse's output folded into `fingerprint`: the tree, the errors,
+/// and the deviation notes, all of which an optimization must leave exactly as they were.
+/// The output is formatted after the measured region, so formatting is not counted.
+fn work_of(text: &str, language: Language, fingerprint: &mut u64) -> Work {
     let _ = take_counters();
     let region = Region::new(GLOBAL);
     let parsed = parse(text, language);
     let stats = region.change();
-    drop(parsed);
     let counted = take_counters();
+    let output = format!(
+        "{:#?}\n{:?}\n{:?}",
+        parsed.syntax(),
+        parsed.errors(),
+        parsed.deviations()
+    );
+    *fingerprint = fnv1a(*fingerprint, output.as_bytes());
     Work {
         bytes: text.len() as u64,
         allocations: (stats.allocations + stats.reallocations) as u64,
@@ -87,9 +112,11 @@ fn counters(files: &[(String, String, Language)]) -> Result<String, String> {
     if !counters_enabled() {
         return Err("built without the `counters` feature; the counts would all be zero".into());
     }
+    let mut fingerprint = FNV_OFFSET;
     let mut out = String::from("{\"mode\":\"counters\",\"files\":{");
     for (i, (name, text, language)) in files.iter().enumerate() {
-        let w = work_of(text, *language);
+        fingerprint = fnv1a(fingerprint, name.as_bytes());
+        let w = work_of(text, *language, &mut fingerprint);
         let _ = write!(
             out,
             "{}{}:{{\"bytes\":{},\"allocations\":{},\"allocated_bytes\":{},\"peeked\":{},\"consumed\":{}}}",
@@ -104,15 +131,17 @@ fn counters(files: &[(String, String, Language)]) -> Result<String, String> {
     }
     out.push('}');
     if let Some((_, text, language)) = files.first() {
-        let one = work_of(text, *language);
-        let many = work_of(&text.repeat(SCALE), *language);
+        // The scaling parses are measured, not fingerprinted: they repeat a file already in.
+        let mut ignored = FNV_OFFSET;
+        let one = work_of(text, *language, &mut ignored);
+        let many = work_of(&text.repeat(SCALE), *language, &mut ignored);
         let _ = write!(
             out,
             ",\"scaling\":{{\"copies\":{SCALE},\"ratio\":{:.4}}}",
             per_byte(&many) / per_byte(&one).max(f64::MIN_POSITIVE)
         );
     }
-    out.push('}');
+    let _ = write!(out, ",\"fingerprint\":\"{fingerprint:016x}\"}}");
     Ok(out)
 }
 

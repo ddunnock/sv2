@@ -22,20 +22,29 @@ def counted(allocations: int = 1000, allocated: int = 50_000, peeked: int = 10_0
     return {"files": {"a.sysml": {**file, "consumed": 100}}, "totals": totals, "scaling": 1.0}
 
 
-def step(
-    *,
-    peeked: int = 10_000,
-    allocations: int = 1000,
-    time_ns: int = 1_000_000,
-    source: str = "s",
-    outcome: str = "improved",
-) -> Doc:
-    """A series measurement (or recorded step) with the given numbers."""
+DEFAULTS: dict[str, int | str] = {
+    "peeked": 10_000,
+    "allocations": 1000,
+    "time_ns": 1_000_000,
+    "source": "s",
+    "outcome": "improved",
+    "fingerprint": "f0",
+}
+
+
+def step(**changes: int | str) -> Doc:
+    """A series measurement (or recorded step): the defaults, with `changes` over them."""
+    v = {**DEFAULTS, **changes}
     return {
-        "totals": {"allocations": allocations, "allocated_bytes": 50_000, "peeked": peeked},
-        "time_ns": time_ns,
-        "source": source,
-        "outcome": outcome,
+        "totals": {
+            "allocations": v["allocations"],
+            "allocated_bytes": 50_000,
+            "peeked": v["peeked"],
+        },
+        "time_ns": v["time_ns"],
+        "source": v["source"],
+        "fingerprint": v["fingerprint"],
+        "outcome": v["outcome"],
         "notes": [],
         "commit": "abc",
     }
@@ -142,6 +151,17 @@ def test_a_step_that_slows_the_parser_past_noise_is_rejected():
     verdict = perf.step_verdict(step(), step(peeked=5_000, time_ns=1_100_000), "peeked", None, 0)
     assert verdict.outcome == "rejected"
     assert verdict.reasons[0].startswith("median time worse")
+
+
+def test_a_step_that_changes_the_parse_output_is_rejected_however_fast():
+    verdict = perf.step_verdict(step(), step(peeked=1_000, fingerprint="f1"), "peeked", None, 0)
+    assert verdict.outcome == "rejected"
+    assert verdict.reasons[0].startswith("the parse output changed")
+
+
+def test_a_series_whose_output_drifted_does_not_close():
+    verdict = perf.close_verdict(step(), step(peeked=1_000, fingerprint="f1"), "peeked")
+    assert verdict.outcome == "rejected"
 
 
 def test_time_within_noise_does_not_veto_a_counter_win():

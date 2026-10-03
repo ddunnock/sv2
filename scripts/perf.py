@@ -159,6 +159,7 @@ def measure_counters(probe: Path, files: list[Path]) -> Doc:
         "files": doc["files"],
         "totals": totals(doc["files"]),
         "scaling": doc["scaling"]["ratio"],
+        "fingerprint": doc["fingerprint"],
     }
 
 
@@ -221,8 +222,17 @@ def metric(measurement: Doc, name: str) -> float:
 
 
 def regressions(before: Doc, after: Doc) -> list[str]:
-    """Every counter or time that got worse past its noise from `before` to `after`."""
+    """Every way `after` is worse than `before`: different output, or slower past noise.
+
+    Output comes first. An optimization that changes a tree, an error or a deviation note
+    is not faster; it is a different parser, and no counter can make up for that.
+    """
     found = []
+    if before["fingerprint"] != after["fingerprint"]:
+        found.append(
+            "the parse output changed (trees, errors or deviation notes differ over the "
+            "corpus); an optimization must leave every one of them identical"
+        )
     for name in COUNTERS:
         g = growth(metric(before, name), metric(after, name))
         if g > COUNTER_REGRESSION:
@@ -351,6 +361,7 @@ def series_measurement(probes: Probes, files: list[Path]) -> Doc:
     return {
         "totals": counted["totals"],
         "scaling": counted["scaling"],
+        "fingerprint": counted["fingerprint"],
         **measure_timing(probes.timing, files),
         "source": source_digest(),
         "commit": head(),
