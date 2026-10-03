@@ -49,6 +49,13 @@ def sites(source: str) -> tuple[list[str], list[str]]:
     return CALL.findall(source), MARKER.findall(source)
 
 
+def parser_sources(parser: Path) -> list[Path]:
+    """`parser.rs` and every `.rs` file in its module directory, in a stable order."""
+    directory = parser.with_suffix("")
+    children = sorted(directory.rglob("*.rs")) if directory.is_dir() else []
+    return [parser, *children]
+
+
 def pending(text: str) -> dict[str, str]:
     """NAME -> reason for each `NAME  # reason` line; blank and `#` lines are skipped."""
     out: dict[str, str] = {}
@@ -93,7 +100,8 @@ def main() -> int:
     """Check the sites against the register; print each disagreement."""
     os.chdir(ROOT)
     entries = departing(json.loads(DEVIATIONS.read_text(encoding="utf-8")))
-    calls, markers = sites(PARSER.read_text(encoding="utf-8"))
+    source = "\n".join(p.read_text(encoding="utf-8") for p in parser_sources(PARSER))
+    calls, markers = sites(source)
     listed = pending(PENDING.read_text(encoding="utf-8")) if PENDING.is_file() else {}
     found = problems(entries, calls, markers, listed)
     for line in found:

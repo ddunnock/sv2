@@ -2,7 +2,9 @@
 # Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 """A departure from the specification must be reported where the parser takes it."""
 
-from check_deviation_sites import PENDING, departing, pending, problems, sites
+from pathlib import Path
+
+from check_deviation_sites import PENDING, departing, parser_sources, pending, problems, sites
 
 REGISTER = {
     "deviations": [
@@ -52,3 +54,20 @@ def test_sited_and_listed_is_stale():
 def test_a_listing_needs_a_reason():
     assert pending("# header\n\nFlow  # KerML only\nStep\n") == {"Flow": "KerML only", "Step": ""}
     assert "Step: listed pending with no reason" in problems({"Step"}, [], [], {"Step": ""})
+
+
+def test_sites_in_the_parser_child_modules_are_read(tmp_path: Path):
+    parser = tmp_path / "parser.rs"
+    parser.write_text("mod action_node;\n")
+    (tmp_path / "parser").mkdir()
+    child = tmp_path / "parser" / "action_node.rs"
+    child.write_text('// deviation: SendNode\nself.note_deviation("SendNode", "x");\n')
+    assert parser_sources(parser) == [parser, child]
+    source = "\n".join(p.read_text() for p in parser_sources(parser))
+    assert sites(source) == (["SendNode"], ["SendNode"])
+
+
+def test_a_parser_without_child_modules_is_read_alone(tmp_path: Path):
+    parser = tmp_path / "parser.rs"
+    parser.write_text("")
+    assert parser_sources(parser) == [parser]
