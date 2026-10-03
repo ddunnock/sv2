@@ -7,7 +7,8 @@
     "0017",
     "0019",
     "0020",
-    "0021"
+    "0021",
+    "0024"
   ],
   "decisions": [
     {
@@ -172,6 +173,13 @@
       "status": "accepted",
       "date": "2026-10-01",
       "file": "docs/adr/0023-a-production-no-grammar-reaches-leaves-the-coverage-count.md"
+    },
+    {
+      "id": "0024",
+      "title": "Parser performance is measured by deterministic counters, ratcheted, and optimized in series",
+      "status": "proposed",
+      "date": "2026-10-03",
+      "file": "docs/adr/0024-parser-performance-is-ratcheted.md"
     }
   ]
 }

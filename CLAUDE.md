@@ -117,6 +117,8 @@ Every source file opens with the two-line license header:
 - `refresh-snapshots` — review pending snapshots one at a time, with a reason each.
 - `close-session` — run the gates, regenerate the derived state, write the authored
   block, append the log entry.
+- `optimize-parser` — a measured optimization series: profile, one change per step,
+  each proven by `scripts/perf.sh series step`, closed on a net win (ADR-0024).
 
 ## Things that look wrong and are not
 
@@ -127,3 +129,6 @@ Every source file opens with the two-line license header:
 - **`sv2` exits 2 for everything except `--version`.** No command is implemented yet,
   and the corpus sweep reads a non-zero exit as "did not parse", which is the honest
   answer until the parser exists.
+- **The perf ratchet fails after grammar work that did nothing wrong.** A production
+  that builds more nodes costs more. Re-baseline with `scripts/perf.sh record --reason`,
+  saying why; never loosen a tolerance. A scaling failure is never this case.
