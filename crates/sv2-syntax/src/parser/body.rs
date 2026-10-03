@@ -4,8 +4,9 @@
 
 use crate::generated::kinds::SyntaxKind;
 use crate::grammar::Language;
+use crate::parser::Parser;
+use crate::parser::namespace::MemberElement;
 use crate::parser::usage::UsageClass;
-use crate::parser::{MemberElement, Parser};
 
 /// Which body production is being read, and so which elements it admits.
 ///
