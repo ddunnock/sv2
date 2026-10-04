@@ -40,7 +40,7 @@ Self time, `cargo flamegraph --bench parse -- --bench simple_vehicle_model`, 996
 | 12.3% | `qualified_name_length` | re-measures the same qualified name per recogniser |
 | 4.0% | `skip_occurrence_usage_prefix` | the same, for occurrence prefixes |
 | 3.7% | `skip_one_prefix_metadata` | the same, for `#Metadata` prefixes |
-| 3.4% + 2.3% | `at_name`, `nth_is_name` | `is_name` scans all 217 `KEYWORDS` linearly |
+| 3.4% + 2.3% | `at_name`, `nth_is_name` | `is_name` scans all 173 `KEYWORDS` linearly |
 | ~8% | rowan `NodeCache` and green nodes | building the tree: the irreducible part |
 | 2.6% | `tokenize` | the lexer |
 
@@ -49,7 +49,7 @@ causes:
 
 1. **Keyword identity is recomputed by string comparison, every time it is asked.** The
    lexer emits keywords as `BasicName`. `nth_is_keyword(n, "part")` compares text, and
-   `is_name` calls `keyword()`, a linear scan of 217 entries with a string compare each,
+   `is_name` calls `keyword()`, a linear scan of 173 entries with a string compare each,
    for every candidate name.
 2. **Member dispatch is a chain of 28 recognisers** (`at_sysml_keyword_member`, and its
    siblings in `body_element`). Each re-skips the same usage prefix from the same
@@ -77,7 +77,7 @@ every platform. From `scripts/perf.sh measure`; the reference copy is in
 | Counter | Largest file | Per token | Per decision | Corpus | Per token | Per decision |
 |---|---:|---:|---:|---:|---:|---:|
 | `keyword_lookups` | 25,091 | 3.6 | 23.7 | 195,225 | 2.8 | 17.7 |
-| `keyword_entries` | 4,126,749 | 592.0 | 3,900.5 | 31,520,868 | 446.6 | 2,863.5 |
+| `keyword_entries` | 4,126,749 → 225,819 after Phase 2 | 592.0 → 32.4 | 3,900.5 → 213.4 | 31,520,868 → 1,757,025 | 446.6 → 24.9 | 2,863.5 → 159.6 |
 | `is_name` | 24,477 | 3.5 | 23.1 | 201,923 | 2.9 | 18.3 |
 | `nth_is_keyword` | 1,233,818 | 177.0 | 1,166.2 | 20,355,352 | 288.4 | 1,849.1 |
 | `qualified_names` | 17,763 | 2.5 | 16.8 | 119,868 | 1.7 | 10.9 |
@@ -97,8 +97,10 @@ file, 2,179 over the corpus.
 1. **`nth_is_keyword` is the dominant lookahead operation.** It runs 1.23 M times for 6,966
    consumed tokens, 1,166 times per member decided, and each call is a string compare.
    Phase 2 makes each call cheap; Phase 5 makes there be fewer.
-2. **`keyword()` compares 164 table entries per lookup**: 4.1 M string compares on one
-   file. That is the linear scan, exactly. Phase 2's step 1 alone takes it to 8 or fewer.
+2. **`keyword()` compared 164 table entries per lookup**: 4.1 M string compares on one
+   file. That was the linear scan, exactly. Phase 2's step 1 made it a binary search,
+   at 9 probes per lookup: the standard library's bound for 173 entries. It is not 8,
+   because that search never stops early.
 3. **Prefix skipping repeats** 54 to 202 times per member decision, for prefixes that are
    almost always empty. `skip_prefix_metadata` alone runs 131 times per member on a file
    with almost no `#` metadata. This is Phase 4's whole target.

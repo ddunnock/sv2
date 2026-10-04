@@ -18,63 +18,31 @@
      "outcome": "enabling"
     }
    ]
+  },
+  {
+   "closed_at": "201f3d1",
+   "name": "keyword-classification",
+   "notes": [
+    "time -25.2% over the series"
+   ],
+   "opened_at": "e49e73d",
+   "outcome": "closed",
+   "primary": "time",
+   "steps": [
+    {
+     "notes": [
+      "time -16.7%"
+     ],
+     "outcome": "improved"
+    },
+    {
+     "notes": [
+      "time -10.2%"
+     ],
+     "outcome": "improved"
+    }
+   ]
   }
  ],
- "open": {
-  "commit": "e49e73d",
-  "fingerprint": "cf9d1abe7e03b349",
-  "host": "Darwin arm64 Davids-MacBook-Pro.local",
-  "largest_p95_ns": 9479500,
-  "name": "keyword-classification",
-  "primary": "time",
-  "scaling": 1.0,
-  "source": "707124c56ae54a650609abfae808019228dc8a8e254c9b9355b86a583fc924b4",
-  "steps": [
-   {
-    "commit": "0edf153",
-    "fingerprint": "cf9d1abe7e03b349",
-    "host": "Darwin arm64 Davids-MacBook-Pro.local",
-    "largest_p95_ns": 8545833,
-    "notes": [
-     "time -16.7%"
-    ],
-    "outcome": "improved",
-    "scaling": 1.0,
-    "source": "d4630580f0cf7e121b5dbb84bdf6069d98adcb5b6aa7ca91f84100a0a9120f10",
-    "time_ns": 16891000,
-    "totals": {
-     "allocated_bytes": 15681312,
-     "allocations": 132472,
-     "consumed": 70576,
-     "peeked": 23986614
-    }
-   },
-   {
-    "commit": "77f0464",
-    "fingerprint": "cf9d1abe7e03b349",
-    "host": "Darwin arm64 Davids-MacBook-Pro.local",
-    "largest_p95_ns": 7474625,
-    "notes": [
-     "time -10.2%"
-    ],
-    "outcome": "improved",
-    "scaling": 1.0,
-    "source": "d335d996ea9945b8974de11b4f6d32b6e979fcca0b0f9ddc6819e7a1b470cabe",
-    "time_ns": 15160918,
-    "totals": {
-     "allocated_bytes": 15681312,
-     "allocations": 132472,
-     "consumed": 70576,
-     "peeked": 23986614
-    }
-   }
-  ],
-  "time_ns": 20266708,
-  "totals": {
-   "allocated_bytes": 15681312,
-   "allocations": 132472,
-   "consumed": 70576,
-   "peeked": 23986614
-  }
- }
+ "open": null
 }

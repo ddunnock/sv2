@@ -108,11 +108,15 @@ measured step. The Stop hook runs the gate, so a turn cannot end over an unmeasu
 For each step:
 
 1. Make one change.
-2. `./scripts/gate.sh`, which must be green. The tests, roundtrip, corpus sweep and snapshots
+2. `scripts/perf.sh series step`. It measures the change and also checks the output
+   fingerprint, so a changed tree, error, or deviation note anywhere in the corpus rejects
+   the step however fast it is. It comes before the gate, because inside a series the gate's
+   ratchet fails until the change is measured.
+3. `./scripts/gate.sh`, which must be green. The tests, roundtrip, corpus sweep and snapshots
    all hold exactly as before. **A snapshot that moved means the change is wrong**, not
-   that the snapshot needs review: an optimization does not change a tree.
-3. `scripts/perf.sh series step`. It also checks the output fingerprint, so a changed tree,
-   error, or deviation note anywhere in the corpus rejects the step however fast it is.
+   that the snapshot needs review: an optimization does not change a tree. Adding tests
+   can make `state.json`'s generated block stale; regenerate it with
+   `python3.12 .claude/scripts/regen_state.py`.
 4. **Improved:** commit the code with the updated ledger, one commit.
 5. **Rejected:** nothing was recorded. Rework the change or `git checkout` it. Do not
    re-run hoping the timing noise lands differently more than once; a step that passes

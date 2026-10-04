@@ -30,7 +30,7 @@ the fingerprint check confirms it with the `counters` feature on and off.
 
 Parsing the 73.5 KB SimpleVehicleModel takes 8.7 ms median natively. About 70% of that is
 lookahead deciding, again, things it has already decided:
-- what a keyword is, by string comparison against a 217-entry table;
+- what a keyword is, by string comparison against a 173-entry table;
 - where a member's prefix ends, re-skipped by each of 28 recognisers;
 - how long a qualified name is, re-measured per recogniser.
 
@@ -159,7 +159,7 @@ How it was built:
 
 **Evidence.**
 - `nth_is_keyword` is 17.9% self time; `memcmp` underneath it is 14.1%.
-- `is_name` → `keyword()` (`parser/lookahead.rs:20`) scans all 217 `KEYWORDS` linearly.
+- `is_name` → `keyword()` (`parser/lookahead.rs:20`) scans all 173 `KEYWORDS` linearly.
   A real name matches none, so every name check is a full scan.
 - There are 512 string-literal keyword call sites.
 - `KEYWORDS` is already emitted sorted (`scripts/gen_syntax_kinds.py:2360`).
@@ -197,9 +197,61 @@ is in scope.
 
 **Depends on.** Phase 0 for the target; Phase 1 for the margin.
 
-**Checkpoint.** After Phase 2, re-run the flamegraph and the Phase 0 counts. With string
-compares gone, the shares of Phases 4 and 5 will be larger and clearer. Re-rank them here
-before planning Phase 4.
+**Outcome.** Series `keyword-classification`, closed: **net −25.2% median time** over
+the five largest files, measured on the MacBook.
+
+| Step | Change | Verdict |
+|---|---|---|
+| 1 (77f0464) | `keyword()` binary-searches the sorted table instead of scanning it | improved, −16.7% |
+| 2 (201f3d1) | `nth_is_keyword` compares the token's bytes instead of a boundary-checked `str` slice | improved, −10.2% vs step 1 |
+
+Largest file, p95, before → after:
+
+| Engine | Before | After | FIT-4 margin |
+|---|---|---|---|
+| native | 9.08 ms | 7.68 ms | 8.32 ms |
+| Bun (JavaScriptCore) | 11.21 ms | 8.34 ms | 7.66 ms |
+| wasmtime | 12.88 ms | 9.40 ms | 6.60 ms |
+
+- `keyword_entries` fell from 4,126,749 to 225,819: 9 probes per lookup, the standard
+  library's binary-search bound for 173 entries.
+- The ratcheted counters and the output fingerprint did not move at any step.
+
+Notes:
+- **Correction:** `KEYWORDS` has 173 entries, not 217. The first count included the
+  operator table's rows.
+- **Revised estimate:** 25–35% → 10–20% when planned, from Phase 0's counts. The result,
+  25%, beat the revision, because step 2's boundary-check saving was larger than the
+  compare it rode along with.
+- **Step 3 not taken.** The kind-based migration of the 512 call sites was conditional on
+  a string compare under `nth_is_keyword` still costing 5% or more after step 2. The
+  re-profile showed none separately, so Phase 5 is left to cut the calls themselves.
+
+**Checkpoint, done after the close.** Instruments Time Profiler self time, with system
+`memcmp` attributed to its caller:
+
+| Self | Where |
+|---|---|
+| 18.5% | `skip_basic_usage_prefix` (inlines `nth_is_keyword` nine times) |
+| 16.5% | `nth_is_keyword` |
+| 10.6% | `memcmp` inside `keyword()`'s binary search |
+| 5.3% | `skip_one_prefix_metadata` |
+| 4.1% | rowan `node_hash` |
+| ~6% | `tokenize` and its `memcmp` (Phase 3) |
+| 2.8% | `skip_occurrence_usage_prefix` |
+
+Re-ranked:
+- **Phase 4 stays next.** The three prefix skips hold about 27% of self time, and each
+  recomputes from the same index.
+- **Phase 5 follows,** cutting the `nth_is_keyword` calls that remain.
+- **A new candidate, "2b",** comes out of this checkpoint: `keyword()`'s remaining 10.6%.
+  Two ways to cut it:
+  - a keyword-kind table per token, built once in `Parser::new`, so `is_name` stops
+    looking names up at all;
+  - a generated `match` on the text, which Rust compiles to length-first comparisons.
+
+  Plan it as its own series after Phase 4. Phase 4's caches will change how often
+  `is_name` is reached.
 
 ---
 
@@ -369,7 +421,7 @@ is recorded there as a candidate, not here.
 |---|---|---|---|
 | 0 | — | done, 9768f88 | counts in assessment.md; re-scoped Phase 4 to prefix skips |
 | 1 | — | done, 82e3051 | largest file p95: 11.3 ms JavaScriptCore, 12.5 ms wasmtime; within FIT-4 by 3.5–4.7 ms |
-| 2 | | not started | |
+| 2 | keyword-classification | closed, net −25.2% time | Bun p95 11.21 → 8.34 ms; two steps, no enabling |
 | 3 | | not started | |
 | 4 | | not started | |
 | 5 | | not started | |

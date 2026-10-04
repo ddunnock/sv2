@@ -1,8 +1,8 @@
 {
- "commit": "9768f88",
+ "commit": "201f3d1",
  "detail": {
   "is_name": 201923,
-  "keyword_entries": 31520868,
+  "keyword_entries": 1757025,
   "keyword_lookups": 195225,
   "keyword_member_dispatch": 36360,
   "member_decisions": 11008,
@@ -21,7 +21,7 @@
    "consumed": 33,
    "detail": {
     "is_name": 20,
-    "keyword_entries": 3311,
+    "keyword_entries": 216,
     "keyword_lookups": 24,
     "keyword_member_dispatch": 0,
     "member_decisions": 7,
@@ -41,7 +41,7 @@
    "consumed": 752,
    "detail": {
     "is_name": 356,
-    "keyword_entries": 70023,
+    "keyword_entries": 4716,
     "keyword_lookups": 524,
     "keyword_member_dispatch": 0,
     "member_decisions": 72,
@@ -61,7 +61,7 @@
    "consumed": 473,
    "detail": {
     "is_name": 239,
-    "keyword_entries": 44944,
+    "keyword_entries": 2988,
     "keyword_lookups": 332,
     "keyword_member_dispatch": 0,
     "member_decisions": 52,
@@ -81,7 +81,7 @@
    "consumed": 221,
    "detail": {
     "is_name": 125,
-    "keyword_entries": 22283,
+    "keyword_entries": 1476,
     "keyword_lookups": 164,
     "keyword_member_dispatch": 0,
     "member_decisions": 26,
@@ -101,7 +101,7 @@
    "consumed": 29,
    "detail": {
     "is_name": 21,
-    "keyword_entries": 4359,
+    "keyword_entries": 261,
     "keyword_lookups": 29,
     "keyword_member_dispatch": 0,
     "member_decisions": 5,
@@ -121,7 +121,7 @@
    "consumed": 86,
    "detail": {
     "is_name": 70,
-    "keyword_entries": 13522,
+    "keyword_entries": 819,
     "keyword_lookups": 91,
     "keyword_member_dispatch": 0,
     "member_decisions": 13,
@@ -141,7 +141,7 @@
    "consumed": 199,
    "detail": {
     "is_name": 123,
-    "keyword_entries": 20359,
+    "keyword_entries": 1503,
     "keyword_lookups": 167,
     "keyword_member_dispatch": 0,
     "member_decisions": 33,
@@ -161,7 +161,7 @@
    "consumed": 32,
    "detail": {
     "is_name": 22,
-    "keyword_entries": 3879,
+    "keyword_entries": 252,
     "keyword_lookups": 28,
     "keyword_member_dispatch": 0,
     "member_decisions": 6,
@@ -181,7 +181,7 @@
    "consumed": 104,
    "detail": {
     "is_name": 108,
-    "keyword_entries": 18244,
+    "keyword_entries": 1224,
     "keyword_lookups": 136,
     "keyword_member_dispatch": 0,
     "member_decisions": 19,
@@ -201,7 +201,7 @@
    "consumed": 85,
    "detail": {
     "is_name": 100,
-    "keyword_entries": 16558,
+    "keyword_entries": 1071,
     "keyword_lookups": 119,
     "keyword_member_dispatch": 0,
     "member_decisions": 16,
@@ -221,7 +221,7 @@
    "consumed": 216,
    "detail": {
     "is_name": 205,
-    "keyword_entries": 36831,
+    "keyword_entries": 2376,
     "keyword_lookups": 264,
     "keyword_member_dispatch": 0,
     "member_decisions": 32,
@@ -241,7 +241,7 @@
    "consumed": 219,
    "detail": {
     "is_name": 204,
-    "keyword_entries": 36330,
+    "keyword_entries": 2358,
     "keyword_lookups": 262,
     "keyword_member_dispatch": 0,
     "member_decisions": 32,
@@ -261,7 +261,7 @@
    "consumed": 775,
    "detail": {
     "is_name": 747,
-    "keyword_entries": 141576,
+    "keyword_entries": 8658,
     "keyword_lookups": 962,
     "keyword_member_dispatch": 0,
     "member_decisions": 113,
@@ -281,7 +281,7 @@
    "consumed": 245,
    "detail": {
     "is_name": 254,
-    "keyword_entries": 45467,
+    "keyword_entries": 2871,
     "keyword_lookups": 319,
     "keyword_member_dispatch": 0,
     "member_decisions": 35,
@@ -301,7 +301,7 @@
    "consumed": 561,
    "detail": {
     "is_name": 500,
-    "keyword_entries": 92632,
+    "keyword_entries": 5733,
     "keyword_lookups": 637,
     "keyword_member_dispatch": 0,
     "member_decisions": 85,
@@ -321,7 +321,7 @@
    "consumed": 1006,
    "detail": {
     "is_name": 893,
-    "keyword_entries": 165012,
+    "keyword_entries": 10089,
     "keyword_lookups": 1121,
     "keyword_member_dispatch": 0,
     "member_decisions": 121,
@@ -341,7 +341,7 @@
    "consumed": 47,
    "detail": {
     "is_name": 46,
-    "keyword_entries": 8087,
+    "keyword_entries": 468,
     "keyword_lookups": 52,
     "keyword_member_dispatch": 0,
     "member_decisions": 6,
@@ -361,7 +361,7 @@
    "consumed": 58,
    "detail": {
     "is_name": 52,
-    "keyword_entries": 9377,
+    "keyword_entries": 549,
     "keyword_lookups": 61,
     "keyword_member_dispatch": 0,
     "member_decisions": 8,
@@ -381,7 +381,7 @@
    "consumed": 133,
    "detail": {
     "is_name": 89,
-    "keyword_entries": 17328,
+    "keyword_entries": 1089,
     "keyword_lookups": 121,
     "keyword_member_dispatch": 0,
     "member_decisions": 21,
@@ -401,7 +401,7 @@
    "consumed": 126,
    "detail": {
     "is_name": 80,
-    "keyword_entries": 15628,
+    "keyword_entries": 963,
     "keyword_lookups": 107,
     "keyword_member_dispatch": 0,
     "member_decisions": 18,
@@ -421,7 +421,7 @@
    "consumed": 148,
    "detail": {
     "is_name": 103,
-    "keyword_entries": 19366,
+    "keyword_entries": 1215,
     "keyword_lookups": 135,
     "keyword_member_dispatch": 0,
     "member_decisions": 23,
@@ -441,7 +441,7 @@
    "consumed": 56,
    "detail": {
     "is_name": 27,
-    "keyword_entries": 4965,
+    "keyword_entries": 342,
     "keyword_lookups": 38,
     "keyword_member_dispatch": 0,
     "member_decisions": 8,
@@ -461,7 +461,7 @@
    "consumed": 168,
    "detail": {
     "is_name": 150,
-    "keyword_entries": 26470,
+    "keyword_entries": 1584,
     "keyword_lookups": 176,
     "keyword_member_dispatch": 0,
     "member_decisions": 20,
@@ -481,7 +481,7 @@
    "consumed": 48,
    "detail": {
     "is_name": 30,
-    "keyword_entries": 3569,
+    "keyword_entries": 243,
     "keyword_lookups": 27,
     "keyword_member_dispatch": 0,
     "member_decisions": 9,
@@ -501,7 +501,7 @@
    "consumed": 111,
    "detail": {
     "is_name": 78,
-    "keyword_entries": 6383,
+    "keyword_entries": 495,
     "keyword_lookups": 55,
     "keyword_member_dispatch": 0,
     "member_decisions": 21,
@@ -521,7 +521,7 @@
    "consumed": 53,
    "detail": {
     "is_name": 48,
-    "keyword_entries": 8193,
+    "keyword_entries": 540,
     "keyword_lookups": 60,
     "keyword_member_dispatch": 0,
     "member_decisions": 10,
@@ -541,7 +541,7 @@
    "consumed": 104,
    "detail": {
     "is_name": 58,
-    "keyword_entries": 10049,
+    "keyword_entries": 738,
     "keyword_lookups": 82,
     "keyword_member_dispatch": 0,
     "member_decisions": 17,
@@ -561,7 +561,7 @@
    "consumed": 90,
    "detail": {
     "is_name": 105,
-    "keyword_entries": 19214,
+    "keyword_entries": 1143,
     "keyword_lookups": 127,
     "keyword_member_dispatch": 0,
     "member_decisions": 16,
@@ -581,7 +581,7 @@
    "consumed": 43,
    "detail": {
     "is_name": 26,
-    "keyword_entries": 4863,
+    "keyword_entries": 324,
     "keyword_lookups": 36,
     "keyword_member_dispatch": 0,
     "member_decisions": 9,
@@ -601,7 +601,7 @@
    "consumed": 129,
    "detail": {
     "is_name": 73,
-    "keyword_entries": 14094,
+    "keyword_entries": 945,
     "keyword_lookups": 105,
     "keyword_member_dispatch": 0,
     "member_decisions": 20,
@@ -621,7 +621,7 @@
    "consumed": 44,
    "detail": {
     "is_name": 49,
-    "keyword_entries": 8370,
+    "keyword_entries": 486,
     "keyword_lookups": 54,
     "keyword_member_dispatch": 0,
     "member_decisions": 7,
@@ -641,7 +641,7 @@
    "consumed": 66,
    "detail": {
     "is_name": 42,
-    "keyword_entries": 8556,
+    "keyword_entries": 594,
     "keyword_lookups": 66,
     "keyword_member_dispatch": 0,
     "member_decisions": 11,
@@ -661,7 +661,7 @@
    "consumed": 51,
    "detail": {
     "is_name": 25,
-    "keyword_entries": 2895,
+    "keyword_entries": 351,
     "keyword_lookups": 39,
     "keyword_member_dispatch": 0,
     "member_decisions": 18,
@@ -681,7 +681,7 @@
    "consumed": 24,
    "detail": {
     "is_name": 16,
-    "keyword_entries": 2835,
+    "keyword_entries": 207,
     "keyword_lookups": 23,
     "keyword_member_dispatch": 0,
     "member_decisions": 5,
@@ -701,7 +701,7 @@
    "consumed": 148,
    "detail": {
     "is_name": 147,
-    "keyword_entries": 26012,
+    "keyword_entries": 1719,
     "keyword_lookups": 191,
     "keyword_member_dispatch": 0,
     "member_decisions": 27,
@@ -721,7 +721,7 @@
    "consumed": 56,
    "detail": {
     "is_name": 38,
-    "keyword_entries": 6218,
+    "keyword_entries": 441,
     "keyword_lookups": 49,
     "keyword_member_dispatch": 0,
     "member_decisions": 12,
@@ -741,7 +741,7 @@
    "consumed": 31,
    "detail": {
     "is_name": 40,
-    "keyword_entries": 7031,
+    "keyword_entries": 414,
     "keyword_lookups": 46,
     "keyword_member_dispatch": 0,
     "member_decisions": 7,
@@ -761,7 +761,7 @@
    "consumed": 452,
    "detail": {
     "is_name": 662,
-    "keyword_entries": 110558,
+    "keyword_entries": 6210,
     "keyword_lookups": 690,
     "keyword_member_dispatch": 0,
     "member_decisions": 68,
@@ -781,7 +781,7 @@
    "consumed": 165,
    "detail": {
     "is_name": 164,
-    "keyword_entries": 30127,
+    "keyword_entries": 1791,
     "keyword_lookups": 199,
     "keyword_member_dispatch": 0,
     "member_decisions": 21,
@@ -801,7 +801,7 @@
    "consumed": 20,
    "detail": {
     "is_name": 15,
-    "keyword_entries": 2995,
+    "keyword_entries": 180,
     "keyword_lookups": 20,
     "keyword_member_dispatch": 0,
     "member_decisions": 4,
@@ -821,7 +821,7 @@
    "consumed": 278,
    "detail": {
     "is_name": 211,
-    "keyword_entries": 41693,
+    "keyword_entries": 2664,
     "keyword_lookups": 296,
     "keyword_member_dispatch": 0,
     "member_decisions": 43,
@@ -841,7 +841,7 @@
    "consumed": 191,
    "detail": {
     "is_name": 142,
-    "keyword_entries": 23052,
+    "keyword_entries": 1440,
     "keyword_lookups": 160,
     "keyword_member_dispatch": 0,
     "member_decisions": 26,
@@ -861,7 +861,7 @@
    "consumed": 118,
    "detail": {
     "is_name": 60,
-    "keyword_entries": 9527,
+    "keyword_entries": 801,
     "keyword_lookups": 89,
     "keyword_member_dispatch": 0,
     "member_decisions": 28,
@@ -881,7 +881,7 @@
    "consumed": 59,
    "detail": {
     "is_name": 38,
-    "keyword_entries": 7368,
+    "keyword_entries": 495,
     "keyword_lookups": 55,
     "keyword_member_dispatch": 0,
     "member_decisions": 11,
@@ -901,7 +901,7 @@
    "consumed": 70,
    "detail": {
     "is_name": 48,
-    "keyword_entries": 9319,
+    "keyword_entries": 612,
     "keyword_lookups": 68,
     "keyword_member_dispatch": 0,
     "member_decisions": 9,
@@ -921,7 +921,7 @@
    "consumed": 192,
    "detail": {
     "is_name": 226,
-    "keyword_entries": 37085,
+    "keyword_entries": 2133,
     "keyword_lookups": 237,
     "keyword_member_dispatch": 0,
     "member_decisions": 29,
@@ -941,7 +941,7 @@
    "consumed": 54,
    "detail": {
     "is_name": 34,
-    "keyword_entries": 6424,
+    "keyword_entries": 477,
     "keyword_lookups": 53,
     "keyword_member_dispatch": 0,
     "member_decisions": 12,
@@ -961,7 +961,7 @@
    "consumed": 110,
    "detail": {
     "is_name": 68,
-    "keyword_entries": 9900,
+    "keyword_entries": 738,
     "keyword_lookups": 82,
     "keyword_member_dispatch": 0,
     "member_decisions": 24,
@@ -981,7 +981,7 @@
    "consumed": 45,
    "detail": {
     "is_name": 28,
-    "keyword_entries": 5273,
+    "keyword_entries": 360,
     "keyword_lookups": 40,
     "keyword_member_dispatch": 0,
     "member_decisions": 10,
@@ -1001,7 +1001,7 @@
    "consumed": 171,
    "detail": {
     "is_name": 110,
-    "keyword_entries": 23757,
+    "keyword_entries": 1422,
     "keyword_lookups": 158,
     "keyword_member_dispatch": 0,
     "member_decisions": 23,
@@ -1021,7 +1021,7 @@
    "consumed": 100,
    "detail": {
     "is_name": 67,
-    "keyword_entries": 9310,
+    "keyword_entries": 648,
     "keyword_lookups": 72,
     "keyword_member_dispatch": 0,
     "member_decisions": 19,
@@ -1041,7 +1041,7 @@
    "consumed": 131,
    "detail": {
     "is_name": 68,
-    "keyword_entries": 13003,
+    "keyword_entries": 882,
     "keyword_lookups": 98,
     "keyword_member_dispatch": 0,
     "member_decisions": 19,
@@ -1061,7 +1061,7 @@
    "consumed": 257,
    "detail": {
     "is_name": 132,
-    "keyword_entries": 24016,
+    "keyword_entries": 1494,
     "keyword_lookups": 166,
     "keyword_member_dispatch": 0,
     "member_decisions": 37,
@@ -1081,7 +1081,7 @@
    "consumed": 195,
    "detail": {
     "is_name": 126,
-    "keyword_entries": 23245,
+    "keyword_entries": 1656,
     "keyword_lookups": 184,
     "keyword_member_dispatch": 0,
     "member_decisions": 29,
@@ -1101,7 +1101,7 @@
    "consumed": 518,
    "detail": {
     "is_name": 270,
-    "keyword_entries": 53408,
+    "keyword_entries": 3483,
     "keyword_lookups": 387,
     "keyword_member_dispatch": 0,
     "member_decisions": 55,
@@ -1121,7 +1121,7 @@
    "consumed": 289,
    "detail": {
     "is_name": 180,
-    "keyword_entries": 30021,
+    "keyword_entries": 1989,
     "keyword_lookups": 221,
     "keyword_member_dispatch": 0,
     "member_decisions": 34,
@@ -1141,7 +1141,7 @@
    "consumed": 86,
    "detail": {
     "is_name": 58,
-    "keyword_entries": 8807,
+    "keyword_entries": 666,
     "keyword_lookups": 74,
     "keyword_member_dispatch": 0,
     "member_decisions": 22,
@@ -1161,7 +1161,7 @@
    "consumed": 431,
    "detail": {
     "is_name": 375,
-    "keyword_entries": 67515,
+    "keyword_entries": 4014,
     "keyword_lookups": 446,
     "keyword_member_dispatch": 0,
     "member_decisions": 55,
@@ -1181,7 +1181,7 @@
    "consumed": 6966,
    "detail": {
     "is_name": 24481,
-    "keyword_entries": 4127788,
+    "keyword_entries": 225855,
     "keyword_lookups": 25095,
     "keyword_member_dispatch": 2153,
     "member_decisions": 1057,
@@ -1201,7 +1201,7 @@
    "consumed": 179,
    "detail": {
     "is_name": 137,
-    "keyword_entries": 23050,
+    "keyword_entries": 1287,
     "keyword_lookups": 143,
     "keyword_member_dispatch": 12,
     "member_decisions": 26,
@@ -1221,7 +1221,7 @@
    "consumed": 508,
    "detail": {
     "is_name": 828,
-    "keyword_entries": 139579,
+    "keyword_entries": 8253,
     "keyword_lookups": 917,
     "keyword_member_dispatch": 85,
     "member_decisions": 67,
@@ -1241,7 +1241,7 @@
    "consumed": 415,
    "detail": {
     "is_name": 559,
-    "keyword_entries": 66887,
+    "keyword_entries": 4347,
     "keyword_lookups": 483,
     "keyword_member_dispatch": 87,
     "member_decisions": 77,
@@ -1261,7 +1261,7 @@
    "consumed": 1143,
    "detail": {
     "is_name": 1462,
-    "keyword_entries": 232668,
+    "keyword_entries": 13662,
     "keyword_lookups": 1518,
     "keyword_member_dispatch": 182,
     "member_decisions": 178,
@@ -1281,7 +1281,7 @@
    "consumed": 147,
    "detail": {
     "is_name": 1881,
-    "keyword_entries": 323885,
+    "keyword_entries": 16974,
     "keyword_lookups": 1886,
     "keyword_member_dispatch": 22,
     "member_decisions": 25,
@@ -1301,7 +1301,7 @@
    "consumed": 584,
    "detail": {
     "is_name": 2250,
-    "keyword_entries": 385315,
+    "keyword_entries": 20817,
     "keyword_lookups": 2313,
     "keyword_member_dispatch": 74,
     "member_decisions": 91,
@@ -1321,7 +1321,7 @@
    "consumed": 395,
    "detail": {
     "is_name": 234,
-    "keyword_entries": 34139,
+    "keyword_entries": 2277,
     "keyword_lookups": 253,
     "keyword_member_dispatch": 47,
     "member_decisions": 58,
@@ -1341,7 +1341,7 @@
    "consumed": 575,
    "detail": {
     "is_name": 621,
-    "keyword_entries": 117412,
+    "keyword_entries": 7056,
     "keyword_lookups": 784,
     "keyword_member_dispatch": 45,
     "member_decisions": 64,
@@ -1361,7 +1361,7 @@
    "consumed": 113,
    "detail": {
     "is_name": 1824,
-    "keyword_entries": 54528,
+    "keyword_entries": 4176,
     "keyword_lookups": 464,
     "keyword_member_dispatch": 1806,
     "member_decisions": 12,
@@ -1381,7 +1381,7 @@
    "consumed": 231,
    "detail": {
     "is_name": 2534,
-    "keyword_entries": 86114,
+    "keyword_entries": 6534,
     "keyword_lookups": 726,
     "keyword_member_dispatch": 2464,
     "member_decisions": 26,
@@ -1401,7 +1401,7 @@
    "consumed": 171,
    "detail": {
     "is_name": 499,
-    "keyword_entries": 30809,
+    "keyword_entries": 2637,
     "keyword_lookups": 293,
     "keyword_member_dispatch": 435,
     "member_decisions": 21,
@@ -1421,7 +1421,7 @@
    "consumed": 40,
    "detail": {
     "is_name": 19,
-    "keyword_entries": 3957,
+    "keyword_entries": 252,
     "keyword_lookups": 28,
     "keyword_member_dispatch": 6,
     "member_decisions": 7,
@@ -1441,7 +1441,7 @@
    "consumed": 60,
    "detail": {
     "is_name": 38,
-    "keyword_entries": 7337,
+    "keyword_entries": 486,
     "keyword_lookups": 54,
     "keyword_member_dispatch": 10,
     "member_decisions": 10,
@@ -1461,7 +1461,7 @@
    "consumed": 233,
    "detail": {
     "is_name": 35640,
-    "keyword_entries": 6061632,
+    "keyword_entries": 315702,
     "keyword_lookups": 35078,
     "keyword_member_dispatch": 616,
     "member_decisions": 34,
@@ -1481,7 +1481,7 @@
    "consumed": 74,
    "detail": {
     "is_name": 13143,
-    "keyword_entries": 2196267,
+    "keyword_entries": 114426,
     "keyword_lookups": 12714,
     "keyword_member_dispatch": 232,
     "member_decisions": 14,
@@ -1501,7 +1501,7 @@
    "consumed": 33,
    "detail": {
     "is_name": 13,
-    "keyword_entries": 1805,
+    "keyword_entries": 207,
     "keyword_lookups": 23,
     "keyword_member_dispatch": 2,
     "member_decisions": 10,
@@ -1521,7 +1521,7 @@
    "consumed": 191,
    "detail": {
     "is_name": 195,
-    "keyword_entries": 37111,
+    "keyword_entries": 2160,
     "keyword_lookups": 240,
     "keyword_member_dispatch": 34,
     "member_decisions": 34,
@@ -1541,7 +1541,7 @@
    "consumed": 58,
    "detail": {
     "is_name": 52,
-    "keyword_entries": 6451,
+    "keyword_entries": 378,
     "keyword_lookups": 42,
     "keyword_member_dispatch": 6,
     "member_decisions": 9,
@@ -1561,7 +1561,7 @@
    "consumed": 442,
    "detail": {
     "is_name": 501,
-    "keyword_entries": 62652,
+    "keyword_entries": 3663,
     "keyword_lookups": 407,
     "keyword_member_dispatch": 39,
     "member_decisions": 51,
@@ -1581,7 +1581,7 @@
    "consumed": 107,
    "detail": {
     "is_name": 79,
-    "keyword_entries": 10533,
+    "keyword_entries": 675,
     "keyword_lookups": 75,
     "keyword_member_dispatch": 10,
     "member_decisions": 16,
@@ -1601,7 +1601,7 @@
    "consumed": 1329,
    "detail": {
     "is_name": 1564,
-    "keyword_entries": 177369,
+    "keyword_entries": 10413,
     "keyword_lookups": 1157,
     "keyword_member_dispatch": 108,
     "member_decisions": 130,
@@ -1621,7 +1621,7 @@
    "consumed": 786,
    "detail": {
     "is_name": 816,
-    "keyword_entries": 102108,
+    "keyword_entries": 6507,
     "keyword_lookups": 723,
     "keyword_member_dispatch": 64,
     "member_decisions": 79,
@@ -1641,7 +1641,7 @@
    "consumed": 32,
    "detail": {
     "is_name": 12,
-    "keyword_entries": 2923,
+    "keyword_entries": 198,
     "keyword_lookups": 22,
     "keyword_member_dispatch": 5,
     "member_decisions": 7,
@@ -1661,7 +1661,7 @@
    "consumed": 86,
    "detail": {
     "is_name": 37,
-    "keyword_entries": 7786,
+    "keyword_entries": 504,
     "keyword_lookups": 56,
     "keyword_member_dispatch": 13,
     "member_decisions": 17,
@@ -1681,7 +1681,7 @@
    "consumed": 70,
    "detail": {
     "is_name": 26,
-    "keyword_entries": 5704,
+    "keyword_entries": 387,
     "keyword_lookups": 43,
     "keyword_member_dispatch": 10,
     "member_decisions": 14,
@@ -1701,7 +1701,7 @@
    "consumed": 33,
    "detail": {
     "is_name": 12,
-    "keyword_entries": 2789,
+    "keyword_entries": 180,
     "keyword_lookups": 20,
     "keyword_member_dispatch": 6,
     "member_decisions": 7,
@@ -1721,7 +1721,7 @@
    "consumed": 415,
    "detail": {
     "is_name": 331,
-    "keyword_entries": 46054,
+    "keyword_entries": 3042,
     "keyword_lookups": 338,
     "keyword_member_dispatch": 48,
     "member_decisions": 62,
@@ -1741,7 +1741,7 @@
    "consumed": 112,
    "detail": {
     "is_name": 58,
-    "keyword_entries": 9663,
+    "keyword_entries": 666,
     "keyword_lookups": 74,
     "keyword_member_dispatch": 14,
     "member_decisions": 20,
@@ -1761,7 +1761,7 @@
    "consumed": 138,
    "detail": {
     "is_name": 84,
-    "keyword_entries": 17155,
+    "keyword_entries": 1170,
     "keyword_lookups": 130,
     "keyword_member_dispatch": 20,
     "member_decisions": 25,
@@ -1781,7 +1781,7 @@
    "consumed": 88,
    "detail": {
     "is_name": 102,
-    "keyword_entries": 16563,
+    "keyword_entries": 990,
     "keyword_lookups": 110,
     "keyword_member_dispatch": 8,
     "member_decisions": 13,
@@ -1801,7 +1801,7 @@
    "consumed": 412,
    "detail": {
     "is_name": 2753,
-    "keyword_entries": 271150,
+    "keyword_entries": 14760,
     "keyword_lookups": 1640,
     "keyword_member_dispatch": 2349,
     "member_decisions": 56,
@@ -1821,7 +1821,7 @@
    "consumed": 787,
    "detail": {
     "is_name": 1167,
-    "keyword_entries": 164809,
+    "keyword_entries": 9801,
     "keyword_lookups": 1089,
     "keyword_member_dispatch": 569,
     "member_decisions": 94,
@@ -1841,7 +1841,7 @@
    "consumed": 459,
    "detail": {
     "is_name": 2744,
-    "keyword_entries": 271858,
+    "keyword_entries": 14868,
     "keyword_lookups": 1652,
     "keyword_member_dispatch": 2352,
     "member_decisions": 58,
@@ -1861,7 +1861,7 @@
    "consumed": 744,
    "detail": {
     "is_name": 1137,
-    "keyword_entries": 162493,
+    "keyword_entries": 9531,
     "keyword_lookups": 1059,
     "keyword_member_dispatch": 563,
     "member_decisions": 87,
@@ -1881,7 +1881,7 @@
    "consumed": 393,
    "detail": {
     "is_name": 455,
-    "keyword_entries": 74499,
+    "keyword_entries": 4644,
     "keyword_lookups": 516,
     "keyword_member_dispatch": 75,
     "member_decisions": 64,
@@ -1901,7 +1901,7 @@
    "consumed": 108,
    "detail": {
     "is_name": 125,
-    "keyword_entries": 20753,
+    "keyword_entries": 1296,
     "keyword_lookups": 144,
     "keyword_member_dispatch": 15,
     "member_decisions": 15,
@@ -1921,7 +1921,7 @@
    "consumed": 113,
    "detail": {
     "is_name": 81,
-    "keyword_entries": 13763,
+    "keyword_entries": 900,
     "keyword_lookups": 100,
     "keyword_member_dispatch": 14,
     "member_decisions": 17,
@@ -1941,7 +1941,7 @@
    "consumed": 83,
    "detail": {
     "is_name": 260,
-    "keyword_entries": 33372,
+    "keyword_entries": 1854,
     "keyword_lookups": 206,
     "keyword_member_dispatch": 221,
     "member_decisions": 13,
@@ -1961,7 +1961,7 @@
    "consumed": 72,
    "detail": {
     "is_name": 52,
-    "keyword_entries": 9409,
+    "keyword_entries": 558,
     "keyword_lookups": 62,
     "keyword_member_dispatch": 5,
     "member_decisions": 12,
@@ -1981,7 +1981,7 @@
    "consumed": 120,
    "detail": {
     "is_name": 173,
-    "keyword_entries": 29620,
+    "keyword_entries": 1629,
     "keyword_lookups": 181,
     "keyword_member_dispatch": 7,
     "member_decisions": 15,
@@ -2001,7 +2001,7 @@
    "consumed": 55,
    "detail": {
     "is_name": 43,
-    "keyword_entries": 7325,
+    "keyword_entries": 405,
     "keyword_lookups": 45,
     "keyword_member_dispatch": 2,
     "member_decisions": 6,
@@ -2021,7 +2021,7 @@
    "consumed": 53,
    "detail": {
     "is_name": 39,
-    "keyword_entries": 7055,
+    "keyword_entries": 405,
     "keyword_lookups": 45,
     "keyword_member_dispatch": 5,
     "member_decisions": 9,
@@ -2041,7 +2041,7 @@
    "consumed": 48,
    "detail": {
     "is_name": 27,
-    "keyword_entries": 3151,
+    "keyword_entries": 279,
     "keyword_lookups": 31,
     "keyword_member_dispatch": 7,
     "member_decisions": 9,
@@ -2061,7 +2061,7 @@
    "consumed": 113,
    "detail": {
     "is_name": 76,
-    "keyword_entries": 5396,
+    "keyword_entries": 720,
     "keyword_lookups": 80,
     "keyword_member_dispatch": 19,
     "member_decisions": 21,
@@ -2081,7 +2081,7 @@
    "consumed": 100,
    "detail": {
     "is_name": 46,
-    "keyword_entries": 8893,
+    "keyword_entries": 540,
     "keyword_lookups": 60,
     "keyword_member_dispatch": 15,
     "member_decisions": 22,
@@ -2101,7 +2101,7 @@
    "consumed": 136,
    "detail": {
     "is_name": 13777,
-    "keyword_entries": 2346572,
+    "keyword_entries": 122346,
     "keyword_lookups": 13594,
     "keyword_member_dispatch": 890,
     "member_decisions": 24,
@@ -2121,7 +2121,7 @@
    "consumed": 138,
    "detail": {
     "is_name": 13132,
-    "keyword_entries": 2193391,
+    "keyword_entries": 114336,
     "keyword_lookups": 12704,
     "keyword_member_dispatch": 236,
     "member_decisions": 23,
@@ -2141,7 +2141,7 @@
    "consumed": 274,
    "detail": {
     "is_name": 194,
-    "keyword_entries": 38798,
+    "keyword_entries": 2358,
     "keyword_lookups": 262,
     "keyword_member_dispatch": 35,
     "member_decisions": 41,
@@ -2161,7 +2161,7 @@
    "consumed": 195,
    "detail": {
     "is_name": 207,
-    "keyword_entries": 34406,
+    "keyword_entries": 2349,
     "keyword_lookups": 261,
     "keyword_member_dispatch": 23,
     "member_decisions": 35,
@@ -2181,7 +2181,7 @@
    "consumed": 71,
    "detail": {
     "is_name": 48,
-    "keyword_entries": 9072,
+    "keyword_entries": 603,
     "keyword_lookups": 67,
     "keyword_member_dispatch": 10,
     "member_decisions": 13,
@@ -2201,7 +2201,7 @@
    "consumed": 114,
    "detail": {
     "is_name": 511,
-    "keyword_entries": 63517,
+    "keyword_entries": 3528,
     "keyword_lookups": 392,
     "keyword_member_dispatch": 451,
     "member_decisions": 19,
@@ -2221,7 +2221,7 @@
    "consumed": 85,
    "detail": {
     "is_name": 63,
-    "keyword_entries": 11476,
+    "keyword_entries": 729,
     "keyword_lookups": 81,
     "keyword_member_dispatch": 12,
     "member_decisions": 20,
@@ -2241,7 +2241,7 @@
    "consumed": 178,
    "detail": {
     "is_name": 213,
-    "keyword_entries": 36173,
+    "keyword_entries": 2187,
     "keyword_lookups": 243,
     "keyword_member_dispatch": 23,
     "member_decisions": 26,
@@ -2261,7 +2261,7 @@
    "consumed": 147,
    "detail": {
     "is_name": 155,
-    "keyword_entries": 25934,
+    "keyword_entries": 1566,
     "keyword_lookups": 174,
     "keyword_member_dispatch": 17,
     "member_decisions": 19,
@@ -2281,7 +2281,7 @@
    "consumed": 49,
    "detail": {
     "is_name": 13,
-    "keyword_entries": 2466,
+    "keyword_entries": 261,
     "keyword_lookups": 29,
     "keyword_member_dispatch": 3,
     "member_decisions": 18,
@@ -2301,7 +2301,7 @@
    "consumed": 132,
    "detail": {
     "is_name": 623,
-    "keyword_entries": 74242,
+    "keyword_entries": 4950,
     "keyword_lookups": 550,
     "keyword_member_dispatch": 572,
     "member_decisions": 21,
@@ -2321,7 +2321,7 @@
    "consumed": 236,
    "detail": {
     "is_name": 2109,
-    "keyword_entries": 237044,
+    "keyword_entries": 13122,
     "keyword_lookups": 1458,
     "keyword_member_dispatch": 1952,
     "member_decisions": 46,
@@ -2341,7 +2341,7 @@
    "consumed": 414,
    "detail": {
     "is_name": 571,
-    "keyword_entries": 92429,
+    "keyword_entries": 5598,
     "keyword_lookups": 622,
     "keyword_member_dispatch": 78,
     "member_decisions": 61,
@@ -2361,7 +2361,7 @@
    "consumed": 94,
    "detail": {
     "is_name": 117,
-    "keyword_entries": 21962,
+    "keyword_entries": 1305,
     "keyword_lookups": 145,
     "keyword_member_dispatch": 16,
     "member_decisions": 17,
@@ -2381,7 +2381,7 @@
    "consumed": 76,
    "detail": {
     "is_name": 66,
-    "keyword_entries": 11238,
+    "keyword_entries": 765,
     "keyword_lookups": 85,
     "keyword_member_dispatch": 6,
     "member_decisions": 9,
@@ -2401,7 +2401,7 @@
    "consumed": 54,
    "detail": {
     "is_name": 36,
-    "keyword_entries": 4737,
+    "keyword_entries": 387,
     "keyword_lookups": 43,
     "keyword_member_dispatch": 9,
     "member_decisions": 9,
@@ -2421,7 +2421,7 @@
    "consumed": 52,
    "detail": {
     "is_name": 27,
-    "keyword_entries": 3851,
+    "keyword_entries": 333,
     "keyword_lookups": 37,
     "keyword_member_dispatch": 11,
     "member_decisions": 12,
@@ -2441,7 +2441,7 @@
    "consumed": 130,
    "detail": {
     "is_name": 93,
-    "keyword_entries": 10623,
+    "keyword_entries": 774,
     "keyword_lookups": 86,
     "keyword_member_dispatch": 15,
     "member_decisions": 16,
@@ -2461,7 +2461,7 @@
    "consumed": 142,
    "detail": {
     "is_name": 118,
-    "keyword_entries": 21590,
+    "keyword_entries": 1359,
     "keyword_lookups": 151,
     "keyword_member_dispatch": 21,
     "member_decisions": 21,
@@ -2481,7 +2481,7 @@
    "consumed": 69,
    "detail": {
     "is_name": 28,
-    "keyword_entries": 6089,
+    "keyword_entries": 387,
     "keyword_lookups": 43,
     "keyword_member_dispatch": 8,
     "member_decisions": 12,
@@ -2501,7 +2501,7 @@
    "consumed": 130,
    "detail": {
     "is_name": 46,
-    "keyword_entries": 10299,
+    "keyword_entries": 801,
     "keyword_lookups": 89,
     "keyword_member_dispatch": 22,
     "member_decisions": 22,
@@ -2521,7 +2521,7 @@
    "consumed": 86,
    "detail": {
     "is_name": 373,
-    "keyword_entries": 47884,
+    "keyword_entries": 2961,
     "keyword_lookups": 329,
     "keyword_member_dispatch": 332,
     "member_decisions": 16,
@@ -2541,7 +2541,7 @@
    "consumed": 72,
    "detail": {
     "is_name": 28,
-    "keyword_entries": 6862,
+    "keyword_entries": 495,
     "keyword_lookups": 55,
     "keyword_member_dispatch": 12,
     "member_decisions": 12,
@@ -2561,7 +2561,7 @@
    "consumed": 131,
    "detail": {
     "is_name": 391,
-    "keyword_entries": 68156,
+    "keyword_entries": 3636,
     "keyword_lookups": 404,
     "keyword_member_dispatch": 12,
     "member_decisions": 17,
@@ -2581,7 +2581,7 @@
    "consumed": 91,
    "detail": {
     "is_name": 44,
-    "keyword_entries": 7340,
+    "keyword_entries": 522,
     "keyword_lookups": 58,
     "keyword_member_dispatch": 13,
     "member_decisions": 13,
@@ -2601,7 +2601,7 @@
    "consumed": 101,
    "detail": {
     "is_name": 59,
-    "keyword_entries": 12469,
+    "keyword_entries": 810,
     "keyword_lookups": 90,
     "keyword_member_dispatch": 22,
     "member_decisions": 22,
@@ -2621,7 +2621,7 @@
    "consumed": 97,
    "detail": {
     "is_name": 105,
-    "keyword_entries": 15239,
+    "keyword_entries": 1026,
     "keyword_lookups": 114,
     "keyword_member_dispatch": 14,
     "member_decisions": 13,
@@ -2641,7 +2641,7 @@
    "consumed": 238,
    "detail": {
     "is_name": 126,
-    "keyword_entries": 26660,
+    "keyword_entries": 1809,
     "keyword_lookups": 201,
     "keyword_member_dispatch": 37,
     "member_decisions": 39,
@@ -2661,7 +2661,7 @@
    "consumed": 140,
    "detail": {
     "is_name": 57,
-    "keyword_entries": 11424,
+    "keyword_entries": 873,
     "keyword_lookups": 97,
     "keyword_member_dispatch": 19,
     "member_decisions": 29,
@@ -2681,7 +2681,7 @@
    "consumed": 38,
    "detail": {
     "is_name": 14,
-    "keyword_entries": 3255,
+    "keyword_entries": 216,
     "keyword_lookups": 24,
     "keyword_member_dispatch": 6,
     "member_decisions": 8,
@@ -2701,7 +2701,7 @@
    "consumed": 192,
    "detail": {
     "is_name": 137,
-    "keyword_entries": 29496,
+    "keyword_entries": 1827,
     "keyword_lookups": 203,
     "keyword_member_dispatch": 23,
     "member_decisions": 33,
@@ -2721,7 +2721,7 @@
    "consumed": 138,
    "detail": {
     "is_name": 173,
-    "keyword_entries": 24427,
+    "keyword_entries": 1638,
     "keyword_lookups": 182,
     "keyword_member_dispatch": 16,
     "member_decisions": 18,
@@ -2741,7 +2741,7 @@
    "consumed": 48,
    "detail": {
     "is_name": 27,
-    "keyword_entries": 5256,
+    "keyword_entries": 378,
     "keyword_lookups": 42,
     "keyword_member_dispatch": 7,
     "member_decisions": 10,
@@ -2761,7 +2761,7 @@
    "consumed": 74,
    "detail": {
     "is_name": 47,
-    "keyword_entries": 7505,
+    "keyword_entries": 495,
     "keyword_lookups": 55,
     "keyword_member_dispatch": 9,
     "member_decisions": 13,
@@ -2781,7 +2781,7 @@
    "consumed": 114,
    "detail": {
     "is_name": 67,
-    "keyword_entries": 13267,
+    "keyword_entries": 909,
     "keyword_lookups": 101,
     "keyword_member_dispatch": 21,
     "member_decisions": 25,
@@ -2801,7 +2801,7 @@
    "consumed": 123,
    "detail": {
     "is_name": 70,
-    "keyword_entries": 14443,
+    "keyword_entries": 1026,
     "keyword_lookups": 114,
     "keyword_member_dispatch": 16,
     "member_decisions": 23,
@@ -2821,7 +2821,7 @@
    "consumed": 96,
    "detail": {
     "is_name": 73,
-    "keyword_entries": 14344,
+    "keyword_entries": 819,
     "keyword_lookups": 91,
     "keyword_member_dispatch": 13,
     "member_decisions": 20,
@@ -2841,7 +2841,7 @@
    "consumed": 135,
    "detail": {
     "is_name": 49,
-    "keyword_entries": 11337,
+    "keyword_entries": 765,
     "keyword_lookups": 85,
     "keyword_member_dispatch": 16,
     "member_decisions": 28,
@@ -2861,7 +2861,7 @@
    "consumed": 226,
    "detail": {
     "is_name": 221,
-    "keyword_entries": 34080,
+    "keyword_entries": 2223,
     "keyword_lookups": 247,
     "keyword_member_dispatch": 39,
     "member_decisions": 37,
@@ -2881,7 +2881,7 @@
    "consumed": 1246,
    "detail": {
     "is_name": 1256,
-    "keyword_entries": 180652,
+    "keyword_entries": 11430,
     "keyword_lookups": 1270,
     "keyword_member_dispatch": 162,
     "member_decisions": 192,
@@ -2901,7 +2901,7 @@
    "consumed": 152,
    "detail": {
     "is_name": 174,
-    "keyword_entries": 20531,
+    "keyword_entries": 1224,
     "keyword_lookups": 136,
     "keyword_member_dispatch": 21,
     "member_decisions": 23,
@@ -2921,7 +2921,7 @@
    "consumed": 540,
    "detail": {
     "is_name": 477,
-    "keyword_entries": 80137,
+    "keyword_entries": 4905,
     "keyword_lookups": 545,
     "keyword_member_dispatch": 65,
     "member_decisions": 85,
@@ -2941,7 +2941,7 @@
    "consumed": 6971,
    "detail": {
     "is_name": 24477,
-    "keyword_entries": 4126749,
+    "keyword_entries": 225819,
     "keyword_lookups": 25091,
     "keyword_member_dispatch": 2153,
     "member_decisions": 1058,
@@ -2961,7 +2961,7 @@
    "consumed": 158,
    "detail": {
     "is_name": 305,
-    "keyword_entries": 41934,
+    "keyword_entries": 2457,
     "keyword_lookups": 273,
     "keyword_member_dispatch": 232,
     "member_decisions": 32,
@@ -2981,7 +2981,7 @@
    "consumed": 238,
    "detail": {
     "is_name": 156,
-    "keyword_entries": 26845,
+    "keyword_entries": 1800,
     "keyword_lookups": 200,
     "keyword_member_dispatch": 27,
     "member_decisions": 43,
@@ -3001,7 +3001,7 @@
    "consumed": 345,
    "detail": {
     "is_name": 274,
-    "keyword_entries": 50042,
+    "keyword_entries": 3024,
     "keyword_lookups": 336,
     "keyword_member_dispatch": 37,
     "member_decisions": 49,
@@ -3021,7 +3021,7 @@
    "consumed": 302,
    "detail": {
     "is_name": 1638,
-    "keyword_entries": 84446,
+    "keyword_entries": 4752,
     "keyword_lookups": 528,
     "keyword_member_dispatch": 1487,
     "member_decisions": 49,
@@ -3041,7 +3041,7 @@
    "consumed": 318,
    "detail": {
     "is_name": 1653,
-    "keyword_entries": 87568,
+    "keyword_entries": 4950,
     "keyword_lookups": 550,
     "keyword_member_dispatch": 1490,
     "member_decisions": 52,
@@ -3061,7 +3061,7 @@
    "consumed": 210,
    "detail": {
     "is_name": 96,
-    "keyword_entries": 19529,
+    "keyword_entries": 1296,
     "keyword_lookups": 144,
     "keyword_member_dispatch": 32,
     "member_decisions": 33,
@@ -3081,7 +3081,7 @@
    "consumed": 225,
    "detail": {
     "is_name": 123,
-    "keyword_entries": 24062,
+    "keyword_entries": 1521,
     "keyword_lookups": 169,
     "keyword_member_dispatch": 31,
     "member_decisions": 32,
@@ -3101,7 +3101,7 @@
    "consumed": 497,
    "detail": {
     "is_name": 628,
-    "keyword_entries": 88804,
+    "keyword_entries": 6255,
     "keyword_lookups": 695,
     "keyword_member_dispatch": 110,
     "member_decisions": 67,
@@ -3121,7 +3121,7 @@
    "consumed": 30,
    "detail": {
     "is_name": 11,
-    "keyword_entries": 2052,
+    "keyword_entries": 180,
     "keyword_lookups": 20,
     "keyword_member_dispatch": 2,
     "member_decisions": 7,
@@ -3141,7 +3141,7 @@
    "consumed": 29,
    "detail": {
     "is_name": 11,
-    "keyword_entries": 1979,
+    "keyword_entries": 162,
     "keyword_lookups": 18,
     "keyword_member_dispatch": 2,
     "member_decisions": 6,
@@ -3161,7 +3161,7 @@
    "consumed": 34,
    "detail": {
     "is_name": 13,
-    "keyword_entries": 2986,
+    "keyword_entries": 216,
     "keyword_lookups": 24,
     "keyword_member_dispatch": 2,
     "member_decisions": 6,
@@ -3181,7 +3181,7 @@
    "consumed": 59,
    "detail": {
     "is_name": 29,
-    "keyword_entries": 4630,
+    "keyword_entries": 405,
     "keyword_lookups": 45,
     "keyword_member_dispatch": 11,
     "member_decisions": 12,
@@ -3201,7 +3201,7 @@
    "consumed": 50,
    "detail": {
     "is_name": 17,
-    "keyword_entries": 4245,
+    "keyword_entries": 306,
     "keyword_lookups": 34,
     "keyword_member_dispatch": 9,
     "member_decisions": 9,
@@ -3221,7 +3221,7 @@
    "consumed": 64,
    "detail": {
     "is_name": 24,
-    "keyword_entries": 5446,
+    "keyword_entries": 369,
     "keyword_lookups": 41,
     "keyword_member_dispatch": 10,
     "member_decisions": 10,
@@ -3241,7 +3241,7 @@
    "consumed": 89,
    "detail": {
     "is_name": 32,
-    "keyword_entries": 7257,
+    "keyword_entries": 495,
     "keyword_lookups": 55,
     "keyword_member_dispatch": 14,
     "member_decisions": 14,
@@ -3261,7 +3261,7 @@
    "consumed": 49,
    "detail": {
     "is_name": 30,
-    "keyword_entries": 5572,
+    "keyword_entries": 405,
     "keyword_lookups": 45,
     "keyword_member_dispatch": 6,
     "member_decisions": 7,
@@ -3281,7 +3281,7 @@
    "consumed": 120,
    "detail": {
     "is_name": 111,
-    "keyword_entries": 12285,
+    "keyword_entries": 747,
     "keyword_lookups": 83,
     "keyword_member_dispatch": 12,
     "member_decisions": 14,
@@ -3301,7 +3301,7 @@
    "consumed": 69,
    "detail": {
     "is_name": 28,
-    "keyword_entries": 6068,
+    "keyword_entries": 414,
     "keyword_lookups": 46,
     "keyword_member_dispatch": 12,
     "member_decisions": 12,
@@ -3321,7 +3321,7 @@
    "consumed": 74,
    "detail": {
     "is_name": 31,
-    "keyword_entries": 6648,
+    "keyword_entries": 450,
     "keyword_lookups": 50,
     "keyword_member_dispatch": 13,
     "member_decisions": 13,
@@ -3341,7 +3341,7 @@
    "consumed": 43,
    "detail": {
     "is_name": 18,
-    "keyword_entries": 3435,
+    "keyword_entries": 270,
     "keyword_lookups": 30,
     "keyword_member_dispatch": 8,
     "member_decisions": 9,
@@ -3361,7 +3361,7 @@
    "consumed": 199,
    "detail": {
     "is_name": 465,
-    "keyword_entries": 27545,
+    "keyword_entries": 1971,
     "keyword_lookups": 219,
     "keyword_member_dispatch": 411,
     "member_decisions": 27,
@@ -3381,7 +3381,7 @@
    "consumed": 55,
    "detail": {
     "is_name": 22,
-    "keyword_entries": 4515,
+    "keyword_entries": 351,
     "keyword_lookups": 39,
     "keyword_member_dispatch": 11,
     "member_decisions": 11,
@@ -3401,7 +3401,7 @@
    "consumed": 76,
    "detail": {
     "is_name": 33,
-    "keyword_entries": 6505,
+    "keyword_entries": 513,
     "keyword_lookups": 57,
     "keyword_member_dispatch": 15,
     "member_decisions": 15,
@@ -3421,7 +3421,7 @@
    "consumed": 85,
    "detail": {
     "is_name": 582,
-    "keyword_entries": 21854,
+    "keyword_entries": 1584,
     "keyword_lookups": 176,
     "keyword_member_dispatch": 544,
     "member_decisions": 14,
@@ -3441,7 +3441,7 @@
    "consumed": 61,
    "detail": {
     "is_name": 247,
-    "keyword_entries": 30439,
+    "keyword_entries": 1674,
     "keyword_lookups": 186,
     "keyword_member_dispatch": 219,
     "member_decisions": 10,
@@ -3461,7 +3461,7 @@
    "consumed": 103,
    "detail": {
     "is_name": 63,
-    "keyword_entries": 11792,
+    "keyword_entries": 819,
     "keyword_lookups": 91,
     "keyword_member_dispatch": 17,
     "member_decisions": 18,
@@ -3481,7 +3481,7 @@
    "consumed": 93,
    "detail": {
     "is_name": 61,
-    "keyword_entries": 12012,
+    "keyword_entries": 783,
     "keyword_lookups": 87,
     "keyword_member_dispatch": 15,
     "member_decisions": 16,
@@ -3501,7 +3501,7 @@
    "consumed": 71,
    "detail": {
     "is_name": 147,
-    "keyword_entries": 19972,
+    "keyword_entries": 1422,
     "keyword_lookups": 158,
     "keyword_member_dispatch": 110,
     "member_decisions": 11,
@@ -3521,7 +3521,7 @@
    "consumed": 79,
    "detail": {
     "is_name": 277,
-    "keyword_entries": 35665,
+    "keyword_entries": 1980,
     "keyword_lookups": 220,
     "keyword_member_dispatch": 221,
     "member_decisions": 12,
@@ -3541,7 +3541,7 @@
    "consumed": 62,
    "detail": {
     "is_name": 55,
-    "keyword_entries": 10021,
+    "keyword_entries": 612,
     "keyword_lookups": 68,
     "keyword_member_dispatch": 7,
     "member_decisions": 8,
@@ -3561,7 +3561,7 @@
    "consumed": 109,
    "detail": {
     "is_name": 108,
-    "keyword_entries": 19590,
+    "keyword_entries": 1233,
     "keyword_lookups": 137,
     "keyword_member_dispatch": 22,
     "member_decisions": 22,
@@ -3581,7 +3581,7 @@
    "consumed": 109,
    "detail": {
     "is_name": 88,
-    "keyword_entries": 16729,
+    "keyword_entries": 1089,
     "keyword_lookups": 121,
     "keyword_member_dispatch": 19,
     "member_decisions": 20,
@@ -3601,7 +3601,7 @@
    "consumed": 116,
    "detail": {
     "is_name": 112,
-    "keyword_entries": 20313,
+    "keyword_entries": 1305,
     "keyword_lookups": 145,
     "keyword_member_dispatch": 23,
     "member_decisions": 23,
@@ -3621,7 +3621,7 @@
    "consumed": 112,
    "detail": {
     "is_name": 100,
-    "keyword_entries": 18454,
+    "keyword_entries": 1188,
     "keyword_lookups": 132,
     "keyword_member_dispatch": 22,
     "member_decisions": 22,
@@ -3641,7 +3641,7 @@
    "consumed": 120,
    "detail": {
     "is_name": 102,
-    "keyword_entries": 19275,
+    "keyword_entries": 1233,
     "keyword_lookups": 137,
     "keyword_member_dispatch": 23,
     "member_decisions": 23,
@@ -3661,7 +3661,7 @@
    "consumed": 138,
    "detail": {
     "is_name": 132,
-    "keyword_entries": 24763,
+    "keyword_entries": 1530,
     "keyword_lookups": 170,
     "keyword_member_dispatch": 24,
     "member_decisions": 25,
@@ -3681,7 +3681,7 @@
    "consumed": 137,
    "detail": {
     "is_name": 129,
-    "keyword_entries": 24348,
+    "keyword_entries": 1503,
     "keyword_lookups": 167,
     "keyword_member_dispatch": 24,
     "member_decisions": 24,
@@ -3701,7 +3701,7 @@
    "consumed": 91,
    "detail": {
     "is_name": 57,
-    "keyword_entries": 11496,
+    "keyword_entries": 738,
     "keyword_lookups": 82,
     "keyword_member_dispatch": 14,
     "member_decisions": 15,
@@ -3721,7 +3721,7 @@
    "consumed": 103,
    "detail": {
     "is_name": 96,
-    "keyword_entries": 17028,
+    "keyword_entries": 1089,
     "keyword_lookups": 121,
     "keyword_member_dispatch": 15,
     "member_decisions": 18,
@@ -3741,7 +3741,7 @@
    "consumed": 113,
    "detail": {
     "is_name": 105,
-    "keyword_entries": 18877,
+    "keyword_entries": 1206,
     "keyword_lookups": 134,
     "keyword_member_dispatch": 14,
     "member_decisions": 19,
@@ -3761,7 +3761,7 @@
    "consumed": 138,
    "detail": {
     "is_name": 129,
-    "keyword_entries": 24139,
+    "keyword_entries": 1521,
     "keyword_lookups": 169,
     "keyword_member_dispatch": 22,
     "member_decisions": 24,
@@ -3781,7 +3781,7 @@
    "consumed": 163,
    "detail": {
     "is_name": 97,
-    "keyword_entries": 19081,
+    "keyword_entries": 1395,
     "keyword_lookups": 155,
     "keyword_member_dispatch": 23,
     "member_decisions": 29,
@@ -3801,7 +3801,7 @@
    "consumed": 60,
    "detail": {
     "is_name": 25,
-    "keyword_entries": 5277,
+    "keyword_entries": 351,
     "keyword_lookups": 39,
     "keyword_member_dispatch": 10,
     "member_decisions": 11,
@@ -3821,7 +3821,7 @@
    "consumed": 62,
    "detail": {
     "is_name": 39,
-    "keyword_entries": 8012,
+    "keyword_entries": 540,
     "keyword_lookups": 60,
     "keyword_member_dispatch": 10,
     "member_decisions": 14,
@@ -3841,7 +3841,7 @@
    "consumed": 40,
    "detail": {
     "is_name": 35,
-    "keyword_entries": 6641,
+    "keyword_entries": 414,
     "keyword_lookups": 46,
     "keyword_member_dispatch": 9,
     "member_decisions": 9,
@@ -3861,7 +3861,7 @@
    "consumed": 209,
    "detail": {
     "is_name": 261,
-    "keyword_entries": 43898,
+    "keyword_entries": 2745,
     "keyword_lookups": 305,
     "keyword_member_dispatch": 27,
     "member_decisions": 31,
@@ -3881,7 +3881,7 @@
    "consumed": 136,
    "detail": {
     "is_name": 93,
-    "keyword_entries": 17793,
+    "keyword_entries": 1251,
     "keyword_lookups": 139,
     "keyword_member_dispatch": 21,
     "member_decisions": 24,
@@ -3901,7 +3901,7 @@
    "consumed": 152,
    "detail": {
     "is_name": 108,
-    "keyword_entries": 20883,
+    "keyword_entries": 1431,
     "keyword_lookups": 159,
     "keyword_member_dispatch": 25,
     "member_decisions": 28,
@@ -3921,7 +3921,7 @@
    "consumed": 32,
    "detail": {
     "is_name": 16,
-    "keyword_entries": 2805,
+    "keyword_entries": 207,
     "keyword_lookups": 23,
     "keyword_member_dispatch": 5,
     "member_decisions": 6,
@@ -3941,7 +3941,7 @@
    "consumed": 62,
    "detail": {
     "is_name": 39,
-    "keyword_entries": 8644,
+    "keyword_entries": 576,
     "keyword_lookups": 64,
     "keyword_member_dispatch": 9,
     "member_decisions": 12,
@@ -3961,7 +3961,7 @@
    "consumed": 50,
    "detail": {
     "is_name": 30,
-    "keyword_entries": 6415,
+    "keyword_entries": 441,
     "keyword_lookups": 49,
     "keyword_member_dispatch": 9,
     "member_decisions": 9,
@@ -3981,7 +3981,7 @@
    "consumed": 101,
    "detail": {
     "is_name": 70,
-    "keyword_entries": 14142,
+    "keyword_entries": 918,
     "keyword_lookups": 102,
     "keyword_member_dispatch": 16,
     "member_decisions": 21,
@@ -4001,7 +4001,7 @@
    "consumed": 55,
    "detail": {
     "is_name": 32,
-    "keyword_entries": 6903,
+    "keyword_entries": 468,
     "keyword_lookups": 52,
     "keyword_member_dispatch": 10,
     "member_decisions": 10,
@@ -4021,7 +4021,7 @@
    "consumed": 65,
    "detail": {
     "is_name": 34,
-    "keyword_entries": 7649,
+    "keyword_entries": 513,
     "keyword_lookups": 57,
     "keyword_member_dispatch": 12,
     "member_decisions": 13,
@@ -4041,7 +4041,7 @@
    "consumed": 160,
    "detail": {
     "is_name": 180,
-    "keyword_entries": 33190,
+    "keyword_entries": 2025,
     "keyword_lookups": 225,
     "keyword_member_dispatch": 16,
     "member_decisions": 22,
@@ -4061,7 +4061,7 @@
    "consumed": 101,
    "detail": {
     "is_name": 91,
-    "keyword_entries": 16815,
+    "keyword_entries": 1071,
     "keyword_lookups": 119,
     "keyword_member_dispatch": 12,
     "member_decisions": 13,
@@ -4081,7 +4081,7 @@
    "consumed": 127,
    "detail": {
     "is_name": 102,
-    "keyword_entries": 20293,
+    "keyword_entries": 1287,
     "keyword_lookups": 143,
     "keyword_member_dispatch": 19,
     "member_decisions": 24,
@@ -4101,7 +4101,7 @@
    "consumed": 35,
    "detail": {
     "is_name": 34,
-    "keyword_entries": 6021,
+    "keyword_entries": 351,
     "keyword_lookups": 39,
     "keyword_member_dispatch": 6,
     "member_decisions": 7,
@@ -4121,7 +4121,7 @@
    "consumed": 80,
    "detail": {
     "is_name": 39,
-    "keyword_entries": 8438,
+    "keyword_entries": 612,
     "keyword_lookups": 68,
     "keyword_member_dispatch": 15,
     "member_decisions": 17,
@@ -4141,7 +4141,7 @@
    "consumed": 91,
    "detail": {
     "is_name": 72,
-    "keyword_entries": 13953,
+    "keyword_entries": 864,
     "keyword_lookups": 96,
     "keyword_member_dispatch": 11,
     "member_decisions": 12,
@@ -4161,7 +4161,7 @@
    "consumed": 107,
    "detail": {
     "is_name": 67,
-    "keyword_entries": 13044,
+    "keyword_entries": 873,
     "keyword_lookups": 97,
     "keyword_member_dispatch": 16,
     "member_decisions": 20,
@@ -4181,7 +4181,7 @@
    "consumed": 250,
    "detail": {
     "is_name": 225,
-    "keyword_entries": 38179,
+    "keyword_entries": 2349,
     "keyword_lookups": 261,
     "keyword_member_dispatch": 29,
     "member_decisions": 32,
@@ -4201,7 +4201,7 @@
    "consumed": 278,
    "detail": {
     "is_name": 264,
-    "keyword_entries": 45482,
+    "keyword_entries": 2709,
     "keyword_lookups": 301,
     "keyword_member_dispatch": 42,
     "member_decisions": 43,
@@ -4221,7 +4221,7 @@
    "consumed": 148,
    "detail": {
     "is_name": 111,
-    "keyword_entries": 21935,
+    "keyword_entries": 1359,
     "keyword_lookups": 151,
     "keyword_member_dispatch": 13,
     "member_decisions": 18,
@@ -4241,7 +4241,7 @@
    "consumed": 82,
    "detail": {
     "is_name": 54,
-    "keyword_entries": 10664,
+    "keyword_entries": 666,
     "keyword_lookups": 74,
     "keyword_member_dispatch": 13,
     "member_decisions": 14,
@@ -4261,7 +4261,7 @@
    "consumed": 71,
    "detail": {
     "is_name": 31,
-    "keyword_entries": 6897,
+    "keyword_entries": 450,
     "keyword_lookups": 50,
     "keyword_member_dispatch": 10,
     "member_decisions": 12,
@@ -4281,7 +4281,7 @@
    "consumed": 79,
    "detail": {
     "is_name": 73,
-    "keyword_entries": 5123,
+    "keyword_entries": 324,
     "keyword_lookups": 36,
     "keyword_member_dispatch": 13,
     "member_decisions": 14,
@@ -4301,7 +4301,7 @@
    "consumed": 78,
    "detail": {
     "is_name": 47,
-    "keyword_entries": 5635,
+    "keyword_entries": 378,
     "keyword_lookups": 42,
     "keyword_member_dispatch": 11,
     "member_decisions": 13,
@@ -4321,7 +4321,7 @@
    "consumed": 116,
    "detail": {
     "is_name": 76,
-    "keyword_entries": 11357,
+    "keyword_entries": 792,
     "keyword_lookups": 88,
     "keyword_member_dispatch": 14,
     "member_decisions": 17,
@@ -4341,7 +4341,7 @@
    "consumed": 112,
    "detail": {
     "is_name": 74,
-    "keyword_entries": 11011,
+    "keyword_entries": 774,
     "keyword_lookups": 86,
     "keyword_member_dispatch": 14,
     "member_decisions": 17,
@@ -4361,7 +4361,7 @@
    "consumed": 68,
    "detail": {
     "is_name": 63,
-    "keyword_entries": 9885,
+    "keyword_entries": 648,
     "keyword_lookups": 72,
     "keyword_member_dispatch": 9,
     "member_decisions": 10,
@@ -4381,7 +4381,7 @@
    "consumed": 97,
    "detail": {
     "is_name": 118,
-    "keyword_entries": 19191,
+    "keyword_entries": 1161,
     "keyword_lookups": 129,
     "keyword_member_dispatch": 13,
     "member_decisions": 13,
@@ -4401,7 +4401,7 @@
    "consumed": 164,
    "detail": {
     "is_name": 263,
-    "keyword_entries": 44471,
+    "keyword_entries": 2529,
     "keyword_lookups": 281,
     "keyword_member_dispatch": 37,
     "member_decisions": 27,
@@ -4421,7 +4421,7 @@
    "consumed": 171,
    "detail": {
     "is_name": 271,
-    "keyword_entries": 47140,
+    "keyword_entries": 2709,
     "keyword_lookups": 301,
     "keyword_member_dispatch": 33,
     "member_decisions": 30,
@@ -4441,7 +4441,7 @@
    "consumed": 142,
    "detail": {
     "is_name": 205,
-    "keyword_entries": 31846,
+    "keyword_entries": 1926,
     "keyword_lookups": 214,
     "keyword_member_dispatch": 18,
     "member_decisions": 19,
@@ -4461,7 +4461,7 @@
    "consumed": 198,
    "detail": {
     "is_name": 364,
-    "keyword_entries": 64085,
+    "keyword_entries": 3564,
     "keyword_lookups": 396,
     "keyword_member_dispatch": 47,
     "member_decisions": 32,
@@ -4481,7 +4481,7 @@
    "consumed": 118,
    "detail": {
     "is_name": 123,
-    "keyword_entries": 21002,
+    "keyword_entries": 1287,
     "keyword_lookups": 143,
     "keyword_member_dispatch": 20,
     "member_decisions": 19,
@@ -4501,7 +4501,7 @@
    "consumed": 136,
    "detail": {
     "is_name": 143,
-    "keyword_entries": 24490,
+    "keyword_entries": 1485,
     "keyword_lookups": 165,
     "keyword_member_dispatch": 25,
     "member_decisions": 22,
@@ -4521,7 +4521,7 @@
    "consumed": 117,
    "detail": {
     "is_name": 123,
-    "keyword_entries": 21015,
+    "keyword_entries": 1278,
     "keyword_lookups": 142,
     "keyword_member_dispatch": 20,
     "member_decisions": 19,
@@ -4541,7 +4541,7 @@
    "consumed": 117,
    "detail": {
     "is_name": 115,
-    "keyword_entries": 18003,
+    "keyword_entries": 1206,
     "keyword_lookups": 134,
     "keyword_member_dispatch": 20,
     "member_decisions": 19,
@@ -4561,7 +4561,7 @@
    "consumed": 111,
    "detail": {
     "is_name": 177,
-    "keyword_entries": 29865,
+    "keyword_entries": 1701,
     "keyword_lookups": 189,
     "keyword_member_dispatch": 19,
     "member_decisions": 16,
@@ -4581,7 +4581,7 @@
    "consumed": 162,
    "detail": {
     "is_name": 193,
-    "keyword_entries": 33893,
+    "keyword_entries": 2043,
     "keyword_lookups": 227,
     "keyword_member_dispatch": 16,
     "member_decisions": 25,
@@ -4601,7 +4601,7 @@
    "consumed": 139,
    "detail": {
     "is_name": 108,
-    "keyword_entries": 17267,
+    "keyword_entries": 1188,
     "keyword_lookups": 132,
     "keyword_member_dispatch": 16,
     "member_decisions": 27,
@@ -4621,7 +4621,7 @@
    "consumed": 84,
    "detail": {
     "is_name": 53,
-    "keyword_entries": 9806,
+    "keyword_entries": 594,
     "keyword_lookups": 66,
     "keyword_member_dispatch": 8,
     "member_decisions": 18,
@@ -4641,7 +4641,7 @@
    "consumed": 71,
    "detail": {
     "is_name": 39,
-    "keyword_entries": 5703,
+    "keyword_entries": 387,
     "keyword_lookups": 43,
     "keyword_member_dispatch": 12,
     "member_decisions": 14,
@@ -4661,7 +4661,7 @@
    "consumed": 89,
    "detail": {
     "is_name": 87,
-    "keyword_entries": 13097,
+    "keyword_entries": 801,
     "keyword_lookups": 89,
     "keyword_member_dispatch": 7,
     "member_decisions": 15,
@@ -4681,7 +4681,7 @@
    "consumed": 316,
    "detail": {
     "is_name": 375,
-    "keyword_entries": 60822,
+    "keyword_entries": 3573,
     "keyword_lookups": 397,
     "keyword_member_dispatch": 30,
     "member_decisions": 43,
@@ -4701,7 +4701,7 @@
    "consumed": 104,
    "detail": {
     "is_name": 104,
-    "keyword_entries": 16573,
+    "keyword_entries": 1044,
     "keyword_lookups": 116,
     "keyword_member_dispatch": 15,
     "member_decisions": 17,
@@ -4721,7 +4721,7 @@
    "consumed": 245,
    "detail": {
     "is_name": 295,
-    "keyword_entries": 49765,
+    "keyword_entries": 2934,
     "keyword_lookups": 326,
     "keyword_member_dispatch": 46,
     "member_decisions": 43,
@@ -4741,7 +4741,7 @@
    "consumed": 161,
    "detail": {
     "is_name": 193,
-    "keyword_entries": 34693,
+    "keyword_entries": 1953,
     "keyword_lookups": 217,
     "keyword_member_dispatch": 19,
     "member_decisions": 24,
@@ -4761,7 +4761,7 @@
    "consumed": 156,
    "detail": {
     "is_name": 123,
-    "keyword_entries": 19370,
+    "keyword_entries": 1161,
     "keyword_lookups": 129,
     "keyword_member_dispatch": 23,
     "member_decisions": 26,
@@ -4781,7 +4781,7 @@
    "consumed": 108,
    "detail": {
     "is_name": 30,
-    "keyword_entries": 6077,
+    "keyword_entries": 477,
     "keyword_lookups": 53,
     "keyword_member_dispatch": 8,
     "member_decisions": 20,
@@ -4801,7 +4801,7 @@
    "consumed": 142,
    "detail": {
     "is_name": 123,
-    "keyword_entries": 15056,
+    "keyword_entries": 990,
     "keyword_lookups": 110,
     "keyword_member_dispatch": 9,
     "member_decisions": 25,
@@ -4821,7 +4821,7 @@
    "consumed": 54,
    "detail": {
     "is_name": 65,
-    "keyword_entries": 9986,
+    "keyword_entries": 585,
     "keyword_lookups": 65,
     "keyword_member_dispatch": 7,
     "member_decisions": 8,
@@ -4841,7 +4841,7 @@
    "consumed": 118,
    "detail": {
     "is_name": 62,
-    "keyword_entries": 10570,
+    "keyword_entries": 756,
     "keyword_lookups": 84,
     "keyword_member_dispatch": 12,
     "member_decisions": 18,
@@ -4861,7 +4861,7 @@
    "consumed": 86,
    "detail": {
     "is_name": 96,
-    "keyword_entries": 15027,
+    "keyword_entries": 891,
     "keyword_lookups": 99,
     "keyword_member_dispatch": 10,
     "member_decisions": 13,
@@ -4881,7 +4881,7 @@
    "consumed": 53,
    "detail": {
     "is_name": 26,
-    "keyword_entries": 3214,
+    "keyword_entries": 243,
     "keyword_lookups": 27,
     "keyword_member_dispatch": 9,
     "member_decisions": 9,
@@ -4901,7 +4901,7 @@
    "consumed": 107,
    "detail": {
     "is_name": 487,
-    "keyword_entries": 60421,
+    "keyword_entries": 3348,
     "keyword_lookups": 372,
     "keyword_member_dispatch": 452,
     "member_decisions": 21,
@@ -4921,7 +4921,7 @@
    "consumed": 94,
    "detail": {
     "is_name": 49,
-    "keyword_entries": 9686,
+    "keyword_entries": 657,
     "keyword_lookups": 73,
     "keyword_member_dispatch": 17,
     "member_decisions": 18,
@@ -4941,7 +4941,7 @@
    "consumed": 102,
    "detail": {
     "is_name": 70,
-    "keyword_entries": 11432,
+    "keyword_entries": 702,
     "keyword_lookups": 78,
     "keyword_member_dispatch": 15,
     "member_decisions": 17,
@@ -4961,7 +4961,7 @@
    "consumed": 122,
    "detail": {
     "is_name": 96,
-    "keyword_entries": 15848,
+    "keyword_entries": 873,
     "keyword_lookups": 97,
     "keyword_member_dispatch": 8,
     "member_decisions": 16,
@@ -4981,7 +4981,7 @@
    "consumed": 148,
    "detail": {
     "is_name": 71,
-    "keyword_entries": 12251,
+    "keyword_entries": 828,
     "keyword_lookups": 92,
     "keyword_member_dispatch": 18,
     "member_decisions": 29,
@@ -5001,7 +5001,7 @@
    "consumed": 148,
    "detail": {
     "is_name": 71,
-    "keyword_entries": 12115,
+    "keyword_entries": 810,
     "keyword_lookups": 90,
     "keyword_member_dispatch": 18,
     "member_decisions": 27,
@@ -5021,7 +5021,7 @@
    "consumed": 146,
    "detail": {
     "is_name": 913,
-    "keyword_entries": 59469,
+    "keyword_entries": 3393,
     "keyword_lookups": 377,
     "keyword_member_dispatch": 870,
     "member_decisions": 20,
@@ -5041,7 +5041,7 @@
    "consumed": 97,
    "detail": {
     "is_name": 76,
-    "keyword_entries": 9650,
+    "keyword_entries": 576,
     "keyword_lookups": 64,
     "keyword_member_dispatch": 11,
     "member_decisions": 13,
@@ -5061,7 +5061,7 @@
    "consumed": 105,
    "detail": {
     "is_name": 697,
-    "keyword_entries": 114557,
+    "keyword_entries": 6102,
     "keyword_lookups": 678,
     "keyword_member_dispatch": 16,
     "member_decisions": 19,
@@ -5081,7 +5081,7 @@
    "consumed": 59,
    "detail": {
     "is_name": 23,
-    "keyword_entries": 2619,
+    "keyword_entries": 234,
     "keyword_lookups": 26,
     "keyword_member_dispatch": 6,
     "member_decisions": 17,
@@ -5101,7 +5101,7 @@
    "consumed": 110,
    "detail": {
     "is_name": 52,
-    "keyword_entries": 6904,
+    "keyword_entries": 441,
     "keyword_lookups": 49,
     "keyword_member_dispatch": 9,
     "member_decisions": 20,
@@ -5121,7 +5121,7 @@
    "consumed": 249,
    "detail": {
     "is_name": 141,
-    "keyword_entries": 24942,
+    "keyword_entries": 1611,
     "keyword_lookups": 179,
     "keyword_member_dispatch": 31,
     "member_decisions": 43,
@@ -5141,7 +5141,7 @@
    "consumed": 226,
    "detail": {
     "is_name": 136,
-    "keyword_entries": 24455,
+    "keyword_entries": 1584,
     "keyword_lookups": 176,
     "keyword_member_dispatch": 29,
     "member_decisions": 37,
@@ -5161,7 +5161,7 @@
    "consumed": 99,
    "detail": {
     "is_name": 58,
-    "keyword_entries": 11381,
+    "keyword_entries": 720,
     "keyword_lookups": 80,
     "keyword_member_dispatch": 17,
     "member_decisions": 21,
@@ -5181,7 +5181,7 @@
    "consumed": 522,
    "detail": {
     "is_name": 778,
-    "keyword_entries": 114218,
+    "keyword_entries": 6696,
     "keyword_lookups": 744,
     "keyword_member_dispatch": 501,
     "member_decisions": 94,
@@ -5201,7 +5201,7 @@
    "consumed": 238,
    "detail": {
     "is_name": 228,
-    "keyword_entries": 41852,
+    "keyword_entries": 2466,
     "keyword_lookups": 274,
     "keyword_member_dispatch": 39,
     "member_decisions": 43,
@@ -5221,7 +5221,7 @@
    "consumed": 312,
    "detail": {
     "is_name": 358,
-    "keyword_entries": 50691,
+    "keyword_entries": 3258,
     "keyword_lookups": 362,
     "keyword_member_dispatch": 52,
     "member_decisions": 65,
@@ -5241,7 +5241,7 @@
    "consumed": 274,
    "detail": {
     "is_name": 312,
-    "keyword_entries": 43536,
+    "keyword_entries": 2799,
     "keyword_lookups": 311,
     "keyword_member_dispatch": 43,
     "member_decisions": 54,
@@ -5261,7 +5261,7 @@
    "consumed": 266,
    "detail": {
     "is_name": 264,
-    "keyword_entries": 42041,
+    "keyword_entries": 2619,
     "keyword_lookups": 291,
     "keyword_member_dispatch": 45,
     "member_decisions": 50,
@@ -5281,7 +5281,7 @@
    "consumed": 144,
    "detail": {
     "is_name": 542,
-    "keyword_entries": 66040,
+    "keyword_entries": 3717,
     "keyword_lookups": 413,
     "keyword_member_dispatch": 453,
     "member_decisions": 23,
@@ -5301,7 +5301,7 @@
    "consumed": 132,
    "detail": {
     "is_name": 504,
-    "keyword_entries": 61910,
+    "keyword_entries": 3465,
     "keyword_lookups": 385,
     "keyword_member_dispatch": 454,
     "member_decisions": 23,
@@ -5321,7 +5321,7 @@
    "consumed": 103,
    "detail": {
     "is_name": 86,
-    "keyword_entries": 15618,
+    "keyword_entries": 981,
     "keyword_lookups": 109,
     "keyword_member_dispatch": 16,
     "member_decisions": 17,
@@ -5341,7 +5341,7 @@
    "consumed": 236,
    "detail": {
     "is_name": 189,
-    "keyword_entries": 35017,
+    "keyword_entries": 2169,
     "keyword_lookups": 241,
     "keyword_member_dispatch": 33,
     "member_decisions": 42,
@@ -5361,7 +5361,7 @@
    "consumed": 168,
    "detail": {
     "is_name": 113,
-    "keyword_entries": 13324,
+    "keyword_entries": 954,
     "keyword_lookups": 106,
     "keyword_member_dispatch": 27,
     "member_decisions": 31,
@@ -5381,7 +5381,7 @@
    "consumed": 275,
    "detail": {
     "is_name": 336,
-    "keyword_entries": 54667,
+    "keyword_entries": 3096,
     "keyword_lookups": 344,
     "keyword_member_dispatch": 44,
     "member_decisions": 49,
@@ -5401,7 +5401,7 @@
    "consumed": 432,
    "detail": {
     "is_name": 283,
-    "keyword_entries": 43927,
+    "keyword_entries": 3006,
     "keyword_lookups": 334,
     "keyword_member_dispatch": 50,
     "member_decisions": 86,
@@ -5421,7 +5421,7 @@
    "consumed": 435,
    "detail": {
     "is_name": 282,
-    "keyword_entries": 43251,
+    "keyword_entries": 3006,
     "keyword_lookups": 334,
     "keyword_member_dispatch": 52,
     "member_decisions": 87,
@@ -5441,7 +5441,7 @@
    "consumed": 363,
    "detail": {
     "is_name": 247,
-    "keyword_entries": 36874,
+    "keyword_entries": 2538,
     "keyword_lookups": 282,
     "keyword_member_dispatch": 49,
     "member_decisions": 62,
@@ -5461,7 +5461,7 @@
    "consumed": 445,
    "detail": {
     "is_name": 457,
-    "keyword_entries": 55661,
+    "keyword_entries": 3771,
     "keyword_lookups": 419,
     "keyword_member_dispatch": 78,
     "member_decisions": 91,
@@ -5481,7 +5481,7 @@
    "consumed": 154,
    "detail": {
     "is_name": 157,
-    "keyword_entries": 27323,
+    "keyword_entries": 1638,
     "keyword_lookups": 182,
     "keyword_member_dispatch": 27,
     "member_decisions": 31,
@@ -5501,7 +5501,7 @@
    "consumed": 288,
    "detail": {
     "is_name": 219,
-    "keyword_entries": 38489,
+    "keyword_entries": 2376,
     "keyword_lookups": 264,
     "keyword_member_dispatch": 40,
     "member_decisions": 46,
@@ -5521,7 +5521,7 @@
    "consumed": 514,
    "detail": {
     "is_name": 414,
-    "keyword_entries": 72020,
+    "keyword_entries": 4437,
     "keyword_lookups": 493,
     "keyword_member_dispatch": 72,
     "member_decisions": 84,
@@ -5541,7 +5541,7 @@
    "consumed": 507,
    "detail": {
     "is_name": 562,
-    "keyword_entries": 76149,
+    "keyword_entries": 4734,
     "keyword_lookups": 526,
     "keyword_member_dispatch": 269,
     "member_decisions": 102,
@@ -5561,7 +5561,7 @@
    "consumed": 373,
    "detail": {
     "is_name": 352,
-    "keyword_entries": 58872,
+    "keyword_entries": 3438,
     "keyword_lookups": 382,
     "keyword_member_dispatch": 49,
     "member_decisions": 59,
@@ -5581,7 +5581,7 @@
    "consumed": 193,
    "detail": {
     "is_name": 201,
-    "keyword_entries": 34698,
+    "keyword_entries": 1998,
     "keyword_lookups": 222,
     "keyword_member_dispatch": 23,
     "member_decisions": 37,
@@ -5601,7 +5601,7 @@
    "consumed": 376,
    "detail": {
     "is_name": 359,
-    "keyword_entries": 61669,
+    "keyword_entries": 3681,
     "keyword_lookups": 409,
     "keyword_member_dispatch": 61,
     "member_decisions": 64,
@@ -5621,7 +5621,7 @@
    "consumed": 452,
    "detail": {
     "is_name": 430,
-    "keyword_entries": 63560,
+    "keyword_entries": 4014,
     "keyword_lookups": 446,
     "keyword_member_dispatch": 70,
     "member_decisions": 87,
@@ -5641,7 +5641,7 @@
    "consumed": 380,
    "detail": {
     "is_name": 511,
-    "keyword_entries": 86331,
+    "keyword_entries": 5139,
     "keyword_lookups": 571,
     "keyword_member_dispatch": 57,
     "member_decisions": 55,
@@ -5661,7 +5661,7 @@
    "consumed": 200,
    "detail": {
     "is_name": 114,
-    "keyword_entries": 17575,
+    "keyword_entries": 1206,
     "keyword_lookups": 134,
     "keyword_member_dispatch": 26,
     "member_decisions": 34,
@@ -5681,7 +5681,7 @@
    "consumed": 251,
    "detail": {
     "is_name": 116,
-    "keyword_entries": 21105,
+    "keyword_entries": 1395,
     "keyword_lookups": 155,
     "keyword_member_dispatch": 26,
     "member_decisions": 48,
@@ -5701,7 +5701,7 @@
    "consumed": 42,
    "detail": {
     "is_name": 24,
-    "keyword_entries": 3016,
+    "keyword_entries": 279,
     "keyword_lookups": 31,
     "keyword_member_dispatch": 10,
     "member_decisions": 10,
@@ -5721,7 +5721,7 @@
    "consumed": 188,
    "detail": {
     "is_name": 557,
-    "keyword_entries": 73103,
+    "keyword_entries": 4077,
     "keyword_lookups": 453,
     "keyword_member_dispatch": 458,
     "member_decisions": 32,
@@ -5741,7 +5741,7 @@
    "consumed": 70,
    "detail": {
     "is_name": 41,
-    "keyword_entries": 7746,
+    "keyword_entries": 504,
     "keyword_lookups": 56,
     "keyword_member_dispatch": 12,
     "member_decisions": 14,
@@ -5761,7 +5761,7 @@
    "consumed": 98,
    "detail": {
     "is_name": 31,
-    "keyword_entries": 6031,
+    "keyword_entries": 459,
     "keyword_lookups": 51,
     "keyword_member_dispatch": 9,
     "member_decisions": 24,
@@ -5781,7 +5781,7 @@
    "consumed": 213,
    "detail": {
     "is_name": 93,
-    "keyword_entries": 15990,
+    "keyword_entries": 1089,
     "keyword_lookups": 121,
     "keyword_member_dispatch": 23,
     "member_decisions": 44,
@@ -5801,7 +5801,7 @@
    "consumed": 213,
    "detail": {
     "is_name": 93,
-    "keyword_entries": 15718,
+    "keyword_entries": 1053,
     "keyword_lookups": 117,
     "keyword_member_dispatch": 23,
     "member_decisions": 40,
@@ -5821,7 +5821,7 @@
    "consumed": 110,
    "detail": {
     "is_name": 53,
-    "keyword_entries": 10276,
+    "keyword_entries": 657,
     "keyword_lookups": 73,
     "keyword_member_dispatch": 14,
     "member_decisions": 24,
@@ -5841,7 +5841,7 @@
    "consumed": 74,
    "detail": {
     "is_name": 57,
-    "keyword_entries": 9393,
+    "keyword_entries": 567,
     "keyword_lookups": 63,
     "keyword_member_dispatch": 8,
     "member_decisions": 11,
@@ -5861,7 +5861,7 @@
    "consumed": 141,
    "detail": {
     "is_name": 72,
-    "keyword_entries": 14786,
+    "keyword_entries": 954,
     "keyword_lookups": 106,
     "keyword_member_dispatch": 24,
     "member_decisions": 26,
@@ -5881,7 +5881,7 @@
    "consumed": 788,
    "detail": {
     "is_name": 4305,
-    "keyword_entries": 428655,
+    "keyword_entries": 23364,
     "keyword_lookups": 2596,
     "keyword_member_dispatch": 2655,
     "member_decisions": 108,
@@ -5901,7 +5901,7 @@
    "consumed": 143,
    "detail": {
     "is_name": 120,
-    "keyword_entries": 14279,
+    "keyword_entries": 1008,
     "keyword_lookups": 112,
     "keyword_member_dispatch": 16,
     "member_decisions": 22,
@@ -5921,7 +5921,7 @@
    "consumed": 65,
    "detail": {
     "is_name": 37,
-    "keyword_entries": 3767,
+    "keyword_entries": 387,
     "keyword_lookups": 43,
     "keyword_member_dispatch": 10,
     "member_decisions": 12,
@@ -5941,7 +5941,7 @@
    "consumed": 146,
    "detail": {
     "is_name": 130,
-    "keyword_entries": 18329,
+    "keyword_entries": 1206,
     "keyword_lookups": 134,
     "keyword_member_dispatch": 16,
     "member_decisions": 19,
@@ -5961,7 +5961,7 @@
    "consumed": 105,
    "detail": {
     "is_name": 82,
-    "keyword_entries": 13516,
+    "keyword_entries": 927,
     "keyword_lookups": 103,
     "keyword_member_dispatch": 15,
     "member_decisions": 16,
@@ -5981,7 +5981,7 @@
    "consumed": 207,
    "detail": {
     "is_name": 223,
-    "keyword_entries": 37276,
+    "keyword_entries": 2196,
     "keyword_lookups": 244,
     "keyword_member_dispatch": 31,
     "member_decisions": 29,
@@ -6001,7 +6001,7 @@
    "consumed": 12,
    "detail": {
     "is_name": 3,
-    "keyword_entries": 489,
+    "keyword_entries": 36,
     "keyword_lookups": 4,
     "keyword_member_dispatch": 1,
     "member_decisions": 4,
@@ -6021,7 +6021,7 @@
    "consumed": 18,
    "detail": {
     "is_name": 5,
-    "keyword_entries": 863,
+    "keyword_entries": 63,
     "keyword_lookups": 7,
     "keyword_member_dispatch": 1,
     "member_decisions": 5,
@@ -6041,7 +6041,7 @@
    "consumed": 71,
    "detail": {
     "is_name": 53,
-    "keyword_entries": 5691,
+    "keyword_entries": 432,
     "keyword_lookups": 48,
     "keyword_member_dispatch": 7,
     "member_decisions": 11,
@@ -6061,7 +6061,7 @@
    "consumed": 201,
    "detail": {
     "is_name": 177,
-    "keyword_entries": 27244,
+    "keyword_entries": 1719,
     "keyword_lookups": 191,
     "keyword_member_dispatch": 16,
     "member_decisions": 25,
@@ -6081,7 +6081,7 @@
    "consumed": 119,
    "detail": {
     "is_name": 59,
-    "keyword_entries": 7899,
+    "keyword_entries": 657,
     "keyword_lookups": 73,
     "keyword_member_dispatch": 17,
     "member_decisions": 20,
@@ -6101,7 +6101,7 @@
    "consumed": 111,
    "detail": {
     "is_name": 63,
-    "keyword_entries": 5661,
+    "keyword_entries": 621,
     "keyword_lookups": 69,
     "keyword_member_dispatch": 15,
     "member_decisions": 18,
@@ -6121,7 +6121,7 @@
    "consumed": 436,
    "detail": {
     "is_name": 426,
-    "keyword_entries": 42931,
+    "keyword_entries": 2844,
     "keyword_lookups": 316,
     "keyword_member_dispatch": 47,
     "member_decisions": 58,
@@ -6141,7 +6141,7 @@
    "consumed": 375,
    "detail": {
     "is_name": 301,
-    "keyword_entries": 36241,
+    "keyword_entries": 2574,
     "keyword_lookups": 286,
     "keyword_member_dispatch": 45,
     "member_decisions": 51,
@@ -6161,7 +6161,7 @@
    "consumed": 373,
    "detail": {
     "is_name": 360,
-    "keyword_entries": 39351,
+    "keyword_entries": 2709,
     "keyword_lookups": 301,
     "keyword_member_dispatch": 46,
     "member_decisions": 54,
@@ -6181,7 +6181,7 @@
    "consumed": 156,
    "detail": {
     "is_name": 89,
-    "keyword_entries": 17998,
+    "keyword_entries": 1224,
     "keyword_lookups": 136,
     "keyword_member_dispatch": 20,
     "member_decisions": 25,
@@ -6201,7 +6201,7 @@
    "consumed": 138,
    "detail": {
     "is_name": 77,
-    "keyword_entries": 14578,
+    "keyword_entries": 1008,
     "keyword_lookups": 112,
     "keyword_member_dispatch": 20,
     "member_decisions": 25,
@@ -6221,7 +6221,7 @@
    "consumed": 235,
    "detail": {
     "is_name": 151,
-    "keyword_entries": 18399,
+    "keyword_entries": 1332,
     "keyword_lookups": 148,
     "keyword_member_dispatch": 22,
     "member_decisions": 48,
@@ -6236,7 +6236,7 @@
   }
  },
  "fingerprint": "cf9d1abe7e03b349",
- "reason": "Phase 0: attribution detail counters added (informational, not ratcheted); ratcheted totals unchanged",
+ "reason": "series 'keyword-classification' closed: time -25.2% over the series",
  "scaling": 1.0,
  "totals": {
   "allocated_bytes": 15681312,
