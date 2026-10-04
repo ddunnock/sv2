@@ -20,20 +20,18 @@ use crate::parser::Parser;
 /// leaving the token set fails the gate there, not silently at run time.
 pub(super) fn keyword(text: &str) -> Option<SyntaxKind> {
     count(Counter::KeywordLookups);
-    // How many entries the scan below compares: the match's position + 1, or the whole
-    // table on a miss. Computed apart from the scan, so the scan is the same code with
-    // the feature on or off.
-    #[cfg(feature = "counters")]
-    crate::counter::count_by(
-        Counter::KeywordEntries,
-        KEYWORDS
-            .iter()
-            .position(|(k, _)| *k == text)
-            .map_or(KEYWORDS.len(), |i| i + 1) as u64,
-    );
+    // A binary search: the generator emits the table sorted by text, which
+    // `keywords_are_sorted_unique_and_ascii` holds it to. Most lookups are misses, from
+    // `is_name` asking whether a name is a keyword, and a linear scan read all 173
+    // entries for every one of them. Each probe is counted; without the `counters`
+    // feature `count` is empty, so this is the same code in every build.
     KEYWORDS
-        .iter()
-        .find(|(k, _)| *k == text)
+        .binary_search_by(|(k, _)| {
+            count(Counter::KeywordEntries);
+            k.cmp(&text)
+        })
+        .ok()
+        .and_then(|i| KEYWORDS.get(i))
         .map(|(_, kind)| *kind)
 }
 

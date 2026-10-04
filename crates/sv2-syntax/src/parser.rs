@@ -386,6 +386,37 @@ mod tests {
         }
     }
 
+    /// `keyword` binary-searches `KEYWORDS`, so the table must be strictly ascending by
+    /// byte order. Every entry must also be ASCII, which `nth_is_keyword` relies on.
+    #[test]
+    fn keywords_are_sorted_unique_and_ascii() {
+        use crate::generated::kinds::KEYWORDS;
+        for pair in KEYWORDS.windows(2) {
+            let [(a, _), (b, _)] = pair else {
+                unreachable!()
+            };
+            assert!(a.as_bytes() < b.as_bytes(), "{a:?} is not before {b:?}");
+        }
+        assert!(KEYWORDS.iter().all(|(text, _)| text.is_ascii()));
+    }
+
+    #[test]
+    fn every_keyword_in_the_table_is_found_as_its_own_kind() {
+        use crate::generated::kinds::KEYWORDS;
+        for (text, kind) in KEYWORDS {
+            assert_eq!(keyword(text), Some(*kind), "{text:?}");
+        }
+    }
+
+    #[test]
+    fn a_near_miss_is_not_a_keyword() {
+        // Empty, a prefix, an extension, the wrong case, and words before the first
+        // entry and after the last: the edges a search gets wrong.
+        for word in ["", "par", "parts", "Part", "a", "zzz", "abou", "xorr"] {
+            assert_eq!(keyword(word), None, "{word:?}");
+        }
+    }
+
     /// The attribution counters (`docs/perf/roadmap.md`, Phase 0). Each expectation comes
     /// from the keyword table or from the input's structure, never from a run's output.
     #[cfg(feature = "counters")]
@@ -403,27 +434,40 @@ mod tests {
                 .unwrap()
         }
 
-        #[test]
-        fn a_keyword_miss_compares_every_entry() {
-            let _ = take_counters();
-            assert_eq!(keyword("not_a_keyword_at_all"), None);
-            let counted = take_counters();
-            assert_eq!(detail(&counted, "keyword_lookups"), 1);
-            assert_eq!(
-                detail(&counted, "keyword_entries"),
-                u64::try_from(KEYWORDS.len()).unwrap()
-            );
+        /// The most probes `slice::binary_search_by` makes over `KEYWORDS`: ⌈log₂ len⌉ + 1.
+        ///
+        /// The standard library's search does not stop at an equal probe. It halves the
+        /// range down to one candidate, then compares that one, so it makes ⌈log₂ len⌉
+        /// halvings and a final comparison: 9 for 173 entries, hit or miss.
+        fn most_probes() -> u64 {
+            let halvings = usize::BITS - (KEYWORDS.len() - 1).leading_zeros();
+            u64::from(halvings) + 1
         }
 
         #[test]
-        fn a_keyword_hit_compares_up_to_its_position_and_no_further() {
-            for (i, (text, kind)) in KEYWORDS.iter().enumerate().step_by(37) {
+        fn a_keyword_miss_probes_at_most_log_of_the_table() {
+            for word in ["not_a_keyword_at_all", "", "a", "zzz", "Part"] {
+                let _ = take_counters();
+                assert_eq!(keyword(word), None);
+                let counted = take_counters();
+                assert_eq!(detail(&counted, "keyword_lookups"), 1);
+                let probes = detail(&counted, "keyword_entries");
+                assert!(
+                    (1..=most_probes()).contains(&probes),
+                    "{word:?}: {probes} probes"
+                );
+            }
+        }
+
+        #[test]
+        fn a_keyword_hit_probes_at_most_log_of_the_table() {
+            for (text, kind) in KEYWORDS {
                 let _ = take_counters();
                 assert_eq!(keyword(text), Some(*kind));
-                let counted = take_counters();
-                assert_eq!(
-                    detail(&counted, "keyword_entries"),
-                    u64::try_from(i + 1).unwrap()
+                let probes = detail(&take_counters(), "keyword_entries");
+                assert!(
+                    (1..=most_probes()).contains(&probes),
+                    "{text:?}: {probes} probes"
                 );
             }
         }

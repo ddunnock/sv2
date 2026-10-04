@@ -15,7 +15,7 @@
 //! | Counter | Counted at | Read by |
 //! |---|---|---|
 //! | `keyword_lookups` | `lookahead::keyword` | Phase 2 |
-//! | `keyword_entries` | table entries `keyword` compares: the match's position + 1, or the whole table on a miss | Phase 2 |
+//! | `keyword_entries` | table entries `keyword`'s binary search probes: at most 9 of the 173 | Phase 2 |
 //! | `is_name` | `Parser::is_name` | Phase 2 |
 //! | `nth_is_keyword` | `Parser::nth_is_keyword` | Phase 2 |
 //! | `qualified_names` | `Parser::qualified_name_length` | Phase 4 |
@@ -38,10 +38,6 @@ pub(crate) enum Counter {
     Peeked,
     Consumed,
     KeywordLookups,
-    #[cfg_attr(
-        not(feature = "counters"),
-        expect(dead_code, reason = "counted only where the feature computes it")
-    )]
     KeywordEntries,
     IsName,
     NthIsKeyword,
