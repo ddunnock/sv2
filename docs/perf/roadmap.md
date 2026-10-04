@@ -39,6 +39,18 @@ starved; it is doing redundant work, and the cure is doing less of it. Allocatio
 mostly the tree itself. Work grows linearly with input: the cost is a constant factor,
 not a quadratic.
 
+**Where FIT-4 stands (Phase 1, measured).** Under WebAssembly the largest corpus file
+parses at 11.3 ms p95 in JavaScriptCore (Bun) and 12.5 ms in wasmtime: 1.2–1.4× native,
+inside the 16 ms budget by 3.5–4.7 ms. So the optimizations are not rescuing a missed
+budget. They buy headroom for three things this measurement does not cover:
+- the standard library's largest file, which is not vendored. At the measured
+  throughput, 16 ms fits about 100 KB;
+- the webview's main-thread contention;
+- the grammar work still to come, which the ratchet shows adds cost.
+
+Phases 2 and 5 together, at their estimates, would put the largest file near 6 ms under
+JavaScriptCore.
+
 ---
 
 ## Phase 0 — Exact attribution
@@ -109,6 +121,35 @@ native × the measured ratio.
   note it is an approximation.
 
 **Depends on.** Nothing. It runs before Phase 2 so the target is known.
+
+**Outcome.** Done in 82e3051, measured with `scripts/perf.sh wasm` on the MacBook.
+The figures are the largest file, 30 runs after 3 warm-ups, and agreed within 1% on a
+second run:
+
+| Engine | Median | p95 | Ratio to native | FIT-4 margin |
+|---|---|---|---|---|
+| native | 8.58 ms | 8.79 ms | — | 7.21 ms |
+| wasmtime 49 (Cranelift) | 12.26 ms | 12.42 ms | 1.43× | 3.58 ms |
+| Bun 1.4.2 (JavaScriptCore) | 10.64 ms | 11.32 ms | 1.24× | 4.68 ms |
+
+The ratio holds at 1.37–1.43× (wasmtime) and 1.21–1.29× (Bun) across the five largest
+files, so it is a property of the engine, not of a file. The roadmap's guess of
+1.5–2× was pessimistic.
+
+- **Bun is the closer stand-in.** JavaScriptCore is the engine of Tauri's webview on
+  macOS and Linux, but not its exact tiering, nor a main thread shared with layout and
+  input.
+- **wasmtime is the reproducible reference,** not the editor.
+- **Bun's p95 spreads more on small files** (2.4 ms against a 0.93 ms median), consistent
+  with JavaScriptCore's tiering and garbage collection.
+
+How it was built:
+- The probe's timing mode is compiled to `wasm32-wasip1`, and the WASI guest sees only a
+  temporary copy of the timed files, never the repository.
+- `proptest` became a non-WASI dev-dependency (its process forking has no WASI
+  implementation).
+- `rust-toolchain.toml` now installs the target with the toolchain, and STD-002-RS 0.2.1
+  states it.
 
 ---
 
@@ -327,7 +368,7 @@ is recorded there as a candidate, not here.
 | Phase | Series | Outcome | Notes |
 |---|---|---|---|
 | 0 | — | done, 9768f88 | counts in assessment.md; re-scoped Phase 4 to prefix skips |
-| 1 | — | not started | |
+| 1 | — | done, 82e3051 | largest file p95: 11.3 ms JavaScriptCore, 12.5 ms wasmtime; within FIT-4 by 3.5–4.7 ms |
 | 2 | | not started | |
 | 3 | | not started | |
 | 4 | | not started | |

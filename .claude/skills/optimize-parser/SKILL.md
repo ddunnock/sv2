@@ -58,6 +58,30 @@ open /tmp/parse.trace
 exact on one function, run `valgrind --tool=callgrind` on the bench binary and read it with
 `callgrind_annotate`. Instruction counts from Linux are not comparable with the Mac's.
 
+### Under WebAssembly (FIT-4)
+
+ADR-0013 FIT-4 is about the editor's wasm build, not native. Check it at the start and
+the close of a series:
+
+```bash
+scripts/perf.sh wasm
+```
+
+It times the five largest files natively, under wasmtime, and under Bun. Bun's
+JavaScriptCore is the engine of Tauri's webview on macOS and Linux, so it is the closer
+stand-in. The command reports each engine's ratio to native and the largest file's p95
+against the 16 ms budget. The guest sees only a temporary copy of the files, and an
+engine that is not installed is skipped. It is reported, never gated.
+
+**One-time setup, on each machine** (a setup download; nothing fetches at build or gate
+time):
+- **wasm target:** installed with the pinned toolchain from `rust-toolchain.toml`. If an
+  older checkout predates that line, run `rustup target add wasm32-wasip1` in the repo.
+- **wasmtime:** `curl https://wasmtime.dev/install.sh -sSf | bash`. It installs to
+  `~/.wasmtime/bin`, which `perf.sh` finds even when it is not on `PATH`.
+- **Bun:** `curl -fsSL https://bun.sh/install | bash`. It installs to `~/.bun/bin`; on
+  RHEL 9 this works from the home directory, with no root needed.
+
 ### Which machine
 
 Counters and the output fingerprint are the same on both machines, so a series can move

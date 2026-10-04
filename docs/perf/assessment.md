@@ -12,15 +12,21 @@ Measured 2026-10-03 at 7020f37, arm64 macOS, release build.
 |---|---|---|
 | Throughput, largest file (73.5 KB) | ~8.5 MB/s, median 8.7 ms | `cargo bench --bench parse` |
 | p95, largest file | 9.9 ms native, against FIT-4's 16 ms | `scripts/perf.sh measure` |
+| p95, largest file, WebAssembly | 11.3 ms JavaScriptCore (Bun), 12.5 ms wasmtime | `scripts/perf.sh wasm` |
+| WebAssembly / native | 1.21–1.29× JavaScriptCore, 1.37–1.43× wasmtime | `scripts/perf.sh wasm`, five largest files |
 | Scaling ×1 → ×16 copies | 8.46 → 8.94 MB/s: linear | bench `repeated` |
 | Tokens peeked per token consumed | 219 (largest file), 340 (corpus) | counters |
 | Allocations, largest file | 9,891 (1.31 MB) | counters |
 | Corpus totals (311 files) | 132,472 allocations, 23,986,614 peeked, 70,576 consumed | `tests/perf-baseline.json` |
 
-**FIT-4 has thin headroom.** 9.9 ms is native. FIT-4 names WebAssembly in the editor, which
-typically runs 1.5–2× slower than native: 15–20 ms, at or past the 16 ms budget, and on a
-73 KB file rather than the standard library's largest. Lookahead is a constant factor,
-not a growth rate: scaling is linear, so the parser is slow, not quadratic.
+**FIT-4 is met, with modest headroom.** This document first estimated WebAssembly at
+1.5–2× native, which would have put the largest file at 15–20 ms, at or past the budget.
+Roadmap Phase 1 measured it instead: 1.2–1.4×, so 11.3–12.5 ms, inside the 16 ms budget
+by 3.5–4.7 ms. That headroom is on a 73 KB file. At the measured throughput the budget
+fits about 100 KB, and the standard library's largest file is not yet measured.
+
+Lookahead is a constant factor, not a growth rate: scaling is linear, so the parser is
+slow, not quadratic.
 
 ## Where the time goes
 
