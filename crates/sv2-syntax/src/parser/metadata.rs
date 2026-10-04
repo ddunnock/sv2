@@ -3,6 +3,7 @@
 //! Metadata, `SysML` 8.2.2.27 and `KerML` 8.2.5.13: definitions, usages, prefix metadata,
 //! and metadata bodies.
 
+use crate::counter::{Counter, count};
 use crate::generated::kinds::SyntaxKind;
 use crate::grammar::Language;
 use crate::parser::body::Body;
@@ -26,6 +27,7 @@ impl Parser<'_> {
     /// a `QualifiedName` or an `OwnedFeatureChain` (`KerML` 8.2.5.12, 8.2.4.3.2, 8.2.4.1.2):
     /// the same text over a different element, so the same walk.
     pub(super) fn skip_prefix_metadata(&self, n: usize) -> usize {
+        count(Counter::SkipPrefixMetadata);
         let mut n = n;
         while let Some(k) = self.skip_one_prefix_metadata(n) {
             n = k;

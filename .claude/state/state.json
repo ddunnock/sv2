@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-10-02T21:28:51Z",
+    "regenerated_utc": "2026-10-04T13:22:27Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -10,6 +10,7 @@
       "grammar_diff": "pass",
       "coverage": "pass",
       "corpus": "pass",
+      "perf": "pass",
       "tests": "pass",
       "clippy": "pass",
       "doc": "pass",
@@ -23,7 +24,7 @@
       "percent": 100.0
     },
     "tests": {
-      "unit": 740,
+      "unit": 744,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 298,
@@ -37,14 +38,14 @@
       "vendor_total": 332
     },
     "commits": [
-      "6f85693 Look ahead through an index of meaningful tokens, so no walk by index is quadratic",
-      "5e6247b Hold the expression-body narrowing in the production, not in its callers' dispatch",
-      "d5374b4 Rewrite the stale notes of the two NonFeatureChainPrimaryArgument units, and re-freeze",
-      "cf2025c Record OwnedExpressionReferenceMember unreachable: coverage reads 553 of 553",
-      "79173cb Admit `unreachable` as a deviation decision, the schema prerequisite of ADR-0023",
-      "94b3592 Drive bnf_coverage.main through the ADR-0023 exclusion",
-      "cd57bc4 Tie the body overrides to recorded conflict deviations, and say so in ADR-0015",
-      "ddcccb6 Close the session: 553 of 554, the last unit waiting on the author's schema edit"
+      "aa8389c Phase the parser optimizations into a roadmap, each phase plannable alone",
+      "de11974 Compare series timing only on one machine, and add profiling per platform",
+      "0324a20 Assess where the parser spends its time, and rank what to optimize",
+      "7020f37 Record ADR-0024 and the optimize-parser skill and perf rule that carry it out",
+      "3cee01a Reject a series step that changes what the parser produces",
+      "503c9e6 Ratchet parser performance in the gate, and hold optimization series to a win",
+      "415ff27 Add a parse benchmark, a measuring probe, and work counters behind a feature",
+      "f3e30a8 Point the add-production skill and a generator comment at parser/<area>.rs"
     ]
   },
   "authored": {

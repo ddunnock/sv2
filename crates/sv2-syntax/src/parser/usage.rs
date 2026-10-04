@@ -3,6 +3,7 @@
 //! Usages, `SysML` 8.2.2.6: usage prefixes, the usage element dispatch, reference usages,
 //! variants, event occurrences, and the usage declaration.
 
+use crate::counter::{Counter, count};
 use crate::generated::kinds::SyntaxKind;
 use crate::parser::Parser;
 use crate::parser::lookahead::keyword;
@@ -114,6 +115,7 @@ impl Parser<'_> {
     /// BasicUsagePrefix`, and `skip_usage_prefix` is the one that also looks past an
     /// `EndUsagePrefix` and the `UsageExtensionKeyword`s after either.
     fn skip_basic_usage_prefix(&self, n: usize) -> usize {
+        count(Counter::SkipBasicUsagePrefix);
         let mut n = n;
         for words in [
             &["in", "out", "inout"][..],
@@ -135,6 +137,7 @@ impl Parser<'_> {
     /// PortionKind? ) UsageExtensionKeyword*` (`SysML` 8.2.2.9.2) — a
     /// `BasicUsagePrefix` and the two keywords only an occurrence may carry.
     pub(super) fn skip_occurrence_usage_prefix(&self, n: usize) -> usize {
+        count(Counter::SkipOccurrenceUsagePrefix);
         // EndUsagePrefix, the first alternative by deviation OccurrenceUsagePrefix
         // (follow_xtext), excludes the rest: an end is not also individual.
         if let Some(kind) = self.skip_end_usage_prefix(n) {

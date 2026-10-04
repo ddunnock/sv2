@@ -107,6 +107,25 @@ def test_linear_scaling_passes():
     assert perf.ratchet_failures(counted(), current) == []
 
 
+def test_detail_is_summed_across_files():
+    files = {
+        "a.sysml": {"detail": {"is_name": 3, "member_decisions": 1}},
+        "b.sysml": {"detail": {"is_name": 4}},
+        "c.sysml": {},
+    }
+    assert perf.detail_totals(files) == {"is_name": 7, "member_decisions": 1}
+
+
+def test_detail_growth_never_fails_the_ratchet_while_a_ratcheted_counter_still_does():
+    baseline, current = counted(), counted()
+    baseline["detail"] = {"keyword_entries": 100}
+    current["detail"] = {"keyword_entries": 1_000}
+    current["files"]["a.sysml"]["detail"] = {"keyword_entries": 1_000}
+    assert perf.ratchet_failures(baseline, current) == []
+    current["totals"]["peeked"] = 11_500
+    assert perf.ratchet_failures(baseline, current) != []
+
+
 def test_growth_from_zero_is_unbounded_and_zero_to_zero_is_none():
     assert perf.growth(0, 0) == 0.0
     assert perf.growth(0, 1) == float("inf")

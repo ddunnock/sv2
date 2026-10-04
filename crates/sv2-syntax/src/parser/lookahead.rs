@@ -3,6 +3,7 @@
 //! Looking ahead: the meaningful-token index, `peek`, and the generic recognisers
 //! every production uses to decide which alternative it is at, without consuming anything.
 
+use crate::counter::{Counter, count};
 use crate::generated::kinds::{KEYWORDS, SyntaxKind};
 use crate::lexer::{Token, is_trivia};
 use crate::parser::Parser;
@@ -18,6 +19,18 @@ use crate::parser::Parser;
 /// `every_keyword_this_parser_names_is_in_the_pinned_token_set` below: a keyword
 /// leaving the token set fails the gate there, not silently at run time.
 pub(super) fn keyword(text: &str) -> Option<SyntaxKind> {
+    count(Counter::KeywordLookups);
+    // How many entries the scan below compares: the match's position + 1, or the whole
+    // table on a miss. Computed apart from the scan, so the scan is the same code with
+    // the feature on or off.
+    #[cfg(feature = "counters")]
+    crate::counter::count_by(
+        Counter::KeywordEntries,
+        KEYWORDS
+            .iter()
+            .position(|(k, _)| *k == text)
+            .map_or(KEYWORDS.len(), |i| i + 1) as u64,
+    );
     KEYWORDS
         .iter()
         .find(|(k, _)| *k == text)
@@ -104,6 +117,7 @@ impl Parser<'_> {
 
     /// Whether `token` is a NAME, asked of any token rather than only the next one.
     pub(super) fn is_name(&self, token: Token) -> bool {
+        count(Counter::IsName);
         match token.kind {
             SyntaxKind::UnrestrictedName => true,
             SyntaxKind::BasicName => keyword(self.text_of(token)).is_none(),
@@ -123,6 +137,7 @@ impl Parser<'_> {
 
     /// Whether the `n`th meaningful token from here is this keyword.
     pub(super) fn nth_is_keyword(&self, n: usize, text: &str) -> bool {
+        count(Counter::NthIsKeyword);
         self.peek_nth(n)
             .is_some_and(|token| token.kind == SyntaxKind::BasicName && self.text_of(token) == text)
     }
@@ -207,6 +222,7 @@ impl Parser<'_> {
         &self,
         tokens: &mut (impl Iterator<Item = Token> + Clone),
     ) -> Option<usize> {
+        count(Counter::QualifiedNames);
         let mut length = 0;
         if tokens
             .clone()

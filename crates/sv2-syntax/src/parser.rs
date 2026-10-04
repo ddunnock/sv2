@@ -385,4 +385,70 @@ mod tests {
             assert_eq!(from, expected.get(n..).unwrap_or(&[]));
         }
     }
+
+    /// The attribution counters (`docs/perf/roadmap.md`, Phase 0). Each expectation comes
+    /// from the keyword table or from the input's structure, never from a run's output.
+    #[cfg(feature = "counters")]
+    mod counters {
+        use crate::generated::kinds::KEYWORDS;
+        use crate::parser::lookahead::keyword;
+        use crate::{Counters, Language, parse, take_counters};
+
+        fn detail(counted: &Counters, name: &str) -> u64 {
+            counted
+                .detail
+                .iter()
+                .find(|(n, _)| *n == name)
+                .map(|(_, value)| *value)
+                .unwrap()
+        }
+
+        #[test]
+        fn a_keyword_miss_compares_every_entry() {
+            let _ = take_counters();
+            assert_eq!(keyword("not_a_keyword_at_all"), None);
+            let counted = take_counters();
+            assert_eq!(detail(&counted, "keyword_lookups"), 1);
+            assert_eq!(
+                detail(&counted, "keyword_entries"),
+                u64::try_from(KEYWORDS.len()).unwrap()
+            );
+        }
+
+        #[test]
+        fn a_keyword_hit_compares_up_to_its_position_and_no_further() {
+            for (i, (text, kind)) in KEYWORDS.iter().enumerate().step_by(37) {
+                let _ = take_counters();
+                assert_eq!(keyword(text), Some(*kind));
+                let counted = take_counters();
+                assert_eq!(
+                    detail(&counted, "keyword_entries"),
+                    u64::try_from(i + 1).unwrap()
+                );
+            }
+        }
+
+        #[test]
+        fn taking_the_counters_resets_them() {
+            let _ = take_counters();
+            drop(parse("package P { part a; }", Language::SysMl));
+            let first = take_counters();
+            assert!(first.consumed > 0);
+            let second = take_counters();
+            assert_eq!((second.peeked, second.consumed), (0, 0));
+            assert!(second.detail.iter().all(|(_, value)| *value == 0));
+        }
+
+        #[test]
+        fn an_empty_file_decides_no_member_and_a_file_with_one_does() {
+            let _ = take_counters();
+            drop(parse("", Language::SysMl));
+            assert_eq!(detail(&take_counters(), "member_decisions"), 0);
+            // Two names, `P` and `a`, and at least one member to decide.
+            drop(parse("package P { part a; }", Language::SysMl));
+            let counted = take_counters();
+            assert!(detail(&counted, "member_decisions") >= 1);
+            assert!(detail(&counted, "is_name") >= 2);
+        }
+    }
 }

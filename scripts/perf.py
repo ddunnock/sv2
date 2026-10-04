@@ -77,6 +77,8 @@ TIME_REGRESSION = 0.05
 MAX_ENABLING_RUN = 3
 
 COUNTERS = ("allocations", "allocated_bytes", "peeked")
+# The probe also reports attribution detail per file (roadmap Phase 0): exact counts at the
+# hot lookahead helpers. They inform targets; neither the ratchet nor a series reads them.
 PRIMARIES = (*COUNTERS, "time")
 # Timing runs per file, and how many of the largest files are timed.
 TIMING_RUNS = 30
@@ -162,12 +164,22 @@ def totals(files: Doc) -> dict[str, int]:
     return {name: sum(int(f[name]) for f in files.values()) for name in (*COUNTERS, "consumed")}
 
 
+def detail_totals(files: Doc) -> dict[str, int]:
+    """Each attribution counter summed over the files: informational, never ratcheted."""
+    out: dict[str, int] = {}
+    for file in files.values():
+        for name, value in file.get("detail", {}).items():
+            out[name] = out.get(name, 0) + int(value)
+    return out
+
+
 def measure_counters(probe: Path, files: list[Path]) -> Doc:
     """Counters per file and in total, and the scaling ratio."""
     doc = run_probe(probe, ["counters", *[rel(p) for p in files]])
     return {
         "files": doc["files"],
         "totals": totals(doc["files"]),
+        "detail": detail_totals(doc["files"]),
         "scaling": doc["scaling"]["ratio"],
         "fingerprint": doc["fingerprint"],
     }
@@ -430,7 +442,21 @@ def cmd_measure(probes: Probes) -> int:
         f"  {'median time':16} {timed['time_ns'] / 1e6:>11.2f} ms  ({TIMING_FILES} largest files)"
     )
     print(f"  {'largest p95':16} {p95 / 1e6:>11.2f} ms  (FIT-4 budget {FIT4_P95_NS / 1e6:.0f} ms)")
+    largest = counted["files"][rel(files[0])]
+    print_detail("largest file", largest.get("detail", {}), largest["consumed"])
+    print_detail("corpus", counted["detail"], counted["totals"]["consumed"])
     return 0
+
+
+def print_detail(label: str, detail: dict[str, int], consumed: int) -> None:
+    """The attribution counters: total, per consumed token, and per member decision."""
+    decisions = detail.get("member_decisions", 0)
+    print(f"\nattribution detail, {label} (not ratcheted):")
+    print(f"  {'counter':30} {'total':>12} {'/token':>10} {'/decision':>10}")
+    for name, value in detail.items():
+        per_token = value / consumed if consumed else 0.0
+        per_decision = value / decisions if decisions else 0.0
+        print(f"  {name:30} {value:>12,} {per_token:>10.1f} {per_decision:>10.1f}")
 
 
 def cmd_check(probes: Probes) -> int:

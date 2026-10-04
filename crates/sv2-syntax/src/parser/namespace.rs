@@ -5,6 +5,7 @@
 
 use rowan::GreenNode;
 
+use crate::counter::{Counter, count};
 use crate::diagnostic::Diagnostic;
 use crate::generated::kinds::SyntaxKind;
 use crate::grammar::Language;
@@ -78,6 +79,7 @@ impl Parser<'_> {
     /// containing one must not parse — which it silently did before ADR-0014 was
     /// implemented here, because one root was applied to both file kinds.
     fn at_member_element(&self, n: usize) -> bool {
+        count(Counter::MemberDispatch);
         // Both grammars reach AnnotatingElement from their member, by different routes:
         // MemberElement = AnnotatingElement | NonFeatureElement in KerML 8.2.3.4.1, and
         // DefinitionElement's third alternative in SysML 8.2.2.6.1. So it is admitted in
@@ -111,6 +113,7 @@ impl Parser<'_> {
     /// `CalculationUsage` were each added here and not there, and `first a then b;` in a
     /// `constraint def` body was read as the start of its result expression.
     pub(super) fn at_sysml_keyword_member(&self, n: usize) -> bool {
+        count(Counter::KeywordMemberDispatch);
         self.at_definition_element(n)
             || self.at_action_usage(n)
             || self.at_state_usage(n)
@@ -231,6 +234,7 @@ impl Parser<'_> {
     // `NonFeatureMember | NamespaceFeatureMember` (KerML 8.2.3.4.1), the first read by
     // `membership`, the second by `kerml_feature_item`.
     fn body_element(&mut self, body: Body) -> bool {
+        count(Counter::MemberDecisions);
         if self.depth >= MAX_DEPTH {
             // Too deeply nested to recurse into another body. Recover one token
             // at a time, exactly as unrecognised text is recovered: every byte

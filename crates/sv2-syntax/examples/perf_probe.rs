@@ -25,7 +25,7 @@ use std::process::ExitCode;
 use std::time::Instant;
 
 use stats_alloc::{INSTRUMENTED_SYSTEM, Region, StatsAlloc};
-use sv2_syntax::{Language, counters_enabled, parse, take_counters};
+use sv2_syntax::{Counters, Language, counters_enabled, parse, take_counters};
 
 #[global_allocator]
 static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
@@ -43,6 +43,8 @@ struct Work {
     allocated_bytes: u64,
     peeked: u64,
     consumed: u64,
+    /// The attribution detail (`docs/perf/roadmap.md`, Phase 0): informational only.
+    counted: Counters,
 }
 
 /// FNV-1a, 64-bit: a fingerprint that is the same on every machine and toolchain, which
@@ -79,6 +81,7 @@ fn work_of(text: &str, language: Language, fingerprint: &mut u64) -> Work {
         allocated_bytes: stats.bytes_allocated as u64,
         peeked: counted.peeked,
         consumed: counted.consumed,
+        counted,
     }
 }
 
@@ -96,6 +99,16 @@ fn json_string(s: &str) -> String {
     }
     out.push('"');
     out
+}
+
+/// The attribution detail as a JSON object, in the counters' order.
+fn detail_json(counted: &Counters) -> String {
+    let fields: Vec<String> = counted
+        .detail
+        .iter()
+        .map(|(name, value)| format!("{}:{value}", json_string(name)))
+        .collect();
+    format!("{{{}}}", fields.join(","))
 }
 
 /// Peeked tokens per byte, the work the scaling ratio compares.
@@ -119,14 +132,15 @@ fn counters(files: &[(String, String, Language)]) -> Result<String, String> {
         let w = work_of(text, *language, &mut fingerprint);
         let _ = write!(
             out,
-            "{}{}:{{\"bytes\":{},\"allocations\":{},\"allocated_bytes\":{},\"peeked\":{},\"consumed\":{}}}",
+            "{}{}:{{\"bytes\":{},\"allocations\":{},\"allocated_bytes\":{},\"peeked\":{},\"consumed\":{},\"detail\":{}}}",
             if i == 0 { "" } else { "," },
             json_string(name),
             w.bytes,
             w.allocations,
             w.allocated_bytes,
             w.peeked,
-            w.consumed
+            w.consumed,
+            detail_json(&w.counted)
         );
     }
     out.push('}');
