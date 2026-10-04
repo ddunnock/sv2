@@ -109,6 +109,35 @@ file, 2,179 over the corpus.
    Phase 4 no longer includes them.
 5. **The keyword-member chain is re-asked** 2.0 times per decision on the largest file and
    3.3 over the corpus: once to decide that a member starts, and again to decide which.
+
+### Prefix-skip start positions (Phase 4, step 0)
+
+A throwaway log recorded every prefix-skip call's absolute meaningful position and
+comment mode over the 311-file corpus, then replayed them against caches of 1–32 slots.
+The log was reverted and is not in the parser. The table gives misses as a share of
+calls. "Distinct" is the floor: each start computed exactly once.
+
+| Helper | Calls | Distinct | 1 slot | 4 slots | 8 slots, direct-mapped |
+|---|---|---|---|---|---|
+| `skip_prefix_metadata` | 2,228,462 | 12,029 (0.54%) | 2.22% | 1.18% | 0.54% |
+| `skip_occurrence_usage_prefix` | 972,243 | 7,906 (0.81%) | 4.30% | 2.36% | 0.81% |
+| `skip_basic_usage_prefix` | 1,210,455 | 7,907 (0.65%) | 3.09% | 1.81% | 0.65% |
+
+- **Each helper starts at about one distinct position per member decision:** 0.7–1.1
+  over the corpus's 11,008 decisions, and 0.8–1.0 on the largest file. The 54–202 calls
+  per decision are one computation asked for again and again.
+- **8 direct-mapped slots, indexed by `position % 8`, reach the floor exactly** on the
+  corpus and on the largest file. So do 16 and 32. LRU replacement does no better, so a
+  plain mask is enough.
+- **Even one slot hits 96–98%.** The repetition is almost entirely back-to-back calls at
+  one start.
+- **The replay counts every call in the uncached stream.** Once the outer
+  `skip_occurrence_usage_prefix` hits, the inner `skip_basic_usage_prefix` and
+  `skip_prefix_metadata` calls it would have made never happen. The real counts can
+  only be lower.
+
+Phase 4 therefore uses an 8-slot `[Cell<Entry>; 8]` per helper, keyed by
+`(position, comments_significant)`.
    Phase 5's head computation answers both at once.
 
 ## What the processor is doing

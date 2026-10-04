@@ -329,6 +329,46 @@ sparse map), and how the `comments_significant` mode is handled.
 
 **Depends on.** The Phase 2 checkpoint for its target. Phase 5 builds on it.
 
+**Plan (2026-10-04).** Read from the code before anything changed:
+- The three helpers read only `tokens` (never mutated during a parse) and the comment
+  mode. They are pure, so a cache needs no invalidation.
+- Their `n` is relative to the cursor (`peek_nth` reads `cursor_position() + n`). The key
+  is therefore the absolute meaningful position, `cursor_position() + n`, and the cached
+  value is an absolute end, returned less `cursor_position()`.
+
+Decisions:
+- **Representation: a small fixed array per helper, not a dense `Vec`.** The largest file
+  has about 7,000 meaningful tokens, so one `u32` per token per helper is about 28 KB, and
+  84 KB for three. That is about 6% of its 1.31 MB `allocated_bytes`, and every file
+  scales the same way, so it breaks the 2% allocation tolerance on the corpus total.
+  A `[Cell<Entry>; N]` held on `Parser` allocates nothing. The roadmap's step 1 needed to
+  be enabling only because a `Vec` costs allocations, so it folds into the first reader
+  and the enabling budget stays unspent. This is right only if the calls for one member
+  land on a few nearby positions, so step 0 measures that.
+- **`comments_significant` is part of the key.** An entry from one mode is never served
+  in the other, with no extra branch.
+
+Steps:
+0. *(before the series; not a step)* A throwaway log of every helper call's absolute
+   start and mode over the corpus, replayed against 1-, 4-, 8- and 16-slot caches. The
+   hit rates, the distinct starts per member decision, and the chosen `N` are recorded
+   in assessment.md. Nothing in the parser source is committed, so the series opens
+   on a clean tree.
+1. The cache type, and `skip_prefix_metadata` reads through it, with a
+   `skip_prefix_metadata_computed` detail counter on the miss path.
+2. `skip_occurrence_usage_prefix` reads through it (its own counter), which also covers
+   most `skip_basic_usage_prefix` calls.
+3. `skip_basic_usage_prefix`'s remaining direct callers (three sites and
+   `skip_unextended_usage_prefix`).
+
+**Step 0, done.** Each helper starts at about one distinct position per member decision
+(0.7–1.1). 8 direct-mapped slots indexed by `position % 8` reach that floor exactly, and
+even one slot hits 96–98% (assessment.md, "Prefix-skip start positions"). `N` is 8. The
+ceiling for the series: calls that compute fall from 4.41 M to about 28 K over the corpus.
+
+After the close, re-measure "2b" (`keyword()`'s remaining self time), since the caches
+change how often `is_name` is reached.
+
 ---
 
 ## Phase 5 — Dispatch on the member head
