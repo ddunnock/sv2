@@ -67,6 +67,11 @@ and off, and timing is unaffected because timing builds exclude the feature.
 
 **Exit.** assessment.md has an exact count table. **Abandon:** not applicable.
 
+**Outcome.** Done in 9768f88; the counts are in assessment.md, "Exact counts". They
+re-scoped Phase 4: qualified names are not hot (2.5 measurements per consumed token), so
+the sampled 12.3% was inlining smear, and prefix skipping is what repeats. Every target
+below is now set from counts.
+
 **Its plan must decide.** Static counter names or an enum-indexed array; whether
 per-recogniser counts need a macro to stay readable.
 
@@ -129,6 +134,13 @@ native × the measured ratio.
 
 **Series.** Primary `time`. Estimate: 25–35% of median time. Enabling budget: 1 (step 2).
 
+**Target, from Phase 0's counts (largest file).**
+- `keyword()` compares 164 table entries per lookup (4,126,749 over 25,091 lookups).
+  Binary search makes that 8 or fewer, and a per-token table makes `is_name` compare none.
+- `nth_is_keyword` runs 1,233,818 times, each a string compare. This phase leaves the
+  count alone (Phase 5 cuts it) but makes each call a kind comparison.
+- Expect `keyword_entries` per `keyword_lookups` ≤ 8 after step 1.
+
 **Quality guards.**
 - `every_keyword_this_parser_names_is_in_the_pinned_token_set` (`parser.rs` tests) must
   stay meaningful. If migration makes it compile-time, changing that test is its own
@@ -177,21 +189,35 @@ change in token kinds.
 
 ## Phase 4 — Memoize lookahead scans
 
-**Goal.** Compute each prefix extent and qualified-name length once per start position.
+**Goal.** Compute each prefix extent once per start position.
 
-**Evidence.**
-- `skip_basic_usage_prefix` is 13.7% self, reached through
-  `skip_occurrence_usage_prefix` (24 call sites).
-- `qualified_name_length` is 12.3% self.
-- Both are pure functions of the start index over tokens that never change during a parse.
-- 219 tokens are peeked per token consumed on the largest file; 340 over the corpus.
+**Evidence.** Phase 0's counts, per member decision (largest file / corpus):
 
-**Approach.** One helper per step:
+| Helper | Calls | Per decision |
+|---|---|---|
+| `skip_prefix_metadata` | 138,283 / 2,228,462 | 130.7 / 202.4 |
+| `skip_basic_usage_prefix` | 70,192 / 1,210,455 | 66.3 / 110.0 |
+| `skip_occurrence_usage_prefix` | 57,320 / 972,243 | 54.2 / 88.3 |
+| `qualified_name_length` | 17,763 / 119,868 | 16.8 / 10.9 |
+
+The prefix skips are pure functions of their start index over tokens that never change
+during a parse, and each runs dozens to hundreds of times per member.
+
+**Qualified names are out of this phase.** At 2.5 measurements per consumed token there
+is little to save. The sampled profile's 12.3% for `qualified_name_length` was inlining
+smear.
+
+**Approach.** One helper per step, in order of calls:
 1. *(enabling)* A per-index cache on `Parser`: `Cell`-held, filled lazily, sized once from
    the meaningful-token count.
-2. `skip_occurrence_usage_prefix` reads through it.
-3. `qualified_name_length` / `skip_qualified_name` read through it.
-4. `skip_prefix_metadata` reads through it.
+2. `skip_prefix_metadata` reads through it.
+3. `skip_occurrence_usage_prefix` reads through it, which also covers most
+   `skip_basic_usage_prefix` calls.
+4. `skip_basic_usage_prefix`'s remaining direct callers.
+
+**Target.** Each of the three prefix skips computes at most once per start index. Their
+*computations* per member decision fall from 54–202 to a handful. The call count stays,
+so measure computations with a detail counter on the cache-miss path.
 
 **Series.** Primary `peeked`. Estimate: 10–20% of time, and a large share of `peeked`.
 Enabling budget: 1.
@@ -231,6 +257,15 @@ in turn.
    the recognisers that keyword can start, **in their original order**.
 3. Switch `body_element`'s dispatch the same way.
 4. Switch the remaining dispatchers, one per step.
+
+**Target, from Phase 0's counts.**
+- Peeks per member decision: 1,444 on the largest file (1,527,604 / 1,058) and 2,179 over
+  the corpus.
+- `nth_is_keyword` per decision: 1,166 / 1,849.
+- `at_sysml_keyword_member` runs 2.0 times per decision on the largest file and 3.3 over
+  the corpus, because the chain is re-asked for the same member.
+
+The goal is one dispatch per decision, and peeks per decision at least halved.
 
 **Series.** Primary `peeked`. Estimate: 20–40% of time, and most of the 219-per-token
 peek ratio. Enabling budget: 2.
@@ -291,7 +326,7 @@ is recorded there as a candidate, not here.
 
 | Phase | Series | Outcome | Notes |
 |---|---|---|---|
-| 0 | — | not started | |
+| 0 | — | done, 9768f88 | counts in assessment.md; re-scoped Phase 4 to prefix skips |
 | 1 | — | not started | |
 | 2 | | not started | |
 | 3 | | not started | |

@@ -56,12 +56,52 @@ The self times above are sampled from a release build, where inlining merges cal
 their callees. Self time per function is reliable. **Caller edges are approximate.** The
 profile credits `qualified_name_length` called from `skip_one_prefix_metadata` with 10.7%,
 but that function returns at once unless the token is `#` (`parser/metadata.rs:38`), so
-most of that time belongs to other callers. Exact call counts per helper are roadmap
-Phase 0.
+most of that time belongs to other callers. The exact counts below replace those edges.
 
 Grouping self time by its nearest `at_*` ancestor: **65.1% of parse time runs under a
 recogniser.** The largest are `at_simple_usage` (8.5%), `at_sysml_keyword_member` (7.6%),
 `at_simple_definition` (5.7%), and a long tail of about 1% each across the 28 alternatives.
+
+## Exact counts
+
+Roadmap Phase 0 (9768f88): counters at the hot helpers, deterministic and the same on
+every platform. From `scripts/perf.sh measure`; the reference copy is in
+`tests/perf-baseline.json` under each file's `detail`.
+
+| Counter | Largest file | Per token | Per decision | Corpus | Per token | Per decision |
+|---|---:|---:|---:|---:|---:|---:|
+| `keyword_lookups` | 25,091 | 3.6 | 23.7 | 195,225 | 2.8 | 17.7 |
+| `keyword_entries` | 4,126,749 | 592.0 | 3,900.5 | 31,520,868 | 446.6 | 2,863.5 |
+| `is_name` | 24,477 | 3.5 | 23.1 | 201,923 | 2.9 | 18.3 |
+| `nth_is_keyword` | 1,233,818 | 177.0 | 1,166.2 | 20,355,352 | 288.4 | 1,849.1 |
+| `qualified_names` | 17,763 | 2.5 | 16.8 | 119,868 | 1.7 | 10.9 |
+| `skip_occurrence_usage_prefix` | 57,320 | 8.2 | 54.2 | 972,243 | 13.8 | 88.3 |
+| `skip_basic_usage_prefix` | 70,192 | 10.1 | 66.3 | 1,210,455 | 17.2 | 110.0 |
+| `skip_prefix_metadata` | 138,283 | 19.8 | 130.7 | 2,228,462 | 31.6 | 202.4 |
+| `member_decisions` | 1,058 | 0.2 | 1.0 | 11,008 | 0.2 | 1.0 |
+| `member_dispatch` | 877 | 0.1 | 0.8 | 8,257 | 0.1 | 0.8 |
+| `keyword_member_dispatch` | 2,153 | 0.3 | 2.0 | 36,360 | 0.5 | 3.3 |
+
+"Per token" is per consumed token: 6,966 on the largest file, 70,576 over the corpus.
+"Per decision" is per member decision. Tokens peeked per decision: 1,444 on the largest
+file, 2,179 over the corpus.
+
+**What the counts say, and where they correct the profile:**
+
+1. **`nth_is_keyword` is the dominant lookahead operation.** It runs 1.23 M times for 6,966
+   consumed tokens, 1,166 times per member decided, and each call is a string compare.
+   Phase 2 makes each call cheap; Phase 5 makes there be fewer.
+2. **`keyword()` compares 164 table entries per lookup**: 4.1 M string compares on one
+   file. That is the linear scan, exactly. Phase 2's step 1 alone takes it to 8 or fewer.
+3. **Prefix skipping repeats** 54 to 202 times per member decision, for prefixes that are
+   almost always empty. `skip_prefix_metadata` alone runs 131 times per member on a file
+   with almost no `#` metadata. This is Phase 4's whole target.
+4. **Qualified names are *not* hot**: 2.5 measurements per consumed token. The sampled
+   12.3% self time for `qualified_name_length` was inlining smear. The counts win, so
+   Phase 4 no longer includes them.
+5. **The keyword-member chain is re-asked** 2.0 times per decision on the largest file and
+   3.3 over the corpus: once to decide that a member starts, and again to decide which.
+   Phase 5's head computation answers both at once.
 
 ## What the processor is doing
 

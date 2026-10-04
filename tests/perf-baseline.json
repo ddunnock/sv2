@@ -1,11 +1,37 @@
 {
- "commit": "415ff27",
+ "commit": "9768f88",
+ "detail": {
+  "is_name": 201923,
+  "keyword_entries": 31520868,
+  "keyword_lookups": 195225,
+  "keyword_member_dispatch": 36360,
+  "member_decisions": 11008,
+  "member_dispatch": 8257,
+  "nth_is_keyword": 20355352,
+  "qualified_names": 119868,
+  "skip_basic_usage_prefix": 1210455,
+  "skip_occurrence_usage_prefix": 972243,
+  "skip_prefix_metadata": 2228462
+ },
  "files": {
   "vendor/corpus/kerml/src/examples/Address Book Example/AddressBookModel.kerml": {
    "allocated_bytes": 9256,
    "allocations": 111,
    "bytes": 164,
    "consumed": 33,
+   "detail": {
+    "is_name": 20,
+    "keyword_entries": 3311,
+    "keyword_lookups": 24,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 7,
+    "member_dispatch": 3,
+    "nth_is_keyword": 987,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 74
+   },
    "peeked": 1290
   },
   "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_N_ary.kerml": {
@@ -13,6 +39,19 @@
    "allocations": 781,
    "bytes": 4894,
    "consumed": 752,
+   "detail": {
+    "is_name": 356,
+    "keyword_entries": 70023,
+    "keyword_lookups": 524,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 72,
+    "member_dispatch": 13,
+    "nth_is_keyword": 20302,
+    "qualified_names": 2,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 666
+   },
    "peeked": 27045
   },
   "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml": {
@@ -20,6 +59,19 @@
    "allocations": 553,
    "bytes": 2940,
    "consumed": 473,
+   "detail": {
+    "is_name": 239,
+    "keyword_entries": 44944,
+    "keyword_lookups": 332,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 52,
+    "member_dispatch": 13,
+    "nth_is_keyword": 15575,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 520
+   },
    "peeked": 20354
   },
   "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_UnownedEnds.kerml": {
@@ -27,6 +79,19 @@
    "allocations": 341,
    "bytes": 1311,
    "consumed": 221,
+   "detail": {
+    "is_name": 125,
+    "keyword_entries": 22283,
+    "keyword_lookups": 164,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 26,
+    "member_dispatch": 8,
+    "nth_is_keyword": 4300,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 280
+   },
    "peeked": 6257
   },
   "vendor/corpus/kerml/src/examples/Behavior Examples/Camera.kerml": {
@@ -34,6 +99,19 @@
    "allocations": 98,
    "bytes": 191,
    "consumed": 29,
+   "detail": {
+    "is_name": 21,
+    "keyword_entries": 4359,
+    "keyword_lookups": 29,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 5,
+    "member_dispatch": 1,
+    "nth_is_keyword": 587,
+    "qualified_names": 1,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 38
+   },
    "peeked": 809
   },
   "vendor/corpus/kerml/src/examples/Behavior Examples/TakePicture.kerml": {
@@ -41,6 +119,19 @@
    "allocations": 214,
    "bytes": 410,
    "consumed": 86,
+   "detail": {
+    "is_name": 70,
+    "keyword_entries": 13522,
+    "keyword_lookups": 91,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 13,
+    "member_dispatch": 4,
+    "nth_is_keyword": 2000,
+    "qualified_names": 7,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 136
+   },
    "peeked": 2750
   },
   "vendor/corpus/kerml/src/examples/Individuals Examples/JohnIndividualExample.kerml": {
@@ -48,6 +139,19 @@
    "allocations": 346,
    "bytes": 2830,
    "consumed": 199,
+   "detail": {
+    "is_name": 123,
+    "keyword_entries": 20359,
+    "keyword_lookups": 167,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 33,
+    "member_dispatch": 20,
+    "nth_is_keyword": 5261,
+    "qualified_names": 2,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 397
+   },
    "peeked": 7005
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-Atoms.kerml": {
@@ -55,6 +159,19 @@
    "allocations": 112,
    "bytes": 356,
    "consumed": 32,
+   "detail": {
+    "is_name": 22,
+    "keyword_entries": 3879,
+    "keyword_lookups": 28,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 6,
+    "member_dispatch": 4,
+    "nth_is_keyword": 818,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 66
+   },
    "peeked": 1066
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-ModelingInstances.kerml": {
@@ -62,6 +179,19 @@
    "allocations": 205,
    "bytes": 740,
    "consumed": 104,
+   "detail": {
+    "is_name": 108,
+    "keyword_entries": 18244,
+    "keyword_lookups": 136,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 19,
+    "member_dispatch": 15,
+    "nth_is_keyword": 2873,
+    "qualified_names": 51,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 253
+   },
    "peeked": 4034
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-2-WithoutConnectors.kerml": {
@@ -69,6 +199,19 @@
    "allocations": 195,
    "bytes": 609,
    "consumed": 85,
+   "detail": {
+    "is_name": 100,
+    "keyword_entries": 16558,
+    "keyword_lookups": 119,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 16,
+    "member_dispatch": 11,
+    "nth_is_keyword": 2333,
+    "qualified_names": 51,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 192
+   },
    "peeked": 3327
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-3-OneToOneConnectors.kerml": {
@@ -76,6 +219,19 @@
    "allocations": 357,
    "bytes": 1633,
    "consumed": 216,
+   "detail": {
+    "is_name": 205,
+    "keyword_entries": 36831,
+    "keyword_lookups": 264,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 32,
+    "member_dispatch": 13,
+    "nth_is_keyword": 3797,
+    "qualified_names": 85,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 303
+   },
    "peeked": 5949
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-4-OneToUnrestrictedConnectors.kerml": {
@@ -83,6 +239,19 @@
    "allocations": 348,
    "bytes": 1704,
    "consumed": 219,
+   "detail": {
+    "is_name": 204,
+    "keyword_entries": 36330,
+    "keyword_lookups": 262,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 32,
+    "member_dispatch": 14,
+    "nth_is_keyword": 3988,
+    "qualified_names": 85,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 320
+   },
    "peeked": 6205
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-5-TimingForStructures.kerml": {
@@ -90,6 +259,19 @@
    "allocations": 790,
    "bytes": 6190,
    "consumed": 775,
+   "detail": {
+    "is_name": 747,
+    "keyword_entries": 141576,
+    "keyword_lookups": 962,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 113,
+    "member_dispatch": 43,
+    "nth_is_keyword": 13491,
+    "qualified_names": 306,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 1039
+   },
    "peeked": 20976
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-6-Sequences.kerml": {
@@ -97,6 +279,19 @@
    "allocations": 388,
    "bytes": 1579,
    "consumed": 245,
+   "detail": {
+    "is_name": 254,
+    "keyword_entries": 45467,
+    "keyword_lookups": 319,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 35,
+    "member_dispatch": 16,
+    "nth_is_keyword": 4938,
+    "qualified_names": 106,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 361
+   },
    "peeked": 7534
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-7-DecisionsAndMerges.kerml": {
@@ -104,6 +299,19 @@
    "allocations": 722,
    "bytes": 4248,
    "consumed": 561,
+   "detail": {
+    "is_name": 500,
+    "keyword_entries": 92632,
+    "keyword_lookups": 637,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 85,
+    "member_dispatch": 20,
+    "nth_is_keyword": 8950,
+    "qualified_names": 180,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 616
+   },
    "peeked": 14206
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml": {
@@ -111,6 +319,19 @@
    "allocations": 1077,
    "bytes": 7039,
    "consumed": 1006,
+   "detail": {
+    "is_name": 893,
+    "keyword_entries": 165012,
+    "keyword_lookups": 1121,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 121,
+    "member_dispatch": 21,
+    "nth_is_keyword": 18802,
+    "qualified_names": 190,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 1136
+   },
    "peeked": 28495
   },
   "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_1.kerml": {
@@ -118,6 +339,19 @@
    "allocations": 162,
    "bytes": 257,
    "consumed": 47,
+   "detail": {
+    "is_name": 46,
+    "keyword_entries": 8087,
+    "keyword_lookups": 52,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 6,
+    "member_dispatch": 2,
+    "nth_is_keyword": 860,
+    "qualified_names": 10,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 57
+   },
    "peeked": 1349
   },
   "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_2.kerml": {
@@ -125,6 +359,19 @@
    "allocations": 176,
    "bytes": 332,
    "consumed": 58,
+   "detail": {
+    "is_name": 52,
+    "keyword_entries": 9377,
+    "keyword_lookups": 61,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 8,
+    "member_dispatch": 2,
+    "nth_is_keyword": 1038,
+    "qualified_names": 10,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 66
+   },
    "peeked": 1591
   },
   "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_1.kerml": {
@@ -132,6 +379,19 @@
    "allocations": 245,
    "bytes": 890,
    "consumed": 133,
+   "detail": {
+    "is_name": 89,
+    "keyword_entries": 17328,
+    "keyword_lookups": 121,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 21,
+    "member_dispatch": 4,
+    "nth_is_keyword": 2962,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 190
+   },
    "peeked": 4074
   },
   "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_2.kerml": {
@@ -139,6 +399,19 @@
    "allocations": 243,
    "bytes": 813,
    "consumed": 126,
+   "detail": {
+    "is_name": 80,
+    "keyword_entries": 15628,
+    "keyword_lookups": 107,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 18,
+    "member_dispatch": 2,
+    "nth_is_keyword": 2456,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 147
+   },
    "peeked": 3477
   },
   "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_3.kerml": {
@@ -146,6 +419,19 @@
    "allocations": 302,
    "bytes": 938,
    "consumed": 148,
+   "detail": {
+    "is_name": 103,
+    "keyword_entries": 19366,
+    "keyword_lookups": 135,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 23,
+    "member_dispatch": 2,
+    "nth_is_keyword": 3268,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 192
+   },
    "peeked": 4604
   },
   "vendor/corpus/kerml/src/examples/Massed Thing Example/MassedThings.kerml": {
@@ -153,6 +439,19 @@
    "allocations": 154,
    "bytes": 277,
    "consumed": 56,
+   "detail": {
+    "is_name": 27,
+    "keyword_entries": 4965,
+    "keyword_lookups": 38,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 8,
+    "member_dispatch": 3,
+    "nth_is_keyword": 1930,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 83
+   },
    "peeked": 2507
   },
   "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml": {
@@ -160,6 +459,19 @@
    "allocations": 306,
    "bytes": 744,
    "consumed": 168,
+   "detail": {
+    "is_name": 150,
+    "keyword_entries": 26470,
+    "keyword_lookups": 176,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 20,
+    "member_dispatch": 5,
+    "nth_is_keyword": 3076,
+    "qualified_names": 22,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 190
+   },
    "peeked": 4974
   },
   "vendor/corpus/kerml/src/examples/Packet Example/PacketUsage.kerml": {
@@ -167,6 +479,19 @@
    "allocations": 133,
    "bytes": 362,
    "consumed": 48,
+   "detail": {
+    "is_name": 30,
+    "keyword_entries": 3569,
+    "keyword_lookups": 27,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 9,
+    "member_dispatch": 1,
+    "nth_is_keyword": 1117,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 67
+   },
    "peeked": 1474
   },
   "vendor/corpus/kerml/src/examples/Packet Example/Packets.kerml": {
@@ -174,6 +499,19 @@
    "allocations": 223,
    "bytes": 966,
    "consumed": 111,
+   "detail": {
+    "is_name": 78,
+    "keyword_entries": 6383,
+    "keyword_lookups": 55,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 21,
+    "member_dispatch": 3,
+    "nth_is_keyword": 3070,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 191
+   },
    "peeked": 3985
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/ArgumentResolution.kerml": {
@@ -181,6 +519,19 @@
    "allocations": 158,
    "bytes": 207,
    "consumed": 53,
+   "detail": {
+    "is_name": 48,
+    "keyword_entries": 8193,
+    "keyword_lookups": 60,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 10,
+    "member_dispatch": 4,
+    "nth_is_keyword": 1624,
+    "qualified_names": 7,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 116
+   },
    "peeked": 2233
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Associations.kerml": {
@@ -188,6 +539,19 @@
    "allocations": 234,
    "bytes": 388,
    "consumed": 104,
+   "detail": {
+    "is_name": 58,
+    "keyword_entries": 10049,
+    "keyword_lookups": 82,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 17,
+    "member_dispatch": 9,
+    "nth_is_keyword": 4726,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 216
+   },
    "peeked": 6007
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Behaviors.kerml": {
@@ -195,6 +559,19 @@
    "allocations": 237,
    "bytes": 381,
    "consumed": 90,
+   "detail": {
+    "is_name": 105,
+    "keyword_entries": 19214,
+    "keyword_lookups": 127,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 16,
+    "member_dispatch": 4,
+    "nth_is_keyword": 2708,
+    "qualified_names": 18,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 184
+   },
    "peeked": 3689
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Circular.kerml": {
@@ -202,6 +579,19 @@
    "allocations": 123,
    "bytes": 172,
    "consumed": 43,
+   "detail": {
+    "is_name": 26,
+    "keyword_entries": 4863,
+    "keyword_lookups": 36,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 9,
+    "member_dispatch": 3,
+    "nth_is_keyword": 1112,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 79
+   },
    "peeked": 1439
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml": {
@@ -209,6 +599,19 @@
    "allocations": 230,
    "bytes": 537,
    "consumed": 129,
+   "detail": {
+    "is_name": 73,
+    "keyword_entries": 14094,
+    "keyword_lookups": 105,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 20,
+    "member_dispatch": 5,
+    "nth_is_keyword": 2977,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 203
+   },
    "peeked": 3900
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Classifications.kerml": {
@@ -216,6 +619,19 @@
    "allocations": 157,
    "bytes": 132,
    "consumed": 44,
+   "detail": {
+    "is_name": 49,
+    "keyword_entries": 8370,
+    "keyword_lookups": 54,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 7,
+    "member_dispatch": 2,
+    "nth_is_keyword": 1211,
+    "qualified_names": 6,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 75
+   },
    "peeked": 1851
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Classifiers.kerml": {
@@ -223,6 +639,19 @@
    "allocations": 125,
    "bytes": 374,
    "consumed": 66,
+   "detail": {
+    "is_name": 42,
+    "keyword_entries": 8556,
+    "keyword_lookups": 66,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 11,
+    "member_dispatch": 11,
+    "nth_is_keyword": 1997,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 183
+   },
    "peeked": 2528
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml": {
@@ -230,6 +659,19 @@
    "allocations": 136,
    "bytes": 755,
    "consumed": 51,
+   "detail": {
+    "is_name": 25,
+    "keyword_entries": 2895,
+    "keyword_lookups": 39,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 18,
+    "member_dispatch": 11,
+    "nth_is_keyword": 1761,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 141
+   },
    "peeked": 2175
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Conjugation.kerml": {
@@ -237,6 +679,19 @@
    "allocations": 85,
    "bytes": 99,
    "consumed": 24,
+   "detail": {
+    "is_name": 16,
+    "keyword_entries": 2835,
+    "keyword_lookups": 23,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 5,
+    "member_dispatch": 3,
+    "nth_is_keyword": 779,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 65
+   },
    "peeked": 979
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Connectors.kerml": {
@@ -244,6 +699,19 @@
    "allocations": 248,
    "bytes": 657,
    "consumed": 148,
+   "detail": {
+    "is_name": 147,
+    "keyword_entries": 26012,
+    "keyword_lookups": 191,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 27,
+    "member_dispatch": 4,
+    "nth_is_keyword": 3464,
+    "qualified_names": 14,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 223
+   },
    "peeked": 5046
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Dependencies.kerml": {
@@ -251,6 +719,19 @@
    "allocations": 124,
    "bytes": 352,
    "consumed": 56,
+   "detail": {
+    "is_name": 38,
+    "keyword_entries": 6218,
+    "keyword_lookups": 49,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 12,
+    "member_dispatch": 8,
+    "nth_is_keyword": 1993,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 162
+   },
    "peeked": 2482
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Expansion.kerml": {
@@ -258,6 +739,19 @@
    "allocations": 123,
    "bytes": 112,
    "consumed": 31,
+   "detail": {
+    "is_name": 40,
+    "keyword_entries": 7031,
+    "keyword_lookups": 46,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 7,
+    "member_dispatch": 1,
+    "nth_is_keyword": 1346,
+    "qualified_names": 5,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 113
+   },
    "peeked": 1818
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Expressions.kerml": {
@@ -265,6 +759,19 @@
    "allocations": 1022,
    "bytes": 1809,
    "consumed": 452,
+   "detail": {
+    "is_name": 662,
+    "keyword_entries": 110558,
+    "keyword_lookups": 690,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 68,
+    "member_dispatch": 5,
+    "nth_is_keyword": 13446,
+    "qualified_names": 135,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 887
+   },
    "peeked": 21463
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml": {
@@ -272,6 +779,19 @@
    "allocations": 239,
    "bytes": 581,
    "consumed": 165,
+   "detail": {
+    "is_name": 164,
+    "keyword_entries": 30127,
+    "keyword_lookups": 199,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 21,
+    "member_dispatch": 8,
+    "nth_is_keyword": 3486,
+    "qualified_names": 8,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 243
+   },
    "peeked": 4779
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml": {
@@ -279,6 +799,19 @@
    "allocations": 80,
    "bytes": 102,
    "consumed": 20,
+   "detail": {
+    "is_name": 15,
+    "keyword_entries": 2995,
+    "keyword_lookups": 20,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 4,
+    "member_dispatch": 1,
+    "nth_is_keyword": 622,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 40
+   },
    "peeked": 796
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Features.kerml": {
@@ -286,6 +819,19 @@
    "allocations": 464,
    "bytes": 1615,
    "consumed": 278,
+   "detail": {
+    "is_name": 211,
+    "keyword_entries": 41693,
+    "keyword_lookups": 296,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 43,
+    "member_dispatch": 18,
+    "nth_is_keyword": 7265,
+    "qualified_names": 10,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 519
+   },
    "peeked": 9600
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Filtering.kerml": {
@@ -293,6 +839,19 @@
    "allocations": 402,
    "bytes": 1184,
    "consumed": 191,
+   "detail": {
+    "is_name": 142,
+    "keyword_entries": 23052,
+    "keyword_lookups": 160,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 26,
+    "member_dispatch": 12,
+    "nth_is_keyword": 3284,
+    "qualified_names": 10,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 241
+   },
    "peeked": 5266
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Imports.kerml": {
@@ -300,6 +859,19 @@
    "allocations": 206,
    "bytes": 480,
    "consumed": 118,
+   "detail": {
+    "is_name": 60,
+    "keyword_entries": 9527,
+    "keyword_lookups": 89,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 28,
+    "member_dispatch": 23,
+    "nth_is_keyword": 3792,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 355
+   },
    "peeked": 4821
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Inheritance.kerml": {
@@ -307,6 +879,19 @@
    "allocations": 133,
    "bytes": 235,
    "consumed": 59,
+   "detail": {
+    "is_name": 38,
+    "keyword_entries": 7368,
+    "keyword_lookups": 55,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 11,
+    "member_dispatch": 3,
+    "nth_is_keyword": 1323,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 92
+   },
    "peeked": 1732
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Inverses.kerml": {
@@ -314,6 +899,19 @@
    "allocations": 133,
    "bytes": 249,
    "consumed": 70,
+   "detail": {
+    "is_name": 48,
+    "keyword_entries": 9319,
+    "keyword_lookups": 68,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 9,
+    "member_dispatch": 5,
+    "nth_is_keyword": 1530,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 117
+   },
    "peeked": 1992
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/MetadataTest.kerml": {
@@ -321,6 +919,19 @@
    "allocations": 390,
    "bytes": 1208,
    "consumed": 192,
+   "detail": {
+    "is_name": 226,
+    "keyword_entries": 37085,
+    "keyword_lookups": 237,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 29,
+    "member_dispatch": 14,
+    "nth_is_keyword": 4904,
+    "qualified_names": 79,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 354
+   },
    "peeked": 7234
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Redefinition.kerml": {
@@ -328,6 +939,19 @@
    "allocations": 146,
    "bytes": 325,
    "consumed": 54,
+   "detail": {
+    "is_name": 34,
+    "keyword_entries": 6424,
+    "keyword_lookups": 53,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 12,
+    "member_dispatch": 5,
+    "nth_is_keyword": 1958,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 144
+   },
    "peeked": 2508
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Scoping.kerml": {
@@ -335,6 +959,19 @@
    "allocations": 215,
    "bytes": 890,
    "consumed": 110,
+   "detail": {
+    "is_name": 68,
+    "keyword_entries": 9900,
+    "keyword_lookups": 82,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 24,
+    "member_dispatch": 16,
+    "nth_is_keyword": 3858,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 316
+   },
    "peeked": 4896
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/TextualRepresentation.kerml": {
@@ -342,6 +979,19 @@
    "allocations": 134,
    "bytes": 343,
    "consumed": 45,
+   "detail": {
+    "is_name": 28,
+    "keyword_entries": 5273,
+    "keyword_lookups": 40,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 10,
+    "member_dispatch": 5,
+    "nth_is_keyword": 1462,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 105
+   },
    "peeked": 1851
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Types.kerml": {
@@ -349,6 +999,19 @@
    "allocations": 256,
    "bytes": 964,
    "consumed": 171,
+   "detail": {
+    "is_name": 110,
+    "keyword_entries": 23757,
+    "keyword_lookups": 158,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 23,
+    "member_dispatch": 21,
+    "nth_is_keyword": 4681,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 397
+   },
    "peeked": 5966
   },
   "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/ExtendedOccurrences.kerml": {
@@ -356,6 +1019,19 @@
    "allocations": 276,
    "bytes": 2023,
    "consumed": 100,
+   "detail": {
+    "is_name": 67,
+    "keyword_entries": 9310,
+    "keyword_lookups": 72,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 19,
+    "member_dispatch": 10,
+    "nth_is_keyword": 12736,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 1226
+   },
    "peeked": 14865
   },
   "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/Moments.kerml": {
@@ -363,6 +1039,19 @@
    "allocations": 275,
    "bytes": 1544,
    "consumed": 131,
+   "detail": {
+    "is_name": 68,
+    "keyword_entries": 13003,
+    "keyword_lookups": 98,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 19,
+    "member_dispatch": 6,
+    "nth_is_keyword": 2739,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 188
+   },
    "peeked": 3830
   },
   "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/TimeVaryingFeaturesEnhanced.kerml": {
@@ -370,6 +1059,19 @@
    "allocations": 442,
    "bytes": 6820,
    "consumed": 257,
+   "detail": {
+    "is_name": 132,
+    "keyword_entries": 24016,
+    "keyword_lookups": 166,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 37,
+    "member_dispatch": 5,
+    "nth_is_keyword": 5275,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 328
+   },
    "peeked": 7404
   },
   "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/TimeVaryingSteps.kerml": {
@@ -377,6 +1079,19 @@
    "allocations": 365,
    "bytes": 2305,
    "consumed": 195,
+   "detail": {
+    "is_name": 126,
+    "keyword_entries": 23245,
+    "keyword_lookups": 184,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 29,
+    "member_dispatch": 11,
+    "nth_is_keyword": 20090,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 1891
+   },
    "peeked": 23431
   },
   "vendor/corpus/kerml/src/examples/Variable Feature Examples/TimeVaryingCarDriver.kerml": {
@@ -384,6 +1099,19 @@
    "allocations": 581,
    "bytes": 4313,
    "consumed": 518,
+   "detail": {
+    "is_name": 270,
+    "keyword_entries": 53408,
+    "keyword_lookups": 387,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 55,
+    "member_dispatch": 7,
+    "nth_is_keyword": 8494,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 491
+   },
    "peeked": 12022
   },
   "vendor/corpus/kerml/src/examples/Variable Feature Examples/TimeVaryingFeatures.kerml": {
@@ -391,6 +1119,19 @@
    "allocations": 338,
    "bytes": 2637,
    "consumed": 289,
+   "detail": {
+    "is_name": 180,
+    "keyword_entries": 30021,
+    "keyword_lookups": 221,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 34,
+    "member_dispatch": 3,
+    "nth_is_keyword": 5415,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 312
+   },
    "peeked": 7611
   },
   "vendor/corpus/kerml/src/examples/Vehicle Example/VehicleDefinitions.kerml": {
@@ -398,6 +1139,19 @@
    "allocations": 206,
    "bytes": 639,
    "consumed": 86,
+   "detail": {
+    "is_name": 58,
+    "keyword_entries": 8807,
+    "keyword_lookups": 74,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 22,
+    "member_dispatch": 13,
+    "nth_is_keyword": 3518,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 263
+   },
    "peeked": 4467
   },
   "vendor/corpus/kerml/src/examples/Vehicle Example/VehicleUsages.kerml": {
@@ -405,6 +1159,19 @@
    "allocations": 681,
    "bytes": 3371,
    "consumed": 431,
+   "detail": {
+    "is_name": 375,
+    "keyword_entries": 67515,
+    "keyword_lookups": 446,
+    "keyword_member_dispatch": 0,
+    "member_decisions": 55,
+    "member_dispatch": 7,
+    "nth_is_keyword": 8254,
+    "qualified_names": 12,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 472
+   },
    "peeked": 12033
   },
   "vendor/corpus/omg/SimpleVehicleModel.sysml": {
@@ -412,6 +1179,19 @@
    "allocations": 9891,
    "bytes": 73519,
    "consumed": 6966,
+   "detail": {
+    "is_name": 24481,
+    "keyword_entries": 4127788,
+    "keyword_lookups": 25095,
+    "keyword_member_dispatch": 2153,
+    "member_decisions": 1057,
+    "member_dispatch": 877,
+    "nth_is_keyword": 1233768,
+    "qualified_names": 17764,
+    "skip_basic_usage_prefix": 70192,
+    "skip_occurrence_usage_prefix": 57320,
+    "skip_prefix_metadata": 138283
+   },
    "peeked": 1527604
   },
   "vendor/corpus/sysml/src/examples/Analysis Examples/AnalysisAnnotation.sysml": {
@@ -419,6 +1199,19 @@
    "allocations": 353,
    "bytes": 959,
    "consumed": 179,
+   "detail": {
+    "is_name": 137,
+    "keyword_entries": 23050,
+    "keyword_lookups": 143,
+    "keyword_member_dispatch": 12,
+    "member_decisions": 26,
+    "member_dispatch": 23,
+    "nth_is_keyword": 12932,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 721,
+    "skip_occurrence_usage_prefix": 581,
+    "skip_prefix_metadata": 1593
+   },
    "peeked": 16040
   },
   "vendor/corpus/sysml/src/examples/Analysis Examples/Dynamics.sysml": {
@@ -426,6 +1219,19 @@
    "allocations": 781,
    "bytes": 2339,
    "consumed": 508,
+   "detail": {
+    "is_name": 828,
+    "keyword_entries": 139579,
+    "keyword_lookups": 917,
+    "keyword_member_dispatch": 85,
+    "member_decisions": 67,
+    "member_dispatch": 60,
+    "nth_is_keyword": 66095,
+    "qualified_names": 160,
+    "skip_basic_usage_prefix": 4040,
+    "skip_occurrence_usage_prefix": 3304,
+    "skip_prefix_metadata": 7544
+   },
    "peeked": 81157
   },
   "vendor/corpus/sysml/src/examples/Analysis Examples/Turbojet Stage Analysis.sysml": {
@@ -433,6 +1239,19 @@
    "allocations": 854,
    "bytes": 4250,
    "consumed": 415,
+   "detail": {
+    "is_name": 559,
+    "keyword_entries": 66887,
+    "keyword_lookups": 483,
+    "keyword_member_dispatch": 87,
+    "member_decisions": 77,
+    "member_dispatch": 65,
+    "nth_is_keyword": 62623,
+    "qualified_names": 68,
+    "skip_basic_usage_prefix": 3741,
+    "skip_occurrence_usage_prefix": 3057,
+    "skip_prefix_metadata": 7064
+   },
    "peeked": 74821
   },
   "vendor/corpus/sysml/src/examples/Analysis Examples/Vehicle Analysis Demo.sysml": {
@@ -440,6 +1259,19 @@
    "allocations": 2019,
    "bytes": 9023,
    "consumed": 1143,
+   "detail": {
+    "is_name": 1462,
+    "keyword_entries": 232668,
+    "keyword_lookups": 1518,
+    "keyword_member_dispatch": 182,
+    "member_decisions": 178,
+    "member_dispatch": 141,
+    "nth_is_keyword": 141301,
+    "qualified_names": 236,
+    "skip_basic_usage_prefix": 8235,
+    "skip_occurrence_usage_prefix": 6751,
+    "skip_prefix_metadata": 15695
+   },
    "peeked": 171024
   },
   "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFCoreLib.sysml": {
@@ -447,6 +1279,19 @@
    "allocations": 365,
    "bytes": 1620,
    "consumed": 147,
+   "detail": {
+    "is_name": 1881,
+    "keyword_entries": 323885,
+    "keyword_lookups": 1886,
+    "keyword_member_dispatch": 22,
+    "member_decisions": 25,
+    "member_dispatch": 22,
+    "nth_is_keyword": 19157,
+    "qualified_names": 1762,
+    "skip_basic_usage_prefix": 1120,
+    "skip_occurrence_usage_prefix": 906,
+    "skip_prefix_metadata": 2029
+   },
    "peeked": 30996
   },
   "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml": {
@@ -454,6 +1299,19 @@
    "allocations": 1143,
    "bytes": 5102,
    "consumed": 584,
+   "detail": {
+    "is_name": 2250,
+    "keyword_entries": 385315,
+    "keyword_lookups": 2313,
+    "keyword_member_dispatch": 74,
+    "member_decisions": 91,
+    "member_dispatch": 77,
+    "nth_is_keyword": 63529,
+    "qualified_names": 1697,
+    "skip_basic_usage_prefix": 3450,
+    "skip_occurrence_usage_prefix": 2844,
+    "skip_prefix_metadata": 7027
+   },
    "peeked": 84284
   },
   "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFProfileLib.sysml": {
@@ -461,6 +1319,19 @@
    "allocations": 658,
    "bytes": 3442,
    "consumed": 395,
+   "detail": {
+    "is_name": 234,
+    "keyword_entries": 34139,
+    "keyword_lookups": 253,
+    "keyword_member_dispatch": 47,
+    "member_decisions": 58,
+    "member_dispatch": 55,
+    "nth_is_keyword": 30193,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 1547,
+    "skip_occurrence_usage_prefix": 1288,
+    "skip_prefix_metadata": 3422
+   },
    "peeked": 36223
   },
   "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml": {
@@ -468,6 +1339,19 @@
    "allocations": 879,
    "bytes": 4814,
    "consumed": 575,
+   "detail": {
+    "is_name": 621,
+    "keyword_entries": 117412,
+    "keyword_lookups": 784,
+    "keyword_member_dispatch": 45,
+    "member_decisions": 64,
+    "member_dispatch": 45,
+    "nth_is_keyword": 45327,
+    "qualified_names": 95,
+    "skip_basic_usage_prefix": 2404,
+    "skip_occurrence_usage_prefix": 2152,
+    "skip_prefix_metadata": 4980
+   },
    "peeked": 54626
   },
   "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_N_ary.sysml": {
@@ -475,6 +1359,19 @@
    "allocations": 227,
    "bytes": 596,
    "consumed": 113,
+   "detail": {
+    "is_name": 1824,
+    "keyword_entries": 54528,
+    "keyword_lookups": 464,
+    "keyword_member_dispatch": 1806,
+    "member_decisions": 12,
+    "member_dispatch": 12,
+    "nth_is_keyword": 925371,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 58109,
+    "skip_occurrence_usage_prefix": 46055,
+    "skip_prefix_metadata": 100129
+   },
    "peeked": 1046983
   },
   "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_OwnedEnds.sysml": {
@@ -482,6 +1379,19 @@
    "allocations": 374,
    "bytes": 1260,
    "consumed": 231,
+   "detail": {
+    "is_name": 2534,
+    "keyword_entries": 86114,
+    "keyword_lookups": 726,
+    "keyword_member_dispatch": 2464,
+    "member_decisions": 26,
+    "member_dispatch": 26,
+    "nth_is_keyword": 1266289,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 79440,
+    "skip_occurrence_usage_prefix": 62977,
+    "skip_prefix_metadata": 137033
+   },
    "peeked": 1433275
   },
   "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_UnownedEnds.sysml": {
@@ -489,6 +1399,19 @@
    "allocations": 314,
    "bytes": 879,
    "consumed": 171,
+   "detail": {
+    "is_name": 499,
+    "keyword_entries": 30809,
+    "keyword_lookups": 293,
+    "keyword_member_dispatch": 435,
+    "member_decisions": 21,
+    "member_dispatch": 21,
+    "nth_is_keyword": 218080,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 13424,
+    "skip_occurrence_usage_prefix": 10786,
+    "skip_prefix_metadata": 24056
+   },
    "peeked": 248637
   },
   "vendor/corpus/sysml/src/examples/Camera Example/Camera.sysml": {
@@ -496,6 +1419,19 @@
    "allocations": 122,
    "bytes": 238,
    "consumed": 40,
+   "detail": {
+    "is_name": 19,
+    "keyword_entries": 3957,
+    "keyword_lookups": 28,
+    "keyword_member_dispatch": 6,
+    "member_decisions": 7,
+    "member_dispatch": 6,
+    "nth_is_keyword": 2954,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 115,
+    "skip_occurrence_usage_prefix": 101,
+    "skip_prefix_metadata": 406
+   },
    "peeked": 3591
   },
   "vendor/corpus/sysml/src/examples/Camera Example/PictureTaking.sysml": {
@@ -503,6 +1439,19 @@
    "allocations": 173,
    "bytes": 261,
    "consumed": 60,
+   "detail": {
+    "is_name": 38,
+    "keyword_entries": 7337,
+    "keyword_lookups": 54,
+    "keyword_member_dispatch": 10,
+    "member_decisions": 10,
+    "member_dispatch": 10,
+    "nth_is_keyword": 4555,
+    "qualified_names": 5,
+    "skip_basic_usage_prefix": 187,
+    "skip_occurrence_usage_prefix": 156,
+    "skip_prefix_metadata": 583
+   },
    "peeked": 5590
   },
   "vendor/corpus/sysml/src/examples/Cause and Effect Examples/CauseAndEffectExample.sysml": {
@@ -510,6 +1459,19 @@
    "allocations": 419,
    "bytes": 1197,
    "consumed": 233,
+   "detail": {
+    "is_name": 35640,
+    "keyword_entries": 6061632,
+    "keyword_lookups": 35078,
+    "keyword_member_dispatch": 616,
+    "member_decisions": 34,
+    "member_dispatch": 33,
+    "nth_is_keyword": 322621,
+    "qualified_names": 34305,
+    "skip_basic_usage_prefix": 20119,
+    "skip_occurrence_usage_prefix": 16356,
+    "skip_prefix_metadata": 35676
+   },
    "peeked": 536297
   },
   "vendor/corpus/sysml/src/examples/Cause and Effect Examples/MedicalDeviceFailure.sysml": {
@@ -517,6 +1479,19 @@
    "allocations": 207,
    "bytes": 491,
    "consumed": 74,
+   "detail": {
+    "is_name": 13143,
+    "keyword_entries": 2196267,
+    "keyword_lookups": 12714,
+    "keyword_member_dispatch": 232,
+    "member_decisions": 14,
+    "member_dispatch": 13,
+    "nth_is_keyword": 122326,
+    "qualified_names": 12644,
+    "skip_basic_usage_prefix": 7635,
+    "skip_occurrence_usage_prefix": 6226,
+    "skip_prefix_metadata": 13498
+   },
    "peeked": 202519
   },
   "vendor/corpus/sysml/src/examples/Comment Examples/Comments.sysml": {
@@ -524,6 +1499,19 @@
    "allocations": 97,
    "bytes": 384,
    "consumed": 33,
+   "detail": {
+    "is_name": 13,
+    "keyword_entries": 1805,
+    "keyword_lookups": 23,
+    "keyword_member_dispatch": 2,
+    "member_decisions": 10,
+    "member_dispatch": 10,
+    "nth_is_keyword": 430,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 1,
+    "skip_occurrence_usage_prefix": 1,
+    "skip_prefix_metadata": 49
+   },
    "peeked": 587
   },
   "vendor/corpus/sysml/src/examples/Flashlight Example/Flashlight Example.sysml": {
@@ -531,6 +1519,19 @@
    "allocations": 382,
    "bytes": 1245,
    "consumed": 191,
+   "detail": {
+    "is_name": 195,
+    "keyword_entries": 37111,
+    "keyword_lookups": 240,
+    "keyword_member_dispatch": 34,
+    "member_decisions": 34,
+    "member_dispatch": 34,
+    "nth_is_keyword": 23484,
+    "qualified_names": 27,
+    "skip_basic_usage_prefix": 1253,
+    "skip_occurrence_usage_prefix": 1047,
+    "skip_prefix_metadata": 2814
+   },
    "peeked": 27943
   },
   "vendor/corpus/sysml/src/examples/Geometry Examples/CarWithEnvelopingShape.sysml": {
@@ -538,6 +1539,19 @@
    "allocations": 184,
    "bytes": 330,
    "consumed": 58,
+   "detail": {
+    "is_name": 52,
+    "keyword_entries": 6451,
+    "keyword_lookups": 42,
+    "keyword_member_dispatch": 6,
+    "member_decisions": 9,
+    "member_dispatch": 7,
+    "nth_is_keyword": 4806,
+    "qualified_names": 6,
+    "skip_basic_usage_prefix": 263,
+    "skip_occurrence_usage_prefix": 214,
+    "skip_prefix_metadata": 508
+   },
    "peeked": 5947
   },
   "vendor/corpus/sysml/src/examples/Geometry Examples/CarWithShapeAndCSG.sysml": {
@@ -545,6 +1559,19 @@
    "allocations": 812,
    "bytes": 2520,
    "consumed": 442,
+   "detail": {
+    "is_name": 501,
+    "keyword_entries": 62652,
+    "keyword_lookups": 407,
+    "keyword_member_dispatch": 39,
+    "member_decisions": 51,
+    "member_dispatch": 41,
+    "nth_is_keyword": 39508,
+    "qualified_names": 91,
+    "skip_basic_usage_prefix": 2198,
+    "skip_occurrence_usage_prefix": 1799,
+    "skip_prefix_metadata": 4114
+   },
    "peeked": 49666
   },
   "vendor/corpus/sysml/src/examples/Geometry Examples/ExternalShapeRefExample.sysml": {
@@ -552,6 +1579,19 @@
    "allocations": 278,
    "bytes": 684,
    "consumed": 107,
+   "detail": {
+    "is_name": 79,
+    "keyword_entries": 10533,
+    "keyword_lookups": 75,
+    "keyword_member_dispatch": 10,
+    "member_decisions": 16,
+    "member_dispatch": 12,
+    "nth_is_keyword": 8693,
+    "qualified_names": 6,
+    "skip_basic_usage_prefix": 461,
+    "skip_occurrence_usage_prefix": 380,
+    "skip_prefix_metadata": 950
+   },
    "peeked": 10692
   },
   "vendor/corpus/sysml/src/examples/Geometry Examples/SimpleQuadcopter.sysml": {
@@ -559,6 +1599,19 @@
    "allocations": 1986,
    "bytes": 10751,
    "consumed": 1329,
+   "detail": {
+    "is_name": 1564,
+    "keyword_entries": 177369,
+    "keyword_lookups": 1157,
+    "keyword_member_dispatch": 108,
+    "member_decisions": 130,
+    "member_dispatch": 111,
+    "nth_is_keyword": 113501,
+    "qualified_names": 336,
+    "skip_basic_usage_prefix": 6263,
+    "skip_occurrence_usage_prefix": 5139,
+    "skip_prefix_metadata": 11698
+   },
    "peeked": 145902
   },
   "vendor/corpus/sysml/src/examples/Geometry Examples/VehicleGeometryAndCoordinateFrames.sysml": {
@@ -566,6 +1619,19 @@
    "allocations": 1425,
    "bytes": 5064,
    "consumed": 786,
+   "detail": {
+    "is_name": 816,
+    "keyword_entries": 102108,
+    "keyword_lookups": 723,
+    "keyword_member_dispatch": 64,
+    "member_decisions": 79,
+    "member_dispatch": 60,
+    "nth_is_keyword": 58275,
+    "qualified_names": 165,
+    "skip_basic_usage_prefix": 3112,
+    "skip_occurrence_usage_prefix": 2571,
+    "skip_prefix_metadata": 6147
+   },
    "peeked": 75789
   },
   "vendor/corpus/sysml/src/examples/Import Tests/AliasImport.sysml": {
@@ -573,6 +1639,19 @@
    "allocations": 100,
    "bytes": 194,
    "consumed": 32,
+   "detail": {
+    "is_name": 12,
+    "keyword_entries": 2923,
+    "keyword_lookups": 22,
+    "keyword_member_dispatch": 5,
+    "member_decisions": 7,
+    "member_dispatch": 5,
+    "nth_is_keyword": 1180,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 49,
+    "skip_occurrence_usage_prefix": 42,
+    "skip_prefix_metadata": 148
+   },
    "peeked": 1465
   },
   "vendor/corpus/sysml/src/examples/Import Tests/CircularImport.sysml": {
@@ -580,6 +1659,19 @@
    "allocations": 163,
    "bytes": 372,
    "consumed": 86,
+   "detail": {
+    "is_name": 37,
+    "keyword_entries": 7786,
+    "keyword_lookups": 56,
+    "keyword_member_dispatch": 13,
+    "member_decisions": 17,
+    "member_dispatch": 13,
+    "nth_is_keyword": 5839,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 290,
+    "skip_occurrence_usage_prefix": 248,
+    "skip_prefix_metadata": 688
+   },
    "peeked": 6990
   },
   "vendor/corpus/sysml/src/examples/Import Tests/PrivateImportTest.sysml": {
@@ -587,6 +1679,19 @@
    "allocations": 166,
    "bytes": 591,
    "consumed": 70,
+   "detail": {
+    "is_name": 26,
+    "keyword_entries": 5704,
+    "keyword_lookups": 43,
+    "keyword_member_dispatch": 10,
+    "member_decisions": 14,
+    "member_dispatch": 10,
+    "nth_is_keyword": 3197,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 146,
+    "skip_occurrence_usage_prefix": 125,
+    "skip_prefix_metadata": 391
+   },
    "peeked": 3905
   },
   "vendor/corpus/sysml/src/examples/Import Tests/QualifiedNameImportTest.sysml": {
@@ -594,6 +1699,19 @@
    "allocations": 104,
    "bytes": 242,
    "consumed": 33,
+   "detail": {
+    "is_name": 12,
+    "keyword_entries": 2789,
+    "keyword_lookups": 20,
+    "keyword_member_dispatch": 6,
+    "member_decisions": 7,
+    "member_dispatch": 6,
+    "nth_is_keyword": 1198,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 49,
+    "skip_occurrence_usage_prefix": 42,
+    "skip_prefix_metadata": 152
+   },
    "peeked": 1498
   },
   "vendor/corpus/sysml/src/examples/Individuals Examples/AnalysisIndividualExample.sysml": {
@@ -601,6 +1719,19 @@
    "allocations": 829,
    "bytes": 2815,
    "consumed": 415,
+   "detail": {
+    "is_name": 331,
+    "keyword_entries": 46054,
+    "keyword_lookups": 338,
+    "keyword_member_dispatch": 48,
+    "member_decisions": 62,
+    "member_dispatch": 46,
+    "nth_is_keyword": 33094,
+    "qualified_names": 36,
+    "skip_basic_usage_prefix": 1756,
+    "skip_occurrence_usage_prefix": 1444,
+    "skip_prefix_metadata": 3710
+   },
    "peeked": 40580
   },
   "vendor/corpus/sysml/src/examples/Individuals Examples/JohnIndividualExample.sysml": {
@@ -608,6 +1739,19 @@
    "allocations": 287,
    "bytes": 1431,
    "consumed": 112,
+   "detail": {
+    "is_name": 58,
+    "keyword_entries": 9663,
+    "keyword_lookups": 74,
+    "keyword_member_dispatch": 14,
+    "member_decisions": 20,
+    "member_dispatch": 19,
+    "nth_is_keyword": 8933,
+    "qualified_names": 2,
+    "skip_basic_usage_prefix": 444,
+    "skip_occurrence_usage_prefix": 375,
+    "skip_prefix_metadata": 1026
+   },
    "peeked": 10742
   },
   "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModel.sysml": {
@@ -615,6 +1759,19 @@
    "allocations": 297,
    "bytes": 1028,
    "consumed": 138,
+   "detail": {
+    "is_name": 84,
+    "keyword_entries": 17155,
+    "keyword_lookups": 130,
+    "keyword_member_dispatch": 20,
+    "member_decisions": 25,
+    "member_dispatch": 20,
+    "nth_is_keyword": 15479,
+    "qualified_names": 3,
+    "skip_basic_usage_prefix": 815,
+    "skip_occurrence_usage_prefix": 718,
+    "skip_prefix_metadata": 1753
+   },
    "peeked": 18119
   },
   "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModelOutside.sysml": {
@@ -622,6 +1779,19 @@
    "allocations": 250,
    "bytes": 714,
    "consumed": 88,
+   "detail": {
+    "is_name": 102,
+    "keyword_entries": 16563,
+    "keyword_lookups": 110,
+    "keyword_member_dispatch": 8,
+    "member_decisions": 13,
+    "member_dispatch": 8,
+    "nth_is_keyword": 7910,
+    "qualified_names": 24,
+    "skip_basic_usage_prefix": 424,
+    "skip_occurrence_usage_prefix": 385,
+    "skip_prefix_metadata": 850
+   },
    "peeked": 9752
   },
   "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-2.sysml": {
@@ -629,6 +1799,19 @@
    "allocations": 824,
    "bytes": 3259,
    "consumed": 412,
+   "detail": {
+    "is_name": 2753,
+    "keyword_entries": 271150,
+    "keyword_lookups": 1640,
+    "keyword_member_dispatch": 2349,
+    "member_decisions": 56,
+    "member_dispatch": 45,
+    "nth_is_keyword": 1227975,
+    "qualified_names": 62,
+    "skip_basic_usage_prefix": 77844,
+    "skip_occurrence_usage_prefix": 61425,
+    "skip_prefix_metadata": 132918
+   },
    "peeked": 1377031
   },
   "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-3.sysml": {
@@ -636,6 +1819,19 @@
    "allocations": 1099,
    "bytes": 5158,
    "consumed": 787,
+   "detail": {
+    "is_name": 1167,
+    "keyword_entries": 164809,
+    "keyword_lookups": 1089,
+    "keyword_member_dispatch": 569,
+    "member_decisions": 94,
+    "member_dispatch": 79,
+    "nth_is_keyword": 321535,
+    "qualified_names": 137,
+    "skip_basic_usage_prefix": 19867,
+    "skip_occurrence_usage_prefix": 15923,
+    "skip_prefix_metadata": 35130
+   },
    "peeked": 365549
   },
   "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-2.sysml": {
@@ -643,6 +1839,19 @@
    "allocations": 871,
    "bytes": 3235,
    "consumed": 459,
+   "detail": {
+    "is_name": 2744,
+    "keyword_entries": 271858,
+    "keyword_lookups": 1652,
+    "keyword_member_dispatch": 2352,
+    "member_decisions": 58,
+    "member_dispatch": 48,
+    "nth_is_keyword": 1229232,
+    "qualified_names": 56,
+    "skip_basic_usage_prefix": 77880,
+    "skip_occurrence_usage_prefix": 61485,
+    "skip_prefix_metadata": 133105
+   },
    "peeked": 1378635
   },
   "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-3.sysml": {
@@ -650,6 +1859,19 @@
    "allocations": 1065,
    "bytes": 4724,
    "consumed": 744,
+   "detail": {
+    "is_name": 1137,
+    "keyword_entries": 162493,
+    "keyword_lookups": 1059,
+    "keyword_member_dispatch": 563,
+    "member_decisions": 87,
+    "member_dispatch": 73,
+    "nth_is_keyword": 315808,
+    "qualified_names": 137,
+    "skip_basic_usage_prefix": 19555,
+    "skip_occurrence_usage_prefix": 15665,
+    "skip_prefix_metadata": 34510
+   },
    "peeked": 358573
   },
   "vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassConstraintExample.sysml": {
@@ -657,6 +1879,19 @@
    "allocations": 558,
    "bytes": 1958,
    "consumed": 393,
+   "detail": {
+    "is_name": 455,
+    "keyword_entries": 74499,
+    "keyword_lookups": 516,
+    "keyword_member_dispatch": 75,
+    "member_decisions": 64,
+    "member_dispatch": 57,
+    "nth_is_keyword": 54555,
+    "qualified_names": 70,
+    "skip_basic_usage_prefix": 3122,
+    "skip_occurrence_usage_prefix": 2580,
+    "skip_prefix_metadata": 6240
+   },
    "peeked": 65433
   },
   "vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassRollup.sysml": {
@@ -664,6 +1899,19 @@
    "allocations": 286,
    "bytes": 605,
    "consumed": 108,
+   "detail": {
+    "is_name": 125,
+    "keyword_entries": 20753,
+    "keyword_lookups": 144,
+    "keyword_member_dispatch": 15,
+    "member_decisions": 15,
+    "member_dispatch": 13,
+    "nth_is_keyword": 11629,
+    "qualified_names": 26,
+    "skip_basic_usage_prefix": 643,
+    "skip_occurrence_usage_prefix": 535,
+    "skip_prefix_metadata": 1296
+   },
    "peeked": 14258
   },
   "vendor/corpus/sysml/src/examples/Mass Roll-up Example/Vehicles.sysml": {
@@ -671,6 +1919,19 @@
    "allocations": 291,
    "bytes": 683,
    "consumed": 113,
+   "detail": {
+    "is_name": 81,
+    "keyword_entries": 13763,
+    "keyword_lookups": 100,
+    "keyword_member_dispatch": 14,
+    "member_decisions": 17,
+    "member_dispatch": 14,
+    "nth_is_keyword": 12020,
+    "qualified_names": 6,
+    "skip_basic_usage_prefix": 657,
+    "skip_occurrence_usage_prefix": 548,
+    "skip_prefix_metadata": 1309
+   },
    "peeked": 14460
   },
   "vendor/corpus/sysml/src/examples/Metadata Examples/IssueMetadataExample.sysml": {
@@ -678,6 +1939,19 @@
    "allocations": 253,
    "bytes": 1116,
    "consumed": 83,
+   "detail": {
+    "is_name": 260,
+    "keyword_entries": 33372,
+    "keyword_lookups": 206,
+    "keyword_member_dispatch": 221,
+    "member_decisions": 13,
+    "member_dispatch": 12,
+    "nth_is_keyword": 114732,
+    "qualified_names": 1,
+    "skip_basic_usage_prefix": 7231,
+    "skip_occurrence_usage_prefix": 5718,
+    "skip_prefix_metadata": 12468
+   },
    "peeked": 128459
   },
   "vendor/corpus/sysml/src/examples/Metadata Examples/RationaleMetadataExample.sysml": {
@@ -685,6 +1959,19 @@
    "allocations": 208,
    "bytes": 833,
    "consumed": 72,
+   "detail": {
+    "is_name": 52,
+    "keyword_entries": 9409,
+    "keyword_lookups": 62,
+    "keyword_member_dispatch": 5,
+    "member_decisions": 12,
+    "member_dispatch": 6,
+    "nth_is_keyword": 4313,
+    "qualified_names": 6,
+    "skip_basic_usage_prefix": 213,
+    "skip_occurrence_usage_prefix": 181,
+    "skip_prefix_metadata": 478
+   },
    "peeked": 5434
   },
   "vendor/corpus/sysml/src/examples/Metadata Examples/RequirementMetadataExample.sysml": {
@@ -692,6 +1979,19 @@
    "allocations": 303,
    "bytes": 923,
    "consumed": 120,
+   "detail": {
+    "is_name": 173,
+    "keyword_entries": 29620,
+    "keyword_lookups": 181,
+    "keyword_member_dispatch": 7,
+    "member_decisions": 15,
+    "member_dispatch": 9,
+    "nth_is_keyword": 4626,
+    "qualified_names": 89,
+    "skip_basic_usage_prefix": 158,
+    "skip_occurrence_usage_prefix": 135,
+    "skip_prefix_metadata": 605
+   },
    "peeked": 6624
   },
   "vendor/corpus/sysml/src/examples/Metadata Examples/RiskMetadataExample.sysml": {
@@ -699,6 +1999,19 @@
    "allocations": 152,
    "bytes": 384,
    "consumed": 55,
+   "detail": {
+    "is_name": 43,
+    "keyword_entries": 7325,
+    "keyword_lookups": 45,
+    "keyword_member_dispatch": 2,
+    "member_decisions": 6,
+    "member_dispatch": 4,
+    "nth_is_keyword": 1775,
+    "qualified_names": 6,
+    "skip_basic_usage_prefix": 48,
+    "skip_occurrence_usage_prefix": 41,
+    "skip_prefix_metadata": 259
+   },
    "peeked": 2574
   },
   "vendor/corpus/sysml/src/examples/Metadata Examples/VerificationMetadataExample.sysml": {
@@ -706,6 +2019,19 @@
    "allocations": 160,
    "bytes": 368,
    "consumed": 53,
+   "detail": {
+    "is_name": 39,
+    "keyword_entries": 7055,
+    "keyword_lookups": 45,
+    "keyword_member_dispatch": 5,
+    "member_decisions": 9,
+    "member_dispatch": 6,
+    "nth_is_keyword": 1762,
+    "qualified_names": 6,
+    "skip_basic_usage_prefix": 36,
+    "skip_occurrence_usage_prefix": 33,
+    "skip_prefix_metadata": 244
+   },
    "peeked": 2485
   },
   "vendor/corpus/sysml/src/examples/Packet Example/PacketUsage.sysml": {
@@ -713,6 +2039,19 @@
    "allocations": 151,
    "bytes": 366,
    "consumed": 48,
+   "detail": {
+    "is_name": 27,
+    "keyword_entries": 3151,
+    "keyword_lookups": 31,
+    "keyword_member_dispatch": 7,
+    "member_decisions": 9,
+    "member_dispatch": 7,
+    "nth_is_keyword": 5507,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 300,
+    "skip_occurrence_usage_prefix": 252,
+    "skip_prefix_metadata": 610
+   },
    "peeked": 6504
   },
   "vendor/corpus/sysml/src/examples/Packet Example/Packets.sysml": {
@@ -720,6 +2059,19 @@
    "allocations": 258,
    "bytes": 996,
    "consumed": 113,
+   "detail": {
+    "is_name": 76,
+    "keyword_entries": 5396,
+    "keyword_lookups": 80,
+    "keyword_member_dispatch": 19,
+    "member_decisions": 21,
+    "member_dispatch": 19,
+    "nth_is_keyword": 15430,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 834,
+    "skip_occurrence_usage_prefix": 690,
+    "skip_prefix_metadata": 1726
+   },
    "peeked": 18213
   },
   "vendor/corpus/sysml/src/examples/Requirements Examples/HSUVRequirements.sysml": {
@@ -727,6 +2079,19 @@
    "allocations": 211,
    "bytes": 1106,
    "consumed": 100,
+   "detail": {
+    "is_name": 46,
+    "keyword_entries": 8893,
+    "keyword_lookups": 60,
+    "keyword_member_dispatch": 15,
+    "member_decisions": 22,
+    "member_dispatch": 15,
+    "nth_is_keyword": 9210,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 392,
+    "skip_occurrence_usage_prefix": 350,
+    "skip_prefix_metadata": 1114
+   },
    "peeked": 11013
   },
   "vendor/corpus/sysml/src/examples/Requirements Examples/RequirementDerivationExample.sysml": {
@@ -734,6 +2099,19 @@
    "allocations": 324,
    "bytes": 772,
    "consumed": 136,
+   "detail": {
+    "is_name": 13777,
+    "keyword_entries": 2346572,
+    "keyword_lookups": 13594,
+    "keyword_member_dispatch": 890,
+    "member_decisions": 24,
+    "member_dispatch": 23,
+    "nth_is_keyword": 461888,
+    "qualified_names": 12601,
+    "skip_basic_usage_prefix": 29229,
+    "skip_occurrence_usage_prefix": 23234,
+    "skip_prefix_metadata": 50331
+   },
    "peeked": 579470
   },
   "vendor/corpus/sysml/src/examples/Requirements Examples/VehicleRequirementDerivation.sysml": {
@@ -741,6 +2119,19 @@
    "allocations": 295,
    "bytes": 855,
    "consumed": 138,
+   "detail": {
+    "is_name": 13132,
+    "keyword_entries": 2193391,
+    "keyword_lookups": 12704,
+    "keyword_member_dispatch": 236,
+    "member_decisions": 23,
+    "member_dispatch": 16,
+    "nth_is_keyword": 124768,
+    "qualified_names": 12577,
+    "skip_basic_usage_prefix": 7737,
+    "skip_occurrence_usage_prefix": 6297,
+    "skip_prefix_metadata": 13740
+   },
    "peeked": 205553
   },
   "vendor/corpus/sysml/src/examples/Room Model/RoomModel.sysml": {
@@ -748,6 +2139,19 @@
    "allocations": 483,
    "bytes": 2846,
    "consumed": 274,
+   "detail": {
+    "is_name": 194,
+    "keyword_entries": 38798,
+    "keyword_lookups": 262,
+    "keyword_member_dispatch": 35,
+    "member_decisions": 41,
+    "member_dispatch": 35,
+    "nth_is_keyword": 18729,
+    "qualified_names": 42,
+    "skip_basic_usage_prefix": 989,
+    "skip_occurrence_usage_prefix": 843,
+    "skip_prefix_metadata": 2303
+   },
    "peeked": 22553
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml": {
@@ -755,6 +2159,19 @@
    "allocations": 492,
    "bytes": 809,
    "consumed": 195,
+   "detail": {
+    "is_name": 207,
+    "keyword_entries": 34406,
+    "keyword_lookups": 261,
+    "keyword_member_dispatch": 23,
+    "member_decisions": 35,
+    "member_dispatch": 23,
+    "nth_is_keyword": 16959,
+    "qualified_names": 43,
+    "skip_basic_usage_prefix": 827,
+    "skip_occurrence_usage_prefix": 706,
+    "skip_prefix_metadata": 1870
+   },
    "peeked": 20849
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/AliasTest.sysml": {
@@ -762,6 +2179,19 @@
    "allocations": 183,
    "bytes": 372,
    "consumed": 71,
+   "detail": {
+    "is_name": 48,
+    "keyword_entries": 9072,
+    "keyword_lookups": 67,
+    "keyword_member_dispatch": 10,
+    "member_decisions": 13,
+    "member_dispatch": 10,
+    "nth_is_keyword": 7046,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 367,
+    "skip_occurrence_usage_prefix": 317,
+    "skip_prefix_metadata": 815
+   },
    "peeked": 8322
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/AllocationTest.sysml": {
@@ -769,6 +2199,19 @@
    "allocations": 264,
    "bytes": 628,
    "consumed": 114,
+   "detail": {
+    "is_name": 511,
+    "keyword_entries": 63517,
+    "keyword_lookups": 392,
+    "keyword_member_dispatch": 451,
+    "member_decisions": 19,
+    "member_dispatch": 19,
+    "nth_is_keyword": 236649,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 14940,
+    "skip_occurrence_usage_prefix": 11820,
+    "skip_prefix_metadata": 25750
+   },
    "peeked": 264527
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/AnalysisTest.sysml": {
@@ -776,6 +2219,19 @@
    "allocations": 225,
    "bytes": 488,
    "consumed": 85,
+   "detail": {
+    "is_name": 63,
+    "keyword_entries": 11476,
+    "keyword_lookups": 81,
+    "keyword_member_dispatch": 12,
+    "member_decisions": 20,
+    "member_dispatch": 12,
+    "nth_is_keyword": 6891,
+    "qualified_names": 8,
+    "skip_basic_usage_prefix": 327,
+    "skip_occurrence_usage_prefix": 276,
+    "skip_prefix_metadata": 729
+   },
    "peeked": 8329
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml": {
@@ -783,6 +2239,19 @@
    "allocations": 392,
    "bytes": 873,
    "consumed": 178,
+   "detail": {
+    "is_name": 213,
+    "keyword_entries": 36173,
+    "keyword_lookups": 243,
+    "keyword_member_dispatch": 23,
+    "member_decisions": 26,
+    "member_dispatch": 20,
+    "nth_is_keyword": 11294,
+    "qualified_names": 62,
+    "skip_basic_usage_prefix": 464,
+    "skip_occurrence_usage_prefix": 390,
+    "skip_prefix_metadata": 1338
+   },
    "peeked": 14627
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/CalculationTest.sysml": {
@@ -790,6 +2259,19 @@
    "allocations": 341,
    "bytes": 659,
    "consumed": 147,
+   "detail": {
+    "is_name": 155,
+    "keyword_entries": 25934,
+    "keyword_lookups": 174,
+    "keyword_member_dispatch": 17,
+    "member_decisions": 19,
+    "member_dispatch": 15,
+    "nth_is_keyword": 12933,
+    "qualified_names": 30,
+    "skip_basic_usage_prefix": 719,
+    "skip_occurrence_usage_prefix": 596,
+    "skip_prefix_metadata": 1426
+   },
    "peeked": 16022
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml": {
@@ -797,6 +2279,19 @@
    "allocations": 137,
    "bytes": 751,
    "consumed": 49,
+   "detail": {
+    "is_name": 13,
+    "keyword_entries": 2466,
+    "keyword_lookups": 29,
+    "keyword_member_dispatch": 3,
+    "member_decisions": 18,
+    "member_dispatch": 11,
+    "nth_is_keyword": 724,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 2,
+    "skip_occurrence_usage_prefix": 2,
+    "skip_prefix_metadata": 100
+   },
    "peeked": 984
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ConjugationTest.sysml": {
@@ -804,6 +2299,19 @@
    "allocations": 223,
    "bytes": 434,
    "consumed": 132,
+   "detail": {
+    "is_name": 623,
+    "keyword_entries": 74242,
+    "keyword_lookups": 550,
+    "keyword_member_dispatch": 572,
+    "member_decisions": 21,
+    "member_dispatch": 21,
+    "nth_is_keyword": 288437,
+    "qualified_names": 1,
+    "skip_basic_usage_prefix": 17966,
+    "skip_occurrence_usage_prefix": 14614,
+    "skip_prefix_metadata": 31823
+   },
    "peeked": 326256
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml": {
@@ -811,6 +2319,19 @@
    "allocations": 454,
    "bytes": 915,
    "consumed": 236,
+   "detail": {
+    "is_name": 2109,
+    "keyword_entries": 237044,
+    "keyword_lookups": 1458,
+    "keyword_member_dispatch": 1952,
+    "member_decisions": 46,
+    "member_dispatch": 46,
+    "nth_is_keyword": 1018904,
+    "qualified_names": 7,
+    "skip_basic_usage_prefix": 64539,
+    "skip_occurrence_usage_prefix": 51052,
+    "skip_prefix_metadata": 110654
+   },
    "peeked": 1140476
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ConstraintTest.sysml": {
@@ -818,6 +2339,19 @@
    "allocations": 638,
    "bytes": 2477,
    "consumed": 414,
+   "detail": {
+    "is_name": 571,
+    "keyword_entries": 92429,
+    "keyword_lookups": 622,
+    "keyword_member_dispatch": 78,
+    "member_decisions": 61,
+    "member_dispatch": 53,
+    "nth_is_keyword": 57796,
+    "qualified_names": 92,
+    "skip_basic_usage_prefix": 3272,
+    "skip_occurrence_usage_prefix": 2714,
+    "skip_prefix_metadata": 6452
+   },
    "peeked": 69481
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml": {
@@ -825,6 +2359,19 @@
    "allocations": 231,
    "bytes": 329,
    "consumed": 94,
+   "detail": {
+    "is_name": 117,
+    "keyword_entries": 21962,
+    "keyword_lookups": 145,
+    "keyword_member_dispatch": 16,
+    "member_decisions": 17,
+    "member_dispatch": 16,
+    "nth_is_keyword": 11741,
+    "qualified_names": 25,
+    "skip_basic_usage_prefix": 626,
+    "skip_occurrence_usage_prefix": 518,
+    "skip_prefix_metadata": 1376
+   },
    "peeked": 13874
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml": {
@@ -832,6 +2379,19 @@
    "allocations": 209,
    "bytes": 312,
    "consumed": 76,
+   "detail": {
+    "is_name": 66,
+    "keyword_entries": 11238,
+    "keyword_lookups": 85,
+    "keyword_member_dispatch": 6,
+    "member_decisions": 9,
+    "member_dispatch": 6,
+    "nth_is_keyword": 3561,
+    "qualified_names": 12,
+    "skip_basic_usage_prefix": 126,
+    "skip_occurrence_usage_prefix": 108,
+    "skip_prefix_metadata": 388
+   },
    "peeked": 4924
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/DefaultValueTest.sysml": {
@@ -839,6 +2399,19 @@
    "allocations": 157,
    "bytes": 218,
    "consumed": 54,
+   "detail": {
+    "is_name": 36,
+    "keyword_entries": 4737,
+    "keyword_lookups": 43,
+    "keyword_member_dispatch": 9,
+    "member_decisions": 9,
+    "member_dispatch": 9,
+    "nth_is_keyword": 5990,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 306,
+    "skip_occurrence_usage_prefix": 256,
+    "skip_prefix_metadata": 688
+   },
    "peeked": 7277
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/DependencyTest.sysml": {
@@ -846,6 +2419,19 @@
    "allocations": 125,
    "bytes": 344,
    "consumed": 52,
+   "detail": {
+    "is_name": 27,
+    "keyword_entries": 3851,
+    "keyword_lookups": 37,
+    "keyword_member_dispatch": 11,
+    "member_decisions": 12,
+    "member_dispatch": 11,
+    "nth_is_keyword": 3189,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 159,
+    "skip_occurrence_usage_prefix": 132,
+    "skip_prefix_metadata": 353
+   },
    "peeked": 3832
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/EnumerationTest.sysml": {
@@ -853,6 +2439,19 @@
    "allocations": 301,
    "bytes": 1030,
    "consumed": 130,
+   "detail": {
+    "is_name": 93,
+    "keyword_entries": 10623,
+    "keyword_lookups": 86,
+    "keyword_member_dispatch": 15,
+    "member_decisions": 16,
+    "member_dispatch": 16,
+    "nth_is_keyword": 9585,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 491,
+    "skip_occurrence_usage_prefix": 395,
+    "skip_prefix_metadata": 1056
+   },
    "peeked": 11915
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/FeaturePathTest.sysml": {
@@ -860,6 +2459,19 @@
    "allocations": 313,
    "bytes": 493,
    "consumed": 142,
+   "detail": {
+    "is_name": 118,
+    "keyword_entries": 21590,
+    "keyword_lookups": 151,
+    "keyword_member_dispatch": 21,
+    "member_decisions": 21,
+    "member_dispatch": 21,
+    "nth_is_keyword": 13757,
+    "qualified_names": 15,
+    "skip_basic_usage_prefix": 693,
+    "skip_occurrence_usage_prefix": 592,
+    "skip_prefix_metadata": 1628
+   },
    "peeked": 16491
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ImportTest.sysml": {
@@ -867,6 +2479,19 @@
    "allocations": 139,
    "bytes": 381,
    "consumed": 69,
+   "detail": {
+    "is_name": 28,
+    "keyword_entries": 6089,
+    "keyword_lookups": 43,
+    "keyword_member_dispatch": 8,
+    "member_decisions": 12,
+    "member_dispatch": 8,
+    "nth_is_keyword": 1436,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 50,
+    "skip_occurrence_usage_prefix": 43,
+    "skip_prefix_metadata": 193
+   },
    "peeked": 1877
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/IndividualTest.sysml": {
@@ -874,6 +2499,19 @@
    "allocations": 279,
    "bytes": 593,
    "consumed": 130,
+   "detail": {
+    "is_name": 46,
+    "keyword_entries": 10299,
+    "keyword_lookups": 89,
+    "keyword_member_dispatch": 22,
+    "member_decisions": 22,
+    "member_dispatch": 22,
+    "nth_is_keyword": 9204,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 342,
+    "skip_occurrence_usage_prefix": 296,
+    "skip_prefix_metadata": 1238
+   },
    "peeked": 11229
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/InterfaceTest.sysml": {
@@ -881,6 +2519,19 @@
    "allocations": 214,
    "bytes": 327,
    "consumed": 86,
+   "detail": {
+    "is_name": 373,
+    "keyword_entries": 47884,
+    "keyword_lookups": 329,
+    "keyword_member_dispatch": 332,
+    "member_decisions": 16,
+    "member_dispatch": 16,
+    "nth_is_keyword": 168778,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 10557,
+    "skip_occurrence_usage_prefix": 8489,
+    "skip_prefix_metadata": 18539
+   },
    "peeked": 189981
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ItemTest.sysml": {
@@ -888,6 +2539,19 @@
    "allocations": 189,
    "bytes": 265,
    "consumed": 72,
+   "detail": {
+    "is_name": 28,
+    "keyword_entries": 6862,
+    "keyword_lookups": 55,
+    "keyword_member_dispatch": 12,
+    "member_decisions": 12,
+    "member_dispatch": 12,
+    "nth_is_keyword": 6609,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 354,
+    "skip_occurrence_usage_prefix": 300,
+    "skip_prefix_metadata": 828
+   },
    "peeked": 7854
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/MetadataTest.sysml": {
@@ -895,6 +2559,19 @@
    "allocations": 275,
    "bytes": 867,
    "consumed": 131,
+   "detail": {
+    "is_name": 391,
+    "keyword_entries": 68156,
+    "keyword_lookups": 404,
+    "keyword_member_dispatch": 12,
+    "member_decisions": 17,
+    "member_dispatch": 16,
+    "nth_is_keyword": 9188,
+    "qualified_names": 292,
+    "skip_basic_usage_prefix": 497,
+    "skip_occurrence_usage_prefix": 409,
+    "skip_prefix_metadata": 1021
+   },
    "peeked": 12648
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/MultiplicityTest.sysml": {
@@ -902,6 +2579,19 @@
    "allocations": 228,
    "bytes": 276,
    "consumed": 91,
+   "detail": {
+    "is_name": 44,
+    "keyword_entries": 7340,
+    "keyword_lookups": 58,
+    "keyword_member_dispatch": 13,
+    "member_decisions": 13,
+    "member_dispatch": 13,
+    "nth_is_keyword": 9459,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 494,
+    "skip_occurrence_usage_prefix": 418,
+    "skip_prefix_metadata": 1074
+   },
    "peeked": 11311
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/OccurrenceTest.sysml": {
@@ -909,6 +2599,19 @@
    "allocations": 239,
    "bytes": 515,
    "consumed": 101,
+   "detail": {
+    "is_name": 59,
+    "keyword_entries": 12469,
+    "keyword_lookups": 90,
+    "keyword_member_dispatch": 22,
+    "member_decisions": 22,
+    "member_dispatch": 22,
+    "nth_is_keyword": 15326,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 791,
+    "skip_occurrence_usage_prefix": 677,
+    "skip_prefix_metadata": 1836
+   },
    "peeked": 17921
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ParameterTest.sysml": {
@@ -916,6 +2619,19 @@
    "allocations": 244,
    "bytes": 340,
    "consumed": 97,
+   "detail": {
+    "is_name": 105,
+    "keyword_entries": 15239,
+    "keyword_lookups": 114,
+    "keyword_member_dispatch": 14,
+    "member_decisions": 13,
+    "member_dispatch": 12,
+    "nth_is_keyword": 10738,
+    "qualified_names": 20,
+    "skip_basic_usage_prefix": 615,
+    "skip_occurrence_usage_prefix": 504,
+    "skip_prefix_metadata": 1178
+   },
    "peeked": 13094
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/PartTest.sysml": {
@@ -923,6 +2639,19 @@
    "allocations": 500,
    "bytes": 949,
    "consumed": 238,
+   "detail": {
+    "is_name": 126,
+    "keyword_entries": 26660,
+    "keyword_lookups": 201,
+    "keyword_member_dispatch": 37,
+    "member_decisions": 39,
+    "member_dispatch": 37,
+    "nth_is_keyword": 25262,
+    "qualified_names": 9,
+    "skip_basic_usage_prefix": 1314,
+    "skip_occurrence_usage_prefix": 1123,
+    "skip_prefix_metadata": 2973
+   },
    "peeked": 29898
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/RequirementTest.sysml": {
@@ -930,6 +2659,19 @@
    "allocations": 292,
    "bytes": 609,
    "consumed": 140,
+   "detail": {
+    "is_name": 57,
+    "keyword_entries": 11424,
+    "keyword_lookups": 97,
+    "keyword_member_dispatch": 19,
+    "member_decisions": 29,
+    "member_dispatch": 21,
+    "nth_is_keyword": 9911,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 429,
+    "skip_occurrence_usage_prefix": 382,
+    "skip_prefix_metadata": 1162
+   },
    "peeked": 11971
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/RootPackageTest.sysml": {
@@ -937,6 +2679,19 @@
    "allocations": 112,
    "bytes": 137,
    "consumed": 38,
+   "detail": {
+    "is_name": 14,
+    "keyword_entries": 3255,
+    "keyword_lookups": 24,
+    "keyword_member_dispatch": 6,
+    "member_decisions": 8,
+    "member_dispatch": 6,
+    "nth_is_keyword": 2057,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 97,
+    "skip_occurrence_usage_prefix": 83,
+    "skip_prefix_metadata": 247
+   },
    "peeked": 2492
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/StateTest.sysml": {
@@ -944,6 +2699,19 @@
    "allocations": 423,
    "bytes": 840,
    "consumed": 192,
+   "detail": {
+    "is_name": 137,
+    "keyword_entries": 29496,
+    "keyword_lookups": 203,
+    "keyword_member_dispatch": 23,
+    "member_decisions": 33,
+    "member_dispatch": 23,
+    "nth_is_keyword": 9355,
+    "qualified_names": 21,
+    "skip_basic_usage_prefix": 221,
+    "skip_occurrence_usage_prefix": 200,
+    "skip_prefix_metadata": 1281
+   },
    "peeked": 12091
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/StructuredControlTest.sysml": {
@@ -951,6 +2719,19 @@
    "allocations": 286,
    "bytes": 532,
    "consumed": 138,
+   "detail": {
+    "is_name": 173,
+    "keyword_entries": 24427,
+    "keyword_lookups": 182,
+    "keyword_member_dispatch": 16,
+    "member_decisions": 18,
+    "member_dispatch": 16,
+    "nth_is_keyword": 11425,
+    "qualified_names": 46,
+    "skip_basic_usage_prefix": 555,
+    "skip_occurrence_usage_prefix": 462,
+    "skip_prefix_metadata": 1070
+   },
    "peeked": 15012
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/TextualRepresentationTest.sysml": {
@@ -958,6 +2739,19 @@
    "allocations": 142,
    "bytes": 375,
    "consumed": 48,
+   "detail": {
+    "is_name": 27,
+    "keyword_entries": 5256,
+    "keyword_lookups": 42,
+    "keyword_member_dispatch": 7,
+    "member_decisions": 10,
+    "member_dispatch": 9,
+    "nth_is_keyword": 4179,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 227,
+    "skip_occurrence_usage_prefix": 187,
+    "skip_prefix_metadata": 496
+   },
    "peeked": 4949
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/TradeStudyTest.sysml": {
@@ -965,6 +2759,19 @@
    "allocations": 213,
    "bytes": 393,
    "consumed": 74,
+   "detail": {
+    "is_name": 47,
+    "keyword_entries": 7505,
+    "keyword_lookups": 55,
+    "keyword_member_dispatch": 9,
+    "member_decisions": 13,
+    "member_dispatch": 7,
+    "nth_is_keyword": 5914,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 311,
+    "skip_occurrence_usage_prefix": 266,
+    "skip_prefix_metadata": 656
+   },
    "peeked": 7222
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/UseCaseTest.sysml": {
@@ -972,6 +2779,19 @@
    "allocations": 246,
    "bytes": 557,
    "consumed": 114,
+   "detail": {
+    "is_name": 67,
+    "keyword_entries": 13267,
+    "keyword_lookups": 101,
+    "keyword_member_dispatch": 21,
+    "member_decisions": 25,
+    "member_dispatch": 17,
+    "nth_is_keyword": 11002,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 482,
+    "skip_occurrence_usage_prefix": 429,
+    "skip_prefix_metadata": 1314
+   },
    "peeked": 13239
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/VariabilityTest.sysml": {
@@ -979,6 +2799,19 @@
    "allocations": 260,
    "bytes": 589,
    "consumed": 123,
+   "detail": {
+    "is_name": 70,
+    "keyword_entries": 14443,
+    "keyword_lookups": 114,
+    "keyword_member_dispatch": 16,
+    "member_decisions": 23,
+    "member_dispatch": 16,
+    "nth_is_keyword": 10499,
+    "qualified_names": 2,
+    "skip_basic_usage_prefix": 511,
+    "skip_occurrence_usage_prefix": 431,
+    "skip_prefix_metadata": 1188
+   },
    "peeked": 12539
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/VerificationTest.sysml": {
@@ -986,6 +2819,19 @@
    "allocations": 250,
    "bytes": 559,
    "consumed": 96,
+   "detail": {
+    "is_name": 73,
+    "keyword_entries": 14344,
+    "keyword_lookups": 91,
+    "keyword_member_dispatch": 13,
+    "member_decisions": 20,
+    "member_dispatch": 12,
+    "nth_is_keyword": 6977,
+    "qualified_names": 10,
+    "skip_basic_usage_prefix": 316,
+    "skip_occurrence_usage_prefix": 270,
+    "skip_prefix_metadata": 768
+   },
    "peeked": 8601
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ViewTest.sysml": {
@@ -993,6 +2839,19 @@
    "allocations": 289,
    "bytes": 583,
    "consumed": 135,
+   "detail": {
+    "is_name": 49,
+    "keyword_entries": 11337,
+    "keyword_lookups": 85,
+    "keyword_member_dispatch": 16,
+    "member_decisions": 28,
+    "member_dispatch": 16,
+    "nth_is_keyword": 8670,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 377,
+    "skip_occurrence_usage_prefix": 334,
+    "skip_prefix_metadata": 1022
+   },
    "peeked": 10501
   },
   "vendor/corpus/sysml/src/examples/State Space Representation Examples/CartSample.sysml": {
@@ -1000,6 +2859,19 @@
    "allocations": 479,
    "bytes": 1827,
    "consumed": 226,
+   "detail": {
+    "is_name": 221,
+    "keyword_entries": 34080,
+    "keyword_lookups": 247,
+    "keyword_member_dispatch": 39,
+    "member_decisions": 37,
+    "member_dispatch": 33,
+    "nth_is_keyword": 27083,
+    "qualified_names": 30,
+    "skip_basic_usage_prefix": 1479,
+    "skip_occurrence_usage_prefix": 1223,
+    "skip_prefix_metadata": 3136
+   },
    "peeked": 32326
   },
   "vendor/corpus/sysml/src/examples/State Space Representation Examples/EVSample.sysml": {
@@ -1007,6 +2879,19 @@
    "allocations": 1939,
    "bytes": 11002,
    "consumed": 1246,
+   "detail": {
+    "is_name": 1256,
+    "keyword_entries": 180652,
+    "keyword_lookups": 1270,
+    "keyword_member_dispatch": 162,
+    "member_decisions": 192,
+    "member_dispatch": 156,
+    "nth_is_keyword": 125591,
+    "qualified_names": 175,
+    "skip_basic_usage_prefix": 6596,
+    "skip_occurrence_usage_prefix": 5485,
+    "skip_prefix_metadata": 13800
+   },
    "peeked": 152577
   },
   "vendor/corpus/sysml/src/examples/Timeslice and Snapshot Examples/TimeVaryingAttribute.sysml": {
@@ -1014,6 +2899,19 @@
    "allocations": 393,
    "bytes": 1397,
    "consumed": 152,
+   "detail": {
+    "is_name": 174,
+    "keyword_entries": 20531,
+    "keyword_lookups": 136,
+    "keyword_member_dispatch": 21,
+    "member_decisions": 23,
+    "member_dispatch": 21,
+    "nth_is_keyword": 17665,
+    "qualified_names": 22,
+    "skip_basic_usage_prefix": 970,
+    "skip_occurrence_usage_prefix": 805,
+    "skip_prefix_metadata": 1962
+   },
    "peeked": 21558
   },
   "vendor/corpus/sysml/src/examples/Variability Examples/VehicleVariabilityModel.sysml": {
@@ -1021,6 +2919,19 @@
    "allocations": 1046,
    "bytes": 4718,
    "consumed": 540,
+   "detail": {
+    "is_name": 477,
+    "keyword_entries": 80137,
+    "keyword_lookups": 545,
+    "keyword_member_dispatch": 65,
+    "member_decisions": 85,
+    "member_dispatch": 62,
+    "nth_is_keyword": 36405,
+    "qualified_names": 62,
+    "skip_basic_usage_prefix": 1662,
+    "skip_occurrence_usage_prefix": 1415,
+    "skip_prefix_metadata": 4180
+   },
    "peeked": 46240
   },
   "vendor/corpus/sysml/src/examples/Vehicle Example/SysML v2 Spec Annex A SimpleVehicleModel.sysml": {
@@ -1028,6 +2939,19 @@
    "allocations": 9901,
    "bytes": 73568,
    "consumed": 6971,
+   "detail": {
+    "is_name": 24477,
+    "keyword_entries": 4126749,
+    "keyword_lookups": 25091,
+    "keyword_member_dispatch": 2153,
+    "member_decisions": 1058,
+    "member_dispatch": 877,
+    "nth_is_keyword": 1233818,
+    "qualified_names": 17763,
+    "skip_basic_usage_prefix": 70192,
+    "skip_occurrence_usage_prefix": 57320,
+    "skip_prefix_metadata": 138283
+   },
    "peeked": 1527683
   },
   "vendor/corpus/sysml/src/examples/Vehicle Example/VehicleDefinitions.sysml": {
@@ -1035,6 +2959,19 @@
    "allocations": 302,
    "bytes": 1051,
    "consumed": 158,
+   "detail": {
+    "is_name": 305,
+    "keyword_entries": 41934,
+    "keyword_lookups": 273,
+    "keyword_member_dispatch": 232,
+    "member_decisions": 32,
+    "member_dispatch": 24,
+    "nth_is_keyword": 120011,
+    "qualified_names": 6,
+    "skip_basic_usage_prefix": 7506,
+    "skip_occurrence_usage_prefix": 5938,
+    "skip_prefix_metadata": 13152
+   },
    "peeked": 134653
   },
   "vendor/corpus/sysml/src/examples/Vehicle Example/VehicleIndividuals.sysml": {
@@ -1042,6 +2979,19 @@
    "allocations": 502,
    "bytes": 2826,
    "consumed": 238,
+   "detail": {
+    "is_name": 156,
+    "keyword_entries": 26845,
+    "keyword_lookups": 200,
+    "keyword_member_dispatch": 27,
+    "member_decisions": 43,
+    "member_dispatch": 37,
+    "nth_is_keyword": 15908,
+    "qualified_names": 10,
+    "skip_basic_usage_prefix": 773,
+    "skip_occurrence_usage_prefix": 663,
+    "skip_prefix_metadata": 1909
+   },
    "peeked": 19504
   },
   "vendor/corpus/sysml/src/examples/Vehicle Example/VehicleUsages.sysml": {
@@ -1049,6 +2999,19 @@
    "allocations": 732,
    "bytes": 2446,
    "consumed": 345,
+   "detail": {
+    "is_name": 274,
+    "keyword_entries": 50042,
+    "keyword_lookups": 336,
+    "keyword_member_dispatch": 37,
+    "member_decisions": 49,
+    "member_dispatch": 43,
+    "nth_is_keyword": 32193,
+    "qualified_names": 31,
+    "skip_basic_usage_prefix": 1709,
+    "skip_occurrence_usage_prefix": 1462,
+    "skip_prefix_metadata": 3559
+   },
    "peeked": 39006
   },
   "vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package - Updated.sysml": {
@@ -1056,6 +3019,19 @@
    "allocations": 589,
    "bytes": 1752,
    "consumed": 302,
+   "detail": {
+    "is_name": 1638,
+    "keyword_entries": 84446,
+    "keyword_lookups": 528,
+    "keyword_member_dispatch": 1487,
+    "member_decisions": 49,
+    "member_dispatch": 48,
+    "nth_is_keyword": 783510,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 49301,
+    "skip_occurrence_usage_prefix": 38914,
+    "skip_prefix_metadata": 84551
+   },
    "peeked": 882445
   },
   "vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package.sysml": {
@@ -1063,6 +3039,19 @@
    "allocations": 600,
    "bytes": 1723,
    "consumed": 318,
+   "detail": {
+    "is_name": 1653,
+    "keyword_entries": 87568,
+    "keyword_lookups": 550,
+    "keyword_member_dispatch": 1490,
+    "member_decisions": 52,
+    "member_dispatch": 51,
+    "nth_is_keyword": 786740,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 49489,
+    "skip_occurrence_usage_prefix": 39071,
+    "skip_prefix_metadata": 84892
+   },
    "peeked": 886182
   },
   "vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition - Updated.sysml": {
@@ -1070,6 +3059,19 @@
    "allocations": 445,
    "bytes": 1194,
    "consumed": 210,
+   "detail": {
+    "is_name": 96,
+    "keyword_entries": 19529,
+    "keyword_lookups": 144,
+    "keyword_member_dispatch": 32,
+    "member_decisions": 33,
+    "member_dispatch": 33,
+    "nth_is_keyword": 21598,
+    "qualified_names": 5,
+    "skip_basic_usage_prefix": 1087,
+    "skip_occurrence_usage_prefix": 928,
+    "skip_prefix_metadata": 2538
+   },
    "peeked": 25826
   },
   "vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition.sysml": {
@@ -1077,6 +3079,19 @@
    "allocations": 450,
    "bytes": 1092,
    "consumed": 225,
+   "detail": {
+    "is_name": 123,
+    "keyword_entries": 24062,
+    "keyword_lookups": 169,
+    "keyword_member_dispatch": 31,
+    "member_decisions": 32,
+    "member_dispatch": 32,
+    "nth_is_keyword": 21653,
+    "qualified_names": 13,
+    "skip_basic_usage_prefix": 1121,
+    "skip_occurrence_usage_prefix": 943,
+    "skip_prefix_metadata": 2491
+   },
    "peeked": 25930
   },
   "vendor/corpus/sysml/src/examples/v1 Spec Examples/D.4.7.8 Dynamics/HSUVDynamics.sysml": {
@@ -1084,6 +3099,19 @@
    "allocations": 884,
    "bytes": 2451,
    "consumed": 497,
+   "detail": {
+    "is_name": 628,
+    "keyword_entries": 88804,
+    "keyword_lookups": 695,
+    "keyword_member_dispatch": 110,
+    "member_decisions": 67,
+    "member_dispatch": 58,
+    "nth_is_keyword": 69038,
+    "qualified_names": 100,
+    "skip_basic_usage_prefix": 3691,
+    "skip_occurrence_usage_prefix": 3071,
+    "skip_prefix_metadata": 7609
+   },
    "peeked": 84300
   },
   "vendor/corpus/sysml/src/training/01. Packages/Comment Example.sysml": {
@@ -1091,6 +3119,19 @@
    "allocations": 90,
    "bytes": 566,
    "consumed": 30,
+   "detail": {
+    "is_name": 11,
+    "keyword_entries": 2052,
+    "keyword_lookups": 20,
+    "keyword_member_dispatch": 2,
+    "member_decisions": 7,
+    "member_dispatch": 4,
+    "nth_is_keyword": 321,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 1,
+    "skip_occurrence_usage_prefix": 1,
+    "skip_prefix_metadata": 48
+   },
    "peeked": 464
   },
   "vendor/corpus/sysml/src/training/01. Packages/Documentation Example.sysml": {
@@ -1098,6 +3139,19 @@
    "allocations": 79,
    "bytes": 307,
    "consumed": 29,
+   "detail": {
+    "is_name": 11,
+    "keyword_entries": 1979,
+    "keyword_lookups": 18,
+    "keyword_member_dispatch": 2,
+    "member_decisions": 6,
+    "member_dispatch": 4,
+    "nth_is_keyword": 307,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 1,
+    "skip_occurrence_usage_prefix": 1,
+    "skip_prefix_metadata": 46
+   },
    "peeked": 445
   },
   "vendor/corpus/sysml/src/training/01. Packages/Package Example.sysml": {
@@ -1105,6 +3159,19 @@
    "allocations": 85,
    "bytes": 226,
    "consumed": 34,
+   "detail": {
+    "is_name": 13,
+    "keyword_entries": 2986,
+    "keyword_lookups": 24,
+    "keyword_member_dispatch": 2,
+    "member_decisions": 6,
+    "member_dispatch": 2,
+    "nth_is_keyword": 245,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 1,
+    "skip_occurrence_usage_prefix": 1,
+    "skip_prefix_metadata": 41
+   },
    "peeked": 373
   },
   "vendor/corpus/sysml/src/training/02. Part Definitions/Part Definition Example.sysml": {
@@ -1112,6 +3179,19 @@
    "allocations": 174,
    "bytes": 361,
    "consumed": 59,
+   "detail": {
+    "is_name": 29,
+    "keyword_entries": 4630,
+    "keyword_lookups": 45,
+    "keyword_member_dispatch": 11,
+    "member_decisions": 12,
+    "member_dispatch": 11,
+    "nth_is_keyword": 6288,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 308,
+    "skip_occurrence_usage_prefix": 258,
+    "skip_prefix_metadata": 756
+   },
    "peeked": 7468
   },
   "vendor/corpus/sysml/src/training/03. Generalization/Generalization Example.sysml": {
@@ -1119,6 +3199,19 @@
    "allocations": 142,
    "bytes": 334,
    "consumed": 50,
+   "detail": {
+    "is_name": 17,
+    "keyword_entries": 4245,
+    "keyword_lookups": 34,
+    "keyword_member_dispatch": 9,
+    "member_decisions": 9,
+    "member_dispatch": 9,
+    "nth_is_keyword": 2903,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 102,
+    "skip_occurrence_usage_prefix": 88,
+    "skip_prefix_metadata": 424
+   },
    "peeked": 3552
   },
   "vendor/corpus/sysml/src/training/04. Subsetting/Subsetting Example.sysml": {
@@ -1126,6 +3219,19 @@
    "allocations": 167,
    "bytes": 342,
    "consumed": 64,
+   "detail": {
+    "is_name": 24,
+    "keyword_entries": 5446,
+    "keyword_lookups": 41,
+    "keyword_member_dispatch": 10,
+    "member_decisions": 10,
+    "member_dispatch": 10,
+    "nth_is_keyword": 4493,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 197,
+    "skip_occurrence_usage_prefix": 169,
+    "skip_prefix_metadata": 585
+   },
    "peeked": 5452
   },
   "vendor/corpus/sysml/src/training/05. Redefinition/Redefinition Example.sysml": {
@@ -1133,6 +3239,19 @@
    "allocations": 206,
    "bytes": 431,
    "consumed": 89,
+   "detail": {
+    "is_name": 32,
+    "keyword_entries": 7257,
+    "keyword_lookups": 55,
+    "keyword_member_dispatch": 14,
+    "member_decisions": 14,
+    "member_dispatch": 14,
+    "nth_is_keyword": 6676,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 295,
+    "skip_occurrence_usage_prefix": 253,
+    "skip_prefix_metadata": 857
+   },
    "peeked": 8088
   },
   "vendor/corpus/sysml/src/training/06. Enumeration Definitions/Enumeration Definitions-1.sysml": {
@@ -1140,6 +3259,19 @@
    "allocations": 147,
    "bytes": 347,
    "consumed": 49,
+   "detail": {
+    "is_name": 30,
+    "keyword_entries": 5572,
+    "keyword_lookups": 45,
+    "keyword_member_dispatch": 6,
+    "member_decisions": 7,
+    "member_dispatch": 6,
+    "nth_is_keyword": 2494,
+    "qualified_names": 2,
+    "skip_basic_usage_prefix": 107,
+    "skip_occurrence_usage_prefix": 89,
+    "skip_prefix_metadata": 309
+   },
    "peeked": 3142
   },
   "vendor/corpus/sysml/src/training/06. Enumeration Definitions/Enumeration Definitions-2.sysml": {
@@ -1147,6 +3279,19 @@
    "allocations": 286,
    "bytes": 633,
    "consumed": 120,
+   "detail": {
+    "is_name": 111,
+    "keyword_entries": 12285,
+    "keyword_lookups": 83,
+    "keyword_member_dispatch": 12,
+    "member_decisions": 14,
+    "member_dispatch": 12,
+    "nth_is_keyword": 9832,
+    "qualified_names": 6,
+    "skip_basic_usage_prefix": 539,
+    "skip_occurrence_usage_prefix": 437,
+    "skip_prefix_metadata": 1033
+   },
    "peeked": 12158
   },
   "vendor/corpus/sysml/src/training/07. Parts/Parts Example-1.sysml": {
@@ -1154,6 +3299,19 @@
    "allocations": 186,
    "bytes": 359,
    "consumed": 69,
+   "detail": {
+    "is_name": 28,
+    "keyword_entries": 6068,
+    "keyword_lookups": 46,
+    "keyword_member_dispatch": 12,
+    "member_decisions": 12,
+    "member_dispatch": 12,
+    "nth_is_keyword": 7692,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 387,
+    "skip_occurrence_usage_prefix": 331,
+    "skip_prefix_metadata": 907
+   },
    "peeked": 9147
   },
   "vendor/corpus/sysml/src/training/07. Parts/Parts Example-2.sysml": {
@@ -1161,6 +3319,19 @@
    "allocations": 204,
    "bytes": 388,
    "consumed": 74,
+   "detail": {
+    "is_name": 31,
+    "keyword_entries": 6648,
+    "keyword_lookups": 50,
+    "keyword_member_dispatch": 13,
+    "member_decisions": 13,
+    "member_dispatch": 13,
+    "nth_is_keyword": 8566,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 435,
+    "skip_occurrence_usage_prefix": 372,
+    "skip_prefix_metadata": 1006
+   },
    "peeked": 10163
   },
   "vendor/corpus/sysml/src/training/08. Items/Items Example.sysml": {
@@ -1168,6 +3339,19 @@
    "allocations": 147,
    "bytes": 224,
    "consumed": 43,
+   "detail": {
+    "is_name": 18,
+    "keyword_entries": 3435,
+    "keyword_lookups": 30,
+    "keyword_member_dispatch": 8,
+    "member_decisions": 9,
+    "member_dispatch": 8,
+    "nth_is_keyword": 4122,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 195,
+    "skip_occurrence_usage_prefix": 165,
+    "skip_prefix_metadata": 507
+   },
    "peeked": 4895
   },
   "vendor/corpus/sysml/src/training/09. Connections/Connections Example.sysml": {
@@ -1175,6 +3359,19 @@
    "allocations": 399,
    "bytes": 974,
    "consumed": 199,
+   "detail": {
+    "is_name": 465,
+    "keyword_entries": 27545,
+    "keyword_lookups": 219,
+    "keyword_member_dispatch": 411,
+    "member_decisions": 27,
+    "member_dispatch": 27,
+    "nth_is_keyword": 210617,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 12979,
+    "skip_occurrence_usage_prefix": 10388,
+    "skip_prefix_metadata": 23072
+   },
    "peeked": 239597
   },
   "vendor/corpus/sysml/src/training/10. Ports/Port Conjugation Example.sysml": {
@@ -1182,6 +3379,19 @@
    "allocations": 165,
    "bytes": 313,
    "consumed": 55,
+   "detail": {
+    "is_name": 22,
+    "keyword_entries": 4515,
+    "keyword_lookups": 39,
+    "keyword_member_dispatch": 11,
+    "member_decisions": 11,
+    "member_dispatch": 11,
+    "nth_is_keyword": 5171,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 249,
+    "skip_occurrence_usage_prefix": 212,
+    "skip_prefix_metadata": 655
+   },
    "peeked": 6171
   },
   "vendor/corpus/sysml/src/training/10. Ports/Port Example.sysml": {
@@ -1189,6 +3399,19 @@
    "allocations": 181,
    "bytes": 435,
    "consumed": 76,
+   "detail": {
+    "is_name": 33,
+    "keyword_entries": 6505,
+    "keyword_lookups": 57,
+    "keyword_member_dispatch": 15,
+    "member_decisions": 15,
+    "member_dispatch": 15,
+    "nth_is_keyword": 7766,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 394,
+    "skip_occurrence_usage_prefix": 334,
+    "skip_prefix_metadata": 962
+   },
    "peeked": 9243
   },
   "vendor/corpus/sysml/src/training/11. Interfaces/Interface Decomposition Example.sysml": {
@@ -1196,6 +3419,19 @@
    "allocations": 230,
    "bytes": 453,
    "consumed": 85,
+   "detail": {
+    "is_name": 582,
+    "keyword_entries": 21854,
+    "keyword_lookups": 176,
+    "keyword_member_dispatch": 544,
+    "member_decisions": 14,
+    "member_dispatch": 14,
+    "nth_is_keyword": 280539,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 17555,
+    "skip_occurrence_usage_prefix": 13999,
+    "skip_prefix_metadata": 30339
+   },
    "peeked": 317949
   },
   "vendor/corpus/sysml/src/training/11. Interfaces/Interface Example.sysml": {
@@ -1203,6 +3439,19 @@
    "allocations": 192,
    "bytes": 408,
    "consumed": 61,
+   "detail": {
+    "is_name": 247,
+    "keyword_entries": 30439,
+    "keyword_lookups": 186,
+    "keyword_member_dispatch": 219,
+    "member_decisions": 10,
+    "member_dispatch": 9,
+    "nth_is_keyword": 113620,
+    "qualified_names": 1,
+    "skip_basic_usage_prefix": 7178,
+    "skip_occurrence_usage_prefix": 5672,
+    "skip_prefix_metadata": 12354
+   },
    "peeked": 126999
   },
   "vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-1.sysml": {
@@ -1210,6 +3459,19 @@
    "allocations": 270,
    "bytes": 596,
    "consumed": 103,
+   "detail": {
+    "is_name": 63,
+    "keyword_entries": 11792,
+    "keyword_lookups": 91,
+    "keyword_member_dispatch": 17,
+    "member_decisions": 18,
+    "member_dispatch": 17,
+    "nth_is_keyword": 11480,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 615,
+    "skip_occurrence_usage_prefix": 522,
+    "skip_prefix_metadata": 1390
+   },
    "peeked": 13634
   },
   "vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-2.sysml": {
@@ -1217,6 +3479,19 @@
    "allocations": 257,
    "bytes": 549,
    "consumed": 93,
+   "detail": {
+    "is_name": 61,
+    "keyword_entries": 12012,
+    "keyword_lookups": 87,
+    "keyword_member_dispatch": 15,
+    "member_decisions": 16,
+    "member_dispatch": 15,
+    "nth_is_keyword": 9804,
+    "qualified_names": 8,
+    "skip_basic_usage_prefix": 521,
+    "skip_occurrence_usage_prefix": 444,
+    "skip_prefix_metadata": 1194
+   },
    "peeked": 11780
   },
   "vendor/corpus/sysml/src/training/13. Flows/Flow Definition Example.sysml": {
@@ -1224,6 +3499,19 @@
    "allocations": 226,
    "bytes": 423,
    "consumed": 71,
+   "detail": {
+    "is_name": 147,
+    "keyword_entries": 19972,
+    "keyword_lookups": 158,
+    "keyword_member_dispatch": 110,
+    "member_decisions": 11,
+    "member_dispatch": 10,
+    "nth_is_keyword": 55033,
+    "qualified_names": 7,
+    "skip_basic_usage_prefix": 3346,
+    "skip_occurrence_usage_prefix": 2794,
+    "skip_prefix_metadata": 6181
+   },
    "peeked": 63002
   },
   "vendor/corpus/sysml/src/training/13. Flows/Flow Interface Example.sysml": {
@@ -1231,6 +3519,19 @@
    "allocations": 230,
    "bytes": 537,
    "consumed": 79,
+   "detail": {
+    "is_name": 277,
+    "keyword_entries": 35665,
+    "keyword_lookups": 220,
+    "keyword_member_dispatch": 221,
+    "member_decisions": 12,
+    "member_dispatch": 11,
+    "nth_is_keyword": 114906,
+    "qualified_names": 13,
+    "skip_basic_usage_prefix": 7236,
+    "skip_occurrence_usage_prefix": 5722,
+    "skip_prefix_metadata": 12514
+   },
    "peeked": 128599
   },
   "vendor/corpus/sysml/src/training/13. Flows/Flow Usage Example.sysml": {
@@ -1238,6 +3539,19 @@
    "allocations": 178,
    "bytes": 372,
    "consumed": 62,
+   "detail": {
+    "is_name": 55,
+    "keyword_entries": 10021,
+    "keyword_lookups": 68,
+    "keyword_member_dispatch": 7,
+    "member_decisions": 8,
+    "member_dispatch": 7,
+    "nth_is_keyword": 4141,
+    "qualified_names": 14,
+    "skip_basic_usage_prefix": 201,
+    "skip_occurrence_usage_prefix": 174,
+    "skip_prefix_metadata": 496
+   },
    "peeked": 5044
   },
   "vendor/corpus/sysml/src/training/14. Action Definitions/Action Definition Example.sysml": {
@@ -1245,6 +3559,19 @@
    "allocations": 229,
    "bytes": 499,
    "consumed": 109,
+   "detail": {
+    "is_name": 108,
+    "keyword_entries": 19590,
+    "keyword_lookups": 137,
+    "keyword_member_dispatch": 22,
+    "member_decisions": 22,
+    "member_dispatch": 22,
+    "nth_is_keyword": 15113,
+    "qualified_names": 5,
+    "skip_basic_usage_prefix": 856,
+    "skip_occurrence_usage_prefix": 697,
+    "skip_prefix_metadata": 1802
+   },
    "peeked": 17697
   },
   "vendor/corpus/sysml/src/training/14. Action Definitions/Action Shorthand Example.sysml": {
@@ -1252,6 +3579,19 @@
    "allocations": 242,
    "bytes": 530,
    "consumed": 109,
+   "detail": {
+    "is_name": 88,
+    "keyword_entries": 16729,
+    "keyword_lookups": 121,
+    "keyword_member_dispatch": 19,
+    "member_decisions": 20,
+    "member_dispatch": 19,
+    "nth_is_keyword": 11549,
+    "qualified_names": 9,
+    "skip_basic_usage_prefix": 606,
+    "skip_occurrence_usage_prefix": 505,
+    "skip_prefix_metadata": 1425
+   },
    "peeked": 13823
   },
   "vendor/corpus/sysml/src/training/14. Action Definitions/Action Succession Example-1.sysml": {
@@ -1259,6 +3599,19 @@
    "allocations": 248,
    "bytes": 549,
    "consumed": 116,
+   "detail": {
+    "is_name": 112,
+    "keyword_entries": 20313,
+    "keyword_lookups": 145,
+    "keyword_member_dispatch": 23,
+    "member_decisions": 23,
+    "member_dispatch": 23,
+    "nth_is_keyword": 15372,
+    "qualified_names": 8,
+    "skip_basic_usage_prefix": 849,
+    "skip_occurrence_usage_prefix": 698,
+    "skip_prefix_metadata": 1846
+   },
    "peeked": 18092
   },
   "vendor/corpus/sysml/src/training/14. Action Definitions/Action Succession Example-2.sysml": {
@@ -1266,6 +3619,19 @@
    "allocations": 238,
    "bytes": 529,
    "consumed": 112,
+   "detail": {
+    "is_name": 100,
+    "keyword_entries": 18454,
+    "keyword_lookups": 132,
+    "keyword_member_dispatch": 22,
+    "member_decisions": 22,
+    "member_dispatch": 22,
+    "nth_is_keyword": 14556,
+    "qualified_names": 5,
+    "skip_basic_usage_prefix": 806,
+    "skip_occurrence_usage_prefix": 661,
+    "skip_prefix_metadata": 1752
+   },
    "peeked": 17144
   },
   "vendor/corpus/sysml/src/training/15. Actions/Action Decomposition.sysml": {
@@ -1273,6 +3639,19 @@
    "allocations": 256,
    "bytes": 582,
    "consumed": 120,
+   "detail": {
+    "is_name": 102,
+    "keyword_entries": 19275,
+    "keyword_lookups": 137,
+    "keyword_member_dispatch": 23,
+    "member_decisions": 23,
+    "member_dispatch": 23,
+    "nth_is_keyword": 14195,
+    "qualified_names": 9,
+    "skip_basic_usage_prefix": 754,
+    "skip_occurrence_usage_prefix": 625,
+    "skip_prefix_metadata": 1757
+   },
    "peeked": 16904
   },
   "vendor/corpus/sysml/src/training/16. Conditional Succession/Conditional Succession Example-1.sysml": {
@@ -1280,6 +3659,19 @@
    "allocations": 297,
    "bytes": 701,
    "consumed": 138,
+   "detail": {
+    "is_name": 132,
+    "keyword_entries": 24763,
+    "keyword_lookups": 170,
+    "keyword_member_dispatch": 24,
+    "member_decisions": 25,
+    "member_dispatch": 24,
+    "nth_is_keyword": 15432,
+    "qualified_names": 16,
+    "skip_basic_usage_prefix": 826,
+    "skip_occurrence_usage_prefix": 683,
+    "skip_prefix_metadata": 1880
+   },
    "peeked": 18432
   },
   "vendor/corpus/sysml/src/training/16. Conditional Succession/Conditional Succession Example-2.sysml": {
@@ -1287,6 +3679,19 @@
    "allocations": 294,
    "bytes": 689,
    "consumed": 137,
+   "detail": {
+    "is_name": 129,
+    "keyword_entries": 24348,
+    "keyword_lookups": 167,
+    "keyword_member_dispatch": 24,
+    "member_decisions": 24,
+    "member_dispatch": 24,
+    "nth_is_keyword": 15428,
+    "qualified_names": 14,
+    "skip_basic_usage_prefix": 826,
+    "skip_occurrence_usage_prefix": 683,
+    "skip_prefix_metadata": 1880
+   },
    "peeked": 18435
   },
   "vendor/corpus/sysml/src/training/17. Control/Camera.sysml": {
@@ -1294,6 +3699,19 @@
    "allocations": 251,
    "bytes": 487,
    "consumed": 91,
+   "detail": {
+    "is_name": 57,
+    "keyword_entries": 11496,
+    "keyword_lookups": 82,
+    "keyword_member_dispatch": 14,
+    "member_decisions": 15,
+    "member_dispatch": 14,
+    "nth_is_keyword": 8772,
+    "qualified_names": 8,
+    "skip_basic_usage_prefix": 453,
+    "skip_occurrence_usage_prefix": 387,
+    "skip_prefix_metadata": 1075
+   },
    "peeked": 10499
   },
   "vendor/corpus/sysml/src/training/17. Control/Control Structures Example.sysml": {
@@ -1301,6 +3719,19 @@
    "allocations": 265,
    "bytes": 599,
    "consumed": 103,
+   "detail": {
+    "is_name": 96,
+    "keyword_entries": 17028,
+    "keyword_lookups": 121,
+    "keyword_member_dispatch": 15,
+    "member_decisions": 18,
+    "member_dispatch": 15,
+    "nth_is_keyword": 9359,
+    "qualified_names": 16,
+    "skip_basic_usage_prefix": 467,
+    "skip_occurrence_usage_prefix": 388,
+    "skip_prefix_metadata": 1068
+   },
    "peeked": 11441
   },
   "vendor/corpus/sysml/src/training/17. Control/Decision Example.sysml": {
@@ -1308,6 +3739,19 @@
    "allocations": 277,
    "bytes": 687,
    "consumed": 113,
+   "detail": {
+    "is_name": 105,
+    "keyword_entries": 18877,
+    "keyword_lookups": 134,
+    "keyword_member_dispatch": 14,
+    "member_decisions": 19,
+    "member_dispatch": 14,
+    "nth_is_keyword": 9165,
+    "qualified_names": 18,
+    "skip_basic_usage_prefix": 459,
+    "skip_occurrence_usage_prefix": 383,
+    "skip_prefix_metadata": 1035
+   },
    "peeked": 11267
   },
   "vendor/corpus/sysml/src/training/17. Control/Fork Join Example.sysml": {
@@ -1315,6 +3759,19 @@
    "allocations": 303,
    "bytes": 939,
    "consumed": 138,
+   "detail": {
+    "is_name": 129,
+    "keyword_entries": 24139,
+    "keyword_lookups": 169,
+    "keyword_member_dispatch": 22,
+    "member_decisions": 24,
+    "member_dispatch": 22,
+    "nth_is_keyword": 13711,
+    "qualified_names": 18,
+    "skip_basic_usage_prefix": 715,
+    "skip_occurrence_usage_prefix": 588,
+    "skip_prefix_metadata": 1626
+   },
    "peeked": 16330
   },
   "vendor/corpus/sysml/src/training/17. Control/Merge Example.sysml": {
@@ -1322,6 +3779,19 @@
    "allocations": 324,
    "bytes": 811,
    "consumed": 163,
+   "detail": {
+    "is_name": 97,
+    "keyword_entries": 19081,
+    "keyword_lookups": 155,
+    "keyword_member_dispatch": 23,
+    "member_decisions": 29,
+    "member_dispatch": 23,
+    "nth_is_keyword": 13862,
+    "qualified_names": 19,
+    "skip_basic_usage_prefix": 646,
+    "skip_occurrence_usage_prefix": 557,
+    "skip_prefix_metadata": 1731
+   },
    "peeked": 16754
   },
   "vendor/corpus/sysml/src/training/18. Action Performance/Action Performance Example.sysml": {
@@ -1329,6 +3799,19 @@
    "allocations": 180,
    "bytes": 359,
    "consumed": 60,
+   "detail": {
+    "is_name": 25,
+    "keyword_entries": 5277,
+    "keyword_lookups": 39,
+    "keyword_member_dispatch": 10,
+    "member_decisions": 11,
+    "member_dispatch": 10,
+    "nth_is_keyword": 4258,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 165,
+    "skip_occurrence_usage_prefix": 144,
+    "skip_prefix_metadata": 583
+   },
    "peeked": 5190
   },
   "vendor/corpus/sysml/src/training/19. Terminate Actions/Terminate Actions Example-1.sysml": {
@@ -1336,6 +3819,19 @@
    "allocations": 169,
    "bytes": 505,
    "consumed": 62,
+   "detail": {
+    "is_name": 39,
+    "keyword_entries": 8012,
+    "keyword_lookups": 60,
+    "keyword_member_dispatch": 10,
+    "member_decisions": 14,
+    "member_dispatch": 10,
+    "nth_is_keyword": 3859,
+    "qualified_names": 7,
+    "skip_basic_usage_prefix": 95,
+    "skip_occurrence_usage_prefix": 89,
+    "skip_prefix_metadata": 517
+   },
    "peeked": 4811
   },
   "vendor/corpus/sysml/src/training/19. Terminate Actions/Terminate Actions Example-2.sysml": {
@@ -1343,6 +3839,19 @@
    "allocations": 146,
    "bytes": 324,
    "consumed": 40,
+   "detail": {
+    "is_name": 35,
+    "keyword_entries": 6641,
+    "keyword_lookups": 46,
+    "keyword_member_dispatch": 9,
+    "member_decisions": 9,
+    "member_dispatch": 9,
+    "nth_is_keyword": 3805,
+    "qualified_names": 6,
+    "skip_basic_usage_prefix": 154,
+    "skip_occurrence_usage_prefix": 128,
+    "skip_prefix_metadata": 481
+   },
    "peeked": 4693
   },
   "vendor/corpus/sysml/src/training/20. Assignment Actions/Assignment Example.sysml": {
@@ -1350,6 +3859,19 @@
    "allocations": 429,
    "bytes": 1166,
    "consumed": 209,
+   "detail": {
+    "is_name": 261,
+    "keyword_entries": 43898,
+    "keyword_lookups": 305,
+    "keyword_member_dispatch": 27,
+    "member_decisions": 31,
+    "member_dispatch": 27,
+    "nth_is_keyword": 25103,
+    "qualified_names": 39,
+    "skip_basic_usage_prefix": 1559,
+    "skip_occurrence_usage_prefix": 1276,
+    "skip_prefix_metadata": 2827
+   },
    "peeked": 30003
   },
   "vendor/corpus/sysml/src/training/21. Asynchronous Messaging/Messaging Example.sysml": {
@@ -1357,6 +3879,19 @@
    "allocations": 325,
    "bytes": 665,
    "consumed": 136,
+   "detail": {
+    "is_name": 93,
+    "keyword_entries": 17793,
+    "keyword_lookups": 139,
+    "keyword_member_dispatch": 21,
+    "member_decisions": 24,
+    "member_dispatch": 21,
+    "nth_is_keyword": 11187,
+    "qualified_names": 20,
+    "skip_basic_usage_prefix": 498,
+    "skip_occurrence_usage_prefix": 429,
+    "skip_prefix_metadata": 1405
+   },
    "peeked": 13748
   },
   "vendor/corpus/sysml/src/training/21. Asynchronous Messaging/Messaging with Ports.sysml": {
@@ -1364,6 +3899,19 @@
    "allocations": 363,
    "bytes": 779,
    "consumed": 152,
+   "detail": {
+    "is_name": 108,
+    "keyword_entries": 20883,
+    "keyword_lookups": 159,
+    "keyword_member_dispatch": 25,
+    "member_decisions": 28,
+    "member_dispatch": 25,
+    "nth_is_keyword": 15346,
+    "qualified_names": 22,
+    "skip_basic_usage_prefix": 740,
+    "skip_occurrence_usage_prefix": 636,
+    "skip_prefix_metadata": 1851
+   },
    "peeked": 18552
   },
   "vendor/corpus/sysml/src/training/22. Opaque Actions/Opaque Action Example.sysml": {
@@ -1371,6 +3919,19 @@
    "allocations": 112,
    "bytes": 307,
    "consumed": 32,
+   "detail": {
+    "is_name": 16,
+    "keyword_entries": 2805,
+    "keyword_lookups": 23,
+    "keyword_member_dispatch": 5,
+    "member_decisions": 6,
+    "member_dispatch": 6,
+    "nth_is_keyword": 2440,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 126,
+    "skip_occurrence_usage_prefix": 103,
+    "skip_prefix_metadata": 294
+   },
    "peeked": 2928
   },
   "vendor/corpus/sysml/src/training/23. State Definitions/State Definition Example-1.sysml": {
@@ -1378,6 +3939,19 @@
    "allocations": 185,
    "bytes": 513,
    "consumed": 62,
+   "detail": {
+    "is_name": 39,
+    "keyword_entries": 8644,
+    "keyword_lookups": 64,
+    "keyword_member_dispatch": 9,
+    "member_decisions": 12,
+    "member_dispatch": 9,
+    "nth_is_keyword": 2812,
+    "qualified_names": 5,
+    "skip_basic_usage_prefix": 67,
+    "skip_occurrence_usage_prefix": 61,
+    "skip_prefix_metadata": 392
+   },
    "peeked": 3567
   },
   "vendor/corpus/sysml/src/training/23. State Definitions/State Definition Example-2.sysml": {
@@ -1385,6 +3959,19 @@
    "allocations": 172,
    "bytes": 378,
    "consumed": 50,
+   "detail": {
+    "is_name": 30,
+    "keyword_entries": 6415,
+    "keyword_lookups": 49,
+    "keyword_member_dispatch": 9,
+    "member_decisions": 9,
+    "member_dispatch": 9,
+    "nth_is_keyword": 2713,
+    "qualified_names": 2,
+    "skip_basic_usage_prefix": 67,
+    "skip_occurrence_usage_prefix": 61,
+    "skip_prefix_metadata": 392
+   },
    "peeked": 3399
   },
   "vendor/corpus/sysml/src/training/24. States/State Actions.sysml": {
@@ -1392,6 +3979,19 @@
    "allocations": 264,
    "bytes": 700,
    "consumed": 101,
+   "detail": {
+    "is_name": 70,
+    "keyword_entries": 14142,
+    "keyword_lookups": 102,
+    "keyword_member_dispatch": 16,
+    "member_decisions": 21,
+    "member_dispatch": 16,
+    "nth_is_keyword": 7980,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 366,
+    "skip_occurrence_usage_prefix": 304,
+    "skip_prefix_metadata": 1037
+   },
    "peeked": 9688
   },
   "vendor/corpus/sysml/src/training/24. States/State Decomposition-1.sysml": {
@@ -1399,6 +3999,19 @@
    "allocations": 186,
    "bytes": 413,
    "consumed": 55,
+   "detail": {
+    "is_name": 32,
+    "keyword_entries": 6903,
+    "keyword_lookups": 52,
+    "keyword_member_dispatch": 10,
+    "member_decisions": 10,
+    "member_dispatch": 10,
+    "nth_is_keyword": 3049,
+    "qualified_names": 2,
+    "skip_basic_usage_prefix": 73,
+    "skip_occurrence_usage_prefix": 67,
+    "skip_prefix_metadata": 449
+   },
    "peeked": 3827
   },
   "vendor/corpus/sysml/src/training/24. States/State Decomposition-2.sysml": {
@@ -1406,6 +4019,19 @@
    "allocations": 209,
    "bytes": 514,
    "consumed": 65,
+   "detail": {
+    "is_name": 34,
+    "keyword_entries": 7649,
+    "keyword_lookups": 57,
+    "keyword_member_dispatch": 12,
+    "member_decisions": 13,
+    "member_dispatch": 12,
+    "nth_is_keyword": 3778,
+    "qualified_names": 2,
+    "skip_basic_usage_prefix": 85,
+    "skip_occurrence_usage_prefix": 79,
+    "skip_prefix_metadata": 565
+   },
    "peeked": 4727
   },
   "vendor/corpus/sysml/src/training/25. Transitions/Change and Time Triggers.sysml": {
@@ -1413,6 +4039,19 @@
    "allocations": 423,
    "bytes": 1064,
    "consumed": 160,
+   "detail": {
+    "is_name": 180,
+    "keyword_entries": 33190,
+    "keyword_lookups": 225,
+    "keyword_member_dispatch": 16,
+    "member_decisions": 22,
+    "member_dispatch": 16,
+    "nth_is_keyword": 9641,
+    "qualified_names": 41,
+    "skip_basic_usage_prefix": 448,
+    "skip_occurrence_usage_prefix": 373,
+    "skip_prefix_metadata": 1166
+   },
    "peeked": 12356
   },
   "vendor/corpus/sysml/src/training/25. Transitions/Local Clock Example.sysml": {
@@ -1420,6 +4059,19 @@
    "allocations": 318,
    "bytes": 586,
    "consumed": 101,
+   "detail": {
+    "is_name": 91,
+    "keyword_entries": 16815,
+    "keyword_lookups": 119,
+    "keyword_member_dispatch": 12,
+    "member_decisions": 13,
+    "member_dispatch": 12,
+    "nth_is_keyword": 5847,
+    "qualified_names": 15,
+    "skip_basic_usage_prefix": 222,
+    "skip_occurrence_usage_prefix": 193,
+    "skip_prefix_metadata": 738
+   },
    "peeked": 7540
   },
   "vendor/corpus/sysml/src/training/25. Transitions/Transition Actions.sysml": {
@@ -1427,6 +4079,19 @@
    "allocations": 339,
    "bytes": 922,
    "consumed": 127,
+   "detail": {
+    "is_name": 102,
+    "keyword_entries": 20293,
+    "keyword_lookups": 143,
+    "keyword_member_dispatch": 19,
+    "member_decisions": 24,
+    "member_dispatch": 19,
+    "nth_is_keyword": 9591,
+    "qualified_names": 12,
+    "skip_basic_usage_prefix": 440,
+    "skip_occurrence_usage_prefix": 364,
+    "skip_prefix_metadata": 1228
+   },
    "peeked": 11750
   },
   "vendor/corpus/sysml/src/training/26. State Exhibition/State Exhibition Example.sysml": {
@@ -1434,6 +4099,19 @@
    "allocations": 135,
    "bytes": 267,
    "consumed": 35,
+   "detail": {
+    "is_name": 34,
+    "keyword_entries": 6021,
+    "keyword_lookups": 39,
+    "keyword_member_dispatch": 6,
+    "member_decisions": 7,
+    "member_dispatch": 6,
+    "nth_is_keyword": 4303,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 248,
+    "skip_occurrence_usage_prefix": 206,
+    "skip_prefix_metadata": 507
+   },
    "peeked": 5130
   },
   "vendor/corpus/sysml/src/training/27. Occurrences/Event Occurrence Example.sysml": {
@@ -1441,6 +4119,19 @@
    "allocations": 211,
    "bytes": 573,
    "consumed": 80,
+   "detail": {
+    "is_name": 39,
+    "keyword_entries": 8438,
+    "keyword_lookups": 68,
+    "keyword_member_dispatch": 15,
+    "member_decisions": 17,
+    "member_dispatch": 15,
+    "nth_is_keyword": 10270,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 515,
+    "skip_occurrence_usage_prefix": 462,
+    "skip_prefix_metadata": 1210
+   },
    "peeked": 12020
   },
   "vendor/corpus/sysml/src/training/27. Occurrences/Interaction Example-1.sysml": {
@@ -1448,6 +4139,19 @@
    "allocations": 233,
    "bytes": 695,
    "consumed": 91,
+   "detail": {
+    "is_name": 72,
+    "keyword_entries": 13953,
+    "keyword_lookups": 96,
+    "keyword_member_dispatch": 11,
+    "member_decisions": 12,
+    "member_dispatch": 11,
+    "nth_is_keyword": 5408,
+    "qualified_names": 5,
+    "skip_basic_usage_prefix": 241,
+    "skip_occurrence_usage_prefix": 212,
+    "skip_prefix_metadata": 685
+   },
    "peeked": 6615
   },
   "vendor/corpus/sysml/src/training/27. Occurrences/Interaction Example-2.sysml": {
@@ -1455,6 +4159,19 @@
    "allocations": 271,
    "bytes": 800,
    "consumed": 107,
+   "detail": {
+    "is_name": 67,
+    "keyword_entries": 13044,
+    "keyword_lookups": 97,
+    "keyword_member_dispatch": 16,
+    "member_decisions": 20,
+    "member_dispatch": 16,
+    "nth_is_keyword": 12133,
+    "qualified_names": 3,
+    "skip_basic_usage_prefix": 619,
+    "skip_occurrence_usage_prefix": 557,
+    "skip_prefix_metadata": 1396
+   },
    "peeked": 14289
   },
   "vendor/corpus/sysml/src/training/27. Occurrences/Interaction Realization-1.sysml": {
@@ -1462,6 +4179,19 @@
    "allocations": 569,
    "bytes": 1827,
    "consumed": 250,
+   "detail": {
+    "is_name": 225,
+    "keyword_entries": 38179,
+    "keyword_lookups": 261,
+    "keyword_member_dispatch": 29,
+    "member_decisions": 32,
+    "member_dispatch": 29,
+    "nth_is_keyword": 19370,
+    "qualified_names": 43,
+    "skip_basic_usage_prefix": 900,
+    "skip_occurrence_usage_prefix": 796,
+    "skip_prefix_metadata": 2246
+   },
    "peeked": 24121
   },
   "vendor/corpus/sysml/src/training/27. Occurrences/Interaction Realization-2.sysml": {
@@ -1469,6 +4199,19 @@
    "allocations": 603,
    "bytes": 2046,
    "consumed": 278,
+   "detail": {
+    "is_name": 264,
+    "keyword_entries": 45482,
+    "keyword_lookups": 301,
+    "keyword_member_dispatch": 42,
+    "member_decisions": 43,
+    "member_dispatch": 42,
+    "nth_is_keyword": 35994,
+    "qualified_names": 37,
+    "skip_basic_usage_prefix": 2010,
+    "skip_occurrence_usage_prefix": 1716,
+    "skip_prefix_metadata": 4105
+   },
    "peeked": 42533
   },
   "vendor/corpus/sysml/src/training/27. Occurrences/Message Payload Example.sysml": {
@@ -1476,6 +4219,19 @@
    "allocations": 341,
    "bytes": 1141,
    "consumed": 148,
+   "detail": {
+    "is_name": 111,
+    "keyword_entries": 21935,
+    "keyword_lookups": 151,
+    "keyword_member_dispatch": 13,
+    "member_decisions": 18,
+    "member_dispatch": 13,
+    "nth_is_keyword": 9891,
+    "qualified_names": 8,
+    "skip_basic_usage_prefix": 497,
+    "skip_occurrence_usage_prefix": 442,
+    "skip_prefix_metadata": 1132
+   },
    "peeked": 11930
   },
   "vendor/corpus/sysml/src/training/27. Occurrences/Time Slice and Snapshot Example.sysml": {
@@ -1483,6 +4239,19 @@
    "allocations": 233,
    "bytes": 442,
    "consumed": 82,
+   "detail": {
+    "is_name": 54,
+    "keyword_entries": 10664,
+    "keyword_lookups": 74,
+    "keyword_member_dispatch": 13,
+    "member_decisions": 14,
+    "member_dispatch": 13,
+    "nth_is_keyword": 8273,
+    "qualified_names": 6,
+    "skip_basic_usage_prefix": 411,
+    "skip_occurrence_usage_prefix": 358,
+    "skip_prefix_metadata": 1000
+   },
    "peeked": 9931
   },
   "vendor/corpus/sysml/src/training/28. Individuals/Individuals and Roles-1.sysml": {
@@ -1490,6 +4259,19 @@
    "allocations": 195,
    "bytes": 499,
    "consumed": 71,
+   "detail": {
+    "is_name": 31,
+    "keyword_entries": 6897,
+    "keyword_lookups": 50,
+    "keyword_member_dispatch": 10,
+    "member_decisions": 12,
+    "member_dispatch": 10,
+    "nth_is_keyword": 6143,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 311,
+    "skip_occurrence_usage_prefix": 270,
+    "skip_prefix_metadata": 757
+   },
    "peeked": 7310
   },
   "vendor/corpus/sysml/src/training/28. Individuals/Individuals and Snapshots Example.sysml": {
@@ -1497,6 +4279,19 @@
    "allocations": 203,
    "bytes": 466,
    "consumed": 79,
+   "detail": {
+    "is_name": 73,
+    "keyword_entries": 5123,
+    "keyword_lookups": 36,
+    "keyword_member_dispatch": 13,
+    "member_decisions": 14,
+    "member_dispatch": 13,
+    "nth_is_keyword": 12378,
+    "qualified_names": 2,
+    "skip_basic_usage_prefix": 718,
+    "skip_occurrence_usage_prefix": 586,
+    "skip_prefix_metadata": 1319
+   },
    "peeked": 14607
   },
   "vendor/corpus/sysml/src/training/28. Individuals/Individuals and Time Slices.sysml": {
@@ -1504,6 +4299,19 @@
    "allocations": 222,
    "bytes": 473,
    "consumed": 78,
+   "detail": {
+    "is_name": 47,
+    "keyword_entries": 5635,
+    "keyword_lookups": 42,
+    "keyword_member_dispatch": 11,
+    "member_decisions": 13,
+    "member_dispatch": 11,
+    "nth_is_keyword": 8011,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 422,
+    "skip_occurrence_usage_prefix": 360,
+    "skip_prefix_metadata": 930
+   },
    "peeked": 9538
   },
   "vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 1.sysml": {
@@ -1511,6 +4319,19 @@
    "allocations": 295,
    "bytes": 709,
    "consumed": 116,
+   "detail": {
+    "is_name": 76,
+    "keyword_entries": 11357,
+    "keyword_lookups": 88,
+    "keyword_member_dispatch": 14,
+    "member_decisions": 17,
+    "member_dispatch": 14,
+    "nth_is_keyword": 11191,
+    "qualified_names": 6,
+    "skip_basic_usage_prefix": 597,
+    "skip_occurrence_usage_prefix": 503,
+    "skip_prefix_metadata": 1249
+   },
    "peeked": 13561
   },
   "vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 2.sysml": {
@@ -1518,6 +4339,19 @@
    "allocations": 289,
    "bytes": 675,
    "consumed": 112,
+   "detail": {
+    "is_name": 74,
+    "keyword_entries": 11011,
+    "keyword_lookups": 86,
+    "keyword_member_dispatch": 14,
+    "member_decisions": 17,
+    "member_dispatch": 14,
+    "nth_is_keyword": 11191,
+    "qualified_names": 6,
+    "skip_basic_usage_prefix": 597,
+    "skip_occurrence_usage_prefix": 503,
+    "skip_prefix_metadata": 1249
+   },
    "peeked": 13547
   },
   "vendor/corpus/sysml/src/training/29. Expressions/MassRollup1.sysml": {
@@ -1525,6 +4359,19 @@
    "allocations": 203,
    "bytes": 403,
    "consumed": 68,
+   "detail": {
+    "is_name": 63,
+    "keyword_entries": 9885,
+    "keyword_lookups": 72,
+    "keyword_member_dispatch": 9,
+    "member_decisions": 10,
+    "member_dispatch": 9,
+    "nth_is_keyword": 6689,
+    "qualified_names": 12,
+    "skip_basic_usage_prefix": 353,
+    "skip_occurrence_usage_prefix": 296,
+    "skip_prefix_metadata": 750
+   },
    "peeked": 8171
   },
   "vendor/corpus/sysml/src/training/29. Expressions/MassRollup2.sysml": {
@@ -1532,6 +4379,19 @@
    "allocations": 274,
    "bytes": 540,
    "consumed": 97,
+   "detail": {
+    "is_name": 118,
+    "keyword_entries": 19191,
+    "keyword_lookups": 129,
+    "keyword_member_dispatch": 13,
+    "member_decisions": 13,
+    "member_dispatch": 11,
+    "nth_is_keyword": 9886,
+    "qualified_names": 26,
+    "skip_basic_usage_prefix": 543,
+    "skip_occurrence_usage_prefix": 451,
+    "skip_prefix_metadata": 1094
+   },
    "peeked": 12192
   },
   "vendor/corpus/sysml/src/training/30. Calculations/Calculation Definitions.sysml": {
@@ -1539,6 +4399,19 @@
    "allocations": 376,
    "bytes": 712,
    "consumed": 164,
+   "detail": {
+    "is_name": 263,
+    "keyword_entries": 44471,
+    "keyword_lookups": 281,
+    "keyword_member_dispatch": 37,
+    "member_decisions": 27,
+    "member_dispatch": 21,
+    "nth_is_keyword": 27747,
+    "qualified_names": 34,
+    "skip_basic_usage_prefix": 1784,
+    "skip_occurrence_usage_prefix": 1446,
+    "skip_prefix_metadata": 3090
+   },
    "peeked": 32935
   },
   "vendor/corpus/sysml/src/training/30. Calculations/Calculation Usages-1.sysml": {
@@ -1546,6 +4419,19 @@
    "allocations": 408,
    "bytes": 830,
    "consumed": 171,
+   "detail": {
+    "is_name": 271,
+    "keyword_entries": 47140,
+    "keyword_lookups": 301,
+    "keyword_member_dispatch": 33,
+    "member_decisions": 30,
+    "member_dispatch": 24,
+    "nth_is_keyword": 27675,
+    "qualified_names": 42,
+    "skip_basic_usage_prefix": 1719,
+    "skip_occurrence_usage_prefix": 1400,
+    "skip_prefix_metadata": 3115
+   },
    "peeked": 32896
   },
   "vendor/corpus/sysml/src/training/30. Calculations/Calculation Usages-2.sysml": {
@@ -1553,6 +4439,19 @@
    "allocations": 357,
    "bytes": 758,
    "consumed": 142,
+   "detail": {
+    "is_name": 205,
+    "keyword_entries": 31846,
+    "keyword_lookups": 214,
+    "keyword_member_dispatch": 18,
+    "member_decisions": 19,
+    "member_dispatch": 15,
+    "nth_is_keyword": 14260,
+    "qualified_names": 52,
+    "skip_basic_usage_prefix": 799,
+    "skip_occurrence_usage_prefix": 656,
+    "skip_prefix_metadata": 1558
+   },
    "peeked": 17774
   },
   "vendor/corpus/sysml/src/training/31. Constraints/Analytical Constraints.sysml": {
@@ -1560,6 +4459,19 @@
    "allocations": 452,
    "bytes": 969,
    "consumed": 198,
+   "detail": {
+    "is_name": 364,
+    "keyword_entries": 64085,
+    "keyword_lookups": 396,
+    "keyword_member_dispatch": 47,
+    "member_decisions": 32,
+    "member_dispatch": 29,
+    "nth_is_keyword": 37174,
+    "qualified_names": 56,
+    "skip_basic_usage_prefix": 2397,
+    "skip_occurrence_usage_prefix": 1943,
+    "skip_prefix_metadata": 4235
+   },
    "peeked": 44287
   },
   "vendor/corpus/sysml/src/training/31. Constraints/Constraint Assertions-1.sysml": {
@@ -1567,6 +4479,19 @@
    "allocations": 291,
    "bytes": 653,
    "consumed": 118,
+   "detail": {
+    "is_name": 123,
+    "keyword_entries": 21002,
+    "keyword_lookups": 143,
+    "keyword_member_dispatch": 20,
+    "member_decisions": 19,
+    "member_dispatch": 15,
+    "nth_is_keyword": 12988,
+    "qualified_names": 20,
+    "skip_basic_usage_prefix": 738,
+    "skip_occurrence_usage_prefix": 608,
+    "skip_prefix_metadata": 1506
+   },
    "peeked": 15744
   },
   "vendor/corpus/sysml/src/training/31. Constraints/Constraint Assertions-2.sysml": {
@@ -1574,6 +4499,19 @@
    "allocations": 307,
    "bytes": 739,
    "consumed": 136,
+   "detail": {
+    "is_name": 143,
+    "keyword_entries": 24490,
+    "keyword_lookups": 165,
+    "keyword_member_dispatch": 25,
+    "member_decisions": 22,
+    "member_dispatch": 18,
+    "nth_is_keyword": 16783,
+    "qualified_names": 20,
+    "skip_basic_usage_prefix": 978,
+    "skip_occurrence_usage_prefix": 805,
+    "skip_prefix_metadata": 1951
+   },
    "peeked": 20158
   },
   "vendor/corpus/sysml/src/training/31. Constraints/Constraints Example-1.sysml": {
@@ -1581,6 +4519,19 @@
    "allocations": 290,
    "bytes": 643,
    "consumed": 117,
+   "detail": {
+    "is_name": 123,
+    "keyword_entries": 21015,
+    "keyword_lookups": 142,
+    "keyword_member_dispatch": 20,
+    "member_decisions": 19,
+    "member_dispatch": 15,
+    "nth_is_keyword": 13001,
+    "qualified_names": 20,
+    "skip_basic_usage_prefix": 739,
+    "skip_occurrence_usage_prefix": 609,
+    "skip_prefix_metadata": 1507
+   },
    "peeked": 15758
   },
   "vendor/corpus/sysml/src/training/31. Constraints/Constraints Example-2.sysml": {
@@ -1588,6 +4539,19 @@
    "allocations": 301,
    "bytes": 671,
    "consumed": 117,
+   "detail": {
+    "is_name": 115,
+    "keyword_entries": 18003,
+    "keyword_lookups": 134,
+    "keyword_member_dispatch": 20,
+    "member_decisions": 19,
+    "member_dispatch": 15,
+    "nth_is_keyword": 13127,
+    "qualified_names": 20,
+    "skip_basic_usage_prefix": 683,
+    "skip_occurrence_usage_prefix": 567,
+    "skip_prefix_metadata": 1449
+   },
    "peeked": 15967
   },
   "vendor/corpus/sysml/src/training/31. Constraints/Derivation Constraints.sysml": {
@@ -1595,6 +4559,19 @@
    "allocations": 334,
    "bytes": 613,
    "consumed": 111,
+   "detail": {
+    "is_name": 177,
+    "keyword_entries": 29865,
+    "keyword_lookups": 189,
+    "keyword_member_dispatch": 19,
+    "member_decisions": 16,
+    "member_dispatch": 12,
+    "nth_is_keyword": 13757,
+    "qualified_names": 36,
+    "skip_basic_usage_prefix": 821,
+    "skip_occurrence_usage_prefix": 674,
+    "skip_prefix_metadata": 1533
+   },
    "peeked": 16946
   },
   "vendor/corpus/sysml/src/training/31. Constraints/Time Constraints.sysml": {
@@ -1602,6 +4579,19 @@
    "allocations": 395,
    "bytes": 977,
    "consumed": 162,
+   "detail": {
+    "is_name": 193,
+    "keyword_entries": 33893,
+    "keyword_lookups": 227,
+    "keyword_member_dispatch": 16,
+    "member_decisions": 25,
+    "member_dispatch": 13,
+    "nth_is_keyword": 9597,
+    "qualified_names": 52,
+    "skip_basic_usage_prefix": 435,
+    "skip_occurrence_usage_prefix": 367,
+    "skip_prefix_metadata": 1093
+   },
    "peeked": 12516
   },
   "vendor/corpus/sysml/src/training/32. Requirements/Requirement Definitions.sysml": {
@@ -1609,6 +4599,19 @@
    "allocations": 326,
    "bytes": 1218,
    "consumed": 139,
+   "detail": {
+    "is_name": 108,
+    "keyword_entries": 17267,
+    "keyword_lookups": 132,
+    "keyword_member_dispatch": 16,
+    "member_decisions": 27,
+    "member_dispatch": 18,
+    "nth_is_keyword": 8352,
+    "qualified_names": 18,
+    "skip_basic_usage_prefix": 385,
+    "skip_occurrence_usage_prefix": 319,
+    "skip_prefix_metadata": 869
+   },
    "peeked": 10450
   },
   "vendor/corpus/sysml/src/training/32. Requirements/Requirement Groups.sysml": {
@@ -1616,6 +4619,19 @@
    "allocations": 243,
    "bytes": 720,
    "consumed": 84,
+   "detail": {
+    "is_name": 53,
+    "keyword_entries": 9806,
+    "keyword_lookups": 66,
+    "keyword_member_dispatch": 8,
+    "member_decisions": 18,
+    "member_dispatch": 10,
+    "nth_is_keyword": 4408,
+    "qualified_names": 8,
+    "skip_basic_usage_prefix": 169,
+    "skip_occurrence_usage_prefix": 150,
+    "skip_prefix_metadata": 517
+   },
    "peeked": 5548
   },
   "vendor/corpus/sysml/src/training/32. Requirements/Requirement Satisfaction.sysml": {
@@ -1623,6 +4639,19 @@
    "allocations": 221,
    "bytes": 568,
    "consumed": 71,
+   "detail": {
+    "is_name": 39,
+    "keyword_entries": 5703,
+    "keyword_lookups": 43,
+    "keyword_member_dispatch": 12,
+    "member_decisions": 14,
+    "member_dispatch": 12,
+    "nth_is_keyword": 7420,
+    "qualified_names": 2,
+    "skip_basic_usage_prefix": 346,
+    "skip_occurrence_usage_prefix": 300,
+    "skip_prefix_metadata": 911
+   },
    "peeked": 8831
   },
   "vendor/corpus/sysml/src/training/32. Requirements/Requirement Usages.sysml": {
@@ -1630,6 +4659,19 @@
    "allocations": 224,
    "bytes": 600,
    "consumed": 89,
+   "detail": {
+    "is_name": 87,
+    "keyword_entries": 13097,
+    "keyword_lookups": 89,
+    "keyword_member_dispatch": 7,
+    "member_decisions": 15,
+    "member_dispatch": 7,
+    "nth_is_keyword": 4872,
+    "qualified_names": 18,
+    "skip_basic_usage_prefix": 226,
+    "skip_occurrence_usage_prefix": 190,
+    "skip_prefix_metadata": 488
+   },
    "peeked": 6384
   },
   "vendor/corpus/sysml/src/training/33. Analysis/Analysis Case Definition Example.sysml": {
@@ -1637,6 +4679,19 @@
    "allocations": 696,
    "bytes": 2309,
    "consumed": 316,
+   "detail": {
+    "is_name": 375,
+    "keyword_entries": 60822,
+    "keyword_lookups": 397,
+    "keyword_member_dispatch": 30,
+    "member_decisions": 43,
+    "member_dispatch": 22,
+    "nth_is_keyword": 23078,
+    "qualified_names": 84,
+    "skip_basic_usage_prefix": 1245,
+    "skip_occurrence_usage_prefix": 1019,
+    "skip_prefix_metadata": 2471
+   },
    "peeked": 29584
   },
   "vendor/corpus/sysml/src/training/33. Analysis/Analysis Case Usage Example.sysml": {
@@ -1644,6 +4699,19 @@
    "allocations": 280,
    "bytes": 851,
    "consumed": 104,
+   "detail": {
+    "is_name": 104,
+    "keyword_entries": 16573,
+    "keyword_lookups": 116,
+    "keyword_member_dispatch": 15,
+    "member_decisions": 17,
+    "member_dispatch": 13,
+    "nth_is_keyword": 11577,
+    "qualified_names": 17,
+    "skip_basic_usage_prefix": 633,
+    "skip_occurrence_usage_prefix": 531,
+    "skip_prefix_metadata": 1301
+   },
    "peeked": 14066
   },
   "vendor/corpus/sysml/src/training/33. Analysis/Trade Study Analysis Example.sysml": {
@@ -1651,6 +4719,19 @@
    "allocations": 468,
    "bytes": 1357,
    "consumed": 245,
+   "detail": {
+    "is_name": 295,
+    "keyword_entries": 49765,
+    "keyword_lookups": 326,
+    "keyword_member_dispatch": 46,
+    "member_decisions": 43,
+    "member_dispatch": 28,
+    "nth_is_keyword": 34611,
+    "qualified_names": 32,
+    "skip_basic_usage_prefix": 2127,
+    "skip_occurrence_usage_prefix": 1746,
+    "skip_prefix_metadata": 3790
+   },
    "peeked": 40872
   },
   "vendor/corpus/sysml/src/training/34. Verification/Verification Case Definition Example.sysml": {
@@ -1658,6 +4739,19 @@
    "allocations": 381,
    "bytes": 1287,
    "consumed": 161,
+   "detail": {
+    "is_name": 193,
+    "keyword_entries": 34693,
+    "keyword_lookups": 217,
+    "keyword_member_dispatch": 19,
+    "member_decisions": 24,
+    "member_dispatch": 16,
+    "nth_is_keyword": 12349,
+    "qualified_names": 36,
+    "skip_basic_usage_prefix": 649,
+    "skip_occurrence_usage_prefix": 532,
+    "skip_prefix_metadata": 1424
+   },
    "peeked": 15461
   },
   "vendor/corpus/sysml/src/training/34. Verification/Verification Case Usage Example.sysml": {
@@ -1665,6 +4759,19 @@
    "allocations": 394,
    "bytes": 1177,
    "consumed": 156,
+   "detail": {
+    "is_name": 123,
+    "keyword_entries": 19370,
+    "keyword_lookups": 129,
+    "keyword_member_dispatch": 23,
+    "member_decisions": 26,
+    "member_dispatch": 23,
+    "nth_is_keyword": 14837,
+    "qualified_names": 10,
+    "skip_basic_usage_prefix": 723,
+    "skip_occurrence_usage_prefix": 616,
+    "skip_prefix_metadata": 1847
+   },
    "peeked": 18021
   },
   "vendor/corpus/sysml/src/training/35. Use Cases/Use Case Definition Example.sysml": {
@@ -1672,6 +4779,19 @@
    "allocations": 194,
    "bytes": 679,
    "consumed": 108,
+   "detail": {
+    "is_name": 30,
+    "keyword_entries": 6077,
+    "keyword_lookups": 53,
+    "keyword_member_dispatch": 8,
+    "member_decisions": 20,
+    "member_dispatch": 9,
+    "nth_is_keyword": 1801,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 7,
+    "skip_occurrence_usage_prefix": 7,
+    "skip_prefix_metadata": 219
+   },
    "peeked": 2582
   },
   "vendor/corpus/sysml/src/training/35. Use Cases/Use Case Usage Example.sysml": {
@@ -1679,6 +4799,19 @@
    "allocations": 284,
    "bytes": 1062,
    "consumed": 142,
+   "detail": {
+    "is_name": 123,
+    "keyword_entries": 15056,
+    "keyword_lookups": 110,
+    "keyword_member_dispatch": 9,
+    "member_decisions": 25,
+    "member_dispatch": 5,
+    "nth_is_keyword": 7118,
+    "qualified_names": 19,
+    "skip_basic_usage_prefix": 315,
+    "skip_occurrence_usage_prefix": 285,
+    "skip_prefix_metadata": 689
+   },
    "peeked": 9026
   },
   "vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml": {
@@ -1686,6 +4819,19 @@
    "allocations": 145,
    "bytes": 390,
    "consumed": 54,
+   "detail": {
+    "is_name": 65,
+    "keyword_entries": 9986,
+    "keyword_lookups": 65,
+    "keyword_member_dispatch": 7,
+    "member_decisions": 8,
+    "member_dispatch": 7,
+    "nth_is_keyword": 5409,
+    "qualified_names": 8,
+    "skip_basic_usage_prefix": 288,
+    "skip_occurrence_usage_prefix": 246,
+    "skip_prefix_metadata": 598
+   },
    "peeked": 6627
   },
   "vendor/corpus/sysml/src/training/36. Variability/Variation Definitions.sysml": {
@@ -1693,6 +4839,19 @@
    "allocations": 285,
    "bytes": 717,
    "consumed": 118,
+   "detail": {
+    "is_name": 62,
+    "keyword_entries": 10570,
+    "keyword_lookups": 84,
+    "keyword_member_dispatch": 12,
+    "member_decisions": 18,
+    "member_dispatch": 12,
+    "nth_is_keyword": 7243,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 353,
+    "skip_occurrence_usage_prefix": 295,
+    "skip_prefix_metadata": 831
+   },
    "peeked": 8954
   },
   "vendor/corpus/sysml/src/training/36. Variability/Variation Usages.sysml": {
@@ -1700,6 +4859,19 @@
    "allocations": 267,
    "bytes": 602,
    "consumed": 86,
+   "detail": {
+    "is_name": 96,
+    "keyword_entries": 15027,
+    "keyword_lookups": 99,
+    "keyword_member_dispatch": 10,
+    "member_decisions": 13,
+    "member_dispatch": 9,
+    "nth_is_keyword": 6234,
+    "qualified_names": 16,
+    "skip_basic_usage_prefix": 304,
+    "skip_occurrence_usage_prefix": 260,
+    "skip_prefix_metadata": 712
+   },
    "peeked": 8058
   },
   "vendor/corpus/sysml/src/training/37. Dependencies/Dependency Example.sysml": {
@@ -1707,6 +4879,19 @@
    "allocations": 125,
    "bytes": 488,
    "consumed": 53,
+   "detail": {
+    "is_name": 26,
+    "keyword_entries": 3214,
+    "keyword_lookups": 27,
+    "keyword_member_dispatch": 9,
+    "member_decisions": 9,
+    "member_dispatch": 9,
+    "nth_is_keyword": 3211,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 148,
+    "skip_occurrence_usage_prefix": 127,
+    "skip_prefix_metadata": 391
+   },
    "peeked": 3855
   },
   "vendor/corpus/sysml/src/training/38. Allocation/Allocation Definition Example.sysml": {
@@ -1714,6 +4899,19 @@
    "allocations": 268,
    "bytes": 827,
    "consumed": 107,
+   "detail": {
+    "is_name": 487,
+    "keyword_entries": 60421,
+    "keyword_lookups": 372,
+    "keyword_member_dispatch": 452,
+    "member_decisions": 21,
+    "member_dispatch": 20,
+    "nth_is_keyword": 231976,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 14609,
+    "skip_occurrence_usage_prefix": 11533,
+    "skip_prefix_metadata": 25303
+   },
    "peeked": 259268
   },
   "vendor/corpus/sysml/src/training/38. Allocation/Allocation Usage Example.sysml": {
@@ -1721,6 +4919,19 @@
    "allocations": 234,
    "bytes": 683,
    "consumed": 94,
+   "detail": {
+    "is_name": 49,
+    "keyword_entries": 9686,
+    "keyword_lookups": 73,
+    "keyword_member_dispatch": 17,
+    "member_decisions": 18,
+    "member_dispatch": 17,
+    "nth_is_keyword": 6553,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 245,
+    "skip_occurrence_usage_prefix": 218,
+    "skip_prefix_metadata": 874
+   },
    "peeked": 8011
   },
   "vendor/corpus/sysml/src/training/39. Metadata/Metadata Example-1.sysml": {
@@ -1728,6 +4939,19 @@
    "allocations": 208,
    "bytes": 612,
    "consumed": 102,
+   "detail": {
+    "is_name": 70,
+    "keyword_entries": 11432,
+    "keyword_lookups": 78,
+    "keyword_member_dispatch": 15,
+    "member_decisions": 17,
+    "member_dispatch": 17,
+    "nth_is_keyword": 11592,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 626,
+    "skip_occurrence_usage_prefix": 528,
+    "skip_prefix_metadata": 1294
+   },
    "peeked": 13563
   },
   "vendor/corpus/sysml/src/training/39. Metadata/Metadata Example-2.sysml": {
@@ -1735,6 +4959,19 @@
    "allocations": 252,
    "bytes": 659,
    "consumed": 122,
+   "detail": {
+    "is_name": 96,
+    "keyword_entries": 15848,
+    "keyword_lookups": 97,
+    "keyword_member_dispatch": 8,
+    "member_decisions": 16,
+    "member_dispatch": 15,
+    "nth_is_keyword": 8127,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 436,
+    "skip_occurrence_usage_prefix": 352,
+    "skip_prefix_metadata": 1018
+   },
    "peeked": 10151
   },
   "vendor/corpus/sysml/src/training/40. Filtering/Filtering Example-1.sysml": {
@@ -1742,6 +4979,19 @@
    "allocations": 306,
    "bytes": 824,
    "consumed": 148,
+   "detail": {
+    "is_name": 71,
+    "keyword_entries": 12251,
+    "keyword_lookups": 92,
+    "keyword_member_dispatch": 18,
+    "member_decisions": 29,
+    "member_dispatch": 22,
+    "nth_is_keyword": 13436,
+    "qualified_names": 1,
+    "skip_basic_usage_prefix": 677,
+    "skip_occurrence_usage_prefix": 577,
+    "skip_prefix_metadata": 1542
+   },
    "peeked": 16234
   },
   "vendor/corpus/sysml/src/training/40. Filtering/Filtering Example-2.sysml": {
@@ -1749,6 +4999,19 @@
    "allocations": 312,
    "bytes": 806,
    "consumed": 148,
+   "detail": {
+    "is_name": 71,
+    "keyword_entries": 12115,
+    "keyword_lookups": 90,
+    "keyword_member_dispatch": 18,
+    "member_decisions": 27,
+    "member_dispatch": 22,
+    "nth_is_keyword": 13406,
+    "qualified_names": 1,
+    "skip_basic_usage_prefix": 677,
+    "skip_occurrence_usage_prefix": 577,
+    "skip_prefix_metadata": 1542
+   },
    "peeked": 16208
   },
   "vendor/corpus/sysml/src/training/41. Language Extension/Model Library Example.sysml": {
@@ -1756,6 +5019,19 @@
    "allocations": 284,
    "bytes": 867,
    "consumed": 146,
+   "detail": {
+    "is_name": 913,
+    "keyword_entries": 59469,
+    "keyword_lookups": 377,
+    "keyword_member_dispatch": 870,
+    "member_decisions": 20,
+    "member_dispatch": 18,
+    "nth_is_keyword": 452943,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 28573,
+    "skip_occurrence_usage_prefix": 22651,
+    "skip_prefix_metadata": 49091
+   },
    "peeked": 509395
   },
   "vendor/corpus/sysml/src/training/41. Language Extension/Semantic Metadata Example.sysml": {
@@ -1763,6 +5039,19 @@
    "allocations": 203,
    "bytes": 615,
    "consumed": 97,
+   "detail": {
+    "is_name": 76,
+    "keyword_entries": 9650,
+    "keyword_lookups": 64,
+    "keyword_member_dispatch": 11,
+    "member_decisions": 13,
+    "member_dispatch": 11,
+    "nth_is_keyword": 6776,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 365,
+    "skip_occurrence_usage_prefix": 295,
+    "skip_prefix_metadata": 741
+   },
    "peeked": 8140
   },
   "vendor/corpus/sysml/src/training/41. Language Extension/User Keyword Example.sysml": {
@@ -1770,6 +5059,19 @@
    "allocations": 297,
    "bytes": 651,
    "consumed": 105,
+   "detail": {
+    "is_name": 697,
+    "keyword_entries": 114557,
+    "keyword_lookups": 678,
+    "keyword_member_dispatch": 16,
+    "member_decisions": 19,
+    "member_dispatch": 15,
+    "nth_is_keyword": 13054,
+    "qualified_names": 600,
+    "skip_basic_usage_prefix": 715,
+    "skip_occurrence_usage_prefix": 593,
+    "skip_prefix_metadata": 1444
+   },
    "peeked": 18398
   },
   "vendor/corpus/sysml/src/training/42. Views/Viewpoint Example.sysml": {
@@ -1777,6 +5079,19 @@
    "allocations": 159,
    "bytes": 974,
    "consumed": 59,
+   "detail": {
+    "is_name": 23,
+    "keyword_entries": 2619,
+    "keyword_lookups": 26,
+    "keyword_member_dispatch": 6,
+    "member_decisions": 17,
+    "member_dispatch": 9,
+    "nth_is_keyword": 2912,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 94,
+    "skip_occurrence_usage_prefix": 85,
+    "skip_prefix_metadata": 326
+   },
    "peeked": 3592
   },
   "vendor/corpus/sysml/src/training/42. Views/Views Example.sysml": {
@@ -1784,6 +5099,19 @@
    "allocations": 233,
    "bytes": 779,
    "consumed": 110,
+   "detail": {
+    "is_name": 52,
+    "keyword_entries": 6904,
+    "keyword_lookups": 49,
+    "keyword_member_dispatch": 9,
+    "member_decisions": 20,
+    "member_dispatch": 9,
+    "nth_is_keyword": 6039,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 284,
+    "skip_occurrence_usage_prefix": 259,
+    "skip_prefix_metadata": 681
+   },
    "peeked": 7446
   },
   "vendor/corpus/sysml/src/validation/01-Parts Tree/1a-Parts Tree.sysml": {
@@ -1791,6 +5119,19 @@
    "allocations": 466,
    "bytes": 3110,
    "consumed": 249,
+   "detail": {
+    "is_name": 141,
+    "keyword_entries": 24942,
+    "keyword_lookups": 179,
+    "keyword_member_dispatch": 31,
+    "member_decisions": 43,
+    "member_dispatch": 32,
+    "nth_is_keyword": 22031,
+    "qualified_names": 12,
+    "skip_basic_usage_prefix": 1129,
+    "skip_occurrence_usage_prefix": 958,
+    "skip_prefix_metadata": 2516
+   },
    "peeked": 26782
   },
   "vendor/corpus/sysml/src/validation/01-Parts Tree/1c-Parts Tree Redefinition.sysml": {
@@ -1798,6 +5139,19 @@
    "allocations": 482,
    "bytes": 2231,
    "consumed": 226,
+   "detail": {
+    "is_name": 136,
+    "keyword_entries": 24455,
+    "keyword_lookups": 176,
+    "keyword_member_dispatch": 29,
+    "member_decisions": 37,
+    "member_dispatch": 30,
+    "nth_is_keyword": 20189,
+    "qualified_names": 12,
+    "skip_basic_usage_prefix": 1033,
+    "skip_occurrence_usage_prefix": 876,
+    "skip_prefix_metadata": 2307
+   },
    "peeked": 24577
   },
   "vendor/corpus/sysml/src/validation/01-Parts Tree/1d-Parts Tree with Reference.sysml": {
@@ -1805,6 +5159,19 @@
    "allocations": 263,
    "bytes": 1344,
    "consumed": 99,
+   "detail": {
+    "is_name": 58,
+    "keyword_entries": 11381,
+    "keyword_lookups": 80,
+    "keyword_member_dispatch": 17,
+    "member_decisions": 21,
+    "member_dispatch": 17,
+    "nth_is_keyword": 9579,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 480,
+    "skip_occurrence_usage_prefix": 406,
+    "skip_prefix_metadata": 1137
+   },
    "peeked": 11391
   },
   "vendor/corpus/sysml/src/validation/02-Parts Interconnection/2a-Parts Interconnection.sysml": {
@@ -1812,6 +5179,19 @@
    "allocations": 991,
    "bytes": 5072,
    "consumed": 522,
+   "detail": {
+    "is_name": 778,
+    "keyword_entries": 114218,
+    "keyword_lookups": 744,
+    "keyword_member_dispatch": 501,
+    "member_decisions": 94,
+    "member_dispatch": 81,
+    "nth_is_keyword": 265769,
+    "qualified_names": 18,
+    "skip_basic_usage_prefix": 16306,
+    "skip_occurrence_usage_prefix": 13020,
+    "skip_prefix_metadata": 29165
+   },
    "peeked": 300120
   },
   "vendor/corpus/sysml/src/validation/02-Parts Interconnection/2c-Parts Interconnection-Multiple Decompositions.sysml": {
@@ -1819,6 +5199,19 @@
    "allocations": 521,
    "bytes": 1343,
    "consumed": 238,
+   "detail": {
+    "is_name": 228,
+    "keyword_entries": 41852,
+    "keyword_lookups": 274,
+    "keyword_member_dispatch": 39,
+    "member_decisions": 43,
+    "member_dispatch": 42,
+    "nth_is_keyword": 28397,
+    "qualified_names": 36,
+    "skip_basic_usage_prefix": 1471,
+    "skip_occurrence_usage_prefix": 1260,
+    "skip_prefix_metadata": 3283
+   },
    "peeked": 33850
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3a-Function-based Behavior-1.sysml": {
@@ -1826,6 +5219,19 @@
    "allocations": 536,
    "bytes": 4170,
    "consumed": 312,
+   "detail": {
+    "is_name": 358,
+    "keyword_entries": 50691,
+    "keyword_lookups": 362,
+    "keyword_member_dispatch": 52,
+    "member_decisions": 65,
+    "member_dispatch": 52,
+    "nth_is_keyword": 35798,
+    "qualified_names": 54,
+    "skip_basic_usage_prefix": 1909,
+    "skip_occurrence_usage_prefix": 1588,
+    "skip_prefix_metadata": 4182
+   },
    "peeked": 42674
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3a-Function-based Behavior-2.sysml": {
@@ -1833,6 +5239,19 @@
    "allocations": 478,
    "bytes": 2526,
    "consumed": 274,
+   "detail": {
+    "is_name": 312,
+    "keyword_entries": 43536,
+    "keyword_lookups": 311,
+    "keyword_member_dispatch": 43,
+    "member_decisions": 54,
+    "member_dispatch": 43,
+    "nth_is_keyword": 30463,
+    "qualified_names": 49,
+    "skip_basic_usage_prefix": 1657,
+    "skip_occurrence_usage_prefix": 1373,
+    "skip_prefix_metadata": 3534
+   },
    "peeked": 36272
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3a-Function-based Behavior-3.sysml": {
@@ -1840,6 +5259,19 @@
    "allocations": 430,
    "bytes": 1982,
    "consumed": 266,
+   "detail": {
+    "is_name": 264,
+    "keyword_entries": 42041,
+    "keyword_lookups": 291,
+    "keyword_member_dispatch": 45,
+    "member_decisions": 50,
+    "member_dispatch": 45,
+    "nth_is_keyword": 33305,
+    "qualified_names": 22,
+    "skip_basic_usage_prefix": 1915,
+    "skip_occurrence_usage_prefix": 1558,
+    "skip_prefix_metadata": 3861
+   },
    "peeked": 39123
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3c-Function-based Behavior-structure mod-1.sysml": {
@@ -1847,6 +5279,19 @@
    "allocations": 363,
    "bytes": 1281,
    "consumed": 144,
+   "detail": {
+    "is_name": 542,
+    "keyword_entries": 66040,
+    "keyword_lookups": 413,
+    "keyword_member_dispatch": 453,
+    "member_decisions": 23,
+    "member_dispatch": 21,
+    "nth_is_keyword": 236249,
+    "qualified_names": 18,
+    "skip_basic_usage_prefix": 14861,
+    "skip_occurrence_usage_prefix": 11743,
+    "skip_prefix_metadata": 25724
+   },
    "peeked": 264406
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3c-Function-based Behavior-structure mod-2.sysml": {
@@ -1854,6 +5299,19 @@
    "allocations": 320,
    "bytes": 1064,
    "consumed": 132,
+   "detail": {
+    "is_name": 504,
+    "keyword_entries": 61910,
+    "keyword_lookups": 385,
+    "keyword_member_dispatch": 454,
+    "member_decisions": 23,
+    "member_dispatch": 22,
+    "nth_is_keyword": 237055,
+    "qualified_names": 1,
+    "skip_basic_usage_prefix": 14931,
+    "skip_occurrence_usage_prefix": 11803,
+    "skip_prefix_metadata": 25865
+   },
    "peeked": 265150
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3c-Function-based Behavior-structure mod-3.sysml": {
@@ -1861,6 +5319,19 @@
    "allocations": 272,
    "bytes": 782,
    "consumed": 103,
+   "detail": {
+    "is_name": 86,
+    "keyword_entries": 15618,
+    "keyword_lookups": 109,
+    "keyword_member_dispatch": 16,
+    "member_decisions": 17,
+    "member_dispatch": 16,
+    "nth_is_keyword": 8060,
+    "qualified_names": 20,
+    "skip_basic_usage_prefix": 350,
+    "skip_occurrence_usage_prefix": 301,
+    "skip_prefix_metadata": 1009
+   },
    "peeked": 9868
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3d-Function-based Behavior-item.sysml": {
@@ -1868,6 +5339,19 @@
    "allocations": 472,
    "bytes": 1601,
    "consumed": 236,
+   "detail": {
+    "is_name": 189,
+    "keyword_entries": 35017,
+    "keyword_lookups": 241,
+    "keyword_member_dispatch": 33,
+    "member_decisions": 42,
+    "member_dispatch": 33,
+    "nth_is_keyword": 21489,
+    "qualified_names": 34,
+    "skip_basic_usage_prefix": 1123,
+    "skip_occurrence_usage_prefix": 947,
+    "skip_prefix_metadata": 2532
+   },
    "peeked": 25824
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3e-Function-based Behavior-item.sysml": {
@@ -1875,6 +5359,19 @@
    "allocations": 384,
    "bytes": 1750,
    "consumed": 168,
+   "detail": {
+    "is_name": 113,
+    "keyword_entries": 13324,
+    "keyword_lookups": 106,
+    "keyword_member_dispatch": 27,
+    "member_decisions": 31,
+    "member_dispatch": 27,
+    "nth_is_keyword": 14864,
+    "qualified_names": 18,
+    "skip_basic_usage_prefix": 712,
+    "skip_occurrence_usage_prefix": 610,
+    "skip_prefix_metadata": 1875
+   },
    "peeked": 18054
   },
   "vendor/corpus/sysml/src/validation/04-Functional Allocation/4a-Functional Allocation.sysml": {
@@ -1882,6 +5379,19 @@
    "allocations": 575,
    "bytes": 2843,
    "consumed": 275,
+   "detail": {
+    "is_name": 336,
+    "keyword_entries": 54667,
+    "keyword_lookups": 344,
+    "keyword_member_dispatch": 44,
+    "member_decisions": 49,
+    "member_dispatch": 45,
+    "nth_is_keyword": 39506,
+    "qualified_names": 44,
+    "skip_basic_usage_prefix": 2334,
+    "skip_occurrence_usage_prefix": 1933,
+    "skip_prefix_metadata": 4534
+   },
    "peeked": 46730
   },
   "vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-1.sysml": {
@@ -1889,6 +5399,19 @@
    "allocations": 855,
    "bytes": 6080,
    "consumed": 432,
+   "detail": {
+    "is_name": 283,
+    "keyword_entries": 43927,
+    "keyword_lookups": 334,
+    "keyword_member_dispatch": 50,
+    "member_decisions": 86,
+    "member_dispatch": 52,
+    "nth_is_keyword": 22748,
+    "qualified_names": 44,
+    "skip_basic_usage_prefix": 808,
+    "skip_occurrence_usage_prefix": 692,
+    "skip_prefix_metadata": 2938
+   },
    "peeked": 28690
   },
   "vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-1a.sysml": {
@@ -1896,6 +5419,19 @@
    "allocations": 853,
    "bytes": 6105,
    "consumed": 435,
+   "detail": {
+    "is_name": 282,
+    "keyword_entries": 43251,
+    "keyword_lookups": 334,
+    "keyword_member_dispatch": 52,
+    "member_decisions": 87,
+    "member_dispatch": 55,
+    "nth_is_keyword": 22283,
+    "qualified_names": 44,
+    "skip_basic_usage_prefix": 744,
+    "skip_occurrence_usage_prefix": 640,
+    "skip_prefix_metadata": 2928
+   },
    "peeked": 28249
   },
   "vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-2.sysml": {
@@ -1903,6 +5439,19 @@
    "allocations": 767,
    "bytes": 3110,
    "consumed": 363,
+   "detail": {
+    "is_name": 247,
+    "keyword_entries": 36874,
+    "keyword_lookups": 282,
+    "keyword_member_dispatch": 49,
+    "member_decisions": 62,
+    "member_dispatch": 49,
+    "nth_is_keyword": 20899,
+    "qualified_names": 35,
+    "skip_basic_usage_prefix": 738,
+    "skip_occurrence_usage_prefix": 634,
+    "skip_prefix_metadata": 2797
+   },
    "peeked": 26284
   },
   "vendor/corpus/sysml/src/validation/06-Individual and Snapshots/6-Individual and Snapshots.sysml": {
@@ -1910,6 +5459,19 @@
    "allocations": 816,
    "bytes": 3689,
    "consumed": 445,
+   "detail": {
+    "is_name": 457,
+    "keyword_entries": 55661,
+    "keyword_lookups": 419,
+    "keyword_member_dispatch": 78,
+    "member_decisions": 91,
+    "member_dispatch": 78,
+    "nth_is_keyword": 62632,
+    "qualified_names": 44,
+    "skip_basic_usage_prefix": 3370,
+    "skip_occurrence_usage_prefix": 2784,
+    "skip_prefix_metadata": 7067
+   },
    "peeked": 74594
   },
   "vendor/corpus/sysml/src/validation/07-Variant Configuration/7a-Variant Configuration - General Concept.sysml": {
@@ -1917,6 +5479,19 @@
    "allocations": 366,
    "bytes": 981,
    "consumed": 154,
+   "detail": {
+    "is_name": 157,
+    "keyword_entries": 27323,
+    "keyword_lookups": 182,
+    "keyword_member_dispatch": 27,
+    "member_decisions": 31,
+    "member_dispatch": 26,
+    "nth_is_keyword": 23177,
+    "qualified_names": 16,
+    "skip_basic_usage_prefix": 1263,
+    "skip_occurrence_usage_prefix": 1073,
+    "skip_prefix_metadata": 2553
+   },
    "peeked": 27510
   },
   "vendor/corpus/sysml/src/validation/07-Variant Configuration/7a1-Variant Configuration - General Concept-a.sysml": {
@@ -1924,6 +5499,19 @@
    "allocations": 536,
    "bytes": 1531,
    "consumed": 288,
+   "detail": {
+    "is_name": 219,
+    "keyword_entries": 38489,
+    "keyword_lookups": 264,
+    "keyword_member_dispatch": 40,
+    "member_decisions": 46,
+    "member_dispatch": 39,
+    "nth_is_keyword": 31368,
+    "qualified_names": 20,
+    "skip_basic_usage_prefix": 1634,
+    "skip_occurrence_usage_prefix": 1393,
+    "skip_prefix_metadata": 3572
+   },
    "peeked": 37747
   },
   "vendor/corpus/sysml/src/validation/07-Variant Configuration/7b-Variant Configurations.sysml": {
@@ -1931,6 +5519,19 @@
    "allocations": 1054,
    "bytes": 3937,
    "consumed": 514,
+   "detail": {
+    "is_name": 414,
+    "keyword_entries": 72020,
+    "keyword_lookups": 493,
+    "keyword_member_dispatch": 72,
+    "member_decisions": 84,
+    "member_dispatch": 65,
+    "nth_is_keyword": 41032,
+    "qualified_names": 51,
+    "skip_basic_usage_prefix": 2053,
+    "skip_occurrence_usage_prefix": 1745,
+    "skip_prefix_metadata": 4671
+   },
    "peeked": 50581
   },
   "vendor/corpus/sysml/src/validation/08-Requirements/8-Requirements.sysml": {
@@ -1938,6 +5539,19 @@
    "allocations": 876,
    "bytes": 5449,
    "consumed": 507,
+   "detail": {
+    "is_name": 562,
+    "keyword_entries": 76149,
+    "keyword_lookups": 526,
+    "keyword_member_dispatch": 269,
+    "member_decisions": 102,
+    "member_dispatch": 64,
+    "nth_is_keyword": 146204,
+    "qualified_names": 44,
+    "skip_basic_usage_prefix": 8715,
+    "skip_occurrence_usage_prefix": 6979,
+    "skip_prefix_metadata": 16035
+   },
    "peeked": 167155
   },
   "vendor/corpus/sysml/src/validation/09-Verification/9-Verification-simplified.sysml": {
@@ -1945,6 +5559,19 @@
    "allocations": 738,
    "bytes": 2911,
    "consumed": 373,
+   "detail": {
+    "is_name": 352,
+    "keyword_entries": 58872,
+    "keyword_lookups": 382,
+    "keyword_member_dispatch": 49,
+    "member_decisions": 59,
+    "member_dispatch": 47,
+    "nth_is_keyword": 32969,
+    "qualified_names": 51,
+    "skip_basic_usage_prefix": 1682,
+    "skip_occurrence_usage_prefix": 1405,
+    "skip_prefix_metadata": 3838
+   },
    "peeked": 40244
   },
   "vendor/corpus/sysml/src/validation/10-Analysis and Trades/10a-Analysis.sysml": {
@@ -1952,6 +5579,19 @@
    "allocations": 387,
    "bytes": 1450,
    "consumed": 193,
+   "detail": {
+    "is_name": 201,
+    "keyword_entries": 34698,
+    "keyword_lookups": 222,
+    "keyword_member_dispatch": 23,
+    "member_decisions": 37,
+    "member_dispatch": 23,
+    "nth_is_keyword": 16644,
+    "qualified_names": 32,
+    "skip_basic_usage_prefix": 879,
+    "skip_occurrence_usage_prefix": 730,
+    "skip_prefix_metadata": 1750
+   },
    "peeked": 20129
   },
   "vendor/corpus/sysml/src/validation/10-Analysis and Trades/10b-Trade-off Among Alternative Configurations.sysml": {
@@ -1959,6 +5599,19 @@
    "allocations": 718,
    "bytes": 2297,
    "consumed": 376,
+   "detail": {
+    "is_name": 359,
+    "keyword_entries": 61669,
+    "keyword_lookups": 409,
+    "keyword_member_dispatch": 61,
+    "member_decisions": 64,
+    "member_dispatch": 48,
+    "nth_is_keyword": 44016,
+    "qualified_names": 36,
+    "skip_basic_usage_prefix": 2504,
+    "skip_occurrence_usage_prefix": 2076,
+    "skip_prefix_metadata": 4895
+   },
    "peeked": 52287
   },
   "vendor/corpus/sysml/src/validation/10-Analysis and Trades/10c-Fuel Economy Analysis.sysml": {
@@ -1966,6 +5619,19 @@
    "allocations": 952,
    "bytes": 4755,
    "consumed": 452,
+   "detail": {
+    "is_name": 430,
+    "keyword_entries": 63560,
+    "keyword_lookups": 446,
+    "keyword_member_dispatch": 70,
+    "member_decisions": 87,
+    "member_dispatch": 62,
+    "nth_is_keyword": 46035,
+    "qualified_names": 65,
+    "skip_basic_usage_prefix": 2305,
+    "skip_occurrence_usage_prefix": 1933,
+    "skip_prefix_metadata": 5219
+   },
    "peeked": 56052
   },
   "vendor/corpus/sysml/src/validation/10-Analysis and Trades/10d-Dynamics Analysis.sysml": {
@@ -1973,6 +5639,19 @@
    "allocations": 752,
    "bytes": 2131,
    "consumed": 380,
+   "detail": {
+    "is_name": 511,
+    "keyword_entries": 86331,
+    "keyword_lookups": 571,
+    "keyword_member_dispatch": 57,
+    "member_decisions": 55,
+    "member_dispatch": 41,
+    "nth_is_keyword": 43517,
+    "qualified_names": 94,
+    "skip_basic_usage_prefix": 2710,
+    "skip_occurrence_usage_prefix": 2211,
+    "skip_prefix_metadata": 4843
+   },
    "peeked": 52796
   },
   "vendor/corpus/sysml/src/validation/11-View and Viewpoint/11a-View-Viewpoint.sysml": {
@@ -1980,6 +5659,19 @@
    "allocations": 400,
    "bytes": 1144,
    "consumed": 200,
+   "detail": {
+    "is_name": 114,
+    "keyword_entries": 17575,
+    "keyword_lookups": 134,
+    "keyword_member_dispatch": 26,
+    "member_decisions": 34,
+    "member_dispatch": 26,
+    "nth_is_keyword": 17468,
+    "qualified_names": 6,
+    "skip_basic_usage_prefix": 873,
+    "skip_occurrence_usage_prefix": 748,
+    "skip_prefix_metadata": 1998
+   },
    "peeked": 21152
   },
   "vendor/corpus/sysml/src/validation/11-View and Viewpoint/11b-Safety and Security Feature Views.sysml": {
@@ -1987,6 +5679,19 @@
    "allocations": 451,
    "bytes": 1606,
    "consumed": 251,
+   "detail": {
+    "is_name": 116,
+    "keyword_entries": 21105,
+    "keyword_lookups": 155,
+    "keyword_member_dispatch": 26,
+    "member_decisions": 48,
+    "member_dispatch": 32,
+    "nth_is_keyword": 16635,
+    "qualified_names": 2,
+    "skip_basic_usage_prefix": 800,
+    "skip_occurrence_usage_prefix": 691,
+    "skip_prefix_metadata": 1927
+   },
    "peeked": 20428
   },
   "vendor/corpus/sysml/src/validation/12-Dependency Relationships/12a-Dependency.sysml": {
@@ -1994,6 +5699,19 @@
    "allocations": 109,
    "bytes": 293,
    "consumed": 42,
+   "detail": {
+    "is_name": 24,
+    "keyword_entries": 3016,
+    "keyword_lookups": 31,
+    "keyword_member_dispatch": 10,
+    "member_decisions": 10,
+    "member_dispatch": 10,
+    "nth_is_keyword": 3152,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 159,
+    "skip_occurrence_usage_prefix": 132,
+    "skip_prefix_metadata": 349
+   },
    "peeked": 3759
   },
   "vendor/corpus/sysml/src/validation/12-Dependency Relationships/12b-Allocation-1.sysml": {
@@ -2001,6 +5719,19 @@
    "allocations": 416,
    "bytes": 1318,
    "consumed": 188,
+   "detail": {
+    "is_name": 557,
+    "keyword_entries": 73103,
+    "keyword_lookups": 453,
+    "keyword_member_dispatch": 458,
+    "member_decisions": 32,
+    "member_dispatch": 25,
+    "nth_is_keyword": 236070,
+    "qualified_names": 10,
+    "skip_basic_usage_prefix": 14816,
+    "skip_occurrence_usage_prefix": 11711,
+    "skip_prefix_metadata": 25770
+   },
    "peeked": 264459
   },
   "vendor/corpus/sysml/src/validation/12-Dependency Relationships/12b-Allocation.sysml": {
@@ -2008,6 +5739,19 @@
    "allocations": 174,
    "bytes": 493,
    "consumed": 70,
+   "detail": {
+    "is_name": 41,
+    "keyword_entries": 7746,
+    "keyword_lookups": 56,
+    "keyword_member_dispatch": 12,
+    "member_decisions": 14,
+    "member_dispatch": 12,
+    "nth_is_keyword": 5567,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 240,
+    "skip_occurrence_usage_prefix": 213,
+    "skip_prefix_metadata": 711
+   },
    "peeked": 6701
   },
   "vendor/corpus/sysml/src/validation/13-Model Containment/13a-Model Containment.sysml": {
@@ -2015,6 +5759,19 @@
    "allocations": 196,
    "bytes": 1428,
    "consumed": 98,
+   "detail": {
+    "is_name": 31,
+    "keyword_entries": 6031,
+    "keyword_lookups": 51,
+    "keyword_member_dispatch": 9,
+    "member_decisions": 24,
+    "member_dispatch": 11,
+    "nth_is_keyword": 1582,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 56,
+    "skip_occurrence_usage_prefix": 50,
+    "skip_prefix_metadata": 188
+   },
    "peeked": 2118
   },
   "vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group-1.sysml": {
@@ -2022,6 +5779,19 @@
    "allocations": 379,
    "bytes": 1340,
    "consumed": 213,
+   "detail": {
+    "is_name": 93,
+    "keyword_entries": 15990,
+    "keyword_lookups": 121,
+    "keyword_member_dispatch": 23,
+    "member_decisions": 44,
+    "member_dispatch": 29,
+    "nth_is_keyword": 13876,
+    "qualified_names": 1,
+    "skip_basic_usage_prefix": 678,
+    "skip_occurrence_usage_prefix": 578,
+    "skip_prefix_metadata": 1592
+   },
    "peeked": 17035
   },
   "vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group-2.sysml": {
@@ -2029,6 +5799,19 @@
    "allocations": 391,
    "bytes": 1304,
    "consumed": 213,
+   "detail": {
+    "is_name": 93,
+    "keyword_entries": 15718,
+    "keyword_lookups": 117,
+    "keyword_member_dispatch": 23,
+    "member_decisions": 40,
+    "member_dispatch": 29,
+    "nth_is_keyword": 13816,
+    "qualified_names": 1,
+    "skip_basic_usage_prefix": 678,
+    "skip_occurrence_usage_prefix": 578,
+    "skip_prefix_metadata": 1592
+   },
    "peeked": 16983
   },
   "vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml": {
@@ -2036,6 +5819,19 @@
    "allocations": 204,
    "bytes": 886,
    "consumed": 110,
+   "detail": {
+    "is_name": 53,
+    "keyword_entries": 10276,
+    "keyword_lookups": 73,
+    "keyword_member_dispatch": 14,
+    "member_decisions": 24,
+    "member_dispatch": 14,
+    "nth_is_keyword": 9010,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 480,
+    "skip_occurrence_usage_prefix": 410,
+    "skip_prefix_metadata": 1012
+   },
    "peeked": 10624
   },
   "vendor/corpus/sysml/src/validation/14-Language Extensions/14a-Language Extensions.sysml": {
@@ -2043,6 +5839,19 @@
    "allocations": 202,
    "bytes": 564,
    "consumed": 74,
+   "detail": {
+    "is_name": 57,
+    "keyword_entries": 9393,
+    "keyword_lookups": 63,
+    "keyword_member_dispatch": 8,
+    "member_decisions": 11,
+    "member_dispatch": 10,
+    "nth_is_keyword": 4593,
+    "qualified_names": 4,
+    "skip_basic_usage_prefix": 220,
+    "skip_occurrence_usage_prefix": 185,
+    "skip_prefix_metadata": 535
+   },
    "peeked": 5722
   },
   "vendor/corpus/sysml/src/validation/14-Language Extensions/14b-Language Extensions.sysml": {
@@ -2050,6 +5859,19 @@
    "allocations": 318,
    "bytes": 939,
    "consumed": 141,
+   "detail": {
+    "is_name": 72,
+    "keyword_entries": 14786,
+    "keyword_lookups": 106,
+    "keyword_member_dispatch": 24,
+    "member_decisions": 26,
+    "member_dispatch": 24,
+    "nth_is_keyword": 11725,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 565,
+    "skip_occurrence_usage_prefix": 489,
+    "skip_prefix_metadata": 1422
+   },
    "peeked": 13987
   },
   "vendor/corpus/sysml/src/validation/14-Language Extensions/14c-Language Extensions.sysml": {
@@ -2057,6 +5879,19 @@
    "allocations": 1158,
    "bytes": 5200,
    "consumed": 788,
+   "detail": {
+    "is_name": 4305,
+    "keyword_entries": 428655,
+    "keyword_lookups": 2596,
+    "keyword_member_dispatch": 2655,
+    "member_decisions": 108,
+    "member_dispatch": 103,
+    "nth_is_keyword": 1393981,
+    "qualified_names": 1263,
+    "skip_basic_usage_prefix": 87595,
+    "skip_occurrence_usage_prefix": 69520,
+    "skip_prefix_metadata": 151042
+   },
    "peeked": 1576194
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_01-Constants.sysml": {
@@ -2064,6 +5899,19 @@
    "allocations": 371,
    "bytes": 2246,
    "consumed": 143,
+   "detail": {
+    "is_name": 120,
+    "keyword_entries": 14279,
+    "keyword_lookups": 112,
+    "keyword_member_dispatch": 16,
+    "member_decisions": 22,
+    "member_dispatch": 16,
+    "nth_is_keyword": 9626,
+    "qualified_names": 24,
+    "skip_basic_usage_prefix": 488,
+    "skip_occurrence_usage_prefix": 407,
+    "skip_prefix_metadata": 1023
+   },
    "peeked": 12436
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_02-Basic Value Properties.sysml": {
@@ -2071,6 +5919,19 @@
    "allocations": 203,
    "bytes": 590,
    "consumed": 65,
+   "detail": {
+    "is_name": 37,
+    "keyword_entries": 3767,
+    "keyword_lookups": 43,
+    "keyword_member_dispatch": 10,
+    "member_decisions": 12,
+    "member_dispatch": 11,
+    "nth_is_keyword": 6963,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 362,
+    "skip_occurrence_usage_prefix": 301,
+    "skip_prefix_metadata": 790
+   },
    "peeked": 8376
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_03-Value Expression.sysml": {
@@ -2078,6 +5939,19 @@
    "allocations": 372,
    "bytes": 932,
    "consumed": 146,
+   "detail": {
+    "is_name": 130,
+    "keyword_entries": 18329,
+    "keyword_lookups": 134,
+    "keyword_member_dispatch": 16,
+    "member_decisions": 19,
+    "member_dispatch": 16,
+    "nth_is_keyword": 11458,
+    "qualified_names": 24,
+    "skip_basic_usage_prefix": 574,
+    "skip_occurrence_usage_prefix": 481,
+    "skip_prefix_metadata": 1274
+   },
    "peeked": 14609
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_04-Logical Expressions.sysml": {
@@ -2085,6 +5959,19 @@
    "allocations": 282,
    "bytes": 724,
    "consumed": 105,
+   "detail": {
+    "is_name": 82,
+    "keyword_entries": 13516,
+    "keyword_lookups": 103,
+    "keyword_member_dispatch": 15,
+    "member_decisions": 16,
+    "member_dispatch": 13,
+    "nth_is_keyword": 6779,
+    "qualified_names": 14,
+    "skip_basic_usage_prefix": 279,
+    "skip_occurrence_usage_prefix": 238,
+    "skip_prefix_metadata": 842
+   },
    "peeked": 8758
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_05-Unification of Expression and Constraint Definition.sysml": {
@@ -2092,6 +5979,19 @@
    "allocations": 445,
    "bytes": 1441,
    "consumed": 207,
+   "detail": {
+    "is_name": 223,
+    "keyword_entries": 37276,
+    "keyword_lookups": 244,
+    "keyword_member_dispatch": 31,
+    "member_decisions": 29,
+    "member_dispatch": 23,
+    "nth_is_keyword": 20761,
+    "qualified_names": 33,
+    "skip_basic_usage_prefix": 1194,
+    "skip_occurrence_usage_prefix": 985,
+    "skip_prefix_metadata": 2364
+   },
    "peeked": 25375
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_06-System of Quantities.sysml": {
@@ -2099,6 +5999,19 @@
    "allocations": 56,
    "bytes": 2785,
    "consumed": 12,
+   "detail": {
+    "is_name": 3,
+    "keyword_entries": 489,
+    "keyword_lookups": 4,
+    "keyword_member_dispatch": 1,
+    "member_decisions": 4,
+    "member_dispatch": 1,
+    "nth_is_keyword": 67,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 8
+   },
    "peeked": 117
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_07-System of Units and Scales.sysml": {
@@ -2106,6 +6019,19 @@
    "allocations": 63,
    "bytes": 3589,
    "consumed": 18,
+   "detail": {
+    "is_name": 5,
+    "keyword_entries": 863,
+    "keyword_lookups": 7,
+    "keyword_member_dispatch": 1,
+    "member_decisions": 5,
+    "member_dispatch": 1,
+    "nth_is_keyword": 73,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 0,
+    "skip_occurrence_usage_prefix": 0,
+    "skip_prefix_metadata": 8
+   },
    "peeked": 138
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_08-Range Restriction.sysml": {
@@ -2113,6 +6039,19 @@
    "allocations": 207,
    "bytes": 537,
    "consumed": 71,
+   "detail": {
+    "is_name": 53,
+    "keyword_entries": 5691,
+    "keyword_lookups": 48,
+    "keyword_member_dispatch": 7,
+    "member_decisions": 11,
+    "member_dispatch": 7,
+    "nth_is_keyword": 3663,
+    "qualified_names": 8,
+    "skip_basic_usage_prefix": 168,
+    "skip_occurrence_usage_prefix": 141,
+    "skip_prefix_metadata": 418
+   },
    "peeked": 4776
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_10-Primitive Data Types.sysml": {
@@ -2120,6 +6059,19 @@
    "allocations": 414,
    "bytes": 1977,
    "consumed": 201,
+   "detail": {
+    "is_name": 177,
+    "keyword_entries": 27244,
+    "keyword_lookups": 191,
+    "keyword_member_dispatch": 16,
+    "member_decisions": 25,
+    "member_dispatch": 17,
+    "nth_is_keyword": 9247,
+    "qualified_names": 16,
+    "skip_basic_usage_prefix": 441,
+    "skip_occurrence_usage_prefix": 363,
+    "skip_prefix_metadata": 1037
+   },
    "peeked": 11988
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_11-Variable Length Collection Types.sysml": {
@@ -2127,6 +6079,19 @@
    "allocations": 256,
    "bytes": 810,
    "consumed": 119,
+   "detail": {
+    "is_name": 59,
+    "keyword_entries": 7899,
+    "keyword_lookups": 73,
+    "keyword_member_dispatch": 17,
+    "member_decisions": 20,
+    "member_dispatch": 17,
+    "nth_is_keyword": 9042,
+    "qualified_names": 0,
+    "skip_basic_usage_prefix": 432,
+    "skip_occurrence_usage_prefix": 361,
+    "skip_prefix_metadata": 1098
+   },
    "peeked": 10933
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_12-Compound Value Type.sysml": {
@@ -2134,6 +6099,19 @@
    "allocations": 275,
    "bytes": 859,
    "consumed": 111,
+   "detail": {
+    "is_name": 63,
+    "keyword_entries": 5661,
+    "keyword_lookups": 69,
+    "keyword_member_dispatch": 15,
+    "member_decisions": 18,
+    "member_dispatch": 15,
+    "nth_is_keyword": 10950,
+    "qualified_names": 2,
+    "skip_basic_usage_prefix": 575,
+    "skip_occurrence_usage_prefix": 476,
+    "skip_prefix_metadata": 1232
+   },
    "peeked": 13237
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_13-Discretely Sampled Function Value.sysml": {
@@ -2141,6 +6119,19 @@
    "allocations": 828,
    "bytes": 2826,
    "consumed": 436,
+   "detail": {
+    "is_name": 426,
+    "keyword_entries": 42931,
+    "keyword_lookups": 316,
+    "keyword_member_dispatch": 47,
+    "member_decisions": 58,
+    "member_dispatch": 51,
+    "nth_is_keyword": 46079,
+    "qualified_names": 50,
+    "skip_basic_usage_prefix": 2577,
+    "skip_occurrence_usage_prefix": 2098,
+    "skip_prefix_metadata": 4826
+   },
    "peeked": 56710
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_19-Materials with Properties.sysml": {
@@ -2148,6 +6139,19 @@
    "allocations": 729,
    "bytes": 2656,
    "consumed": 375,
+   "detail": {
+    "is_name": 301,
+    "keyword_entries": 36241,
+    "keyword_lookups": 286,
+    "keyword_member_dispatch": 45,
+    "member_decisions": 51,
+    "member_dispatch": 45,
+    "nth_is_keyword": 34889,
+    "qualified_names": 36,
+    "skip_basic_usage_prefix": 1837,
+    "skip_occurrence_usage_prefix": 1511,
+    "skip_prefix_metadata": 3924
+   },
    "peeked": 42779
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_19a-Materials with Properties.sysml": {
@@ -2155,6 +6159,19 @@
    "allocations": 766,
    "bytes": 2735,
    "consumed": 373,
+   "detail": {
+    "is_name": 360,
+    "keyword_entries": 39351,
+    "keyword_lookups": 301,
+    "keyword_member_dispatch": 46,
+    "member_decisions": 54,
+    "member_dispatch": 46,
+    "nth_is_keyword": 40072,
+    "qualified_names": 48,
+    "skip_basic_usage_prefix": 2201,
+    "skip_occurrence_usage_prefix": 1797,
+    "skip_prefix_metadata": 4319
+   },
    "peeked": 48908
   },
   "vendor/corpus/sysml/src/validation/17-Sequence Modeling/17a-Sequence-Modeling.sysml": {
@@ -2162,6 +6179,19 @@
    "allocations": 312,
    "bytes": 1083,
    "consumed": 156,
+   "detail": {
+    "is_name": 89,
+    "keyword_entries": 17998,
+    "keyword_lookups": 136,
+    "keyword_member_dispatch": 20,
+    "member_decisions": 25,
+    "member_dispatch": 20,
+    "nth_is_keyword": 15507,
+    "qualified_names": 3,
+    "skip_basic_usage_prefix": 815,
+    "skip_occurrence_usage_prefix": 718,
+    "skip_prefix_metadata": 1749
+   },
    "peeked": 18269
   },
   "vendor/corpus/sysml/src/validation/17-Sequence Modeling/17b-Sequence-Modeling.sysml": {
@@ -2169,6 +6199,19 @@
    "allocations": 271,
    "bytes": 857,
    "consumed": 138,
+   "detail": {
+    "is_name": 77,
+    "keyword_entries": 14578,
+    "keyword_lookups": 112,
+    "keyword_member_dispatch": 20,
+    "member_decisions": 25,
+    "member_dispatch": 20,
+    "nth_is_keyword": 15501,
+    "qualified_names": 3,
+    "skip_basic_usage_prefix": 815,
+    "skip_occurrence_usage_prefix": 718,
+    "skip_prefix_metadata": 1749
+   },
    "peeked": 18239
   },
   "vendor/corpus/sysml/src/validation/18-Use Case/18-Use Case.sysml": {
@@ -2176,10 +6219,24 @@
    "allocations": 395,
    "bytes": 2014,
    "consumed": 235,
+   "detail": {
+    "is_name": 151,
+    "keyword_entries": 18399,
+    "keyword_lookups": 148,
+    "keyword_member_dispatch": 22,
+    "member_decisions": 48,
+    "member_dispatch": 22,
+    "nth_is_keyword": 16000,
+    "qualified_names": 15,
+    "skip_basic_usage_prefix": 739,
+    "skip_occurrence_usage_prefix": 646,
+    "skip_prefix_metadata": 1660
+   },
    "peeked": 19540
   }
  },
- "reason": "initial: the parser as of the module split (36b902a) and the harness",
+ "fingerprint": "cf9d1abe7e03b349",
+ "reason": "Phase 0: attribution detail counters added (informational, not ratcheted); ratcheted totals unchanged",
  "scaling": 1.0,
  "totals": {
   "allocated_bytes": 15681312,

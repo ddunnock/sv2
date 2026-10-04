@@ -45,7 +45,7 @@ doing, so a gate that reads it flips on a busy laptop. A gate that flips gets ig
 
 - *Counters*, deterministic: allocations and bytes allocated (`stats_alloc`, which keeps
   the `unsafe` of a counting allocator out of this workspace), and tokens peeked and
-  consumed, counted by two relaxed atomics behind the `counters` feature, which compile to
+  consumed, counted per thread behind the `counters` feature, which compile to
   nothing without it. And a *scaling ratio*: tokens peeked per byte for the largest file
   repeated eight times in one input, against one copy. Linear work gives 1.0; a rescan
   from the start gives about the number of copies.
