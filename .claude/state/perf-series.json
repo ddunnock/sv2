@@ -48,6 +48,25 @@
      "consumed": 70576,
      "peeked": 23986614
     }
+   },
+   {
+    "commit": "77f0464",
+    "fingerprint": "cf9d1abe7e03b349",
+    "host": "Darwin arm64 Davids-MacBook-Pro.local",
+    "largest_p95_ns": 7474625,
+    "notes": [
+     "time -10.2%"
+    ],
+    "outcome": "improved",
+    "scaling": 1.0,
+    "source": "d335d996ea9945b8974de11b4f6d32b6e979fcca0b0f9ddc6819e7a1b470cabe",
+    "time_ns": 15160918,
+    "totals": {
+     "allocated_bytes": 15681312,
+     "allocations": 132472,
+     "consumed": 70576,
+     "peeked": 23986614
+    }
    }
   ],
   "time_ns": 20266708,

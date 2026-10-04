@@ -136,8 +136,16 @@ impl Parser<'_> {
     /// Whether the `n`th meaningful token from here is this keyword.
     pub(super) fn nth_is_keyword(&self, n: usize, text: &str) -> bool {
         count(Counter::NthIsKeyword);
-        self.peek_nth(n)
-            .is_some_and(|token| token.kind == SyntaxKind::BasicName && self.text_of(token) == text)
+        // Bytes, not `text_of`: slicing a `str` checks a UTF-8 boundary at both ends, and
+        // this runs on every keyword lookahead. The answer is the same. Every keyword is
+        // ASCII (`keywords_are_sorted_unique_and_ascii`), and a range that starts or ends
+        // inside a multi-byte character holds a continuation byte (0x80 or above), which
+        // no ASCII text equals. Where `text_of` gave `""` for such a range, which equals
+        // no keyword, this compares unequal too.
+        self.peek_nth(n).is_some_and(|token| {
+            token.kind == SyntaxKind::BasicName
+                && self.source.as_bytes().get(token.start..token.end) == Some(text.as_bytes())
+        })
     }
 
     /// Whether an `EndUsagePrefix`'s kind keyword stands at or after the `k`th token,
