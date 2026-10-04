@@ -3,6 +3,7 @@
 """Parser performance: measure it, ratchet it, and hold optimization work to it (ADR-0024).
 
     scripts/perf.sh measure                       print counters and timing for this tree
+    scripts/perf.sh wasm                          time it under WebAssembly engines (FIT-4)
     scripts/perf.sh check                         the gate's ratchet
     scripts/perf.sh record --reason "..."         re-baseline, deliberately
     scripts/perf.sh series open NAME --primary M  start an optimization series
@@ -41,8 +42,10 @@ import argparse
 import hashlib
 import json
 import platform
+import shutil
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -148,12 +151,15 @@ def head() -> str:
 
 
 def run_probe(probe: Path, args: list[str]) -> Doc:
-    """The probe's JSON document for `args`; a failure is an error, never a zero."""
-    done = subprocess.run(
-        [str(probe), *args], capture_output=True, text=True, check=False, cwd=ROOT
-    )
+    """The native probe's JSON document for `args`, run from the repository root."""
+    return run_command([str(probe), *args], ROOT)
+
+
+def run_command(command: list[str], cwd: Path) -> Doc:
+    """A probe's JSON document, however it is launched; a failure is an error, never a zero."""
+    done = subprocess.run(command, capture_output=True, text=True, check=False, cwd=cwd)
     if done.returncode != 0:
-        msg = f"{probe.name} failed: {done.stderr.strip()}"
+        msg = f"{Path(command[0]).name} failed: {done.stderr.strip()}"
         raise RuntimeError(msg)
     doc: Doc = json.loads(done.stdout)
     return doc
@@ -195,6 +201,84 @@ def measure_timing(probe: Path, files: list[Path]) -> Doc:
         "time_ns": sum(int(f["median_ns"]) for f in per_file.values()),
         "largest_p95_ns": int(largest["p95_ns"]),
     }
+
+
+# --- WebAssembly (roadmap Phase 1) -------------------------------------------------
+
+WASI_RUNNER = ROOT / "scripts" / "wasi_run.mjs"
+
+
+def engine_command(
+    engine: str, executable: Path | None, wasm: Path, stage: Path, args: list[str]
+) -> list[str] | None:
+    """How to run the WASI probe under `engine`, or None when it is not installed.
+
+    The guest sees only `stage`, a temporary copy of the files it times, preopened as its
+    working directory; never the repository, so a guest cannot write to it.
+    """
+    if executable is None or not executable.is_file():
+        return None
+    if engine == "wasmtime":
+        return [str(executable), "run", f"--dir={stage}::.", str(wasm), *args]
+    if engine == "bun":
+        return [str(executable), str(WASI_RUNNER), str(wasm), str(stage), *args]
+    msg = f"unknown engine {engine!r}"
+    raise ValueError(msg)
+
+
+def engine_ratio(engine_ns: int, native_ns: int) -> float | None:
+    """How many times slower `engine_ns` is than native; None without a native time."""
+    return engine_ns / native_ns if native_ns > 0 else None
+
+
+def fit4_margin(p95_ns: int) -> int:
+    """FIT-4's budget left over at `p95_ns`: positive is headroom, negative is over."""
+    return FIT4_P95_NS - p95_ns
+
+
+def stage_files(files: list[Path], stage: Path) -> None:
+    """Copy `files` under `stage` at their repository-relative paths."""
+    for path in files:
+        target = stage / rel(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(path, target)
+
+
+def cmd_wasm(probes: Probes, wasm: Path, engines: dict[str, Path | None]) -> int:
+    """Time the largest files natively and under each WebAssembly engine, against FIT-4."""
+    timed = workload()[:TIMING_FILES]
+    names = [rel(p) for p in timed]
+    args = ["timing", str(TIMING_RUNS), *names]
+    results: dict[str, Doc | None] = {"native": run_probe(probes.timing, args)["files"]}
+    with tempfile.TemporaryDirectory(prefix="sv2-wasm-") as directory:
+        stage = Path(directory)
+        stage_files(timed, stage)
+        for engine, executable in engines.items():
+            command = engine_command(engine, executable, wasm, stage, args)
+            results[engine] = None if command is None else run_command(command, ROOT)["files"]
+    print(f"WebAssembly timing: {TIMING_FILES} largest files, {TIMING_RUNS} runs, host {host()}")
+    for engine, files in results.items():
+        if files is None:
+            print(f"\n{engine}: skipped (not installed)")
+            continue
+        print(f"\n{engine}:")
+        for name in names:
+            row = files[name]
+            native = results["native"][name] if results["native"] else row
+            ratio = engine_ratio(int(row["median_ns"]), int(native["median_ns"]))
+            shown_ratio = "" if engine == "native" or ratio is None else f"  {ratio:.2f}x native"
+            print(
+                f"  {row['median_ns'] / 1e6:7.2f} ms median {row['p95_ns'] / 1e6:7.2f} ms p95"
+                f"{shown_ratio}  {Path(name).name}"
+            )
+        largest = int(files[names[0]]["p95_ns"])
+        margin = fit4_margin(largest)
+        verdict = "within" if margin >= 0 else "OVER"
+        print(
+            f"  largest p95 {largest / 1e6:.2f} ms: {verdict} FIT-4's "
+            f"{FIT4_P95_NS / 1e6:.0f} ms by {abs(margin) / 1e6:.2f} ms"
+        )
+    return 0
 
 
 # --- the ratchet --------------------------------------------------------------------
@@ -600,8 +684,12 @@ def arguments(argv: list[str] | None) -> argparse.Namespace:
     )
     parser.add_argument("--counters-probe", type=Path, required=True)
     parser.add_argument("--timing-probe", type=Path, required=True)
+    parser.add_argument("--wasm-probe", type=Path, help="the probe built for wasm32-wasip1")
+    parser.add_argument("--wasmtime", type=Path, help="wasmtime, when installed")
+    parser.add_argument("--bun", type=Path, help="bun, when installed")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("measure")
+    sub.add_parser("wasm")
     sub.add_parser("check")
     record = sub.add_parser("record")
     record.add_argument("--reason", required=True)
@@ -628,6 +716,9 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_check(probes)
         if args.command == "record":
             return cmd_record(probes, args.reason)
+        if args.command == "wasm":
+            engines = {"wasmtime": args.wasmtime, "bun": args.bun}
+            return cmd_wasm(probes, args.wasm_probe, engines)
         actions = {
             "open": lambda: cmd_open(probes, args.name, args.primary),
             "step": lambda: cmd_step(probes, args.enabling),

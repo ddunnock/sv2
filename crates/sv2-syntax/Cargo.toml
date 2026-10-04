@@ -16,9 +16,14 @@ text-size = { workspace = true }
 
 [dev-dependencies]
 insta = { workspace = true }
-proptest = { workspace = true }
 divan = { workspace = true }
 stats_alloc = { workspace = true }
+
+# Not for WASI: proptest's process forking (wait-timeout) has no WASI implementation, and
+# nothing that uses it runs there. The one dev target built for WASI is perf_probe, which
+# times the parser under WebAssembly engines (ADR-0024; docs/perf/roadmap.md Phase 1).
+[target.'cfg(not(target_os = "wasi"))'.dev-dependencies]
+proptest = { workspace = true }
 
 [[bench]]
 name = "parse"

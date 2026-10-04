@@ -2,8 +2,8 @@
 title: Rust Standards
 document_id: STD-002-RS
 status: draft
-version: 0.2.0
-date: 2026-09-16
+version: 0.2.1
+date: 2026-10-04
 review_date: 2027-03-16
 owner: David — CSE
 applies_to: all Rust crates in this workspace — sv2-syntax, sv2-ast, sv2-hir, sv2-resolve, sv2-cli
@@ -1375,6 +1375,9 @@ channel = "1.98.1"
 # rust-src is what rust-analyzer needs to index the standard library; it plays no
 # part in any gate
 components = ["clippy", "rustfmt", "rust-src"]
+# wasm32-wasip1 is what scripts/perf.sh wasm builds the timing probe for (ADR-0024,
+# ADR-0013 FIT-4); installed with the toolchain, never fetched at build or gate time
+targets = ["wasm32-wasip1"]
 profile = "minimal"
 ```
 

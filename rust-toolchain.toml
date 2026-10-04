@@ -6,4 +6,8 @@ channel = "1.98.1"
 # rust-src is what rust-analyzer needs to index the standard library. It plays no
 # part in any gate.
 components = ["clippy", "rustfmt", "rust-src"]
+# wasm32-wasip1 is what scripts/perf.sh wasm builds the timing probe for, to measure
+# ADR-0013 FIT-4 under WebAssembly engines (docs/perf/roadmap.md Phase 1). rustup
+# installs it with the toolchain, once; nothing fetches it at build or gate time.
+targets = ["wasm32-wasip1"]
 profile = "minimal"

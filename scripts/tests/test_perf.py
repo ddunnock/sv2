@@ -379,3 +379,55 @@ def test_check_fails_inside_an_open_series_over_an_unmeasured_change(series_env:
 @pytest.mark.usefixtures("series_env")
 def test_check_fails_without_a_baseline():
     assert perf.cmd_check(PROBES) == 1
+
+
+# --- WebAssembly timing (roadmap Phase 1) -------------------------------------------
+
+
+def test_an_engine_ratio_is_engine_over_native():
+    assert perf.engine_ratio(14_000_000, 10_000_000) == 1.4
+
+
+def test_an_engine_ratio_without_a_native_time_is_none():
+    assert perf.engine_ratio(14_000_000, 0) is None
+
+
+def test_the_fit4_margin_is_headroom_under_budget_and_negative_over_it():
+    assert perf.fit4_margin(perf.FIT4_P95_NS - 1_000_000) == 1_000_000
+    assert perf.fit4_margin(perf.FIT4_P95_NS + 2_000_000) == -2_000_000
+
+
+def test_a_missing_engine_is_skipped_not_an_error(tmp_path: Path):
+    wasm, stage = tmp_path / "p.wasm", tmp_path / "stage"
+    assert perf.engine_command("wasmtime", None, wasm, stage, ["timing"]) is None
+    absent = tmp_path / "no-such-wasmtime"
+    assert perf.engine_command("wasmtime", absent, wasm, stage, ["timing"]) is None
+
+
+def test_an_installed_engine_sees_only_the_staged_copy(tmp_path: Path):
+    wasmtime = tmp_path / "wasmtime"
+    wasmtime.write_text("")
+    wasm, stage = tmp_path / "p.wasm", tmp_path / "stage"
+    command = perf.engine_command("wasmtime", wasmtime, wasm, stage, ["timing", "30"])
+    assert command == [str(wasmtime), "run", f"--dir={stage}::.", str(wasm), "timing", "30"]
+
+
+def test_bun_runs_the_module_through_the_wasi_runner_with_the_stage(tmp_path: Path):
+    bun = tmp_path / "bun"
+    bun.write_text("")
+    wasm, stage = tmp_path / "p.wasm", tmp_path / "stage"
+    command = perf.engine_command("bun", bun, wasm, stage, ["timing"])
+    assert command == [str(bun), str(perf.WASI_RUNNER), str(wasm), str(stage), "timing"]
+
+
+def test_an_unknown_engine_is_a_programming_error(tmp_path: Path):
+    node = tmp_path / "node"
+    node.write_text("")
+    with pytest.raises(ValueError, match="unknown engine"):
+        perf.engine_command("node", node, tmp_path / "p.wasm", tmp_path, [])
+
+
+def test_staged_files_keep_their_repository_relative_paths(tmp_path: Path):
+    source = perf.ROOT / "scripts" / "perf.py"
+    perf.stage_files([source], tmp_path)
+    assert (tmp_path / "scripts" / "perf.py").read_bytes() == source.read_bytes()
