@@ -50,63 +50,58 @@ causes:
    position before looking at the one keyword that decides it.
 3. **Qualified names are re-measured** by each recogniser that looks past one.
 
-## Candidates, ranked
+### A caveat on caller attribution
 
-### 1. Classify keywords once, at the token: est. 25–35% of time
+The self times above are sampled from a release build, where inlining merges callers into
+their callees. Self time per function is reliable. **Caller edges are approximate.** The
+profile credits `qualified_name_length` called from `skip_one_prefix_metadata` with 10.7%,
+but that function returns at once unless the token is `#` (`parser/metadata.rs:38`), so
+most of that time belongs to other callers. Exact call counts per helper are roadmap
+Phase 0.
 
-Compute each `BasicName` token's keyword kind once in `Parser::new`, beside the
-meaningful-token index. Then:
-- `is_name` becomes a lookup, not a 217-entry scan;
-- `nth_is_keyword` compares a `SyntaxKind`, not text;
-- `keyword()` becomes a `match` (generated) or a binary search over the sorted table.
+Grouping self time by its nearest `at_*` ancestor: **65.1% of parse time runs under a
+recogniser.** The largest are `at_simple_usage` (8.5%), `at_sysml_keyword_member` (7.6%),
+`at_simple_definition` (5.7%), and a long tail of about 1% each across the 28 alternatives.
 
-- **Primary metric:** `time`. No counter sees string compares; `peeked` will not move.
-- **Steps:**
-  1. Precompute the table, and make `is_name` use it. This step should already win.
-  2. Make `nth_is_keyword` compare kinds; its `&str` callers keep working through a
-     kind lookup.
-  3. Optionally move call sites from `"part"` to `SyntaxKind::KwPart`. This is mechanical
-     but touches hundreds of lines, so do it one module per step.
-- **Risk:** low. The keyword set is the pinned one, and the fingerprint catches any
-  mis-tag. Allocations rise by one `Vec` per parse, inside the 2% step tolerance.
+## What the processor is doing
 
-### 2. Decide the member once: est. 20–40% of time, most of `peeked`
+Instruments CPU Counters, bottleneck mode, on the same bench (88 10-ms buckets while
+parsing; the timer-calibration buckets are excluded):
 
-Read a member's head once: its prefix's extent and the keyword after it. Then dispatch on
-that keyword with a `match`, instead of asking 28 recognisers that each re-skip the
-prefix. Where several recognisers share a keyword, the `match` arm keeps their original
-order.
+| Share of cycles | Category | Reading |
+|---|---|---|
+| 66.5% | useful | the processor is mostly not stalled: the work is real, just redundant |
+| 19.2% | instruction delivery (front end) | control flow hopping across many small recognisers |
+| 8.4% | discarded (speculation) | branch mispredictions: present, not dominant |
+| 5.9% | processing | arithmetic and memory: not the bottleneck |
 
-- **Primary metric:** `peeked`. It should drop by a large factor; 219 per consumed token
-  is mostly this.
-- **Steps:** likely enabling ones first. Introduce the member-head computation alongside
-  the chain (enabling), then switch one dispatcher at a time, `body_element` first.
-- **Risk:** medium. The recogniser order encodes priority, including deviation-driven
-  choices (ADR-0022). The fingerprint makes any change of choice a rejected step, which
-  is exactly the guard this needs.
+The parser is slow because it does too much, not because what it does is
+cache-unfriendly. The remedy is less work: Phases 2, 4 and 5. Phase 5's dispatch should
+also cut the front-end share.
 
-### 3. Memoize prefix and name skipping: est. 10–20%, a fallback for #2
+## Where the allocations come from
 
-If #2 is too invasive for a pass, cache what `skip_*_prefix` and `qualified_name_length`
-return per start index (a `Cell`-held, lazily filled table on `Parser`). The chain stays,
-but each repetition becomes a lookup.
+Instruments Allocations, five parses of the largest file plus divan's setup: 50,747
+allocations, matching the probe's 9,891 per parse.
 
-- **Primary metric:** `peeked`, then `time`.
-- **Risk:** low to medium. A cache keyed on index must be invalidated by nothing, which
-  holds because tokens never change during a parse. The cost is a few `Vec`s of
-  allocation.
+| Count share | Size class |
+|---|---|
+| 47.2% | 48 bytes |
+| 22.0% | 64 bytes |
+| 8.8% | 80 bytes |
+| 5.4% + 4.9% | 112 and 96 bytes |
 
-Do #3 only if #2 is abandoned. Done after #2, there would be little left to save.
+69% of allocations are 48 or 64 bytes. These are, by size, rowan green nodes with one or
+two children; the export gives size classes, not backtraces, so this is an inference.
+Those nodes *are* the tree, and reducing them would change its shape, which an
+optimization may not do. What can be trimmed is the buffers (roadmap Phase 6).
 
-### 4. Leave alone for now
+## The plan
 
-- **rowan `NodeCache` (~6%).** It deduplicates green nodes, which is how the tree is
-  built. A cache shared across parses would help the editor's reparse loop more than a
-  single parse; it belongs with ADR-0013's incremental work, not here.
-- **Lexer (2.6%), allocation count.** 9,891 allocations for 73 KB is mostly green nodes.
-  Nothing is worth a series until #1 and #2 have moved the rest.
+The optimizations are phased in **[roadmap.md](roadmap.md)**. Each phase can be planned
+and executed alone, as one `optimize-parser` series.
 
-## Suggested order
-
-Do #1, then #2, each as its own series. After #1, re-run this profile. With the string
-compares gone, #2's share will be larger and easier to read.
+One ordering changed from this document's first draft. Memoizing prefix and name scans
+(roadmap Phase 4) now comes *before* member-head dispatch (Phase 5), not as its fallback.
+It makes the head cheap to compute, and it is the lower-risk win if Phase 5 has to be
+abandoned.
