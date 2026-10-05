@@ -203,6 +203,20 @@ impl Parser<'_> {
     /// With no kind keyword before one of those, the `end` is `DefaultReferenceUsage`'s
     /// bare one (deviation `DefaultReferenceUsage`), which owns no cross feature.
     pub(super) fn skip_end_usage_prefix(&self, n: usize) -> Option<usize> {
+        count(Counter::SkipEndUsagePrefix);
+        // The walk asks `at_end_kind`, a whole member dispatch, at every token of the cross
+        // feature, and the same start is asked again by each usage recogniser (roadmap
+        // Phase 5). `None` is cached as an end equal to the start, which an answer never
+        // is: an answer lies past the `end`.
+        let end = self.memoized(&self.end_usage_prefix_ends, n, |parser, n| {
+            parser.compute_end_usage_prefix(n).unwrap_or(n)
+        });
+        (end != n).then_some(end)
+    }
+
+    /// `skip_end_usage_prefix`'s walk, when its cache does not have the answer.
+    fn compute_end_usage_prefix(&self, n: usize) -> Option<usize> {
+        count(Counter::SkipEndUsagePrefixComputed);
         if !self.nth_is_keyword(n, "end") {
             return None;
         }

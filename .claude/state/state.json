@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-10-05T12:48:03Z",
+    "regenerated_utc": "2026-10-05T12:50:12Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -38,14 +38,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "4e1f85b Ask each keyword member only where its head admits it",
       "18da45a Ask at_definition_element only at a head a definition can open",
       "3208c23 Open optimization series member-head-dispatch (roadmap Phase 5)",
       "4ae0eee Plan roadmap Phase 5 and measure dispatch by head (step 0)",
       "723eb60 Close the session: Phase 4 closed at -81.9% peeked, Phase 5 next",
       "a156cee Record roadmap Phase 4's outcome and the checkpoint profile after it",
       "4c115c7 Close series prefix-skip-memo: net -81.9% peeked (roadmap Phase 4)",
-      "0ce49b7 Memoize skip_basic_usage_prefix by absolute start and comment mode",
-      "892ab63 Memoize skip_occurrence_usage_prefix by absolute start and comment mode"
+      "0ce49b7 Memoize skip_basic_usage_prefix by absolute start and comment mode"
     ]
   },
   "authored": {

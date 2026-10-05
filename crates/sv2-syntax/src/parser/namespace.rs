@@ -101,7 +101,8 @@ impl KeywordMember {
     ///
     /// Each recogniser reads only prefix words and `#` metadata before the keyword that
     /// decides it, which is therefore the head; the keyword is the one its recogniser
-    /// tests, named at each arm. The three that decide on a prefix are admitted by the
+    /// tests, named at each arm or, for `Simple` and `Case`, read from the table that
+    /// recogniser walks. The three that decide on a prefix are admitted by the
     /// flag `member_head` keeps for it. An `end` head admits everything: an
     /// `EndUsagePrefix` owns a cross feature (8.2.2.6.2) that `member_head` does not
     /// look past, and every usage recogniser reads one. The
@@ -143,7 +144,8 @@ impl KeywordMember {
             Self::Simple => head.word.is_some_and(is_simple_usage_head),
             // `ref` is the kind keyword, and `member_head` skips it as a prefix word.
             Self::Reference => head.after_ref,
-            // At least one `#` before the head, with no kind keyword between.
+            // At least one `#` skipped on the way to the head. The recogniser decides the
+            // rest, that no kind keyword follows it.
             Self::Extended => head.after_metadata,
         }
     }

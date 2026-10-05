@@ -203,6 +203,8 @@ struct Parser<'a> {
     occurrence_usage_prefix_ends: PrefixCache,
     /// `skip_basic_usage_prefix`'s recent answers.
     basic_usage_prefix_ends: PrefixCache,
+    /// `skip_end_usage_prefix`'s recent answers.
+    end_usage_prefix_ends: PrefixCache,
 }
 
 impl<'a> Parser<'a> {
@@ -237,6 +239,7 @@ impl<'a> Parser<'a> {
             prefix_metadata_ends: PrefixCache::new(),
             occurrence_usage_prefix_ends: PrefixCache::new(),
             basic_usage_prefix_ends: PrefixCache::new(),
+            end_usage_prefix_ends: PrefixCache::new(),
         }
     }
 
