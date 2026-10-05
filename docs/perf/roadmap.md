@@ -527,6 +527,75 @@ its commit.
 Step 3: most of what remains of the `end` cost. Step 4: the second decision's share,
 which step 0 did not isolate.
 
+**Outcome.** Series `member-head-dispatch`, closed: **net −41.1% `peeked`**
+(4,331,571 → 2,552,786), against the −25 to −37% expected. Median time over the five
+largest files fell from 14.35 ms at the open to about 12.4 ms. The series was opened,
+stepped and closed on the RHEL 9 workspace. Five steps, all improved, none enabling:
+
+| Step | Change | Verdict |
+|---|---|---|
+| 1 (18da45a) | `MemberHead`; `at_definition_element` asked only where `opens_definition` admits the head | improved, −16.4% |
+| 2 (4e1f85b) | `KeywordMember` and `admits`: every keyword member asked only where its head admits it, in the chain's order | improved, −17.3% |
+| 3 (cb9858f) | `skip_end_usage_prefix` memoized, `None` stored as an end equal to the start | improved, −2.8% |
+| 4 (0f47596) | `membership` re-runs `definition_element` only at a definition head | improved, −5.8% |
+| 5 (bc06618) | `membership` re-runs the three usage chains only where `admits_here` holds | improved, −6.8% |
+
+How it differs from the plan:
+- **Gates, not a table.** Each `KeywordMember` gets an `admits` predicate on the head,
+  and the chain is walked in its original order. That keeps priority by construction,
+  where a table of candidate lists would need a test to keep each list ordered.
+  `MemberHead` records three flags: `ref`, `individual`/`snapshot`/`timeslice`, and `#`
+  metadata. Those three members decide on a prefix that the head skips.
+- **"Decide once" became step 4 and step 5's gates.** Before step 4, a throwaway count put
+  `membership`'s second decision (from its member prefix to its first consumed token) at
+  1,149,945 of 2,908,282 peeks. Its chains run in a different order from the keyword
+  chain, so passing the first decision through would mean mapping one priority onto
+  another. The same head checks gate the second decision instead. Steps 4 and 5 removed
+  about 355 K of it. The rest of that window is mostly lookahead inside the chosen
+  production before it consumes anything, not dispatch.
+- **Step 3 was small** (−2.8%), because step 2 had already made the nested dispatch inside
+  the `end` walk cheap.
+- **`body_element`'s own arms** (the old step 5) were not taken. Step 0 measured
+  `at_result_expression` at 3% and `at_source_succession_member` at 0.3%.
+
+The evidence for every gate is two implication tests, run at every meaningful position of
+the corpus, `tests/rejection` and a list of hand-written forms, in both comment modes:
+- `definition_element_heads_cover_every_definition`: 609 files, 4,782 definitions.
+- `every_keyword_member_is_admitted_where_it_accepts`: 646 sources, 16,226 acceptances.
+
+Negative controls on both failed them, as they should. **The tests are empirical, not a
+proof.** A recogniser that accepted on input outside those sources at a head its
+`admits` arm rejects would change meaning silently. A new recogniser, or a new keyword
+in one, needs its `admits` arm updated and a form added. Each dispatcher step had a
+`spec-conformance-reviewer` pass: 0 blocking in all four.
+
+Largest file, p95, after the close (RHEL 9 workspace, two runs; take FIT-4 on the
+MacBook):
+
+| Engine | After Phase 4 | After Phase 5 | FIT-4 margin |
+|---|---|---|---|
+| native | 7.12 ms | 5.2 ms | 10.8 ms |
+| Bun (JavaScriptCore) | 9.02 ms | 8.6–9.0 ms | ≥ 7.0 ms |
+| wasmtime | 9.11 ms | 6.0–7.5 ms | ≥ 8.5 ms |
+
+**Self time after the close** (`perf`, whole-corpus bench). DWARF unwinding now resolves
+`memcmp`'s caller, though inclusive time through the parser's recursion still truncates:
+
+| Self | Where |
+|---|---|
+| 14.2% | `nth_is_keyword` |
+| ~11% | `keyword()`'s binary search, `memcmp` included ("2b") |
+| ~9% | `tokenize` (Phase 3) |
+| ~20% | rowan tree building and dropping (Phase 6) |
+
+Carried forward:
+- The leading comments on `non_occurrence_usage_element`, `structure_usage_element` and
+  `behavior_usage_element` should point at `admits_here`. This is step 5's review
+  advisory, left for the next change to the parser, because a comment-only change cannot
+  be measured as a step.
+- **"2b" is now the largest single target,** together with pending decision
+  `keyword-table-per-language`.
+
 ---
 
 ## Phase 6 — Allocation trims
@@ -571,5 +640,5 @@ is recorded there as a candidate, not here.
 | 2 | keyword-classification | closed, net −25.2% time | Bun p95 11.21 → 8.34 ms; two steps, no enabling |
 | 3 | | not started | |
 | 4 | prefix-skip-memo | closed, net −81.9% peeked | median time 23.92 → 13.62 ms (RHEL 9); three steps, no enabling |
-| 5 | | not started | |
+| 5 | member-head-dispatch | closed, net −41.1% peeked | five steps, no enabling; gates by `admits`, not a table |
 | 6 | | not started | |
