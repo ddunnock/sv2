@@ -140,6 +140,60 @@ Phase 4 therefore uses an 8-slot `[Cell<Entry>; 8]` per helper, keyed by
 `(position, comments_significant)`.
    Phase 5's head computation answers both at once.
 
+### Keyword-member dispatch by head (Phase 5, step 0)
+
+Measured at 723eb60, after Phase 4. A throwaway worktree wrapped each of
+`at_sysml_keyword_member`'s 28 recognisers and recorded, per call, the member's **head**
+and what each recogniser peeked and answered. The head is the first token after any
+`#` prefix metadata and the prefix words `in out inout derived abstract variation constant
+ref individual snapshot timeslice`, as a keyword or a token kind. The peek counter was
+restored around the head computation, so the totals are the parser's own. The worktree
+was deleted; nothing from it is in the parser.
+
+| Where | Calls | Peeked | Share of 4.36 M |
+|---|---:|---:|---:|
+| `at_sysml_keyword_member`, all callers | 14,020 | 2,395,083 | 55% |
+| `at_member_element` (contains most of the above) | 8,257 | 1,486,292 | 34% |
+| `at_result_expression` | 688 | 140,403 | 3% |
+| `at_source_succession_member` | 5,681 | 12,998 | 0.3% |
+
+Of the chain's 2.40 M:
+
+| Recogniser | Calls | Accepts | Peeked |
+|---|---:|---:|---:|
+| `at_definition_element` (asked first, every time) | 14,020 | 1,961 | 1,138,651 |
+| `at_simple_usage` | 10,378 | 3,004 | 245,453 |
+| `at_action_usage` | 12,059 | 283 | 165,621 |
+| `at_individual_or_portion_usage` | 11,012 | 95 | 141,492 |
+| `at_reference_usage` | 7,374 | 117 | 122,840 |
+| `at_succession_as_usage` | 10,917 | 86 | 113,730 |
+| `at_binding_connector_as_usage` | 10,831 | 71 | 112,522 |
+| the other 21 | | | 354,654 |
+
+- **68% of the chain's peeks are spent in recognisers that never accept at that head**
+  anywhere in the corpus: 1,622,532 of 2,395,083. That share is what head dispatch can
+  remove, and it is 37% of all peeks. It is an upper bound from one corpus. The candidate
+  sets themselves must come from the recognisers' code, not from this log.
+- **`at_definition_element` alone spends 728,419 peeks at heads where it never wins.** At
+  a bare-name head it costs 89 peeks per call and wins none of 3,670 calls.
+- **An `end` member costs about 3,600 peeks per call:** 150 calls, 538,556 peeks.
+  `skip_end_usage_prefix` walks the cross feature token by token, and at each token
+  `at_end_kind` runs the whole 28-recogniser chain. Head dispatch makes each nested call
+  cheap. Memoizing `skip_end_usage_prefix` stops the walk being repeated.
+- **70 distinct heads; 31 have more than one winner.** These account for 11,009 of the
+  14,020 calls. `part`, for example, is `at_definition_element` (`part def`) or
+  `at_simple_usage`. So the head selects an ordered candidate set, not one recogniser.
+- **1,787 calls end with no winner** (bare names, `:`, `[`, numbers, `then`). They cost
+  290,998 peeks. Most come from `at_result_expression` and `at_end_kind` asking whether a
+  member starts at a token that cannot start one.
+- **Correction to the Phase 0 count:** `keyword_member_dispatch` is now 14,020, 1.3 per
+  decision, not 36,360 (3.3). Phase 4 removed the repeats: the nested calls came from
+  `at_end_kind` inside prefix skips that are now cached.
+- **`membership` decides a second time.** After `at_member_element` accepts,
+  `definition_element` and `usage_element_of_class` re-run their own recogniser chains
+  to choose which production to read. That cost is inside the 1.8 M peeks that fall
+  outside the dispatch regions above.
+
 ## What the processor is doing
 
 Instruments CPU Counters, bottleneck mode, on the same bench (88 10-ms buckets while

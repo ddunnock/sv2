@@ -478,6 +478,55 @@ against the old chain (ideally by a test that asserts they agree).
 
 **Depends on.** Phase 4 (cheap head computation). Phase 2 (kind comparison).
 
+**Plan (2026-10-05).** Step 0 is done (assessment.md, "Keyword-member dispatch by head").
+The chain is 55% of all peeks, and 68% of that is spent in recognisers that never accept
+at the head they were asked at.
+
+Decisions:
+- **Head representation.** `MemberHead { at: usize, kind: SyntaxKind }`:
+  - `at` is the relative index of the first token after `#` metadata and the prefix
+    words. `kind` is that token's keyword kind, or its token kind when it is not a
+    keyword.
+  - Computed once per `at_sysml_keyword_member` call, through Phase 4's caches.
+  - No allocation. It is keyed exactly as the step-0 log was keyed.
+- **A table, not a hand-written `match`.** A `Recogniser` enum names the 28 chain
+  members. A `const` table maps a head kind to `&[Recogniser]`, and one `match` turns a
+  `Recogniser` into its call. A head the table does not list falls back to the whole
+  chain, in order. That keeps the keyword-less member and every rare head exactly the old
+  fall-through.
+- **Candidate sets come from the code, and a test proves them.**
+  - Each recogniser's possible heads are read from its own code and cited at its table
+    row. They are never taken from the step-0 log.
+  - A unit test asserts every row is an ordered subsequence of the chain. Order encodes
+    priority, including the choices deviations make (ADR-0022).
+  - A **differential test** keeps the old chain under `#[cfg(test)]` and compares it
+    with the new dispatch at every meaningful token position, in both comment modes,
+    over the positive corpus, `tests/rejection/` and the test fixtures. The answers must
+    be identical.
+  - The fingerprint holds the same over the corpus at each step.
+
+Steps:
+1. Compute `MemberHead`, and ask `at_definition_element` only at the heads that can open
+   a definition, a package, a dependency or an annotating element. This is the largest
+   single cost: 728 K peeks at heads where it never wins. It is a win, not enabling,
+   because it lands with its first reader.
+2. Replace the rest of `at_sysml_keyword_member`'s chain with the table. The nested
+   calls from `at_end_kind` become cheap here, which is where most of the `end` cost
+   goes.
+3. Memoize `skip_end_usage_prefix` in a `PrefixCache`, storing `None` as an end equal to
+   the start. This removes the remaining repeated walks over a cross feature.
+4. *(enabling, if needed)* Decide once. `at_sysml_keyword_member` returns the
+   `Recogniser` that accepted, and `membership` dispatches on it instead of re-running
+   `definition_element`'s and `usage_element_of_class`'s chains.
+5. `body_element`'s own arms on the head, if a re-measure still shows them.
+
+Each dispatcher switch (steps 1, 2, 4, 5) gets a `spec-conformance-reviewer` pass before
+its commit.
+
+**Expected.** Steps 1–2: `peeked` −25 to −37% (the step-0 bound is 1.62 M of 4.36 M).
+Step 3: most of what remains of the `end` cost. Step 4: the second decision's share,
+which step 0 did not isolate.
+
 ---
 
 ## Phase 6 — Allocation trims
