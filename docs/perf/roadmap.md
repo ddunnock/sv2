@@ -719,6 +719,33 @@ is recorded there as a candidate, not here.
 
 **Depends on.** Phase 0.
 
+**Outcome.** Series `buffer-trims`, closed: **net −19.3% `allocated_bytes`**
+(15,713,448 → 12,686,360). It ran on the RHEL 9 workspace, where this metric is exact.
+Three steps, all improved, none enabling:
+
+| Step | Change | Verdict |
+|---|---|---|
+| 1 (47b9e6a) | the two meaningful-token indices counted first and allocated once at that size | improved, −2.7% |
+| 2 (5709ef0) | `Token`'s offsets `u32`, the width of rowan's `TextSize`: 24 → 12 bytes | improved, −13.3% |
+| 3 (c390cfd) | the indices held as `u32` | improved, −4.3% |
+
+- **Step 0 was DHAT, not Instruments.** Its allocation sites on the largest file put the
+  token buffer at 42%, rowan's nodes at 41% (the tree, out of scope) and the indices at
+  14% of DHAT's total.
+- **DHAT and the ratcheted metric count growth differently.** DHAT counts every
+  reallocation as a whole new block. `stats_alloc`, which the probe reads, adds only a
+  reallocation's growth to `bytes_allocated`. So a `Vec` grown from empty costs about its
+  final capacity here, and a capacity hint on `tokenize` measured +1.2% and was rejected.
+  An earlier session note that the metric was "blind to reallocation growth" was wrong,
+  read from the field's documentation rather than its code (stats_alloc 0.1.10,
+  `realloc`), and was retracted before anything changed. The doubling's cost is copying,
+  which is time.
+- **`Token` is public** and its fields changed type. Nothing outside `sv2-syntax` uses
+  it, and `Token::range` gives the `usize` range for indexing. The 4 GiB bound was
+  already rowan's.
+- What remains above 1% is rowan's green nodes, which this phase may not touch, and the
+  token buffer's doublings, which are time, not bytes.
+
 ---
 
 ## Outcomes
@@ -731,4 +758,4 @@ is recorded there as a candidate, not here.
 | 3 | operator-dispatch | closed, net −3.2% time | one step; `tokenize` alone −45% |
 | 4 | prefix-skip-memo | closed, net −81.9% peeked | median time 23.92 → 13.62 ms (RHEL 9); three steps, no enabling |
 | 5 | member-head-dispatch | closed, net −41.1% peeked | five steps, no enabling; gates by `admits`, not a table |
-| 6 | | not started | |
+| 6 | buffer-trims | closed, net −19.3% allocated_bytes | three steps; `Token` 24 → 12 bytes |

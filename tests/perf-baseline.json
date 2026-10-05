@@ -1,5 +1,5 @@
 {
- "commit": "2c578fc",
+ "commit": "c390cfd",
  "detail": {
   "is_name": 51727,
   "keyword_entries": 145161,
@@ -20,8 +20,8 @@
  },
  "files": {
   "vendor/corpus/kerml/src/examples/Address Book Example/AddressBookModel.kerml": {
-   "allocated_bytes": 9328,
-   "allocations": 111,
+   "allocated_bytes": 7800,
+   "allocations": 103,
    "bytes": 164,
    "consumed": 33,
    "detail": {
@@ -45,8 +45,8 @@
    "peeked": 887
   },
   "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_N_ary.kerml": {
-   "allocated_bytes": 128800,
-   "allocations": 781,
+   "allocated_bytes": 93856,
+   "allocations": 765,
    "bytes": 4894,
    "consumed": 752,
    "detail": {
@@ -70,8 +70,8 @@
    "peeked": 14317
   },
   "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_OwnedEnds.kerml": {
-   "allocated_bytes": 75120,
-   "allocations": 553,
+   "allocated_bytes": 58424,
+   "allocations": 539,
    "bytes": 2940,
    "consumed": 473,
    "detail": {
@@ -95,8 +95,8 @@
    "peeked": 10359
   },
   "vendor/corpus/kerml/src/examples/Association Examples/ProductSelection_UnownedEnds.kerml": {
-   "allocated_bytes": 42680,
-   "allocations": 341,
+   "allocated_bytes": 34208,
+   "allocations": 329,
    "bytes": 1311,
    "consumed": 221,
    "detail": {
@@ -120,8 +120,8 @@
    "peeked": 4439
   },
   "vendor/corpus/kerml/src/examples/Behavior Examples/Camera.kerml": {
-   "allocated_bytes": 8216,
-   "allocations": 98,
+   "allocated_bytes": 7168,
+   "allocations": 92,
    "bytes": 191,
    "consumed": 29,
    "detail": {
@@ -145,8 +145,8 @@
    "peeked": 588
   },
   "vendor/corpus/kerml/src/examples/Behavior Examples/TakePicture.kerml": {
-   "allocated_bytes": 22632,
-   "allocations": 214,
+   "allocated_bytes": 18200,
+   "allocations": 204,
    "bytes": 410,
    "consumed": 86,
    "detail": {
@@ -170,8 +170,8 @@
    "peeked": 1994
   },
   "vendor/corpus/kerml/src/examples/Individuals Examples/JohnIndividualExample.kerml": {
-   "allocated_bytes": 44968,
-   "allocations": 346,
+   "allocated_bytes": 36288,
+   "allocations": 334,
    "bytes": 2830,
    "consumed": 199,
    "detail": {
@@ -195,8 +195,8 @@
    "peeked": 4830
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-Atoms.kerml": {
-   "allocated_bytes": 9648,
-   "allocations": 112,
+   "allocated_bytes": 8620,
+   "allocations": 106,
    "bytes": 356,
    "consumed": 32,
    "detail": {
@@ -220,8 +220,8 @@
    "peeked": 714
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-2-ModelingInstances.kerml": {
-   "allocated_bytes": 23080,
-   "allocations": 205,
+   "allocated_bytes": 18780,
+   "allocations": 195,
    "bytes": 740,
    "consumed": 104,
    "detail": {
@@ -245,8 +245,8 @@
    "peeked": 2512
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-2-WithoutConnectors.kerml": {
-   "allocated_bytes": 22200,
-   "allocations": 195,
+   "allocated_bytes": 17752,
+   "allocations": 185,
    "bytes": 609,
    "consumed": 85,
    "detail": {
@@ -270,8 +270,8 @@
    "peeked": 2066
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-3-OneToOneConnectors.kerml": {
-   "allocated_bytes": 43616,
-   "allocations": 357,
+   "allocated_bytes": 35096,
+   "allocations": 345,
    "bytes": 1633,
    "consumed": 216,
    "detail": {
@@ -295,8 +295,8 @@
    "peeked": 4058
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-4-OneToUnrestrictedConnectors.kerml": {
-   "allocated_bytes": 43296,
-   "allocations": 348,
+   "allocated_bytes": 34800,
+   "allocations": 336,
    "bytes": 1704,
    "consumed": 219,
    "detail": {
@@ -320,8 +320,8 @@
    "peeked": 4225
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-5-TimingForStructures.kerml": {
-   "allocated_bytes": 129816,
-   "allocations": 790,
+   "allocated_bytes": 95024,
+   "allocations": 774,
    "bytes": 6190,
    "consumed": 775,
    "detail": {
@@ -345,8 +345,8 @@
    "peeked": 14248
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-6-Sequences.kerml": {
-   "allocated_bytes": 45632,
-   "allocations": 388,
+   "allocated_bytes": 37344,
+   "allocations": 376,
    "bytes": 1579,
    "consumed": 245,
    "detail": {
@@ -370,8 +370,8 @@
    "peeked": 5109
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-7-DecisionsAndMerges.kerml": {
-   "allocated_bytes": 97536,
-   "allocations": 722,
+   "allocated_bytes": 73268,
+   "allocations": 706,
    "bytes": 4248,
    "consumed": 561,
    "detail": {
@@ -395,8 +395,8 @@
    "peeked": 10007
   },
   "vendor/corpus/kerml/src/examples/KerML Spec Annex A Examples/A-3-8-ChangingFeatureValues.kerml": {
-   "allocated_bytes": 158808,
-   "allocations": 1077,
+   "allocated_bytes": 125888,
+   "allocations": 1061,
    "bytes": 7039,
    "consumed": 1006,
    "detail": {
@@ -420,8 +420,8 @@
    "peeked": 21036
   },
   "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_1.kerml": {
-   "allocated_bytes": 15704,
-   "allocations": 162,
+   "allocated_bytes": 13520,
+   "allocations": 154,
    "bytes": 257,
    "consumed": 47,
    "detail": {
@@ -445,8 +445,8 @@
    "peeked": 1027
   },
   "vendor/corpus/kerml/src/examples/Mass Roll-up Example/MassRollup_2.kerml": {
-   "allocated_bytes": 16584,
-   "allocations": 176,
+   "allocated_bytes": 14488,
+   "allocations": 168,
    "bytes": 332,
    "consumed": 58,
    "detail": {
@@ -470,8 +470,8 @@
    "peeked": 1200
   },
   "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_1.kerml": {
-   "allocated_bytes": 27672,
-   "allocations": 245,
+   "allocated_bytes": 21568,
+   "allocations": 233,
    "bytes": 890,
    "consumed": 133,
    "detail": {
@@ -495,8 +495,8 @@
    "peeked": 2981
   },
   "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_2.kerml": {
-   "allocated_bytes": 25184,
-   "allocations": 243,
+   "allocated_bytes": 21072,
+   "allocations": 233,
    "bytes": 813,
    "consumed": 126,
    "detail": {
@@ -520,8 +520,8 @@
    "peeked": 2604
   },
   "vendor/corpus/kerml/src/examples/Mass Roll-up Example/Vehicles_3.kerml": {
-   "allocated_bytes": 39736,
-   "allocations": 302,
+   "allocated_bytes": 30680,
+   "allocations": 290,
    "bytes": 938,
    "consumed": 148,
    "detail": {
@@ -545,8 +545,8 @@
    "peeked": 3441
   },
   "vendor/corpus/kerml/src/examples/Massed Thing Example/MassedThings.kerml": {
-   "allocated_bytes": 13816,
-   "allocations": 154,
+   "allocated_bytes": 11704,
+   "allocations": 146,
    "bytes": 277,
    "consumed": 56,
    "detail": {
@@ -570,8 +570,8 @@
    "peeked": 1372
   },
   "vendor/corpus/kerml/src/examples/Named Collection Members Example/VehicleTanks.kerml": {
-   "allocated_bytes": 32504,
-   "allocations": 306,
+   "allocated_bytes": 26680,
+   "allocations": 294,
    "bytes": 744,
    "consumed": 168,
    "detail": {
@@ -595,8 +595,8 @@
    "peeked": 3851
   },
   "vendor/corpus/kerml/src/examples/Packet Example/PacketUsage.kerml": {
-   "allocated_bytes": 13704,
-   "allocations": 133,
+   "allocated_bytes": 11528,
+   "allocations": 125,
    "bytes": 362,
    "consumed": 48,
    "detail": {
@@ -620,8 +620,8 @@
    "peeked": 1056
   },
   "vendor/corpus/kerml/src/examples/Packet Example/Packets.kerml": {
-   "allocated_bytes": 24416,
-   "allocations": 223,
+   "allocated_bytes": 20184,
+   "allocations": 213,
    "bytes": 966,
    "consumed": 111,
    "detail": {
@@ -645,8 +645,8 @@
    "peeked": 2831
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/ArgumentResolution.kerml": {
-   "allocated_bytes": 15304,
-   "allocations": 158,
+   "allocated_bytes": 13168,
+   "allocations": 150,
    "bytes": 207,
    "consumed": 53,
    "detail": {
@@ -670,8 +670,8 @@
    "peeked": 1615
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Associations.kerml": {
-   "allocated_bytes": 24320,
-   "allocations": 234,
+   "allocated_bytes": 20032,
+   "allocations": 224,
    "bytes": 388,
    "consumed": 104,
    "detail": {
@@ -695,8 +695,8 @@
    "peeked": 3033
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Behaviors.kerml": {
-   "allocated_bytes": 26240,
-   "allocations": 237,
+   "allocated_bytes": 21840,
+   "allocations": 227,
    "bytes": 381,
    "consumed": 90,
    "detail": {
@@ -720,8 +720,8 @@
    "peeked": 2699
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Circular.kerml": {
-   "allocated_bytes": 11704,
-   "allocations": 123,
+   "allocated_bytes": 9488,
+   "allocations": 115,
    "bytes": 172,
    "consumed": 43,
    "detail": {
@@ -745,8 +745,8 @@
    "peeked": 981
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Classes.kerml": {
-   "allocated_bytes": 26496,
-   "allocations": 230,
+   "allocated_bytes": 20360,
+   "allocations": 218,
    "bytes": 537,
    "consumed": 129,
    "detail": {
@@ -770,8 +770,8 @@
    "peeked": 2822
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Classifications.kerml": {
-   "allocated_bytes": 14984,
-   "allocations": 157,
+   "allocated_bytes": 12776,
+   "allocations": 149,
    "bytes": 132,
    "consumed": 44,
    "detail": {
@@ -795,8 +795,8 @@
    "peeked": 1406
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Classifiers.kerml": {
-   "allocated_bytes": 14176,
-   "allocations": 125,
+   "allocated_bytes": 11120,
+   "allocations": 115,
    "bytes": 374,
    "consumed": 66,
    "detail": {
@@ -820,8 +820,8 @@
    "peeked": 1676
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Comments.kerml": {
-   "allocated_bytes": 14304,
-   "allocations": 136,
+   "allocated_bytes": 12092,
+   "allocations": 128,
    "bytes": 755,
    "consumed": 51,
    "detail": {
@@ -845,8 +845,8 @@
    "peeked": 1402
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Conjugation.kerml": {
-   "allocated_bytes": 7152,
-   "allocations": 85,
+   "allocated_bytes": 6064,
+   "allocations": 79,
    "bytes": 99,
    "consumed": 24,
    "detail": {
@@ -870,8 +870,8 @@
    "peeked": 658
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Connectors.kerml": {
-   "allocated_bytes": 34392,
-   "allocations": 248,
+   "allocated_bytes": 25336,
+   "allocations": 236,
    "bytes": 657,
    "consumed": 148,
    "detail": {
@@ -895,8 +895,8 @@
    "peeked": 3706
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Dependencies.kerml": {
-   "allocated_bytes": 12824,
-   "allocations": 124,
+   "allocated_bytes": 10712,
+   "allocations": 116,
    "bytes": 352,
    "consumed": 56,
    "detail": {
@@ -920,8 +920,8 @@
    "peeked": 1614
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Expansion.kerml": {
-   "allocated_bytes": 9560,
-   "allocations": 123,
+   "allocated_bytes": 8528,
+   "allocations": 117,
    "bytes": 112,
    "consumed": 31,
    "detail": {
@@ -945,8 +945,8 @@
    "peeked": 1385
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Expressions.kerml": {
-   "allocated_bytes": 112032,
-   "allocations": 1022,
+   "allocated_bytes": 95168,
+   "allocations": 1008,
    "bytes": 1809,
    "consumed": 452,
    "detail": {
@@ -970,8 +970,8 @@
    "peeked": 17141
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/FeatureChains.kerml": {
-   "allocated_bytes": 33600,
-   "allocations": 239,
+   "allocated_bytes": 24680,
+   "allocations": 227,
    "bytes": 581,
    "consumed": 165,
    "detail": {
@@ -995,8 +995,8 @@
    "peeked": 3445
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/FeatureInheritance.kerml": {
-   "allocated_bytes": 6856,
-   "allocations": 80,
+   "allocated_bytes": 5736,
+   "allocations": 74,
    "bytes": 102,
    "consumed": 20,
    "detail": {
@@ -1020,8 +1020,8 @@
    "peeked": 553
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Features.kerml": {
-   "allocated_bytes": 55712,
-   "allocations": 464,
+   "allocated_bytes": 43600,
+   "allocations": 450,
    "bytes": 1615,
    "consumed": 278,
    "detail": {
@@ -1045,8 +1045,8 @@
    "peeked": 6830
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Filtering.kerml": {
-   "allocated_bytes": 44648,
-   "allocations": 402,
+   "allocated_bytes": 35936,
+   "allocations": 390,
    "bytes": 1184,
    "consumed": 191,
    "detail": {
@@ -1070,8 +1070,8 @@
    "peeked": 3970
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Imports.kerml": {
-   "allocated_bytes": 23680,
-   "allocations": 206,
+   "allocated_bytes": 19504,
+   "allocations": 196,
    "bytes": 480,
    "consumed": 118,
    "detail": {
@@ -1095,8 +1095,8 @@
    "peeked": 3073
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Inheritance.kerml": {
-   "allocated_bytes": 13152,
-   "allocations": 133,
+   "allocated_bytes": 11064,
+   "allocations": 125,
    "bytes": 235,
    "consumed": 59,
    "detail": {
@@ -1120,8 +1120,8 @@
    "peeked": 1199
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Inverses.kerml": {
-   "allocated_bytes": 14152,
-   "allocations": 133,
+   "allocated_bytes": 11128,
+   "allocations": 123,
    "bytes": 249,
    "consumed": 70,
    "detail": {
@@ -1145,8 +1145,8 @@
    "peeked": 1380
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/MetadataTest.kerml": {
-   "allocated_bytes": 44776,
-   "allocations": 390,
+   "allocated_bytes": 36072,
+   "allocations": 378,
    "bytes": 1208,
    "consumed": 192,
    "detail": {
@@ -1170,8 +1170,8 @@
    "peeked": 4981
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Redefinition.kerml": {
-   "allocated_bytes": 13224,
-   "allocations": 146,
+   "allocated_bytes": 11096,
+   "allocations": 138,
    "bytes": 325,
    "consumed": 54,
    "detail": {
@@ -1195,8 +1195,8 @@
    "peeked": 1717
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Scoping.kerml": {
-   "allocated_bytes": 24424,
-   "allocations": 215,
+   "allocated_bytes": 20184,
+   "allocations": 205,
    "bytes": 890,
    "consumed": 110,
    "detail": {
@@ -1220,8 +1220,8 @@
    "peeked": 3224
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/TextualRepresentation.kerml": {
-   "allocated_bytes": 13528,
-   "allocations": 134,
+   "allocated_bytes": 11320,
+   "allocations": 126,
    "bytes": 343,
    "consumed": 45,
    "detail": {
@@ -1245,8 +1245,8 @@
    "peeked": 1270
   },
   "vendor/corpus/kerml/src/examples/Simple Tests/Types.kerml": {
-   "allocated_bytes": 35688,
-   "allocations": 256,
+   "allocated_bytes": 26816,
+   "allocations": 244,
    "bytes": 964,
    "consumed": 171,
    "detail": {
@@ -1270,8 +1270,8 @@
    "peeked": 4220
   },
   "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/ExtendedOccurrences.kerml": {
-   "allocated_bytes": 47464,
-   "allocations": 394,
+   "allocated_bytes": 39040,
+   "allocations": 382,
    "bytes": 2023,
    "consumed": 227,
    "detail": {
@@ -1295,8 +1295,8 @@
    "peeked": 5692
   },
   "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/Moments.kerml": {
-   "allocated_bytes": 32480,
-   "allocations": 275,
+   "allocated_bytes": 26360,
+   "allocations": 263,
    "bytes": 1544,
    "consumed": 131,
    "detail": {
@@ -1320,8 +1320,8 @@
    "peeked": 2755
   },
   "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/TimeVaryingFeaturesEnhanced.kerml": {
-   "allocated_bytes": 73472,
-   "allocations": 442,
+   "allocated_bytes": 55048,
+   "allocations": 428,
    "bytes": 6820,
    "consumed": 257,
    "detail": {
@@ -1345,8 +1345,8 @@
    "peeked": 5524
   },
   "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/TimeVaryingSteps.kerml": {
-   "allocated_bytes": 60752,
-   "allocations": 380,
+   "allocated_bytes": 42824,
+   "allocations": 366,
    "bytes": 2305,
    "consumed": 319,
    "detail": {
@@ -1370,8 +1370,8 @@
    "peeked": 3499
   },
   "vendor/corpus/kerml/src/examples/Variable Feature Examples/TimeVaryingCarDriver.kerml": {
-   "allocated_bytes": 87464,
-   "allocations": 581,
+   "allocated_bytes": 62936,
+   "allocations": 565,
    "bytes": 4313,
    "consumed": 518,
    "detail": {
@@ -1395,8 +1395,8 @@
    "peeked": 8978
   },
   "vendor/corpus/kerml/src/examples/Variable Feature Examples/TimeVaryingFeatures.kerml": {
-   "allocated_bytes": 60008,
-   "allocations": 338,
+   "allocated_bytes": 41840,
+   "allocations": 324,
    "bytes": 2637,
    "consumed": 289,
    "detail": {
@@ -1420,8 +1420,8 @@
    "peeked": 5729
   },
   "vendor/corpus/kerml/src/examples/Vehicle Example/VehicleDefinitions.kerml": {
-   "allocated_bytes": 22728,
-   "allocations": 206,
+   "allocated_bytes": 18276,
+   "allocations": 196,
    "bytes": 639,
    "consumed": 86,
    "detail": {
@@ -1445,8 +1445,8 @@
    "peeked": 2753
   },
   "vendor/corpus/kerml/src/examples/Vehicle Example/VehicleUsages.kerml": {
-   "allocated_bytes": 84704,
-   "allocations": 681,
+   "allocated_bytes": 67640,
+   "allocations": 667,
    "bytes": 3371,
    "consumed": 431,
    "detail": {
@@ -1470,8 +1470,8 @@
    "peeked": 9184
   },
   "vendor/corpus/omg/SimpleVehicleModel.sysml": {
-   "allocated_bytes": 1308136,
-   "allocations": 9891,
+   "allocated_bytes": 1036104,
+   "allocations": 9869,
    "bytes": 73519,
    "consumed": 6966,
    "detail": {
@@ -1495,8 +1495,8 @@
    "peeked": 219592
   },
   "vendor/corpus/sysml/src/examples/Analysis Examples/AnalysisAnnotation.sysml": {
-   "allocated_bytes": 42704,
-   "allocations": 353,
+   "allocated_bytes": 33896,
+   "allocations": 341,
    "bytes": 959,
    "consumed": 179,
    "detail": {
@@ -1520,8 +1520,8 @@
    "peeked": 4121
   },
   "vendor/corpus/sysml/src/examples/Analysis Examples/Dynamics.sysml": {
-   "allocated_bytes": 91448,
-   "allocations": 781,
+   "allocated_bytes": 75032,
+   "allocations": 767,
    "bytes": 2339,
    "consumed": 508,
    "detail": {
@@ -1545,8 +1545,8 @@
    "peeked": 18715
   },
   "vendor/corpus/sysml/src/examples/Analysis Examples/Turbojet Stage Analysis.sysml": {
-   "allocated_bytes": 97592,
-   "allocations": 854,
+   "allocated_bytes": 80416,
+   "allocations": 840,
    "bytes": 4250,
    "consumed": 415,
    "detail": {
@@ -1570,8 +1570,8 @@
    "peeked": 14936
   },
   "vendor/corpus/sysml/src/examples/Analysis Examples/Vehicle Analysis Demo.sysml": {
-   "allocated_bytes": 248544,
-   "allocations": 2019,
+   "allocated_bytes": 200324,
+   "allocations": 2001,
    "bytes": 9023,
    "consumed": 1143,
    "detail": {
@@ -1595,8 +1595,8 @@
    "peeked": 37282
   },
   "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFCoreLib.sysml": {
-   "allocated_bytes": 44648,
-   "allocations": 365,
+   "allocated_bytes": 35584,
+   "allocations": 353,
    "bytes": 1620,
    "consumed": 147,
    "detail": {
@@ -1620,8 +1620,8 @@
    "peeked": 2829
   },
   "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml": {
-   "allocated_bytes": 129952,
-   "allocations": 1143,
+   "allocated_bytes": 105936,
+   "allocations": 1127,
    "bytes": 5102,
    "consumed": 584,
    "detail": {
@@ -1645,8 +1645,8 @@
    "peeked": 16396
   },
   "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFProfileLib.sysml": {
-   "allocated_bytes": 85264,
-   "allocations": 658,
+   "allocated_bytes": 67912,
+   "allocations": 644,
    "bytes": 3442,
    "consumed": 395,
    "detail": {
@@ -1670,8 +1670,8 @@
    "peeked": 10240
   },
   "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFSequences.sysml": {
-   "allocated_bytes": 117776,
-   "allocations": 879,
+   "allocated_bytes": 93700,
+   "allocations": 863,
    "bytes": 4814,
    "consumed": 575,
    "detail": {
@@ -1695,8 +1695,8 @@
    "peeked": 11113
   },
   "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_N_ary.sysml": {
-   "allocated_bytes": 24576,
-   "allocations": 227,
+   "allocated_bytes": 20360,
+   "allocations": 217,
    "bytes": 596,
    "consumed": 113,
    "detail": {
@@ -1720,8 +1720,8 @@
    "peeked": 4014
   },
   "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_OwnedEnds.sysml": {
-   "allocated_bytes": 43728,
-   "allocations": 374,
+   "allocated_bytes": 35336,
+   "allocations": 362,
    "bytes": 1260,
    "consumed": 231,
    "detail": {
@@ -1745,8 +1745,8 @@
    "peeked": 8132
   },
   "vendor/corpus/sysml/src/examples/Association Examples/ProductSelection_UnownedEnds.sysml": {
-   "allocated_bytes": 39624,
-   "allocations": 314,
+   "allocated_bytes": 30752,
+   "allocations": 302,
    "bytes": 879,
    "consumed": 171,
    "detail": {
@@ -1770,8 +1770,8 @@
    "peeked": 5757
   },
   "vendor/corpus/sysml/src/examples/Camera Example/Camera.sysml": {
-   "allocated_bytes": 10000,
-   "allocations": 122,
+   "allocated_bytes": 8528,
+   "allocations": 114,
    "bytes": 238,
    "consumed": 40,
    "detail": {
@@ -1795,8 +1795,8 @@
    "peeked": 1061
   },
   "vendor/corpus/sysml/src/examples/Camera Example/PictureTaking.sysml": {
-   "allocated_bytes": 16704,
-   "allocations": 173,
+   "allocated_bytes": 14624,
+   "allocations": 165,
    "bytes": 261,
    "consumed": 60,
    "detail": {
@@ -1820,8 +1820,8 @@
    "peeked": 2240
   },
   "vendor/corpus/sysml/src/examples/Cause and Effect Examples/CauseAndEffectExample.sysml": {
-   "allocated_bytes": 47984,
-   "allocations": 419,
+   "allocated_bytes": 39608,
+   "allocations": 407,
    "bytes": 1197,
    "consumed": 233,
    "detail": {
@@ -1845,8 +1845,8 @@
    "peeked": 7842
   },
   "vendor/corpus/sysml/src/examples/Cause and Effect Examples/MedicalDeviceFailure.sysml": {
-   "allocated_bytes": 19552,
-   "allocations": 207,
+   "allocated_bytes": 16560,
+   "allocations": 197,
    "bytes": 491,
    "consumed": 74,
    "detail": {
@@ -1870,8 +1870,8 @@
    "peeked": 2468
   },
   "vendor/corpus/sysml/src/examples/Comment Examples/Comments.sysml": {
-   "allocated_bytes": 10712,
-   "allocations": 97,
+   "allocated_bytes": 8640,
+   "allocations": 90,
    "bytes": 384,
    "consumed": 33,
    "detail": {
@@ -1895,8 +1895,8 @@
    "peeked": 416
   },
   "vendor/corpus/sysml/src/examples/Flashlight Example/Flashlight Example.sysml": {
-   "allocated_bytes": 43824,
-   "allocations": 382,
+   "allocated_bytes": 35112,
+   "allocations": 370,
    "bytes": 1245,
    "consumed": 191,
    "detail": {
@@ -1920,8 +1920,8 @@
    "peeked": 6515
   },
   "vendor/corpus/sysml/src/examples/Geometry Examples/CarWithEnvelopingShape.sysml": {
-   "allocated_bytes": 17088,
-   "allocations": 184,
+   "allocated_bytes": 14988,
+   "allocations": 176,
    "bytes": 330,
    "consumed": 58,
    "detail": {
@@ -1945,8 +1945,8 @@
    "peeked": 1355
   },
   "vendor/corpus/sysml/src/examples/Geometry Examples/CarWithShapeAndCSG.sysml": {
-   "allocated_bytes": 90256,
-   "allocations": 812,
+   "allocated_bytes": 73300,
+   "allocations": 798,
    "bytes": 2520,
    "consumed": 442,
    "detail": {
@@ -1970,8 +1970,8 @@
    "peeked": 12517
   },
   "vendor/corpus/sysml/src/examples/Geometry Examples/ExternalShapeRefExample.sysml": {
-   "allocated_bytes": 29528,
-   "allocations": 278,
+   "allocated_bytes": 25260,
+   "allocations": 268,
    "bytes": 684,
    "consumed": 107,
    "detail": {
@@ -1995,8 +1995,8 @@
    "peeked": 2910
   },
   "vendor/corpus/sysml/src/examples/Geometry Examples/SimpleQuadcopter.sysml": {
-   "allocated_bytes": 269224,
-   "allocations": 1986,
+   "allocated_bytes": 197892,
+   "allocations": 1968,
    "bytes": 10751,
    "consumed": 1329,
    "detail": {
@@ -2020,8 +2020,8 @@
    "peeked": 40676
   },
   "vendor/corpus/sysml/src/examples/Geometry Examples/VehicleGeometryAndCoordinateFrames.sysml": {
-   "allocated_bytes": 168048,
-   "allocations": 1425,
+   "allocated_bytes": 133364,
+   "allocations": 1409,
    "bytes": 5064,
    "consumed": 786,
    "detail": {
@@ -2045,8 +2045,8 @@
    "peeked": 24642
   },
   "vendor/corpus/sysml/src/examples/Import Tests/AliasImport.sysml": {
-   "allocated_bytes": 8512,
-   "allocations": 100,
+   "allocated_bytes": 7488,
+   "allocations": 94,
    "bytes": 194,
    "consumed": 32,
    "detail": {
@@ -2070,8 +2070,8 @@
    "peeked": 596
   },
   "vendor/corpus/sysml/src/examples/Import Tests/CircularImport.sysml": {
-   "allocated_bytes": 19456,
-   "allocations": 163,
+   "allocated_bytes": 15024,
+   "allocations": 153,
    "bytes": 372,
    "consumed": 86,
    "detail": {
@@ -2095,8 +2095,8 @@
    "peeked": 2314
   },
   "vendor/corpus/sysml/src/examples/Import Tests/PrivateImportTest.sysml": {
-   "allocated_bytes": 20856,
-   "allocations": 166,
+   "allocated_bytes": 16296,
+   "allocations": 156,
    "bytes": 591,
    "consumed": 70,
    "detail": {
@@ -2120,8 +2120,8 @@
    "peeked": 1456
   },
   "vendor/corpus/sysml/src/examples/Import Tests/QualifiedNameImportTest.sysml": {
-   "allocated_bytes": 9240,
-   "allocations": 104,
+   "allocated_bytes": 7712,
+   "allocations": 96,
    "bytes": 242,
    "consumed": 33,
    "detail": {
@@ -2145,8 +2145,8 @@
    "peeked": 616
   },
   "vendor/corpus/sysml/src/examples/Individuals Examples/AnalysisIndividualExample.sysml": {
-   "allocated_bytes": 102688,
-   "allocations": 829,
+   "allocated_bytes": 85528,
+   "allocations": 815,
    "bytes": 2815,
    "consumed": 415,
    "detail": {
@@ -2170,8 +2170,8 @@
    "peeked": 11164
   },
   "vendor/corpus/sysml/src/examples/Individuals Examples/JohnIndividualExample.sysml": {
-   "allocated_bytes": 28856,
-   "allocations": 287,
+   "allocated_bytes": 24608,
+   "allocations": 277,
    "bytes": 1431,
    "consumed": 112,
    "detail": {
@@ -2195,8 +2195,8 @@
    "peeked": 2520
   },
   "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModel.sysml": {
-   "allocated_bytes": 33528,
-   "allocations": 297,
+   "allocated_bytes": 27464,
+   "allocations": 285,
    "bytes": 1028,
    "consumed": 138,
    "detail": {
@@ -2220,8 +2220,8 @@
    "peeked": 3638
   },
   "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceModelOutside.sysml": {
-   "allocated_bytes": 27328,
-   "allocations": 250,
+   "allocated_bytes": 22908,
+   "allocations": 240,
    "bytes": 714,
    "consumed": 88,
    "detail": {
@@ -2245,8 +2245,8 @@
    "peeked": 2370
   },
   "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-2.sysml": {
-   "allocated_bytes": 103416,
-   "allocations": 824,
+   "allocated_bytes": 86216,
+   "allocations": 810,
    "bytes": 3259,
    "consumed": 412,
    "detail": {
@@ -2270,8 +2270,8 @@
    "peeked": 12583
   },
   "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceOutsideRealization-3.sysml": {
-   "allocated_bytes": 155208,
-   "allocations": 1099,
+   "allocated_bytes": 120540,
+   "allocations": 1083,
    "bytes": 5158,
    "consumed": 787,
    "detail": {
@@ -2295,8 +2295,8 @@
    "peeked": 21110
   },
   "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-2.sysml": {
-   "allocated_bytes": 106208,
-   "allocations": 871,
+   "allocated_bytes": 89388,
+   "allocations": 857,
    "bytes": 3235,
    "consumed": 459,
    "detail": {
@@ -2320,8 +2320,8 @@
    "peeked": 12835
   },
   "vendor/corpus/sysml/src/examples/Interaction Sequencing Examples/ServerSequenceRealization-3.sysml": {
-   "allocated_bytes": 152720,
-   "allocations": 1065,
+   "allocated_bytes": 117712,
+   "allocations": 1049,
    "bytes": 4724,
    "consumed": 744,
    "detail": {
@@ -2345,8 +2345,8 @@
    "peeked": 19091
   },
   "vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassConstraintExample.sysml": {
-   "allocated_bytes": 73960,
-   "allocations": 558,
+   "allocated_bytes": 56624,
+   "allocations": 544,
    "bytes": 1958,
    "consumed": 393,
    "detail": {
@@ -2370,8 +2370,8 @@
    "peeked": 14960
   },
   "vendor/corpus/sysml/src/examples/Mass Roll-up Example/MassRollup.sysml": {
-   "allocated_bytes": 29336,
-   "allocations": 286,
+   "allocated_bytes": 25080,
+   "allocations": 276,
    "bytes": 605,
    "consumed": 108,
    "detail": {
@@ -2395,8 +2395,8 @@
    "peeked": 4058
   },
   "vendor/corpus/sysml/src/examples/Mass Roll-up Example/Vehicles.sysml": {
-   "allocated_bytes": 29336,
-   "allocations": 291,
+   "allocated_bytes": 25120,
+   "allocations": 281,
    "bytes": 683,
    "consumed": 113,
    "detail": {
@@ -2420,8 +2420,8 @@
    "peeked": 3711
   },
   "vendor/corpus/sysml/src/examples/Metadata Examples/IssueMetadataExample.sysml": {
-   "allocated_bytes": 27280,
-   "allocations": 253,
+   "allocated_bytes": 22824,
+   "allocations": 243,
    "bytes": 1116,
    "consumed": 83,
    "detail": {
@@ -2445,8 +2445,8 @@
    "peeked": 2799
   },
   "vendor/corpus/sysml/src/examples/Metadata Examples/RationaleMetadataExample.sysml": {
-   "allocated_bytes": 19824,
-   "allocations": 208,
+   "allocated_bytes": 16808,
+   "allocations": 198,
    "bytes": 833,
    "consumed": 72,
    "detail": {
@@ -2470,8 +2470,8 @@
    "peeked": 1984
   },
   "vendor/corpus/sysml/src/examples/Metadata Examples/RequirementMetadataExample.sysml": {
-   "allocated_bytes": 30864,
-   "allocations": 303,
+   "allocated_bytes": 26700,
+   "allocations": 293,
    "bytes": 923,
    "consumed": 120,
    "detail": {
@@ -2495,8 +2495,8 @@
    "peeked": 3038
   },
   "vendor/corpus/sysml/src/examples/Metadata Examples/RiskMetadataExample.sysml": {
-   "allocated_bytes": 14520,
-   "allocations": 152,
+   "allocated_bytes": 12400,
+   "allocations": 144,
    "bytes": 384,
    "consumed": 55,
    "detail": {
@@ -2520,8 +2520,8 @@
    "peeked": 1539
   },
   "vendor/corpus/sysml/src/examples/Metadata Examples/VerificationMetadataExample.sysml": {
-   "allocated_bytes": 16000,
-   "allocations": 160,
+   "allocated_bytes": 13864,
+   "allocations": 152,
    "bytes": 368,
    "consumed": 53,
    "detail": {
@@ -2545,8 +2545,8 @@
    "peeked": 1567
   },
   "vendor/corpus/sysml/src/examples/Packet Example/PacketUsage.sysml": {
-   "allocated_bytes": 14416,
-   "allocations": 151,
+   "allocated_bytes": 12240,
+   "allocations": 143,
    "bytes": 366,
    "consumed": 48,
    "detail": {
@@ -2570,8 +2570,8 @@
    "peeked": 1781
   },
   "vendor/corpus/sysml/src/examples/Packet Example/Packets.sysml": {
-   "allocated_bytes": 25888,
-   "allocations": 258,
+   "allocated_bytes": 21672,
+   "allocations": 248,
    "bytes": 996,
    "consumed": 113,
    "detail": {
@@ -2595,8 +2595,8 @@
    "peeked": 4893
   },
   "vendor/corpus/sysml/src/examples/Requirements Examples/HSUVRequirements.sysml": {
-   "allocated_bytes": 23728,
-   "allocations": 211,
+   "allocated_bytes": 19400,
+   "allocations": 201,
    "bytes": 1106,
    "consumed": 100,
    "detail": {
@@ -2620,8 +2620,8 @@
    "peeked": 4108
   },
   "vendor/corpus/sysml/src/examples/Requirements Examples/RequirementDerivationExample.sysml": {
-   "allocated_bytes": 34304,
-   "allocations": 324,
+   "allocated_bytes": 28224,
+   "allocations": 312,
    "bytes": 772,
    "consumed": 136,
    "detail": {
@@ -2645,8 +2645,8 @@
    "peeked": 5050
   },
   "vendor/corpus/sysml/src/examples/Requirements Examples/VehicleRequirementDerivation.sysml": {
-   "allocated_bytes": 31880,
-   "allocations": 295,
+   "allocated_bytes": 25816,
+   "allocations": 283,
    "bytes": 855,
    "consumed": 138,
    "detail": {
@@ -2670,8 +2670,8 @@
    "peeked": 5027
   },
   "vendor/corpus/sysml/src/examples/Room Model/RoomModel.sysml": {
-   "allocated_bytes": 55064,
-   "allocations": 483,
+   "allocated_bytes": 42920,
+   "allocations": 469,
    "bytes": 2846,
    "consumed": 274,
    "detail": {
@@ -2695,8 +2695,8 @@
    "peeked": 6716
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ActionTest.sysml": {
-   "allocated_bytes": 54216,
-   "allocations": 492,
+   "allocated_bytes": 45536,
+   "allocations": 480,
    "bytes": 809,
    "consumed": 195,
    "detail": {
@@ -2720,8 +2720,8 @@
    "peeked": 7187
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/AliasTest.sysml": {
-   "allocated_bytes": 18224,
-   "allocations": 183,
+   "allocated_bytes": 15208,
+   "allocations": 173,
    "bytes": 372,
    "consumed": 71,
    "detail": {
@@ -2745,8 +2745,8 @@
    "peeked": 2154
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/AllocationTest.sysml": {
-   "allocated_bytes": 26784,
-   "allocations": 264,
+   "allocated_bytes": 22576,
+   "allocations": 254,
    "bytes": 628,
    "consumed": 114,
    "detail": {
@@ -2770,8 +2770,8 @@
    "peeked": 4615
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/AnalysisTest.sysml": {
-   "allocated_bytes": 24088,
-   "allocations": 225,
+   "allocated_bytes": 19640,
+   "allocations": 215,
    "bytes": 488,
    "consumed": 85,
    "detail": {
@@ -2795,8 +2795,8 @@
    "peeked": 2643
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/AssignmentTest.sysml": {
-   "allocated_bytes": 43488,
-   "allocations": 392,
+   "allocated_bytes": 34672,
+   "allocations": 380,
    "bytes": 873,
    "consumed": 178,
    "detail": {
@@ -2820,8 +2820,8 @@
    "peeked": 5757
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/CalculationTest.sysml": {
-   "allocated_bytes": 33856,
-   "allocations": 341,
+   "allocated_bytes": 27864,
+   "allocations": 329,
    "bytes": 659,
    "consumed": 147,
    "detail": {
@@ -2845,8 +2845,8 @@
    "peeked": 4681
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/CommentTest.sysml": {
-   "allocated_bytes": 14448,
-   "allocations": 137,
+   "allocated_bytes": 12220,
+   "allocations": 129,
    "bytes": 751,
    "consumed": 49,
    "detail": {
@@ -2870,8 +2870,8 @@
    "peeked": 707
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ConjugationTest.sysml": {
-   "allocated_bytes": 26696,
-   "allocations": 223,
+   "allocated_bytes": 20584,
+   "allocations": 211,
    "bytes": 434,
    "consumed": 132,
    "detail": {
@@ -2895,8 +2895,8 @@
    "peeked": 5849
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml": {
-   "allocated_bytes": 50376,
-   "allocations": 454,
+   "allocated_bytes": 42024,
+   "allocations": 442,
    "bytes": 915,
    "consumed": 236,
    "detail": {
@@ -2920,8 +2920,8 @@
    "peeked": 10523
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ConstraintTest.sysml": {
-   "allocated_bytes": 82456,
-   "allocations": 638,
+   "allocated_bytes": 65288,
+   "allocations": 624,
    "bytes": 2477,
    "consumed": 414,
    "detail": {
@@ -2945,8 +2945,8 @@
    "peeked": 13701
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ControlNodeTest.sysml": {
-   "allocated_bytes": 24720,
-   "allocations": 231,
+   "allocated_bytes": 20352,
+   "allocations": 221,
    "bytes": 329,
    "consumed": 94,
    "detail": {
@@ -2970,8 +2970,8 @@
    "peeked": 3410
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/DecisionTest.sysml": {
-   "allocated_bytes": 22648,
-   "allocations": 209,
+   "allocated_bytes": 18136,
+   "allocations": 199,
    "bytes": 312,
    "consumed": 76,
    "detail": {
@@ -2995,8 +2995,8 @@
    "peeked": 2573
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/DefaultValueTest.sysml": {
-   "allocated_bytes": 13968,
-   "allocations": 157,
+   "allocated_bytes": 11840,
+   "allocations": 149,
    "bytes": 218,
    "consumed": 54,
    "detail": {
@@ -3020,8 +3020,8 @@
    "peeked": 2351
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/DependencyTest.sysml": {
-   "allocated_bytes": 12008,
-   "allocations": 125,
+   "allocated_bytes": 9864,
+   "allocations": 117,
    "bytes": 344,
    "consumed": 52,
    "detail": {
@@ -3045,8 +3045,8 @@
    "peeked": 1172
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/EnumerationTest.sysml": {
-   "allocated_bytes": 31720,
-   "allocations": 301,
+   "allocated_bytes": 26604,
+   "allocations": 290,
    "bytes": 1030,
    "consumed": 130,
    "detail": {
@@ -3070,8 +3070,8 @@
    "peeked": 3490
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/FeaturePathTest.sysml": {
-   "allocated_bytes": 33096,
-   "allocations": 313,
+   "allocated_bytes": 27064,
+   "allocations": 301,
    "bytes": 493,
    "consumed": 142,
    "detail": {
@@ -3095,8 +3095,8 @@
    "peeked": 4868
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ImportTest.sysml": {
-   "allocated_bytes": 15128,
-   "allocations": 139,
+   "allocated_bytes": 12096,
+   "allocations": 129,
    "bytes": 381,
    "consumed": 69,
    "detail": {
@@ -3120,8 +3120,8 @@
    "peeked": 912
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/IndividualTest.sysml": {
-   "allocated_bytes": 31576,
-   "allocations": 279,
+   "allocated_bytes": 25448,
+   "allocations": 267,
    "bytes": 593,
    "consumed": 130,
    "detail": {
@@ -3145,8 +3145,8 @@
    "peeked": 5130
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/InterfaceTest.sysml": {
-   "allocated_bytes": 23424,
-   "allocations": 214,
+   "allocated_bytes": 18992,
+   "allocations": 204,
    "bytes": 327,
    "consumed": 86,
    "detail": {
@@ -3170,8 +3170,8 @@
    "peeked": 3918
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ItemTest.sysml": {
-   "allocated_bytes": 18312,
-   "allocations": 189,
+   "allocated_bytes": 15304,
+   "allocations": 179,
    "bytes": 265,
    "consumed": 72,
    "detail": {
@@ -3195,8 +3195,8 @@
    "peeked": 2475
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/MetadataTest.sysml": {
-   "allocated_bytes": 31184,
-   "allocations": 275,
+   "allocated_bytes": 25064,
+   "allocations": 263,
    "bytes": 867,
    "consumed": 131,
    "detail": {
@@ -3220,8 +3220,8 @@
    "peeked": 2455
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/MultiplicityTest.sysml": {
-   "allocated_bytes": 23456,
-   "allocations": 228,
+   "allocated_bytes": 19064,
+   "allocations": 218,
    "bytes": 276,
    "consumed": 91,
    "detail": {
@@ -3245,8 +3245,8 @@
    "peeked": 3465
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/OccurrenceTest.sysml": {
-   "allocated_bytes": 24672,
-   "allocations": 239,
+   "allocated_bytes": 20360,
+   "allocations": 229,
    "bytes": 515,
    "consumed": 101,
    "detail": {
@@ -3270,8 +3270,8 @@
    "peeked": 4371
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ParameterTest.sysml": {
-   "allocated_bytes": 24424,
-   "allocations": 244,
+   "allocated_bytes": 20080,
+   "allocations": 234,
    "bytes": 340,
    "consumed": 97,
    "detail": {
@@ -3295,8 +3295,8 @@
    "peeked": 3378
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/PartTest.sysml": {
-   "allocated_bytes": 54888,
-   "allocations": 500,
+   "allocated_bytes": 46552,
+   "allocations": 488,
    "bytes": 949,
    "consumed": 238,
    "detail": {
@@ -3320,8 +3320,8 @@
    "peeked": 8551
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/RequirementTest.sysml": {
-   "allocated_bytes": 30552,
-   "allocations": 292,
+   "allocated_bytes": 24496,
+   "allocations": 280,
    "bytes": 609,
    "consumed": 140,
    "detail": {
@@ -3345,8 +3345,8 @@
    "peeked": 3844
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/RootPackageTest.sysml": {
-   "allocated_bytes": 11080,
-   "allocations": 112,
+   "allocated_bytes": 8824,
+   "allocations": 104,
    "bytes": 137,
    "consumed": 38,
    "detail": {
@@ -3370,8 +3370,8 @@
    "peeked": 885
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/StateTest.sysml": {
-   "allocated_bytes": 48232,
-   "allocations": 423,
+   "allocated_bytes": 39528,
+   "allocations": 411,
    "bytes": 840,
    "consumed": 192,
    "detail": {
@@ -3395,8 +3395,8 @@
    "peeked": 6898
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/StructuredControlTest.sysml": {
-   "allocated_bytes": 30120,
-   "allocations": 286,
+   "allocated_bytes": 24056,
+   "allocations": 274,
    "bytes": 532,
    "consumed": 138,
    "detail": {
@@ -3420,8 +3420,8 @@
    "peeked": 4848
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/TextualRepresentationTest.sysml": {
-   "allocated_bytes": 13928,
-   "allocations": 142,
+   "allocated_bytes": 11744,
+   "allocations": 134,
    "bytes": 375,
    "consumed": 48,
    "detail": {
@@ -3445,8 +3445,8 @@
    "peeked": 1090
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/TradeStudyTest.sysml": {
-   "allocated_bytes": 19736,
-   "allocations": 213,
+   "allocated_bytes": 16744,
+   "allocations": 203,
    "bytes": 393,
    "consumed": 74,
    "detail": {
@@ -3470,8 +3470,8 @@
    "peeked": 2409
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/UseCaseTest.sysml": {
-   "allocated_bytes": 27792,
-   "allocations": 246,
+   "allocated_bytes": 23580,
+   "allocations": 236,
    "bytes": 557,
    "consumed": 114,
    "detail": {
@@ -3495,8 +3495,8 @@
    "peeked": 3511
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/VariabilityTest.sysml": {
-   "allocated_bytes": 26208,
-   "allocations": 260,
+   "allocated_bytes": 22072,
+   "allocations": 250,
    "bytes": 589,
    "consumed": 123,
    "detail": {
@@ -3520,8 +3520,8 @@
    "peeked": 4345
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/VerificationTest.sysml": {
-   "allocated_bytes": 25048,
-   "allocations": 250,
+   "allocated_bytes": 20692,
+   "allocations": 240,
    "bytes": 559,
    "consumed": 96,
    "detail": {
@@ -3545,8 +3545,8 @@
    "peeked": 3005
   },
   "vendor/corpus/sysml/src/examples/Simple Tests/ViewTest.sysml": {
-   "allocated_bytes": 32992,
-   "allocations": 289,
+   "allocated_bytes": 26904,
+   "allocations": 277,
    "bytes": 583,
    "consumed": 135,
    "detail": {
@@ -3570,8 +3570,8 @@
    "peeked": 4032
   },
   "vendor/corpus/sysml/src/examples/State Space Representation Examples/CartSample.sysml": {
-   "allocated_bytes": 55848,
-   "allocations": 479,
+   "allocated_bytes": 47416,
+   "allocations": 467,
    "bytes": 1827,
    "consumed": 226,
    "detail": {
@@ -3595,8 +3595,8 @@
    "peeked": 7941
   },
   "vendor/corpus/sysml/src/examples/State Space Representation Examples/EVSample.sysml": {
-   "allocated_bytes": 289672,
-   "allocations": 1939,
+   "allocated_bytes": 217660,
+   "allocations": 1921,
    "bytes": 11002,
    "consumed": 1246,
    "detail": {
@@ -3620,8 +3620,8 @@
    "peeked": 42978
   },
   "vendor/corpus/sysml/src/examples/Timeslice and Snapshot Examples/TimeVaryingAttribute.sysml": {
-   "allocated_bytes": 45576,
-   "allocations": 393,
+   "allocated_bytes": 36552,
+   "allocations": 381,
    "bytes": 1397,
    "consumed": 152,
    "detail": {
@@ -3645,8 +3645,8 @@
    "peeked": 4449
   },
   "vendor/corpus/sysml/src/examples/Variability Examples/VehicleVariabilityModel.sysml": {
-   "allocated_bytes": 124720,
-   "allocations": 1046,
+   "allocated_bytes": 100368,
+   "allocations": 1030,
    "bytes": 4718,
    "consumed": 540,
    "detail": {
@@ -3670,8 +3670,8 @@
    "peeked": 17776
   },
   "vendor/corpus/sysml/src/examples/Vehicle Example/SysML v2 Spec Annex A SimpleVehicleModel.sysml": {
-   "allocated_bytes": 1308688,
-   "allocations": 9901,
+   "allocated_bytes": 1036696,
+   "allocations": 9879,
    "bytes": 73568,
    "consumed": 6971,
    "detail": {
@@ -3695,8 +3695,8 @@
    "peeked": 219650
   },
   "vendor/corpus/sysml/src/examples/Vehicle Example/VehicleDefinitions.sysml": {
-   "allocated_bytes": 41792,
-   "allocations": 302,
+   "allocated_bytes": 32796,
+   "allocations": 290,
    "bytes": 1051,
    "consumed": 158,
    "detail": {
@@ -3720,8 +3720,8 @@
    "peeked": 4433
   },
   "vendor/corpus/sysml/src/examples/Vehicle Example/VehicleIndividuals.sysml": {
-   "allocated_bytes": 53200,
-   "allocations": 502,
+   "allocated_bytes": 44824,
+   "allocations": 490,
    "bytes": 2826,
    "consumed": 238,
    "detail": {
@@ -3745,8 +3745,8 @@
    "peeked": 5320
   },
   "vendor/corpus/sysml/src/examples/Vehicle Example/VehicleUsages.sysml": {
-   "allocated_bytes": 87856,
-   "allocations": 732,
+   "allocated_bytes": 70104,
+   "allocations": 718,
    "bytes": 2446,
    "consumed": 345,
    "detail": {
@@ -3770,8 +3770,8 @@
    "peeked": 11874
   },
   "vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package - Updated.sysml": {
-   "allocated_bytes": 66184,
-   "allocations": 589,
+   "allocated_bytes": 54260,
+   "allocations": 575,
    "bytes": 1752,
    "consumed": 302,
    "detail": {
@@ -3795,8 +3795,8 @@
    "peeked": 10700
   },
   "vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.1 Wheel Hub Assembly/Wheel Package.sysml": {
-   "allocated_bytes": 77744,
-   "allocations": 600,
+   "allocated_bytes": 59804,
+   "allocations": 586,
    "bytes": 1723,
    "consumed": 318,
    "detail": {
@@ -3820,8 +3820,8 @@
    "peeked": 11240
   },
   "vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition - Updated.sysml": {
-   "allocated_bytes": 49304,
-   "allocations": 445,
+   "allocated_bytes": 40740,
+   "allocations": 433,
    "bytes": 1194,
    "consumed": 210,
    "detail": {
@@ -3845,8 +3845,8 @@
    "peeked": 8386
   },
   "vendor/corpus/sysml/src/examples/v1 Spec Examples/8.4.5 Constraining Decomposition/Vehicle Decomposition.sysml": {
-   "allocated_bytes": 48008,
-   "allocations": 450,
+   "allocated_bytes": 39564,
+   "allocations": 438,
    "bytes": 1092,
    "consumed": 225,
    "detail": {
@@ -3870,8 +3870,8 @@
    "peeked": 6778
   },
   "vendor/corpus/sysml/src/examples/v1 Spec Examples/D.4.7.8 Dynamics/HSUVDynamics.sysml": {
-   "allocated_bytes": 95848,
-   "allocations": 884,
+   "allocated_bytes": 79344,
+   "allocations": 870,
    "bytes": 2451,
    "consumed": 497,
    "detail": {
@@ -3895,8 +3895,8 @@
    "peeked": 24237
   },
   "vendor/corpus/sysml/src/training/01. Packages/Comment Example.sysml": {
-   "allocated_bytes": 8384,
-   "allocations": 90,
+   "allocated_bytes": 7328,
+   "allocations": 84,
    "bytes": 566,
    "consumed": 30,
    "detail": {
@@ -3920,8 +3920,8 @@
    "peeked": 341
   },
   "vendor/corpus/sysml/src/training/01. Packages/Documentation Example.sysml": {
-   "allocated_bytes": 6888,
-   "allocations": 79,
+   "allocated_bytes": 5828,
+   "allocations": 73,
    "bytes": 307,
    "consumed": 29,
    "detail": {
@@ -3945,8 +3945,8 @@
    "peeked": 319
   },
   "vendor/corpus/sysml/src/training/01. Packages/Package Example.sysml": {
-   "allocated_bytes": 7624,
-   "allocations": 85,
+   "allocated_bytes": 6104,
+   "allocations": 77,
    "bytes": 226,
    "consumed": 34,
    "detail": {
@@ -3970,8 +3970,8 @@
    "peeked": 292
   },
   "vendor/corpus/sysml/src/training/02. Part Definitions/Part Definition Example.sysml": {
-   "allocated_bytes": 16696,
-   "allocations": 174,
+   "allocated_bytes": 14608,
+   "allocations": 166,
    "bytes": 361,
    "consumed": 59,
    "detail": {
@@ -3995,8 +3995,8 @@
    "peeked": 2443
   },
   "vendor/corpus/sysml/src/training/03. Generalization/Generalization Example.sysml": {
-   "allocated_bytes": 13360,
-   "allocations": 142,
+   "allocated_bytes": 11200,
+   "allocations": 134,
    "bytes": 334,
    "consumed": 50,
    "detail": {
@@ -4020,8 +4020,8 @@
    "peeked": 1701
   },
   "vendor/corpus/sysml/src/training/04. Subsetting/Subsetting Example.sysml": {
-   "allocated_bytes": 16456,
-   "allocations": 167,
+   "allocated_bytes": 14408,
+   "allocations": 159,
    "bytes": 342,
    "consumed": 64,
    "detail": {
@@ -4045,8 +4045,8 @@
    "peeked": 2164
   },
   "vendor/corpus/sysml/src/training/05. Redefinition/Redefinition Example.sysml": {
-   "allocated_bytes": 22912,
-   "allocations": 206,
+   "allocated_bytes": 18504,
+   "allocations": 196,
    "bytes": 431,
    "consumed": 89,
    "detail": {
@@ -4070,8 +4070,8 @@
    "peeked": 3183
   },
   "vendor/corpus/sysml/src/training/06. Enumeration Definitions/Enumeration Definitions-1.sysml": {
-   "allocated_bytes": 14592,
-   "allocations": 147,
+   "allocated_bytes": 12424,
+   "allocations": 139,
    "bytes": 347,
    "consumed": 49,
    "detail": {
@@ -4095,8 +4095,8 @@
    "peeked": 1276
   },
   "vendor/corpus/sysml/src/training/06. Enumeration Definitions/Enumeration Definitions-2.sysml": {
-   "allocated_bytes": 29232,
-   "allocations": 286,
+   "allocated_bytes": 25072,
+   "allocations": 276,
    "bytes": 633,
    "consumed": 120,
    "detail": {
@@ -4120,8 +4120,8 @@
    "peeked": 2707
   },
   "vendor/corpus/sysml/src/training/07. Parts/Parts Example-1.sysml": {
-   "allocated_bytes": 18712,
-   "allocations": 186,
+   "allocated_bytes": 15680,
+   "allocations": 176,
    "bytes": 359,
    "consumed": 69,
    "detail": {
@@ -4145,8 +4145,8 @@
    "peeked": 2989
   },
   "vendor/corpus/sysml/src/training/07. Parts/Parts Example-2.sysml": {
-   "allocated_bytes": 22616,
-   "allocations": 204,
+   "allocated_bytes": 18088,
+   "allocations": 194,
    "bytes": 388,
    "consumed": 74,
    "detail": {
@@ -4170,8 +4170,8 @@
    "peeked": 3262
   },
   "vendor/corpus/sysml/src/training/08. Items/Items Example.sysml": {
-   "allocated_bytes": 14136,
-   "allocations": 147,
+   "allocated_bytes": 11920,
+   "allocations": 139,
    "bytes": 224,
    "consumed": 43,
    "detail": {
@@ -4195,8 +4195,8 @@
    "peeked": 1705
   },
   "vendor/corpus/sysml/src/training/09. Connections/Connections Example.sysml": {
-   "allocated_bytes": 45536,
-   "allocations": 399,
+   "allocated_bytes": 36888,
+   "allocations": 387,
    "bytes": 974,
    "consumed": 199,
    "detail": {
@@ -4220,8 +4220,8 @@
    "peeked": 6667
   },
   "vendor/corpus/sysml/src/training/10. Ports/Port Conjugation Example.sysml": {
-   "allocated_bytes": 16280,
-   "allocations": 165,
+   "allocated_bytes": 14160,
+   "allocations": 157,
    "bytes": 313,
    "consumed": 55,
    "detail": {
@@ -4245,8 +4245,8 @@
    "peeked": 2256
   },
   "vendor/corpus/sysml/src/training/10. Ports/Port Example.sysml": {
-   "allocated_bytes": 21416,
-   "allocations": 181,
+   "allocated_bytes": 16904,
+   "allocations": 171,
    "bytes": 435,
    "consumed": 76,
    "detail": {
@@ -4270,8 +4270,8 @@
    "peeked": 3201
   },
   "vendor/corpus/sysml/src/training/11. Interfaces/Interface Decomposition Example.sysml": {
-   "allocated_bytes": 24168,
-   "allocations": 230,
+   "allocated_bytes": 19728,
+   "allocations": 220,
    "bytes": 453,
    "consumed": 85,
    "detail": {
@@ -4295,8 +4295,8 @@
    "peeked": 2950
   },
   "vendor/corpus/sysml/src/training/11. Interfaces/Interface Example.sysml": {
-   "allocated_bytes": 17616,
-   "allocations": 192,
+   "allocated_bytes": 15544,
+   "allocations": 184,
    "bytes": 408,
    "consumed": 61,
    "detail": {
@@ -4320,8 +4320,8 @@
    "peeked": 2203
   },
   "vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-1.sysml": {
-   "allocated_bytes": 28248,
-   "allocations": 270,
+   "allocated_bytes": 23952,
+   "allocations": 260,
    "bytes": 596,
    "consumed": 103,
    "detail": {
@@ -4345,8 +4345,8 @@
    "peeked": 4029
   },
   "vendor/corpus/sysml/src/training/12. Binding Connectors/Binding Connectors Example-2.sysml": {
-   "allocated_bytes": 27464,
-   "allocations": 257,
+   "allocated_bytes": 23088,
+   "allocations": 247,
    "bytes": 549,
    "consumed": 93,
    "detail": {
@@ -4370,8 +4370,8 @@
    "peeked": 4015
   },
   "vendor/corpus/sysml/src/training/13. Flows/Flow Definition Example.sysml": {
-   "allocated_bytes": 20408,
-   "allocations": 226,
+   "allocated_bytes": 17392,
+   "allocations": 216,
    "bytes": 423,
    "consumed": 71,
    "detail": {
@@ -4395,8 +4395,8 @@
    "peeked": 2534
   },
   "vendor/corpus/sysml/src/training/13. Flows/Flow Interface Example.sysml": {
-   "allocated_bytes": 23952,
-   "allocations": 230,
+   "allocated_bytes": 19464,
+   "allocations": 220,
    "bytes": 537,
    "consumed": 79,
    "detail": {
@@ -4420,8 +4420,8 @@
    "peeked": 2825
   },
   "vendor/corpus/sysml/src/training/13. Flows/Flow Usage Example.sysml": {
-   "allocated_bytes": 16888,
-   "allocations": 178,
+   "allocated_bytes": 14824,
+   "allocations": 170,
    "bytes": 372,
    "consumed": 62,
    "detail": {
@@ -4445,8 +4445,8 @@
    "peeked": 1781
   },
   "vendor/corpus/sysml/src/training/14. Action Definitions/Action Definition Example.sysml": {
-   "allocated_bytes": 24592,
-   "allocations": 229,
+   "allocated_bytes": 20344,
+   "allocations": 219,
    "bytes": 499,
    "consumed": 109,
    "detail": {
@@ -4470,8 +4470,8 @@
    "peeked": 3425
   },
   "vendor/corpus/sysml/src/training/14. Action Definitions/Action Shorthand Example.sysml": {
-   "allocated_bytes": 27392,
-   "allocations": 242,
+   "allocated_bytes": 23144,
+   "allocations": 232,
    "bytes": 530,
    "consumed": 109,
    "detail": {
@@ -4495,8 +4495,8 @@
    "peeked": 4376
   },
   "vendor/corpus/sysml/src/training/14. Action Definitions/Action Succession Example-1.sysml": {
-   "allocated_bytes": 27856,
-   "allocations": 248,
+   "allocated_bytes": 23664,
+   "allocations": 238,
    "bytes": 549,
    "consumed": 116,
    "detail": {
@@ -4520,8 +4520,8 @@
    "peeked": 3901
   },
   "vendor/corpus/sysml/src/training/14. Action Definitions/Action Succession Example-2.sysml": {
-   "allocated_bytes": 25048,
-   "allocations": 238,
+   "allocated_bytes": 20824,
+   "allocations": 228,
    "bytes": 529,
    "consumed": 112,
    "detail": {
@@ -4545,8 +4545,8 @@
    "peeked": 3652
   },
   "vendor/corpus/sysml/src/training/15. Actions/Action Decomposition.sysml": {
-   "allocated_bytes": 28336,
-   "allocations": 256,
+   "allocated_bytes": 24176,
+   "allocations": 246,
    "bytes": 582,
    "consumed": 120,
    "detail": {
@@ -4570,8 +4570,8 @@
    "peeked": 5029
   },
   "vendor/corpus/sysml/src/training/16. Conditional Succession/Conditional Succession Example-1.sysml": {
-   "allocated_bytes": 32440,
-   "allocations": 297,
+   "allocated_bytes": 26376,
+   "allocations": 285,
    "bytes": 701,
    "consumed": 138,
    "detail": {
@@ -4595,8 +4595,8 @@
    "peeked": 5300
   },
   "vendor/corpus/sysml/src/training/16. Conditional Succession/Conditional Succession Example-2.sysml": {
-   "allocated_bytes": 32272,
-   "allocations": 294,
+   "allocated_bytes": 26200,
+   "allocations": 282,
    "bytes": 689,
    "consumed": 137,
    "detail": {
@@ -4620,8 +4620,8 @@
    "peeked": 5307
   },
   "vendor/corpus/sysml/src/training/17. Control/Camera.sysml": {
-   "allocated_bytes": 27232,
-   "allocations": 251,
+   "allocated_bytes": 22840,
+   "allocations": 241,
    "bytes": 487,
    "consumed": 91,
    "detail": {
@@ -4645,8 +4645,8 @@
    "peeked": 3604
   },
   "vendor/corpus/sysml/src/training/17. Control/Control Structures Example.sysml": {
-   "allocated_bytes": 29640,
-   "allocations": 265,
+   "allocated_bytes": 25344,
+   "allocations": 255,
    "bytes": 599,
    "consumed": 103,
    "detail": {
@@ -4670,8 +4670,8 @@
    "peeked": 3657
   },
   "vendor/corpus/sysml/src/training/17. Control/Decision Example.sysml": {
-   "allocated_bytes": 30192,
-   "allocations": 277,
+   "allocated_bytes": 25976,
+   "allocations": 267,
    "bytes": 687,
    "consumed": 113,
    "detail": {
@@ -4695,8 +4695,8 @@
    "peeked": 3756
   },
   "vendor/corpus/sysml/src/training/17. Control/Fork Join Example.sysml": {
-   "allocated_bytes": 34568,
-   "allocations": 303,
+   "allocated_bytes": 28504,
+   "allocations": 291,
    "bytes": 939,
    "consumed": 138,
    "detail": {
@@ -4720,8 +4720,8 @@
    "peeked": 4390
   },
   "vendor/corpus/sysml/src/training/17. Control/Merge Example.sysml": {
-   "allocated_bytes": 42272,
-   "allocations": 324,
+   "allocated_bytes": 33336,
+   "allocations": 312,
    "bytes": 811,
    "consumed": 163,
    "detail": {
@@ -4745,8 +4745,8 @@
    "peeked": 6918
   },
   "vendor/corpus/sysml/src/training/18. Action Performance/Action Performance Example.sysml": {
-   "allocated_bytes": 17120,
-   "allocations": 180,
+   "allocated_bytes": 15040,
+   "allocations": 172,
    "bytes": 359,
    "consumed": 60,
    "detail": {
@@ -4770,8 +4770,8 @@
    "peeked": 1777
   },
   "vendor/corpus/sysml/src/training/19. Terminate Actions/Terminate Actions Example-1.sysml": {
-   "allocated_bytes": 16768,
-   "allocations": 169,
+   "allocated_bytes": 14704,
+   "allocations": 161,
    "bytes": 505,
    "consumed": 62,
    "detail": {
@@ -4795,8 +4795,8 @@
    "peeked": 2496
   },
   "vendor/corpus/sysml/src/training/19. Terminate Actions/Terminate Actions Example-2.sysml": {
-   "allocated_bytes": 14376,
-   "allocations": 146,
+   "allocated_bytes": 12136,
+   "allocations": 138,
    "bytes": 324,
    "consumed": 40,
    "detail": {
@@ -4820,8 +4820,8 @@
    "peeked": 1792
   },
   "vendor/corpus/sysml/src/training/20. Assignment Actions/Assignment Example.sysml": {
-   "allocated_bytes": 52632,
-   "allocations": 429,
+   "allocated_bytes": 44064,
+   "allocations": 417,
    "bytes": 1166,
    "consumed": 209,
    "detail": {
@@ -4845,8 +4845,8 @@
    "peeked": 6026
   },
   "vendor/corpus/sysml/src/training/21. Asynchronous Messaging/Messaging Example.sysml": {
-   "allocated_bytes": 33672,
-   "allocations": 325,
+   "allocated_bytes": 27592,
+   "allocations": 313,
    "bytes": 665,
    "consumed": 136,
    "detail": {
@@ -4870,8 +4870,8 @@
    "peeked": 6013
   },
   "vendor/corpus/sysml/src/training/21. Asynchronous Messaging/Messaging with Ports.sysml": {
-   "allocated_bytes": 43344,
-   "allocations": 363,
+   "allocated_bytes": 34320,
+   "allocations": 351,
    "bytes": 779,
    "consumed": 152,
    "detail": {
@@ -4895,8 +4895,8 @@
    "peeked": 7152
   },
   "vendor/corpus/sysml/src/training/22. Opaque Actions/Opaque Action Example.sysml": {
-   "allocated_bytes": 9640,
-   "allocations": 112,
+   "allocated_bytes": 8612,
+   "allocations": 106,
    "bytes": 307,
    "consumed": 32,
    "detail": {
@@ -4920,8 +4920,8 @@
    "peeked": 854
   },
   "vendor/corpus/sysml/src/training/23. State Definitions/State Definition Example-1.sysml": {
-   "allocated_bytes": 17432,
-   "allocations": 185,
+   "allocated_bytes": 15368,
+   "allocations": 177,
    "bytes": 513,
    "consumed": 62,
    "detail": {
@@ -4945,8 +4945,8 @@
    "peeked": 1816
   },
   "vendor/corpus/sysml/src/training/23. State Definitions/State Definition Example-2.sysml": {
-   "allocated_bytes": 16528,
-   "allocations": 172,
+   "allocated_bytes": 14368,
+   "allocations": 164,
    "bytes": 378,
    "consumed": 50,
    "detail": {
@@ -4970,8 +4970,8 @@
    "peeked": 1714
   },
   "vendor/corpus/sysml/src/training/24. States/State Actions.sysml": {
-   "allocated_bytes": 28320,
-   "allocations": 264,
+   "allocated_bytes": 24000,
+   "allocations": 254,
    "bytes": 700,
    "consumed": 101,
    "detail": {
@@ -4995,8 +4995,8 @@
    "peeked": 3195
   },
   "vendor/corpus/sysml/src/training/24. States/State Decomposition-1.sysml": {
-   "allocated_bytes": 17248,
-   "allocations": 186,
+   "allocated_bytes": 15128,
+   "allocations": 178,
    "bytes": 413,
    "consumed": 55,
    "detail": {
@@ -5020,8 +5020,8 @@
    "peeked": 1991
   },
   "vendor/corpus/sysml/src/training/24. States/State Decomposition-2.sysml": {
-   "allocated_bytes": 19240,
-   "allocations": 209,
+   "allocated_bytes": 16684,
+   "allocations": 200,
    "bytes": 514,
    "consumed": 65,
    "detail": {
@@ -5045,8 +5045,8 @@
    "peeked": 2554
   },
   "vendor/corpus/sysml/src/training/25. Transitions/Change and Time Triggers.sysml": {
-   "allocated_bytes": 46688,
-   "allocations": 423,
+   "allocated_bytes": 37728,
+   "allocations": 411,
    "bytes": 1064,
    "consumed": 160,
    "detail": {
@@ -5070,8 +5070,8 @@
    "peeked": 4549
   },
   "vendor/corpus/sysml/src/training/25. Transitions/Local Clock Example.sysml": {
-   "allocated_bytes": 31776,
-   "allocations": 318,
+   "allocated_bytes": 27464,
+   "allocations": 308,
    "bytes": 586,
    "consumed": 101,
    "detail": {
@@ -5095,8 +5095,8 @@
    "peeked": 3386
   },
   "vendor/corpus/sysml/src/training/25. Transitions/Transition Actions.sysml": {
-   "allocated_bytes": 34720,
-   "allocations": 339,
+   "allocated_bytes": 30608,
+   "allocations": 329,
    "bytes": 922,
    "consumed": 127,
    "detail": {
@@ -5120,8 +5120,8 @@
    "peeked": 3894
   },
   "vendor/corpus/sysml/src/training/26. State Exhibition/State Exhibition Example.sysml": {
-   "allocated_bytes": 12016,
-   "allocations": 135,
+   "allocated_bytes": 10504,
+   "allocations": 127,
    "bytes": 267,
    "consumed": 35,
    "detail": {
@@ -5145,8 +5145,8 @@
    "peeked": 1063
   },
   "vendor/corpus/sysml/src/training/27. Occurrences/Event Occurrence Example.sysml": {
-   "allocated_bytes": 23344,
-   "allocations": 211,
+   "allocated_bytes": 18864,
+   "allocations": 201,
    "bytes": 573,
    "consumed": 80,
    "detail": {
@@ -5170,8 +5170,8 @@
    "peeked": 2922
   },
   "vendor/corpus/sysml/src/training/27. Occurrences/Interaction Example-1.sysml": {
-   "allocated_bytes": 23744,
-   "allocations": 233,
+   "allocated_bytes": 19352,
+   "allocations": 223,
    "bytes": 695,
    "consumed": 91,
    "detail": {
@@ -5195,8 +5195,8 @@
    "peeked": 1869
   },
   "vendor/corpus/sysml/src/training/27. Occurrences/Interaction Example-2.sysml": {
-   "allocated_bytes": 28592,
-   "allocations": 271,
+   "allocated_bytes": 24328,
+   "allocations": 261,
    "bytes": 800,
    "consumed": 107,
    "detail": {
@@ -5220,8 +5220,8 @@
    "peeked": 3149
   },
   "vendor/corpus/sysml/src/training/27. Occurrences/Interaction Realization-1.sysml": {
-   "allocated_bytes": 58864,
-   "allocations": 569,
+   "allocated_bytes": 50624,
+   "allocations": 557,
    "bytes": 1827,
    "consumed": 250,
    "detail": {
@@ -5245,8 +5245,8 @@
    "peeked": 7730
   },
   "vendor/corpus/sysml/src/training/27. Occurrences/Interaction Realization-2.sysml": {
-   "allocated_bytes": 65176,
-   "allocations": 603,
+   "allocated_bytes": 53064,
+   "allocations": 589,
    "bytes": 2046,
    "consumed": 278,
    "detail": {
@@ -5270,8 +5270,8 @@
    "peeked": 9602
   },
   "vendor/corpus/sysml/src/training/27. Occurrences/Message Payload Example.sysml": {
-   "allocated_bytes": 35344,
-   "allocations": 341,
+   "allocated_bytes": 29360,
+   "allocations": 329,
    "bytes": 1141,
    "consumed": 148,
    "detail": {
@@ -5295,8 +5295,8 @@
    "peeked": 3336
   },
   "vendor/corpus/sysml/src/training/27. Occurrences/Time Slice and Snapshot Example.sysml": {
-   "allocated_bytes": 23616,
-   "allocations": 233,
+   "allocated_bytes": 19152,
+   "allocations": 223,
    "bytes": 442,
    "consumed": 82,
    "detail": {
@@ -5320,8 +5320,8 @@
    "peeked": 2353
   },
   "vendor/corpus/sysml/src/training/28. Individuals/Individuals and Roles-1.sysml": {
-   "allocated_bytes": 22088,
-   "allocations": 195,
+   "allocated_bytes": 17536,
+   "allocations": 185,
    "bytes": 499,
    "consumed": 71,
    "detail": {
@@ -5345,8 +5345,8 @@
    "peeked": 2248
   },
   "vendor/corpus/sysml/src/training/28. Individuals/Individuals and Snapshots Example.sysml": {
-   "allocated_bytes": 22528,
-   "allocations": 203,
+   "allocated_bytes": 18040,
+   "allocations": 193,
    "bytes": 466,
    "consumed": 79,
    "detail": {
@@ -5370,8 +5370,8 @@
    "peeked": 2221
   },
   "vendor/corpus/sysml/src/training/28. Individuals/Individuals and Time Slices.sysml": {
-   "allocated_bytes": 23240,
-   "allocations": 222,
+   "allocated_bytes": 18744,
+   "allocations": 212,
    "bytes": 473,
    "consumed": 78,
    "detail": {
@@ -5395,8 +5395,8 @@
    "peeked": 1979
   },
   "vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 1.sysml": {
-   "allocated_bytes": 29592,
-   "allocations": 295,
+   "allocated_bytes": 25400,
+   "allocations": 285,
    "bytes": 709,
    "consumed": 116,
    "detail": {
@@ -5420,8 +5420,8 @@
    "peeked": 4146
   },
   "vendor/corpus/sysml/src/training/29. Expressions/Car Mass Rollup Example 2.sysml": {
-   "allocated_bytes": 29256,
-   "allocations": 289,
+   "allocated_bytes": 25032,
+   "allocations": 279,
    "bytes": 675,
    "consumed": 112,
    "detail": {
@@ -5445,8 +5445,8 @@
    "peeked": 4132
   },
   "vendor/corpus/sysml/src/training/29. Expressions/MassRollup1.sysml": {
-   "allocated_bytes": 18984,
-   "allocations": 203,
+   "allocated_bytes": 15944,
+   "allocations": 193,
    "bytes": 403,
    "consumed": 68,
    "detail": {
@@ -5470,8 +5470,8 @@
    "peeked": 2559
   },
   "vendor/corpus/sysml/src/training/29. Expressions/MassRollup2.sysml": {
-   "allocated_bytes": 28536,
-   "allocations": 274,
+   "allocated_bytes": 24192,
+   "allocations": 264,
    "bytes": 540,
    "consumed": 97,
    "detail": {
@@ -5495,8 +5495,8 @@
    "peeked": 3504
   },
   "vendor/corpus/sysml/src/training/30. Calculations/Calculation Definitions.sysml": {
-   "allocated_bytes": 42552,
-   "allocations": 376,
+   "allocated_bytes": 33624,
+   "allocations": 364,
    "bytes": 712,
    "consumed": 164,
    "detail": {
@@ -5520,8 +5520,8 @@
    "peeked": 5201
   },
   "vendor/corpus/sysml/src/training/30. Calculations/Calculation Usages-1.sysml": {
-   "allocated_bytes": 46272,
-   "allocations": 408,
+   "allocated_bytes": 37400,
+   "allocations": 396,
    "bytes": 830,
    "consumed": 171,
    "detail": {
@@ -5545,8 +5545,8 @@
    "peeked": 5960
   },
   "vendor/corpus/sysml/src/training/30. Calculations/Calculation Usages-2.sysml": {
-   "allocated_bytes": 37536,
-   "allocations": 357,
+   "allocated_bytes": 31504,
+   "allocations": 345,
    "bytes": 758,
    "consumed": 142,
    "detail": {
@@ -5570,8 +5570,8 @@
    "peeked": 4805
   },
   "vendor/corpus/sysml/src/training/31. Constraints/Analytical Constraints.sysml": {
-   "allocated_bytes": 48968,
-   "allocations": 452,
+   "allocated_bytes": 40312,
+   "allocations": 440,
    "bytes": 969,
    "consumed": 198,
    "detail": {
@@ -5595,8 +5595,8 @@
    "peeked": 6551
   },
   "vendor/corpus/sysml/src/training/31. Constraints/Constraint Assertions-1.sysml": {
-   "allocated_bytes": 29272,
-   "allocations": 291,
+   "allocated_bytes": 25096,
+   "allocations": 281,
    "bytes": 653,
    "consumed": 118,
    "detail": {
@@ -5620,8 +5620,8 @@
    "peeked": 3731
   },
   "vendor/corpus/sysml/src/training/31. Constraints/Constraint Assertions-2.sysml": {
-   "allocated_bytes": 32344,
-   "allocations": 307,
+   "allocated_bytes": 26264,
+   "allocations": 295,
    "bytes": 739,
    "consumed": 136,
    "detail": {
@@ -5645,8 +5645,8 @@
    "peeked": 4376
   },
   "vendor/corpus/sysml/src/training/31. Constraints/Constraints Example-1.sysml": {
-   "allocated_bytes": 29200,
-   "allocations": 290,
+   "allocated_bytes": 25016,
+   "allocations": 280,
    "bytes": 643,
    "consumed": 117,
    "detail": {
@@ -5670,8 +5670,8 @@
    "peeked": 3904
   },
   "vendor/corpus/sysml/src/training/31. Constraints/Constraints Example-2.sysml": {
-   "allocated_bytes": 29696,
-   "allocations": 301,
+   "allocated_bytes": 25512,
+   "allocations": 291,
    "bytes": 671,
    "consumed": 117,
    "detail": {
@@ -5695,8 +5695,8 @@
    "peeked": 4399
   },
   "vendor/corpus/sysml/src/training/31. Constraints/Derivation Constraints.sysml": {
-   "allocated_bytes": 30960,
-   "allocations": 334,
+   "allocated_bytes": 26728,
+   "allocations": 324,
    "bytes": 613,
    "consumed": 111,
    "detail": {
@@ -5720,8 +5720,8 @@
    "peeked": 3680
   },
   "vendor/corpus/sysml/src/training/31. Constraints/Time Constraints.sysml": {
-   "allocated_bytes": 45720,
-   "allocations": 395,
+   "allocated_bytes": 36776,
+   "allocations": 383,
    "bytes": 977,
    "consumed": 162,
    "detail": {
@@ -5745,8 +5745,8 @@
    "peeked": 4521
   },
   "vendor/corpus/sysml/src/training/32. Requirements/Requirement Definitions.sysml": {
-   "allocated_bytes": 34992,
-   "allocations": 326,
+   "allocated_bytes": 28920,
+   "allocations": 314,
    "bytes": 1218,
    "consumed": 139,
    "detail": {
@@ -5770,8 +5770,8 @@
    "peeked": 3724
   },
   "vendor/corpus/sysml/src/training/32. Requirements/Requirement Groups.sysml": {
-   "allocated_bytes": 26824,
-   "allocations": 243,
+   "allocated_bytes": 22368,
+   "allocations": 233,
    "bytes": 720,
    "consumed": 84,
    "detail": {
@@ -5795,8 +5795,8 @@
    "peeked": 2270
   },
   "vendor/corpus/sysml/src/training/32. Requirements/Requirement Satisfaction.sysml": {
-   "allocated_bytes": 20576,
-   "allocations": 221,
+   "allocated_bytes": 17560,
+   "allocations": 211,
    "bytes": 568,
    "consumed": 71,
    "detail": {
@@ -5820,8 +5820,8 @@
    "peeked": 2306
   },
   "vendor/corpus/sysml/src/training/32. Requirements/Requirement Usages.sysml": {
-   "allocated_bytes": 23440,
-   "allocations": 224,
+   "allocated_bytes": 19024,
+   "allocations": 214,
    "bytes": 600,
    "consumed": 89,
    "detail": {
@@ -5845,8 +5845,8 @@
    "peeked": 2364
   },
   "vendor/corpus/sysml/src/training/33. Analysis/Analysis Case Definition Example.sysml": {
-   "allocated_bytes": 73168,
-   "allocations": 696,
+   "allocated_bytes": 61348,
+   "allocations": 682,
    "bytes": 2309,
    "consumed": 316,
    "detail": {
@@ -5870,8 +5870,8 @@
    "peeked": 8577
   },
   "vendor/corpus/sysml/src/training/33. Analysis/Analysis Case Usage Example.sysml": {
-   "allocated_bytes": 29040,
-   "allocations": 280,
+   "allocated_bytes": 24752,
+   "allocations": 270,
    "bytes": 851,
    "consumed": 104,
    "detail": {
@@ -5895,8 +5895,8 @@
    "peeked": 3739
   },
   "vendor/corpus/sysml/src/training/33. Analysis/Trade Study Analysis Example.sysml": {
-   "allocated_bytes": 55696,
-   "allocations": 468,
+   "allocated_bytes": 47416,
+   "allocations": 456,
    "bytes": 1357,
    "consumed": 245,
    "detail": {
@@ -5920,8 +5920,8 @@
    "peeked": 7896
   },
   "vendor/corpus/sysml/src/training/34. Verification/Verification Case Definition Example.sysml": {
-   "allocated_bytes": 43592,
-   "allocations": 381,
+   "allocated_bytes": 34636,
+   "allocations": 369,
    "bytes": 1287,
    "consumed": 161,
    "detail": {
@@ -5945,8 +5945,8 @@
    "peeked": 4720
   },
   "vendor/corpus/sysml/src/training/34. Verification/Verification Case Usage Example.sysml": {
-   "allocated_bytes": 45720,
-   "allocations": 394,
+   "allocated_bytes": 36728,
+   "allocations": 382,
    "bytes": 1177,
    "consumed": 156,
    "detail": {
@@ -5970,8 +5970,8 @@
    "peeked": 4587
   },
   "vendor/corpus/sysml/src/training/35. Use Cases/Use Case Definition Example.sysml": {
-   "allocated_bytes": 22416,
-   "allocations": 194,
+   "allocated_bytes": 18156,
+   "allocations": 184,
    "bytes": 679,
    "consumed": 108,
    "detail": {
@@ -5995,8 +5995,8 @@
    "peeked": 1930
   },
   "vendor/corpus/sysml/src/training/35. Use Cases/Use Case Usage Example.sysml": {
-   "allocated_bytes": 33880,
-   "allocations": 284,
+   "allocated_bytes": 27848,
+   "allocations": 272,
    "bytes": 1062,
    "consumed": 142,
    "detail": {
@@ -6020,8 +6020,8 @@
    "peeked": 2951
   },
   "vendor/corpus/sysml/src/training/36. Variability/Variation Configuration.sysml": {
-   "allocated_bytes": 14152,
-   "allocations": 145,
+   "allocated_bytes": 12024,
+   "allocations": 137,
    "bytes": 390,
    "consumed": 54,
    "detail": {
@@ -6045,8 +6045,8 @@
    "peeked": 2132
   },
   "vendor/corpus/sysml/src/training/36. Variability/Variation Definitions.sysml": {
-   "allocated_bytes": 30208,
-   "allocations": 285,
+   "allocated_bytes": 26032,
+   "allocations": 275,
    "bytes": 717,
    "consumed": 118,
    "detail": {
@@ -6070,8 +6070,8 @@
    "peeked": 3249
   },
   "vendor/corpus/sysml/src/training/36. Variability/Variation Usages.sysml": {
-   "allocated_bytes": 27632,
-   "allocations": 267,
+   "allocated_bytes": 23200,
+   "allocations": 257,
    "bytes": 602,
    "consumed": 86,
    "detail": {
@@ -6095,8 +6095,8 @@
    "peeked": 2920
   },
   "vendor/corpus/sysml/src/training/37. Dependencies/Dependency Example.sysml": {
-   "allocated_bytes": 12304,
-   "allocations": 125,
+   "allocated_bytes": 10168,
+   "allocations": 117,
    "bytes": 488,
    "consumed": 53,
    "detail": {
@@ -6120,8 +6120,8 @@
    "peeked": 1412
   },
   "vendor/corpus/sysml/src/training/38. Allocation/Allocation Definition Example.sysml": {
-   "allocated_bytes": 29008,
-   "allocations": 268,
+   "allocated_bytes": 24744,
+   "allocations": 258,
    "bytes": 827,
    "consumed": 107,
    "detail": {
@@ -6145,8 +6145,8 @@
    "peeked": 4141
   },
   "vendor/corpus/sysml/src/training/38. Allocation/Allocation Usage Example.sysml": {
-   "allocated_bytes": 24440,
-   "allocations": 234,
+   "allocated_bytes": 20072,
+   "allocations": 224,
    "bytes": 683,
    "consumed": 94,
    "detail": {
@@ -6170,8 +6170,8 @@
    "peeked": 2940
   },
   "vendor/corpus/sysml/src/training/39. Metadata/Metadata Example-1.sysml": {
-   "allocated_bytes": 23184,
-   "allocations": 208,
+   "allocated_bytes": 18880,
+   "allocations": 198,
    "bytes": 612,
    "consumed": 102,
    "detail": {
@@ -6195,8 +6195,8 @@
    "peeked": 3465
   },
   "vendor/corpus/sysml/src/training/39. Metadata/Metadata Example-2.sysml": {
-   "allocated_bytes": 25312,
-   "allocations": 252,
+   "allocated_bytes": 21168,
+   "allocations": 242,
    "bytes": 659,
    "consumed": 122,
    "detail": {
@@ -6220,8 +6220,8 @@
    "peeked": 2842
   },
   "vendor/corpus/sysml/src/training/40. Filtering/Filtering Example-1.sysml": {
-   "allocated_bytes": 30312,
-   "allocations": 306,
+   "allocated_bytes": 24320,
+   "allocations": 294,
    "bytes": 824,
    "consumed": 148,
    "detail": {
@@ -6245,8 +6245,8 @@
    "peeked": 5355
   },
   "vendor/corpus/sysml/src/training/40. Filtering/Filtering Example-2.sysml": {
-   "allocated_bytes": 30464,
-   "allocations": 312,
+   "allocated_bytes": 24472,
+   "allocations": 300,
    "bytes": 806,
    "consumed": 148,
    "detail": {
@@ -6270,8 +6270,8 @@
    "peeked": 5345
   },
   "vendor/corpus/sysml/src/training/41. Language Extension/Model Library Example.sysml": {
-   "allocated_bytes": 31648,
-   "allocations": 284,
+   "allocated_bytes": 25648,
+   "allocations": 272,
    "bytes": 867,
    "consumed": 146,
    "detail": {
@@ -6295,8 +6295,8 @@
    "peeked": 4565
   },
   "vendor/corpus/sysml/src/training/41. Language Extension/Semantic Metadata Example.sysml": {
-   "allocated_bytes": 22984,
-   "allocations": 203,
+   "allocated_bytes": 18640,
+   "allocations": 193,
    "bytes": 615,
    "consumed": 97,
    "detail": {
@@ -6320,8 +6320,8 @@
    "peeked": 1612
   },
   "vendor/corpus/sysml/src/training/41. Language Extension/User Keyword Example.sysml": {
-   "allocated_bytes": 29256,
-   "allocations": 297,
+   "allocated_bytes": 24976,
+   "allocations": 287,
    "bytes": 651,
    "consumed": 105,
    "detail": {
@@ -6345,8 +6345,8 @@
    "peeked": 2870
   },
   "vendor/corpus/sysml/src/training/42. Views/Viewpoint Example.sysml": {
-   "allocated_bytes": 16680,
-   "allocations": 159,
+   "allocated_bytes": 14580,
+   "allocations": 151,
    "bytes": 974,
    "consumed": 59,
    "detail": {
@@ -6370,8 +6370,8 @@
    "peeked": 1654
   },
   "vendor/corpus/sysml/src/training/42. Views/Views Example.sysml": {
-   "allocated_bytes": 24640,
-   "allocations": 233,
+   "allocated_bytes": 20400,
+   "allocations": 223,
    "bytes": 779,
    "consumed": 110,
    "detail": {
@@ -6395,8 +6395,8 @@
    "peeked": 2535
   },
   "vendor/corpus/sysml/src/validation/01-Parts Tree/1a-Parts Tree.sysml": {
-   "allocated_bytes": 50432,
-   "allocations": 466,
+   "allocated_bytes": 42140,
+   "allocations": 454,
    "bytes": 3110,
    "consumed": 249,
    "detail": {
@@ -6420,8 +6420,8 @@
    "peeked": 8814
   },
   "vendor/corpus/sysml/src/validation/01-Parts Tree/1c-Parts Tree Redefinition.sysml": {
-   "allocated_bytes": 50160,
-   "allocations": 482,
+   "allocated_bytes": 41704,
+   "allocations": 470,
    "bytes": 2231,
    "consumed": 226,
    "detail": {
@@ -6445,8 +6445,8 @@
    "peeked": 8127
   },
   "vendor/corpus/sysml/src/validation/01-Parts Tree/1d-Parts Tree with Reference.sysml": {
-   "allocated_bytes": 28648,
-   "allocations": 263,
+   "allocated_bytes": 24308,
+   "allocations": 253,
    "bytes": 1344,
    "consumed": 99,
    "detail": {
@@ -6470,8 +6470,8 @@
    "peeked": 3218
   },
   "vendor/corpus/sysml/src/validation/02-Parts Interconnection/2a-Parts Interconnection.sysml": {
-   "allocated_bytes": 118072,
-   "allocations": 991,
+   "allocated_bytes": 97628,
+   "allocations": 976,
    "bytes": 5072,
    "consumed": 522,
    "detail": {
@@ -6495,8 +6495,8 @@
    "peeked": 17812
   },
   "vendor/corpus/sysml/src/validation/02-Parts Interconnection/2c-Parts Interconnection-Multiple Decompositions.sysml": {
-   "allocated_bytes": 56712,
-   "allocations": 521,
+   "allocated_bytes": 48360,
+   "allocations": 509,
    "bytes": 1343,
    "consumed": 238,
    "detail": {
@@ -6520,8 +6520,8 @@
    "peeked": 9558
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3a-Function-based Behavior-1.sysml": {
-   "allocated_bytes": 79168,
-   "allocations": 536,
+   "allocated_bytes": 61140,
+   "allocations": 522,
    "bytes": 4170,
    "consumed": 312,
    "detail": {
@@ -6545,8 +6545,8 @@
    "peeked": 8475
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3a-Function-based Behavior-2.sysml": {
-   "allocated_bytes": 61920,
-   "allocations": 478,
+   "allocated_bytes": 49760,
+   "allocations": 464,
    "bytes": 2526,
    "consumed": 274,
    "detail": {
@@ -6570,8 +6570,8 @@
    "peeked": 7680
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3a-Function-based Behavior-3.sysml": {
-   "allocated_bytes": 54408,
-   "allocations": 430,
+   "allocated_bytes": 42200,
+   "allocations": 416,
    "bytes": 1982,
    "consumed": 266,
    "detail": {
@@ -6595,8 +6595,8 @@
    "peeked": 7710
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3c-Function-based Behavior-structure mod-1.sysml": {
-   "allocated_bytes": 44576,
-   "allocations": 363,
+   "allocated_bytes": 35488,
+   "allocations": 351,
    "bytes": 1281,
    "consumed": 144,
    "detail": {
@@ -6620,8 +6620,8 @@
    "peeked": 5688
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3c-Function-based Behavior-structure mod-2.sysml": {
-   "allocated_bytes": 35288,
-   "allocations": 320,
+   "allocated_bytes": 29176,
+   "allocations": 308,
    "bytes": 1064,
    "consumed": 132,
    "detail": {
@@ -6645,8 +6645,8 @@
    "peeked": 5291
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3c-Function-based Behavior-structure mod-3.sysml": {
-   "allocated_bytes": 28600,
-   "allocations": 272,
+   "allocated_bytes": 24304,
+   "allocations": 262,
    "bytes": 782,
    "consumed": 103,
    "detail": {
@@ -6670,8 +6670,8 @@
    "peeked": 4030
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3d-Function-based Behavior-item.sysml": {
-   "allocated_bytes": 51696,
-   "allocations": 472,
+   "allocated_bytes": 43320,
+   "allocations": 460,
    "bytes": 1601,
    "consumed": 236,
    "detail": {
@@ -6695,8 +6695,8 @@
    "peeked": 7651
   },
   "vendor/corpus/sysml/src/validation/03-Function-based Behavior/3e-Function-based Behavior-item.sysml": {
-   "allocated_bytes": 46000,
-   "allocations": 384,
+   "allocated_bytes": 37092,
+   "allocations": 372,
    "bytes": 1750,
    "consumed": 168,
    "detail": {
@@ -6720,8 +6720,8 @@
    "peeked": 6366
   },
   "vendor/corpus/sysml/src/validation/04-Functional Allocation/4a-Functional Allocation.sysml": {
-   "allocated_bytes": 66512,
-   "allocations": 575,
+   "allocated_bytes": 54368,
+   "allocations": 561,
    "bytes": 2843,
    "consumed": 275,
    "detail": {
@@ -6745,8 +6745,8 @@
    "peeked": 9191
   },
   "vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-1.sysml": {
-   "allocated_bytes": 107880,
-   "allocations": 855,
+   "allocated_bytes": 90804,
+   "allocations": 841,
    "bytes": 6080,
    "consumed": 432,
    "detail": {
@@ -6770,8 +6770,8 @@
    "peeked": 12164
   },
   "vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-1a.sysml": {
-   "allocated_bytes": 107984,
-   "allocations": 853,
+   "allocated_bytes": 90932,
+   "allocations": 839,
    "bytes": 6105,
    "consumed": 435,
    "detail": {
@@ -6795,8 +6795,8 @@
    "peeked": 12694
   },
   "vendor/corpus/sysml/src/validation/05-State-based Behavior/5-State-based Behavior-2.sysml": {
-   "allocated_bytes": 89056,
-   "allocations": 767,
+   "allocated_bytes": 71472,
+   "allocations": 753,
    "bytes": 3110,
    "consumed": 363,
    "detail": {
@@ -6820,8 +6820,8 @@
    "peeked": 11348
   },
   "vendor/corpus/sysml/src/validation/06-Individual and Snapshots/6-Individual and Snapshots.sysml": {
-   "allocated_bytes": 93216,
-   "allocations": 816,
+   "allocated_bytes": 76272,
+   "allocations": 802,
    "bytes": 3689,
    "consumed": 445,
    "detail": {
@@ -6845,8 +6845,8 @@
    "peeked": 15782
   },
   "vendor/corpus/sysml/src/validation/07-Variant Configuration/7a-Variant Configuration - General Concept.sysml": {
-   "allocated_bytes": 42112,
-   "allocations": 366,
+   "allocated_bytes": 33104,
+   "allocations": 354,
    "bytes": 981,
    "consumed": 154,
    "detail": {
@@ -6870,8 +6870,8 @@
    "peeked": 7800
   },
   "vendor/corpus/sysml/src/validation/07-Variant Configuration/7a1-Variant Configuration - General Concept-a.sysml": {
-   "allocated_bytes": 63464,
-   "allocations": 536,
+   "allocated_bytes": 51432,
+   "allocations": 522,
    "bytes": 1531,
    "consumed": 288,
    "detail": {
@@ -6895,8 +6895,8 @@
    "peeked": 11292
   },
   "vendor/corpus/sysml/src/validation/07-Variant Configuration/7b-Variant Configurations.sysml": {
-   "allocated_bytes": 125320,
-   "allocations": 1054,
+   "allocated_bytes": 100760,
+   "allocations": 1038,
    "bytes": 3937,
    "consumed": 514,
    "detail": {
@@ -6920,8 +6920,8 @@
    "peeked": 16459
   },
   "vendor/corpus/sysml/src/validation/08-Requirements/8-Requirements.sysml": {
-   "allocated_bytes": 100480,
-   "allocations": 876,
+   "allocated_bytes": 83984,
+   "allocations": 862,
    "bytes": 5449,
    "consumed": 507,
    "detail": {
@@ -6945,8 +6945,8 @@
    "peeked": 15271
   },
   "vendor/corpus/sysml/src/validation/09-Verification/9-Verification-simplified.sysml": {
-   "allocated_bytes": 87456,
-   "allocations": 738,
+   "allocated_bytes": 69952,
+   "allocations": 724,
    "bytes": 2911,
    "consumed": 373,
    "detail": {
@@ -6970,8 +6970,8 @@
    "peeked": 11177
   },
   "vendor/corpus/sysml/src/validation/10-Analysis and Trades/10a-Analysis.sysml": {
-   "allocated_bytes": 45600,
-   "allocations": 387,
+   "allocated_bytes": 36892,
+   "allocations": 375,
    "bytes": 1450,
    "consumed": 193,
    "detail": {
@@ -6995,8 +6995,8 @@
    "peeked": 5146
   },
   "vendor/corpus/sysml/src/validation/10-Analysis and Trades/10b-Trade-off Among Alternative Configurations.sysml": {
-   "allocated_bytes": 85960,
-   "allocations": 718,
+   "allocated_bytes": 68480,
+   "allocations": 704,
    "bytes": 2297,
    "consumed": 376,
    "detail": {
@@ -7020,8 +7020,8 @@
    "peeked": 12072
   },
   "vendor/corpus/sysml/src/validation/10-Analysis and Trades/10c-Fuel Economy Analysis.sysml": {
-   "allocated_bytes": 111544,
-   "allocations": 952,
+   "allocated_bytes": 94656,
+   "allocations": 938,
    "bytes": 4755,
    "consumed": 452,
    "detail": {
@@ -7045,8 +7045,8 @@
    "peeked": 16552
   },
   "vendor/corpus/sysml/src/validation/10-Analysis and Trades/10d-Dynamics Analysis.sysml": {
-   "allocated_bytes": 87072,
-   "allocations": 752,
+   "allocated_bytes": 69632,
+   "allocations": 738,
    "bytes": 2131,
    "consumed": 380,
    "detail": {
@@ -7070,8 +7070,8 @@
    "peeked": 10760
   },
   "vendor/corpus/sysml/src/validation/11-View and Viewpoint/11a-View-Viewpoint.sysml": {
-   "allocated_bytes": 45192,
-   "allocations": 400,
+   "allocated_bytes": 36552,
+   "allocations": 388,
    "bytes": 1144,
    "consumed": 200,
    "detail": {
@@ -7095,8 +7095,8 @@
    "peeked": 6805
   },
   "vendor/corpus/sysml/src/validation/11-View and Viewpoint/11b-Safety and Security Feature Views.sysml": {
-   "allocated_bytes": 48576,
-   "allocations": 451,
+   "allocated_bytes": 40336,
+   "allocations": 439,
    "bytes": 1606,
    "consumed": 251,
    "detail": {
@@ -7120,8 +7120,8 @@
    "peeked": 7300
   },
   "vendor/corpus/sysml/src/validation/12-Dependency Relationships/12a-Dependency.sysml": {
-   "allocated_bytes": 11128,
-   "allocations": 109,
+   "allocated_bytes": 8904,
+   "allocations": 101,
    "bytes": 293,
    "consumed": 42,
    "detail": {
@@ -7145,8 +7145,8 @@
    "peeked": 1120
   },
   "vendor/corpus/sysml/src/validation/12-Dependency Relationships/12b-Allocation-1.sysml": {
-   "allocated_bytes": 46376,
-   "allocations": 416,
+   "allocated_bytes": 37640,
+   "allocations": 404,
    "bytes": 1318,
    "consumed": 188,
    "detail": {
@@ -7170,8 +7170,8 @@
    "peeked": 5259
   },
   "vendor/corpus/sysml/src/validation/12-Dependency Relationships/12b-Allocation.sysml": {
-   "allocated_bytes": 17016,
-   "allocations": 174,
+   "allocated_bytes": 13992,
+   "allocations": 164,
    "bytes": 493,
    "consumed": 70,
    "detail": {
@@ -7195,8 +7195,8 @@
    "peeked": 1922
   },
   "vendor/corpus/sysml/src/validation/13-Model Containment/13a-Model Containment.sysml": {
-   "allocated_bytes": 23264,
-   "allocations": 196,
+   "allocated_bytes": 18920,
+   "allocations": 186,
    "bytes": 1428,
    "consumed": 98,
    "detail": {
@@ -7220,8 +7220,8 @@
    "peeked": 986
   },
   "vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group-1.sysml": {
-   "allocated_bytes": 44576,
-   "allocations": 379,
+   "allocated_bytes": 36024,
+   "allocations": 367,
    "bytes": 1340,
    "consumed": 213,
    "detail": {
@@ -7245,8 +7245,8 @@
    "peeked": 5960
   },
   "vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group-2.sysml": {
-   "allocated_bytes": 44872,
-   "allocations": 391,
+   "allocated_bytes": 36320,
+   "allocations": 379,
    "bytes": 1304,
    "consumed": 213,
    "detail": {
@@ -7270,8 +7270,8 @@
    "peeked": 5940
   },
   "vendor/corpus/sysml/src/validation/13-Model Containment/13b-Safety and Security Features Element Group.sysml": {
-   "allocated_bytes": 23536,
-   "allocations": 204,
+   "allocated_bytes": 19284,
+   "allocations": 194,
    "bytes": 886,
    "consumed": 110,
    "detail": {
@@ -7295,8 +7295,8 @@
    "peeked": 3081
   },
   "vendor/corpus/sysml/src/validation/14-Language Extensions/14a-Language Extensions.sysml": {
-   "allocated_bytes": 22320,
-   "allocations": 202,
+   "allocated_bytes": 17792,
+   "allocations": 192,
    "bytes": 564,
    "consumed": 74,
    "detail": {
@@ -7320,8 +7320,8 @@
    "peeked": 1915
   },
   "vendor/corpus/sysml/src/validation/14-Language Extensions/14b-Language Extensions.sysml": {
-   "allocated_bytes": 33208,
-   "allocations": 318,
+   "allocated_bytes": 27168,
+   "allocations": 306,
    "bytes": 939,
    "consumed": 141,
    "detail": {
@@ -7345,8 +7345,8 @@
    "peeked": 4479
   },
   "vendor/corpus/sysml/src/validation/14-Language Extensions/14c-Language Extensions.sysml": {
-   "allocated_bytes": 157360,
-   "allocations": 1158,
+   "allocated_bytes": 122692,
+   "allocations": 1142,
    "bytes": 5200,
    "consumed": 788,
    "detail": {
@@ -7370,8 +7370,8 @@
    "peeked": 20578
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_01-Constants.sysml": {
-   "allocated_bytes": 37728,
-   "allocations": 371,
+   "allocated_bytes": 31692,
+   "allocations": 359,
    "bytes": 2246,
    "consumed": 143,
    "detail": {
@@ -7395,8 +7395,8 @@
    "peeked": 3943
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_02-Basic Value Properties.sysml": {
-   "allocated_bytes": 17920,
-   "allocations": 203,
+   "allocated_bytes": 15364,
+   "allocations": 194,
    "bytes": 590,
    "consumed": 65,
    "detail": {
@@ -7420,8 +7420,8 @@
    "peeked": 2542
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_03-Value Expression.sysml": {
-   "allocated_bytes": 36424,
-   "allocations": 372,
+   "allocated_bytes": 30420,
+   "allocations": 360,
    "bytes": 932,
    "consumed": 146,
    "detail": {
@@ -7445,8 +7445,8 @@
    "peeked": 5244
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_04-Logical Expressions.sysml": {
-   "allocated_bytes": 26656,
-   "allocations": 282,
+   "allocated_bytes": 22376,
+   "allocations": 272,
    "bytes": 724,
    "consumed": 105,
    "detail": {
@@ -7470,8 +7470,8 @@
    "peeked": 3395
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_05-Unification of Expression and Constraint Definition.sysml": {
-   "allocated_bytes": 52024,
-   "allocations": 445,
+   "allocated_bytes": 43432,
+   "allocations": 433,
    "bytes": 1441,
    "consumed": 207,
    "detail": {
@@ -7495,8 +7495,8 @@
    "peeked": 5900
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_06-System of Quantities.sysml": {
-   "allocated_bytes": 6744,
-   "allocations": 56,
+   "allocated_bytes": 6192,
+   "allocations": 52,
    "bytes": 2785,
    "consumed": 12,
    "detail": {
@@ -7520,8 +7520,8 @@
    "peeked": 82
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_07-System of Units and Scales.sysml": {
-   "allocated_bytes": 8280,
-   "allocations": 63,
+   "allocated_bytes": 7648,
+   "allocations": 58,
    "bytes": 3589,
    "consumed": 18,
    "detail": {
@@ -7545,8 +7545,8 @@
    "peeked": 102
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_08-Range Restriction.sysml": {
-   "allocated_bytes": 19432,
-   "allocations": 207,
+   "allocated_bytes": 16412,
+   "allocations": 197,
    "bytes": 537,
    "consumed": 71,
    "detail": {
@@ -7570,8 +7570,8 @@
    "peeked": 1688
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_10-Primitive Data Types.sysml": {
-   "allocated_bytes": 46800,
-   "allocations": 414,
+   "allocated_bytes": 38136,
+   "allocations": 402,
    "bytes": 1977,
    "consumed": 201,
    "detail": {
@@ -7595,8 +7595,8 @@
    "peeked": 3912
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_11-Variable Length Collection Types.sysml": {
-   "allocated_bytes": 28272,
-   "allocations": 256,
+   "allocated_bytes": 24100,
+   "allocations": 246,
    "bytes": 810,
    "consumed": 119,
    "detail": {
@@ -7620,8 +7620,8 @@
    "peeked": 3710
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_12-Compound Value Type.sysml": {
-   "allocated_bytes": 28552,
-   "allocations": 275,
+   "allocated_bytes": 24316,
+   "allocations": 265,
    "bytes": 859,
    "consumed": 111,
    "detail": {
@@ -7645,8 +7645,8 @@
    "peeked": 3976
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_13-Discretely Sampled Function Value.sysml": {
-   "allocated_bytes": 91544,
-   "allocations": 828,
+   "allocated_bytes": 74536,
+   "allocations": 814,
    "bytes": 2826,
    "consumed": 436,
    "detail": {
@@ -7670,8 +7670,8 @@
    "peeked": 12978
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_19-Materials with Properties.sysml": {
-   "allocated_bytes": 85848,
-   "allocations": 729,
+   "allocated_bytes": 68360,
+   "allocations": 715,
    "bytes": 2656,
    "consumed": 375,
    "detail": {
@@ -7695,8 +7695,8 @@
    "peeked": 11795
   },
   "vendor/corpus/sysml/src/validation/15-Properties-Values-Expressions/15_19a-Materials with Properties.sysml": {
-   "allocated_bytes": 87456,
-   "allocations": 766,
+   "allocated_bytes": 69944,
+   "allocations": 752,
    "bytes": 2735,
    "consumed": 373,
    "detail": {
@@ -7720,8 +7720,8 @@
    "peeked": 11776
   },
   "vendor/corpus/sysml/src/validation/17-Sequence Modeling/17a-Sequence-Modeling.sysml": {
-   "allocated_bytes": 40488,
-   "allocations": 312,
+   "allocated_bytes": 31496,
+   "allocations": 300,
    "bytes": 1083,
    "consumed": 156,
    "detail": {
@@ -7745,8 +7745,8 @@
    "peeked": 3776
   },
   "vendor/corpus/sysml/src/validation/17-Sequence Modeling/17b-Sequence-Modeling.sysml": {
-   "allocated_bytes": 28728,
-   "allocations": 271,
+   "allocated_bytes": 22664,
+   "allocations": 259,
    "bytes": 857,
    "consumed": 138,
    "detail": {
@@ -7770,8 +7770,8 @@
    "peeked": 3746
   },
   "vendor/corpus/sysml/src/validation/18-Use Case/18-Use Case.sysml": {
-   "allocated_bytes": 47848,
-   "allocations": 395,
+   "allocated_bytes": 39460,
+   "allocations": 383,
    "bytes": 2014,
    "consumed": 235,
    "detail": {
@@ -7796,11 +7796,11 @@
   }
  },
  "fingerprint": "6843c161c5e848b5",
- "reason": "series 'keyword-lookahead' closed: peeked -15.5% over the series",
+ "reason": "series 'buffer-trims' closed: allocated_bytes -19.3% over the series",
  "scaling": 1.0,
  "totals": {
-  "allocated_bytes": 15713448,
-  "allocations": 132605,
+  "allocated_bytes": 12686360,
+  "allocations": 129163,
   "consumed": 70827,
   "peeked": 2136851
  }
