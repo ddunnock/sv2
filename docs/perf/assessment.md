@@ -228,6 +228,31 @@ is deterministic where this workspace's timing is not:
   this cost is the number of `nth_is_keyword` calls, or the per-call cost of `peek_nth`,
   not the comparison.
 
+### Keyword lookahead, by caller (series keyword-lookahead)
+
+After 2b was abandoned, `callgrind` call counts by caller showed where `nth_is_keyword`'s
+1.9 M calls come from. On the five largest files, `body_element`'s arms led with 148,240
+calls, followed by `at_basic_usage_prefix` (42,272) and `member_prefix` (30,064). Most
+were one token asked about a group of words one peek per word:
+`words.iter().any(|word| self.nth_is_keyword(n, word))` at 21 sites. Worst among them was
+`at_visibility`, three peeks re-asked by every `at_element_keyword`.
+
+| Step | Change | Verdict |
+|---|---|---|
+| 1 (2c578fc) | `nth_is_any_keyword` and `at_any_element_keyword`: one peek per group of words, at all 21 sites | improved, `peeked` −15.5%; `callgrind` 411.9 M → 398.5 M instructions (−3.3%) |
+| 2 (rejected, backed out) | remember the element word at the cursor, so `at_element_keyword` answers without a peek | `peeked` only −1.2% |
+
+- **Step 2's time verdict was a noise burst.** It read +30.9% against the 5% limit, and
+  `measure` straight after gave 12.16 ms. The step was rejected anyway, and it did not
+  earn its place: after step 1, `body_element`'s remaining calls are `at_visibility`'s
+  single peeks (49,712), not `at_element_keyword`.
+- **What remains is spread thin.** No caller of `nth_is_keyword` is above 15 K calls on
+  the five files. `occurrence_usage_prefix`, `at_multiplicity_part`,
+  `feature_specialization`, `expect_keyword` (consumption, not lookahead) and
+  `ref_prefix` lead. The next lookahead win is the per-peek path itself (`peek_nth`,
+  `cursor_position`, `meaningful_index`), which costs instructions rather than peeks, so
+  it needs a time series measured on the MacBook or with `callgrind` beside it.
+
 ## What the processor is doing
 
 Instruments CPU Counters, bottleneck mode, on the same bench (88 10-ms buckets while

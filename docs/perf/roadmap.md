@@ -306,6 +306,10 @@ workspace quiet. Enabling budget: 0, because step 1 lands with its reader. **Gua
 
 **Exit:** a net time win. **Abandon:** under 3% after step 2.
 
+**Follow-up.** Series `keyword-lookahead` took the calls instead of the compare: one
+peek per group of words at 21 sites. It closed at **−15.5% `peeked`** (−3.3%
+instructions); see assessment.md, "Keyword lookahead, by caller".
+
 **Outcome.** Series `token-keywords`, **abandoned** at its own line. Steps 1–2 cut
 instructions by about 1.4%. The text compare was never the cost; see assessment.md,
 "Keyword classification by token (2b)". The step-1 code was never committed and was
