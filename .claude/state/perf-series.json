@@ -72,120 +72,49 @@
      "outcome": "improved"
     }
    ]
+  },
+  {
+   "closed_at": "bc06618",
+   "name": "member-head-dispatch",
+   "notes": [
+    "peeked -41.1% over the series"
+   ],
+   "opened_at": "4ae0eee",
+   "outcome": "closed",
+   "primary": "peeked",
+   "steps": [
+    {
+     "notes": [
+      "peeked -16.4%"
+     ],
+     "outcome": "improved"
+    },
+    {
+     "notes": [
+      "peeked -17.3%"
+     ],
+     "outcome": "improved"
+    },
+    {
+     "notes": [
+      "peeked -2.8%"
+     ],
+     "outcome": "improved"
+    },
+    {
+     "notes": [
+      "peeked -5.8%"
+     ],
+     "outcome": "improved"
+    },
+    {
+     "notes": [
+      "peeked -6.8%"
+     ],
+     "outcome": "improved"
+    }
+   ]
   }
  ],
- "open": {
-  "commit": "4ae0eee",
-  "fingerprint": "cf9d1abe7e03b349",
-  "host": "Linux x86_64 R-JQ948439S28E",
-  "largest_p95_ns": 7378037,
-  "name": "member-head-dispatch",
-  "primary": "peeked",
-  "scaling": 1.0,
-  "source": "a76535844221f939c0690b5815ab6aa40f102fcc6d34bf9c6c4f5f031216446e",
-  "steps": [
-   {
-    "commit": "3208c23",
-    "fingerprint": "cf9d1abe7e03b349",
-    "host": "Linux x86_64 R-JQ948439S28E",
-    "largest_p95_ns": 7046231,
-    "notes": [
-     "peeked -16.4%"
-    ],
-    "outcome": "improved",
-    "scaling": 1.0,
-    "source": "95f2b9fdea8fc9903096ff77cf3c7c628fc88e0117573e2ad4ec716656f287d7",
-    "time_ns": 13273112,
-    "totals": {
-     "allocated_bytes": 15711448,
-     "allocations": 132472,
-     "consumed": 70576,
-     "peeked": 3619341
-    }
-   },
-   {
-    "commit": "18da45a",
-    "fingerprint": "cf9d1abe7e03b349",
-    "host": "Linux x86_64 R-JQ948439S28E",
-    "largest_p95_ns": 7173960,
-    "notes": [
-     "peeked -17.3%"
-    ],
-    "outcome": "improved",
-    "scaling": 1.0,
-    "source": "c2bd9b716f8f2379a8e4d97f24bcb0e9e6ae6f3ca7c70bc2a952ebe0955c4e8d",
-    "time_ns": 13564984,
-    "totals": {
-     "allocated_bytes": 15711448,
-     "allocations": 132472,
-     "consumed": 70576,
-     "peeked": 2993442
-    }
-   },
-   {
-    "commit": "4e1f85b",
-    "fingerprint": "cf9d1abe7e03b349",
-    "host": "Linux x86_64 R-JQ948439S28E",
-    "largest_p95_ns": 5307300,
-    "notes": [
-     "peeked -2.8%"
-    ],
-    "outcome": "improved",
-    "scaling": 1.0,
-    "source": "f2402550d613e8677c10ba18289d4e78c4c3a91dee7873451c2eea8b10cd0646",
-    "time_ns": 12628578,
-    "totals": {
-     "allocated_bytes": 15711448,
-     "allocations": 132472,
-     "consumed": 70576,
-     "peeked": 2908282
-    }
-   },
-   {
-    "commit": "cb9858f",
-    "fingerprint": "cf9d1abe7e03b349",
-    "host": "Linux x86_64 R-JQ948439S28E",
-    "largest_p95_ns": 7002561,
-    "notes": [
-     "peeked -5.8%"
-    ],
-    "outcome": "improved",
-    "scaling": 1.0,
-    "source": "d26fff287cc0293ac2a3bdaa462ed55cfb076ef6f569cb8e0567aae62c5ce3cc",
-    "time_ns": 12483572,
-    "totals": {
-     "allocated_bytes": 15711448,
-     "allocations": 132472,
-     "consumed": 70576,
-     "peeked": 2738298
-    }
-   },
-   {
-    "commit": "0f47596",
-    "fingerprint": "cf9d1abe7e03b349",
-    "host": "Linux x86_64 R-JQ948439S28E",
-    "largest_p95_ns": 6876361,
-    "notes": [
-     "peeked -6.8%"
-    ],
-    "outcome": "improved",
-    "scaling": 1.0,
-    "source": "5b05c5886271af44561bf70e8b09579ade5cbfb5699b1385f2e5edaf1f0021c7",
-    "time_ns": 12621701,
-    "totals": {
-     "allocated_bytes": 15711448,
-     "allocations": 132472,
-     "consumed": 70576,
-     "peeked": 2552786
-    }
-   }
-  ],
-  "time_ns": 14346183,
-  "totals": {
-   "allocated_bytes": 15711448,
-   "allocations": 132472,
-   "consumed": 70576,
-   "peeked": 4331571
-  }
- }
+ "open": null
 }
