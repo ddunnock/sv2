@@ -20,6 +20,7 @@
 //! | `nth_is_keyword` | `Parser::nth_is_keyword` | Phase 2 |
 //! | `qualified_names` | `Parser::qualified_name_length` | Phase 4 |
 //! | `skip_occurrence_usage_prefix` | the method of that name | Phase 4 |
+//! | `skip_occurrence_usage_prefix_computed` | the same, when its cache did not have the answer | Phase 4 |
 //! | `skip_basic_usage_prefix` | the method of that name | Phase 4 |
 //! | `skip_prefix_metadata` | the method of that name | Phase 4 |
 //! | `skip_prefix_metadata_computed` | the same, when its cache did not have the answer | Phase 4 |
@@ -44,6 +45,7 @@ pub(crate) enum Counter {
     NthIsKeyword,
     QualifiedNames,
     SkipOccurrenceUsagePrefix,
+    SkipOccurrenceUsagePrefixComputed,
     SkipBasicUsagePrefix,
     SkipPrefixMetadata,
     SkipPrefixMetadataComputed,
@@ -53,7 +55,7 @@ pub(crate) enum Counter {
 }
 
 /// How many counters there are, the two ratcheted ones included.
-const COUNT: usize = 14;
+const COUNT: usize = 15;
 
 /// How many are attribution detail: all but `peeked` and `consumed`.
 pub(crate) const DETAIL: usize = COUNT - 2;
@@ -68,6 +70,7 @@ const NAMES: [&str; COUNT] = [
     "nth_is_keyword",
     "qualified_names",
     "skip_occurrence_usage_prefix",
+    "skip_occurrence_usage_prefix_computed",
     "skip_basic_usage_prefix",
     "skip_prefix_metadata",
     "skip_prefix_metadata_computed",

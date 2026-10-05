@@ -138,6 +138,17 @@ impl Parser<'_> {
     /// `BasicUsagePrefix` and the two keywords only an occurrence may carry.
     pub(super) fn skip_occurrence_usage_prefix(&self, n: usize) -> usize {
         count(Counter::SkipOccurrenceUsagePrefix);
+        // Asked many times from one start, like `skip_prefix_metadata` (roadmap Phase 4).
+        self.memoized(
+            &self.occurrence_usage_prefix_ends,
+            n,
+            Self::compute_occurrence_usage_prefix,
+        )
+    }
+
+    /// `skip_occurrence_usage_prefix`'s walk, when its cache does not have the answer.
+    fn compute_occurrence_usage_prefix(&self, n: usize) -> usize {
+        count(Counter::SkipOccurrenceUsagePrefixComputed);
         // EndUsagePrefix, the first alternative by deviation OccurrenceUsagePrefix
         // (follow_xtext), excludes the rest: an end is not also individual.
         if let Some(kind) = self.skip_end_usage_prefix(n) {

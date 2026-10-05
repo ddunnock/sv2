@@ -199,6 +199,8 @@ struct Parser<'a> {
     framed_concern_body: Option<u32>,
     /// `skip_prefix_metadata`'s recent answers (roadmap Phase 4).
     prefix_metadata_ends: PrefixCache,
+    /// `skip_occurrence_usage_prefix`'s recent answers.
+    occurrence_usage_prefix_ends: PrefixCache,
 }
 
 impl<'a> Parser<'a> {
@@ -231,6 +233,7 @@ impl<'a> Parser<'a> {
             comments_significant: false,
             framed_concern_body: None,
             prefix_metadata_ends: PrefixCache::new(),
+            occurrence_usage_prefix_ends: PrefixCache::new(),
         }
     }
 
