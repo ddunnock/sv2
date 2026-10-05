@@ -74,5 +74,22 @@
    ]
   }
  ],
- "open": null
+ "open": {
+  "commit": "4ae0eee",
+  "fingerprint": "cf9d1abe7e03b349",
+  "host": "Linux x86_64 R-JQ948439S28E",
+  "largest_p95_ns": 7378037,
+  "name": "member-head-dispatch",
+  "primary": "peeked",
+  "scaling": 1.0,
+  "source": "a76535844221f939c0690b5815ab6aa40f102fcc6d34bf9c6c4f5f031216446e",
+  "steps": [],
+  "time_ns": 14346183,
+  "totals": {
+   "allocated_bytes": 15711448,
+   "allocations": 132472,
+   "consumed": 70576,
+   "peeked": 4331571
+  }
+ }
 }
