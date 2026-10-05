@@ -7074,28 +7074,34 @@ fn a_deviation_is_not_an_error_and_strictness_is_asked_separately() {
 
 #[test]
 fn a_diagnostic_points_at_the_text_it_is_about() {
-    // The whole point of the range: a caller underlines it. `class` is KerML's, so in a
-    // SysML file it is unexpected, and recovery skips to the end of the statement — so the
-    // range covers the RUN it gave up on, from the offending token through the `;`.
+    // The whole point of the range: a caller underlines it. `until` is a word SysML reserves
+    // (8.2.2.1.2) and no SysML member opens on, so in a SysML file it is unexpected, and
+    // recovery skips to the end of the statement — so the range covers the RUN it gave up
+    // on, from the offending token through the `;`.
+    //
+    // This was `class Wrong;` while the parser reserved both languages' words in both.
+    // SysML does not reserve `class` (only KerML 8.2.2.6 does), so there it is a NAME, and
+    // the statement fails later and for another reason; the word changed, not the claim
+    // (pending decision keyword-table-per-language, resolved 2026-10-05).
     //
     // It covered exactly `class` while recovery took one token at a time and reported each
     // one. That expectation is not relaxed here, it is replaced: the claim is still that
     // the range is exactly the text the diagnostic is about, and the text it is about is
     // now the statement. The sibling case below keeps a witness for the one-token form.
-    let source = "package P { class Wrong; }";
+    let source = "package P { until Wrong; }";
     let parsed = parse(source, Language::SysMl);
     let first = parsed
         .errors()
         .iter()
         .find(|d| d.code() == DiagnosticCode::Unexpected)
-        .expect("`class` is not a SysML element");
+        .expect("`until` opens no SysML element");
     let start = usize::from(first.range().start());
     let end = usize::from(first.range().end());
     // `get`, not a slice: the workspace forbids indexing a str, because a range landing
     // inside a multi-byte character panics — which is the same reason the range is
     // required to be on character boundaries in the first place.
-    assert_eq!(source.get(start..end), Some("class Wrong;"));
-    // One diagnostic for the statement, where there were three: `class`, `Wrong` and `;`.
+    assert_eq!(source.get(start..end), Some("until Wrong;"));
+    // One diagnostic for the statement, where there were three: `until`, `Wrong` and `;`.
     assert_eq!(
         parsed
             .errors()
