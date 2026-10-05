@@ -1,5 +1,5 @@
 {
- "commit": "bc06618",
+ "commit": "694e01f",
  "detail": {
   "is_name": 51562,
   "keyword_entries": 559314,
@@ -7796,7 +7796,7 @@
   }
  },
  "fingerprint": "cf9d1abe7e03b349",
- "reason": "series 'member-head-dispatch' closed: peeked -41.1% over the series",
+ "reason": "series 'operator-dispatch' closed: time -3.2% over the series",
  "scaling": 1.0,
  "totals": {
   "allocated_bytes": 15711448,
