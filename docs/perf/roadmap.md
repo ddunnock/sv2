@@ -278,6 +278,34 @@ change in token kinds.
 
 **Depends on.** Nothing. Any time.
 
+**Outcome.** Series `operator-dispatch`, closed: **net −3.2% median time** (series
+ledger, RHEL 9 workspace, where it was opened and closed). One step, improved, no
+enabling.
+
+| Step | Change | Verdict |
+|---|---|---|
+| 1 (694e01f) | `OPERATORS_BY_FIRST_BYTE`, and `lex_operator` compares each byte's candidates inline on the source bytes | improved, −3.2% |
+
+- **Neither generated grouping nor a hand-written `match`.** A `const fn` derives the
+  per-byte index from `OPERATORS` at compile time. The generated table stays the single
+  source, and each byte's candidates keep its longest-first order. More than 8 operators
+  sharing a first byte (6 share `:`), a non-ASCII operator, or a table too long for a
+  `u8` index is a build error.
+- **The first form was rejected,** at −2.7%: first-byte dispatch over `<[u8]>::starts_with`.
+  The rework compares the at-most-three bytes inline, which removes a `memcmp` call per
+  candidate, and reads the source bytes without `Cursor::rest`'s `str` boundary check.
+  That is a different change, not a re-run.
+- **The lexer alone halved.** In a throwaway A/B of `tokenize` over the corpus, five
+  rounds alternating old and new, the median went from about 4.8 to 2.65 ms (−45%).
+  The parse-level −3.2% sits at this workspace's noise floor; the lexer-level number is
+  the clear signal.
+- `operator_dispatch_agrees_with_the_full_scan` compares the new lexer with the old scan
+  on every string of up to three characters over the operator alphabet, plus a letter, a
+  space and a non-ASCII character. A negative control that skipped each row's longest
+  candidate failed it on `!==`.
+- What remains of `tokenize` is char decoding in `Cursor::peek`/`eat_while` and the
+  growth of its `Vec`. That is a byte-level lexer, and a hypothesis of its own.
+
 ---
 
 ## Phase 4 — Memoize lookahead scans
@@ -638,7 +666,7 @@ is recorded there as a candidate, not here.
 | 0 | — | done, 9768f88 | counts in assessment.md; re-scoped Phase 4 to prefix skips |
 | 1 | — | done, 82e3051 | largest file p95: 11.3 ms JavaScriptCore, 12.5 ms wasmtime; within FIT-4 by 3.5–4.7 ms |
 | 2 | keyword-classification | closed, net −25.2% time | Bun p95 11.21 → 8.34 ms; two steps, no enabling |
-| 3 | | not started | |
+| 3 | operator-dispatch | closed, net −3.2% time | one step; `tokenize` alone −45% |
 | 4 | prefix-skip-memo | closed, net −81.9% peeked | median time 23.92 → 13.62 ms (RHEL 9); three steps, no enabling |
 | 5 | member-head-dispatch | closed, net −41.1% peeked | five steps, no enabling; gates by `admits`, not a table |
 | 6 | | not started | |
