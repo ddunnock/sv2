@@ -310,14 +310,15 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("sv2-cli-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("Broken.sysml");
-        std::fs::write(&path, "package P {\n  class Wrong;\n}\n").unwrap();
+        std::fs::write(&path, "package P {\n  until Wrong;\n}\n").unwrap();
 
         let (code, out, err) = invoke(&["sv2", "parse", path.to_str().unwrap()]);
         std::fs::remove_file(&path).ok();
 
         assert_eq!(code, exit(ErrorCode::ParseFailed));
         assert!(out.is_empty());
-        // `class` is KerML's, and this is a .sysml file: line 2, column 3.
+        // `until` is reserved in SysML (8.2.2.1.2) and opens no member: line 2, column 3.
+        // (It was `class`, which SysML does not reserve, so in a .sysml file it is a NAME.)
         assert!(err.contains("2:3: error[PARSE-UNEXPECTED]"), "{err}");
     }
 
