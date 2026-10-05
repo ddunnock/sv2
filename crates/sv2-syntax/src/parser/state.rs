@@ -219,9 +219,7 @@ impl Parser<'_> {
     pub(super) fn at_target_transition_usage_member(&self) -> bool {
         let n = usize::from(self.at_visibility());
         if self.nth_is_keyword(n, "transition") {
-            return ["accept", "if", "do", "then"]
-                .iter()
-                .any(|word| self.nth_is_keyword(n + 1, word));
+            return self.nth_is_any_keyword(n + 1, &["accept", "if", "do", "then"]);
         }
         self.nth_is_keyword(n, "accept")
             || (self.nth_is_keyword(n, "if") && self.scan_for_keyword(n + 1, "then").is_some())
@@ -392,16 +390,11 @@ impl Parser<'_> {
     fn at_trigger_payload(&self) -> bool {
         let mut n = 0;
         loop {
-            if ["at", "after", "when"]
-                .iter()
-                .any(|word| self.nth_is_keyword(n, word))
-            {
+            if self.nth_is_any_keyword(n, &["at", "after", "when"]) {
                 return true;
             }
             if self.peek_nth(n).is_none()
-                || ["via", "if", "do", "then"]
-                    .iter()
-                    .any(|word| self.nth_is_keyword(n, word))
+                || self.nth_is_any_keyword(n, &["via", "if", "do", "then"])
                 || self.nth_is(n, SyntaxKind::Semicolon)
                 || self.nth_is(n, SyntaxKind::LBrace)
                 || self.nth_is(n, SyntaxKind::RBrace)

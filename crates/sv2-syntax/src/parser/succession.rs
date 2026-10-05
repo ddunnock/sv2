@@ -515,7 +515,7 @@ impl Parser<'_> {
             };
             n = after;
         }
-        n += usize::from(VISIBILITY.iter().any(|word| self.nth_is_keyword(n, word)));
+        n += usize::from(self.nth_is_any_keyword(n, &VISIBILITY));
         self.at_action_usage(n)
             || self.at_state_usage(n)
             || self.at_exhibit_state_usage(n)

@@ -294,9 +294,7 @@ impl Parser<'_> {
                 return None;
             }
             if token.kind == SyntaxKind::Hash
-                || KERML_FEATURE_ELEMENT_KEYWORDS
-                    .iter()
-                    .any(|word| self.nth_is_keyword(k, word))
+                || self.nth_is_any_keyword(k, &KERML_FEATURE_ELEMENT_KEYWORDS)
             {
                 return Some(k);
             }
@@ -318,7 +316,7 @@ impl Parser<'_> {
             &["composite", "portion"],
             &["var", "const"],
         ] {
-            if words.iter().any(|word| self.nth_is_keyword(n, word)) {
+            if self.nth_is_any_keyword(n, words) {
                 n += 1;
             }
         }
@@ -432,9 +430,7 @@ impl Parser<'_> {
             || self.nth_is(n, SyntaxKind::Tilde)
             || self.nth_is_name(n)
             || self.nth_at_feature_specialization(n)
-            || ["all", "ordered", "nonunique", "conjugates"]
-                .iter()
-                .any(|word| self.nth_is_keyword(n, word))
+            || self.nth_is_any_keyword(n, &["all", "ordered", "nonunique", "conjugates"])
     }
 
     // production: FeatureDeclaration@kerml
@@ -647,9 +643,7 @@ impl Parser<'_> {
             SyntaxKind::FatArrow,     // CROSSES
         ];
         SYMBOLS.iter().any(|kind| self.nth_is(n, *kind))
-            || ["subsets", "redefines", "references", "crosses"]
-                .iter()
-                .any(|word| self.nth_is_keyword(n, word))
+            || self.nth_is_any_keyword(n, &["subsets", "redefines", "references", "crosses"])
             || (self.nth_is_keyword(
                 n,
                 match self.language {

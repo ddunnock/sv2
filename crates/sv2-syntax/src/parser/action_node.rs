@@ -87,9 +87,7 @@ impl Parser<'_> {
                 return Some((word, n));
             }
             if self.peek_nth(n).is_none()
-                || ["then", "if", "do"]
-                    .iter()
-                    .any(|word| self.nth_is_keyword(n, word))
+                || self.nth_is_any_keyword(n, &["then", "if", "do"])
                 || self.nth_is(n, SyntaxKind::Semicolon)
                 || self.nth_is(n, SyntaxKind::LBrace)
                 || self.nth_is(n, SyntaxKind::RBrace)

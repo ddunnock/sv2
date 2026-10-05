@@ -161,6 +161,12 @@ impl Parser<'_> {
         self.nth_is_keyword(usize::from(self.at_visibility()), text)
     }
 
+    /// Whether any one of `words` is written here, after a visibility if one is: the
+    /// question `at_element_keyword` answers, asked of a group of words in one look.
+    pub(super) fn at_any_element_keyword(&self, words: &[&str]) -> bool {
+        self.nth_is_any_keyword(usize::from(self.at_visibility()), words)
+    }
+
     /// Whether a `Package` starts at the `n`th meaningful token: its
     /// `PrefixMetadataMember*` (`SysML` 8.2.2.5.1) looked past, then `package`.
     pub(super) fn at_package(&self, n: usize) -> bool {
@@ -517,9 +523,7 @@ impl Parser<'_> {
             // through an ObjectiveMembership of its own, as SubjectMember does.
             self.objective_member();
         } else if body.admits_state_action()
-            && ["entry", "do", "exit"]
-                .iter()
-                .any(|word| self.at_element_keyword(word))
+            && self.at_any_element_keyword(&["entry", "do", "exit"])
         {
             // StateBodyItem's fourth, fifth and sixth alternatives (SysML 8.2.2.18.1),
             // each owning a StateActionUsage through a StateSubactionMembership of its
@@ -573,9 +577,7 @@ impl Parser<'_> {
                         || self.at_state_usage(0)
                         || self.at_exhibit_state_usage(0)
                         // StateBodyItems rather than members `membership` reads.
-                        || ["transition", "entry", "do", "exit"]
-                            .iter()
-                            .any(|word| self.at_element_keyword(word))
+                        || self.at_any_element_keyword(&["transition", "entry", "do", "exit"])
                         || self.at_perform_action_usage(0)
                         || self.at_flow_usage(0)
                         || self.at_succession_flow_usage(0)

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-10-05T21:29:06Z",
+    "regenerated_utc": "2026-10-05T21:39:52Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -38,14 +38,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "0662506 Open optimization series keyword-lookahead",
+      "d3eac16 Abandon series token-keywords (roadmap 2b): the compare was not the cost",
       "6f1dae2 Open optimization series token-keywords (roadmap 2b)",
       "efe9024 Re-plan roadmap candidate 2b: classify each token once, in the lexer",
       "bffb492 Point the next session at roadmap candidate 2b",
       "621f1b2 Reserve each language's own words, not the union of both",
       "7788f94 Test the CLI's diagnostic position with a word SysML reserves",
-      "88cc734 Test a statement-wide diagnostic range with a word SysML reserves",
-      "bb4ec8a Record roadmap Phase 3's outcome",
-      "d65dee6 Close series operator-dispatch: net -3.2% time (roadmap Phase 3)"
+      "88cc734 Test a statement-wide diagnostic range with a word SysML reserves"
     ]
   },
   "authored": {

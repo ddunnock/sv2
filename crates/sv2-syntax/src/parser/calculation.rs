@@ -77,9 +77,7 @@ impl Parser<'_> {
             return false;
         }
         if self.at_return_parameter_member()
-            || ["variant", "subject", "actor", "objective"]
-                .iter()
-                .any(|word| self.at_element_keyword(word))
+            || self.at_any_element_keyword(&["variant", "subject", "actor", "objective"])
         {
             // `return` and `variant` continue the item run rather than ending it: both
             // are items of a calculation body (8.2.2.19, 8.2.2.17.1), and `subject`,

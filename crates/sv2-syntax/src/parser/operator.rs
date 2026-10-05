@@ -400,10 +400,7 @@ impl Parser<'_> {
     /// Its `ArgumentMember` is the one optional operand in the clause, so a
     /// classification or cast operator may be the first token of an expression.
     pub(super) fn at_leading_classification(&self) -> bool {
-        self.at(SyntaxKind::At)
-            || ["istype", "hastype", "as"]
-                .iter()
-                .any(|word| self.at_keyword(word))
+        self.at(SyntaxKind::At) || self.nth_is_any_keyword(0, &["istype", "hastype", "as"])
     }
 
     /// Whether a `MetaclassificationExpression` starts here.

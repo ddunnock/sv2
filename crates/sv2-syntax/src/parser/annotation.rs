@@ -35,9 +35,7 @@ impl Parser<'_> {
     /// or the `#` prefix metadata before either (see `at_metadata_element`).
     fn at_annotating_element(&self) -> bool {
         self.at(SyntaxKind::RegularComment)
-            || ["comment", "locale", "doc", "rep", "language"]
-                .iter()
-                .any(|word| self.at_keyword(word))
+            || self.nth_is_any_keyword(0, &["comment", "locale", "doc", "rep", "language"])
             || self.at_metadata_element(0)
     }
 
@@ -441,9 +439,7 @@ impl Parser<'_> {
     /// has a comment in it, so it is its own change with its own snapshot review rather
     /// than a side effect of this one.
     pub(super) fn at_annotating_member(&self, n: usize) -> bool {
-        ["comment", "locale", "doc", "rep", "language"]
-            .iter()
-            .any(|word| self.nth_is_keyword(n, word))
+        self.nth_is_any_keyword(n, &["comment", "locale", "doc", "rep", "language"])
             || self.at_metadata_element(n)
             // Only ever true with comments significant, which is how a member loop reads
             // the member `at_bare_comment_member` found.

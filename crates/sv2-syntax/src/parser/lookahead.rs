@@ -296,7 +296,7 @@ impl Parser<'_> {
 
     /// Whether a `VisibilityIndicator` starts here (`SysML` 8.2.2.5.1).
     pub(super) fn at_visibility(&self) -> bool {
-        VISIBILITY.iter().any(|word| self.at_keyword(word))
+        self.nth_is_any_keyword(0, &VISIBILITY)
     }
 
     /// Whether the next meaningful token is this keyword.
@@ -316,6 +316,22 @@ impl Parser<'_> {
         self.peek_nth(n).is_some_and(|token| {
             token.kind == SyntaxKind::BasicName
                 && self.source.as_bytes().get(token.start..token.end) == Some(text.as_bytes())
+        })
+    }
+
+    /// Whether the `n`th meaningful token from here is any one of `words`.
+    ///
+    /// The same answer as asking `nth_is_keyword` of each word, from one look at the
+    /// token rather than one per word: a token is a name spelled like one of them or it
+    /// is not. Where the parser asks one position about a group of words (a visibility,
+    /// a prefix's alternatives, a set of item keywords), this is that question.
+    pub(super) fn nth_is_any_keyword(&self, n: usize, words: &[&str]) -> bool {
+        count(Counter::NthIsKeyword);
+        self.peek_nth(n).is_some_and(|token| {
+            token.kind == SyntaxKind::BasicName && {
+                let text = self.source.as_bytes().get(token.start..token.end);
+                words.iter().any(|word| text == Some(word.as_bytes()))
+            }
         })
     }
 

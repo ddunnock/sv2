@@ -142,7 +142,7 @@ impl Parser<'_> {
             &["constant"],
             &["ref"],
         ] {
-            if words.iter().any(|word| self.nth_is_keyword(n, word)) {
+            if self.nth_is_any_keyword(n, words) {
                 n += 1;
             }
         }
@@ -174,7 +174,7 @@ impl Parser<'_> {
         }
         let mut n = self.skip_basic_usage_prefix(n);
         for words in [&["individual"][..], &["snapshot", "timeslice"]] {
-            if words.iter().any(|word| self.nth_is_keyword(n, word)) {
+            if self.nth_is_any_keyword(n, words) {
                 n += 1;
             }
         }
@@ -251,9 +251,7 @@ impl Parser<'_> {
             return !self.kind_follows(k + 1);
         }
         let prefix = self.skip_basic_usage_prefix(k) != k
-            || ["individual", "snapshot", "timeslice"]
-                .iter()
-                .any(|word| self.nth_is_keyword(k, word));
+            || self.nth_is_any_keyword(k, &["individual", "snapshot", "timeslice"]);
         !prefix && self.at_sysml_keyword_member(k)
     }
 
@@ -707,7 +705,7 @@ impl Parser<'_> {
             &["abstract", "variation"],
             &["constant"],
         ] {
-            if words.iter().any(|word| self.nth_is_keyword(n, word)) {
+            if self.nth_is_any_keyword(n, words) {
                 n += 1;
             }
         }
@@ -1040,18 +1038,19 @@ impl Parser<'_> {
 
     /// Whether any keyword of a `BasicUsagePrefix` is written here.
     fn at_basic_usage_prefix(&self) -> bool {
-        [
-            "in",
-            "out",
-            "inout",
-            "derived",
-            "abstract",
-            "variation",
-            "constant",
-            "ref",
-        ]
-        .iter()
-        .any(|word| self.at_keyword(word))
+        self.nth_is_any_keyword(
+            0,
+            &[
+                "in",
+                "out",
+                "inout",
+                "derived",
+                "abstract",
+                "variation",
+                "constant",
+                "ref",
+            ],
+        )
     }
 
     // production: BasicUsagePrefix
