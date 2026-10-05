@@ -194,6 +194,40 @@ Of the chain's 2.40 M:
   to choose which production to read. That cost is inside the 1.8 M peeks that fall
   outside the dispatch regions above.
 
+### Keyword classification by token (2b), abandoned
+
+Series `token-keywords` (2026-10-05, opened at efe9024, RHEL 9 workspace) tested whether
+the roughly 27% of self time spent asking which keyword a token is (`nth_is_keyword`,
+`is_reserved`, `admits`, and their `memcmp`) could be removed by classifying each token
+once in the lexer. It could not, because the text comparison was not where that time
+goes.
+
+Instructions, by `callgrind` over the five largest files (`perf_probe timing 1`), which
+is deterministic where this workspace's timing is not:
+
+| Build | Total | `nth_is_keyword` | `is_reserved` | `memcmp` | `tokenize` |
+|---|---:|---:|---:|---:|---:|
+| before | 412.2 M | 96.7 M | 8.1 M | 19.6 M | 27.1 M |
+| step 1: `Token::keyword` set in `tokenize`, `is_reserved` by kind | 407.4 M (−1.2%) | 96.7 M | — | 17.1 M | 34.8 M |
+| step 2: `nth_is_keyword` answers a non-keyword name without a compare | 406.3 M (−1.4%) | 96.0 M | — | 16.9 M | 34.8 M |
+
+- **`nth_is_keyword` costs about 50 instructions a call** over 1.9 M calls. Almost all of
+  it is the lookahead path the compare sits behind: `peek_nth`, `cursor_position`, the
+  meaningful-token index, and the counter hook. The compare itself is short, and most
+  calls land on tokens that are keywords, so an early exit for names rarely fires.
+- **Removing `is_reserved`'s search** (8.1 M) was mostly repaid in `tokenize` (+7.7 M),
+  which classifies every name, including names nothing asks about.
+- **The timed verdict misled.** The series ledger recorded step 1 at −9.9% time. A
+  pinned A/B over five alternating rounds gave −10.6, −9.1, +5.1, −2.0 and −1.5%, so
+  about −2% at the median. This workspace's GPU-less desktop keeps three to four of its
+  eight cores busy. Even pinned with `taskset`, the median spreads by about 5%, which is
+  wider than a `time` series' 3% bar. A `time` series here needs an instruction count
+  beside it, or the MacBook.
+- **Not to retry:** per-token keyword classification as a speed change. It may still be
+  worth having for clarity: `Token::keyword` made `is_name` a kind test. The next lever on
+  this cost is the number of `nth_is_keyword` calls, or the per-call cost of `peek_nth`,
+  not the comparison.
+
 ## What the processor is doing
 
 Instruments CPU Counters, bottleneck mode, on the same bench (88 10-ms buckets while

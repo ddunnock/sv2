@@ -132,24 +132,25 @@
      "outcome": "improved"
     }
    ]
+  },
+  {
+   "closed_at": "6f1dae2",
+   "name": "token-keywords",
+   "notes": [
+    "callgrind over the five largest files: step 1 (Token::keyword set in tokenize, is_reserved by kind) -1.2% instructions (is_reserved -8.1 M, memcmp -2.5 M, tokenize +7.7 M from classifying every name); step 2 prototype (nth_is_keyword early-out on non-keywords) a further -0.3%. Under the plan's 3% line. The timed -9.9% recorded for step 1 was noise on a loaded VM (pinned A/B over five rounds, median about -2%). nth_is_keyword's cost is about 50 instructions per call in the lookahead path (peek_nth, cursor_position, the meaningful index), not the text compare."
+   ],
+   "opened_at": "efe9024",
+   "outcome": "abandoned",
+   "primary": "time",
+   "steps": [
+    {
+     "notes": [
+      "time -9.9%"
+     ],
+     "outcome": "improved"
+    }
+   ]
   }
  ],
- "open": {
-  "commit": "efe9024",
-  "fingerprint": "6843c161c5e848b5",
-  "host": "Linux x86_64 R-JQ948439S28E",
-  "largest_p95_ns": 7024347,
-  "name": "token-keywords",
-  "primary": "time",
-  "scaling": 1.0,
-  "source": "1b591f7e91c5709bda57ff4096a7799b80631e9c3cb6cfd76183fa8941e1210f",
-  "steps": [],
-  "time_ns": 13774530,
-  "totals": {
-   "allocated_bytes": 15713448,
-   "allocations": 132605,
-   "consumed": 70827,
-   "peeked": 2529232
-  }
- }
+ "open": null
 }

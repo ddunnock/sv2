@@ -306,6 +306,11 @@ workspace quiet. Enabling budget: 0, because step 1 lands with its reader. **Gua
 
 **Exit:** a net time win. **Abandon:** under 3% after step 2.
 
+**Outcome.** Series `token-keywords`, **abandoned** at its own line. Steps 1–2 cut
+instructions by about 1.4%. The text compare was never the cost; see assessment.md,
+"Keyword classification by token (2b)". The step-1 code was never committed and was
+backed out.
+
 ---
 
 ## Phase 3 — Lexer operator dispatch
