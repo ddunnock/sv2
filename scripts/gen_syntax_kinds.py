@@ -26,7 +26,22 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 TOKENS = Path(".claude/state/grammar/keywords.json")
+BNF = Path(".claude/state/grammar/bnf-productions.json")
+DEVIATIONS = Path(".claude/state/deviations.json")
 OUT = Path("crates/sv2-syntax/src/generated/kinds.rs")
+
+# The specification file that states each language's RESERVED_KEYWORD production:
+# KerML 8.2.2.6 and SysML 8.2.2.1.2. The lists differ both ways, and a BasicName is a
+# NAME unless its own language reserves it (pending decision keyword-table-per-language).
+RESERVED_SOURCE = {"kerml": "KerML-textual-bnf.kebnf", "sysml": "SysML-textual-bnf.kebnf"}
+
+# Words a language reserves beyond its printed list, each by a recorded deviation: the
+# production must name an entry in .claude/state/deviations.json, or the generator stops.
+RESERVED_BY_DEVIATION: dict[str, dict[str, str]] = {
+    # KerML 8.2.5.8.3 writes 'new' as ConstructorExpression's keyword, and 8.2.2.6 omits it.
+    "kerml": {"new": "ConstructorExpression"},
+    "sysml": {},
+}
 GENERATED_BY = "scripts/gen_syntax_kinds.py"
 
 # Symbol -> Rust variant name. Explicit rather than transliterated: a generated
@@ -2292,6 +2307,11 @@ KEYWORDS_HEADER = """\
 /// Every keyword of the language, paired with its kind, sorted by text.
 pub const KEYWORDS: &[(&str, SyntaxKind)] = &["""
 
+RESERVED_HEADER = """\
+/// The words {language} reserves, sorted: {clause}, plus any a recorded deviation adds.
+/// A `BasicName` spelled as one of these is not a NAME in a {suffix} file.
+pub const {name}: &[&str] = &["""
+
 OPERATORS_HEADER = """\
 /// Every operator, paired with its kind, sorted longest first.
 ///
@@ -2370,7 +2390,19 @@ def _operator_entries(operators: list[str]) -> list[str]:
     return rows
 
 
-def render(keywords: list[str], operators: list[str]) -> str:
+def _reserved_entries(words: list[str]) -> list[str]:
+    """One reserved-word table's rows."""
+    return [f'    "{word}",' for word in words]
+
+
+#: (scope, constant, language, clause, file suffix) of each reserved-word table.
+RESERVED_TABLES = (
+    ("kerml", "RESERVED_KERML", "`KerML`", "`KerML` 8.2.2.6", "`.kerml`"),
+    ("sysml", "RESERVED_SYSML", "`SysML`", "`SysML` 8.2.2.1.2", "`.sysml`"),
+)
+
+
+def render(keywords: list[str], operators: list[str], reserved: dict[str, list[str]]) -> str:
     """The generated Rust module, as text."""
     lines = ENUM_HEADER.splitlines()
     lines += _lexical_variants()
@@ -2381,6 +2413,9 @@ def render(keywords: list[str], operators: list[str]) -> str:
     lines += ["", *ALL_HEADER.splitlines(), *_all_entries(keywords, operators), "];"]
     lines += ["", *KEYWORDS_HEADER.splitlines(), *_keyword_entries(keywords), "];"]
     lines += ["", *OPERATORS_HEADER.splitlines(), *_operator_entries(operators), "];"]
+    for scope, name, language, clause, suffix in RESERVED_TABLES:
+        header = RESERVED_HEADER.format(language=language, clause=clause, suffix=suffix, name=name)
+        lines += ["", *header.splitlines(), *_reserved_entries(reserved[scope]), "];"]
     lines.append("")
     return "\n".join(lines)
 
@@ -2398,7 +2433,43 @@ def build() -> str:
             "be transliterated into an identifier nobody chose."
         )
         raise SystemExit(message)
-    return render(keywords, operators)
+    return render(keywords, operators, reserved_words(keywords))
+
+
+def reserved_words(keywords: list[str]) -> dict[str, list[str]]:
+    """Each language's reserved words: its printed RESERVED_KEYWORD, plus deviations.
+
+    Refuses rather than falling back to the union of the two lists, which is wrong for
+    both languages. Every word must also be in `KEYWORDS`, so the kind lookup and the
+    reserved test cannot disagree about what a keyword is.
+    """
+    rules = json.loads(BNF.read_text()).get("rules", []) if BNF.is_file() else []
+    entries = (
+        json.loads(DEVIATIONS.read_text()).get("deviations", []) if DEVIATIONS.is_file() else []
+    )
+    recorded = {entry.get("production") for entry in entries if isinstance(entry, dict)}
+    reserved: dict[str, list[str]] = {}
+    for scope, source in RESERVED_SOURCE.items():
+        bodies = [
+            str(rule.get("body", ""))
+            for rule in rules
+            if rule.get("name") == "RESERVED_KEYWORD" and rule.get("file") == source
+        ]
+        if not bodies:
+            message = f"no RESERVED_KEYWORD for {scope} in {BNF}; run scripts/extract_bnf.py"
+            raise SystemExit(message)
+        words = set(re.findall(r"'([^'\n]+)'", bodies[0]))
+        for word, deviation in RESERVED_BY_DEVIATION[scope].items():
+            if deviation not in recorded:
+                message = f"{scope} reserves {word!r} by {deviation!r}, not in {DEVIATIONS}"
+                raise SystemExit(message)
+            words.add(word)
+        missing = sorted(words - set(keywords))
+        if missing:
+            message = f"{scope} reserves words with no keyword kind: {missing}"
+            raise SystemExit(message)
+        reserved[scope] = sorted(words)
+    return reserved
 
 
 def main(argv: list[str] | None = None) -> int:

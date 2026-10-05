@@ -155,9 +155,12 @@ impl Parser<'_> {
     /// (8.2.2.27), reached by deviation `AnnotatingElement`; `KerML`'s `MetadataFeature`
     /// opens `PrefixMetadataMember* ( '@' | 'metadata' )` (8.2.5.12). The same text, a
     /// `#X` run then the symbol or the word, so one recogniser serves both, and
-    /// `metadata_annotating_element` builds the file's language's element. `metadata def`
-    /// is `SysML`'s `MetadataDefinition` beside it, and `#X metadata def` too; `def` is
-    /// reserved, so in `KerML` it cannot be a typing's name either.
+    /// `metadata_annotating_element` builds the file's language's element. In `SysML`,
+    /// `metadata def` is `MetadataDefinition` beside it, and `#X metadata def` too. In
+    /// `KerML` it is not: `KerML` has no `MetadataDefinition` and does not reserve `def`
+    /// (8.2.2.6), so `metadata def : T;` is a `MetadataFeature` named `def`, by
+    /// `MetadataFeatureDeclaration = ( Identification ( ':' | 'typed' 'by' ) )?
+    /// OwnedFeatureTyping` (8.2.5.12).
     ///
     /// `@` also opens an expression: a `ClassificationExpression` with no left operand
     /// (`KerML` 8.2.5.8.1). The two never meet at member position, but they do where a
@@ -166,7 +169,8 @@ impl Parser<'_> {
     pub(super) fn at_metadata_element(&self, n: usize) -> bool {
         let n = self.skip_prefix_metadata(n);
         self.nth_is(n, SyntaxKind::At)
-            || (self.nth_is_keyword(n, "metadata") && !self.nth_is_keyword(n + 1, "def"))
+            || (self.nth_is_keyword(n, "metadata")
+                && !(self.language == Language::SysMl && self.nth_is_keyword(n + 1, "def")))
     }
 
     /// Whether a metadata element opens here with comments significant, so that a

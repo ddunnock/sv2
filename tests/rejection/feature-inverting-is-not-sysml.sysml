@@ -3,7 +3,7 @@
 // SysML's start symbol alone (ADR-0014).
 // KerML 8.2.3.4.3 — NonFeatureElement = ... | FeatureInverting | ...
 // KerML 8.2.4.3.6 — FeatureInverting  = ( 'inverting' Identification? )? 'inverse' ...
-// rejects: PARSE-UNEXPECTED on: inverse Person::parents of Person::children;
+// rejects: PARSE-EXPECTED on: inverse Person::parents of Person::children;
 package Family {
 	inverse Person::parents of Person::children;
 }

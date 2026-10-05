@@ -3,5 +3,5 @@
 // (ADR-0014). KerML declares a data type with `datatype`; `enum` is not a KerML keyword
 // at all.
 // KerML 8.2.3.4.1 — NamespaceBodyElement = NamespaceMember | AliasMember | Import
-// rejects: PARSE-UNEXPECTED on: enum def E;
+// rejects: PARSE-EXPECTED on: enum def E;
 enum def E;

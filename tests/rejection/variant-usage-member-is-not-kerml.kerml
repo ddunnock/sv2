@@ -3,7 +3,7 @@
 // KerML 8.2.4.1  — TypeBodyElement = NonFeatureMember | FeatureMember | AliasMember
 //                                  | Import
 // SysML 8.2.2.6.1 — VariantUsageMember = MemberPrefix 'variant' VariantUsageElement
-// rejects: PARSE-UNEXPECTED on: variant x;
+// rejects: PARSE-EXPECTED on: variant x;
 classifier C {
 	variant x;
 }

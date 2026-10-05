@@ -6,7 +6,8 @@
 use std::cell::Cell;
 
 use crate::counter::{Counter, count};
-use crate::generated::kinds::{KEYWORDS, SyntaxKind};
+use crate::generated::kinds::{KEYWORDS, RESERVED_KERML, RESERVED_SYSML, SyntaxKind};
+use crate::grammar::Language;
 use crate::lexer::{Token, is_trivia};
 use crate::parser::Parser;
 
@@ -35,6 +36,18 @@ pub(super) fn keyword(text: &str) -> Option<SyntaxKind> {
         .ok()
         .and_then(|i| KEYWORDS.get(i))
         .map(|(_, kind)| *kind)
+}
+
+/// Whether `language` reserves `text`: `RESERVED_KERML` (`KerML` 8.2.2.6, with `new` by
+/// deviation `ConstructorExpression`) or `RESERVED_SYSML` (`SysML` 8.2.2.1.2), both
+/// generated from the pinned lists and sorted, which the binary search relies on
+/// (`reserved_words_are_sorted_and_keywords`).
+pub(super) fn is_reserved(language: Language, text: &str) -> bool {
+    let words = match language {
+        Language::KerMl => RESERVED_KERML,
+        Language::SysMl => RESERVED_SYSML,
+    };
+    words.binary_search(&text).is_ok()
 }
 
 /// The three `VisibilityIndicator` keywords, in the order the specification
@@ -260,9 +273,13 @@ impl Parser<'_> {
     /// A reserved word is excluded. `KerML` 8.2.2.6: "a reserved keyword is a token
     /// that has the lexical structure of a basic name but cannot actually be used as a
     /// basic name". The lexer cannot make that distinction, because `package` and
-    /// `Vehicle` are the same token shape; the pinned keyword table is what separates
-    /// them, and asking it here is what keeps `package package;` from declaring a
+    /// `Vehicle` are the same token shape; the pinned reserved words are what separate
+    /// them, and asking them here is what keeps `package package;` from declaring a
     /// package named `package`.
+    ///
+    /// The file's language's own words, not both languages': `KerML` 8.2.2.6 and `SysML`
+    /// 8.2.2.1.2 print different lists, so `part step;` is a part named `step` in `SysML`
+    /// and `member step merge` a feature named `merge` in `KerML` (see [`is_reserved`]).
     pub(super) fn at_name(&self) -> bool {
         self.peek().is_some_and(|token| self.is_name(token))
     }
@@ -272,7 +289,7 @@ impl Parser<'_> {
         count(Counter::IsName);
         match token.kind {
             SyntaxKind::UnrestrictedName => true,
-            SyntaxKind::BasicName => keyword(self.text_of(token)).is_none(),
+            SyntaxKind::BasicName => !is_reserved(self.language, self.text_of(token)),
             _ => false,
         }
     }

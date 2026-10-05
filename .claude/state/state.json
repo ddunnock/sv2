@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-10-05T13:50:19Z",
+    "regenerated_utc": "2026-10-05T15:01:17Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -24,10 +24,10 @@
       "percent": 100.0
     },
     "tests": {
-      "unit": 750,
+      "unit": 752,
       "snapshots": 8,
       "corpus_files": 311,
-      "negative_cases": 298,
+      "negative_cases": 299,
       "known_permissive": 0
     },
     "pins": {
@@ -38,14 +38,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "7788f94 Test the CLI's diagnostic position with a word SysML reserves",
+      "88cc734 Test a statement-wide diagnostic range with a word SysML reserves",
+      "bb4ec8a Record roadmap Phase 3's outcome",
       "d65dee6 Close series operator-dispatch: net -3.2% time (roadmap Phase 3)",
       "694e01f Dispatch lex_operator on the first byte, compared inline",
       "1709f7c Open optimization series operator-dispatch (roadmap Phase 3)",
       "efaa23f Record roadmap Phase 5's outcome; next is keyword-table-per-language or 2b",
-      "9aa6ca6 Close series member-head-dispatch: net -41.1% peeked (roadmap Phase 5)",
-      "bc06618 Re-run the usage chains in membership only where each head admits",
-      "0f47596 Re-run the definition chain in membership only at a definition head",
-      "cb9858f Memoize skip_end_usage_prefix by absolute start and comment mode"
+      "9aa6ca6 Close series member-head-dispatch: net -41.1% peeked (roadmap Phase 5)"
     ]
   },
   "authored": {
@@ -178,13 +178,8 @@
       },
       {
         "id": "keyword-table-per-language",
-        "question": "The parser's keyword table (KEYWORDS, generated from .claude/state/grammar/keywords.json) is ONE table for both languages, so every SysML reserved word is also treated as reserved in a .kerml file, and vice versa: `part` and `classifier` are in the same list. The pinned sources disagree: KerML's RESERVED_KEYWORD (vendor/spec-bnf/KerML-textual-bnf.kebnf, KerML 8.2.2.6) omits SysML-only words, and omits `new` although KerML 8.2.5.8.3's ConstructorExpression writes it as a literal, while SysML's Tier B' list (SysML-textual-bnf.kebnf:20) includes `new` and its clause list in the wiki does not. So `feature new;` or `feature part;` is rejected in KerML where its own list admits it. Found by the conformance review of the send/assign/`new` construct (2026-09-22); it predates that change (KwNew was already in the table). Decide: split the table per Language (ADR-0014 already makes the grammars two), and whether `new` in KerML is a deviation in the SYSML21-11 family (missing reserved keywords) or simply not reserved. Needs the grammar-adjudicator. ADDED 2026-09-23 (80415c1, where it was first filed as a duplicate, reserved-words-per-language, now folded in here): the effect in SysML is concrete and spec-visible. The 44 KerML-only words -- assoc, behavior, bool, chains, class, classifier, composite, conjugate, conjugates, conjugation, connector, const, datatype, differences, disjoining, disjoint, expr, feature, featured, featuring, function, interaction, intersects, inv, inverse, inverting, member, metaclass, multiplicity, namespace, portion, predicate, redefinition, specialization, step, struct, subclassifier, subset, subtype, type, typed, typing, unions, var -- are refused as SysML names (`part step;` is rejected), and SysML 7.17.12's first while-loop example names its body clause `step`; the_while_until_example_of_7_17_12_parses writes it `'step'` until this is settled. The reverse set is 72 SysML-only words refused in .kerml files. The fix is in scripts/gen_syntax_kinds.py (kinds.rs is machine-owned): per-language keyword sets, asked by is_name with the parse's Language.",
-        "blocks": [
-          "a KerML name spelled like a SysML-only keyword",
-          "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/TimeVaryingSteps.kerml:4, `member step merge : ...` (found 2026-09-25: `merge` is SysML-reserved, a KerML NAME)",
-          "vendor/corpus/kerml/src/examples/Variable Feature Examples/Enhancements/ExtendedOccurrences.kerml:16,25-26: `expr at`, `expr while`, `in timeslice` -- none KerML-reserved (8.2.2.6); tests write them quoted until this is settled",
-          "KerML 7.4.8.3's example `in state;`, written `in 'state';` in an_expression_reads_the_examples_of_7_4_8_3"
-        ]
+        "question": "RESOLVED 2026-10-05. Reserved words are per-language: scripts/gen_syntax_kinds.py emits RESERVED_KERML (KerML 8.2.2.6's 101 words, plus `new` by new deviation ConstructorExpression, follow_xtext) and RESERVED_SYSML (SysML 8.2.2.1.2's 129) from the derived BNF's RESERVED_KEYWORD rules, refusing to fall back to the union; Parser::is_name asks the file's language (lookahead::is_reserved). KEYWORDS, the kind lookup, is unchanged. Grammar-adjudicator verdicts: KerML `new` reserved (pilot lexer reserves it in both languages; corpus never names anything `new`); SysML `typed` NOT reserved (SysML.xtext writes no 'typed'; deviation MetadataUsageDeclaration already excludes `typed by`). RESERVED_KEYWORD's register entry amended: lexical structure shared, reserved words not. Effects: .kerml corpus 56 -> 58/58 (TimeVaryingSteps, ExtendedOccurrences); 11 rejection files re-declared PARSE-UNEXPECTED -> PARSE-EXPECTED (the foreign word is now a NAME, still rejected); new rejection new-is-reserved-in-kerml.kerml; tests unquote 'step', 'state', 'at', 'while', 'timeslice'; two tests that relied on `class` being SysML-reserved corrected first, on their own (88cc734, 7788f94). The spec-conformance review (1 blocking, fixed) found one shared path that still read a SysML-only word as a keyword in KerML: at_metadata_element's `!nth_is_keyword(n + 1, \"def\")`, which turned away `metadata def : T;`, a KerML MetadataFeature named `def` (8.2.5.12); now gated on SysML, with metadata_def_is_a_metadata_feature_named_def_in_kerml. The review sampled the other cross-language nth_is_keyword asks and found them language-gated, but did not trace every caller. Open advisory: the re-declared rejections report the generic \"after a classifier/definition declaration\" wording.",
+        "blocks": []
       },
       {
         "id": "reference-json-owned-cross-feature-metaclass",
@@ -272,11 +267,8 @@
       },
       {
         "id": "perf-2b-vs-keyword-table-per-language",
-        "question": "Roadmap candidate 2b (cut the ~10.6% of self time left in keyword()'s binary-search compares, by a per-token keyword-kind table built in Parser::new or a generated match) and pending decision keyword-table-per-language (per-language reserved words, consulted with self.language) both rework keyword() and is_name in crates/sv2-syntax/src/parser/lookahead.rs. Recommendation: do keyword-table-per-language first, since it is a correctness fix that makes two .kerml corpus files parse, and design 2b over the per-language tables. The other order would build 2b's table or match twice. UPDATE 2026-10-05: after Phase 4, keyword() is 4.8% self time on the RHEL workspace plus an unattributed share of memcmp (13.8%); the roadmap now places 2b after Phase 5. Split memcmp with Instruments on the MacBook before planning 2b. UPDATE after Phase 5: with DWARF unwinding at 64 KB stacks on the RHEL workspace, memcmp resolves to keyword()'s binary search; keyword() is about 11% of self time inclusive of it, now the largest single target after nth_is_keyword (14.2%).",
-        "blocks": [
-          "roadmap candidate 2b",
-          "keyword-table-per-language, in that its implementation should know 2b is coming"
-        ]
+        "question": "Roadmap candidate 2b (cut the ~10.6% of self time left in keyword()'s binary-search compares, by a per-token keyword-kind table built in Parser::new or a generated match) and pending decision keyword-table-per-language (per-language reserved words, consulted with self.language) both rework keyword() and is_name in crates/sv2-syntax/src/parser/lookahead.rs. Recommendation: do keyword-table-per-language first, since it is a correctness fix that makes two .kerml corpus files parse, and design 2b over the per-language tables. The other order would build 2b's table or match twice. UPDATE 2026-10-05: after Phase 4, keyword() is 4.8% self time on the RHEL workspace plus an unattributed share of memcmp (13.8%); the roadmap now places 2b after Phase 5. Split memcmp with Instruments on the MacBook before planning 2b. UPDATE after Phase 5: with DWARF unwinding at 64 KB stacks on the RHEL workspace, memcmp resolves to keyword()'s binary search; keyword() is about 11% of self time inclusive of it, now the largest single target after nth_is_keyword (14.2%). UPDATE 2026-10-05: keyword-table-per-language is done, so 2b is unblocked. is_name no longer calls keyword(): it binary-searches the file's own RESERVED_* table, so 2b's target is now that search plus keyword()'s remaining callers (bump_as tagging).",
+        "blocks": []
       },
       {
         "id": "perf-rhel-parity",

@@ -150,13 +150,14 @@ impl Parser<'_> {
     // expression" (KerML 7.4.9.4, receipt f77ceb64). A shared unit: SysML reaches it
     // through the same BaseExpression.
     //
-    // `new` is RESERVED IN SYSML ONLY. The SysML Tier B' BNF lists it among the reserved
-    // keywords (vendor/spec-bnf/SysML-textual-bnf.kebnf:20); KerML's list does not
+    // `new` is printed as reserved in SysML only. The SysML Tier B' BNF lists it among the
+    // reserved keywords (vendor/spec-bnf/SysML-textual-bnf.kebnf:20); KerML's list does not
     // (KerML-textual-bnf.kebnf RESERVED_KEYWORD, and KerML 8.2.2.6), although this very
-    // production writes it as a literal. The parser treats it as reserved in both only
-    // because its keyword table is one table for both languages — the pending decision
-    // [keyword-table-per-language] — so `feature new;` is rejected in a .kerml file where
-    // KerML's own list would admit it.
+    // production writes it as a literal. KerML reserves it anyway, by deviation
+    // ConstructorExpression (follow_xtext): the pilot lexer reserves it in both languages
+    // and the corpus never names anything `new`. So `feature new;` is rejected in a .kerml
+    // file too, and tests/rejection/new-is-reserved-in-kerml.kerml holds that. It admits no
+    // text, so there is no PARSE-DEVIATION site for it (.claude/state/deviation-sites-pending.txt).
     //
     // The ArgumentList is not the expression's own, as it is an InvocationExpression's: it
     // belongs to the ConstructorResult, the result parameter the arguments bind features

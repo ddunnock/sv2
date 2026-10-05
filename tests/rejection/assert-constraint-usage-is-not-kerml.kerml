@@ -5,5 +5,5 @@
 // KerML 8.2.3.4.1  — NamespaceBodyElement = NamespaceMember | AliasMember | Import
 // KerML 8.2.5.7.4  — Invariant = FeaturePrefix 'inv' ( 'true' | 'false' )?
 //                      FeatureDeclaration ValuePart? FunctionBody
-// rejects: PARSE-UNEXPECTED on: assert constraint c;
+// rejects: PARSE-EXPECTED on: assert constraint c;
 assert constraint c;

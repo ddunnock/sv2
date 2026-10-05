@@ -5,5 +5,5 @@
 // KerML 8.2.3.4.1  — NamespaceBodyElement = NamespaceMember | AliasMember | Import
 // KerML 8.2.5.7.4  — BooleanExpression = FeaturePrefix 'bool' FeatureDeclaration ValuePart?
 //                      FunctionBody
-// rejects: PARSE-UNEXPECTED on: constraint c { a <= b }
+// rejects: PARSE-EXPECTED on: constraint c { a <= b }
 constraint c { a <= b }

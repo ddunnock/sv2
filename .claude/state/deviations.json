@@ -3994,7 +3994,7 @@
       "upstream": "vendor/pilot/SysML.xtext (lines 149-150) writes the keyword alternative as DefinedByKeyword, ':' | 'defined' 'by' (lines 395-397), the same rule its TypedBy uses.",
       "problem": "SysML 8.2.2.27 prints MetadataUsageDeclaration's keyword alternative as ( ':' | 'typed' 'by' ), KerML 8.2.5.12's MetadataFeatureDeclaration word for word. SysML does not reserve 'typed' (8.2.2.1.2) and defines no TYPED_BY; it reserves 'defined' and defines DEFINED_BY = ':' | 'defined' 'by', and its own TypedBy (8.2.2.6.5) is DEFINED_BY FeatureTyping where KerML's (8.2.4.3.1) is TYPED_BY OwnedFeatureTyping.",
       "decision": "follow_xtext",
-      "rationale": "The 'typed' 'by' is an unadapted copy of KerML's text in a clause SysML otherwise converts to DEFINED_BY: SysML types every other feature with 'defined' 'by', and 'typed' is not one of its reserved words. The pilot's DefinedByKeyword is that conversion, with no predicate or inlining. Not a union: nothing supports 'typed' 'by' in SysML. The corpus is silent on the keyword spelling: typed metadata usages use ':', e.g. `metadata engineSelectionRationale : Rationale about engine4cyl {`. The OwnedFeatureTyping the clause prints is kept, per deviation PrefixMetadataTyping-chain. The adjudicator read the open SysML issue list on 2026-09-17: no issue names this; SYSML21-11 (8.2.2.1.2's missing reserved words) does not mention 'typed'. Adjudicated by the grammar-adjudicator on 2026-09-17; the two TypedBy clauses and SysML's reserved words were rechecked directly.",
+      "rationale": "The 'typed' 'by' is an unadapted copy of KerML's text in a clause SysML otherwise converts to DEFINED_BY: SysML types every other feature with 'defined' 'by', and 'typed' is not one of its reserved words. The pilot's DefinedByKeyword is that conversion, with no predicate or inlining. Not a union: nothing supports 'typed' 'by' in SysML. The corpus is silent on the keyword spelling: typed metadata usages use ':', e.g. `metadata engineSelectionRationale : Rationale about engine4cyl {`. The OwnedFeatureTyping the clause prints is kept, per deviation PrefixMetadataTyping-chain. The adjudicator read the open SysML issue list on 2026-09-17: no issue names this; SYSML21-11 (8.2.2.1.2's missing reserved words) does not mention 'typed'. Adjudicated by the grammar-adjudicator on 2026-09-17; the two TypedBy clauses and SysML's reserved words were rechecked directly. Since reserved words became per-language (2026-10-05, pending decision keyword-table-per-language), 'typed' is therefore an ordinary NAME in SysML; the grammar-adjudicator confirmed on 2026-10-05 that SysML.xtext writes no 'typed' literal, so the pilot lexer does not reserve it either.",
       "evidence": [
         {
           "kind": "spec_clause",
@@ -5114,12 +5114,52 @@
         {
           "kind": "spec_clause",
           "ref": "KerML 8.2.2.6 (ReservedWords), PDF p.103, printed p.77",
-          "note": "MACHINE-GROUNDED. Retrieved as wiki production atom ReservedWords, region_sha256 f4ed93be1f57b626\u2026 SysML 8.2.2.1.2 (PDF p.197, sha 4ceb9d82\u2026) states that the SysML lexical structure 'is identical to that of the KerML textual notation', which is why the KerML clause governs both languages."
+          "note": "MACHINE-GROUNDED. Retrieved as wiki production atom ReservedWords, region_sha256 f4ed93be1f57b626\u2026 SysML 8.2.2.1.2 (PDF p.197, sha 4ceb9d82\u2026) states that the SysML lexical structure 'is identical to that of the KerML textual notation', which is why the KerML clause governs both languages. AMENDED 2026-10-05 (pending decision keyword-table-per-language): the lexical STRUCTURE is shared, but the reserved WORDS are not. SysML 8.2.2.1.2 prints its own RESERVED_KEYWORD of 129 words beside KerML 8.2.2.6's 101, and the two differ both ways (44 KerML-only, 72 SysML-only). Each language's NAME excludes its own list only: scripts/gen_syntax_kinds.py emits RESERVED_KERML and RESERVED_SYSML from the two printed lists, and KerML adds `new` by deviation ConstructorExpression."
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.1.2 Lexical Structure (vendor/spec-bnf/SysML-textual-bnf.kebnf:13)",
+          "note": "SysML's own RESERVED_KEYWORD: 129 words, among them `at`, `merge`, `part`, `state` and `while`, none of which KerML 8.2.2.6 reserves."
         },
         {
           "kind": "file_id",
           "ref": "ptc/25-04-04",
           "note": "The KerML Tier A pin the governing clause belongs to."
+        }
+      ]
+    },
+    {
+      "production": "ConstructorExpression",
+      "bucket": "conflict",
+      "upstream": "vendor/pilot/KerMLExpressions.xtext:424 writes the literal 'new', and KerML.xtext and SysML.xtext both declare `with KerMLExpressions` (line 29 of each). Xtext makes a grammar's keyword literals keywords of its lexer, so the pilot treats `new` as a keyword in both languages; this is inferred from the grammars, not observed by running the pilot.",
+      "problem": "KerML 8.2.5.8.3 writes ConstructorExpression as 'new' ownedRelationship += InstantiatedTypeMember, but KerML's RESERVED_KEYWORD (8.2.2.6) does not list `new`; SysML's (8.2.2.1.2) does. Read literally, `feature new;` is a KerML declaration and `new X()` is ambiguous with a reference to a feature named `new`.",
+      "decision": "follow_xtext",
+      "rationale": "A gap in the printed list, of the family of SYSML21-11 (missing reserved keywords): KerML's own grammar uses `new` as a keyword literal, SysML reserves the same word, and the pilot grammars make it a keyword in both languages (see upstream). The clause text cited below is the Tier B' transcription's, which is not normative; the PDF clauses were not re-retrieved for this entry. The corpus uses it only as the constructor keyword and never as a name. So KerML reserves `new`, departing from its printed list by this one word; scripts/gen_syntax_kinds.py adds it to RESERVED_KERML by this entry's name and stops if the entry is missing. Adjudicated by the grammar-adjudicator on 2026-10-05 for pending decision keyword-table-per-language; the OMG issue tracker was not consulted, so no issue is cited.",
+      "evidence": [
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.5.8.3 ConstructorExpression (vendor/spec-bnf/KerML-textual-bnf.kebnf:1216)",
+          "note": "'new' ownedRelationship += InstantiatedTypeMember"
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "KerML 8.2.2.6 Reserved Words (vendor/spec-bnf/KerML-textual-bnf.kebnf:114)",
+          "note": "RESERVED_KEYWORD does not contain 'new'."
+        },
+        {
+          "kind": "spec_clause",
+          "ref": "SysML 8.2.2.1.2 Lexical Structure (vendor/spec-bnf/SysML-textual-bnf.kebnf:13)",
+          "note": "SysML's RESERVED_KEYWORD lists 'new'."
+        },
+        {
+          "kind": "file_id",
+          "ref": "ptc/25-04-04",
+          "note": "The KerML release pin (vendor/omg/20250201/KerML.xmi, the abstract syntax), cited as the release the textual clauses above belong to, as this register's other entries do; it does not itself contain them. The pilot's literal (vendor/pilot/KerMLExpressions.xtext:424, pinned by revision in vendor/sources.lock.toml, not by an OMG File ID) is cited in `upstream`."
+        },
+        {
+          "kind": "corpus_file",
+          "ref": "vendor/corpus/kerml/src/examples/Simple Tests/Expressions.kerml",
+          "note": "line 73: `feature l = new L();`, the keyword use; no KerML corpus file writes `new` as a name."
         }
       ]
     },

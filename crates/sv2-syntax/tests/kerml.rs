@@ -361,6 +361,20 @@ fn every_annotating_element_is_a_member_and_an_owned_annotation() {
     kerml_rejected("featuring y by C { #S doc /* d */ }");
 }
 
+#[test]
+fn metadata_def_is_a_metadata_feature_named_def_in_kerml() {
+    // KerML has no MetadataDefinition and does not reserve `def` (8.2.2.6), so after
+    // `metadata` it is the Identification of MetadataFeatureDeclaration =
+    // ( Identification ( ':' | 'typed' 'by' ) )? OwnedFeatureTyping (8.2.5.12), or, with
+    // no `:`, the name of the type. In SysML the same words open a MetadataDefinition
+    // (SysML 8.2.2.27), which a_metadata_usage_owns_what_its_production_writes in
+    // tests/parser.rs holds.
+    let named = render(&kerml_accepted("package P { metadata def : T; }").syntax());
+    assert!(has_node(&named, "MetadataFeature"), "{named}");
+    let typed = render(&kerml_accepted("package P { metadata def; }").syntax());
+    assert!(has_node(&typed, "MetadataFeature"), "{typed}");
+}
+
 // A bare REGULAR_COMMENT is a Comment (8.2.3.3.2), so a MemberElement wherever a member
 // may stand, and reported anywhere else: the Pilot hides only WS, ML_NOTE and SL_NOTE
 // (KerMLExpressions.xtext:29).
@@ -1081,9 +1095,9 @@ fn a_connector_is_bounded_by_its_rules() {
 #[test]
 fn a_connection_usage_is_not_kerml() {
     // SysML 8.2.2.13.1 states it; KerML's own connector is `connector` (8.2.5.5.1), and no
-    // KerML production writes the terminal `connect` (KerML does not reserve the word, so
-    // there it would be a NAME; see pending decision [keyword-table-per-language]). Held as a file by
-    // tests/rejection/connection-usage-is-not-kerml.kerml.
+    // KerML production writes the terminal `connect` (KerML 8.2.2.6 does not reserve the
+    // word, so there it is a NAME, a feature `connect` that `a to b` cannot continue). Held
+    // as a file by tests/rejection/connection-usage-is-not-kerml.kerml.
     kerml_rejected("package P { connect a to b; }");
 }
 
@@ -4249,27 +4263,24 @@ fn an_expression_reads_the_corpus_forms() {
     assert!(has_node(&directed, "ResultExpressionMember"), "{directed}");
     // Variable Feature Examples/Enhancements/ExtendedOccurrences.kerml:16-23: a
     // redefinition, parameters, and bindings in the body, no result expression. Its name
-    // `at` is written `'at'`, and :25's `while` `'while'`: neither is a KerML reserved
-    // word (8.2.2.6), but SysML's are reserved in a .kerml file too until pending decision
-    // keyword-table-per-language splits the table, as `'state'` is below.
+    // `at`, and :25's `while`, are written as the file writes them: neither is a KerML
+    // reserved word (8.2.2.6), though both are SysML's (8.2.2.1.2).
     kerml_accepted(
-        "class C {\n        expr 'at' {\n        \t:>> that : Timeslice;\n            in interval : \
+        "class C {\n        expr at {\n        \t:>> that : Timeslice;\n            in interval : \
          Interval;\n            return result : Timeslice;\n\n            binding \
          result.portionOf = that;\n            binding result.interval = interval;\n        }\n}",
     );
-    // :25-26, whose parameter `timeslice` is SysML's portion keyword and no KerML one:
-    // quoted the same way.
-    kerml_accepted("class C { expr 'while' { in 'timeslice' : Timeslice; } }");
+    // :25-26, whose parameter `timeslice` is SysML's portion keyword and no KerML one.
+    kerml_accepted("class C { expr while { in timeslice : Timeslice; } }");
 }
 
 #[test]
 fn an_expression_reads_the_examples_of_7_4_8_3() {
-    // `state` is written `'state'`: it is no KerML reserved word (8.2.2.6), but SysML's
-    // are reserved in a .kerml file too until pending decision keyword-table-per-language
-    // splits the table, as the_while_until_example_of_7_17_12_parses writes `'step'`.
+    // `state` is no KerML reserved word (8.2.2.6), only SysML's (8.2.2.1.2), so it is written
+    // as the example writes it.
     kerml_accepted(
         "expr computation : ComputeDynamics {\n    // Parameters redefined parameters of \
-         ComputeDynamics.\n    in 'state';\n    in dt;\n    return result;\n}\nexpr \
+         ComputeDynamics.\n    in state;\n    in dt;\n    return result;\n}\nexpr \
          vehicleComputation subsets computation {\n    // Input parameters are inherited, \
          result is redefined.\n    return : VehicleState;\n}",
     );
@@ -4402,11 +4413,16 @@ fn a_type_body_owns_a_feature_through_member_too() {
         "{tree}"
     );
     // Variable Feature Examples/Enhancements/TimeVaryingSteps.kerml:11, a step, here after
-    // a visibility. (Its line 4, `member step merge : ...`, waits on pending decision
-    // keyword-table-per-language: `merge` is SysML's reserved word, not KerML's.)
+    // a visibility.
     kerml_accepted(
         "behavior TakePicture { private member step focus [0..1] featured by \
          TakePicture_snapshots { } }",
+    );
+    // Its line 4: a step named `merge`, which SysML reserves (8.2.2.1.2) and KerML does not
+    // (8.2.2.6), so in a .kerml file it is a NAME.
+    kerml_accepted(
+        "behavior TakePicture { member step merge : ControlPerformances::MergePerformance \
+         [0..1] featured by TakePicture_snapshots { } }",
     );
 }
 

@@ -320,6 +320,18 @@ mod tests {
         "flow",
     ];
 
+    /// `is_reserved` binary-searches each language's reserved words, so each table must
+    /// be strictly ascending, and every word in it must have a keyword kind, or the
+    /// reserved test and the kind lookup would disagree about what a keyword is.
+    #[test]
+    fn reserved_words_are_sorted_and_keywords() {
+        use crate::generated::kinds::{RESERVED_KERML, RESERVED_SYSML};
+        for words in [RESERVED_KERML, RESERVED_SYSML] {
+            assert!(words.windows(2).all(|pair| pair.first() < pair.get(1)));
+            assert!(words.iter().all(|word| keyword(word).is_some()));
+        }
+    }
+
     #[test]
     fn every_keyword_this_parser_names_is_in_the_pinned_token_set() {
         // VISIBILITY is chained rather than copied: it is the list the parser itself

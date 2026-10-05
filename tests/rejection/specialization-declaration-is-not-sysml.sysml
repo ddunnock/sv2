@@ -5,7 +5,7 @@
 // KerML 8.2.4.1.2 — Specialization    = ( 'specialization' Identification )?
 //                                        'subtype' SpecificType SPECIALIZES GeneralType
 //                                        RelationshipBody
-// rejects: PARSE-UNEXPECTED on: subtype C specializes A;
+// rejects: PARSE-EXPECTED on: subtype C specializes A;
 package Types {
 	subtype C specializes A;
 }

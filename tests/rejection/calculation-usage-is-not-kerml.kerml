@@ -4,5 +4,5 @@
 // keyword at all.
 // KerML 8.2.3.4.1  — NamespaceBodyElement = NamespaceMember | AliasMember | Import
 // KerML 8.2.5.7.2  — Expression = FeaturePrefix 'expr' FeatureDeclaration ValuePart? FunctionBody
-// rejects: PARSE-UNEXPECTED on: calc c { a + b }
+// rejects: PARSE-EXPECTED on: calc c { a + b }
 calc c { a + b }

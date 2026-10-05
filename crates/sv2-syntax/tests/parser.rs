@@ -5677,13 +5677,12 @@ fn a_terminate_node_is_bounded_by_its_rules() {
 #[test]
 fn the_while_until_example_of_7_17_12_parses() {
     // 7.17.12's first while-loop example (receipt b0446148), in an action definition.
-    // It names its body clause `step`, which SysML does not reserve but this parser
-    // refuses (pending decision keyword-table-per-language); it is written `'step'`
-    // here, the same name as an unrestricted one. The third example, `loop { ... then
-    // if ... }`, is in the IfNode section.
+    // It names its body clause `step`, which SysML does not reserve (8.2.2.1.2; only KerML
+    // 8.2.2.6 does), so it is written here as the example writes it. The third example,
+    // `loop { ... then if ... }`, is in the IfNode section.
     let advance = "action def A {\n\
                    action advance while t < endTime\n\
-                   action 'step' {\n\
+                   action step {\n\
                    perform advanceState {\n\
                    :>> stateVector = systemState;\n\
                    :>> deltaT = dt;\n\
@@ -5708,7 +5707,7 @@ fn the_while_until_example_of_7_17_12_parses() {
         ],
         "{rendered}"
     );
-    // The body clause: `action 'step'`, its braces, and two ActionBodyItems -- a
+    // The body clause: `action step`, its braces, and two ActionBodyItems -- a
     // BehaviorUsageMember over the perform, and SourceSuccessionMember then
     // ActionNodeMember over the `then assign` (8.2.2.17.1).
     assert_eq!(
