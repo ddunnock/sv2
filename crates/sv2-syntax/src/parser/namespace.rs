@@ -114,7 +114,10 @@ impl Parser<'_> {
     /// `constraint def` body was read as the start of its result expression.
     pub(super) fn at_sysml_keyword_member(&self, n: usize) -> bool {
         count(Counter::KeywordMemberDispatch);
-        self.at_definition_element(n)
+        // The definitions are asked first and cost the most, so they are asked only at a
+        // head one of them can open (roadmap Phase 5; see `opens_definition`).
+        let head = self.member_head(n);
+        (Self::opens_definition(head) && self.at_definition_element(n))
             || self.at_action_usage(n)
             || self.at_state_usage(n)
             || self.at_exhibit_state_usage(n)

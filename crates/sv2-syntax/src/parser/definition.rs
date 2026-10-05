@@ -7,7 +7,8 @@ use crate::generated::kinds::SyntaxKind;
 use crate::grammar::Language;
 use crate::parser::Parser;
 use crate::parser::body::Body;
-use crate::parser::lookahead::keyword;
+use crate::parser::case::is_case_head;
+use crate::parser::lookahead::{MemberHead, keyword};
 
 /// A `SysML` definition production: one keyword over a shared spine.
 ///
@@ -149,6 +150,49 @@ impl Parser<'_> {
     }
 
     /// Whether an implemented `DefinitionElement` starts at the `n`th meaningful token.
+    /// Whether `at_definition_element` can accept at a member with this `head`.
+    ///
+    /// Each of its alternatives reads only prefix words and `#` metadata before one
+    /// keyword, so that keyword is the head:
+    /// - `package` (`at_package`), `standard` or `library` (`at_library_package`, which
+    ///   reads nothing before them), and `dependency` (`at_dependency`);
+    /// - the kind keyword before `def`: `port`, `requirement`, `constraint`, `calc`,
+    ///   `metadata`, `action`, `state`, `enum`, `interface`, `concern`, `viewpoint`,
+    ///   `view`, every `SIMPLE_DEFINITIONS` keyword, and the first of every `CASES`
+    ///   entry's keywords;
+    /// - `def` itself, for `at_extended_definition` (`#X def`) and
+    ///   `at_individual_definition` (`individual def`), which write no kind keyword.
+    ///
+    /// `definition_element_heads_cover_every_definition` holds this to the recognisers.
+    pub(super) fn opens_definition(head: MemberHead<'_>) -> bool {
+        let Some(word) = head.word else {
+            return false;
+        };
+        matches!(
+            word,
+            "package"
+                | "standard"
+                | "library"
+                | "dependency"
+                | "def"
+                | "port"
+                | "requirement"
+                | "constraint"
+                | "calc"
+                | "metadata"
+                | "action"
+                | "state"
+                | "enum"
+                | "interface"
+                | "concern"
+                | "viewpoint"
+                | "view"
+        ) || SIMPLE_DEFINITIONS
+            .iter()
+            .any(|definition| definition.keyword == word)
+            || is_case_head(word)
+    }
+
     pub(super) fn at_definition_element(&self, n: usize) -> bool {
         self.at_package(n)
             || self.at_library_package(n)
@@ -751,5 +795,119 @@ impl Parser<'_> {
             self.error_expected("`;` or `{` after a definition declaration");
         }
         self.finish_node();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::{Path, PathBuf};
+
+    use crate::grammar::Language;
+    use crate::parser::Parser;
+
+    /// Every `.sysml` and `.kerml` file under `dir`, found without recursing in Rust.
+    fn model_files(dir: PathBuf) -> Vec<PathBuf> {
+        let mut found = Vec::new();
+        let mut stack = vec![dir];
+        while let Some(dir) = stack.pop() {
+            let (dirs, files): (Vec<PathBuf>, Vec<PathBuf>) = std::fs::read_dir(&dir)
+                .into_iter()
+                .flatten()
+                .flatten()
+                .map(|entry| entry.path())
+                .partition(|path| path.is_dir());
+            stack.extend(dirs);
+            found.extend(files.into_iter().filter(|path| {
+                path.extension()
+                    .is_some_and(|e| e == "sysml" || e == "kerml")
+            }));
+        }
+        found
+    }
+
+    /// Every model file under the repository's `dir`, with its text and its language.
+    fn sources_under(dir: &str) -> Vec<(String, String, Language)> {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../..")
+            .join(dir);
+        model_files(root)
+            .into_iter()
+            .filter_map(|path| {
+                let source = std::fs::read_to_string(&path).ok()?;
+                let language = Language::from_path(&path)?;
+                Some((path.display().to_string(), source, language))
+            })
+            .collect()
+    }
+
+    /// How many times `at_definition_element` accepts in `source`, asserting at each
+    /// that `opens_definition` admits the head.
+    fn definitions_admitted(name: &str, source: &str, language: Language) -> usize {
+        let mut parser = Parser::new(source, language);
+        let mut accepted = 0;
+        for significant in [false, true] {
+            parser.comments_significant = significant;
+            let positions = if significant {
+                parser.meaningful_with_comments.len()
+            } else {
+                parser.meaningful.len()
+            };
+            let at = (0..=positions).filter(|&n| parser.at_definition_element(n));
+            for n in at.collect::<Vec<_>>() {
+                accepted += 1;
+                assert!(
+                    Parser::opens_definition(parser.member_head(n)),
+                    "{name}: a definition at meaningful position {n} (comments \
+                     significant: {significant}) has a head `opens_definition` turns away"
+                );
+            }
+        }
+        accepted
+    }
+
+    /// Forms the corpus may not write: every prefix in every order, each extension form,
+    /// and a `#` that names nothing, which `skip_prefix_metadata` does not look past.
+    const FORMS: &[&str] = &[
+        "abstract #M individual #N def D;",
+        "variation #a::b.c part def P;",
+        "individual #M def I;",
+        "#M #N def E;",
+        "abstract #M metadata def M;",
+        "standard library package L;",
+        "library package L;",
+        "#M dependency a to b;",
+        "#M package P;",
+        "abstract use case def U;",
+        "individual verification def V;",
+        "# def X;",
+        "abstract # part def X;",
+        "#$::M enum def E;",
+    ];
+
+    /// `opens_definition` must hold wherever `at_definition_element` accepts, or the
+    /// gate in `at_sysml_keyword_member` would turn a definition away.
+    ///
+    /// Asked at every meaningful position of every corpus file, every rejection case and
+    /// every form above, in both comment modes, which is every place the recognisers can
+    /// be asked from. The implication is what makes the gate exact: where the head opens
+    /// no definition, `at_definition_element` was always going to answer `false`.
+    #[test]
+    fn definition_element_heads_cover_every_definition() {
+        let mut sources: Vec<(String, String, Language)> = FORMS
+            .iter()
+            .map(|form| ((*form).to_owned(), (*form).to_owned(), Language::SysMl))
+            .collect();
+        let corpus = sources_under("vendor/corpus");
+        let rejection = sources_under("tests/rejection");
+        let files = corpus.len() + rejection.len();
+        sources.extend(corpus);
+        sources.extend(rejection);
+        let accepted: usize = sources
+            .iter()
+            .map(|(name, source, language)| definitions_admitted(name, source, *language))
+            .sum();
+        println!("{files} files, {accepted} definitions");
+        // Inert without the corpus, but the forms alone accept eleven times.
+        assert!(accepted >= 11, "only {accepted} definitions seen");
     }
 }

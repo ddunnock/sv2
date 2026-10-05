@@ -72,6 +72,56 @@ impl PrefixCache {
     }
 }
 
+/// The words a member may write before the keyword that says what it is: `RefPrefix`'s
+/// and `BasicUsagePrefix`'s (`SysML` 8.2.2.6.2), `OccurrenceUsagePrefix`'s `individual`
+/// and `PortionKind` (8.2.2.9.2), and `BasicDefinitionPrefix`'s (8.2.2.6.1). All are
+/// reserved, and none is a keyword a member opens on, which is what makes skipping them
+/// safe: see [`MemberHead`].
+const MEMBER_PREFIX_WORDS: [&str; 11] = [
+    "in",
+    "out",
+    "inout",
+    "derived",
+    "abstract",
+    "variation",
+    "constant",
+    "ref",
+    "individual",
+    "snapshot",
+    "timeslice",
+];
+
+/// Where a member's deciding keyword stands: the first token from `n` that is neither
+/// `#` prefix metadata nor one of [`MEMBER_PREFIX_WORDS`], in any order and number
+/// (roadmap Phase 5).
+///
+/// A recogniser that accepts reads some run of exactly those before its keyword, so it
+/// accepts only when its keyword is the head. The head never decides acceptance alone;
+/// it rules out the recognisers whose keywords it is not.
+#[derive(Clone, Copy)]
+pub(super) struct MemberHead<'a> {
+    /// The head's text when it is a word, keyword or name, and `None` otherwise.
+    pub(super) word: Option<&'a str>,
+}
+
+impl<'a> Parser<'a> {
+    /// The [`MemberHead`] of a member written from the `n`th token.
+    pub(super) fn member_head(&self, n: usize) -> MemberHead<'a> {
+        let mut k = n;
+        loop {
+            k = self.skip_prefix_metadata(k);
+            let word = self
+                .peek_nth(k)
+                .filter(|token| token.kind == SyntaxKind::BasicName)
+                .map(|token| self.text_of(token));
+            match word {
+                Some(text) if MEMBER_PREFIX_WORDS.contains(&text) => k += 1,
+                _ => return MemberHead { word },
+            }
+        }
+    }
+}
+
 impl Parser<'_> {
     /// `compute(self, n)`, answered from `cache` when it has been asked from the same
     /// absolute position in the same comment mode before.

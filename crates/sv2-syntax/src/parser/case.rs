@@ -73,6 +73,14 @@ pub(super) const CASES: [Case; 4] = [
     },
 ];
 
+/// Whether `word` is the first kind keyword of one of [`CASES`]: what a case definition
+/// or usage has at its head (roadmap Phase 5).
+pub(super) fn is_case_head(word: &str) -> bool {
+    CASES
+        .iter()
+        .any(|case| case.keywords.first() == Some(&word))
+}
+
 impl Parser<'_> {
     /// Which case definition starts at the `n`th meaningful token, if one does.
     ///
