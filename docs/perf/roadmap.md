@@ -369,6 +369,64 @@ ceiling for the series: calls that compute fall from 4.41 M to about 28 K over t
 After the close, re-measure "2b" (`keyword()`'s remaining self time), since the caches
 change how often `is_name` is reached.
 
+**Outcome.** Series `prefix-skip-memo`, closed: **net −81.9% `peeked`** over the corpus
+(23,986,614 → 4,331,571). Median time over the five largest files fell 23.92 → 13.62 ms
+(−43%). It was opened, stepped and closed on the RHEL 9 workspace, so every time
+comparison is same-host. Three steps, all improved, none enabling:
+
+| Step | Change | Verdict |
+|---|---|---|
+| 1 (0c9e6af) | `PrefixCache`, and `skip_prefix_metadata` reads through it | improved, `peeked` −11.6% |
+| 2 (892ab63) | `skip_occurrence_usage_prefix` reads through its own | improved, −76.4% vs step 1 |
+| 3 (0ce49b7) | `skip_basic_usage_prefix` reads through its own | improved, −13.4% vs step 2 |
+
+Calls and computations over the corpus, before → after (`*_computed` detail counters):
+
+| Helper | Calls | Computed |
+|---|---|---|
+| `skip_prefix_metadata` | 2,228,462 → 595,231 | 12,029 |
+| `skip_occurrence_usage_prefix` | 972,243 → 394,233 | 7,906 |
+| `skip_basic_usage_prefix` | 1,210,455 → 94,288 | 7,907 |
+| `nth_is_keyword` | 20,355,352 → 3,637,378 | — |
+
+- 27,842 computations in all, against the 28 K the step-0 replay predicted.
+- Allocations and the output fingerprint did not move at any step.
+- **The estimate was low.** It was 10–20% of time, and the result was 43%. A hit on the
+  occurrence prefix also skips the basic-prefix and metadata skips nested inside it, and
+  those nested calls held most of the `nth_is_keyword` traffic.
+- Step 2 was measured twice. The first measurement was recorded over source that failed
+  clippy's `excessive_nesting`, so it was discarded before commit and the fix measured
+  in its place. Both runs gave −76.4%.
+
+Largest file, p95, after the close (RHEL 9 workspace; not comparable with the MacBook's
+numbers, and noisy there):
+
+| Engine | Before (at open) | After | FIT-4 margin |
+|---|---|---|---|
+| native | 10.5–14.3 ms | 7.12 ms | 8.88 ms |
+| Bun (JavaScriptCore) | 14.1–16.0 ms | 9.02 ms | 6.98 ms |
+| wasmtime | 15.1–17.7 ms | 9.11 ms | 6.89 ms |
+
+**Checkpoint, done after the close.** `perf` self time on the RHEL 9 workspace,
+`simple_vehicle_model` bench:
+
+| Self | Where |
+|---|---|
+| 22.8% | `nth_is_keyword` |
+| 13.8% | `memcmp` (callers not resolved: neither frame-pointer nor DWARF unwinding gets through libc's) |
+| 6.5% + 4.7% + 4.2% + 3.8% | rowan `node_hash`, `NodeCache::node`, `NodeCache::token`, `Arc::drop_slow` |
+| 5.6% | `tokenize` (Phase 3) |
+| 4.8% | `keyword()` ("2b"), before its share of `memcmp` |
+| 2.1% | `skip_prefix_metadata`, now mostly cache hits |
+
+Re-ranked:
+- **Phase 5 is next.** `nth_is_keyword` is again the largest self time, and its remaining
+  3.6 M calls are what dispatching on the member head removes.
+- **"2b" stays after Phase 5.** `keyword()` is 4.8% self here, plus an unknown share of
+  `memcmp`. Split `memcmp` with Instruments on the MacBook before planning it.
+- **rowan's tree building now shows,** at about 19% across the four entries. That is
+  Phase 6's territory, and the first time it ranks.
+
 ---
 
 ## Phase 5 — Dispatch on the member head
@@ -463,6 +521,6 @@ is recorded there as a candidate, not here.
 | 1 | — | done, 82e3051 | largest file p95: 11.3 ms JavaScriptCore, 12.5 ms wasmtime; within FIT-4 by 3.5–4.7 ms |
 | 2 | keyword-classification | closed, net −25.2% time | Bun p95 11.21 → 8.34 ms; two steps, no enabling |
 | 3 | | not started | |
-| 4 | | not started | |
+| 4 | prefix-skip-memo | closed, net −81.9% peeked | median time 23.92 → 13.62 ms (RHEL 9); three steps, no enabling |
 | 5 | | not started | |
 | 6 | | not started | |
