@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-10-05T12:58:34Z",
+    "regenerated_utc": "2026-10-05T13:49:21Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -24,7 +24,7 @@
       "percent": 100.0
     },
     "tests": {
-      "unit": 749,
+      "unit": 750,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 298,
@@ -38,14 +38,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "1709f7c Open optimization series operator-dispatch (roadmap Phase 3)",
+      "efaa23f Record roadmap Phase 5's outcome; next is keyword-table-per-language or 2b",
       "9aa6ca6 Close series member-head-dispatch: net -41.1% peeked (roadmap Phase 5)",
       "bc06618 Re-run the usage chains in membership only where each head admits",
       "0f47596 Re-run the definition chain in membership only at a definition head",
       "cb9858f Memoize skip_end_usage_prefix by absolute start and comment mode",
       "4e1f85b Ask each keyword member only where its head admits it",
-      "18da45a Ask at_definition_element only at a head a definition can open",
-      "3208c23 Open optimization series member-head-dispatch (roadmap Phase 5)",
-      "4ae0eee Plan roadmap Phase 5 and measure dispatch by head (step 0)"
+      "18da45a Ask at_definition_element only at a head a definition can open"
     ]
   },
   "authored": {

@@ -273,16 +273,132 @@ fn lex_quoted(cursor: &mut Cursor<'_>, delimiter: char, kind: SyntaxKind) -> Syn
     kind
 }
 
+/// How many `OPERATORS` may share one first byte. Six do (`:`); more is a build error in
+/// [`operators_by_first_byte`].
+const OPERATOR_SLOTS: usize = 8;
+
+/// For each ASCII byte, the indices into `OPERATORS` of the operators that begin with
+/// it, in the table's order and so still longest first, padded with `OPERATORS.len()`.
+///
+/// Derived from `OPERATORS` at compile time, so the generated table stays the one list
+/// of operators (roadmap Phase 3).
+const OPERATORS_BY_FIRST_BYTE: [[u8; OPERATOR_SLOTS]; 128] = operators_by_first_byte();
+
+/// Build [`OPERATORS_BY_FIRST_BYTE`]. Runs only at compile time: an operator that is not
+/// ASCII, a byte with more than [`OPERATOR_SLOTS`] operators, or a table too long for a
+/// `u8` index stops the build rather than the lexer.
+#[expect(
+    clippy::indexing_slicing,
+    clippy::cast_possible_truncation,
+    reason = "const evaluation: an out-of-range index or a truncation is a build error, never a run-time panic"
+)]
+const fn operators_by_first_byte() -> [[u8; OPERATOR_SLOTS]; 128] {
+    assert!(
+        OPERATORS.len() < u8::MAX as usize,
+        "OPERATORS outgrew a u8 index"
+    );
+    let mut table = [[OPERATORS.len() as u8; OPERATOR_SLOTS]; 128];
+    let mut filled = [0_usize; 128];
+    let mut i = 0;
+    while i < OPERATORS.len() {
+        let first = OPERATORS[i].0.as_bytes()[0];
+        assert!(
+            first.is_ascii(),
+            "an operator that does not begin with ASCII"
+        );
+        let first = first as usize;
+        assert!(
+            filled[first] < OPERATOR_SLOTS,
+            "more operators share a first byte than OPERATOR_SLOTS"
+        );
+        table[first][filled[first]] = i as u8;
+        filled[first] += 1;
+        i += 1;
+    }
+    table
+}
+
+/// Whether `bytes` begins with `prefix`, compared a byte at a time.
+///
+/// Not `<[u8]>::starts_with`, which calls `memcmp`: an operator is at most three bytes,
+/// and a call per candidate cost more than the comparison (roadmap Phase 3).
+fn begins_with(bytes: &[u8], prefix: &[u8]) -> bool {
+    bytes.len() >= prefix.len() && prefix.iter().zip(bytes).all(|(p, b)| p == b)
+}
+
 /// The operator set, longest match first.
 ///
 /// `OPERATORS` is sorted longest first by the generator, which is what makes maximal
-/// munch correct: `::>` before `::` before `:`.
+/// munch correct: `::>` before `::` before `:`. Only the operators that begin with the
+/// byte at the cursor are tried, in that same order; every other entry could not match.
 fn lex_operator(cursor: &mut Cursor<'_>) -> SyntaxKind {
-    for (text, kind) in OPERATORS {
-        if cursor.eat(text) {
+    // Bytes, not `Cursor::rest`: every operator is ASCII, so no candidate can match
+    // where a multi-byte character starts, and the `str` boundary check buys nothing.
+    let rest = cursor.source.as_bytes().get(cursor.offset..).unwrap_or(&[]);
+    let candidates = rest
+        .first()
+        .and_then(|&byte| OPERATORS_BY_FIRST_BYTE.get(usize::from(byte)))
+        .map_or(&[][..], |row| &row[..]);
+    for &index in candidates {
+        // The padding index is past the table's end, and ends the row.
+        let Some((text, kind)) = OPERATORS.get(usize::from(index)) else {
+            break;
+        };
+        if begins_with(rest, text.as_bytes()) {
+            cursor.offset += text.len();
             return *kind;
         }
     }
     cursor.bump();
     SyntaxKind::Error
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Cursor, OPERATORS, SyntaxKind, lex_operator};
+
+    /// The scan `lex_operator` replaced: every entry, longest first.
+    fn scanned(cursor: &mut Cursor<'_>) -> SyntaxKind {
+        for (text, kind) in OPERATORS {
+            if cursor.eat(text) {
+                return *kind;
+            }
+        }
+        cursor.bump();
+        SyntaxKind::Error
+    }
+
+    /// The first-byte dispatch must choose what the full scan chose, and consume as much,
+    /// on every string of up to three characters over every byte an operator uses plus a
+    /// letter, a space and a non-ASCII character: every maximal-munch case there is,
+    /// since no operator is longer than three.
+    #[test]
+    fn operator_dispatch_agrees_with_the_full_scan() {
+        let mut alphabet: Vec<char> = OPERATORS
+            .iter()
+            .flat_map(|(text, _)| text.chars())
+            .chain(['a', ' ', 'é'])
+            .collect();
+        alphabet.sort_unstable();
+        alphabet.dedup();
+        assert!(OPERATORS.iter().all(|(text, _)| text.len() <= 3));
+        let mut inputs = vec![String::new()];
+        for _ in 0..3 {
+            let longer: Vec<String> = inputs
+                .iter()
+                .flat_map(|s| alphabet.iter().map(move |c| format!("{s}{c}")))
+                .collect();
+            inputs.extend(longer);
+        }
+        inputs.sort_unstable();
+        inputs.dedup();
+        for input in inputs.iter().filter(|s| !s.is_empty()) {
+            let (mut fast, mut full) = (Cursor::new(input), Cursor::new(input));
+            assert_eq!(
+                (lex_operator(&mut fast), fast.offset),
+                (scanned(&mut full), full.offset),
+                "{input:?}"
+            );
+        }
+    }
 }
