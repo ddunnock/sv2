@@ -149,7 +149,6 @@ impl Parser<'_> {
         self.skip_prefix_metadata(n + usize::from(self.nth_is_keyword(n, "individual")))
     }
 
-    /// Whether an implemented `DefinitionElement` starts at the `n`th meaningful token.
     /// Whether `at_definition_element` can accept at a member with this `head`.
     ///
     /// Each of its alternatives reads only prefix words and `#` metadata before one
@@ -193,6 +192,7 @@ impl Parser<'_> {
             || is_case_head(word)
     }
 
+    /// Whether an implemented `DefinitionElement` starts at the `n`th meaningful token.
     pub(super) fn at_definition_element(&self, n: usize) -> bool {
         self.at_package(n)
             || self.at_library_package(n)
@@ -804,6 +804,7 @@ mod tests {
 
     use crate::grammar::Language;
     use crate::parser::Parser;
+    use crate::parser::namespace::KEYWORD_MEMBERS;
 
     /// Every `.sysml` and `.kerml` file under `dir`, found without recursing in Rust.
     fn model_files(dir: PathBuf) -> Vec<PathBuf> {
@@ -882,7 +883,76 @@ mod tests {
         "# def X;",
         "abstract # part def X;",
         "#$::M enum def E;",
+        // The usage prefixes `member_head` skips: none opens a definition, and the three
+        // that decide a usage are admitted by their flags.
+        "ref part def P;",
+        "snapshot part def P;",
+        "in out derived constant ref x : T;",
+        "ref x : T;",
+        "ref #M x;",
+        "#M ref x;",
+        "in #M x;",
+        "#M x;",
+        "individual part i;",
+        "snapshot s;",
+        "timeslice t : T;",
+        "individual #M snapshot x;",
+        "end ref a;",
+        "end part p;",
+        "end x : T part p;",
+        "in end part p;",
+        "assert not satisfy r;",
+        "not satisfy r;",
+        "satisfy r by s;",
+        "first a then b;",
+        "succession s first a then b;",
+        "use case u;",
+        "derived abstract constant attribute a;",
     ];
+
+    /// Every keyword member's `admits` must hold wherever its recogniser accepts, or the
+    /// head would turn that member away in `at_sysml_keyword_member`. Asked as
+    /// `definitions_admitted` asks, over the same sources.
+    fn keyword_members_admitted(name: &str, source: &str, language: Language) -> usize {
+        let mut parser = Parser::new(source, language);
+        let mut accepted = 0;
+        for significant in [false, true] {
+            parser.comments_significant = significant;
+            let positions = if significant {
+                parser.meaningful_with_comments.len()
+            } else {
+                parser.meaningful.len()
+            };
+            let pairs = (0..=positions).flat_map(|n| KEYWORD_MEMBERS.map(|member| (n, member)));
+            let at = pairs.filter(|&(n, member)| parser.at_keyword_member(member, n));
+            for (n, member) in at.collect::<Vec<_>>() {
+                accepted += 1;
+                assert!(
+                    member.admits(parser.member_head(n)),
+                    "{name}: {member:?} accepts at meaningful position {n} (comments \
+                     significant: {significant}) where its head does not admit it"
+                );
+            }
+        }
+        accepted
+    }
+
+    #[test]
+    fn every_keyword_member_is_admitted_where_it_accepts() {
+        let mut sources: Vec<(String, String, Language)> = FORMS
+            .iter()
+            .map(|form| ((*form).to_owned(), (*form).to_owned(), Language::SysMl))
+            .collect();
+        sources.extend(sources_under("vendor/corpus"));
+        sources.extend(sources_under("tests/rejection"));
+        let accepted: usize = sources
+            .iter()
+            .map(|(name, source, language)| keyword_members_admitted(name, source, *language))
+            .sum();
+        println!("{} sources, {accepted} acceptances", sources.len());
+        // Inert without the corpus, but the forms alone accept dozens of times.
+        assert!(accepted >= 30, "only {accepted} acceptances seen");
+    }
 
     /// `opens_definition` must hold wherever `at_definition_element` accepts, or the
     /// gate in `at_sysml_keyword_member` would turn a definition away.

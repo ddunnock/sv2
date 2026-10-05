@@ -100,6 +100,12 @@ pub(super) const SIMPLE_USAGES: [SimpleUsage; 7] = [
     },
 ];
 
+/// Whether `word` is the kind keyword of one of [`SIMPLE_USAGES`]: what such a usage has
+/// at its head (roadmap Phase 5).
+pub(super) fn is_simple_usage_head(word: &str) -> bool {
+    SIMPLE_USAGES.iter().any(|usage| usage.keyword == word)
+}
+
 impl Parser<'_> {
     /// The index just past a `BasicUsagePrefix` written from the `n`th token.
     ///

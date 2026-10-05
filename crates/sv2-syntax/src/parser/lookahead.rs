@@ -75,8 +75,10 @@ impl PrefixCache {
 /// The words a member may write before the keyword that says what it is: `RefPrefix`'s
 /// and `BasicUsagePrefix`'s (`SysML` 8.2.2.6.2), `OccurrenceUsagePrefix`'s `individual`
 /// and `PortionKind` (8.2.2.9.2), and `BasicDefinitionPrefix`'s (8.2.2.6.1). All are
-/// reserved, and none is a keyword a member opens on, which is what makes skipping them
-/// safe: see [`MemberHead`].
+/// reserved. Most decide nothing. The three that do are recorded rather than read as the
+/// head: `ref` is `ReferenceUsage`'s kind keyword (8.2.2.6.2), and `individual`,
+/// `snapshot` and `timeslice` decide an individual or portion usage (8.2.2.9.2). See
+/// [`MemberHead`].
 const MEMBER_PREFIX_WORDS: [&str; 11] = [
     "in",
     "out",
@@ -96,27 +98,47 @@ const MEMBER_PREFIX_WORDS: [&str; 11] = [
 /// (roadmap Phase 5).
 ///
 /// A recogniser that accepts reads some run of exactly those before its keyword, so it
-/// accepts only when its keyword is the head. The head never decides acceptance alone;
-/// it rules out the recognisers whose keywords it is not.
+/// accepts only when its keyword is the head, or, for the three that decide on a prefix,
+/// only when that prefix was skipped. The head never decides acceptance alone; it rules
+/// out the recognisers that cannot accept.
 #[derive(Clone, Copy)]
 pub(super) struct MemberHead<'a> {
     /// The head's text when it is a word, keyword or name, and `None` otherwise.
     pub(super) word: Option<&'a str>,
+    /// Whether `ref` was skipped on the way to the head.
+    pub(super) after_ref: bool,
+    /// Whether `individual`, `snapshot` or `timeslice` was.
+    pub(super) after_occurrence_word: bool,
+    /// Whether any `#` prefix metadata was.
+    pub(super) after_metadata: bool,
 }
 
 impl<'a> Parser<'a> {
     /// The [`MemberHead`] of a member written from the `n`th token.
     pub(super) fn member_head(&self, n: usize) -> MemberHead<'a> {
         let mut k = n;
+        let mut head = MemberHead {
+            word: None,
+            after_ref: false,
+            after_occurrence_word: false,
+            after_metadata: false,
+        };
         loop {
-            k = self.skip_prefix_metadata(k);
-            let word = self
+            let past = self.skip_prefix_metadata(k);
+            head.after_metadata |= past > k;
+            k = past;
+            head.word = self
                 .peek_nth(k)
                 .filter(|token| token.kind == SyntaxKind::BasicName)
                 .map(|token| self.text_of(token));
-            match word {
-                Some(text) if MEMBER_PREFIX_WORDS.contains(&text) => k += 1,
-                _ => return MemberHead { word },
+            match head.word {
+                Some(text) if MEMBER_PREFIX_WORDS.contains(&text) => {
+                    head.after_ref |= text == "ref";
+                    head.after_occurrence_word |=
+                        matches!(text, "individual" | "snapshot" | "timeslice");
+                    k += 1;
+                }
+                _ => return head,
             }
         }
     }

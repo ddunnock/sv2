@@ -10,8 +10,10 @@ use crate::diagnostic::Diagnostic;
 use crate::generated::kinds::SyntaxKind;
 use crate::grammar::Language;
 use crate::parser::body::Body;
-use crate::parser::lookahead::keyword;
+use crate::parser::case::is_case_head;
+use crate::parser::lookahead::{MemberHead, keyword};
 use crate::parser::usage::UsageClass;
+use crate::parser::usage::is_simple_usage_head;
 use crate::parser::{MAX_DEPTH, Parser};
 
 /// What `membership` found after the `MemberPrefix`, which decides the member's node.
@@ -25,6 +27,126 @@ pub(super) enum MemberElement {
     /// BehaviorUsageMember | ActionNodeMember` (`SysML` 8.2.2.17.1), so it is owned
     /// beside the behaviour usages rather than as one of them.
     ActionNode,
+}
+
+/// The `SysML` members that open on a keyword, one per recogniser
+/// `at_sysml_keyword_member` asks.
+#[derive(Clone, Copy, Debug)]
+pub(super) enum KeywordMember {
+    Definition,
+    Action,
+    State,
+    ExhibitState,
+    PerformAction,
+    Flow,
+    SuccessionFlow,
+    Message,
+    Connection,
+    Interface,
+    Allocation,
+    View,
+    EventOccurrence,
+    IndividualOrPortion,
+    SuccessionAsUsage,
+    BindingConnector,
+    AssertConstraint,
+    SatisfyRequirement,
+    Constraint,
+    Requirement,
+    Concern,
+    Viewpoint,
+    Calculation,
+    Case,
+    IncludeUseCase,
+    Simple,
+    Reference,
+    Extended,
+}
+
+/// Every [`KeywordMember`], in the order `at_sysml_keyword_member` asks them. The order
+/// is the chain's priority, and ONE LIST: see `at_sysml_keyword_member`.
+pub(super) const KEYWORD_MEMBERS: [KeywordMember; 28] = [
+    KeywordMember::Definition,
+    KeywordMember::Action,
+    KeywordMember::State,
+    KeywordMember::ExhibitState,
+    KeywordMember::PerformAction,
+    KeywordMember::Flow,
+    KeywordMember::SuccessionFlow,
+    KeywordMember::Message,
+    KeywordMember::Connection,
+    KeywordMember::Interface,
+    KeywordMember::Allocation,
+    KeywordMember::View,
+    KeywordMember::EventOccurrence,
+    KeywordMember::IndividualOrPortion,
+    KeywordMember::SuccessionAsUsage,
+    KeywordMember::BindingConnector,
+    KeywordMember::AssertConstraint,
+    KeywordMember::SatisfyRequirement,
+    KeywordMember::Constraint,
+    KeywordMember::Requirement,
+    KeywordMember::Concern,
+    KeywordMember::Viewpoint,
+    KeywordMember::Calculation,
+    KeywordMember::Case,
+    KeywordMember::IncludeUseCase,
+    KeywordMember::Simple,
+    KeywordMember::Reference,
+    KeywordMember::Extended,
+];
+
+impl KeywordMember {
+    /// Whether this member's recogniser can accept at a member with this `head`.
+    ///
+    /// Each recogniser reads only prefix words and `#` metadata before the keyword that
+    /// decides it, which is therefore the head; the keyword is the one its recogniser
+    /// tests, named at each arm. The three that decide on a prefix are admitted by the
+    /// flag `member_head` keeps for it. An `end` head admits everything: an
+    /// `EndUsagePrefix` owns a cross feature (8.2.2.6.2) that `member_head` does not
+    /// look past, and every usage recogniser reads one. The
+    /// `every_keyword_member_is_admitted_where_it_accepts` test holds each arm to its
+    /// recogniser.
+    pub(super) fn admits(self, head: MemberHead<'_>) -> bool {
+        if head.word == Some("end") {
+            return true;
+        }
+        let is = |words: &[&str]| head.word.is_some_and(|word| words.contains(&word));
+        match self {
+            Self::Definition => Parser::opens_definition(head),
+            Self::Action => is(&["action"]),
+            Self::State => is(&["state"]),
+            Self::ExhibitState => is(&["exhibit"]),
+            Self::PerformAction => is(&["perform"]),
+            Self::Flow => is(&["flow"]),
+            Self::SuccessionFlow => is(&["succession"]),
+            Self::Message => is(&["message"]),
+            Self::Connection => is(&["connection", "connect"]),
+            Self::Interface => is(&["interface"]),
+            Self::Allocation => is(&["allocation", "allocate"]),
+            Self::View => is(&["view"]),
+            Self::EventOccurrence => is(&["event"]),
+            // `individual` or a `PortionKind`, both skipped by `member_head`.
+            Self::IndividualOrPortion => head.after_occurrence_word,
+            Self::SuccessionAsUsage => is(&["succession", "first"]),
+            Self::BindingConnector => is(&["binding", "bind"]),
+            Self::AssertConstraint => is(&["assert"]),
+            // `'assert'? 'not'? 'satisfy'`: whichever is written first.
+            Self::SatisfyRequirement => is(&["assert", "not", "satisfy"]),
+            Self::Constraint => is(&["constraint"]),
+            Self::Requirement => is(&["requirement"]),
+            Self::Concern => is(&["concern"]),
+            Self::Viewpoint => is(&["viewpoint"]),
+            Self::Calculation => is(&["calc"]),
+            Self::Case => head.word.is_some_and(is_case_head),
+            Self::IncludeUseCase => is(&["include"]),
+            Self::Simple => head.word.is_some_and(is_simple_usage_head),
+            // `ref` is the kind keyword, and `member_head` skips it as a prefix word.
+            Self::Reference => head.after_ref,
+            // At least one `#` before the head, with no kind keyword between.
+            Self::Extended => head.after_metadata,
+        }
+    }
 }
 
 impl Parser<'_> {
@@ -114,37 +236,46 @@ impl Parser<'_> {
     /// `constraint def` body was read as the start of its result expression.
     pub(super) fn at_sysml_keyword_member(&self, n: usize) -> bool {
         count(Counter::KeywordMemberDispatch);
-        // The definitions are asked first and cost the most, so they are asked only at a
-        // head one of them can open (roadmap Phase 5; see `opens_definition`).
+        // Each member is asked only where its head admits it (roadmap Phase 5), and in
+        // `KEYWORD_MEMBERS`'s order, which is this chain's priority.
         let head = self.member_head(n);
-        (Self::opens_definition(head) && self.at_definition_element(n))
-            || self.at_action_usage(n)
-            || self.at_state_usage(n)
-            || self.at_exhibit_state_usage(n)
-            || self.at_perform_action_usage(n)
-            || self.at_flow_usage(n)
-            || self.at_succession_flow_usage(n)
-            || self.at_message(n)
-            || self.at_connection_usage(n)
-            || self.at_interface_usage(n)
-            || self.at_allocation_usage(n)
-            || self.at_view_usage(n)
-            || self.at_event_occurrence_usage(n)
-            || self.at_individual_or_portion_usage(n).is_some()
-            || self.at_succession_as_usage(n)
-            || self.at_binding_connector_as_usage(n)
-            || self.at_assert_constraint_usage(n)
-            || self.at_satisfy_requirement_usage(n)
-            || self.at_constraint_usage(n)
-            || self.at_requirement_usage(n)
-            || self.at_concern_usage(n)
-            || self.at_viewpoint_usage(n)
-            || self.at_calculation_usage(n)
-            || self.at_case_usage(n).is_some()
-            || self.at_include_use_case_usage(n)
-            || self.at_simple_usage(n).is_some()
-            || self.at_reference_usage(n)
-            || self.at_extended_usage(n)
+        KEYWORD_MEMBERS
+            .iter()
+            .any(|&member| member.admits(head) && self.at_keyword_member(member, n))
+    }
+
+    /// Whether `member` starts at the `n`th token: its recogniser, by name.
+    pub(super) fn at_keyword_member(&self, member: KeywordMember, n: usize) -> bool {
+        match member {
+            KeywordMember::Definition => self.at_definition_element(n),
+            KeywordMember::Action => self.at_action_usage(n),
+            KeywordMember::State => self.at_state_usage(n),
+            KeywordMember::ExhibitState => self.at_exhibit_state_usage(n),
+            KeywordMember::PerformAction => self.at_perform_action_usage(n),
+            KeywordMember::Flow => self.at_flow_usage(n),
+            KeywordMember::SuccessionFlow => self.at_succession_flow_usage(n),
+            KeywordMember::Message => self.at_message(n),
+            KeywordMember::Connection => self.at_connection_usage(n),
+            KeywordMember::Interface => self.at_interface_usage(n),
+            KeywordMember::Allocation => self.at_allocation_usage(n),
+            KeywordMember::View => self.at_view_usage(n),
+            KeywordMember::EventOccurrence => self.at_event_occurrence_usage(n),
+            KeywordMember::IndividualOrPortion => self.at_individual_or_portion_usage(n).is_some(),
+            KeywordMember::SuccessionAsUsage => self.at_succession_as_usage(n),
+            KeywordMember::BindingConnector => self.at_binding_connector_as_usage(n),
+            KeywordMember::AssertConstraint => self.at_assert_constraint_usage(n),
+            KeywordMember::SatisfyRequirement => self.at_satisfy_requirement_usage(n),
+            KeywordMember::Constraint => self.at_constraint_usage(n),
+            KeywordMember::Requirement => self.at_requirement_usage(n),
+            KeywordMember::Concern => self.at_concern_usage(n),
+            KeywordMember::Viewpoint => self.at_viewpoint_usage(n),
+            KeywordMember::Calculation => self.at_calculation_usage(n),
+            KeywordMember::Case => self.at_case_usage(n).is_some(),
+            KeywordMember::IncludeUseCase => self.at_include_use_case_usage(n),
+            KeywordMember::Simple => self.at_simple_usage(n).is_some(),
+            KeywordMember::Reference => self.at_reference_usage(n),
+            KeywordMember::Extended => self.at_extended_usage(n),
+        }
     }
 
     // production: RootNamespace@kerml
