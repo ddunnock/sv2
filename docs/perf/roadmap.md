@@ -253,6 +253,59 @@ Re-ranked:
   Plan it as its own series after Phase 4. Phase 4's caches will change how often
   `is_name` is reached.
 
+**2b, re-planned (2026-10-05, after Phase 5 and keyword-table-per-language).** The target
+moved twice:
+- Phases 4 and 5 cut `keyword_lookups` over the corpus from 195,225 to 16,129.
+- `is_name` stopped calling `keyword()` (621f1b2), and binary-searches the file's own
+  `RESERVED_*` table instead.
+
+Measured at bffb492, `perf` self time on the whole-corpus bench (RHEL 9 workspace, under
+load, so shares only):
+
+| Self | Where |
+|---|---|
+| 16.2% | `nth_is_keyword` (1,912,055 calls; 174 per member decision) |
+| 3.3% + 2.3% `memcmp` | `is_reserved` (51,727 `is_name` calls) |
+| 2.8% | `KeywordMember::admits` (string compares on the head word) |
+| 1.3% + 1.1% `memcmp` | `keyword()`, and `nth_is_keyword`'s own compare |
+
+About 27% of self time is spent asking the same question: which keyword, if any, is
+this token? The tokens never change during a parse, so the question has one answer per
+token.
+
+Decisions:
+- **Classify in the lexer, not in `Parser::new`.**
+  - `Token` gains `keyword: Option<SyntaxKind>`, set by `tokenize` for each `BasicName`
+    through one `keyword()` lookup.
+  - `Token` is a `u16` and two `usize`s, 24 bytes with 6 of padding. `Option<SyntaxKind>`
+    is 2 bytes by the enum's niche, so `Token` stays 24 bytes. That means no allocation
+    and no `allocated_bytes` growth; a side table built in `Parser::new` would cost both.
+  - The classification is language-independent, so it belongs to the lexer. Nothing
+    outside the lexer constructs a `Token`.
+- **Reserved as a kind question.** The generator emits `reserved_in_kerml(kind)` and
+  `reserved_in_sysml(kind)` as `matches!` over keyword kinds, beside the word tables.
+  `is_name` becomes a kind test, with no search and no `memcmp`.
+- **The 343 `nth_is_keyword(n, "word")` call sites stay as they are** in this series.
+  Migrating them to kinds is a larger, mechanical change, and a series of its own if a
+  re-measure still shows the compare.
+
+Steps:
+1. `Token::keyword` set in `tokenize`, and `is_name` answers from it through the generated
+   reserved-kind tests. `is_reserved`'s binary search goes.
+2. `nth_is_keyword` early-outs on a token whose `keyword` is `None`: a name is never a
+   keyword, so it needs no byte compare.
+3. `KeywordMember::admits` and `member_head` compare the head's keyword kind rather than
+   its text.
+
+**Series.** Primary `time`, since no counter sees a compare, so it needs this
+workspace quiet. Enabling budget: 0, because step 1 lands with its reader. **Guards:**
+- The output fingerprint must not move.
+- `Token`'s size is asserted to stay 24 bytes.
+- `reserved_words_are_sorted_and_keywords` is extended to the kind tests: each must
+  agree with its word table for every keyword.
+
+**Exit:** a net time win. **Abandon:** under 3% after step 2.
+
 ---
 
 ## Phase 3 — Lexer operator dispatch
