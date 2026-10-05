@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-10-05T23:00:15Z",
+    "regenerated_utc": "2026-10-05T23:14:47Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -38,14 +38,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "bfb7f64 Open optimization series buffer-trims (roadmap Phase 6)",
+      "54a9214 Record in the handoff that main is pushed",
       "6790d86 Close series keyword-lookahead: net -15.5% peeked",
       "2c578fc Ask one token about a group of keywords in one look",
       "0662506 Open optimization series keyword-lookahead",
       "d3eac16 Abandon series token-keywords (roadmap 2b): the compare was not the cost",
       "6f1dae2 Open optimization series token-keywords (roadmap 2b)",
-      "efe9024 Re-plan roadmap candidate 2b: classify each token once, in the lexer",
-      "bffb492 Point the next session at roadmap candidate 2b",
-      "621f1b2 Reserve each language's own words, not the union of both"
+      "efe9024 Re-plan roadmap candidate 2b: classify each token once, in the lexer"
     ]
   },
   "authored": {

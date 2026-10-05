@@ -212,13 +212,19 @@ struct Parser<'a> {
 impl<'a> Parser<'a> {
     fn new(source: &'a str, language: Language) -> Self {
         let tokens = tokenize(source);
+        // Counted first and allocated once at that size: a filtered `collect` cannot know
+        // its length and grows to the next power of two (roadmap Phase 6).
         let indices = |keep: fn(SyntaxKind) -> bool| -> Vec<usize> {
-            tokens
-                .iter()
-                .enumerate()
-                .filter(|(_, token)| keep(token.kind))
-                .map(|(i, _)| i)
-                .collect()
+            let kept = tokens.iter().filter(|token| keep(token.kind)).count();
+            let mut index = Vec::with_capacity(kept);
+            index.extend(
+                tokens
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, token)| keep(token.kind))
+                    .map(|(i, _)| i),
+            );
+            index
         };
         let meaningful = indices(|kind| !is_trivia(kind));
         let meaningful_with_comments =
