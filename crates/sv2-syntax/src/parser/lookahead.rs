@@ -114,6 +114,20 @@ pub(super) struct MemberHead<'a> {
 }
 
 impl<'a> Parser<'a> {
+    /// The [`MemberHead`] of a member at the cursor, remembered for the cursor's position
+    /// and comment mode: a member's second dispatch asks it once per recogniser.
+    pub(super) fn cursor_head(&self) -> MemberHead<'a> {
+        let key = (self.pos, self.comments_significant);
+        if let Some((pos, significant, head)) = self.cursor_head.get()
+            && (pos, significant) == key
+        {
+            return head;
+        }
+        let head = self.member_head(0);
+        self.cursor_head.set(Some((key.0, key.1, head)));
+        head
+    }
+
     /// The [`MemberHead`] of a member written from the `n`th token.
     pub(super) fn member_head(&self, n: usize) -> MemberHead<'a> {
         let mut k = n;

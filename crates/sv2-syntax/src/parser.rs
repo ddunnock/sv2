@@ -71,7 +71,7 @@ use crate::generated::kinds::SyntaxKind;
 use crate::grammar::Language;
 use crate::language::SyntaxNode;
 use crate::lexer::{Token, is_trivia, tokenize};
-use crate::parser::lookahead::PrefixCache;
+use crate::parser::lookahead::{MemberHead, PrefixCache};
 
 pub use crate::parser::operator::infix_table_for_test;
 
@@ -205,6 +205,8 @@ struct Parser<'a> {
     basic_usage_prefix_ends: PrefixCache,
     /// `skip_end_usage_prefix`'s recent answers.
     end_usage_prefix_ends: PrefixCache,
+    /// `cursor_head`'s last answer: `(pos, comments_significant, head)`.
+    cursor_head: Cell<Option<(usize, bool, MemberHead<'a>)>>,
 }
 
 impl<'a> Parser<'a> {
@@ -240,6 +242,7 @@ impl<'a> Parser<'a> {
             occurrence_usage_prefix_ends: PrefixCache::new(),
             basic_usage_prefix_ends: PrefixCache::new(),
             end_usage_prefix_ends: PrefixCache::new(),
+            cursor_head: Cell::new(None),
         }
     }
 

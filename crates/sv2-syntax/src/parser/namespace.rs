@@ -246,6 +246,16 @@ impl Parser<'_> {
             .any(|&member| member.admits(head) && self.at_keyword_member(member, n))
     }
 
+    /// Whether `member`'s head admits it at the cursor (see [`KeywordMember::admits`]).
+    ///
+    /// A member's second dispatch, the chains `usage_element_of_class` runs to choose
+    /// which production to read, asks this before each recogniser, which accepts only
+    /// where this holds: `every_keyword_member_is_admitted_where_it_accepts`. So the
+    /// chains keep their order and their answers, and skip only what cannot accept.
+    pub(super) fn admits_here(&self, member: KeywordMember) -> bool {
+        member.admits(self.cursor_head())
+    }
+
     /// Whether `member` starts at the `n`th token: its recogniser, by name.
     pub(super) fn at_keyword_member(&self, member: KeywordMember, n: usize) -> bool {
         match member {
@@ -754,8 +764,9 @@ impl Parser<'_> {
         } else if Self::opens_definition(self.member_head(0)) && self.definition_element() {
             // A definition: `MemberElement::Other`, which `element` already is. Every
             // recogniser `definition_element` asks is one of `at_definition_element`'s
-            // alternatives, so none accepts where the head opens no definition, and the
-            // chain is not run there (roadmap Phase 5).
+            // alternatives, so none accepts where the head opens no definition
+            // (`definition_element_heads_cover_every_definition`), and the chain is not run
+            // there (roadmap Phase 5).
         } else if let Some(class) = self.usage_element_of_class() {
             element = MemberElement::Usage(class);
         } else {

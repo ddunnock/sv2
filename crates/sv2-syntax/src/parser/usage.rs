@@ -7,6 +7,7 @@ use crate::counter::{Counter, count};
 use crate::generated::kinds::SyntaxKind;
 use crate::parser::Parser;
 use crate::parser::lookahead::keyword;
+use crate::parser::namespace::KeywordMember;
 
 /// A usage production whose whole rule is `<prefix> KEYWORD Usage`.
 #[derive(Clone, Copy)]
@@ -486,21 +487,25 @@ impl Parser<'_> {
     // whose `ref` is a keyword usage's BasicUsagePrefix too; ExtendedUsage, which needs a
     // `#` and no kind keyword after it; and DefaultReferenceUsage, which has no keyword.
     fn non_occurrence_usage_element(&mut self) -> bool {
-        if self.at_succession_as_usage(0) {
+        if self.admits_here(KeywordMember::SuccessionAsUsage) && self.at_succession_as_usage(0) {
             // "a succession is not a kind of occurrence usage" (7.13.5, receipt 2abd302c).
             self.succession_as_usage();
-        } else if self.at_binding_connector_as_usage(0) {
+        } else if self.admits_here(KeywordMember::BindingConnector)
+            && self.at_binding_connector_as_usage(0)
+        {
             // "a binding is not a kind of occurrence usage" (7.13.3, receipt 6db87b41).
             self.binding_connector_as_usage();
         } else if let Some(usage) = self
-            .at_simple_usage(0)
+            .admits_here(KeywordMember::Simple)
+            .then(|| self.at_simple_usage(0))
+            .flatten()
             .filter(|usage| usage.class == UsageClass::NonOccurrence)
         {
             // AttributeUsage and EnumerationUsage.
             self.simple_usage(usage);
-        } else if self.at_reference_usage(0) {
+        } else if self.admits_here(KeywordMember::Reference) && self.at_reference_usage(0) {
             self.reference_usage();
-        } else if self.at_extended_usage(0) {
+        } else if self.admits_here(KeywordMember::Extended) && self.at_extended_usage(0) {
             self.extended_usage();
         } else if self.at_default_reference_usage(0) {
             self.default_reference_usage();
@@ -527,35 +532,45 @@ impl Parser<'_> {
     // individual x;` too, and that `ref` is their BasicUsagePrefix.
     fn structure_usage_element(&mut self) -> bool {
         if let Some(usage) = self
-            .at_simple_usage(0)
+            .admits_here(KeywordMember::Simple)
+            .then(|| self.at_simple_usage(0))
+            .flatten()
             .filter(|usage| usage.class == UsageClass::Structure)
         {
             // OccurrenceUsage, ItemUsage, PartUsage, PortUsage and RenderingUsage.
             self.simple_usage(usage);
-        } else if let Some(node) = self.at_individual_or_portion_usage(0) {
+        } else if let Some(node) = self
+            .admits_here(KeywordMember::IndividualOrPortion)
+            .then(|| self.at_individual_or_portion_usage(0))
+            .flatten()
+        {
             self.individual_or_portion_usage(node);
-        } else if self.at_flow_usage(0) {
+        } else if self.admits_here(KeywordMember::Flow) && self.at_flow_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), though its metaclass is an ActionUsage.
             self.flow_usage();
-        } else if self.at_succession_flow_usage(0) {
+        } else if self.admits_here(KeywordMember::SuccessionFlow)
+            && self.at_succession_flow_usage(0)
+        {
             // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
             self.succession_flow_usage();
-        } else if self.at_message(0) {
+        } else if self.admits_here(KeywordMember::Message) && self.at_message(0) {
             // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
             self.message();
-        } else if self.at_connection_usage(0) {
+        } else if self.admits_here(KeywordMember::Connection) && self.at_connection_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), as FlowUsage is.
             self.connection_usage();
-        } else if self.at_interface_usage(0) {
+        } else if self.admits_here(KeywordMember::Interface) && self.at_interface_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), as ConnectionUsage is.
             self.interface_usage();
-        } else if self.at_allocation_usage(0) {
+        } else if self.admits_here(KeywordMember::Allocation) && self.at_allocation_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), as ConnectionUsage is.
             self.allocation_usage();
-        } else if self.at_view_usage(0) {
+        } else if self.admits_here(KeywordMember::View) && self.at_view_usage(0) {
             // A StructureUsageElement (8.2.2.6.4), as PartUsage is.
             self.view_usage();
-        } else if self.at_event_occurrence_usage(0) {
+        } else if self.admits_here(KeywordMember::EventOccurrence)
+            && self.at_event_occurrence_usage(0)
+        {
             // A StructureUsageElement (8.2.2.6.4), as OccurrenceUsage is.
             self.event_occurrence_usage();
         } else {
@@ -575,54 +590,64 @@ impl Parser<'_> {
     //
     // All sixteen, returning whether one was read; the four cases through CASES.
     fn behavior_usage_element(&mut self) -> bool {
-        if self.at_perform_action_usage(0) {
+        if self.admits_here(KeywordMember::PerformAction) && self.at_perform_action_usage(0) {
             self.perform_action_usage();
             true
-        } else if self.at_action_usage(0) {
+        } else if self.admits_here(KeywordMember::Action) && self.at_action_usage(0) {
             self.action_usage();
             true
-        } else if self.at_state_usage(0) {
+        } else if self.admits_here(KeywordMember::State) && self.at_state_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
             self.state_usage();
             true
-        } else if self.at_exhibit_state_usage(0) {
+        } else if self.admits_here(KeywordMember::ExhibitState) && self.at_exhibit_state_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as PerformActionUsage is.
             self.exhibit_state_usage();
             true
-        } else if self.at_calculation_usage(0) {
+        } else if self.admits_here(KeywordMember::Calculation) && self.at_calculation_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
             self.calculation_usage();
             true
-        } else if let Some(case) = self.at_case_usage(0) {
+        } else if let Some(case) = self
+            .admits_here(KeywordMember::Case)
+            .then(|| self.at_case_usage(0))
+            .flatten()
+        {
             // CaseUsage, AnalysisCaseUsage and UseCaseUsage are BehaviorUsageElements
             // (8.2.2.6.4).
             self.case_usage(case);
             true
-        } else if self.at_include_use_case_usage(0) {
+        } else if self.admits_here(KeywordMember::IncludeUseCase)
+            && self.at_include_use_case_usage(0)
+        {
             // A BehaviorUsageElement (8.2.2.6.4), as PerformActionUsage is.
             self.include_use_case_usage();
             true
-        } else if self.at_requirement_usage(0) {
+        } else if self.admits_here(KeywordMember::Requirement) && self.at_requirement_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ConstraintUsage is.
             self.requirement_usage();
             true
-        } else if self.at_concern_usage(0) {
+        } else if self.admits_here(KeywordMember::Concern) && self.at_concern_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as RequirementUsage is.
             self.concern_usage();
             true
-        } else if self.at_viewpoint_usage(0) {
+        } else if self.admits_here(KeywordMember::Viewpoint) && self.at_viewpoint_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as ConcernUsage is.
             self.viewpoint_usage();
             true
-        } else if self.at_constraint_usage(0) {
+        } else if self.admits_here(KeywordMember::Constraint) && self.at_constraint_usage(0) {
             // A BehaviorUsageElement (8.2.2.6.4), as AssertConstraintUsage is.
             self.constraint_usage();
             true
-        } else if self.at_assert_constraint_usage(0) {
+        } else if self.admits_here(KeywordMember::AssertConstraint)
+            && self.at_assert_constraint_usage(0)
+        {
             // A BehaviorUsageElement (8.2.2.6.4), as ActionUsage is.
             self.assert_constraint_usage();
             true
-        } else if self.at_satisfy_requirement_usage(0) {
+        } else if self.admits_here(KeywordMember::SatisfyRequirement)
+            && self.at_satisfy_requirement_usage(0)
+        {
             // A BehaviorUsageElement (8.2.2.6.4), as AssertConstraintUsage is.
             self.satisfy_requirement_usage();
             true
