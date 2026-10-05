@@ -9,7 +9,7 @@ use crate::counter::{Counter, count};
 use crate::generated::kinds::{KEYWORDS, RESERVED_KERML, RESERVED_SYSML, SyntaxKind};
 use crate::grammar::Language;
 use crate::lexer::{Token, is_trivia};
-use crate::parser::Parser;
+use crate::parser::{Parser, widen_index};
 
 /// The kind the pinned token set gives `text`, or `None` if it names no keyword.
 ///
@@ -223,7 +223,7 @@ impl Parser<'_> {
         let at = self
             .meaningful_index()
             .get(self.cursor_position().checked_add(n)?)?;
-        self.tokens.get(*at).copied()
+        self.tokens.get(widen_index(*at)).copied()
     }
 
     /// Where the cursor falls in `meaningful_index`: the position of the first meaningful
@@ -233,7 +233,9 @@ impl Parser<'_> {
         if pos == self.pos && significant == self.comments_significant {
             return position;
         }
-        let position = self.meaningful_index().partition_point(|&i| i < self.pos);
+        let position = self
+            .meaningful_index()
+            .partition_point(|&i| widen_index(i) < self.pos);
         self.cursor
             .set((self.pos, self.comments_significant, position));
         position
@@ -241,7 +243,7 @@ impl Parser<'_> {
 
     /// The meaningful-token index for the current comment mode: the tokens `skippable`
     /// does not skip.
-    fn meaningful_index(&self) -> &[usize] {
+    fn meaningful_index(&self) -> &[u32] {
         if self.comments_significant {
             &self.meaningful_with_comments
         } else {
@@ -405,7 +407,7 @@ impl Parser<'_> {
             .get(start..)
             .unwrap_or(&[])
             .iter()
-            .filter_map(|&i| self.tokens.get(i).copied())
+            .filter_map(|&i| self.tokens.get(widen_index(i)).copied())
             .inspect(|_| crate::counter::peeked())
     }
 

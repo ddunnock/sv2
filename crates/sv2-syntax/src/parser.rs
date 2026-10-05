@@ -156,9 +156,9 @@ struct Parser<'a> {
     /// there, so asking for the `n`th meaningful token costs O(log len) rather than a
     /// filter from the cursor. A recogniser that walks by index was quadratic in the
     /// length of what it walked while it did not.
-    meaningful: Vec<usize>,
+    meaningful: Vec<u32>,
     /// The same, while `REGULAR_COMMENT` is significant (`with_significant_comments`).
-    meaningful_with_comments: Vec<usize>,
+    meaningful_with_comments: Vec<u32>,
     /// The last cursor located in an index: `(pos, comments_significant, position)`.
     /// Most lookahead asks a step or two ahead many times at one cursor, and the binary
     /// search alone made error recovery several times slower than the filter it replaced.
@@ -209,12 +209,24 @@ struct Parser<'a> {
     cursor_head: Cell<Option<(usize, bool, MemberHead<'a>)>>,
 }
 
+/// A token's position in `tokens` as the `u32` the indices hold: half the bytes of a
+/// `usize`, and lossless, since a source `TextSize` can address has fewer than
+/// `u32::MAX` tokens (roadmap Phase 6). Clamped rather than wrapped past that.
+fn narrow_index(at: usize) -> u32 {
+    u32::try_from(at).unwrap_or(u32::MAX)
+}
+
+/// An index entry back as a position in `tokens`; saturating where `usize` is narrower.
+fn widen_index(at: u32) -> usize {
+    usize::try_from(at).unwrap_or(usize::MAX)
+}
+
 impl<'a> Parser<'a> {
     fn new(source: &'a str, language: Language) -> Self {
         let tokens = tokenize(source);
         // Counted first and allocated once at that size: a filtered `collect` cannot know
         // its length and grows to the next power of two (roadmap Phase 6).
-        let indices = |keep: fn(SyntaxKind) -> bool| -> Vec<usize> {
+        let indices = |keep: fn(SyntaxKind) -> bool| -> Vec<u32> {
             let kept = tokens.iter().filter(|token| keep(token.kind)).count();
             let mut index = Vec::with_capacity(kept);
             index.extend(
@@ -222,7 +234,7 @@ impl<'a> Parser<'a> {
                     .iter()
                     .enumerate()
                     .filter(|(_, token)| keep(token.kind))
-                    .map(|(i, _)| i),
+                    .map(|(i, _)| narrow_index(i)),
             );
             index
         };
