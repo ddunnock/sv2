@@ -128,7 +128,8 @@ impl Parser<'_> {
 
     /// One token's half-open byte range.
     pub(super) fn range_of(token: Token) -> TextRange {
-        TextRange::new(Self::size(token.start), Self::size(token.end))
+        // A token's offsets are already `TextSize`'s width (see `Token`).
+        TextRange::new(TextSize::new(token.start), TextSize::new(token.end))
     }
 
     /// A byte offset as a `TextSize`, saturating rather than wrapping.

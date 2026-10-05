@@ -315,7 +315,7 @@ impl Parser<'_> {
         // no keyword, this compares unequal too.
         self.peek_nth(n).is_some_and(|token| {
             token.kind == SyntaxKind::BasicName
-                && self.source.as_bytes().get(token.start..token.end) == Some(text.as_bytes())
+                && self.source.as_bytes().get(token.range()) == Some(text.as_bytes())
         })
     }
 
@@ -329,7 +329,7 @@ impl Parser<'_> {
         count(Counter::NthIsKeyword);
         self.peek_nth(n).is_some_and(|token| {
             token.kind == SyntaxKind::BasicName && {
-                let text = self.source.as_bytes().get(token.start..token.end);
+                let text = self.source.as_bytes().get(token.range());
                 words.iter().any(|word| text == Some(word.as_bytes()))
             }
         })

@@ -24,15 +24,16 @@ fn texts(source: &str) -> Vec<&str> {
 fn assert_tokens_cover(source: &str) {
     let mut offset = 0;
     for token in tokenize(source) {
+        let range = token.range();
         assert_eq!(
-            token.start, offset,
+            range.start, offset,
             "gap or overlap at {token:?} in {source:?}"
         );
         assert!(
-            token.end >= token.start,
+            range.end >= range.start,
             "backwards span {token:?} in {source:?}"
         );
-        offset = token.end;
+        offset = range.end;
     }
     assert_eq!(
         offset,

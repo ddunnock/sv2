@@ -12,14 +12,20 @@
 use crate::generated::kinds::{OPERATORS, SyntaxKind};
 
 /// One token: its kind and its half-open byte range in the source.
+///
+/// The offsets are `u32`, the width of rowan's `TextSize`, which already bounds every
+/// tree this crate builds at 4 GiB: a `Token` is 12 bytes where `usize` offsets made it
+/// 24, and the token buffer is the largest this crate allocates outside the tree
+/// (roadmap Phase 6). An offset past that bound is clamped to `u32::MAX`, as
+/// `OffsetMap` clamps one, never wrapped and never a panic.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Token {
     /// What the token is.
     pub kind: SyntaxKind,
     /// Byte offset of the first character.
-    pub start: usize,
+    pub start: u32,
     /// Byte offset one past the last character.
-    pub end: usize,
+    pub end: u32,
 }
 
 impl Token {
@@ -30,8 +36,25 @@ impl Token {
     /// (invariant 3).
     #[must_use]
     pub fn text<'a>(&self, source: &'a str) -> Option<&'a str> {
-        source.get(self.start..self.end)
+        source.get(self.range())
     }
+
+    /// The token's byte range in the source, as `usize` offsets for indexing.
+    #[must_use]
+    pub fn range(&self) -> std::ops::Range<usize> {
+        offset(self.start)..offset(self.end)
+    }
+}
+
+/// A `u32` offset as a `usize`, for indexing. Lossless on every target this crate builds
+/// for, whose `usize` is at least 32 bits; saturating rather than panicking otherwise.
+fn offset(at: u32) -> usize {
+    usize::try_from(at).unwrap_or(usize::MAX)
+}
+
+/// A `usize` offset as a token's `u32`, clamped at `u32::MAX`: see [`Token`].
+fn narrow(at: usize) -> u32 {
+    u32::try_from(at).unwrap_or(u32::MAX)
 }
 
 /// Whether a kind is trivia — attached to the tree, never skipped.
@@ -132,8 +155,8 @@ pub fn tokenize(source: &str) -> Vec<Token> {
         }
         tokens.push(Token {
             kind,
-            start,
-            end: cursor.offset,
+            start: narrow(start),
+            end: narrow(cursor.offset),
         });
     }
     tokens
@@ -355,7 +378,14 @@ fn lex_operator(cursor: &mut Cursor<'_>) -> SyntaxKind {
 
 #[cfg(test)]
 mod tests {
-    use super::{Cursor, OPERATORS, SyntaxKind, lex_operator};
+    use super::{Cursor, OPERATORS, SyntaxKind, Token, lex_operator};
+
+    /// A token is its kind and two `u32` offsets, 12 bytes on every target, where `usize`
+    /// offsets made it 24 on a 64-bit one (roadmap Phase 6).
+    #[test]
+    fn a_token_is_twelve_bytes() {
+        assert_eq!(size_of::<Token>(), 12);
+    }
 
     /// The scan `lex_operator` replaced: every entry, longest first.
     fn scanned(cursor: &mut Cursor<'_>) -> SyntaxKind {

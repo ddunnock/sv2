@@ -198,6 +198,25 @@
      "consumed": 70827,
      "peeked": 2136851
     }
+   },
+   {
+    "commit": "47b9e6a",
+    "fingerprint": "6843c161c5e848b5",
+    "host": "Linux x86_64 R-JQ948439S28E",
+    "largest_p95_ns": 5979616,
+    "notes": [
+     "allocated_bytes -13.3%"
+    ],
+    "outcome": "improved",
+    "scaling": 1.0,
+    "source": "0d9bbb48221edab8a59371c172605b17f57a43722ebd01e8ce99fc208588c77a",
+    "time_ns": 11580793,
+    "totals": {
+     "allocated_bytes": 13251080,
+     "allocations": 129163,
+     "consumed": 70827,
+     "peeked": 2136851
+    }
    }
   ],
   "time_ns": 11599882,
