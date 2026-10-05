@@ -116,6 +116,17 @@ impl Parser<'_> {
     /// `EndUsagePrefix` and the `UsageExtensionKeyword`s after either.
     fn skip_basic_usage_prefix(&self, n: usize) -> usize {
         count(Counter::SkipBasicUsagePrefix);
+        // Asked many times from one start, like `skip_prefix_metadata` (roadmap Phase 4).
+        self.memoized(
+            &self.basic_usage_prefix_ends,
+            n,
+            Self::compute_basic_usage_prefix,
+        )
+    }
+
+    /// `skip_basic_usage_prefix`'s walk, when its cache does not have the answer.
+    fn compute_basic_usage_prefix(&self, n: usize) -> usize {
+        count(Counter::SkipBasicUsagePrefixComputed);
         let mut n = n;
         for words in [
             &["in", "out", "inout"][..],
