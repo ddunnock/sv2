@@ -751,8 +751,11 @@ impl Parser<'_> {
             // the one that takes no target successions after it, as an end takes none.
             self.default_interface_end();
             element = MemberElement::Usage(UsageClass::Structure);
-        } else if self.definition_element() {
-            // A definition: `MemberElement::Other`, which `element` already is.
+        } else if Self::opens_definition(self.member_head(0)) && self.definition_element() {
+            // A definition: `MemberElement::Other`, which `element` already is. Every
+            // recogniser `definition_element` asks is one of `at_definition_element`'s
+            // alternatives, so none accepts where the head opens no definition, and the
+            // chain is not run there (roadmap Phase 5).
         } else if let Some(class) = self.usage_element_of_class() {
             element = MemberElement::Usage(class);
         } else {
