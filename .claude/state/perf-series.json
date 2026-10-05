@@ -170,5 +170,22 @@
    ]
   }
  ],
- "open": null
+ "open": {
+  "commit": "54a9214",
+  "fingerprint": "6843c161c5e848b5",
+  "host": "Linux x86_64 R-JQ948439S28E",
+  "largest_p95_ns": 6032545,
+  "name": "buffer-trims",
+  "primary": "allocated_bytes",
+  "scaling": 1.0,
+  "source": "47a590fd93ca985b9e3a299a418821e1c5201a5a31c7de34361a91e3d4cfd20e",
+  "steps": [],
+  "time_ns": 11599882,
+  "totals": {
+   "allocated_bytes": 15713448,
+   "allocations": 132605,
+   "consumed": 70827,
+   "peeked": 2136851
+  }
+ }
 }
