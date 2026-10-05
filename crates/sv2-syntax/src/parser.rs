@@ -71,6 +71,7 @@ use crate::generated::kinds::SyntaxKind;
 use crate::grammar::Language;
 use crate::language::SyntaxNode;
 use crate::lexer::{Token, is_trivia, tokenize};
+use crate::parser::lookahead::PrefixCache;
 
 pub use crate::parser::operator::infix_table_for_test;
 
@@ -196,6 +197,8 @@ struct Parser<'a> {
     /// six read at exactly this depth: `note_framed_concern_body_item` says so, and a
     /// body nested in one reads at a greater depth and draws none.
     framed_concern_body: Option<u32>,
+    /// `skip_prefix_metadata`'s recent answers (roadmap Phase 4).
+    prefix_metadata_ends: PrefixCache,
 }
 
 impl<'a> Parser<'a> {
@@ -227,6 +230,7 @@ impl<'a> Parser<'a> {
             depth_reported: false,
             comments_significant: false,
             framed_concern_body: None,
+            prefix_metadata_ends: PrefixCache::new(),
         }
     }
 

@@ -3,6 +3,8 @@
 //! Looking ahead: the meaningful-token index, `peek`, and the generic recognisers
 //! every production uses to decide which alternative it is at, without consuming anything.
 
+use std::cell::Cell;
+
 use crate::counter::{Counter, count};
 use crate::generated::kinds::{KEYWORDS, SyntaxKind};
 use crate::lexer::{Token, is_trivia};
@@ -40,7 +42,73 @@ pub(super) fn keyword(text: &str) -> Option<SyntaxKind> {
 /// other keyword; this is only the list of which ones the production names.
 pub(super) const VISIBILITY: [&str; 3] = ["public", "private", "protected"];
 
+/// How many entries a [`PrefixCache`] holds.
+///
+/// Each prefix skip starts at about one distinct position per member decision (0.7–1.1
+/// over the corpus), and 8 direct-mapped slots reach that floor exactly
+/// (`docs/perf/assessment.md`, "Prefix-skip start positions"; roadmap Phase 4).
+const PREFIX_SLOTS: usize = 8;
+
+/// One remembered prefix skip: from the absolute meaningful position `start`, in comment
+/// mode `significant`, the skip ends at the absolute position `end`.
+#[derive(Clone, Copy)]
+struct PrefixEntry {
+    start: usize,
+    significant: bool,
+    end: usize,
+}
+
+/// The last few answers of one prefix skip, by where it started.
+///
+/// A prefix skip reads only the tokens, which never change during a parse, and the
+/// comment mode, which is part of the key, so an entry never goes stale and nothing
+/// invalidates it. A fixed array rather than a `Vec` sized from the token count: it
+/// allocates nothing, so it costs no allocation the ratchet counts.
+pub(super) struct PrefixCache([Cell<Option<PrefixEntry>>; PREFIX_SLOTS]);
+
+impl PrefixCache {
+    pub(super) const fn new() -> Self {
+        Self([const { Cell::new(None) }; PREFIX_SLOTS])
+    }
+}
+
 impl Parser<'_> {
+    /// `compute(self, n)`, answered from `cache` when it has been asked from the same
+    /// absolute position in the same comment mode before.
+    ///
+    /// `n` is relative to the cursor, as every lookahead index is, so the key is the
+    /// absolute meaningful position `cursor_position() + n` and the entry holds an
+    /// absolute end, returned less the cursor. A position that does not fit a `usize` is
+    /// computed and not remembered.
+    pub(super) fn memoized(
+        &self,
+        cache: &PrefixCache,
+        n: usize,
+        compute: impl FnOnce(&Self, usize) -> usize,
+    ) -> usize {
+        let base = self.cursor_position();
+        let Some(start) = base.checked_add(n) else {
+            return compute(self, n);
+        };
+        let significant = self.comments_significant;
+        let slot = cache.0.get(start % PREFIX_SLOTS);
+        if let Some(entry) = slot.and_then(Cell::get)
+            && entry.start == start
+            && entry.significant == significant
+        {
+            return entry.end.saturating_sub(base);
+        }
+        let skipped = compute(self, n);
+        if let (Some(slot), Some(end)) = (slot, base.checked_add(skipped)) {
+            slot.set(Some(PrefixEntry {
+                start,
+                significant,
+                end,
+            }));
+        }
+        skipped
+    }
+
     /// The next non-trivia token, without consuming anything.
     pub(super) fn peek(&self) -> Option<Token> {
         self.peek_nth(0)

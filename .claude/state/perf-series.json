@@ -53,7 +53,27 @@
   "primary": "peeked",
   "scaling": 1.0,
   "source": "d335d996ea9945b8974de11b4f6d32b6e979fcca0b0f9ddc6819e7a1b470cabe",
-  "steps": [],
+  "steps": [
+   {
+    "commit": "1fde01b",
+    "fingerprint": "cf9d1abe7e03b349",
+    "host": "Linux x86_64 R-JQ948439S28E",
+    "largest_p95_ns": 13084401,
+    "notes": [
+     "peeked -11.6%"
+    ],
+    "outcome": "improved",
+    "scaling": 1.0,
+    "source": "cfe72c79b3fc0410d4156c4c5acf2cf5cc7e49c33f34d1a9c7f5132181135b15",
+    "time_ns": 22818180,
+    "totals": {
+     "allocated_bytes": 15711448,
+     "allocations": 132472,
+     "consumed": 70576,
+     "peeked": 21206856
+    }
+   }
+  ],
   "time_ns": 23917285,
   "totals": {
    "allocated_bytes": 15711448,

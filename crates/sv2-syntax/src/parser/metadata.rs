@@ -28,11 +28,16 @@ impl Parser<'_> {
     /// the same text over a different element, so the same walk.
     pub(super) fn skip_prefix_metadata(&self, n: usize) -> usize {
         count(Counter::SkipPrefixMetadata);
-        let mut n = n;
-        while let Some(k) = self.skip_one_prefix_metadata(n) {
-            n = k;
-        }
-        n
+        // Every prefix recogniser asks this, many times from one start (roadmap Phase 4),
+        // and the answer depends only on the start and the comment mode.
+        self.memoized(&self.prefix_metadata_ends, n, |parser, n| {
+            count(Counter::SkipPrefixMetadataComputed);
+            let mut n = n;
+            while let Some(k) = parser.skip_one_prefix_metadata(n) {
+                n = k;
+            }
+            n
+        })
     }
 
     /// The index just past ONE `#` prefix metadata written at the `n`th token, if one is:

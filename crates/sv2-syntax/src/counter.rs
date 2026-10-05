@@ -22,6 +22,7 @@
 //! | `skip_occurrence_usage_prefix` | the method of that name | Phase 4 |
 //! | `skip_basic_usage_prefix` | the method of that name | Phase 4 |
 //! | `skip_prefix_metadata` | the method of that name | Phase 4 |
+//! | `skip_prefix_metadata_computed` | the same, when its cache did not have the answer | Phase 4 |
 //! | `member_decisions` | `Parser::body_element`, once per member read | Phase 5 |
 //! | `member_dispatch` | `Parser::at_member_element` | Phase 5 |
 //! | `keyword_member_dispatch` | `Parser::at_sysml_keyword_member` | Phase 5 |
@@ -45,13 +46,14 @@ pub(crate) enum Counter {
     SkipOccurrenceUsagePrefix,
     SkipBasicUsagePrefix,
     SkipPrefixMetadata,
+    SkipPrefixMetadataComputed,
     MemberDecisions,
     MemberDispatch,
     KeywordMemberDispatch,
 }
 
 /// How many counters there are, the two ratcheted ones included.
-const COUNT: usize = 13;
+const COUNT: usize = 14;
 
 /// How many are attribution detail: all but `peeked` and `consumed`.
 pub(crate) const DETAIL: usize = COUNT - 2;
@@ -68,6 +70,7 @@ const NAMES: [&str; COUNT] = [
     "skip_occurrence_usage_prefix",
     "skip_basic_usage_prefix",
     "skip_prefix_metadata",
+    "skip_prefix_metadata_computed",
     "member_decisions",
     "member_dispatch",
     "keyword_member_dispatch",
