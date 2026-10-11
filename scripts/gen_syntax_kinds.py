@@ -31,6 +31,7 @@ TOKENS = Path(".claude/state/grammar/keywords.json")
 BNF = Path(".claude/state/grammar/bnf-productions.json")
 DEVIATIONS = Path(".claude/state/deviations.json")
 OUT = Path("crates/sv2-syntax/src/generated/kinds.rs")
+NODE_KINDS = Path(".claude/state/node-kinds.json")
 
 # The specification file that states each language's RESERVED_KEYWORD production:
 # KerML 8.2.2.6 and SysML 8.2.2.1.2. The lists differ both ways, and a BasicName is a
@@ -2485,6 +2486,26 @@ def reserved_words(keywords: list[str]) -> dict[str, list[str]]:
     return reserved
 
 
+def node_inventory() -> str:
+    """The authored node kinds, as the inventory sv2-ast's coverage counts against.
+
+    `kinds.rs` is generated from the same list. Emitting the inventory here rather than
+    parsing the generated Rust is ADR-0025's rule: a second reader of generated code is
+    how one derived fact becomes two that disagree.
+    """
+    doc = {
+        "_generated_by": GENERATED_BY,
+        "_note": (
+            "The node kinds a tree can contain, authored in this generator's NODES. "
+            "sv2-ast's coverage counts against it (ADR-0025). Declaration order is the "
+            "kind's discriminant order, and is the order the worklist falls back to."
+        ),
+        "counts": {"nodes": len(NODES)},
+        "nodes": [name for name, _ in NODES],
+    }
+    return json.dumps(doc, indent=2) + "\n"
+
+
 def main(argv: list[str] | None = None) -> int:
     """Write the generated kinds module, or with --check fail if it is stale."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -2497,16 +2518,25 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     text = build()
+    inventory = node_inventory()
     if args.check:
-        if not OUT.is_file() or OUT.read_text() != text:
-            print(f"{OUT} is stale — run python3.12 {GENERATED_BY}")
+        stale = [
+            path
+            for path, want in ((OUT, text), (NODE_KINDS, inventory))
+            if not path.is_file() or path.read_text() != want
+        ]
+        if stale:
+            for path in stale:
+                print(f"{path} is stale — run python3.12 {GENERATED_BY}")
             return 1
-        print(f"syntax kinds current ({OUT})")
+        print(f"syntax kinds current ({OUT}, {NODE_KINDS})")
         return 0
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     write_derived(OUT, text)
-    print(f"wrote {OUT}")
+    NODE_KINDS.parent.mkdir(parents=True, exist_ok=True)
+    write_derived(NODE_KINDS, inventory)
+    print(f"wrote {OUT} and {NODE_KINDS}")
     return 0
 
 
