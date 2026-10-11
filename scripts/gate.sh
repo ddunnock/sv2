@@ -107,6 +107,7 @@ main() {
   run_check "program headers" "${PY}" scripts/check_headers.py
   run_check "standards config" "${PY}" scripts/check_standards_config.py
   run_check "rust patterns" "${PY}" scripts/check_rust_patterns.py
+  run_check "ast leaks" "${PY}" scripts/check_ast_leaks.py
   run_optional "shellcheck" shellcheck scripts/*.sh .claude/scripts/*.sh
   run_optional "shfmt" shfmt -d scripts .claude/scripts
   run_optional "ruff" ruff check
