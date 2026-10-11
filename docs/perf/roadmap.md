@@ -659,8 +659,8 @@ proof.** A recogniser that accepted on input outside those sources at a head its
 in one, needs its `admits` arm updated and a form added. Each dispatcher step had a
 `spec-conformance-reviewer` pass: 0 blocking in all four.
 
-Largest file, p95, after the close (RHEL 9 workspace, two runs; take FIT-4 on the
-MacBook):
+Largest file, p95, after the close (RHEL 9 workspace, two runs; FIT-4 on the MacBook was
+taken after Phase 6, and is recorded there):
 
 | Engine | After Phase 4 | After Phase 5 | FIT-4 margin |
 |---|---|---|---|
@@ -746,6 +746,50 @@ Three steps, all improved, none enabling:
 - What remains above 1% is rowan's green nodes, which this phase may not touch, and the
   token buffer's doublings, which are time, not bytes.
 
+**Re-measured on the MacBook** (2026-10-10, Apple M2 Max, 32 GiB, Darwin 25.6; the series
+itself ran on the RHEL 9 workspace). Each of the four trees was checked out into a detached
+worktree and measured with `scripts/perf.sh measure`:
+
+| Tree | `allocated_bytes` | Step | Median time, five largest |
+|---|---:|---:|---:|
+| open (54a9214) | 15,683,304 | — | 7.26 ms |
+| 1 (47b9e6a) | 15,261,512 | −2.69% | 7.18 ms |
+| 2 (5709ef0) | 13,220,936 | −13.37% | 7.23 ms |
+| 3 (c390cfd) | 12,656,216 | −4.27% | 7.14 ms |
+
+- **Net −19.30%**, against the −19.3% recorded on RHEL 9, with every step inside 0.1 point
+  of its recorded verdict. The series reproduces on this machine.
+- **The steps cost no time and gained none.** 7.26 → 7.14 ms is inside this machine's
+  run-to-run spread (assessment.md, "The two machines"), so the Mac says the same thing the
+  estimate did: "modest, 5–15% of bytes and little time".
+- **`allocated_bytes` is not quite host-independent.** Every tree measures lower here than
+  the same tree did on RHEL 9, by a near-constant 96–176 bytes per file — 30,144 bytes over
+  the corpus, −0.24%, roughly flat per parse rather than proportional to size. `allocations`,
+  `peeked` and `consumed` are exactly equal, per file, on both machines, and so is the output
+  fingerprint. The cause is not identified. It does not touch any verdict here, because the
+  offset is the same at every step and the step deltas are unaffected, and it is two orders
+  below the ratchet's 10%. It does mean a series stepped across the two machines would spend
+  about an eighth of its 2% no-worse budget on `allocated_bytes` before it changed anything.
+  The recorded ratchet is the RHEL 9 figure and was deliberately left alone: this machine
+  measures *under* it, so the gate is green here, and re-recording to the lower number would
+  tighten the ratchet on evidence about the host rather than about the parser.
+
+**FIT-4 on the MacBook** — the item Phase 5 carried forward. Largest file, p95, two runs of
+`scripts/perf.sh wasm`, 30 runs per file, after Phase 6:
+
+| Engine | p95 (two runs) | Median | × native | FIT-4 margin |
+|---|---:|---:|---:|---:|
+| native | 3.20 / 4.40 ms | 2.95 ms | — | ≥ 11.6 ms |
+| wasmtime | 3.73 / 3.73 ms | 3.60–3.67 ms | 1.22–1.34× | ≥ 12.3 ms |
+| Bun (JavaScriptCore) | 4.13 / 4.24 ms | 3.53–3.56 ms | 1.12–1.21× | ≥ 11.8 ms |
+
+- **The wasm penalty is much smaller here.** Bun ran at 1.65–1.73× native on the RHEL 9
+  workspace and 1.12–1.21× here; wasmtime is about the same on both (1.15–1.44× there,
+  1.22–1.34× here). Bun's median is marginally the lower of the two engines, its p95 the
+  higher, which is what a garbage collector looks like.
+- **FIT-4 is met with the whole budget to spare on this machine**, and the RHEL 9 figures
+  remain the conservative ones to plan against.
+
 ---
 
 ## Outcomes
@@ -758,4 +802,4 @@ Three steps, all improved, none enabling:
 | 3 | operator-dispatch | closed, net −3.2% time | one step; `tokenize` alone −45% |
 | 4 | prefix-skip-memo | closed, net −81.9% peeked | median time 23.92 → 13.62 ms (RHEL 9); three steps, no enabling |
 | 5 | member-head-dispatch | closed, net −41.1% peeked | five steps, no enabling; gates by `admits`, not a table |
-| 6 | buffer-trims | closed, net −19.3% allocated_bytes | three steps; `Token` 24 → 12 bytes |
+| 6 | buffer-trims | closed, net −19.3% allocated_bytes | three steps; `Token` 24 → 12 bytes; re-measured on the MacBook at −19.30%, every step inside 0.1 point |

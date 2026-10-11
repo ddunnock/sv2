@@ -286,6 +286,57 @@ two children; the export gives size classes, not backtraces, so this is an infer
 Those nodes *are* the tree, and reducing them would change its shape, which an
 optimization may not do. What can be trimmed is the buffers (roadmap Phase 6).
 
+## The two machines
+
+Phases 2–6 were measured on the RHEL 9 workspace. Everything below was measured on the
+MacBook on 2026-10-10, at 9871224, with nothing else running. ADR-0024's rule stands: the
+counters and the fingerprint compare across the two, the times do not.
+
+| | RHEL 9 workspace | MacBook |
+|---|---|---|
+| Identity in a measurement | `Linux x86_64 …` | `Darwin arm64 Davids-MacBook-Pro.local` |
+| Processor | 8 cores, GPU-less desktop, 3–4 of them usually busy | Apple M2 Max, 8 performance + 4 efficiency cores |
+| Memory | — | 32 GiB |
+
+**Standing numbers for the MacBook**, `scripts/perf.sh measure` at 9871224:
+
+| | Value |
+|---|---:|
+| `allocations` | 129,163 |
+| `allocated_bytes` | 12,656,216 |
+| `peeked` | 2,136,851 |
+| `consumed` | 70,827 |
+| Median time, five largest files | 7.23 ms (median of nine runs; see below) |
+| Largest file, p95, native | 3.0–3.4 ms (FIT-4 budget 16 ms) |
+
+**divan**, `cargo bench -p sv2-syntax --bench parse`, medians. Read for comparison between
+runs on this machine; no verdict comes from here (ADR-0024):
+
+| Case | Median | Throughput |
+|---|---:|---:|
+| `simple_vehicle_model` | 2.65 ms | 27.7 MB/s |
+| `whole_corpus` | 28.89 ms | 19.6 MB/s |
+| `repeated` 1 / 4 / 16 copies | 2.63 / 8.95 / 34.25 ms | 27.9 / 32.9 / 34.3 MB/s |
+| `nested_parts` | 444 µs | 6.8 MB/s |
+| `long_expression` | 568 µs | 14.1 MB/s |
+
+**How much the MacBook's time wobbles.** Nine `measure` runs of this code, on an otherwise
+idle machine, gave medians of 7.09, 7.14, 7.14, 7.22, 7.23, 7.31, 7.33, 7.35 and 7.57 ms
+over the five largest files: median 7.23, so −1.9% to +4.7% about it. Consecutive runs drift
+upward within a loop, which looks like heat rather than load.
+
+This qualifies, and does not fully grant, the hope recorded twice above — that a `time`
+series wants "an instruction count beside it, or the MacBook". The Mac's spread is about
+half the RHEL workspace's 5%, but a single before/after pair here can still move further
+than `TIME_IMPROVEMENT`'s 3% bar on its own. A `time` series on this machine should still
+re-run `measure` either side of the change, and prefer a step whose counters move too.
+
+**`allocated_bytes` carries a small host offset.** The same tree measures 30,144 bytes less
+here than on RHEL 9, −0.24% of the corpus total, spread as a near-constant 96–176 bytes per
+file rather than in proportion to size. `allocations`, `peeked`, `consumed` and the output
+fingerprint are exactly equal per file on both. The cause is unidentified. Consequences, and
+why the recorded ratchet was left at the RHEL 9 figure, are in roadmap.md's Phase 6 outcome.
+
 ## The plan
 
 The optimizations are phased in **[roadmap.md](roadmap.md)**. Each phase can be planned
