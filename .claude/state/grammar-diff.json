@@ -357,6 +357,7 @@
     "ConstraintDefKeyword",
     "ConstraintKeyword",
     "ConstraintUsageKeyword",
+    "ConstructorExpression",
     "ControlNodePrefix",
     "CrossesKeyword",
     "Crossings",
