@@ -188,6 +188,13 @@
       "status": "proposed",
       "date": "2026-10-11",
       "file": "docs/adr/0025-typed-accessors-are-ratcheted-and-proved-on-malformed-trees.md"
+    },
+    {
+      "id": "0026",
+      "title": "Analyses are declared in the model, configured in sv2.toml, and run by in-tree runners",
+      "status": "accepted",
+      "date": "2026-10-11",
+      "file": "docs/adr/0026-analyses-are-declared-in-the-model-configured-in-sv2-toml-and-run-in-tree.md"
     }
   ]
 }

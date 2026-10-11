@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-10-11T19:10:10Z",
+    "regenerated_utc": "2026-10-11T19:15:45Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -49,14 +49,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "b316423 Record that ast-harness is merged and pushed",
       "820db58 Merge ast-harness: the sv2-ast development harness and its first accessor",
       "13fc1a0 Close the session: report the ast gates, and hand off from state.json",
       "2d44300 Cite the parser for recovery, and make two gates fail closed",
       "bb2b2ee Make the malformed case a gate, not a promise",
       "ebe3deb Give the sweep real teeth, and tell the truth in the malformed case",
       "3c2692e Add the RootNamespace accessor, and prove the harness bites",
-      "1548f12 Wire sv2-ast to the tree, and land the sweep before the accessors",
-      "aa39d82 Give sv2-ast its own rules and an add-accessor skill"
+      "1548f12 Wire sv2-ast to the tree, and land the sweep before the accessors"
     ]
   },
   "authored": {
@@ -316,11 +316,21 @@
         "blocks": []
       },
       {
-        "id": "adr-0026-placement",
-        "question": "ADR-0026 (analyses declared in the model, configured in sv2.toml, run by in-tree runners; 360 lines, status proposed) was written outside the ast-harness work and deliberately kept off that branch -- index_decisions.py globs every docs/adr/[0-9]*.md, so its presence made the decisions index stale. It was moved to this session's scratchpad, which is NOT durable: 0026-analyses-are-declared-in-the-model-configured-in-sv2-toml-and-run-in-tree.md under /tmp/claude-501/-Users-dunnock-projects-sv2/7e5a122c-d96e-4c53-96ce-cb7b0395e988/scratchpad/. It also uses frontmatter keys ADR-0025 does not (version, decision-makers, consulted, informed vs deciders). Recover it, reconcile the frontmatter, and commit it on its own branch.",
+        "id": "adr-0026-open-questions",
+        "question": "ADR-0026 is accepted and carries three open questions in its own 'Open questions' table, which an accepted record can hide: OQ-1 does suspect propagation stop at an accepted baseline or pass through it (decides the baseline sidecar schema and restamp-on-change semantics); OQ-2 may a library runner's query language be a subset of SysML v2 expressions or does it need its own (decides whether the library class needs framework-side grammar); OQ-3 should `ci` results be committed as derived sidecars or discarded after reporting (decides repository size, and whether staleness survives a clone). The table in the ADR is the detail; this entry exists so they are visible at session start.",
         "blocks": [
-          "the analyses feature having a recorded decision at all"
-        ]
+          "implementing the baseline sidecar",
+          "implementing the library runner class"
+        ],
+        "adr": "ADR-0026"
+      },
+      {
+        "id": "adr-0019-0020-status",
+        "question": "ADR-0026 is accepted and amends ADR-0019 and ADR-0020, both of which are still proposed -- an accepted record amending two open ones. ADR-0026 states it deliberately does not supersede them and restates the amendments so neither has to be edited, so nothing is contradictory and no gate fails (index_decisions.py checks status validity and supersession pairing, not amendment coherence). Still: accept ADR-0019 and ADR-0020, or demote ADR-0026 to proposed until they are settled?",
+        "blocks": [
+          "a reader knowing which of the three records is in force"
+        ],
+        "adr": "ADR-0026"
       }
     ],
     "log": [
@@ -498,6 +508,11 @@
         "date": "2026-10-11",
         "gate": "green",
         "summary": "ast-harness: the sv2-ast development harness for ADR-0025, 12 commits, plus the first accessor. Node-kind inventory (463, Tombstone excluded), ast_coverage.py with five states, check_ast_leaks.py, root-downward worklist, .claude/rules/ast.md, the add-accessor skill, crate wired to the tree with a sweep over 610 trees, and RootNamespace::members(). Two review rounds found what the gates could not. The sweep's differential was containment, which passes an accessor yielding nothing, one reversing the order and one filtering a kind out -- now equality, proved by mutation (containment caught 1 of 6 member defects, equality 6). The malformed case claimed three parts and had two; part 3 is vacant until a second accessor exists and now says so. The recovery outcome was cited to ADR-0022, which is about deviations and never mentions recovery, and that wrong citation had been copied into the rules file and the skill -- now attributed to body_elements in parser/namespace.rs, the only source there is. Malformed cases moved to a directory per kind because the flat name could credit the wrong kind (package-body-missing). check_ast_leaks.py could not see a generic struct and so exempted it from every rule; it now reports any shape it cannot read. ADR-0025 corrected to say two of four kinds of evidence are mechanical, not four. Five pending decisions recorded, including the sweep-enforcement gap. Branch not pushed, not merged; --no-ff chosen. ADR-0026 was set aside off-branch -- see adr-0026-placement, it is in a non-durable scratchpad."
+      },
+      {
+        "date": "2026-10-11",
+        "gate": "green",
+        "summary": "ADR-0026 (analyses declared in the model, configured in sv2.toml, run by in-tree runners) recovered from the session scratchpad into docs/adr/ and its header normalised to the convention 20 of 25 ADRs use, including all four most recent: title unprefixed and quoted, status unquoted, deciders: [David]. Dropped version and the TBD consulted/informed placeholders, which the indexer never read. Status set to accepted on the user's word that it is decided. The 'ADR-0026:' prefix came off both the title and the H1 -- the id is in the filename and the index derives it, so the prefix made the README and decisions.json read the number twice. Index now 26 ADRs, 8 open (unchanged: accepted is a closed status). Two decisions recorded: the three open questions the accepted ADR carries, and that it amends ADR-0019 and ADR-0020 while both are still proposed."
       }
     ]
   }
