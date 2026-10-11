@@ -27,10 +27,12 @@ fn assert_node_invariants(node: &SyntaxNode) {
 /// What `RootNamespace` must satisfy at every node, whatever the tree:
 ///
 /// (a) `cast` succeeds exactly when `node.kind()` is `SyntaxKind::RootNamespace`, and
-///     returns `None` otherwise;
-/// (b) the differential assertion: every member `members()` yields is genuinely one of
-///     the node's children, re-derived by walking children directly rather than by
-///     trusting the accessor's own definition;
+///     returns `None` otherwise, and the node survives the round trip;
+/// (b) the differential assertion: `members()` yields the node's direct children,
+///     **exactly** — same members, same order, no more and no fewer. Equality, not
+///     containment: a subset check passes an accessor that yields nothing, one that
+///     reverses the order, and one that silently filters a kind out, which are the
+///     defects most likely to be introduced by a later edit.
 /// (c) calling the accessor twice returns the same answer.
 fn assert_root_namespace_accessor(node: &SyntaxNode) {
     let is_root_namespace = node.kind() == SyntaxKind::RootNamespace;
@@ -46,7 +48,19 @@ fn assert_root_namespace_accessor(node: &SyntaxNode) {
         return;
     };
 
-    // (b) differential: re-derive "is a child" by walking children directly.
+    // (a) round trip: the accessor hands back the very node it was cast from. This is the
+    // one contract `AstNode` itself states, and nothing else asserts it.
+    assert_eq!(
+        root_namespace.syntax(),
+        node,
+        "RootNamespace::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) differential: re-derive the children by walking the tree directly, then demand
+    // that `members()` equal them. Equality is the honest assertion here because
+    // `members()` claims every direct child -- recovery `Error` nodes included (ADR-0002).
+    // An accessor that filters a kind out must change this line and say why.
     let children_by_range: Vec<(SyntaxKind, sv2_syntax::TextRange)> = node
         .children()
         .map(|child| (child.kind(), child.text_range()))
@@ -55,13 +69,12 @@ fn assert_root_namespace_accessor(node: &SyntaxNode) {
         .members()
         .map(|member| (member.kind(), member.text_range()))
         .collect();
-    for member in &first {
-        assert!(
-            children_by_range.contains(member),
-            "member {member:?} at {:?} is not among its parent's direct children",
-            node.text_range()
-        );
-    }
+    assert_eq!(
+        first,
+        children_by_range,
+        "members() is not exactly this node's direct children, in order, at {:?}",
+        node.text_range()
+    );
 
     // (c) idempotent: the same node answers the same way the second time.
     let second: Vec<(SyntaxKind, sv2_syntax::TextRange)> = root_namespace

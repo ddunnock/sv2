@@ -11,7 +11,7 @@
 
 use std::path::{Path, PathBuf};
 
-use sv2_syntax::{Language, SyntaxNode, parse};
+use sv2_syntax::{Language, Parse, SyntaxNode, parse};
 
 /// The workspace root, from this crate's manifest directory.
 #[expect(
@@ -69,5 +69,13 @@ pub(crate) fn language_of(path: &Path) -> Language {
 
 /// The root node of `source`.
 pub(crate) fn tree(source: &str, language: Language) -> SyntaxNode {
-    parse(source, language).syntax()
+    parsed(source, language).syntax()
+}
+
+/// The whole parse of `source`: the tree *and* what the parser could not make sense of.
+///
+/// A malformed case needs both. "The accessor reports absence rather than guessing"
+/// (ADR-0025) has two halves, and a test that reads only the tree proves one of them.
+pub(crate) fn parsed(source: &str, language: Language) -> Parse {
+    parse(source, language)
 }
