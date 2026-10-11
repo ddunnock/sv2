@@ -33,11 +33,34 @@ A large unimplemented count is the honest state of this crate, not a problem to 
 Three things, because absence is not the only way to be wrong:
 
 1. the parse still yields a tree — it always does, and the accessor sees a partial one;
-2. the accessor reports **absence** rather than guessing;
-3. the neighbouring accessors still answer.
+2. the accessor reports **absence** rather than guessing — and that something *reported*
+   it: read `Parse::errors()`, because absence nothing reported is absence guessed;
+3. the neighbouring accessors still answer. With one accessor in the crate there is no
+   neighbour, so this part is **vacant, not discharged** — say so in the test rather
+   than letting a `kind()` check stand in for it.
 
 Where the grammar admits one child and the tree carries two, the case pins **which** is
 chosen. `.claude/rules/tests.md` governs where expectations may come from; read it.
+
+A recovery outcome is not a spec rule. The specification says a package body closes with
+`}`; it says nothing about what this parser does when one does not. Cite the clause for
+the clause's claim and ADR-0022 plus the parser for the recovery, never the clause for
+both.
+
+### The case is named for its kind, and the gate reads the name
+
+`crates/sv2-ast/tests/malformed/<kind-in-kebab>-<condition>.sysml` (or `.kerml`).
+`RootNamespace` is proved by `root-namespace-unclosed-body.sysml`. The condition goes
+last so one kind can carry several cases, and so the filename says which accessor is on
+the hook.
+
+`scripts/ast_coverage.py` fails on an implemented kind with no case — the `unproved`
+state. The longest matching kind owns a file, because 180 kinds have a kebab form that
+prefixes another's: `package-body-unclosed.sysml` proves `PackageBody` and does **not**
+prove `Package`.
+
+The gate checks the case *exists*. It cannot check that it asserts the right things, so
+review does.
 
 ## What this crate does not do
 

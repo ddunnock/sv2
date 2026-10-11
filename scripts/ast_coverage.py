@@ -5,15 +5,28 @@
     implemented    a marker claims a kind                      -- counted
     unimplemented  a kind no marker claims                     -- legitimate
     absent         a marker claims a kind that does not exist  -- DEFECT
+    unproved       an implemented kind with no malformed case  -- DEFECT
 
 A claim is a ``// node: Kind`` marker in a file under ``crates/sv2-ast/``. The inventory
 is ``.claude/state/node-kinds.json``, written by the generator that owns the list.
 
     python3.12 scripts/ast_coverage.py           write the report
-    python3.12 scripts/ast_coverage.py --check   fail on any absent, or on a stale report
+    python3.12 scripts/ast_coverage.py --check   fail on absent, unproved, or staleness
 
 `unimplemented` is the honest state of a crate being built and is never a failure. A new
-crate reads 0 implemented and 464 unimplemented, which is the number, not a verdict.
+crate reads 0 implemented and 463 unimplemented, which is the number, not a verdict.
+
+`unproved` is what makes ADR-0025's central claim true rather than aspirational: "an
+accessor lands with all of them or it does not land". Three of the four kinds of evidence
+were already mechanical -- the sweep and the property tests run, the marker is counted.
+The malformed case was prose only, so an accessor could land without one and the gate
+stayed green. A kind is proved by at least one file named ``<kind-in-kebab>-*.sysml`` or
+``.kerml`` under ``crates/sv2-ast/tests/malformed/``; ``RootNamespace`` is proved by
+``root-namespace-unclosed-body.sysml``. The condition goes after the kind so one kind can
+carry several cases, and so the filename says which accessor is on the hook.
+
+This checks the case EXISTS, not that it asserts the right things. No gate can check that;
+review does.
 
 Network: none.
 """
@@ -32,11 +45,20 @@ ROOT = Path(__file__).resolve().parents[1]
 INVENTORY = Path(".claude/state/node-kinds.json")
 REPORT = Path(".claude/state/ast-coverage.json")
 SOURCE = Path("crates/sv2-ast")
+MALFORMED = Path("crates/sv2-ast/tests/malformed")
 REFERENCE = Path(".claude/state/grammar/reference.json")
 START = "RootNamespace"
 
 #: A claim. The kind name is a Rust identifier, so the pattern admits nothing else.
 MARKER = re.compile(r"//\s*node:\s*([A-Za-z_][A-Za-z0-9_]*)")
+
+#: Where one word ends and the next begins in a node kind. No kind in the inventory
+#: carries consecutive capitals, so a boundary is exactly a capital after another
+#: character.
+BOUNDARY = re.compile(r"(?<!^)(?=[A-Z])")
+
+#: The suffixes a malformed case may carry — the two languages, nothing else.
+CASE_SUFFIXES = ("sysml", "kerml")
 
 
 def declared(path: Path = INVENTORY) -> list[str]:
@@ -57,11 +79,61 @@ def claims(root: Path = SOURCE) -> dict[str, list[str]]:
     return found
 
 
+def kebab(kind: str) -> str:
+    """The filename stem a node kind's malformed cases carry.
+
+    ``RootNamespace`` -> ``root-namespace``.
+    """
+    return BOUNDARY.sub("-", kind).lower()
+
+
+def case_owner(filename: str, stems: dict[str, str]) -> str | None:
+    """The one kind a malformed case file belongs to, or None if it names no kind.
+
+    The LONGEST matching stem wins, and that is not a detail. 180 kinds in the inventory
+    have a kebab form that prefixes another's -- `package` prefixes `package-body`,
+    `type` prefixes `type-body`. Matching every prefix would let `package-body-unclosed`
+    prove `Package` as well as `PackageBody`, so `Package` could land with no case of its
+    own and the gate would stay green. That is the false green this check exists to stop,
+    so the file belongs to `PackageBody` and to nothing else.
+    """
+    stem = filename.rsplit(".", 1)[0]
+    best: str | None = None
+    for kind, candidate in stems.items():
+        if not stem.startswith(f"{candidate}-"):
+            continue
+        if best is None or len(candidate) > len(stems[best]):
+            best = kind
+    return best
+
+
+def malformed_cases(kinds: list[str], root: Path = MALFORMED) -> dict[str, list[str]]:
+    """Every kind with at least one malformed case, mapped to those files, name-sorted.
+
+    A case is ``<kind-in-kebab>-<condition>.sysml`` or ``.kerml``. The condition goes
+    last so one kind can carry several cases, and so the filename says which accessor is
+    on the hook. A file naming no kind in the inventory is not an error here: the gate
+    asks whether a kind has a case, never whether a file has a kind.
+    """
+    if not root.is_dir():
+        return {}
+    stems = {kind: kebab(kind) for kind in kinds}
+    found: dict[str, list[str]] = {}
+    for path in sorted(root.iterdir()):
+        if not path.is_file() or path.suffix.lstrip(".") not in CASE_SUFFIXES:
+            continue
+        owner = case_owner(path.name, stems)
+        if owner is not None:
+            found.setdefault(owner, []).append(path.name)
+    return found
+
+
 def build_report(
     declared_kinds: set[str] | list[str],
     implemented: list[str],
     unimplemented: list[str],
     absent: list[str],
+    unproved: list[str],
 ) -> dict[str, object]:
     """The report as it should be on disk for this inventory and these markers."""
     total = len(set(declared_kinds))
@@ -71,16 +143,20 @@ def build_report(
         "_note": (
             "Typed accessors over CST node kinds (ADR-0025). `unimplemented` is a tracked "
             "state, not a failure. `absent` is a defect: a marker claiming a kind that "
-            "does not exist. The order is the worklist order, never a verdict."
+            "does not exist. `unproved` is a defect: an implemented kind with no malformed "
+            "case under crates/sv2-ast/tests/malformed/. The order is the worklist order, "
+            "never a verdict."
         ),
         "declared": total,
         "implemented": len(implemented),
         "unimplemented": len(unimplemented),
         "absent": len(absent),
+        "unproved": len(unproved),
         "percent": round(percent, 1),
         "implemented_kinds": implemented,
         "unimplemented_kinds": unimplemented,
         "absent_markers": absent,
+        "unproved_kinds": unproved,
     }
 
 
@@ -161,24 +237,38 @@ def measure() -> dict[str, object]:
     implemented = [k for k in ordered if k in claimed]
     unimplemented = [k for k in ordered if k not in claimed]
     absent = sorted(k for k in claimed if k not in set(kinds))
-    return build_report(kinds, implemented, unimplemented, absent)
+    proved = malformed_cases(kinds)
+    unproved = [k for k in implemented if k not in proved]
+    return build_report(kinds, implemented, unimplemented, absent, unproved)
 
 
 def main(argv: list[str] | None = None) -> int:
     """Write the coverage report, or with --check fail on absent or staleness."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true", help="fail on absent or a stale report")
+    parser.add_argument(
+        "--check", action="store_true", help="fail on absent, unproved, or a stale report"
+    )
     args = parser.parse_args(argv)
     os.chdir(ROOT)
 
     report = measure()
     absent = report["absent_markers"]
+    unproved = report["unproved_kinds"]
     if args.check:
         if absent:
             print("markers claim node kinds that do not exist:")
             for kind in absent if isinstance(absent, list) else []:
                 print(f"  {kind}")
             print("A kind is added to the parser's NODES, then regenerated. `absent` is a defect.")
+            return 1
+        if unproved:
+            print("accessors with no malformed case (ADR-0025):")
+            for kind in unproved if isinstance(unproved, list) else []:
+                print(f"  {kind} — expected {MALFORMED}/{kebab(kind)}-<condition>.sysml")
+            print(
+                "An accessor lands with all four kinds of evidence or it does not land. "
+                "Write the case; do not widen this check."
+            )
             return 1
         if is_stale(report):
             print(f"{REPORT} is stale — run python3.12 scripts/ast_coverage.py")

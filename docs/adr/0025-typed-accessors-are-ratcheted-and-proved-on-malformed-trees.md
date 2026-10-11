@@ -96,9 +96,28 @@ nodes and tokens and the caller asks those for text. Nothing `pub` is named `tes
 | Evidence | Where | What it catches |
 |---|---|---|
 | Sweep of every tree the repository holds | `tests/sweep.rs` | panics, children that are not children, ranges outside the parent, answers that change between calls |
-| A named malformed case per accessor | `tests/malformed.rs`, data in `tests/malformed/` | a child absent, duplicated, or out of order — the conditions the corpora do not happen to contain |
+| A named malformed case per accessor | `tests/malformed.rs`, data in `tests/malformed/<kind-in-kebab>-<condition>.sysml` | a child absent, duplicated, or out of order — the conditions the corpora do not happen to contain |
 | Property tests over generated input | `tests/properties.rs` | truncation at a multi-byte boundary, nesting near `MAX_DEPTH`, inputs nobody thought to write |
 | Differential assertion | inside the two above | an accessor that is confidently **wrong**, which neither a panic check nor an absence check sees |
+
+"All of them or it does not land" is mechanical, not a promise. Three of the four were
+already checked by something: the sweep and the property tests run, and the `// node:`
+marker is counted. The malformed case was prose, so an accessor could land without one
+and the gate stayed green — which is the shape of failure this ADR exists to prevent, in
+the ADR itself. `scripts/ast_coverage.py` therefore reports a fourth state, `unproved`:
+an implemented kind with no malformed case, and a gate failure. The case is named for its
+kind so the check can find it, the longest matching kind owns a file (180 kinds have a
+kebab form prefixing another's, so `package-body-unclosed.sysml` proves `PackageBody` and
+not `Package`), and the condition goes last so one kind may carry several cases.
+
+The check asks whether the case exists. Whether it asserts the right things is a review
+question, and no gate will ever answer it.
+
+The differential assertion is **equality**, not containment. A subset check — every
+member the accessor yields is one of the node's children — reads like a differential and
+is not one: it passes an accessor that yields nothing, one that reverses the order, and
+one that silently filters a kind out. Measured on the first accessor, containment caught
+one of six plausible defects and equality caught five.
 
 The sweep reads the 311 corpus files *and* the 299 rejection files. Those rejection files
 are malformed by construction, so the hardest inputs for this layer are already in the

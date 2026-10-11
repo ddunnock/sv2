@@ -5,7 +5,16 @@ import json
 import pytest
 
 import ast_coverage
-from ast_coverage import build_report, claims, is_stale, layer_of, worklist
+from ast_coverage import (
+    build_report,
+    case_owner,
+    claims,
+    is_stale,
+    kebab,
+    layer_of,
+    malformed_cases,
+    worklist,
+)
 
 
 def _crate(tmp_path, **files):
@@ -35,27 +44,27 @@ def test_spacing_in_the_marker_does_not_matter(tmp_path):
 
 
 def test_a_kind_no_marker_claims_is_unimplemented():
-    report = build_report({"A", "B"}, ["A"], ["B"], [])
+    report = build_report({"A", "B"}, ["A"], ["B"], [], [])
     assert report["unimplemented"] == 1
     assert report["unimplemented_kinds"] == ["B"]
     assert report["absent"] == 0
 
 
 def test_a_marker_naming_no_kind_is_absent():
-    report = build_report({"A"}, [], ["A"], ["NotAKind"])
+    report = build_report({"A"}, [], ["A"], ["NotAKind"], [])
     assert report["absent"] == 1
     assert report["absent_markers"] == ["NotAKind"]
 
 
 def test_an_empty_crate_reports_every_kind_unimplemented():
-    report = build_report({"A", "B"}, [], ["A", "B"], [])
+    report = build_report({"A", "B"}, [], ["A", "B"], [], [])
     assert (report["implemented"], report["unimplemented"], report["percent"]) == (0, 2, 0.0)
 
 
 def test_a_report_matching_disk_is_not_stale(tmp_path, monkeypatch):
     path = tmp_path / "ast-coverage.json"
     monkeypatch.setattr(ast_coverage, "REPORT", path)
-    report = build_report({"A"}, [], ["A"], [])
+    report = build_report({"A"}, [], ["A"], [], [])
     path.write_text(json.dumps(report, indent=2) + "\n")
     assert not is_stale(report)
 
@@ -64,11 +73,11 @@ def test_a_report_matching_disk_is_not_stale(tmp_path, monkeypatch):
 def test_a_report_disagreeing_with_disk_is_stale(damage, tmp_path, monkeypatch):
     path = tmp_path / "ast-coverage.json"
     monkeypatch.setattr(ast_coverage, "REPORT", path)
-    report = build_report({"A"}, [], ["A"], [])
+    report = build_report({"A"}, [], ["A"], [], [])
     if damage == "truncated":
         path.write_text('{"implemented":')
     elif damage == "changed":
-        path.write_text(json.dumps(build_report({"A"}, ["A"], [], []), indent=2) + "\n")
+        path.write_text(json.dumps(build_report({"A"}, ["A"], [], [], []), indent=2) + "\n")
     assert is_stale(report)
 
 
@@ -140,3 +149,65 @@ def test_the_worklist_sorts_shallow_kinds_first():
 
 def test_a_kind_with_no_layer_keeps_declaration_order_among_its_peers():
     assert worklist(["Beta", "Alpha"], {}) == ["Beta", "Alpha"]
+
+
+def test_a_kind_becomes_its_kebab_stem():
+    assert kebab("RootNamespace") == "root-namespace"
+    assert kebab("Package") == "package"
+
+
+def test_a_case_belongs_to_the_longest_matching_kind():
+    """`Package` and `PackageBody` both exist, and `package` prefixes `package-body`.
+
+    A case for the longer kind must not prove the shorter one, or `Package` could land
+    with no case of its own while the gate stayed green.
+    """
+    stems = {kind: kebab(kind) for kind in ("Package", "PackageBody")}
+    assert case_owner("package-body-unclosed.sysml", stems) == "PackageBody"
+    assert case_owner("package-missing-brace.sysml", stems) == "Package"
+
+
+def test_a_case_naming_no_kind_belongs_to_nothing():
+    stems = {"Package": "package"}
+    assert case_owner("something-else-entirely.sysml", stems) is None
+
+
+def test_a_bare_kind_stem_with_no_condition_is_not_a_case():
+    """The condition is required: `-` after the stem is what makes the name say which."""
+    stems = {"Package": "package"}
+    assert case_owner("package.sysml", stems) is None
+
+
+def test_both_languages_carry_cases(tmp_path):
+    (tmp_path / "root-namespace-unclosed.sysml").write_text("")
+    (tmp_path / "package-body-unclosed.kerml").write_text("")
+    (tmp_path / "notes.md").write_text("not a case")
+    found = malformed_cases(["RootNamespace", "PackageBody"], tmp_path)
+    assert found == {
+        "RootNamespace": ["root-namespace-unclosed.sysml"],
+        "PackageBody": ["package-body-unclosed.kerml"],
+    }
+
+
+def test_several_cases_for_one_kind_all_count(tmp_path):
+    (tmp_path / "package-unclosed.sysml").write_text("")
+    (tmp_path / "package-duplicated.sysml").write_text("")
+    assert malformed_cases(["Package"], tmp_path) == {
+        "Package": ["package-duplicated.sysml", "package-unclosed.sysml"]
+    }
+
+
+def test_a_missing_malformed_directory_proves_nothing(tmp_path):
+    assert malformed_cases(["Package"], tmp_path / "absent") == {}
+
+
+def test_an_implemented_kind_with_no_case_is_unproved():
+    report = build_report({"A", "B"}, ["A"], ["B"], [], ["A"])
+    assert report["unproved"] == 1
+    assert report["unproved_kinds"] == ["A"]
+
+
+def test_an_unimplemented_kind_is_never_unproved():
+    """`unimplemented` is a tracked state; only a LANDED accessor owes a case."""
+    report = build_report({"A"}, [], ["A"], [], [])
+    assert report["unproved"] == 0
