@@ -36,3 +36,4 @@ silently is not.
 | [0022](0022-deviations-are-reported-and-strict-conformance-promotes-them.md) | Deviations are reported as diagnostics; strict conformance promotes them | accepted |
 | [0023](0023-a-production-no-grammar-reaches-leaves-the-coverage-count.md) | A production no grammar reaches is recorded as unreachable and leaves the coverage count | accepted |
 | [0024](0024-parser-performance-is-ratcheted.md) | Parser performance is measured by deterministic counters, ratcheted, and optimized in series | **proposed** |
+| [0025](0025-typed-accessors-are-ratcheted-and-proved-on-malformed-trees.md) | Typed accessors are ratcheted against the node-kind inventory and proved on malformed trees | **proposed** |
