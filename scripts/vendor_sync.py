@@ -19,7 +19,7 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from _lock import read_lock, read_target, write_hash
+from _lock import REVISION, LockError, read_lock, read_target, write_hash
 
 ROOT = Path(__file__).resolve().parents[1]
 UNPINNED = "UNPINNED"
@@ -44,7 +44,37 @@ def _resolve_url(entry: dict[str, str], pilot_sha: str) -> str | None:
         print("        tier_b_pilot.revision is UNSET in docs/conformance-target.toml.")
         print("        Set it to a full commit sha (never a branch) before syncing Tier B.")
         return None
+    # "a full commit sha (never a branch)" was advice in the message above; it is a check
+    # now. The value is substituted into the URL that gets fetched, so a branch name pins
+    # whatever it pointed at today, and a value carrying `?`, `#` or `..` reshapes the URL.
+    if not REVISION.fullmatch(pilot_sha):
+        print(f"  SKIP  {entry['path']}")
+        print("        tier_b_pilot.revision in docs/conformance-target.toml is not a full")
+        print("        commit sha: 40 lowercase hex digits, never a branch, never a tag.")
+        return None
     return url.replace("{PILOT_SHA}", pilot_sha)
+
+
+def _vendor_path(entry_path: str) -> Path:
+    """`entry_path` as a path inside vendor/, or a failure if it points outside it.
+
+    The lockfile is reviewed and machine-owned, so this has never had anything to catch.
+    It is here because the value is a path out of a data file and the sink is a write:
+    one entry reading `../.git/hooks/post-checkout` would otherwise be honoured.
+    """
+    path = (ROOT / entry_path).resolve()
+    vendor = (ROOT / "vendor").resolve()
+    if not path.is_relative_to(vendor):
+        message = f"lockfile path {entry_path} resolves outside vendor/"
+        raise ValueError(message)
+    return path
+
+
+def _is_current(path: Path, want: str) -> bool:
+    """Whether the file on disk is already the content `want` pins."""
+    if want == UNPINNED or not path.exists():
+        return False
+    return hashlib.sha256(path.read_bytes()).hexdigest() == want
 
 
 def _fetch(url: str) -> bytes:
@@ -56,10 +86,13 @@ def _fetch(url: str) -> bytes:
 
 
 def _store(entry_path: str, data: bytes, digest: str) -> None:
-    path = Path(entry_path)
+    # The pin goes in first. write_hash validates the digest and rewrites the lockfile
+    # atomically, so a digest it rejects leaves the working tree untouched; the reverse
+    # order would leave unpinned content on disk.
+    path = _vendor_path(entry_path)
+    write_hash(entry_path, digest=digest)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(data)
-    write_hash(entry_path, digest)
 
 
 def _apply(entry: dict[str, str], data: bytes, *, accept_new: bool, tally: Tally) -> None:
@@ -89,22 +122,21 @@ def _sync_entry(
     url = _resolve_url(entry, pilot_sha)
     if url is None:
         return
-    path = Path(entry["path"])
-    want = entry.get("sha256", UNPINNED)
-    if path.exists() and want != UNPINNED and hashlib.sha256(path.read_bytes()).hexdigest() == want:
-        tally.verified += 1
-        return
-    if dry_run:
-        print(f"  would fetch  {entry['path']}")
-        return
     try:
-        data = _fetch(url)
-    except (OSError, ValueError) as exc:
-        # One unreachable file must not stop the rest; the summary reports it.
+        path = _vendor_path(entry["path"])
+        if _is_current(path, entry.get("sha256", UNPINNED)):
+            tally.verified += 1
+            return
+        if dry_run:
+            print(f"  would fetch  {entry['path']}")
+            return
+        _apply(entry, _fetch(url), accept_new=accept_new, tally=tally)
+    except (OSError, ValueError, LockError) as exc:
+        # One unreachable file, or one pin that cannot be written, must not stop the rest.
+        # LockError means nothing was written at all, so the entry is simply not synced;
+        # the summary reports it either way.
         tally.failed.append((entry["path"], str(exc)))
         print(f"  FAIL  {entry['path']}: {exc}")
-        return
-    _apply(entry, data, accept_new=accept_new, tally=tally)
 
 
 def main(argv: list[str] | None = None) -> int:

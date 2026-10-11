@@ -26,6 +26,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from _derived import write_derived
+
 ROOT = Path(__file__).resolve().parents[1]
 PILOT = Path("vendor/pilot")
 OUT_DIR = Path(".claude/state/grammar")
@@ -261,7 +263,7 @@ def _check(artifacts: dict[str, dict[str, Any]], inv: Inventory) -> int:
 def _write(artifacts: dict[str, dict[str, Any]]) -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     for name, data in artifacts.items():
-        (OUT_DIR / name).write_text(_render(data))
+        write_derived(OUT_DIR / name, _render(data))
     kinds = artifacts["productions.json"]["counts"]
     tokens = artifacts["keywords.json"]["counts"]
     metaclasses = artifacts["metaclass-map.json"]["counts"]["metaclasses"]

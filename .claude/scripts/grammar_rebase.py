@@ -19,7 +19,7 @@ import os
 from typing import TYPE_CHECKING
 
 from _grammar import GRAMMAR, load_units
-from _state import REPO_ROOT, load_json
+from _state import REPO_ROOT, load_json, write_derived
 
 if TYPE_CHECKING:
     from _state import Json
@@ -61,7 +61,7 @@ def main(argv: list[str] | None = None) -> int:
         **{k: sorted(v) for k, v in groups.items()},
         "work": sorted(groups["changed"] + groups["new"]),
     }
-    (GRAMMAR / "rebase.json").write_text(json.dumps(report, indent=2) + "\n")
+    write_derived(GRAMMAR / "rebase.json", json.dumps(report, indent=2) + "\n")
 
     total = len(groups["unchanged"]) + len(groups["changed"]) + len(groups["new"])
     work = len(report["work"])

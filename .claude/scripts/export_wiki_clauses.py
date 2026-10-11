@@ -40,6 +40,7 @@ import sys
 from pathlib import Path
 
 from _grammar import defective_productions
+from _state import write_derived
 
 ROOT = Path(__file__).resolve().parents[2]
 INVENTORY = ROOT / ".claude/state/grammar/bnf-productions.json"
@@ -180,7 +181,7 @@ def main(argv: list[str] | None = None) -> int:
     export, absent = build(inventory, atoms)
 
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(export, indent=2, sort_keys=True) + "\n")
+    write_derived(out, json.dumps(export, indent=2, sort_keys=True) + "\n")
 
     print(f"wrote {out} ({len(export)} productions from {len(atoms)} clause atoms)")
     if absent:

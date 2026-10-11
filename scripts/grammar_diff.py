@@ -23,6 +23,8 @@ import os
 from pathlib import Path
 from typing import Any
 
+from _derived import write_derived
+
 ROOT = Path(__file__).resolve().parents[1]
 INVENTORY = Path(".claude/state/grammar/productions.json")
 SPEC_INVENTORY = Path(".claude/state/grammar/bnf-productions.json")
@@ -139,7 +141,7 @@ def main(argv: list[str] | None = None) -> int:
         "unreviewed": unreviewed,
     }
     REPORT.parent.mkdir(parents=True, exist_ok=True)
-    REPORT.write_text(json.dumps(report, indent=2) + "\n")
+    write_derived(REPORT, json.dumps(report, indent=2) + "\n")
     print(f"wrote {REPORT} ({len(unreviewed)} unreviewed)")
     return 0
 

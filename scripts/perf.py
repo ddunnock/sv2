@@ -50,6 +50,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from _derived import write_derived
 from corpus_sweep import ROOT, corpus_roots, model_files, rel
 
 BASELINE = ROOT / "tests" / "perf-baseline.json"
@@ -479,7 +480,7 @@ def load(path: Path, default: Doc) -> Doc:
 def save(path: Path, doc: Doc) -> None:
     """Write `doc` as stable, reviewable JSON."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(doc, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    write_derived(path, json.dumps(doc, indent=1, sort_keys=True) + "\n")
 
 
 def empty_ledger() -> Doc:

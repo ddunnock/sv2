@@ -17,7 +17,7 @@ import os
 from typing import TYPE_CHECKING
 
 from _grammar import GRAMMAR, load_units, render_ebnf, shadowed
-from _state import REPO_ROOT, load_json, pin_value, utc_now
+from _state import REPO_ROOT, load_json, pin_value, utc_now, write_derived
 
 if TYPE_CHECKING:
     from _state import Json
@@ -133,13 +133,16 @@ def freeze(body: dict[str, Json], digest: str, oracle: Json) -> None:
         **entry,
         "grammar": body,
     }
-    REFERENCE.write_text(json.dumps(reference, indent=2) + "\n")
+    write_derived(REFERENCE, json.dumps(reference, indent=2) + "\n")
 
     entries = json.loads(LEDGER.read_text())["entries"] if LEDGER.exists() else []
     entries.append(entry)
-    LEDGER.write_text(json.dumps({"_note": LEDGER_NOTE, "entries": entries}, indent=2) + "\n")
+    # Atomic, and the one here that matters most: this is a read-modify-write of an
+    # append-only ledger, so a truncating write loses every earlier entry.
+    write_derived(LEDGER, json.dumps({"_note": LEDGER_NOTE, "entries": entries}, indent=2) + "\n")
 
-    EBNF.write_text("\n".join(render_ebnf(n, b["rule"]) for n, b in sorted(body.items())) + "\n")
+    rendered = "\n".join(render_ebnf(n, b["rule"]) for n, b in sorted(body.items()))
+    write_derived(EBNF, rendered + "\n")
     print(f"frozen: {len(body)} productions, sha256 {digest[:16]}")
     print(
         "        reference.json, reference.ebnf (rendered, for review only),"

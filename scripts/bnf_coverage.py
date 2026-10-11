@@ -41,6 +41,8 @@ import os
 import re
 from pathlib import Path
 
+from _derived import write_derived
+
 ROOT = Path(__file__).resolve().parents[1]
 INVENTORY = Path(".claude/state/grammar/bnf-productions.json")
 XTEXT_INVENTORY = Path(".claude/state/grammar/productions.json")
@@ -263,7 +265,7 @@ def main(argv: list[str] | None = None) -> int:
         return _check(absent, report, live)
 
     REPORT.parent.mkdir(parents=True, exist_ok=True)
-    REPORT.write_text(json.dumps(report, indent=2) + "\n")
+    write_derived(REPORT, json.dumps(report, indent=2) + "\n")
     print(f"wrote {REPORT} ({len(implemented)}/{len(declared)} grammar units implemented)")
     if excluded:
         print(

@@ -41,6 +41,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from _state import write_derived
+
 ROOT = Path(__file__).resolve().parents[2]
 PILOT = Path("vendor/pilot")
 DEVIATIONS = Path(".claude/state/deviations.json")
@@ -333,7 +335,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     document["deviations"] = sorted(kept + entries, key=lambda d: d["production"])
-    DEVIATIONS.write_text(json.dumps(document, indent=2) + "\n")
+    write_derived(DEVIATIONS, json.dumps(document, indent=2) + "\n")
     print(f"wrote {DEVIATIONS} ({len(document['deviations'])} deviations)")
     return 0
 

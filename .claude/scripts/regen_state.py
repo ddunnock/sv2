@@ -18,13 +18,19 @@ import re
 import shutil
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from _state import REPO_ROOT, STATE, load_json, pin_value, utc_now
+from _state import REPO_ROOT, STATE, load_json, pin_value, utc_now, write_derived
 
 if TYPE_CHECKING:
     from _state import Json
+
+# What a pinned vendor entry's sha256 looks like. scripts/_lock.py owns this rule for the
+# tooling that writes it; the duplication is STD-001-PY §2 keeping the two script trees
+# from importing each other, the same reason write_derived exists twice.
+DIGEST = re.compile(r"[0-9a-f]{64}")
 
 PY = sys.executable
 GATES: dict[str, list[str]] = {
@@ -123,15 +129,22 @@ def tests() -> dict[str, int]:
 
 
 def pins() -> dict[str, Json]:
-    """The conformance pins and how much of the vendor set is hashed."""
+    """The conformance pins and how much of the vendor set is hashed.
+
+    The two counts come from the parsed lockfile, not from a regex over its text. A
+    single-quoted TOML string, an indented ``[[file]]``, uppercase hex, or a ``sha256``
+    inside a comment all mis-count a scan, and ``--check`` then asserts the wrong number
+    rather than reporting a wrong one (STD-001-PY §4.4).
+    """
     lock = Path("vendor/sources.lock.toml")
-    lock_text = lock.read_text() if lock.exists() else ""
+    entries = tomllib.loads(lock.read_text()).get("file", []) if lock.exists() else []
+    pinned = [e for e in entries if DIGEST.fullmatch(str(e.get("sha256", "")))]
     return {
         "omg_namespace": pin_value("tier_a_omg.namespace"),
         "pilot_revision": pin_value("tier_b_pilot.revision"),
         "pilot_bundle": pin_value("tier_b_pilot.bundle_version"),
-        "vendor_pinned": len(re.findall(r'sha256\s*=\s*"[0-9a-f]{64}"', lock_text)),
-        "vendor_total": len(re.findall(r"^\[\[file\]\]", lock_text, re.MULTILINE)),
+        "vendor_pinned": len(pinned),
+        "vendor_total": len(entries),
     }
 
 
@@ -186,7 +199,9 @@ def main(argv: list[str] | None = None) -> int:
 
     gate_results = gates()
     doc["generated"] = {"regenerated_utc": utc_now(), "gates": gate_results, **measured}
-    STATE.write_text(json.dumps(doc, indent=2) + "\n")
+    # Atomic: this is a read-modify-write, and doc carries the authored block, which is
+    # hand-written and cannot be regenerated. A truncating write loses it.
+    write_derived(STATE, json.dumps(doc, indent=2) + "\n")
     passing = sum(1 for v in gate_results.values() if v == "pass")
     print(f"state.json regenerated ({passing}/{len(gate_results)} gates passing)")
     return 0

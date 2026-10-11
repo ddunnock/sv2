@@ -9,6 +9,7 @@ from _grammar import (
     refs_of,
     render_ebnf,
     reserved_keywords,
+    unit_key,
     xtext_rule_text,
 )
 
@@ -142,3 +143,35 @@ def test_pinned_reserved_words_differ_between_the_languages():
         pytest.skip("bnf-productions.json not generated")
     assert {"at", "merge", "while"} <= sysml - kerml
     assert {"class", "feature", "type"} <= kerml - sysml
+
+
+@pytest.mark.parametrize(
+    ("unit", "expected"),
+    [
+        ({"production": "Feature"}, "Feature"),
+        ({"production": "Feature", "scope": None}, "Feature"),
+        ({"production": "Feature", "scope": "kerml"}, "Feature@kerml"),
+        ({"production": "_Private"}, "_Private"),
+    ],
+)
+def test_unit_key_names_the_unit(unit, expected):
+    assert unit_key(unit) == expected
+
+
+@pytest.mark.parametrize(
+    "unit",
+    [
+        {"production": "../../escape"},
+        {"production": "with/slash"},
+        {"production": "with space"},
+        {"production": ""},
+        {"production": "Feature", "scope": "../kerml"},
+        {"production": "Feature", "scope": "other"},
+        {"production": "Feature;rm -rf /"},
+        {"production": "Feature\nsecond"},
+    ],
+)
+def test_unit_key_refuses_a_key_that_is_not_an_identifier(unit):
+    # The key becomes a file name, a path in a context pack, and a command-line argument.
+    with pytest.raises(ValueError, match="not an identifier"):
+        unit_key(unit)

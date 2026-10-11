@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from _state import load_json
+from _state import load_json, write_derived
 
 if TYPE_CHECKING:
     from _earley import Productions, Symbol
@@ -144,6 +144,9 @@ def referable_productions(inventory: Json) -> list[str]:
 
 
 SCOPES = ("kerml", "sysml")
+#: The shape a unit key may take. It becomes a file name, a path in a context pack,
+#: and an argument on a command line, so it is an identifier and nothing else.
+_KEY = re.compile(rf"[A-Za-z_][A-Za-z0-9_]*(@({'|'.join(SCOPES)}))?")
 #: Which grammar reads a model file.
 SCOPE_OF_SUFFIX = {".kerml": "kerml", ".sysml": "sysml"}
 #: Pilot grammar files each scope's Xtext rules come from. SysML extends only the
@@ -158,9 +161,21 @@ _ASSIGNMENT = re.compile(r"\w+\s*(?:\+=|\?=|=)\s*")
 
 
 def unit_key(unit: Json) -> str:
-    """The identity of a unit: its production, qualified by scope for a variant."""
+    """The identity of a unit: its production, qualified by scope for a variant.
+
+    The key is checked against its shape here rather than at each place it is used,
+    because it is used as a file name (``save_unit``), as a path in a context pack, and
+    inside a command line (``grammar_next.py``). All three come from the ``production``
+    field of a derived document; a production name carrying ``/`` or ``..`` would write
+    outside the units directory. Every one of the 1,129 units today is a plain identifier,
+    so this has nothing to catch — it is here so that stays true by construction.
+    """
     scope = unit.get("scope")
-    return f"{unit['production']}@{scope}" if scope else str(unit["production"])
+    key = f"{unit['production']}@{scope}" if scope else str(unit["production"])
+    if not _KEY.fullmatch(key):
+        msg = f"unit key {key!r} is not an identifier, optionally @{' or @'.join(SCOPES)}"
+        raise ValueError(msg)
+    return key
 
 
 def load_units() -> dict[str, Json]:
@@ -185,7 +200,7 @@ def load_units() -> dict[str, Json]:
 def save_unit(unit: Json) -> None:
     """Write one unit to the file its own content names."""
     UNITS.mkdir(parents=True, exist_ok=True)
-    (UNITS / f"{unit_key(unit)}.json").write_text(json.dumps(unit, indent=2) + "\n")
+    write_derived(UNITS / f"{unit_key(unit)}.json", json.dumps(unit, indent=2) + "\n")
 
 
 def grammar_view(units: dict[str, Json], scope: str) -> dict[str, Json]:

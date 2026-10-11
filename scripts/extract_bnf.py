@@ -29,6 +29,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from _derived import write_derived
+
 ROOT = Path(__file__).resolve().parents[1]
 SPEC_BNF = Path("vendor/spec-bnf")
 OUT_DIR = Path(".claude/state/grammar")
@@ -158,7 +160,7 @@ def _check(artifact: dict[str, Any]) -> int:
 
 def _write(artifact: dict[str, Any]) -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    (OUT_DIR / ARTIFACT).write_text(_render(artifact))
+    write_derived(OUT_DIR / ARTIFACT, _render(artifact))
     counts = artifact["counts"]
     print(
         f"wrote grammar/{ARTIFACT}  {counts['total']} productions "

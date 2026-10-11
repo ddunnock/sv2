@@ -15,9 +15,27 @@ import re
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 CRATE = re.compile(r".*/crates/([^/]*)/.*")
 FINDING = re.compile(r"^(error|warning)")
+
+
+def edited_file(path: str) -> Path | None:
+    """``path`` as a Rust file inside this project, or None when it is not one.
+
+    The payload's ``file_path`` is the one genuinely external input this tooling reads, and
+    everything after ``cargo fmt --`` is rustfmt's own argv, so ending in ``.rs`` is not
+    enough to pass it on: ``--config-path=x.rs`` satisfies that test and would hand rustfmt
+    a configuration of someone else's choosing. Resolved, required to be a file, and
+    required to be inside the directory this hook just changed into.
+    """
+    if path.startswith("-"):
+        return None
+    resolved = Path(path).resolve()
+    if not resolved.is_relative_to(Path.cwd()) or not resolved.is_file():
+        return None
+    return resolved
 
 
 def format_file(path: str) -> None:
@@ -58,8 +76,11 @@ def main() -> int:
     except OSError:
         return 0
 
-    format_file(path)
-    scope, findings = clippy_findings(path)
+    rust = edited_file(path)
+    if rust is None:
+        return 0
+    format_file(str(rust))
+    scope, findings = clippy_findings(str(rust))
     if not findings:
         return 0
     context = (

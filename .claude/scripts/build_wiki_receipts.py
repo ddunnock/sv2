@@ -35,6 +35,8 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+from _state import write_derived
+
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = Path(".claude/state/wiki-receipts.json")
 GENERATED_BY = ".claude/scripts/build_wiki_receipts.py"
@@ -145,7 +147,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     MANIFEST.parent.mkdir(parents=True, exist_ok=True)
-    MANIFEST.write_text(_render(manifest))
+    write_derived(MANIFEST, _render(manifest))
     counts = manifest["counts"]
     print(
         f"wrote {MANIFEST} ({counts['total']} atoms: "

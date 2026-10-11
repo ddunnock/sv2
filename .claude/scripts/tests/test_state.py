@@ -2,8 +2,8 @@
 # Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 import pytest
 
-from _state import pin_value
-from regen_state import is_stale
+from _state import pin_value, write_derived
+from regen_state import is_stale, pins
 
 TARGET = """[corpus]
 revision = "corpus-rev"   # an earlier table sharing the key name
@@ -58,3 +58,72 @@ def test_a_measurement_that_moved_is_stale(key):
 
 def test_a_measurement_that_went_missing_is_stale():
     assert is_stale({k: v for k, v in BLOCK.items() if k != "pins"}, BLOCK)
+
+
+def test_write_derived_replaces_the_file(tmp_path):
+    target = tmp_path / "state.json"
+    target.write_text("stale, and longer than what replaces it\n")
+    write_derived(target, "fresh\n")
+    assert target.read_text() == "fresh\n"
+
+
+def test_write_derived_leaves_no_scratch_file(tmp_path):
+    write_derived(tmp_path / "state.json", "x\n")
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["state.json"]
+
+
+def test_write_derived_writes_utf8_whatever_the_locale(tmp_path):
+    target = tmp_path / "state.json"
+    write_derived(target, "… ≠ ✓\n")
+    assert target.read_bytes() == "… ≠ ✓\n".encode()
+
+
+LOCK = """# a comment mentioning sha256 = "0000000000000000000000000000000000000000"
+[[file]]
+path = "vendor/a.xmi"
+sha256 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+[[file]]
+path = "vendor/b.xmi"
+sha256 = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+  [[file]]
+  path = "vendor/c.xmi"
+  sha256 = "UNPINNED"
+
+[[file]]
+path = "vendor/d.xmi"
+sha256 = "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+"""
+
+
+@pytest.fixture
+def pinned(tmp_path, monkeypatch):
+    """A workspace with a lockfile whose shape defeats a regex scan."""
+    (tmp_path / "vendor").mkdir()
+    (tmp_path / "vendor" / "sources.lock.toml").write_text(LOCK)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "conformance-target.toml").write_text(TARGET)
+    monkeypatch.chdir(tmp_path)
+
+
+@pytest.mark.usefixtures("pinned")
+def test_pins_count_every_file_entry_however_it_is_written():
+    # Four entries: one of them indented, which an ^-anchored scan of [[file]] missed.
+    assert pins()["vendor_total"] == 4
+
+
+@pytest.mark.usefixtures("pinned")
+def test_pins_count_a_single_quoted_digest_as_pinned():
+    # Two are real digests, one single-quoted; UNPINNED and the uppercase one are not.
+    assert pins()["vendor_pinned"] == 2
+
+
+@pytest.mark.usefixtures("pinned")
+def test_pins_do_not_count_a_digest_inside_a_comment():
+    assert pins()["vendor_pinned"] < pins()["vendor_total"]
+
+
+@pytest.mark.usefixtures("pinned")
+def test_pins_read_the_conformance_target_table_qualified():
+    assert pins()["pilot_revision"] == "0123abc"

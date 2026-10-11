@@ -19,7 +19,7 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from _state import REPO_ROOT
+from _state import REPO_ROOT, write_derived
 
 if TYPE_CHECKING:
     from _state import Json
@@ -37,6 +37,18 @@ CLOSED_STATUSES = frozenset({"accepted", "superseded", "rejected"})
 KNOWN_STATUSES = OPEN_STATUSES | CLOSED_STATUSES
 
 
+def _unquote(value: str) -> str:
+    """``value`` with one matching pair of surrounding quotes removed.
+
+    ``strip('"')`` removes every quote at both ends, which is lossy for a title that
+    legitimately ends in one.
+    """
+    for quote in ('"', "'"):
+        if value[:1] == quote and value[-1:] == quote and value != quote:
+            return value[1:-1]
+    return value
+
+
 def frontmatter(text: str) -> dict[str, str]:
     """Flat ``key: value`` pairs from a leading frontmatter block."""
     m = FRONTMATTER.match(text)
@@ -46,7 +58,7 @@ def frontmatter(text: str) -> dict[str, str]:
     for line in m.group(1).splitlines():
         if ":" in line:
             key, value = line.split(":", 1)
-            fields[key.strip()] = value.strip().strip('"')
+            fields[key.strip()] = _unquote(value.strip())
     return fields
 
 
@@ -182,7 +194,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"decisions index current ({summary})")
         return 0
     INDEX.parent.mkdir(parents=True, exist_ok=True)
-    INDEX.write_text(text)
+    write_derived(INDEX, text)
     print(f"wrote {INDEX} ({summary})")
     return 0
 

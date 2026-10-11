@@ -24,6 +24,8 @@ import os
 import re
 from pathlib import Path
 
+from _derived import write_derived
+
 ROOT = Path(__file__).resolve().parents[1]
 TOKENS = Path(".claude/state/grammar/keywords.json")
 BNF = Path(".claude/state/grammar/bnf-productions.json")
@@ -2391,8 +2393,19 @@ def _operator_entries(operators: list[str]) -> list[str]:
 
 
 def _reserved_entries(words: list[str]) -> list[str]:
-    """One reserved-word table's rows."""
-    return [f'    "{word}",' for word in words]
+    """One reserved-word table's rows.
+
+    Escaped the same way `_operator_entries` escapes, for the same reason: the row is a
+    Rust string literal, and a word carrying a quote or a backslash would close it. The
+    `missing` check below rejects any reserved word that is not also a `WORD`-shaped
+    keyword, so nothing reaches here that needs it today — but the escape is the contract
+    and the check is the guard, not the other way round.
+    """
+    rows = []
+    for word in words:
+        escaped = word.replace("\\", "\\\\").replace('"', '\\"')
+        rows.append(f'    "{escaped}",')
+    return rows
 
 
 #: (scope, constant, language, clause, file suffix) of each reserved-word table.
@@ -2492,7 +2505,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(text)
+    write_derived(OUT, text)
     print(f"wrote {OUT}")
     return 0
 

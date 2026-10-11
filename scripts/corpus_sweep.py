@@ -30,6 +30,8 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+from _derived import write_derived
+
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = ROOT / "tests" / "corpus-accepted.txt"
 NEGATIVE = ROOT / "tests" / "rejection"
@@ -128,10 +130,24 @@ def read_ledger() -> set[str]:
 
 
 def write_ledger(accepted: set[str]) -> None:
-    """Rewrite the ledger with `accepted`, sorted, one path per line."""
+    """Rewrite the ledger with `accepted`, sorted, one path per line.
+
+    The format is one path per line and `#` starts a comment, so a path carrying a newline
+    or beginning with `#` would be written and then read back as something else — and
+    `read_ledger` dropping it reads as a file that stopped being accepted, which is how
+    this gate reports a regression. Both are legal file names, so the writer refuses them
+    rather than the format silently losing them.
+    """
+    unrepresentable = sorted(p for p in accepted if "\n" in p or "\r" in p or p.startswith("#"))
+    if unrepresentable:
+        named = ", ".join(repr(p) for p in unrepresentable[:5])
+        message = f"{len(unrepresentable)} corpus paths cannot be written one per line: {named}"
+        raise ValueError(message)
     body = "".join(f"{path}\n" for path in sorted(accepted))
     LEDGER.parent.mkdir(parents=True, exist_ok=True)
-    LEDGER.write_text(LEDGER_HEADER + body, encoding="utf-8")
+    # Atomic: the ledger's invariant is that it may grow and must never shrink, and a
+    # truncated one reads as a shorter acceptance set, which is exactly a silent regression.
+    write_derived(LEDGER, LEDGER_HEADER + body)
 
 
 def tally(files: list[Path], accepted: set[str], suffix: str) -> Tally:
@@ -272,7 +288,13 @@ def main(argv: list[str] | None = None) -> int:
     accepted = {rel(path) for path in files if accepts(binary, path)}
 
     if args.record:
-        write_ledger(accepted)
+        try:
+            write_ledger(accepted)
+        except ValueError as exc:
+            # A failure is a diagnostic and an exit code (STD-001-PY §7.1), not a traceback.
+            print(f"ledger not written: {exc}")
+            print("Rename the files so each path fits one line and does not open with '#'.")
+            return 1
         print(f"recorded {len(accepted)} accepted of {len(files)} corpus files")
         return 0
 

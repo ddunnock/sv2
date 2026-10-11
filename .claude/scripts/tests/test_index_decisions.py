@@ -191,3 +191,19 @@ def test_a_correct_link_is_not_a_problem(monkeypatch, tmp_path):
     (adrs / "0013-rust-cst.md").write_text("# 13")
     (adrs / "0017-sidecar.md").write_text("see [ADR-0013](0013-rust-cst.md)")
     assert link_problems() == []
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ('"quoted"', "quoted"),
+        ("'quoted'", "quoted"),
+        ("bare", "bare"),
+        ('"a title ending in a quote ""', 'a title ending in a quote "'),
+        ('"', '"'),
+        ("", ""),
+        ('"unbalanced', '"unbalanced'),
+    ],
+)
+def test_unquote_removes_one_matching_pair(value, expected):
+    assert index_decisions._unquote(value) == expected

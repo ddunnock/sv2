@@ -31,13 +31,26 @@ make this pass. If you cannot resolve it, say so and stop; do not work around it
 """
 
 
+def _is_derived(path: Path) -> bool:
+    """Whether the unit at ``path`` records status "derived".
+
+    Read from the parsed document, not as a substring of the text. A substring over-counts
+    when the literal turns up in a nested field, and under-counts if the writer's spacing
+    ever changes — and the under-count is the direction that matters, because it lets a
+    turn end on the unfinished derivation this check exists to catch.
+    """
+    try:
+        return bool(json.loads(path.read_text()).get("status") == "derived")
+    except (OSError, ValueError):
+        # A unit that cannot be read or parsed is not evidence of a half-derived rule;
+        # grammar_validate.py is what reports a malformed unit, and it is a gate.
+        return False
+
+
 def half_derived_units() -> int:
     """Units whose rule is written but has not passed its acceptance checks."""
-    return sum(
-        1
-        for p in Path(".claude/state/grammar/units").glob("*.json")
-        if '"status": "derived"' in p.read_text(errors="replace")
-    )
+    units = Path(".claude/state/grammar/units").glob("*.json")
+    return sum(1 for p in units if _is_derived(p))
 
 
 def block(reason: str) -> int:

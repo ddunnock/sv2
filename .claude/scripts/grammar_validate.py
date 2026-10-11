@@ -39,7 +39,7 @@ from _grammar import (
     pinned_tokens,
     reserved_keywords,
 )
-from _state import REPO_ROOT
+from _state import REPO_ROOT, write_derived
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -148,7 +148,7 @@ def main(argv: list[str] | None = None) -> int:
         "missed_detail": missed[:40],
         "leaked_detail": leaked[:40],
     }
-    (GRAMMAR / "validation.json").write_text(json.dumps(report, indent=2) + "\n")
+    write_derived(GRAMMAR / "validation.json", json.dumps(report, indent=2) + "\n")
     print(
         f"oracle: {len(accepted)} accepted / {len(missed)} missed | "
         f"{len(caught)} caught / {len(leaked)} leaked"

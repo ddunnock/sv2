@@ -25,6 +25,26 @@ def load_json(path: str | Path, default: Json = None) -> Json:
     return json.loads(p.read_text()) if p.exists() else default
 
 
+def write_derived(path: str | Path, text: str) -> None:
+    """Replace ``path`` with ``text`` in one step, through a scratch file beside it.
+
+    A plain write truncates first, so an interrupted one leaves a derived file empty or
+    half written and the next reader cannot tell that from a real result. It matters most
+    where the file cannot be regenerated: ``state.json`` carries a hand-written block, and
+    the frozen-grammar ledger is append-only. ``Path.replace`` is atomic within a
+    filesystem, which is why the scratch file is a sibling rather than a file in /tmp.
+
+    The sibling is also why this exists twice, once here and once as
+    ``scripts/_derived.py``: STD-001-PY §2 keeps the two script trees from sharing code.
+    The encoding is named rather than left to the locale, because the gate compares these
+    files byte for byte, on two machines.
+    """
+    target = Path(path)
+    scratch = target.with_name(f"{target.name}.new")
+    scratch.write_text(text, encoding="utf-8")
+    scratch.replace(target)
+
+
 def utc_now() -> str:
     """The current time as the ISO-8601 UTC stamp every state file uses."""
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")

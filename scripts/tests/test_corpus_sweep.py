@@ -210,3 +210,32 @@ def test_provenance_fails_a_declaration_the_parser_contradicts_with_silence(reje
     )
     monkeypatch.setattr(corpus_sweep, "first_diagnostic", lambda *_: None)
     assert corpus_sweep.check_provenance(Path("sv2")) == 1
+
+
+@pytest.mark.usefixtures("corpus")
+def test_write_ledger_records_one_path_per_line():
+    corpus_sweep.write_ledger({"b.sysml", "a.kerml"})
+    body = corpus_sweep.LEDGER.read_text().splitlines()
+    assert [line for line in body if not line.startswith("#")] == ["a.kerml", "b.sysml"]
+
+
+@pytest.mark.usefixtures("corpus")
+def test_write_ledger_leaves_no_scratch_file():
+    corpus_sweep.write_ledger({"a.kerml"})
+    assert not corpus_sweep.LEDGER.with_name(corpus_sweep.LEDGER.name + ".new").exists()
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "# commented-out.sysml",
+        "two\nlines.sysml",
+        "carriage\rreturn.sysml",
+    ],
+)
+@pytest.mark.usefixtures("corpus")
+def test_write_ledger_refuses_a_path_the_format_cannot_hold(path):
+    # read_ledger drops a blank line, a comment, and the tail of a split line, and a
+    # dropped path reads as a file that stopped being accepted — a silent regression.
+    with pytest.raises(ValueError, match="cannot be written one per line"):
+        corpus_sweep.write_ledger({"fine.sysml", path})
