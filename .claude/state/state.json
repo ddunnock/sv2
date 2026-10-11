@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated": {
-    "regenerated_utc": "2026-10-05T23:18:37Z",
+    "regenerated_utc": "2026-10-11T17:30:35Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -24,7 +24,7 @@
       "percent": 100.0
     },
     "tests": {
-      "unit": 753,
+      "unit": 757,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -38,14 +38,14 @@
       "vendor_total": 332
     },
     "commits": [
-      "c390cfd Hold the meaningful-token indices as u32",
-      "5709ef0 Narrow a token's offsets to u32",
-      "47b9e6a Size the meaningful-token indices exactly",
-      "bfb7f64 Open optimization series buffer-trims (roadmap Phase 6)",
-      "54a9214 Record in the handoff that main is pushed",
-      "6790d86 Close series keyword-lookahead: net -15.5% peeked",
-      "2c578fc Ask one token about a group of keywords in one look",
-      "0662506 Open optimization series keyword-lookahead"
+      "aa39d82 Give sv2-ast its own rules and an add-accessor skill",
+      "acd8c56 Make owns-no-data and no-scaffolding gate failures",
+      "6dcbd9a Order the accessor worklist root downward, advisory only",
+      "1f3d493 Correct the node-kind count: 463 authored, not 464",
+      "a461aac Count typed accessors against the node-kind inventory",
+      "2e9547e Emit the node-kind inventory from the generator that owns the list",
+      "9a8f033 Ignore the subagent-driven-development workspace",
+      "0300de2 Plan the sv2-ast harness: 8 tasks, 54 steps"
     ]
   },
   "authored": {

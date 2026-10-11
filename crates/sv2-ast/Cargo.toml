@@ -7,6 +7,10 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+sv2-syntax = { workspace = true }
+
+[target.'cfg(not(target_os = "wasi"))'.dev-dependencies]
+proptest = { workspace = true }
 
 [lints]
 workspace = true
