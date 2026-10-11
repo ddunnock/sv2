@@ -42,25 +42,62 @@ Three things, because absence is not the only way to be wrong:
 Where the grammar admits one child and the tree carries two, the case pins **which** is
 chosen. `.claude/rules/tests.md` governs where expectations may come from; read it.
 
-A recovery outcome is not a spec rule. The specification says a package body closes with
-`}`; it says nothing about what this parser does when one does not. Cite the clause for
-the clause's claim and ADR-0022 plus the parser for the recovery, never the clause for
-both.
+A recovery outcome is not a spec rule, and it is usually not an ADR either. The
+specification says a package body closes with `}`; it says nothing about what this parser
+does when one does not. For a recovery outcome the source is **the parser** — name the
+function and the file. ADR-0004 supports only the shape (an error node is just another
+node, so a partial tree survives), never a particular outcome.
 
-### The case is named for its kind, and the gate reads the name
+Do not reach for ADR-0022. It is about deviation diagnostics and strict conformance and
+says nothing about recovery; `crates/sv2-syntax/src/parser/recovery.rs` mentions both in
+one sentence, which is where that mistake comes from. It has been made twice here.
 
-`crates/sv2-ast/tests/malformed/<kind-in-kebab>-<condition>.sysml` (or `.kerml`).
-`RootNamespace` is proved by `root-namespace-unclosed-body.sysml`. The condition goes
-last so one kind can carry several cases, and so the filename says which accessor is on
-the hook.
+### The case is a directory named for its kind
 
-`scripts/ast_coverage.py` fails on an implemented kind with no case — the `unproved`
-state. The longest matching kind owns a file, because 180 kinds have a kebab form that
-prefixes another's: `package-body-unclosed.sysml` proves `PackageBody` and does **not**
-prove `Package`.
+`crates/sv2-ast/tests/malformed/<kind-in-kebab>/<condition>.sysml` (or `.kerml`).
+`RootNamespace` is proved by `root-namespace/unclosed-body.sysml`.
 
-The gate checks the case *exists*. It cannot check that it asserts the right things, so
-review does.
+The kind is the directory, not a filename prefix, because a filename cannot carry both
+unambiguously: `-` separates the words inside a kebab kind *and* would separate kind from
+condition, and 91 kinds have a kebab form that prefixes another's. `package-body-missing`
+reads equally as `Package` + "body missing" and as `PackageBody` + "missing", and no rule
+can tell them apart. A directory keeps the two in separate namespaces.
+
+`scripts/ast_coverage.py` fails on an implemented kind with no non-empty case (`unproved`)
+and on a case that names no kind (`stray`) — a misspelled directory, or a file left at the
+top level, which would otherwise stop counting in silence.
+
+The gate checks the case *exists* and is not empty. It cannot check that it asserts the
+right things, so review does.
+
+## The sweep is where an accessor is actually exercised
+
+`tests/sweep.rs` walks every tree in the repository — 311 corpus files and 299 rejection
+files. An accessor that is not called from there is not swept at all, and the suite stays
+green because it has nothing to check, which is the failure ADR-0025 exists to prevent.
+Adding the accessor without adding its sweep assertions is the easiest way to get a green
+gate that proves nothing, and **no check catches it**: `sweep()` names each accessor's
+assertion function explicitly.
+
+Each kind gets an `assert_<kind>_accessor` asserting:
+
+- the cast contract — `cast` succeeds exactly when `kind()` matches, and `syntax()` hands
+  back the node it was cast from;
+- the differential — re-derive the same fact by walking the tree directly, then assert
+  **equality**, not containment.
+
+Equality, because a subset check reads like a differential and is not one. Measured on the
+first accessor against six plausible `members()` defects, `children.contains(member)`
+caught one and equality caught all six: containment passes an accessor that returns
+nothing, one that reverses the order, and one that silently filters a kind out.
+
+An accessor that legitimately filters — most will, being a view of one child — filters in
+the re-derivation too, with a comment saying why. That is the point: the equality forces
+the decision to be written down instead of made by accident. What is never acceptable is
+relaxing equality to containment to make a filtering accessor pass.
+
+Then mutate the accessor and watch the sweep go red before you trust it. An assertion
+nobody has seen fail is a guess.
 
 ## What this crate does not do
 

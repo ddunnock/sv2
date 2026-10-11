@@ -7,13 +7,20 @@ mod trees;
 use sv2_ast::{AstNode, RootNamespace};
 use sv2_syntax::{Language, SyntaxKind};
 
-const UNCLOSED_BODY: &str = include_str!("malformed/root-namespace-unclosed-body.sysml");
+const UNCLOSED_BODY: &str = include_str!("malformed/root-namespace/unclosed-body.sysml");
 
-/// `root-namespace-unclosed-body.sysml`: the first package's body is never closed, so
+/// `root-namespace/unclosed-body.sysml`: the first package's body is never closed, so
 /// the parser's recovery reads to end of file, and the second `package` becomes one of
-/// the first package's OWN members rather than a sibling of it at the root
-/// (ADR-0022; `crates/sv2-syntax/src/parser/namespace.rs`). Of the three things a
-/// malformed case must prove (`.claude/rules/ast.md`):
+/// the first package's OWN members rather than a sibling of it at the root.
+///
+/// The source for that outcome is the parser, and only the parser: `body_elements` in
+/// `crates/sv2-syntax/src/parser/namespace.rs` loops `while !self.at_end() && !at(until)`,
+/// so a body whose terminator never arrives consumes the rest of the file. No ADR states
+/// it and no clause states it — the specification says a package body closes with `}`
+/// and stops there. What ADR-0004 supports is the shape, not the outcome: an error node
+/// is just another node, so recovery keeps the partial tree instead of discarding it.
+///
+/// Of the three things a malformed case must prove (`.claude/rules/ast.md`):
 ///
 /// 1. the parse still yields a tree — asserted;
 /// 2. the accessor reports absence rather than guessing — asserted in both halves:

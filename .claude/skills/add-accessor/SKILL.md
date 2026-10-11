@@ -45,12 +45,12 @@ Both of them, before the accessor exists:
 
 - the positive case, reading the real file found in step 2 — or, for a universal kind,
   the sweep assertions of step 4;
-- the malformed case in `tests/malformed/<kind-in-kebab>-<condition>.sysml`, named for
-  its kind **and** its condition (`root-namespace-unclosed-body.sysml`), with a header
-  comment saying what it violates — and asserting all three parts. `.claude/rules/ast.md`
-  states what the three are and when part 3 is legitimately vacant. The name is not a
-  preference: `scripts/ast_coverage.py` reads it, and an implemented kind with no
-  matching file fails the gate.
+- the malformed case at `tests/malformed/<kind-in-kebab>/<condition>.sysml` — the kind
+  names the DIRECTORY, the condition names the file (`root-namespace/unclosed-body.sysml`),
+  with a header comment saying what it violates — and asserting all three parts.
+  `.claude/rules/ast.md` states what the three are and when part 3 is legitimately vacant.
+  The layout is not a preference: `scripts/ast_coverage.py` reads it, and an implemented
+  kind with no non-empty case there fails the gate, as does a case that names no kind.
 
 Run them. They must fail for the right reason.
 
@@ -66,8 +66,11 @@ learn what recovery actually did. That is reading the *parser's* behaviour to fi
 what to pin, which is legitimate. What is forbidden is reading your *new accessor's*
 output and calling it the expectation — that proves only that the code does what it does.
 
-Then write the case citing ADR-0022 and the parser for the recovery outcome, and the
-clause only for what the clause actually says. Never cite a clause for a recovery choice.
+Then write the case citing **the parser** for the recovery outcome — the function and the
+file — and the clause only for what the clause actually says. A recovery outcome has no
+clause and usually no ADR; ADR-0004 supports only the shape, that an error node is just
+another node. Never cite a clause for a recovery choice, and never cite ADR-0022, which is
+about deviation diagnostics and says nothing about recovery.
 
 ## 4. Implement, and give the sweep teeth
 

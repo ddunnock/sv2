@@ -27,17 +27,34 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = Path("crates/sv2-ast/src")
 
-STRUCT = re.compile(r"pub struct\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{(.*?)\n\}", re.DOTALL)
+#: A braced struct, generics and a `where` clause included. `[^{;(]*` swallows `<'a, T>`
+#: and `where T: Clone` and stops at the body.
+STRUCT = re.compile(r"pub struct\s+([A-Za-z_][A-Za-z0-9_]*)[^{;(]*\{(.*?)\n\}", re.DOTALL)
 #: The idiomatic rowan shape, `pub struct Part(SyntaxNode);`. Without this the checker
-#: would read no accessor in the crate and pass every one of them.
-TUPLE_STRUCT = re.compile(r"pub struct\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*;")
+#: would read no accessor in the crate and pass every one of them. The field list is
+#: matched greedily to the last `)` so a nested paren -- `(pub Vec<(String, u32)>)` --
+#: does not end it early.
+TUPLE_STRUCT = re.compile(
+    r"pub struct\s+([A-Za-z_][A-Za-z0-9_]*)[^;({]*\((.*)\)\s*(?:where[^;]*)?;"
+)
+#: Any public struct at all. A header neither pattern above can read is exempt from every
+#: rule in this file, not merely unchecked for owned text -- a generic struct used to pass
+#: with three fields, an owned `String` and no marker, in silence. This is the backstop:
+#: a shape the checker cannot parse is reported rather than waved through.
+ANY_STRUCT = re.compile(r"pub struct\s+([A-Za-z_][A-Za-z0-9_]*)")
 FIELD = re.compile(r"^\s*(?:pub\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*:\s*([^,\n]+)", re.MULTILINE)
 PUB_FN_STRING = re.compile(r"pub fn\s+[A-Za-z_][A-Za-z0-9_]*\s*\([^)]*\)\s*->\s*String")
 PUB_ITEM = re.compile(r"pub (?:fn|struct|enum|trait|const|static)\s+([A-Za-z_][A-Za-z0-9_]*)")
-CFG_TEST_PUB = re.compile(r"#\[cfg\(test\)\]\s*\n\s*pub\s")
+CFG_TEST_PUB = re.compile(r"#\[cfg\((?:any\([^)]*)?[^)]*\btest\b[^)]*\)*\)\]\s*\n?\s*pub\s")
 MARKER = re.compile(r"//\s*node:\s*([A-Za-z_][A-Za-z0-9_]*)")
+#: The reasoned exemption for a public type that is not a node view -- a named iterator,
+#: say. Without it such a type deadlocks: the marker rule demands `// node: Members`, and
+#: that marker then makes `Members` an `absent` kind in ast_coverage.py. Red either way.
+NOT_A_NODE = re.compile(r"//\s*not-a-node:\s*\S")
 SCAFFOLD = ("test_", "dump_", "debug_", "fixture_")
-OWNED_TEXT = ("String", "Box<str>", "Vec<String>", "Cow<")
+OWNED_TEXT = ("String", "Box<str>", "Vec<String>", "Cow<", "Arc<str>", "Rc<str>")
+#: How far above a declaration its marker may sit: doc comments and attributes intervene.
+MARKER_LOOKBEHIND = 12
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,15 +84,74 @@ def _declared_types(text: str) -> list[tuple[str, str, list[tuple[str, str]], in
         for match in STRUCT.finditer(text)
     ]
     for match in TUPLE_STRUCT.finditer(text):
-        parts = [p.strip() for p in match.group(2).split(",") if p.strip()]
+        parts = _split_fields(match.group(2))
         fields = [(str(index), part) for index, part in enumerate(parts)]
         found.append((match.group(1), match.group(2), fields, match.start()))
     return found
 
 
+def _split_fields(body: str) -> list[str]:
+    """`body` split on top-level commas only.
+
+    A plain `split(",")` reads `Vec<(String, u32)>` as two fields and reports a one-field
+    tuple struct as holding two, which sends the reader looking for a field that is not
+    there.
+    """
+    parts: list[str] = []
+    depth = 0
+    current = ""
+    for char in body:
+        if char in "<([{":
+            depth += 1
+        elif char in ">)]}":
+            depth -= 1
+        if char == "," and depth == 0:
+            parts.append(current)
+            current = ""
+            continue
+        current += char
+    parts.append(current)
+    return [part.strip() for part in parts if part.strip()]
+
+
+def _in_comment(text: str, offset: int) -> bool:
+    """Whether `offset` sits on a line whose code is commented out.
+
+    The owned-text rules describe themselves in prose, and a doc comment saying "never
+    `pub fn name(&self) -> String`" is documentation, not a leak.
+    """
+    line_start = text.rfind("\n", 0, offset) + 1
+    return text[line_start:offset].lstrip().startswith("//")
+
+
+def _preamble(text: str, start: int) -> str:
+    """The few lines above `start`, where a declaration's markers and attributes sit."""
+    lines = text[:start].splitlines()
+    return "\n".join(lines[-MARKER_LOOKBEHIND:])
+
+
+def _unreadable_structs(text: str, path: str) -> list[Finding]:
+    """Every `pub struct` whose header neither STRUCT nor TUPLE_STRUCT could read.
+
+    Reported rather than skipped. A shape the checker cannot see is exempt from all three
+    rules, which is worse than no rule at all: it looks checked.
+    """
+    readable = {match.start() for match in STRUCT.finditer(text)}
+    readable |= {match.start() for match in TUPLE_STRUCT.finditer(text)}
+    return [
+        Finding(
+            path,
+            _line(text, match.start()),
+            f"`{match.group(1)}` has a shape this checker cannot read, so none of its "
+            f"rules applied; simplify the declaration or teach check_ast_leaks.py",
+        )
+        for match in ANY_STRUCT.finditer(text)
+        if match.start() not in readable
+    ]
+
+
 def _struct_findings(text: str, path: str) -> list[Finding]:
-    found: list[Finding] = []
-    claimed = set(MARKER.findall(text))
+    found: list[Finding] = _unreadable_structs(text, path)
     for name, body, fields, start in _declared_types(text):
         body_at = text.index(body, start) if body else start
         for field_name, field_type in fields:
@@ -98,12 +174,15 @@ def _struct_findings(text: str, path: str) -> list[Finding]:
                     f"SyntaxNode and nothing else",
                 )
             )
-        if name not in claimed:
+        preamble = _preamble(text, start)
+        if not MARKER.search(preamble) and not NOT_A_NODE.search(preamble):
             found.append(
                 Finding(
                     path,
                     _line(text, start),
-                    f"`{name}` has no `// node:` marker, so coverage cannot count it",
+                    f"`{name}` has no `// node:` marker above it, so coverage cannot count "
+                    f"it; a public type that is not a node view carries "
+                    f"`// not-a-node: <reason>` instead",
                 )
             )
     return found
@@ -115,6 +194,7 @@ def findings(text: str, path: str) -> list[Finding]:
     found += [
         Finding(path, _line(text, m.start()), "a public fn returns String; return a token instead")
         for m in PUB_FN_STRING.finditer(text)
+        if not _in_comment(text, m.start())
     ]
     found += [
         Finding(

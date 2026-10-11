@@ -6,13 +6,14 @@ import pytest
 
 import ast_coverage
 from ast_coverage import (
+    Tally,
     build_report,
-    case_owner,
     claims,
     is_stale,
     kebab,
     layer_of,
     malformed_cases,
+    stray_cases,
     worklist,
 )
 
@@ -44,27 +45,27 @@ def test_spacing_in_the_marker_does_not_matter(tmp_path):
 
 
 def test_a_kind_no_marker_claims_is_unimplemented():
-    report = build_report({"A", "B"}, ["A"], ["B"], [], [])
+    report = build_report({"A", "B"}, Tally(["A"], ["B"], [], [], []))
     assert report["unimplemented"] == 1
     assert report["unimplemented_kinds"] == ["B"]
     assert report["absent"] == 0
 
 
 def test_a_marker_naming_no_kind_is_absent():
-    report = build_report({"A"}, [], ["A"], ["NotAKind"], [])
+    report = build_report({"A"}, Tally([], ["A"], ["NotAKind"], [], []))
     assert report["absent"] == 1
     assert report["absent_markers"] == ["NotAKind"]
 
 
 def test_an_empty_crate_reports_every_kind_unimplemented():
-    report = build_report({"A", "B"}, [], ["A", "B"], [], [])
+    report = build_report({"A", "B"}, Tally([], ["A", "B"], [], [], []))
     assert (report["implemented"], report["unimplemented"], report["percent"]) == (0, 2, 0.0)
 
 
 def test_a_report_matching_disk_is_not_stale(tmp_path, monkeypatch):
     path = tmp_path / "ast-coverage.json"
     monkeypatch.setattr(ast_coverage, "REPORT", path)
-    report = build_report({"A"}, [], ["A"], [], [])
+    report = build_report({"A"}, Tally([], ["A"], [], [], []))
     path.write_text(json.dumps(report, indent=2) + "\n")
     assert not is_stale(report)
 
@@ -73,11 +74,13 @@ def test_a_report_matching_disk_is_not_stale(tmp_path, monkeypatch):
 def test_a_report_disagreeing_with_disk_is_stale(damage, tmp_path, monkeypatch):
     path = tmp_path / "ast-coverage.json"
     monkeypatch.setattr(ast_coverage, "REPORT", path)
-    report = build_report({"A"}, [], ["A"], [], [])
+    report = build_report({"A"}, Tally([], ["A"], [], [], []))
     if damage == "truncated":
         path.write_text('{"implemented":')
     elif damage == "changed":
-        path.write_text(json.dumps(build_report({"A"}, ["A"], [], [], []), indent=2) + "\n")
+        path.write_text(
+            json.dumps(build_report({"A"}, Tally(["A"], [], [], [], [])), indent=2) + "\n"
+        )
     assert is_stale(report)
 
 
@@ -156,58 +159,88 @@ def test_a_kind_becomes_its_kebab_stem():
     assert kebab("Package") == "package"
 
 
-def test_a_case_belongs_to_the_longest_matching_kind():
-    """`Package` and `PackageBody` both exist, and `package` prefixes `package-body`.
-
-    A case for the longer kind must not prove the shorter one, or `Package` could land
-    with no case of its own while the gate stayed green.
-    """
-    stems = {kind: kebab(kind) for kind in ("Package", "PackageBody")}
-    assert case_owner("package-body-unclosed.sysml", stems) == "PackageBody"
-    assert case_owner("package-missing-brace.sysml", stems) == "Package"
-
-
-def test_a_case_naming_no_kind_belongs_to_nothing():
-    stems = {"Package": "package"}
-    assert case_owner("something-else-entirely.sysml", stems) is None
-
-
-def test_a_bare_kind_stem_with_no_condition_is_not_a_case():
-    """The condition is required: `-` after the stem is what makes the name say which."""
-    stems = {"Package": "package"}
-    assert case_owner("package.sysml", stems) is None
-
-
-def test_both_languages_carry_cases(tmp_path):
-    (tmp_path / "root-namespace-unclosed.sysml").write_text("")
-    (tmp_path / "package-body-unclosed.kerml").write_text("")
-    (tmp_path / "notes.md").write_text("not a case")
-    found = malformed_cases(["RootNamespace", "PackageBody"], tmp_path)
-    assert found == {
-        "RootNamespace": ["root-namespace-unclosed.sysml"],
-        "PackageBody": ["package-body-unclosed.kerml"],
-    }
-
-
-def test_several_cases_for_one_kind_all_count(tmp_path):
-    (tmp_path / "package-unclosed.sysml").write_text("")
-    (tmp_path / "package-duplicated.sysml").write_text("")
-    assert malformed_cases(["Package"], tmp_path) == {
-        "Package": ["package-duplicated.sysml", "package-unclosed.sysml"]
-    }
-
-
-def test_a_missing_malformed_directory_proves_nothing(tmp_path):
-    assert malformed_cases(["Package"], tmp_path / "absent") == {}
-
-
 def test_an_implemented_kind_with_no_case_is_unproved():
-    report = build_report({"A", "B"}, ["A"], ["B"], [], ["A"])
+    report = build_report({"A", "B"}, Tally(["A"], ["B"], [], ["A"], []))
     assert report["unproved"] == 1
     assert report["unproved_kinds"] == ["A"]
 
 
 def test_an_unimplemented_kind_is_never_unproved():
     """`unimplemented` is a tracked state; only a LANDED accessor owes a case."""
-    report = build_report({"A"}, [], ["A"], [], [])
+    report = build_report({"A"}, Tally([], ["A"], [], [], []))
     assert report["unproved"] == 0
+
+
+def _case(root, kind_dir, name, text="package P {"):
+    directory = root / kind_dir
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / name).write_text(text)
+    return directory / name
+
+
+def test_a_case_belongs_to_the_kind_naming_its_directory(tmp_path):
+    """`package` prefixes `package-body`, so a flat filename could not tell these apart.
+
+    `package-body-missing` reads equally as Package + "body missing" and as PackageBody +
+    "missing". The directory removes the question.
+    """
+    _case(tmp_path, "package", "body-missing.sysml")
+    _case(tmp_path, "package-body", "missing.sysml")
+    assert malformed_cases(["Package", "PackageBody"], tmp_path) == {
+        "Package": ["body-missing.sysml"],
+        "PackageBody": ["missing.sysml"],
+    }
+
+
+def test_both_languages_carry_cases(tmp_path):
+    _case(tmp_path, "root-namespace", "unclosed.sysml")
+    _case(tmp_path, "package-body", "unclosed.kerml")
+    found = malformed_cases(["RootNamespace", "PackageBody"], tmp_path)
+    assert sorted(found) == ["PackageBody", "RootNamespace"]
+
+
+def test_several_cases_for_one_kind_all_count(tmp_path):
+    _case(tmp_path, "package", "unclosed.sysml")
+    _case(tmp_path, "package", "duplicated.sysml")
+    assert malformed_cases(["Package"], tmp_path) == {
+        "Package": ["duplicated.sysml", "unclosed.sysml"]
+    }
+
+
+def test_an_empty_case_proves_nothing(tmp_path):
+    """A placeholder file would otherwise satisfy the gate while asserting nothing."""
+    _case(tmp_path, "package", "unclosed.sysml", text="")
+    assert malformed_cases(["Package"], tmp_path) == {}
+
+
+def test_a_file_of_another_suffix_is_not_a_case(tmp_path):
+    _case(tmp_path, "package", "notes.md")
+    assert malformed_cases(["Package"], tmp_path) == {}
+
+
+def test_a_missing_malformed_directory_proves_nothing(tmp_path):
+    assert malformed_cases(["Package"], tmp_path / "absent") == {}
+
+
+def test_a_directory_naming_no_kind_is_stray(tmp_path):
+    _case(tmp_path, "pakage", "unclosed.sysml")
+    assert stray_cases(["Package"], tmp_path) == ["pakage/ names no node kind"]
+
+
+def test_a_case_left_at_the_top_level_is_stray(tmp_path):
+    """The layout before the kind became a directory. It would silently stop counting."""
+    (tmp_path / "package-unclosed.sysml").write_text("package P {")
+    assert stray_cases(["Package"], tmp_path) == [
+        "package-unclosed.sysml is not inside a <kind-in-kebab>/ directory"
+    ]
+
+
+def test_a_correctly_placed_case_is_not_stray(tmp_path):
+    _case(tmp_path, "package", "unclosed.sysml")
+    assert stray_cases(["Package"], tmp_path) == []
+
+
+def test_a_stray_case_is_a_reported_defect():
+    report = build_report({"A"}, Tally(["A"], [], [], [], ["b/ names no node kind"]))
+    assert report["stray"] == 1
+    assert report["stray_cases"] == ["b/ names no node kind"]
