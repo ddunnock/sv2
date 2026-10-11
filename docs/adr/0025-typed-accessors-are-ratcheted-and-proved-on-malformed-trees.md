@@ -46,7 +46,7 @@ being the single source of truth.
 
 ## Considered options
 
-1. **Ratchet against the node kinds** (464 authored kinds), marker per accessor, three
+1. **Ratchet against the node kinds** (463 authored kinds), marker per accessor, three
    states, failing only on `absent` or staleness.
 2. **Ratchet against the frozen grammar's productions** — 554 frozen, of which 553 are the
    live units coverage counts, the difference being the unreachable one ADR-0023 excludes —
@@ -77,7 +77,7 @@ turns into two disagreeing facts.
 
 `--check` fails on `absent` or on a stale report. The report is written to
 `.claude/state/ast-coverage.json`, machine-owned and protected by the PreToolUse hook. On
-the day this lands it reads 0 implemented, 464 unimplemented, 0 absent, which is the honest
+the day this lands it reads 0 implemented, 463 unimplemented, 0 absent, which is the honest
 state of a new crate and not a red gate.
 
 **The worklist is ordered root downward**, by a breadth-first walk of the frozen grammar
