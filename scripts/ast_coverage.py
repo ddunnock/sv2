@@ -32,6 +32,8 @@ ROOT = Path(__file__).resolve().parents[1]
 INVENTORY = Path(".claude/state/node-kinds.json")
 REPORT = Path(".claude/state/ast-coverage.json")
 SOURCE = Path("crates/sv2-ast")
+REFERENCE = Path(".claude/state/grammar/reference.json")
+START = "RootNamespace"
 
 #: A claim. The kind name is a Rust identifier, so the pattern admits nothing else.
 MARKER = re.compile(r"//\s*node:\s*([A-Za-z_][A-Za-z0-9_]*)")
@@ -98,12 +100,66 @@ def is_stale(report: dict[str, object]) -> bool:
     return on_disk != report
 
 
+def _references(rule: object) -> list[str]:
+    """Every production a rule names, at any depth."""
+    if isinstance(rule, dict):
+        if rule.get("k") == "ref" and isinstance(rule.get("name"), str):
+            return [rule["name"]]
+        return [name for value in rule.values() for name in _references(value)]
+    if isinstance(rule, list):
+        return [name for item in rule for name in _references(item)]
+    return []
+
+
+def layer_of(reference: dict[str, object]) -> dict[str, int]:
+    """Breadth-first distance from the start symbol, for every production it reaches.
+
+    The frozen grammar is under `grammar` and keyed by UNIT, so one name can arrive twice
+    as `Name@kerml` and `Name@sysml` (ADR-0015). The walk is over base names: a name's
+    rules are every unit sharing it, and a variant does not get a layer of its own. A
+    production the start symbol cannot reach has none either, and is absent from the map.
+    Marking on enqueue means a cycle terminates.
+    """
+    grammar = reference.get("grammar")
+    if not isinstance(grammar, dict):
+        return {}
+    rules: dict[str, list[object]] = {}
+    for unit, body in grammar.items():
+        if isinstance(body, dict):
+            rules.setdefault(unit.split("@", 1)[0], []).append(body.get("rule"))
+    if START not in rules:
+        return {}
+    depth = {START: 0}
+    queue = [START]
+    while queue:
+        name = queue.pop(0)
+        for rule in rules.get(name, []):
+            for child in _references(rule):
+                if child not in depth and child in rules:
+                    depth[child] = depth[name] + 1
+                    queue.append(child)
+    return depth
+
+
+def worklist(kinds: list[str], layers: dict[str, int]) -> list[str]:
+    """`kinds` ordered root downward, ties and unreached kinds keeping declaration order.
+
+    ADR-0025: this decides how the report prints and nothing else. The production-to-kind
+    mapping is by name and is approximate, so it may not gate.
+    """
+    order = {kind: index for index, kind in enumerate(kinds)}
+    far = max(layers.values(), default=0) + 1
+    return sorted(kinds, key=lambda kind: (layers.get(kind, far), order[kind]))
+
+
 def measure() -> dict[str, object]:
-    """The report for the tree as it stands."""
+    """The report for the tree as it stands, worklist ordered root downward."""
     kinds = declared()
+    layers = layer_of(json.loads(REFERENCE.read_text())) if REFERENCE.is_file() else {}
+    ordered = worklist(kinds, layers)
     claimed = claims()
-    implemented = [k for k in kinds if k in claimed]
-    unimplemented = [k for k in kinds if k not in claimed]
+    implemented = [k for k in ordered if k in claimed]
+    unimplemented = [k for k in ordered if k not in claimed]
     absent = sorted(k for k in claimed if k not in set(kinds))
     return build_report(kinds, implemented, unimplemented, absent)
 

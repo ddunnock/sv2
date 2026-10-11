@@ -5,7 +5,7 @@ import json
 import pytest
 
 import ast_coverage
-from ast_coverage import build_report, claims, is_stale
+from ast_coverage import build_report, claims, is_stale, layer_of, worklist
 
 
 def _crate(tmp_path, **files):
@@ -70,3 +70,73 @@ def test_a_report_disagreeing_with_disk_is_stale(damage, tmp_path, monkeypatch):
     elif damage == "changed":
         path.write_text(json.dumps(build_report({"A"}, ["A"], [], []), indent=2) + "\n")
     assert is_stale(report)
+
+
+def test_the_root_is_layer_zero():
+    reference = {"grammar": {"RootNamespace": {"rule": {"k": "ref", "name": "Member"}}}}
+    assert layer_of(reference)["RootNamespace"] == 0
+
+
+def test_a_production_the_root_reaches_is_layer_one():
+    reference = {
+        "grammar": {
+            "RootNamespace": {"rule": {"k": "ref", "name": "Member"}},
+            "Member": {"rule": {"k": "kw", "text": "part"}},
+        }
+    }
+    assert layer_of(reference)["Member"] == 1
+
+
+def test_a_variant_unit_is_layered_under_its_base_name():
+    # The grammar is keyed by unit, so RootNamespace may arrive as RootNamespace@kerml.
+    reference = {
+        "grammar": {
+            "RootNamespace@kerml": {"rule": {"k": "ref", "name": "Member"}},
+            "RootNamespace@sysml": {"rule": {"k": "ref", "name": "Other"}},
+            "Member": {"rule": {"k": "kw", "text": "part"}},
+            "Other": {"rule": {"k": "kw", "text": "item"}},
+        }
+    }
+    assert layer_of(reference) == {"RootNamespace": 0, "Member": 1, "Other": 1}
+
+
+def test_a_reference_nested_in_a_sequence_is_found():
+    reference = {
+        "grammar": {
+            "RootNamespace": {"rule": {"k": "seq", "items": [{"k": "ref", "name": "Deep"}]}},
+            "Deep": {"rule": {"k": "kw", "text": "x"}},
+        }
+    }
+    assert layer_of(reference)["Deep"] == 1
+
+
+def test_an_unreached_production_has_no_layer():
+    reference = {
+        "grammar": {
+            "RootNamespace": {"rule": {"k": "kw", "text": "x"}},
+            "Island": {"rule": {"k": "kw", "text": "y"}},
+        }
+    }
+    assert "Island" not in layer_of(reference)
+
+
+def test_a_cycle_terminates():
+    reference = {
+        "grammar": {
+            "RootNamespace": {"rule": {"k": "ref", "name": "A"}},
+            "A": {"rule": {"k": "ref", "name": "RootNamespace"}},
+        }
+    }
+    assert layer_of(reference) == {"RootNamespace": 0, "A": 1}
+
+
+def test_the_worklist_sorts_shallow_kinds_first():
+    assert worklist(["Zebra", "Member", "RootNamespace"], {"RootNamespace": 0, "Member": 1}) == [
+        "RootNamespace",
+        "Member",
+        "Zebra",
+    ]
+
+
+def test_a_kind_with_no_layer_keeps_declaration_order_among_its_peers():
+    assert worklist(["Beta", "Alpha"], {}) == ["Beta", "Alpha"]
