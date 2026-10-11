@@ -81,6 +81,7 @@ main() {
   run_check "grammar diff" "${PY}" scripts/grammar_diff.py --check
   run_check "decisions index" "${PY}" .claude/scripts/index_decisions.py --check
   run_check "bnf coverage" "${PY}" scripts/bnf_coverage.py --check
+  run_check "ast coverage" "${PY}" scripts/ast_coverage.py --check
   run_check "frozen grammar" "${PY}" .claude/scripts/grammar_freeze.py --check
   # Inert without the local clause export, which is not in the repository.
   run_check "derivation prose" "${PY}" .claude/scripts/check_derivation_text.py
@@ -106,6 +107,7 @@ main() {
   run_check "program headers" "${PY}" scripts/check_headers.py
   run_check "standards config" "${PY}" scripts/check_standards_config.py
   run_check "rust patterns" "${PY}" scripts/check_rust_patterns.py
+  run_check "ast leaks" "${PY}" scripts/check_ast_leaks.py
   run_optional "shellcheck" shellcheck scripts/*.sh .claude/scripts/*.sh
   run_optional "shfmt" shfmt -d scripts .claude/scripts
   run_optional "ruff" ruff check

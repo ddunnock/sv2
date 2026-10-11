@@ -20,7 +20,7 @@
 - **Test layout** (STD-002-RS §10): unit tests at the bottom of the file they test in `#[cfg(test)] mod tests`; integration tests in `tests/` using the public API only; golden/fixture inputs are data files, never values embedded in assertions.
 - **Expectations come from the specification or the corpus, never from output** (`.claude/rules/tests.md`). Never weaken a failing test.
 - **The marker is `// node: Kind`.** Three states: `implemented` (marker claims a kind in the inventory), `unimplemented` (a kind no marker claims — tracked, never a failure), `absent` (a marker claims a kind that does not exist — a defect).
-- **464** authored node kinds; **311** corpus files under `vendor/corpus`; **299** rejection files under `tests/rejection`. `tests/corpus` does not exist yet — `corpus_roots()` returns only roots that exist.
+- **463** authored node kinds; **311** corpus files under `vendor/corpus`; **299** rejection files under `tests/rejection`. `tests/corpus` does not exist yet — `corpus_roots()` returns only roots that exist.
 - **The layer ordering may never gate.** It decides how the report prints and nothing else.
 - **No network, ever.** `scripts/vendor_sync.py` is the only script that fetches.
 - **Definition of done for every task:** `./scripts/gate.sh` is green.
@@ -297,7 +297,7 @@ is ``.claude/state/node-kinds.json``, written by the generator that owns the lis
     python3.12 scripts/ast_coverage.py --check   fail on any absent, or on a stale report
 
 `unimplemented` is the honest state of a crate being built and is never a failure. A new
-crate reads 0 implemented and 464 unimplemented, which is the number, not a verdict.
+crate reads 0 implemented and 463 unimplemented, which is the number, not a verdict.
 
 Network: none.
 """
@@ -435,7 +435,7 @@ Expected: PASS
 - [ ] **Step 5: Generate the report and read it**
 
 Run: `python3.12 scripts/ast_coverage.py`
-Expected: `wrote .claude/state/ast-coverage.json (0/464 node kinds)`
+Expected: `wrote .claude/state/ast-coverage.json (0/463 node kinds)`
 
 - [ ] **Step 6: Negative control — a marker naming no kind is `absent`**
 
@@ -1469,7 +1469,7 @@ Invoke `add-accessor` for `RootNamespace` — it is first on the worklist, and e
 - [ ] **Step 2: Confirm the report moves**
 
 Run: `python3.12 scripts/ast_coverage.py`
-Expected: `wrote .claude/state/ast-coverage.json (1/464 node kinds)`
+Expected: `wrote .claude/state/ast-coverage.json (1/463 node kinds)`
 
 - [ ] **Step 3: Confirm the leak lint still passes on real code**
 

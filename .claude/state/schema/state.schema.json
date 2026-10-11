@@ -4,64 +4,181 @@
   "title": "sv2 work state",
   "description": "Two blocks with different owners. `generated` is rewritten wholesale by .claude/scripts/regen_state.py and is never hand-edited. `authored` holds intent, which cannot be derived from the repository.",
   "type": "object",
-  "required": ["schema_version", "generated", "authored"],
+  "required": [
+    "schema_version",
+    "generated",
+    "authored"
+  ],
   "additionalProperties": false,
   "properties": {
-    "schema_version": { "type": "integer", "const": 1 },
-
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
     "generated": {
       "type": "object",
       "description": "Derived from the repository. Every value here is measured, not asserted.",
-      "required": ["regenerated_utc", "gates", "coverage", "tests", "pins"],
+      "required": [
+        "regenerated_utc",
+        "gates",
+        "coverage",
+        "tests",
+        "pins"
+      ],
       "additionalProperties": false,
       "properties": {
-        "regenerated_utc": { "type": "string" },
+        "regenerated_utc": {
+          "type": "string"
+        },
         "gates": {
           "type": "object",
-          "additionalProperties": { "enum": ["pass", "fail", "skipped"] }
+          "additionalProperties": {
+            "enum": [
+              "pass",
+              "fail",
+              "skipped"
+            ]
+          }
         },
         "coverage": {
           "type": "object",
-          "required": ["declared", "implemented", "unimplemented", "absent"],
+          "required": [
+            "declared",
+            "implemented",
+            "unimplemented",
+            "absent"
+          ],
           "additionalProperties": false,
           "properties": {
-            "declared": { "type": "integer", "minimum": 0 },
-            "implemented": { "type": "integer", "minimum": 0 },
-            "unimplemented": { "type": "integer", "minimum": 0 },
-            "absent": { "type": "integer", "minimum": 0 },
-            "percent": { "type": "number" }
+            "declared": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "implemented": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unimplemented": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "absent": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "percent": {
+              "type": "number"
+            }
           }
         },
         "tests": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "unit": { "type": "integer", "minimum": 0 },
-            "snapshots": { "type": "integer", "minimum": 0 },
-            "corpus_files": { "type": "integer", "minimum": 0 },
-            "negative_cases": { "type": "integer", "minimum": 0 },
-            "known_permissive": { "type": "integer", "minimum": 0 }
+            "unit": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "snapshots": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "corpus_files": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "negative_cases": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "known_permissive": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
         "pins": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "omg_namespace": { "type": "string" },
-            "pilot_revision": { "type": "string" },
-            "pilot_bundle": { "type": "string" },
-            "vendor_pinned": { "type": "integer", "minimum": 0 },
-            "vendor_total": { "type": "integer", "minimum": 0 }
+            "omg_namespace": {
+              "type": "string"
+            },
+            "pilot_revision": {
+              "type": "string"
+            },
+            "pilot_bundle": {
+              "type": "string"
+            },
+            "vendor_pinned": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "vendor_total": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
-        "commits": { "type": "array", "items": { "type": "string" } }
+        "commits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ast_coverage": {
+          "type": "object",
+          "description": "Typed accessors over CST node kinds (ADR-0025). `unimplemented` is a tracked state, never a failure; `absent`, `unproved` and `stray` are defects.",
+          "required": [
+            "declared",
+            "implemented",
+            "unimplemented",
+            "absent",
+            "unproved",
+            "stray"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "declared": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "implemented": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unimplemented": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "absent": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unproved": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "stray": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "percent": {
+              "type": "number"
+            }
+          }
+        }
       }
     },
-
     "authored": {
       "type": "object",
       "description": "Written by a human or by the close-session skill. Never machine-derived.",
-      "required": ["objective", "next_step", "pending_decisions", "log"],
+      "required": [
+        "objective",
+        "next_step",
+        "pending_decisions",
+        "log"
+      ],
       "additionalProperties": false,
       "properties": {
         "objective": {
@@ -78,13 +195,27 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["id", "question"],
+            "required": [
+              "id",
+              "question"
+            ],
             "additionalProperties": false,
             "properties": {
-              "id": { "type": "string" },
-              "question": { "type": "string" },
-              "blocks": { "type": "array", "items": { "type": "string" } },
-              "adr": { "type": "string" }
+              "id": {
+                "type": "string"
+              },
+              "question": {
+                "type": "string"
+              },
+              "blocks": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "adr": {
+                "type": "string"
+              }
             }
           }
         },
@@ -93,12 +224,24 @@
           "description": "Append-only, one entry per session, newest last.",
           "items": {
             "type": "object",
-            "required": ["date", "summary"],
+            "required": [
+              "date",
+              "summary"
+            ],
             "additionalProperties": false,
             "properties": {
-              "date": { "type": "string" },
-              "summary": { "type": "string" },
-              "gate": { "enum": ["green", "red"] }
+              "date": {
+                "type": "string"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "gate": {
+                "enum": [
+                  "green",
+                  "red"
+                ]
+              }
             }
           }
         }

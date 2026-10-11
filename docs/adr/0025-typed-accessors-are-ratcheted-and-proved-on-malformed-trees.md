@@ -46,7 +46,7 @@ being the single source of truth.
 
 ## Considered options
 
-1. **Ratchet against the node kinds** (464 authored kinds), marker per accessor, three
+1. **Ratchet against the node kinds** (463 authored kinds), marker per accessor, three
    states, failing only on `absent` or staleness.
 2. **Ratchet against the frozen grammar's productions** — 554 frozen, of which 553 are the
    live units coverage counts, the difference being the unreachable one ADR-0023 excludes —
@@ -77,7 +77,7 @@ turns into two disagreeing facts.
 
 `--check` fails on `absent` or on a stale report. The report is written to
 `.claude/state/ast-coverage.json`, machine-owned and protected by the PreToolUse hook. On
-the day this lands it reads 0 implemented, 464 unimplemented, 0 absent, which is the honest
+the day this lands it reads 0 implemented, 463 unimplemented, 0 absent, which is the honest
 state of a new crate and not a red gate.
 
 **The worklist is ordered root downward**, by a breadth-first walk of the frozen grammar
@@ -96,9 +96,39 @@ nodes and tokens and the caller asks those for text. Nothing `pub` is named `tes
 | Evidence | Where | What it catches |
 |---|---|---|
 | Sweep of every tree the repository holds | `tests/sweep.rs` | panics, children that are not children, ranges outside the parent, answers that change between calls |
-| A named malformed case per accessor | `tests/malformed.rs`, data in `tests/malformed/` | a child absent, duplicated, or out of order — the conditions the corpora do not happen to contain |
+| A named malformed case per accessor | `tests/malformed.rs`, data in `tests/malformed/<kind-in-kebab>/<condition>.sysml` | a child absent, duplicated, or out of order — the conditions the corpora do not happen to contain |
 | Property tests over generated input | `tests/properties.rs` | truncation at a multi-byte boundary, nesting near `MAX_DEPTH`, inputs nobody thought to write |
 | Differential assertion | inside the two above | an accessor that is confidently **wrong**, which neither a panic check nor an absence check sees |
+
+"All of them or it does not land" is **two of four mechanical, two procedural**, and
+saying otherwise here would be the very failure this ADR is about.
+
+Mechanical: the `// node:` marker is counted, and the malformed case is now required.
+`scripts/ast_coverage.py` reports `unproved` — an implemented kind with no non-empty case
+— and `stray` — a case naming no kind — and both fail the gate. A case lives at
+`tests/malformed/<kind-in-kebab>/<condition>.sysml`, the kind naming the DIRECTORY,
+because a filename cannot carry kind and condition unambiguously: `-` separates the words
+inside a kebab kind and would also separate kind from condition, and 91 kinds have a kebab
+form prefixing another's, so `package-body-missing` reads equally as `Package` + "body
+missing" and as `PackageBody` + "missing". A directory keeps them in separate namespaces.
+
+Procedural, and said plainly: nothing requires a new accessor to be *called from the
+sweep*. `sweep()` names each assertion function explicitly, so an accessor can land with
+its marker, its malformed case and a green gate while never being swept at all — "green
+because it has nothing to check", one level up from where this ADR first found it. The
+guard is `.claude/rules/ast.md`, which loads on every `crates/sv2-ast/**` edit, and the
+`add-accessor` skill. A future check could require each implemented kind to appear in
+`tests/sweep.rs`; until one exists, this leg is discipline, not enforcement. The
+property-test leg is the same — the tests run, but nothing ties them to a new kind.
+
+The check asks whether the case exists and is not empty. Whether it asserts the right
+things is a review question, and no gate will ever answer it.
+
+The differential assertion is **equality**, not containment. A subset check — every
+member the accessor yields is one of the node's children — reads like a differential and
+is not one: it passes an accessor that yields nothing, one that reverses the order, and
+one that silently filters a kind out. Measured on the first accessor against six plausible
+`members()` defects, containment caught one and equality caught all six.
 
 The sweep reads the 311 corpus files *and* the 299 rejection files. Those rejection files
 are malformed by construction, so the hardest inputs for this layer are already in the

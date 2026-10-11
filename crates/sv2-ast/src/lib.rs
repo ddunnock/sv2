@@ -4,5 +4,9 @@
 //!
 //! This crate owns no data. Every accessor is a view over a CST node, so the tree
 //! stays the single source of truth and the text stays authoritative (ADR-0001).
-//!
-//! A stub: no accessors exist yet, so the crate has no public API.
+
+mod ast_node;
+mod namespace;
+
+pub use crate::ast_node::AstNode;
+pub use crate::namespace::RootNamespace;

@@ -44,7 +44,7 @@ every test passes.
 
 ```
 crates/sv2-syntax     lossless CST over rowan, no I/O          .claude/rules/syntax.md
-crates/sv2-ast        typed accessors over CST nodes           .claude/rules/syntax.md
+crates/sv2-ast        typed accessors over CST nodes           .claude/rules/ast.md
 crates/sv2-hir        desugaring, implied specialization       .claude/rules/hir.md
 crates/sv2-resolve    libraries, names, derived props          .claude/rules/resolve.md
 crates/sv2-cli        the `sv2` binary

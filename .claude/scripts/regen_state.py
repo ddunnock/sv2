@@ -40,6 +40,8 @@ GATES: dict[str, list[str]] = {
     "metaclass_map": [PY, "scripts/check_metaclass_map.py"],
     "grammar_diff": [PY, "scripts/grammar_diff.py", "--check"],
     "coverage": [PY, "scripts/bnf_coverage.py", "--check"],
+    "ast_coverage": [PY, "scripts/ast_coverage.py", "--check"],
+    "ast_leaks": [PY, "scripts/check_ast_leaks.py"],
     "corpus": ["./scripts/corpus-sweep.sh"],
     "perf": ["./scripts/perf.sh", "check"],
 }
@@ -89,6 +91,26 @@ def coverage() -> dict[str, Json]:
         "implemented": cov.get("implemented", 0),
         "unimplemented": cov.get("unimplemented", 0),
         "absent": cov.get("absent", 0),
+        "percent": round(cov.get("percent", 0.0), 1),
+    }
+
+
+def ast_coverage() -> dict[str, Json]:
+    """The typed-accessor summary, from the report ast_coverage.py writes (ADR-0025).
+
+    Written for whoever reads the block at session start: a cold session should learn how
+    far sv2-ast has got from derived data, not from the prose in `objective`, which goes
+    stale. `unimplemented` is a tracked state and never a failure; `absent`, `unproved`
+    and `stray` are defects the gate already fails on.
+    """
+    cov = load_json(".claude/state/ast-coverage.json", {})
+    return {
+        "declared": cov.get("declared", 0),
+        "implemented": cov.get("implemented", 0),
+        "unimplemented": cov.get("unimplemented", 0),
+        "absent": cov.get("absent", 0),
+        "unproved": cov.get("unproved", 0),
+        "stray": cov.get("stray", 0),
         "percent": round(cov.get("percent", 0.0), 1),
     }
 
@@ -160,7 +182,7 @@ def commits() -> list[str]:
 #: no fixed point — amending only moves the hash — so the gate would be red after
 #: every commit, for ever. It is still measured and written, for whoever reads the
 #: block at session start; it is simply not evidence of anything being stale.
-COMPARED = ("coverage", "tests", "pins")
+COMPARED = ("coverage", "ast_coverage", "tests", "pins")
 
 
 def is_stale(recorded: dict[str, Json], measured: dict[str, Json]) -> bool:
@@ -180,6 +202,7 @@ def main(argv: list[str] | None = None) -> int:
     doc = json.loads(STATE.read_text())
     measured: dict[str, Json] = {
         "coverage": coverage(),
+        "ast_coverage": ast_coverage(),
         "tests": tests(),
         "pins": pins(),
         "commits": commits(),

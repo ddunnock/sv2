@@ -43,3 +43,7 @@ dist/
 # CodeGraph's index, a per-machine derived cache: a 514K binary rebuilt by
 # `codegraph init`, holding nothing the tree does not already hold.
 .codegraph/
+
+# Subagent-driven-development scratch: ledger, briefs, reports, review packages.
+# The git history is the durable record; this is the controller's recovery map.
+.superpowers/
