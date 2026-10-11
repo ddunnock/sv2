@@ -2,13 +2,14 @@
   "_generated_by": "scripts/ast_coverage.py",
   "_note": "Typed accessors over CST node kinds (ADR-0025). `unimplemented` is a tracked state, not a failure. `absent` is a defect: a marker claiming a kind that does not exist. The order is the worklist order, never a verdict.",
   "declared": 463,
-  "implemented": 0,
-  "unimplemented": 463,
+  "implemented": 1,
+  "unimplemented": 462,
   "absent": 0,
-  "percent": 0.0,
-  "implemented_kinds": [],
+  "percent": 0.2,
+  "implemented_kinds": [
+    "RootNamespace"
+  ],
   "unimplemented_kinds": [
-    "RootNamespace",
     "Import",
     "PackageMember",
     "AliasMember",

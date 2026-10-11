@@ -6,5 +6,7 @@
 //! stays the single source of truth and the text stays authoritative (ADR-0001).
 
 mod ast_node;
+mod namespace;
 
 pub use crate::ast_node::AstNode;
+pub use crate::namespace::RootNamespace;
