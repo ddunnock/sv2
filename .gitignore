@@ -30,6 +30,10 @@ CLAUDE.local.md
 # JetBrains IDE workspace, per-machine.
 .idea/
 
+# Finder's per-directory metadata, written on the MacBook and meaningless on the
+# RHEL 9 workspace. Anywhere in the tree, not just the root.
+.DS_Store
+
 # Bun/TypeScript build inputs and outputs under app/. bun.lock IS committed —
 # it plus bunfig's install settings are the reproducibility story, and a
 # committed node_modules would put platform binaries in the history.
