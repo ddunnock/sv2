@@ -80,10 +80,11 @@ RULES: list[tuple[tuple[str, ...], str | None]] = [
             ".claude/state/grammar-diff.json",
             ".claude/state/decisions.json",
             ".claude/state/node-kinds.json",
+            ".claude/state/ast-coverage.json",
         ),
         (
             "Script-owned. Regenerate with bnf_coverage.py, grammar_diff.py, index_decisions.py,"
-            " or gen_syntax_kinds.py."
+            " gen_syntax_kinds.py, or ast_coverage.py."
         ),
     ),
     (
