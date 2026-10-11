@@ -1,7 +1,6 @@
 ---
 paths:
   - "crates/sv2-syntax/**"
-  - "crates/sv2-ast/**"
 ---
 
 # sv2-syntax and sv2-ast — the lossless layer
