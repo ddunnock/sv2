@@ -254,7 +254,7 @@ for.
 `crates/*/src/**/*.rs` against it, alongside the Python sources. One repository
 has one license, so it has one setting, not one per language.
 
-```toml
+```toml title=pyproject.toml
 [tool.sv2.headers]
 required = true
 must_contain = [
@@ -1238,9 +1238,25 @@ check is what makes "the configuration is normative" true rather than
 aspirational: the blocks below are not a description of the repository's
 configuration, they are the same text.
 
+**A normative block names its file on the fence**, and a block that does not is an
+illustration:
+
+    ```toml title=clippy.toml
+
+The marker is what the checker reads. It **must** name one of the governed files —
+`pyproject.toml`, `Cargo.toml`, `clippy.toml`, `rustfmt.toml`, `rust-toolchain.toml`,
+`deny.toml` — a marked block **must** parse as TOML, and every governed file **must** be
+named by at least one marked block; the check fails on each of those. The marker replaced
+two inferences that failed in the direction that makes the check pass: a block used to be
+bound to the nearest heading above it, which dropped any block whose heading did not name
+a file, and a block that failed to parse was treated as an illustration, so a typo in
+normative configuration left the gate green. The member manifest in
+[§13.1](#131-workspace-cargotoml) is the one unmarked block in this section, because it
+is an example of a crate's file rather than a file this repository has.
+
 ### 13.1 Workspace Cargo.toml
 
-```toml
+```toml title=Cargo.toml
 [workspace]
 resolver = "3"
 members = ["crates/*"]
@@ -1320,7 +1336,7 @@ workspace = true
 
 ### 13.2 clippy.toml
 
-```toml
+```toml title=clippy.toml
 # §5.1 thresholds
 excessive-nesting-threshold = 4       # = three nested blocks inside the function body
 cognitive-complexity-threshold = 15
@@ -1353,7 +1369,7 @@ disallowed-methods = [
 
 ### 13.3 rustfmt.toml
 
-```toml
+```toml title=rustfmt.toml
 edition = "2024"
 style_edition = "2024"
 max_width = 100
@@ -1369,7 +1385,7 @@ a setting that silently does nothing is worse than none.
 
 ### 13.4 rust-toolchain.toml
 
-```toml
+```toml title=rust-toolchain.toml
 [toolchain]
 channel = "1.98.1"
 # rust-src is what rust-analyzer needs to index the standard library; it plays no
@@ -1383,7 +1399,7 @@ profile = "minimal"
 
 ### 13.5 deny.toml
 
-```toml
+```toml title=deny.toml
 [graph]
 all-features = true
 

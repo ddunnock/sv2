@@ -10,11 +10,20 @@ setup nobody runs is worse than no standard, because it is trusted.
 
     python3.12 scripts/check_standards_config.py
 
-Every key a standard's TOML block sets must have the same value in the governed
-file; keys the repository adds are not compared. A block is bound to its file by
-the ``### 13.N`` heading above it (STD-002-RS) or is a workspace-root
-``pyproject.toml`` table (STD-001-PY, top-level ``tool`` only). The member
-manifest in STD-002-RS §13.1 is an example, not configuration, and is skipped.
+A block is normative when its fence says which file it governs::
+
+    ```toml title=clippy.toml
+
+A plain ``toml`` fence is an illustration and is not read: that is what the member
+manifest in STD-002-RS §13.1 is. The marker replaces two inferences that could not tell
+configuration from prose — binding a block to the nearest ``###`` heading above it, and
+skipping any block that failed to parse. Both failed silently, in the direction that makes
+this check pass: a normative block with a TOML typo was read as an illustration, and a
+block under a heading that did not name its file was dropped. A marked block must parse,
+must name a governed file, and every governed file must have one.
+
+Every key a normative block sets must have the same value in the governed file;
+keys the repository adds are not compared.
 
 A difference the repository makes on purpose is recorded in
 ``[tool.sv2.deviations]`` of pyproject.toml as ``"<file>:<dotted.key>" =
@@ -28,6 +37,7 @@ import argparse
 import os
 import re
 import tomllib
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -36,16 +46,43 @@ STANDARDS = Path("docs/standards")
 PYTHON_STANDARD = STANDARDS / "STD-001-PY-python-standards.md"
 RUST_STANDARD = STANDARDS / "STD-002-RS-rust-standards.md"
 PYPROJECT = Path("pyproject.toml")
-RUST_FILES = ("Cargo.toml", "clippy.toml", "rustfmt.toml", "rust-toolchain.toml", "deny.toml")
-# STD-001-PY blocks also carry one distribution's [project] fragments; only tool
-# tables are workspace configuration.
-PYTHON_GOVERNED = ("tool",)
 
-TOML_BLOCK = re.compile(r"```toml\n(.*?)```", re.DOTALL)
-HEADING = re.compile(r"^#{2,4} .*$", re.MULTILINE)
+#: Every file the standards govern. Each must be named by at least one normative block,
+#: so dropping a marker is a finding rather than a silent return to green. pyproject.toml
+#: is named by both standards: STD-002-RS §2.3 states the header table that lives there.
+GOVERNED = (
+    "pyproject.toml",
+    "Cargo.toml",
+    "clippy.toml",
+    "rustfmt.toml",
+    "rust-toolchain.toml",
+    "deny.toml",
+)
+
+#: A fence opens and closes at the start of a line. Without the anchor, the indented
+#: example of a marker in STD-001-PY §12 reads as a normative block itself, and takes
+#: the rest of the document with it as its body.
+TOML_FENCE = re.compile(r"^```toml(?P<info>[^\n]*)\n(?P<body>.*?)^```", re.DOTALL | re.MULTILINE)
+#: What makes a fence normative. `title=` is the convention documentation renderers use
+#: for a file name, so the marker reads as a caption rather than as machinery.
+MARKER = re.compile(r"\btitle=(?P<target>\S+)")
 
 # Any: TOML documents are deserialized and compared structurally (STD-001-PY §6).
 Toml = dict[str, Any]
+
+
+@dataclass(frozen=True)
+class Block:
+    """One normative configuration block, and where it was written."""
+
+    standard: str
+    line: int
+    target: str
+    body: str
+
+    def where(self) -> str:
+        """The block's position, for a message that someone has to go and act on."""
+        return f"{self.standard}:{self.line}"
 
 
 def deep_merge(into: Toml, other: Toml) -> None:
@@ -75,39 +112,61 @@ def drift(expected: Any, actual: Any, path: str, source: str) -> list[tuple[str,
     return []
 
 
-def python_config(text: str) -> Toml:
-    """The workspace-root tool tables STD-001-PY declares."""
-    merged: Toml = {}
-    for block in TOML_BLOCK.findall(text):
-        try:
-            parsed = tomllib.loads(block)
-        except tomllib.TOMLDecodeError:
-            continue  # a deliberately partial fragment; examples are not config
-        deep_merge(merged, {k: v for k, v in parsed.items() if k in PYTHON_GOVERNED})
-    return merged
+def normative_blocks(text: str, standard: str) -> list[Block]:
+    """Every marked block in one standard, in document order. Unmarked fences are skipped."""
+    blocks = []
+    for fence in TOML_FENCE.finditer(text):
+        marker = MARKER.search(fence.group("info"))
+        if marker:
+            line = text[: fence.start()].count("\n") + 1
+            blocks.append(Block(standard, line, marker.group("target"), fence.group("body")))
+    return blocks
 
 
-def rust_config(text: str) -> dict[str, Toml]:
-    """Each STD-002-RS §13 block, merged per file named by the heading above it."""
+def declared(standards: dict[str, str]) -> tuple[dict[str, Toml], list[str]]:
+    """The configuration the standards declare per governed file, and any defects in it.
+
+    A defect here is a defect in the standard, not drift: a marker naming a file nothing
+    governs, a marked block that is not TOML, or a governed file no block declares.
+    """
     per_file: dict[str, Toml] = {}
-    for match in TOML_BLOCK.finditer(text):
-        headings = HEADING.findall(text, 0, match.start())
-        heading = headings[-1] if headings else ""
-        target = next((name for name in RUST_FILES if name in heading), None)
-        parsed = tomllib.loads(match.group(1))
-        if target is None or "package" in parsed:
-            continue  # not a §13 file block, or the §13.1 member-manifest example
-        deep_merge(per_file.setdefault(target, {}), parsed)
-    return per_file
+    problems: list[str] = []
+    for standard, text in standards.items():
+        for block in normative_blocks(text, standard):
+            if block.target not in GOVERNED:
+                problems.append(
+                    f"{block.where()}: fence says title={block.target}, which is not one of "
+                    f"the governed files ({', '.join(GOVERNED)})"
+                )
+                continue
+            try:
+                parsed = tomllib.loads(block.body)
+            except tomllib.TOMLDecodeError as exc:
+                problems.append(
+                    f"{block.where()}: the block marked title={block.target} is normative "
+                    f"configuration and is not valid TOML: {exc}"
+                )
+                continue
+            deep_merge(per_file.setdefault(block.target, {}), parsed)
+    problems += [
+        f"no normative block declares {name}: a ```toml title={name} fence is how the "
+        f"standard states its configuration, and without one nothing is compared"
+        for name in GOVERNED
+        if name not in per_file
+    ]
+    return per_file, problems
 
 
 def findings(deviations: dict[str, str]) -> list[str]:
-    """Every unrecorded drift, and every recorded deviation that no longer drifts."""
-    pyproject = tomllib.loads(PYPROJECT.read_text())
-    governed: list[tuple[str, Toml, Toml]] = [
-        ("pyproject.toml", python_config(PYTHON_STANDARD.read_text()), pyproject)
-    ]
-    for name, expected in rust_config(RUST_STANDARD.read_text()).items():
+    """Every defect in the standards, every unrecorded drift, and every stale deviation."""
+    expected_per_file, problems = declared(
+        {
+            str(PYTHON_STANDARD): PYTHON_STANDARD.read_text(),
+            str(RUST_STANDARD): RUST_STANDARD.read_text(),
+        }
+    )
+    governed: list[tuple[str, Toml, Toml]] = []
+    for name, expected in expected_per_file.items():
         actual = tomllib.loads(Path(name).read_text()) if Path(name).is_file() else {}
         governed.append((name, expected, actual))
 
@@ -116,7 +175,7 @@ def findings(deviations: dict[str, str]) -> list[str]:
         for name, expected, actual in governed
         for key, description in drift(expected, actual, "", name)
     }
-    issues = [f"{key}: {text}" for key, text in drifted.items() if key not in deviations]
+    issues = problems + [f"{key}: {text}" for key, text in drifted.items() if key not in deviations]
     issues += [
         f"{key}: recorded as a deviation but matches the standard; remove the entry"
         for key in deviations

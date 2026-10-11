@@ -198,7 +198,7 @@ each required string. Checking the _values_ rather than the presence of a block 
 the point — a header with the wrong copyright line passes a presence check and
 fails a review.
 
-```toml
+```toml title=pyproject.toml
 [tool.sv2.headers]
 required = true
 must_contain = [
@@ -835,7 +835,17 @@ group outside `[project]` ([§3.1](#31-the-standard-library-and-one-optional-imp
 There is no second place to configure these tools from, and there should not be
 one.
 
-```toml
+`scripts/check_standards_config.py` compares the block below key by key against the real
+`pyproject.toml`, and that is what makes this section normative rather than descriptive. It
+reads a block only when the fence names the file it governs:
+
+    ```toml title=pyproject.toml
+
+so a block that names no file is an illustration, a marked block that does not parse is a
+failure rather than a skipped fragment, and a governed file that no marked block declares is
+a failure too. STD-002-RS §13 states the same convention for the Rust workspace's files.
+
+```toml title=pyproject.toml
 [tool.ruff]
 # py312 is the interpreter the scripts run on — invoked as `python3.12`, the
 # newest one RHEL 9 AppStream provides as a supported package — and ruff and mypy
