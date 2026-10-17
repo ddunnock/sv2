@@ -1,6 +1,6 @@
 ---
 title: "Typed accessors are ratcheted against the node-kind inventory and proved on malformed trees"
-status: proposed
+status: accepted
 date: 2026-10-11
 deciders: [David]
 ---
@@ -67,15 +67,22 @@ parses `kinds.rs` a second time; a second reader of generated Rust is how a deri
 turns into two disagreeing facts.
 
 **Coverage** (`scripts/ast_coverage.py`, in the gate). A `// node: Kind` marker in
-`crates/sv2-ast/` claims a typed accessor.
+`crates/sv2-ast/src/` claims a typed accessor. Only `src/`: a marker in a test file would
+otherwise count as implemented with no accessor shipped, and `check_ast_leaks.py` runs its
+rules over `src/` alone, so the counted scope and the inspected scope are deliberately the
+same one. One tool counting what the other does not inspect is how a number stops meaning
+anything.
 
 | State | Meaning | Verdict |
 |---|---|---|
 | implemented | a marker claims a kind in the inventory | counted |
 | unimplemented | a kind no marker claims | tracked, never a failure |
 | absent | a marker claims a kind that does not exist | defect |
+| unproved | an implemented kind with no non-empty malformed case | defect |
+| unswept | an implemented kind whose sweep assertion is not defined and called | defect |
+| stray | a malformed case naming no kind | defect |
 
-`--check` fails on `absent` or on a stale report. The report is written to
+`--check` fails on any defect state or on a stale report. The report is written to
 `.claude/state/ast-coverage.json`, machine-owned and protected by the PreToolUse hook. On
 the day this lands it reads 0 implemented, 463 unimplemented, 0 absent, which is the honest
 state of a new crate and not a red gate.
@@ -97,29 +104,43 @@ nodes and tokens and the caller asks those for text. Nothing `pub` is named `tes
 |---|---|---|
 | Sweep of every tree the repository holds | `tests/sweep.rs` | panics, children that are not children, ranges outside the parent, answers that change between calls |
 | A named malformed case per accessor | `tests/malformed.rs`, data in `tests/malformed/<kind-in-kebab>/<condition>.sysml` | a child absent, duplicated, or out of order — the conditions the corpora do not happen to contain |
-| Property tests over generated input | `tests/properties.rs` | truncation at a multi-byte boundary, nesting near `MAX_DEPTH`, inputs nobody thought to write |
+| Property tests over generated input | `tests/properties.rs` | truncation at any character boundary in text carrying 2-, 3- and 4-byte characters, nesting near `MAX_DEPTH`, inputs nobody thought to write |
 | Differential assertion | inside the two above | an accessor that is confidently **wrong**, which neither a panic check nor an absence check sees |
 
-"All of them or it does not land" is **two of four mechanical, two procedural**, and
+"All of them or it does not land" is **three of four mechanical, one procedural**, and
 saying otherwise here would be the very failure this ADR is about.
 
-Mechanical: the `// node:` marker is counted, and the malformed case is now required.
-`scripts/ast_coverage.py` reports `unproved` — an implemented kind with no non-empty case
-— and `stray` — a case naming no kind — and both fail the gate. A case lives at
+Mechanical: the `// node:` marker is counted, the malformed case is required, and the
+sweep assertion is required. `scripts/ast_coverage.py` reports `unproved` — an implemented
+kind with no non-empty case — `unswept` — one the sweep does not exercise — and `stray` —
+a case naming no kind — and all three fail the gate. A case lives at
 `tests/malformed/<kind-in-kebab>/<condition>.sysml`, the kind naming the DIRECTORY,
 because a filename cannot carry kind and condition unambiguously: `-` separates the words
 inside a kebab kind and would also separate kind from condition, and 91 kinds have a kebab
 form prefixing another's, so `package-body-missing` reads equally as `Package` + "body
 missing" and as `PackageBody` + "missing". A directory keeps them in separate namespaces.
 
-Procedural, and said plainly: nothing requires a new accessor to be *called from the
-sweep*. `sweep()` names each assertion function explicitly, so an accessor can land with
-its marker, its malformed case and a green gate while never being swept at all — "green
-because it has nothing to check", one level up from where this ADR first found it. The
-guard is `.claude/rules/ast.md`, which loads on every `crates/sv2-ast/**` edit, and the
-`add-accessor` skill. A future check could require each implemented kind to appear in
-`tests/sweep.rs`; until one exists, this leg is discipline, not enforcement. The
-property-test leg is the same — the tests run, but nothing ties them to a new kind.
+The sweep leg was procedural when this ADR was first written, and that was its own
+instance of the failure it is about: `sweep()` names each assertion function explicitly,
+so an accessor could land with its marker, its malformed case and a green gate while never
+being swept at all — "green because it has nothing to check", one level up from where this
+ADR first found it. `ast_coverage.py` now reports `unswept`: a kind is swept when
+`tests/sweep.rs` both **defines** `assert_<kind_in_snake>_accessor` and **calls** it, with
+line comments stripped first so a doc comment naming the call does not stand in for the
+deed. Both conditions, because a definition with no call site *is* the hole — requiring
+the definition alone would reopen it one level down.
+
+Procedural, and said plainly: the **property-test leg**. `tests/properties.rs` runs, and
+its generated input reaches the accessors, but nothing ties a new kind to a new property.
+What a property should assert varies too much by kind for a name-matching check to
+demand one honestly, and a check that only counted a function would buy the same false
+comfort `unswept` was added to remove. The guard is `.claude/rules/ast.md`, which loads on
+every `crates/sv2-ast/**` edit, and the `add-accessor` skill.
+
+Also procedural, and unfixable by any gate: whether an assertion asserts anything worth
+asserting. `unswept` proves the accessor is reached; only mutating the accessor and
+watching the suite go red proves the assertions bite. Mutation is in the skill for that
+reason.
 
 The check asks whether the case exists and is not empty. Whether it asserts the right
 things is a review question, and no gate will ever answer it.
@@ -169,6 +190,10 @@ corpus file, malformed case, differential assertion, coverage, leak lint, tests,
   measuring rather than assuming.
 - Bad, because `sv2-syntax`'s round-trip generator cannot be imported across crates, so a
   small generator is duplicated in `tests/trees/`.
+- Bad, because `unswept` reads `tests/sweep.rs` as text rather than parsing it, so it
+  trusts a naming convention. A kind whose assertion is reached only through a helper
+  named something else would be reported `unswept` although it is swept; the fix is to
+  name the function as the convention says, never to widen the check.
 
 ### Confirmation
 
@@ -180,6 +205,15 @@ A check that has nothing to check passes, and this repository has said so about 
 gate. So each check lands **with its negative control run and recorded**: a `// node:`
 marker naming a kind that does not exist must report `absent`; a struct carrying a `String`
 field must fail; a `pub fn test_*` must fail; an accessor without its marker must fail.
+
+`unswept`'s controls, run against the live `tests/sweep.rs` and recorded here: deleting
+the call to `assert_root_namespace_accessor` while leaving the function defined reports
+`unswept` and exits 1; renaming the definition away reports it; replacing the call with a
+line comment naming it reports it; a missing `sweep.rs` sweeps nothing. The unmodified
+file reports none. The marker-scope narrowing has its own control — a `// node:` marker in
+a test file claims nothing — and the property test was proved by mutating `members()` two
+ways (`skip(1)`, and filtering `SyntaxKind::Error` out), each of which it caught, the
+second on generated input alone.
 
 The whole harness is then proved by building **one** accessor through the skill, root
 downward, before any others: the marker is claimed, the report moves 0 → 1, the leak lint

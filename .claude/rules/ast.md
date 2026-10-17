@@ -16,17 +16,26 @@ no public function returning `String`. `scripts/check_ast_leaks.py` fails on eac
 ADR-0004 justifies the lossless tree partly because this crate makes it affordable.
 Copying text out is how that stops being true.
 
-## The marker, and the three states
+## The marker, and the six states
 
-Every accessor carries `// node: Kind`. `scripts/ast_coverage.py` counts markers against
-`.claude/state/node-kinds.json`:
+Every accessor carries `// node: Kind`, **in `src/`**. `scripts/ast_coverage.py` counts
+markers under `src/` only — a marker in a test file counts for nothing, because it would
+read as implemented with no accessor shipped, and `check_ast_leaks.py` inspects `src/`
+alone. The counted scope and the inspected scope are the same one on purpose.
+
+Counted against `.claude/state/node-kinds.json`:
 
 - **implemented** — a marker claims a kind. Counted.
 - **unimplemented** — a kind no marker claims. Tracked, never a failure.
 - **absent** — a marker claims a kind that does not exist. A defect: the kind is added to
   the parser's `NODES` and regenerated, or the marker is wrong.
+- **unproved** — an implemented kind with no non-empty malformed case. A defect.
+- **unswept** — an implemented kind whose `assert_<kind>_accessor` the sweep does not both
+  define and call, so no tree ever reaches it. A defect.
+- **stray** — a malformed case naming no kind. A defect.
 
-A large unimplemented count is the honest state of this crate, not a problem to fix.
+A large unimplemented count is the honest state of this crate, not a problem to fix. The
+four defect states are the ones that mean something is wrong.
 
 ## A malformed case per accessor, in the same change
 
@@ -35,9 +44,13 @@ Three things, because absence is not the only way to be wrong:
 1. the parse still yields a tree — it always does, and the accessor sees a partial one;
 2. the accessor reports **absence** rather than guessing — and that something *reported*
    it: read `Parse::errors()`, because absence nothing reported is absence guessed;
-3. the neighbouring accessors still answer. With one accessor in the crate there is no
-   neighbour, so this part is **vacant, not discharged** — say so in the test rather
-   than letting a `kind()` check stand in for it.
+3. the neighbouring accessors still answer. This is dischargeable now that the crate has
+   more than one accessor, so discharge it: ask a different accessor about the same
+   damaged tree and assert it answers correctly. `Import`'s case asks `RootNamespace`
+   whether the broken import is still its one member. Where a fixture gives the
+   neighbour nothing to answer — the root-namespace case writes no import — say that in
+   the test and assert the only thing left, which is that the neighbour does not invent
+   one. A `kind()` check on the accessor under test never stands in for this.
 
 Where the grammar admits one child and the tree carries two, the case pins **which** is
 chosen. `.claude/rules/tests.md` governs where expectations may come from; read it.
@@ -75,9 +88,16 @@ right things, so review does.
 `tests/sweep.rs` walks every tree in the repository — 311 corpus files and 299 rejection
 files. An accessor that is not called from there is not swept at all, and the suite stays
 green because it has nothing to check, which is the failure ADR-0025 exists to prevent.
-Adding the accessor without adding its sweep assertions is the easiest way to get a green
-gate that proves nothing, and **no check catches it**: `sweep()` names each accessor's
-assertion function explicitly.
+
+`ast_coverage.py` now catches that as **unswept**: a kind counts as swept only when
+`tests/sweep.rs` both defines `assert_<kind_in_snake>_accessor` and calls it. Defining it
+and forgetting the call fails the gate, which is the whole point — that was the shape of
+the hole. Line comments are stripped before the scan, so a doc comment mentioning the call
+does not satisfy it.
+
+What the check cannot do is judge the assertions. It proves a tree reaches your accessor;
+it says nothing about whether anything would fail if the accessor were wrong. That is
+still on you, and the mutation step below is how you discharge it.
 
 Each kind gets an `assert_<kind>_accessor` asserting:
 

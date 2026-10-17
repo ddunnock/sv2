@@ -47,3 +47,11 @@ dist/
 # Subagent-driven-development scratch: ledger, briefs, reports, review packages.
 # The git history is the durable record; this is the controller's recovery map.
 .superpowers/
+
+# Proptest's saved failure seeds. The add-accessor skill requires mutating an
+# accessor and watching the suite go red, so most of these files record failures
+# that were induced on purpose and no longer exist — a seed replayed for ever as
+# though it had found something. A counterexample that is real gets promoted to a
+# named fixture with its citation, under tests/rejection/ or tests/malformed/,
+# which is this repository's idiom for "an input that broke us". Not an opaque seed.
+*.proptest-regressions

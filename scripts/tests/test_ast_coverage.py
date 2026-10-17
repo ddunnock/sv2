@@ -13,7 +13,9 @@ from ast_coverage import (
     kebab,
     layer_of,
     malformed_cases,
+    snake,
     stray_cases,
+    swept,
     worklist,
 )
 
@@ -44,28 +46,45 @@ def test_spacing_in_the_marker_does_not_matter(tmp_path):
     assert "RootNamespace" in claims(root)
 
 
+def test_a_marker_outside_src_claims_nothing(tmp_path):
+    """Coverage inflation: a marker in a test file, with no accessor shipped.
+
+    `check_ast_leaks.py` inspects `src/` alone, so a marker anywhere else used to be
+    counted as implemented by one tool and exempted from every rule by the other.
+    """
+    root = _crate(tmp_path, **{"ns.rs": "// node: RootNamespace\n"})
+    tests = root / "tests"
+    tests.mkdir()
+    (tests / "sweep.rs").write_text("// node: Package\n")
+    assert claims(root) == {"RootNamespace": ["src/ns.rs"]}
+
+
+def test_a_crate_with_no_src_claims_nothing(tmp_path):
+    assert claims(tmp_path) == {}
+
+
 def test_a_kind_no_marker_claims_is_unimplemented():
-    report = build_report({"A", "B"}, Tally(["A"], ["B"], [], [], []))
+    report = build_report({"A", "B"}, Tally(["A"], ["B"], [], [], [], []))
     assert report["unimplemented"] == 1
     assert report["unimplemented_kinds"] == ["B"]
     assert report["absent"] == 0
 
 
 def test_a_marker_naming_no_kind_is_absent():
-    report = build_report({"A"}, Tally([], ["A"], ["NotAKind"], [], []))
+    report = build_report({"A"}, Tally([], ["A"], ["NotAKind"], [], [], []))
     assert report["absent"] == 1
     assert report["absent_markers"] == ["NotAKind"]
 
 
 def test_an_empty_crate_reports_every_kind_unimplemented():
-    report = build_report({"A", "B"}, Tally([], ["A", "B"], [], [], []))
+    report = build_report({"A", "B"}, Tally([], ["A", "B"], [], [], [], []))
     assert (report["implemented"], report["unimplemented"], report["percent"]) == (0, 2, 0.0)
 
 
 def test_a_report_matching_disk_is_not_stale(tmp_path, monkeypatch):
     path = tmp_path / "ast-coverage.json"
     monkeypatch.setattr(ast_coverage, "REPORT", path)
-    report = build_report({"A"}, Tally([], ["A"], [], [], []))
+    report = build_report({"A"}, Tally([], ["A"], [], [], [], []))
     path.write_text(json.dumps(report, indent=2) + "\n")
     assert not is_stale(report)
 
@@ -74,12 +93,12 @@ def test_a_report_matching_disk_is_not_stale(tmp_path, monkeypatch):
 def test_a_report_disagreeing_with_disk_is_stale(damage, tmp_path, monkeypatch):
     path = tmp_path / "ast-coverage.json"
     monkeypatch.setattr(ast_coverage, "REPORT", path)
-    report = build_report({"A"}, Tally([], ["A"], [], [], []))
+    report = build_report({"A"}, Tally([], ["A"], [], [], [], []))
     if damage == "truncated":
         path.write_text('{"implemented":')
     elif damage == "changed":
         path.write_text(
-            json.dumps(build_report({"A"}, Tally(["A"], [], [], [], [])), indent=2) + "\n"
+            json.dumps(build_report({"A"}, Tally(["A"], [], [], [], [], [])), indent=2) + "\n"
         )
     assert is_stale(report)
 
@@ -159,15 +178,88 @@ def test_a_kind_becomes_its_kebab_stem():
     assert kebab("Package") == "package"
 
 
+def test_a_kind_becomes_its_snake_assertion_stem():
+    assert snake("RootNamespace") == "root_namespace"
+    assert snake("Package") == "package"
+
+
+def _sweep(tmp_path, text):
+    path = tmp_path / "sweep.rs"
+    path.write_text(text)
+    return path
+
+
+DEFINED_AND_CALLED = """
+fn assert_root_namespace_accessor(node: &SyntaxNode) {
+    assert_eq!(1, 1);
+}
+
+fn sweep(paths: Vec<PathBuf>) {
+    for node in root.descendants() {
+        assert_root_namespace_accessor(&node);
+    }
+}
+"""
+
+
+def test_an_accessor_defined_and_called_is_swept(tmp_path):
+    assert swept(["RootNamespace"], _sweep(tmp_path, DEFINED_AND_CALLED)) == {"RootNamespace"}
+
+
+def test_an_assertion_never_called_is_not_swept(tmp_path):
+    """The hole ADR-0025 named: it compiles, the suite is green, no tree reaches it."""
+    text = DEFINED_AND_CALLED.replace("assert_root_namespace_accessor(&node);", "")
+    assert swept(["RootNamespace"], _sweep(tmp_path, text)) == set()
+
+
+def test_an_assertion_never_defined_is_not_swept(tmp_path):
+    text = DEFINED_AND_CALLED.replace("fn assert_root_namespace_accessor", "fn assert_other")
+    assert swept(["RootNamespace"], _sweep(tmp_path, text)) == set()
+
+
+def test_a_call_in_a_comment_does_not_sweep(tmp_path):
+    """Documentation standing in for the deed. The marker already counts the claim."""
+    text = DEFINED_AND_CALLED.replace(
+        "assert_root_namespace_accessor(&node);",
+        "// assert_root_namespace_accessor(&node);",
+    )
+    assert swept(["RootNamespace"], _sweep(tmp_path, text)) == set()
+
+
+def test_a_kind_whose_stem_prefixes_another_is_not_swept_by_it(tmp_path):
+    """`Package` must not be credited by `assert_package_body_accessor`."""
+    text = """
+fn assert_package_body_accessor(node: &SyntaxNode) {}
+fn sweep() { assert_package_body_accessor(&node); }
+"""
+    assert swept(["Package", "PackageBody"], _sweep(tmp_path, text)) == {"PackageBody"}
+
+
+def test_a_missing_sweep_file_sweeps_nothing(tmp_path):
+    assert swept(["RootNamespace"], tmp_path / "absent.rs") == set()
+
+
+def test_an_implemented_kind_the_sweep_misses_is_unswept():
+    report = build_report({"A", "B"}, Tally(["A"], ["B"], [], [], ["A"], []))
+    assert report["unswept"] == 1
+    assert report["unswept_kinds"] == ["A"]
+
+
+def test_an_unimplemented_kind_is_never_unswept():
+    """Only a LANDED accessor owes a sweep assertion."""
+    report = build_report({"A"}, Tally([], ["A"], [], [], [], []))
+    assert report["unswept"] == 0
+
+
 def test_an_implemented_kind_with_no_case_is_unproved():
-    report = build_report({"A", "B"}, Tally(["A"], ["B"], [], ["A"], []))
+    report = build_report({"A", "B"}, Tally(["A"], ["B"], [], ["A"], [], []))
     assert report["unproved"] == 1
     assert report["unproved_kinds"] == ["A"]
 
 
 def test_an_unimplemented_kind_is_never_unproved():
     """`unimplemented` is a tracked state; only a LANDED accessor owes a case."""
-    report = build_report({"A"}, Tally([], ["A"], [], [], []))
+    report = build_report({"A"}, Tally([], ["A"], [], [], [], []))
     assert report["unproved"] == 0
 
 
@@ -241,6 +333,6 @@ def test_a_correctly_placed_case_is_not_stray(tmp_path):
 
 
 def test_a_stray_case_is_a_reported_defect():
-    report = build_report({"A"}, Tally(["A"], [], [], [], ["b/ names no node kind"]))
+    report = build_report({"A"}, Tally(["A"], [], [], [], [], ["b/ names no node kind"]))
     assert report["stray"] == 1
     assert report["stray_cases"] == ["b/ names no node kind"]

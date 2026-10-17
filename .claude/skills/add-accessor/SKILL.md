@@ -74,13 +74,15 @@ about deviation diagnostics and says nothing about recovery.
 
 ## 4. Implement, and give the sweep teeth
 
-The accessor wraps one `SyntaxNode`, carries `// node: Kind`, and returns nodes and
-tokens — never a `String`.
+The accessor wraps one `SyntaxNode`, carries `// node: Kind` **in `src/`** (a marker
+elsewhere counts for nothing), and returns nodes and tokens — never a `String`.
 
-**Extend `tests/sweep.rs` with assertions for this kind.** This is not optional, and it
-is the step most easily skipped: the sweep walks every tree in the repository, so an
-accessor that is not called from it is not swept at all, and the suite stays green
-because it has nothing to check. Add, in `assert_<kind>_accessor`:
+**Extend `tests/sweep.rs` with assertions for this kind.** The sweep walks every tree in
+the repository, so an accessor that is not called from it is not swept at all, and the
+suite stays green because it has nothing to check. The gate enforces this as `unswept`:
+`fn assert_<kind_in_snake>_accessor` must exist **and** be called from `sweep()`. Writing
+the function and forgetting the call is a red gate, not a silent pass. Add, in
+`assert_<kind>_accessor`:
 
 - the cast contract — `cast` succeeds exactly when `kind()` matches, and `syntax()`
   hands back the node it was cast from;
@@ -92,21 +94,51 @@ because it has nothing to check. Add, in `assert_<kind>_accessor`:
   must say why — forcing the decision to be written down rather than made by accident.
 
 Then prove the assertion can fail. Mutate the accessor (return an empty iterator; reverse
-the order; filter a kind out), confirm the sweep goes red, and restore it. An assertion
-you have not seen fail is a guess.
+the order; filter a kind out; reach a grandchild; read descendants where you meant
+children), confirm the suite goes red, and restore it. An assertion you have not seen fail
+is a guess — and this is the half `unswept` cannot check. The gate proves a tree reaches
+your accessor; only the mutation proves anything would notice if the accessor were wrong.
+
+Restore from a **copy you made first**, not with `git checkout <path>`: an accessor still
+being built is unstaged, so a checkout silently reverts the whole file's new work and the
+suite goes green for the wrong reason.
+
+### A missed mutation is a result, not a nuisance
+
+When a mutation survives, exactly one of two things is true, and they are not
+interchangeable:
+
+- **No case distinguishes it.** Write one, and say in its doc comment why the corpus
+  could not. `is_import_all` reading descendants instead of direct children survived the
+  whole 610-tree sweep, because no pinned file writes `all` below an import without
+  writing one above it; `tests/positive.rs` now writes `public import A::*[all B];`,
+  where the `all` is an `ExtentExpression` operator (`KerML` 8.2.5.8.1) and not the
+  import's. A hand-written positive case is legitimate for precisely this — a
+  distinction the corpus does not contain — and its expectation still comes from the
+  clauses, never from what the accessor printed.
+- **The mutation is equivalent under an invariant something already proves.** Say which
+  invariant, and leave it. `Import::child` taking the last matching child rather than the
+  first cannot be observed, because the sweep asserts over every tree that an import
+  never carries two of any of them — so `find` and `last` agree by construction. If that
+  assertion ever failed, this mutation would become observable, which is the honest link
+  between the two.
+
+What is never acceptable is recording a mutation as caught when the build merely failed to
+compile. That proves the mutation was ill-formed, not that an assertion bites.
 
 ## 5. Verify, in this order
 
 ```bash
 python3.12 scripts/ast_coverage.py          # the kind moves to implemented
-python3.12 scripts/ast_coverage.py --check  # and is proved: no `unproved`, no `absent`
+python3.12 scripts/ast_coverage.py --check  # no absent, unproved, unswept or stray
 python3.12 scripts/check_ast_leaks.py       # owns no data, marker present
 cargo test -p sv2-ast                       # positive, malformed, sweep, properties
 ./scripts/gate.sh                           # the definition of done
 ```
 
-`unproved` means the malformed case is missing or misnamed. Write the case or fix the
-name; never widen the check.
+`unproved` means the malformed case is missing or misnamed. `unswept` means the sweep does
+not define *and* call `assert_<kind_in_snake>_accessor`. Write the case, or add the call;
+never widen the check.
 
 A sweep failure on a tree you did not write is the point of the sweep. Read the tree
 before changing the accessor.

@@ -6,21 +6,35 @@
     unimplemented  a kind no marker claims                     -- legitimate
     absent         a marker claims a kind that does not exist  -- DEFECT
     unproved       an implemented kind with no malformed case  -- DEFECT
+    unswept        an implemented kind the sweep never calls   -- DEFECT
     stray          a malformed case that names no kind         -- DEFECT
 
-A claim is a ``// node: Kind`` marker in a file under ``crates/sv2-ast/``. The inventory
-is ``.claude/state/node-kinds.json``, written by the generator that owns the list.
+A claim is a ``// node: Kind`` marker in a file under ``crates/sv2-ast/src/``. Only
+``src/``: a marker in a test file would otherwise count as implemented with no accessor
+shipped, which inflates coverage, and ``src/`` is already the scope
+``scripts/check_ast_leaks.py`` enforces its rules over. The two agreeing is the point --
+one tool counting what the other does not inspect is how a number stops meaning anything.
+
+The inventory is ``.claude/state/node-kinds.json``, written by the generator that owns the
+list.
 
     python3.12 scripts/ast_coverage.py           write the report
-    python3.12 scripts/ast_coverage.py --check   fail on absent, unproved, stray, staleness
+    python3.12 scripts/ast_coverage.py --check   fail on any defect, or on staleness
 
 `unimplemented` is the honest state of a crate being built and is never a failure. A new
 crate reads 0 implemented and 463 unimplemented, which is the number, not a verdict.
 
-`unproved` is what makes part of ADR-0025's claim mechanical rather than aspirational:
-"an accessor lands with all of them or it does not land". The marker was already counted
-here; the malformed case was prose only, so an accessor could land without one and the
-gate stayed green.
+`unproved` and `unswept` are what make ADR-0025's claim mechanical rather than
+aspirational: "an accessor lands with all of them or it does not land". The marker was
+already counted here; the malformed case and the sweep assertion were prose only, so an
+accessor could land without either and the gate stayed green.
+
+`unswept` closes the hole ADR-0025 named and left open: ``tests/sweep.rs`` calls each
+assertion function by name, so an accessor could carry its marker and its malformed case
+while never being exercised over a single tree -- "green because it has nothing to
+check". A kind is swept when the sweep both DEFINES ``assert_<kind_in_snake>_accessor``
+and CALLS it; defining one and forgetting the call is the whole failure, so requiring the
+definition alone would re-open the hole one level down. See `swept`.
 
 A kind is proved by at least one non-empty file under
 ``crates/sv2-ast/tests/malformed/<kind-in-kebab>/``; ``RootNamespace`` is proved by
@@ -42,6 +56,10 @@ import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 from _derived import write_derived
 
@@ -49,6 +67,10 @@ ROOT = Path(__file__).resolve().parents[1]
 INVENTORY = Path(".claude/state/node-kinds.json")
 REPORT = Path(".claude/state/ast-coverage.json")
 SOURCE = Path("crates/sv2-ast")
+#: Markers count only here, and `check_ast_leaks.py` enforces only here. Relative to
+#: SOURCE, so the report still prints the path a reader can open.
+SRC = Path("src")
+SWEEP = Path("crates/sv2-ast/tests/sweep.rs")
 MALFORMED = Path("crates/sv2-ast/tests/malformed")
 REFERENCE = Path(".claude/state/grammar/reference.json")
 START = "RootNamespace"
@@ -74,9 +96,15 @@ def declared(path: Path = INVENTORY) -> list[str]:
 
 
 def claims(root: Path = SOURCE) -> dict[str, list[str]]:
-    """Every kind claimed under `root`, mapped to the files claiming it, path-sorted."""
+    """Every kind claimed under ``root/src``, mapped to the files claiming it, path-sorted.
+
+    Only ``src/``. A marker anywhere under the crate used to count, so one in a test file
+    read as implemented although no accessor shipped -- and `check_ast_leaks.py` would
+    never have inspected it, because its rules run over ``src/`` alone. Paths stay
+    relative to `root`, so the report prints ``src/ns.rs`` and not ``ns.rs``.
+    """
     found: dict[str, list[str]] = {}
-    for file in sorted(root.rglob("*.rs")):
+    for file in sorted((root / SRC).rglob("*.rs")):
         relative = file.relative_to(root).as_posix()
         for kind in MARKER.findall(file.read_text(errors="replace")):
             found.setdefault(kind, []).append(relative)
@@ -89,6 +117,49 @@ def kebab(kind: str) -> str:
     ``RootNamespace`` -> ``root-namespace``.
     """
     return BOUNDARY.sub("-", kind).lower()
+
+
+def snake(kind: str) -> str:
+    """The Rust identifier stem a node kind's sweep assertion carries.
+
+    ``RootNamespace`` -> ``root_namespace``, so the assertion is
+    ``assert_root_namespace_accessor``.
+    """
+    return BOUNDARY.sub("_", kind).lower()
+
+
+def _code(text: str) -> str:
+    """``text`` with line comments stripped, so a prose mention is not a call site.
+
+    A doc comment naming ``assert_x_accessor()`` would otherwise satisfy `swept` for a
+    kind nothing calls -- the documentation standing in for the deed. This is a text
+    scan, not a Rust parser: it would also cut a ``//`` inside a string literal, which
+    `sweep.rs` does not contain, and whether an assertion asserts anything worth
+    asserting remains a review question either way.
+    """
+    return "\n".join(line.split("//", 1)[0] for line in text.splitlines())
+
+
+def swept(kinds: list[str], path: Path = SWEEP) -> set[str]:
+    """Every kind whose accessor the sweep both defines an assertion for and calls.
+
+    Two conditions, because either alone is satisfiable without exercising anything. A
+    definition with no call site is the exact failure ADR-0025 named and left to
+    discipline: the function compiles, the suite is green, and no tree ever reaches the
+    accessor. A call with no definition does not compile, so it is only checked here for
+    symmetry.
+    """
+    if not path.is_file():
+        return set()
+    code = _code(path.read_text(errors="replace"))
+    found: set[str] = set()
+    for kind in kinds:
+        stem = snake(kind)
+        defined = f"fn assert_{stem}_accessor" in code
+        called = re.search(rf"(?<!fn )\bassert_{re.escape(stem)}_accessor\s*\(", code)
+        if defined and called:
+            found.add(kind)
+    return found
 
 
 def malformed_cases(kinds: list[str], root: Path = MALFORMED) -> dict[str, list[str]]:
@@ -158,6 +229,7 @@ class Tally:
     unimplemented: list[str]
     absent: list[str]
     unproved: list[str]
+    unswept: list[str]
     stray: list[str]
 
 
@@ -168,7 +240,7 @@ def build_report(
     """The report as it should be on disk for this inventory and these markers."""
     implemented = tally.implemented
     unimplemented, absent = tally.unimplemented, tally.absent
-    unproved, stray = tally.unproved, tally.stray
+    unproved, unswept, stray = tally.unproved, tally.unswept, tally.stray
     total = len(set(declared_kinds))
     percent = 100.0 * len(implemented) / total if total else 0.0
     return {
@@ -177,20 +249,24 @@ def build_report(
             "Typed accessors over CST node kinds (ADR-0025). `unimplemented` is a tracked "
             "state, not a failure. `absent` is a defect: a marker claiming a kind that "
             "does not exist. `unproved` is a defect: an implemented kind with no malformed "
-            "case under crates/sv2-ast/tests/malformed/<kind-in-kebab>/. `stray` is a "
-            "defect: a case naming no kind. The order is the worklist order, never a verdict."
+            "case under crates/sv2-ast/tests/malformed/<kind-in-kebab>/. `unswept` is a "
+            "defect: an implemented kind whose assert_<kind>_accessor the sweep does not "
+            "define and call, so no tree reaches it. `stray` is a defect: a case naming no "
+            "kind. The order is the worklist order, never a verdict."
         ),
         "declared": total,
         "implemented": len(implemented),
         "unimplemented": len(unimplemented),
         "absent": len(absent),
         "unproved": len(unproved),
+        "unswept": len(unswept),
         "stray": len(stray),
         "percent": round(percent, 1),
         "implemented_kinds": implemented,
         "unimplemented_kinds": unimplemented,
         "absent_markers": absent,
         "unproved_kinds": unproved,
+        "unswept_kinds": unswept,
         "stray_cases": stray,
     }
 
@@ -274,49 +350,92 @@ def measure() -> dict[str, object]:
     absent = sorted(k for k in claimed if k not in set(kinds))
     proved = malformed_cases(kinds)
     unproved = [k for k in implemented if k not in proved]
-    tally = Tally(implemented, unimplemented, absent, unproved, stray_cases(kinds))
+    exercised = swept(kinds)
+    unswept = [k for k in implemented if k not in exercised]
+    tally = Tally(implemented, unimplemented, absent, unproved, unswept, stray_cases(kinds))
     return build_report(kinds, tally)
 
 
+@dataclass(frozen=True, slots=True)
+class Defect:
+    """One defect state: what to call it, what it listed, and what to do about it."""
+
+    heading: str
+    key: str
+    item: Callable[[str], str]
+    advice: str
+
+
+#: The four defect states, in report order. A table rather than four near-identical
+#: branches: the next state added is a row, and nothing about how it prints can drift from
+#: how the others print.
+DEFECTS = (
+    Defect(
+        heading="markers claim node kinds that do not exist:",
+        key="absent_markers",
+        item=lambda kind: f"  {kind}",
+        advice="A kind is added to the parser's NODES, then regenerated. `absent` is a defect.",
+    ),
+    Defect(
+        heading="malformed cases that name no node kind:",
+        key="stray_cases",
+        item=lambda case: f"  {case}",
+        advice=(
+            f"A case lives at {MALFORMED}/<kind-in-kebab>/<condition>.sysml. "
+            "Misplaced, it proves nothing while looking as though it does."
+        ),
+    ),
+    Defect(
+        heading="accessors with no malformed case (ADR-0025):",
+        key="unproved_kinds",
+        item=lambda kind: f"  {kind} — expected {MALFORMED}/{kebab(kind)}/<condition>.sysml",
+        advice=(
+            "An accessor lands with all four kinds of evidence or it does not land. "
+            "Write the case; do not widen this check."
+        ),
+    ),
+    Defect(
+        heading="accessors the sweep never exercises (ADR-0025):",
+        key="unswept_kinds",
+        item=lambda kind: (
+            f"  {kind} — expected fn assert_{snake(kind)}_accessor in {SWEEP}, called"
+        ),
+        advice=(
+            "An accessor nothing sweeps is green because it has nothing to check. "
+            "Define the assertion AND call it from sweep(); do not widen this check."
+        ),
+    ),
+)
+
+
+def report_defects(report: dict[str, object]) -> bool:
+    """Print the first defect state carrying anything. True when one did."""
+    for defect in DEFECTS:
+        found = report.get(defect.key)
+        if not isinstance(found, list) or not found:
+            continue
+        print(defect.heading)
+        for entry in found:
+            print(defect.item(str(entry)))
+        print(defect.advice)
+        return True
+    return False
+
+
 def main(argv: list[str] | None = None) -> int:
-    """Write the coverage report, or with --check fail on absent or staleness."""
+    """Write the coverage report, or with --check fail on a defect state or staleness."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--check",
         action="store_true",
-        help="fail on absent, unproved, stray, or a stale report",
+        help="fail on absent, unproved, unswept, stray, or a stale report",
     )
     args = parser.parse_args(argv)
     os.chdir(ROOT)
 
     report = measure()
-    absent = report["absent_markers"]
-    unproved = report["unproved_kinds"]
-    stray = report["stray_cases"]
     if args.check:
-        if absent:
-            print("markers claim node kinds that do not exist:")
-            for kind in absent if isinstance(absent, list) else []:
-                print(f"  {kind}")
-            print("A kind is added to the parser's NODES, then regenerated. `absent` is a defect.")
-            return 1
-        if stray:
-            print("malformed cases that name no node kind:")
-            for case in stray if isinstance(stray, list) else []:
-                print(f"  {case}")
-            print(
-                f"A case lives at {MALFORMED}/<kind-in-kebab>/<condition>.sysml. "
-                "Misplaced, it proves nothing while looking as though it does."
-            )
-            return 1
-        if unproved:
-            print("accessors with no malformed case (ADR-0025):")
-            for kind in unproved if isinstance(unproved, list) else []:
-                print(f"  {kind} — expected {MALFORMED}/{kebab(kind)}/<condition>.sysml")
-            print(
-                "An accessor lands with all four kinds of evidence or it does not land. "
-                "Write the case; do not widen this check."
-            )
+        if report_defects(report):
             return 1
         if is_stale(report):
             print(f"{REPORT} is stale — run python3.12 scripts/ast_coverage.py")
