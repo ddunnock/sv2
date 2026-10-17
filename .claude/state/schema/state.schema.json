@@ -13,7 +13,7 @@
   "properties": {
     "schema_version": {
       "type": "integer",
-      "const": 1
+      "const": 2
     },
     "generated": {
       "type": "object",
@@ -128,13 +128,14 @@
         },
         "ast_coverage": {
           "type": "object",
-          "description": "Typed accessors over CST node kinds (ADR-0025). `unimplemented` is a tracked state, never a failure; `absent`, `unproved` and `stray` are defects.",
+          "description": "Typed accessors over CST node kinds (ADR-0025). `unimplemented` is a tracked state, never a failure; `absent`, `unproved`, `unswept` and `stray` are defects.",
           "required": [
             "declared",
             "implemented",
             "unimplemented",
             "absent",
             "unproved",
+            "unswept",
             "stray"
           ],
           "additionalProperties": false,
@@ -156,6 +157,10 @@
               "minimum": 0
             },
             "unproved": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unswept": {
               "type": "integer",
               "minimum": 0
             },

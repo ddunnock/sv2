@@ -100,8 +100,12 @@ def ast_coverage() -> dict[str, Json]:
 
     Written for whoever reads the block at session start: a cold session should learn how
     far sv2-ast has got from derived data, not from the prose in `objective`, which goes
-    stale. `unimplemented` is a tracked state and never a failure; `absent`, `unproved`
-    and `stray` are defects the gate already fails on.
+    stale. `unimplemented` is a tracked state and never a failure; `absent`, `unproved`,
+    `unswept` and `stray` are defects the gate already fails on.
+
+    All four defect states are reported, not only the ones that happen to be non-zero. A
+    handoff block that lists three of four reads as though the fourth did not exist, which
+    is how a reader concludes the sweep requirement is still discipline.
     """
     cov = load_json(".claude/state/ast-coverage.json", {})
     return {
@@ -110,6 +114,7 @@ def ast_coverage() -> dict[str, Json]:
         "unimplemented": cov.get("unimplemented", 0),
         "absent": cov.get("absent", 0),
         "unproved": cov.get("unproved", 0),
+        "unswept": cov.get("unswept", 0),
         "stray": cov.get("stray", 0),
         "percent": round(cov.get("percent", 0.0), 1),
     }
