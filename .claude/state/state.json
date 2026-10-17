@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-17T11:41:08Z",
+    "regenerated_utc": "2026-10-17T11:58:01Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 1,
-      "unimplemented": 462,
+      "implemented": 2,
+      "unimplemented": 461,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 0.2
+      "percent": 0.4
     },
     "tests": {
-      "unit": 758,
+      "unit": 761,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "28fc394 Correct the handoff: the schema bump is no longer outstanding",
+      "6c502df Surface unswept in the handoff block, at state schema v2",
       "56e6478 Close the four ADR-0025 evidence gaps, and accept it",
       "3e08d5d Land ADR-0026 with the frontmatter the other ADRs use",
       "b316423 Record that ast-harness is merged and pushed",
       "820db58 Merge ast-harness: the sv2-ast development harness and its first accessor",
       "13fc1a0 Close the session: report the ast gates, and hand off from state.json",
-      "2d44300 Cite the parser for recovery, and make two gates fail closed",
-      "bb2b2ee Make the malformed case a gate, not a promise",
-      "ebe3deb Give the sweep real teeth, and tell the truth in the malformed case"
+      "2d44300 Cite the parser for recovery, and make two gates fail closed"
     ]
   },
   "authored": {

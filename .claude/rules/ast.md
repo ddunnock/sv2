@@ -44,9 +44,13 @@ Three things, because absence is not the only way to be wrong:
 1. the parse still yields a tree — it always does, and the accessor sees a partial one;
 2. the accessor reports **absence** rather than guessing — and that something *reported*
    it: read `Parse::errors()`, because absence nothing reported is absence guessed;
-3. the neighbouring accessors still answer. With one accessor in the crate there is no
-   neighbour, so this part is **vacant, not discharged** — say so in the test rather
-   than letting a `kind()` check stand in for it.
+3. the neighbouring accessors still answer. This is dischargeable now that the crate has
+   more than one accessor, so discharge it: ask a different accessor about the same
+   damaged tree and assert it answers correctly. `Import`'s case asks `RootNamespace`
+   whether the broken import is still its one member. Where a fixture gives the
+   neighbour nothing to answer — the root-namespace case writes no import — say that in
+   the test and assert the only thing left, which is that the neighbour does not invent
+   one. A `kind()` check on the accessor under test never stands in for this.
 
 Where the grammar admits one child and the tree carries two, the case pins **which** is
 chosen. `.claude/rules/tests.md` governs where expectations may come from; read it.
