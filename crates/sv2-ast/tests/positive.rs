@@ -17,13 +17,18 @@
 
 mod trees;
 
-use sv2_ast::{AstNode, Import};
+use sv2_ast::{AstNode, Import, PackageMember};
 use sv2_syntax::{SyntaxKind, SyntaxNode};
 
 /// The file the frozen grammar unit cites as evidence for the optional `all`
 /// (`.claude/state/grammar/units/Import.json`, evidence[2]).
 const PRIVATE_IMPORT_TEST: &str = "vendor/corpus/sysml/src/examples/Import Tests/\
                                    PrivateImportTest.sysml";
+
+/// Eight lines holding a `PackageMember` beside the two other memberships that stand at
+/// the same position in a package body, which is what makes it useful.
+const PACKAGE_EXAMPLE: &str = "vendor/corpus/sysml/src/training/01. Packages/\
+                               Package Example.sysml";
 
 #[expect(
     clippy::panic,
@@ -161,4 +166,81 @@ fn an_import_does_not_claim_an_all_from_its_filter_expression() {
         "the `all` here is the extent expression's operator (KerML 8.2.5.8.1), not the \
          import's isImportAll (SysML 8.2.2.5.1)"
     );
+}
+
+/// `Package Example.sysml` writes two package members, and four things that are not
+/// package members although they sit in the same position and share its prefix shape.
+///
+/// Read off the file, which is eight lines whole:
+///
+/// ```text
+///   package 'Package Example' {            PackageMember, no visibility
+///       public import ISQ::TorqueValue;    Import
+///       private import ScalarValues::*;    Import
+///       private part def Automobile;       PackageMember, private
+///       public alias Car for Automobile;   AliasMember
+///       alias Torque for ISQ::TorqueValue; AliasMember
+///   }
+/// ```
+///
+/// `PackageBodyElement` admits all three kinds (`SysML` 8.2.2.5.1), and `Import`,
+/// `AliasMember` and `PackageMember` each open with a `MemberPrefix` or a visibility — so
+/// a cast that went by shape rather than by kind would collect six "members" here instead
+/// of two. That is what this file is for, and no hand-written input would do it as well:
+/// these are the real neighbours, in a real file, in the order a real author wrote them.
+///
+/// It also pins both prefix states against one another. The outer package is written with
+/// no visibility, so its prefix is present and **zero width**; `Automobile` is written
+/// `private`, so its prefix carries a `VisibilityIndicator`. A test that saw only one of
+/// those would not notice an accessor that always returned the same thing.
+#[test]
+fn package_example_writes_two_members_beside_other_memberships() {
+    let root = tree_of(PACKAGE_EXAMPLE);
+    let members: Vec<PackageMember> = root.descendants().filter_map(PackageMember::cast).collect();
+
+    assert_eq!(
+        members.len(),
+        2,
+        "the outer package and `private part def Automobile;` are the package members; \
+         the imports and aliases are not, although they stand in the same place"
+    );
+
+    // The elements, by the kind each alternation resolved to. `DefinitionElement` and
+    // `UsageElement` build no node, so these are the concrete elements.
+    let elements: Vec<SyntaxKind> = members
+        .iter()
+        .map(|member| {
+            member
+                .element()
+                .map_or(SyntaxKind::Error, |element| element.kind())
+        })
+        .collect();
+    assert_eq!(
+        elements,
+        [SyntaxKind::Package, SyntaxKind::PartDefinition],
+        "the outer member owns the package; the inner one owns the part definition"
+    );
+
+    // Both prefix states, in one file: empty for the package, `private` for the part
+    // definition. The node is present in both cases, by deliberate choice in the parser.
+    let prefixes: Vec<String> = members
+        .iter()
+        .map(|member| {
+            member
+                .prefix()
+                .map_or_else(|| "<none>".to_owned(), |node| node.text().to_string())
+        })
+        .collect();
+    assert_eq!(
+        prefixes,
+        ["", "private"],
+        "a member written without a visibility has an empty prefix, not an absent one"
+    );
+
+    // And the neighbours really are there, so the count above is a discrimination rather
+    // than an accident of a file that happens to hold two of something.
+    let kinds: Vec<SyntaxKind> = root.descendants().map(|node| node.kind()).collect();
+    let count = |want: SyntaxKind| kinds.iter().filter(|kind| **kind == want).count();
+    assert_eq!(count(SyntaxKind::Import), 2, "two imports are written");
+    assert_eq!(count(SyntaxKind::AliasMember), 2, "two aliases are written");
 }

@@ -8,7 +8,9 @@
 mod ast_node;
 mod import;
 mod namespace;
+mod package_member;
 
 pub use crate::ast_node::AstNode;
 pub use crate::import::Import;
 pub use crate::namespace::RootNamespace;
+pub use crate::package_member::PackageMember;

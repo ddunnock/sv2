@@ -7,7 +7,7 @@
 
 mod trees;
 
-use sv2_ast::{AstNode, Import, RootNamespace};
+use sv2_ast::{AstNode, Import, PackageMember, RootNamespace};
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode};
 
 /// The direct children of `node` that are of `kind`.
@@ -181,6 +181,121 @@ fn assert_import_accessor(node: &SyntaxNode) {
     );
 }
 
+/// `prefix()` and `element()` partition `node`'s direct children.
+///
+/// (b) the production is `MemberPrefix` then **one** element, so neither half may have
+///     two members;
+/// (c) each accessor equals its re-derived half, and then the arithmetic that ties the
+///     two together: the counts must add up to every child, exactly once. Each equality
+///     taken alone passes an accessor that returned the prefix for both, because
+///     `element()` is defined as "not the prefix" and a defect can satisfy that vacuously;
+/// (d) the prefix is a `MemberPrefix`, the element never is, and they are never the same
+///     node.
+fn assert_package_member_partition(node: &SyntaxNode, member: &PackageMember) {
+    let prefixes = children_of_kind(node, SyntaxKind::MemberPrefix);
+    let elements: Vec<SyntaxNode> = node
+        .children()
+        .filter(|child| child.kind() != SyntaxKind::MemberPrefix)
+        .collect();
+    assert!(
+        prefixes.len() <= 1,
+        "a package member carries at most one MemberPrefix, but this one has {} at {:?}",
+        prefixes.len(),
+        node.text_range()
+    );
+    assert!(
+        elements.len() <= 1,
+        "a package member owns at most one element, but this one has {} ({:?}) at {:?}",
+        elements.len(),
+        elements.iter().map(SyntaxNode::kind).collect::<Vec<_>>(),
+        node.text_range()
+    );
+
+    assert_eq!(
+        member.prefix(),
+        prefixes.first().cloned(),
+        "prefix() is not this node's MemberPrefix child at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        member.element(),
+        elements.first().cloned(),
+        "element() is not this node's non-prefix child at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        usize::from(member.prefix().is_some()) + usize::from(member.element().is_some()),
+        node.children().count(),
+        "prefix() and element() must account for every direct child exactly once, at {:?}",
+        node.text_range()
+    );
+
+    if let Some(prefix) = member.prefix() {
+        assert_eq!(prefix.kind(), SyntaxKind::MemberPrefix);
+        assert_ne!(
+            Some(&prefix),
+            member.element().as_ref(),
+            "element() returned the prefix at {:?}",
+            node.text_range()
+        );
+    }
+    if let Some(element) = member.element() {
+        assert_ne!(
+            element.kind(),
+            SyntaxKind::MemberPrefix,
+            "element() returned a MemberPrefix at {:?}",
+            node.text_range()
+        );
+    }
+}
+
+/// What `PackageMember` must satisfy at every node, whatever the tree:
+///
+/// (a) `cast` succeeds exactly when `node.kind()` is `SyntaxKind::PackageMember`, and the
+///     node survives the round trip through `syntax()`;
+/// (b) the production is `MemberPrefix` then **one** element (`SysML` 8.2.2.5.1), so no
+///     member anywhere may carry two prefixes or two elements. This is the claim
+///     `PackageMember::child_where` relies on when it takes the first match;
+/// (c) the differential, and the one that matters here: `prefix()` and `element()`
+///     partition the direct children. `element()` is defined as "not the prefix", so the
+///     assertion re-derives both halves independently and demands that together they
+///     account for every child and never for the same one — an accessor that returned
+///     the prefix as the element would satisfy each half alone;
+/// (d) the prefix is a `MemberPrefix` and the element never is;
+/// (e) calling each accessor twice returns the same answer.
+fn assert_package_member_accessor(node: &SyntaxNode) {
+    let is_member = node.kind() == SyntaxKind::PackageMember;
+    let cast = PackageMember::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_member,
+        "PackageMember::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(member) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        member.syntax(),
+        node,
+        "PackageMember::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b), (c) and (d): the two accessors partition this node's children.
+    assert_package_member_partition(node, &member);
+
+    // (e) idempotent.
+    assert_eq!(
+        (member.prefix(), member.element()),
+        (member.prefix(), member.element()),
+        "a PackageMember accessor disagreed with itself between two calls on the same node"
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -192,6 +307,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_node_invariants(&node);
             assert_root_namespace_accessor(&node);
             assert_import_accessor(&node);
+            assert_package_member_accessor(&node);
             visited += 1;
         }
     }
