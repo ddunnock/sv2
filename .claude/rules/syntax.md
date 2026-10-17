@@ -3,7 +3,7 @@ paths:
   - "crates/sv2-syntax/**"
 ---
 
-# sv2-syntax and sv2-ast — the lossless layer
+# sv2-syntax — the lossless layer
 
 ## The parse tree is lossless. This is not negotiable.
 
@@ -57,11 +57,15 @@ else — a line and column now, UTF-16 code units when a language server needs t
 (ADR-0013 RISK-013-2). A second conversion anywhere defeats the test that this one is
 right.
 
-## sv2-ast owns no data
+## The layer above holds nodes, not text
 
-The AST layer is typed accessors over CST nodes. It holds references and offsets, not
-owned strings or cloned subtrees. If you find yourself copying text out of the CST into
-an AST struct, the abstraction has leaked — the consumer should hold the node instead.
+`sv2-ast` is typed accessors over these nodes, holding references and offsets rather than
+owned strings. That is what makes the lossless tree affordable (ADR-0004), so a node here
+is designed to be worth holding: cheap to clone, and carrying its own ranges.
+
+The rule itself, and `scripts/check_ast_leaks.py` which enforces it, belong to
+`.claude/rules/ast.md` — the file that loads when you edit that crate. It is not restated
+here, because a second copy in a file scoped to `crates/sv2-syntax/**` can only drift.
 
 ## Incrementality
 

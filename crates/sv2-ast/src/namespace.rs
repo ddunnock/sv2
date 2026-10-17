@@ -35,7 +35,7 @@ impl RootNamespace {
     ///
     /// A production swallowed into an earlier, unclosed sibling's body is not one of
     /// these: this walks the tree the parser actually built, never the member count
-    /// the source text seems to promise (`tests/malformed/root-namespace-unclosed-body.sysml`).
+    /// the source text seems to promise (`tests/malformed/root-namespace/unclosed-body.sysml`).
     ///
     /// Recovery nodes are members. A `SyntaxKind::Error` is not an alternative of
     /// `PackageBodyElement` (`SysML` 8.2.2.5.1) or `NamespaceBodyElement` (`KerML`
