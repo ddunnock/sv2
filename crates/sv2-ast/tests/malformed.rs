@@ -133,8 +133,11 @@ fn an_import_naming_nothing_still_reports_a_declaration_that_names_nothing() {
     let visibility = import
         .visibility()
         .expect("`public` is written, so the VisibilityIndicator is there");
-    assert_eq!(visibility.kind(), SyntaxKind::VisibilityIndicator);
-    assert_eq!(visibility.text().to_string(), "public");
+    assert_eq!(
+        visibility.keyword().map(|token| token.kind()),
+        Some(SyntaxKind::KwPublic),
+        "the indicator is reached as a typed view and reports `public` by token kind"
+    );
     assert!(
         !import.is_import_all(),
         "no `all` is written, so none may be reported"
@@ -574,7 +577,8 @@ fn a_filter_with_no_condition_reports_none_rather_than_an_error_node() {
     assert_eq!(
         prefix
             .visibility()
-            .map(|node| node.text().to_string())
+            .and_then(|visibility| visibility.keyword())
+            .map(|token| token.text().to_string())
             .as_deref(),
         Some("private"),
         "`private` is this member's own, and the damaged condition does not cost it"
@@ -586,7 +590,8 @@ fn a_filter_with_no_condition_reports_none_rather_than_an_error_node() {
     assert_eq!(
         found[0]
             .visibility()
-            .map(|node| node.text().to_string())
+            .and_then(|visibility| visibility.keyword())
+            .map(|token| token.text().to_string())
             .as_deref(),
         Some("public"),
         "the import above the filter is untouched"
@@ -673,7 +678,8 @@ fn a_global_qualifier_with_no_segment_names_nothing() {
     assert_eq!(
         found[0]
             .visibility()
-            .map(|node| node.text().to_string())
+            .and_then(|visibility| visibility.keyword())
+            .map(|token| token.text().to_string())
             .as_deref(),
         Some("public"),
         "the import's own visibility is untouched by the damage inside the name"
@@ -761,5 +767,92 @@ fn a_name_does_not_claim_a_segment_recovery_took() {
     assert!(
         aliases[0].target().is_some(),
         "and it still reports the target it does have"
+    );
+}
+
+const FIRST_OF_TWO_LOST: &str =
+    include_str!("malformed/visibility-indicator/first-of-two-lost-to-recovery.sysml");
+
+/// `visibility-indicator/first-of-two-lost-to-recovery.sysml`:
+/// `public private import A::*;`. The import's indicator is `private` — the SECOND word
+/// — and `public` belongs to nobody.
+///
+/// Like `MemberPrefix`, this kind's own shape cannot be wrong: it is three keywords and
+/// nothing else, every one of the 821 in the repository holds exactly one token, and an
+/// empty one is unreachable from either caller (`body_elements` enters only on
+/// `at_visibility`; a bare `import A::*;` is reported as "unexpected `import`" and never
+/// reaches `import()`). So there is no violated shape to pin and no reachable absence
+/// either, and this case pins **attribution** instead.
+///
+/// The source is the parser: `at_import` wants a visibility then `import`, which
+/// `public private` is not, so `recover_statement`
+/// (`crates/sv2-syntax/src/parser/recovery.rs`) takes `public` into an `Error` and
+/// `private import A::*;` parses as an import of its own.
+///
+/// 1. the parse still yields a tree, with one import in it;
+/// 2. attribution, not a guess: the indicator reports `private`. Anything that took the
+///    first visibility in the statement, or looked leftwards past the node, would answer
+///    `public`. The two disagree, so no wrong answer here is accidentally right;
+/// 3. the neighbours still answer: the import reports its declaration, and no
+///    `MemberPrefix` anywhere claims the lost word.
+#[test]
+fn an_indicator_reports_its_own_keyword_not_the_one_recovery_took() {
+    let parse = trees::parsed(FIRST_OF_TWO_LOST, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. one import, and it has an indicator.
+    let found = imports(&root);
+    assert_eq!(found.len(), 1, "`private import A::*;` is the one import");
+    let indicator = found[0]
+        .visibility()
+        .expect("the import states its visibility and this one is written");
+
+    // 2a. attribution: the keyword is `private`, the second word. Asserted by TOKEN KIND
+    // rather than by text, because the kind is what tells the three apart without a
+    // string comparison (the point of returning the token).
+    assert_eq!(
+        indicator.keyword().map(|token| token.kind()),
+        Some(SyntaxKind::KwPrivate),
+        "the indicator's own keyword is `private`, not the `public` before it"
+    );
+    assert_ne!(
+        indicator.keyword().map(|token| token.kind()),
+        Some(SyntaxKind::KwPublic),
+        "`public` is not this import's visibility"
+    );
+
+    // 2b. and `public` really is in the tree, in its own Error node — so the word was
+    // not dropped, and this is a statement about attribution rather than about loss.
+    let orphan = root
+        .descendants()
+        .find(|node| node.kind() == SyntaxKind::Error)
+        .expect("recovery built an Error node for the word it could not place");
+    assert_eq!(
+        orphan.text().to_string().trim(),
+        "public",
+        "recovery took the first word alone, not the pair"
+    );
+    assert!(
+        orphan.text_range().end() <= indicator.syntax().text_range().start(),
+        "the lost word stands before the indicator, which is why it looks like its own"
+    );
+
+    // 2c. something reported it.
+    assert_eq!(
+        parse.errors().len(),
+        1,
+        "the stray visibility is reported once: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbours still answer.
+    assert!(
+        found[0].declaration().is_some(),
+        "the import still names what it imports"
+    );
+    let prefixes: Vec<MemberPrefix> = root.descendants().filter_map(MemberPrefix::cast).collect();
+    assert!(
+        prefixes.iter().all(|prefix| prefix.visibility().is_none()),
+        "no member prefix in this tree was written a visibility, so none may claim one"
     );
 }

@@ -74,7 +74,8 @@ fn private_import_test_writes_four_imports_one_of_them_import_all() {
         .map(|import| {
             import
                 .visibility()
-                .map_or_else(|| "<none>".to_owned(), |node| node.text().to_string())
+                .and_then(|visibility| visibility.keyword())
+                .map_or_else(|| "<none>".to_owned(), |token| token.text().to_string())
         })
         .collect();
     assert_eq!(
@@ -396,7 +397,8 @@ fn item_test_writes_every_visibility_across_several_memberships() {
     let written: Vec<String> = prefixes
         .iter()
         .filter_map(MemberPrefix::visibility)
-        .map(|node| node.text().to_string())
+        .filter_map(|visibility| visibility.keyword())
+        .map(|token| token.text().to_string())
         .collect();
     assert_eq!(
         written,
@@ -414,12 +416,12 @@ fn item_test_writes_every_visibility_across_several_memberships() {
     );
 
     // The visibility is a VisibilityIndicator node, not a bare keyword token: that
-    // production has its own kind, and its own accessor still to come.
+    // production has its own kind, and now its own view, which `visibility()` returns.
     assert!(
         prefixes
             .iter()
             .filter_map(MemberPrefix::visibility)
-            .all(|node| node.kind() == SyntaxKind::VisibilityIndicator),
+            .all(|visibility| visibility.syntax().kind() == SyntaxKind::VisibilityIndicator),
         "every visibility comes back as its own node"
     );
 
@@ -622,5 +624,77 @@ fn scoping_tells_a_package_named_dollar_from_the_global_qualifier() {
         qualified.name().map(|token| token.text().to_owned()),
         Some("Object".to_owned()),
         "the last segment written is the one the name identifies"
+    );
+}
+
+/// All three visibility keywords come back as the token kind that names them, under both
+/// of the productions that carry an indicator.
+///
+/// `VisibilityIndicator = 'public' | 'private' | 'protected'` (`KerML` 8.2.3.4.1, `SysML`
+/// 8.2.2.5.1). `ItemTest.sysml` writes `public`, `protected` and `private`, which is all
+/// three, and it writes them under `MemberPrefix`; `PrivateImportTest.sysml` writes them
+/// under `Import`. Both files are already read above for other claims.
+///
+/// What this case adds is that the accessor hands back the **token**, so a caller tells
+/// the three apart by `kind()` and never by comparing text. That is the whole reason it
+/// does not return an enum: the frozen unit
+/// (`.claude/state/grammar/units/VisibilityIndicator.json`) records that the Xtext's
+/// `enum VisibilityIndicator returns SysML::VisibilityKind` binding "is abstract-syntax
+/// assignment, not concrete syntax, and it is not carried across: what parses is the
+/// keyword, and which enum literal it becomes belongs to whoever builds the element".
+/// Constructing a metaclass is not this crate's work (`.claude/rules/ast.md`).
+#[test]
+fn every_visibility_keyword_comes_back_as_its_own_token_kind() {
+    let root = tree_of(ITEM_TEST);
+    let indicators: Vec<sv2_ast::VisibilityIndicator> = root
+        .descendants()
+        .filter_map(sv2_ast::VisibilityIndicator::cast)
+        .collect();
+
+    let kinds: Vec<SyntaxKind> = indicators
+        .iter()
+        .filter_map(sv2_ast::VisibilityIndicator::keyword)
+        .map(|token| token.kind())
+        .collect();
+    assert_eq!(
+        kinds,
+        [
+            SyntaxKind::KwPublic,    // public item def A
+            SyntaxKind::KwProtected, // protected ref part c: C
+            SyntaxKind::KwPublic,    // public abstract part a: A
+            SyntaxKind::KwPrivate,   // private part def C
+            SyntaxKind::KwPrivate,   // private in ref y: A, B
+        ],
+        "the visibilities this file writes, in source order, by token kind"
+    );
+    assert_eq!(
+        kinds.len(),
+        indicators.len(),
+        "every indicator in the file reported a keyword; an empty one is unreachable \
+         (`at_visibility` gates the only caller that could build one)"
+    );
+
+    // All three keywords are exercised, which is the whole alternation. Asserted as a
+    // set so that reading a different file would still satisfy it.
+    let mut distinct = kinds.clone();
+    distinct.sort_unstable();
+    distinct.dedup();
+    assert_eq!(
+        distinct.len(),
+        3,
+        "this file writes all three keywords: {kinds:?}"
+    );
+
+    // The other production that carries an indicator. Two parents is what makes this a
+    // shared child, the same reason `MemberPrefix` was taken out of worklist order.
+    let under_import = tree_of(PRIVATE_IMPORT_TEST)
+        .descendants()
+        .filter_map(sv2_ast::VisibilityIndicator::cast)
+        .filter_map(|indicator| indicator.syntax().parent().map(|parent| parent.kind()))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        under_import,
+        [SyntaxKind::Import; 4],
+        "all four of that file's indicators sit under an Import, not a MemberPrefix"
     );
 }

@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-18T16:33:18Z",
+    "regenerated_utc": "2026-10-18T17:02:28Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 7,
-      "unimplemented": 456,
+      "implemented": 8,
+      "unimplemented": 455,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 1.5
+      "percent": 1.7
     },
     "tests": {
-      "unit": 774,
+      "unit": 776,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "2909888 Merge ast-qualified-name: the QualifiedName accessor and the first delegation upgrade",
+      "7a7abec Drop a relational claim about two corpus lines for the lines themselves",
+      "6666cbb Add the QualifiedName accessor, and upgrade AliasMember to delegate to it",
       "88da349 Merge ast-element-filter-member: the ElementFilterMember accessor",
       "7545595 Correct the corpus line numbers the conformance review caught",
       "d5242e6 Add the ElementFilterMember accessor, the first with an expression child",
       "41420e2 Merge ast-member-prefix: the MemberPrefix accessor and its two delegations",
-      "81102b6 Record the conformance review's findings: 0 blocking, 1 advisory",
-      "355c28b Close the session: five accessors, and the delegation rule they produced",
-      "f042d33 Add MemberPrefix out of order, and let two accessors delegate to it",
-      "16ac148 Merge ast-package-member and ast-alias-member: two more accessors"
+      "81102b6 Record the conformance review's findings: 0 blocking, 1 advisory"
     ]
   },
   "authored": {

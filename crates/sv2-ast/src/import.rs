@@ -5,6 +5,7 @@
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode};
 
 use crate::ast_node::AstNode;
+use crate::visibility_indicator::VisibilityIndicator;
 
 /// An import of one membership or one namespace into the enclosing namespace.
 ///
@@ -50,8 +51,14 @@ impl Import {
     /// `Option`, because validity gates writes and never reads (ADR-0002): a tree that
     /// parsed badly enough still enters the IR, and an accessor that promised a node the
     /// tree does not carry would have to panic to keep the promise.
-    pub fn visibility(&self) -> Option<SyntaxNode> {
+    /// Returns the typed [`VisibilityIndicator`] rather than the raw node, under the
+    /// delegation rule in `.claude/rules/ast.md`: the child has a kind of its own, so
+    /// which keyword it is belongs to it and not to this node
+    /// (`import.visibility().and_then(|visibility| visibility.keyword())`). It returned a
+    /// raw `SyntaxNode` until that kind had a view to delegate to.
+    pub fn visibility(&self) -> Option<VisibilityIndicator> {
         self.child(SyntaxKind::VisibilityIndicator)
+            .and_then(VisibilityIndicator::cast)
     }
 
     /// Whether `all` is written, which is `isImportAll` in the abstract syntax.
