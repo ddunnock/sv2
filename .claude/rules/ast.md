@@ -83,6 +83,33 @@ top level, which would otherwise stop counting in silence.
 The gate checks the case *exists* and is not empty. It cannot check that it asserts the
 right things, so review does.
 
+## An accessor answers for its own production, and delegates for the rest
+
+When a child has a node kind of its own, the accessor returns the **typed view** of it,
+not a raw `SyntaxNode`, and does not reach past it:
+
+```rust
+pub fn prefix(&self) -> Option<MemberPrefix> { ... }   // not Option<SyntaxNode>
+// the caller then asks the prefix its own question:
+member.prefix().and_then(|prefix| prefix.visibility())
+```
+
+`PackageMember` and `AliasMember` both carry a `MemberPrefix`, and the visibility lives
+inside it. An accessor on either that returned the visibility directly would be answering
+for a node it is not a view of — which is the same move as `declaration()` returning a
+grandchild, a defect caught by mutation on the `Import` round. Reaching across a
+production boundary is how two accessors start disagreeing about one fact.
+
+The consequence is an ordering one: **a shared child is worth taking out of worklist
+order.** `MemberPrefix` went ahead of its position because three productions were about
+to reach into it. Say why in the commit when you reorder; the worklist is advisory
+(ADR-0025) and this is a good reason to leave it.
+
+When the child production has *no* node of its own — `DefinitionElement` and
+`UsageElement` are alternations that build nothing — there is nothing to delegate to, and
+the accessor returns the concrete element it finds. Say so, because the next reader will
+wonder why this one is untyped.
+
 ## The sweep is where an accessor is actually exercised
 
 `tests/sweep.rs` walks every tree in the repository — 311 corpus files and 299 rejection
