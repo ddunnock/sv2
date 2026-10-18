@@ -325,6 +325,20 @@
           "a reader knowing which of the three records is in force"
         ],
         "adr": "ADR-0026"
+      },
+      {
+        "id": "import-module-doc-citation",
+        "question": "WRONG CLAUSE CITATION, verified, not yet fixed, and OUT OF SCOPE of the session that found it. crates/sv2-syntax/src/parser/import.rs line 3 says \"Imports, SysML 8.2.2.5.2 and KerML 8.2.3.5\". Both numbers are wrong. Three independent sources say SysML 8.2.2.5.1 / KerML 8.2.3.4.2: the receipted frozen unit (.claude/state/grammar/units/Import.json, spec_clause_ref region_sha256 a2610efd00be16cc / 3ee603b1b89d4345); that same file's own six inline citations, at lines 85, 128, 134, 139 and 213; and a spec-conformance review against the mounted wikis, which found SysML 8.2.2.5.2 to be the PackageElements atom (the DefinitionElement/UsageElement alternation, nothing to do with Import) and KerML 8.2.3.5 to be name resolution, cited only in a Note inside the Imports atom. So the module doc contradicts its own file three lines from the top. The sv2-ast accessor docs followed the frozen unit and are correct; nothing in sv2-ast needs changing. NOT FIXED HERE because it is a different crate and no part of the diff that found it, and because the fix should probably arrive with the second half below. THE SECOND HALF, which is the more interesting one: NO GATE CAN SEE THIS. scripts/check_citations.py reads .claude/state/deviations.json only, and checks that quoted region RECEIPTS resolve to wiki-receipts.json -- it never looks at Rust source, and a clause NUMBER is not a receipt. Invariant 4 says every claim about the language traces to a source, and a wrong clause number in a doc comment is exactly such a claim, carried by nothing. Decide whether clause citations in source comments should resolve against the receipts too, or whether that stays a review question and the one-line fix is simply made.",
+        "blocks": [
+          "invariant 4 holding mechanically for clause citations written in source comments rather than in deviations.json"
+        ]
+      },
+      {
+        "id": "ast-expression-child",
+        "question": "ElementFilterMember is next on the ast-coverage worklist and is the first accessor whose production carries an EXPRESSION: `MemberPrefix 'filter' OwnedExpression ';'` (element_filter_member, crates/sv2-syntax/src/parser/namespace.rs). The MemberPrefix half delegates under the new rule in .claude/rules/ast.md, so the open question is only the expression. OwnedExpression is an alternation that builds no node of its own, like DefinitionElement and UsageElement, so what comes back is the concrete expression kind -- for the corpus idiom `private filter @Safety;` that is a ClassificationExpression with no ArgumentMember. Return it raw as a SyntaxNode, matching PackageMember::element, or wait for an expression-layer accessor and return a typed view? The delegation rule says prefer the typed view when the child HAS a kind of its own, and an alternation does not, which argues for raw -- but the expression layer is fifteen precedence tiers and will eventually want accessors, so this decides whether ElementFilterMember is revisited later or gets it right now. 16 corpus files write a filter.",
+        "blocks": [
+          "the ElementFilterMember accessor"
+        ]
       }
     ],
     "log": [
