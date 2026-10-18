@@ -8,8 +8,8 @@
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, PackageMember, QualifiedName,
-    RootNamespace, VisibilityIndicator,
+    AliasMember, AstNode, ElementFilterMember, Import, ImportDeclaration, MemberPrefix,
+    PackageMember, QualifiedName, RootNamespace, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -128,7 +128,10 @@ fn assert_import_children(node: &SyntaxNode, import: &Import) {
             SyntaxKind::VisibilityIndicator,
             import.visibility().map(|v| v.syntax().clone()),
         ),
-        (SyntaxKind::ImportDeclaration, import.declaration()),
+        (
+            SyntaxKind::ImportDeclaration,
+            import.declaration().map(|d| d.syntax().clone()),
+        ),
         (SyntaxKind::RelationshipBody, import.body()),
     ] {
         let direct = children_of_kind(node, kind);
@@ -191,7 +194,7 @@ fn assert_import_accessor(node: &SyntaxNode) {
     let answers = || {
         (
             import.visibility().map(|v| v.syntax().clone()),
-            import.declaration(),
+            import.declaration().map(|d| d.syntax().clone()),
             import.body(),
         )
     };
@@ -948,6 +951,91 @@ fn assert_visibility_indicator_token(node: &SyntaxNode, indicator: &VisibilityIn
     );
 }
 
+/// What `ImportDeclaration` must satisfy at every node, whatever the tree:
+///
+/// (a) `cast` succeeds exactly when `node.kind()` is `SyntaxKind::ImportDeclaration`, and
+///     the node survives the round trip through `syntax()`;
+/// (b) the production is `MembershipImport | NamespaceImport` (`KerML` 8.2.3.4.2,
+///     `SysML` 8.2.2.5.1), and this parser builds a node for whichever matched — at a
+///     checkpoint, in `imported`. So the declaration is a pure wrapper: **exactly one
+///     child node, and no token of its own.** The separators and stars belong to the
+///     alternative inside it, which is why no accessor here goes looking for them;
+/// (c) the child is one of those two kinds and nothing else — the claim that makes
+///     `imported()`'s raw return readable, because the kind is the discriminator;
+/// (d) the differential: `imported()` equals that child, re-derived by walking the tree;
+/// (e) calling the accessor twice returns the same answer.
+fn assert_import_declaration_accessor(node: &SyntaxNode) {
+    let is_declaration = node.kind() == SyntaxKind::ImportDeclaration;
+    let cast = ImportDeclaration::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_declaration,
+        "ImportDeclaration::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(declaration) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        declaration.syntax(),
+        node,
+        "ImportDeclaration::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) a pure wrapper: one child, and nothing else at all. The token half is the
+    // assertion that keeps `imported()` honest — if a separator ever became a direct
+    // token here, "the child is the whole content" would have stopped being true.
+    let kids: Vec<SyntaxNode> = node.children().collect();
+    assert_eq!(
+        kids.len(),
+        1,
+        "a declaration wraps exactly one alternative, but this one has {} ({:?}) at {:?}",
+        kids.len(),
+        kids.iter().map(SyntaxNode::kind).collect::<Vec<_>>(),
+        node.text_range()
+    );
+    assert_eq!(
+        node.children_with_tokens().count(),
+        1,
+        "a declaration holds no token of its own, yet this one has {:?} at {:?}",
+        node.children_with_tokens()
+            .filter_map(SyntaxElement::into_token)
+            .map(|token| token.kind())
+            .collect::<Vec<_>>(),
+        node.text_range()
+    );
+
+    // (c) and (d): which alternative, and the differential.
+    for child in &kids {
+        assert!(
+            matches!(
+                child.kind(),
+                SyntaxKind::MembershipImport | SyntaxKind::NamespaceImport
+            ),
+            "a declaration wraps one of the two import alternatives, not {:?}, at {:?}",
+            child.kind(),
+            node.text_range()
+        );
+    }
+    assert_eq!(
+        declaration.imported(),
+        kids.first().cloned(),
+        "imported() is not this node's one child at {:?}",
+        node.text_range()
+    );
+
+    // (e) idempotent.
+    assert_eq!(
+        declaration.imported(),
+        declaration.imported(),
+        "imported() disagreed with itself between two calls on the same node"
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -965,6 +1053,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_element_filter_member_accessor(&node);
             assert_qualified_name_accessor(&node);
             assert_visibility_indicator_accessor(&node);
+            assert_import_declaration_accessor(&node);
             visited += 1;
         }
     }

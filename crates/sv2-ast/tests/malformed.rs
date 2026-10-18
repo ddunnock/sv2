@@ -151,9 +151,16 @@ fn an_import_naming_nothing_still_reports_a_declaration_that_names_nothing() {
     let declaration = import
         .declaration()
         .expect("recovery opens the declaration before it looks for a name, so it is there");
-    assert_eq!(declaration.kind(), SyntaxKind::ImportDeclaration);
+    // The kind no longer needs asserting -- `cast` guarantees it -- so the typed view
+    // buys a stronger statement instead: the alternative inside is present and is itself
+    // empty, which is what "opened before the name was sought" means one level down.
     assert_eq!(
-        declaration.text_range().len(),
+        declaration.imported().map(|node| node.kind()),
+        Some(SyntaxKind::MembershipImport),
+        "no `*` was written, so the checkpoint closed as a membership import"
+    );
+    assert_eq!(
+        declaration.syntax().text_range().len(),
         0.into(),
         "the declaration names nothing, so it must be zero width -- a non-empty range \
          here would mean the accessor is reporting text the author never wrote"
@@ -854,5 +861,101 @@ fn an_indicator_reports_its_own_keyword_not_the_one_recovery_took() {
     assert!(
         prefixes.iter().all(|prefix| prefix.visibility().is_none()),
         "no member prefix in this tree was written a visibility, so none may claim one"
+    );
+}
+
+const TRAILING_SEPARATOR: &str =
+    include_str!("malformed/import-declaration/trailing-separator.sysml");
+
+/// `import-declaration/trailing-separator.sysml`: `public import A::;`. Every accessor
+/// answers plausibly and the tree looks undamaged — which is the point.
+///
+/// An `ImportDeclaration`'s own shape cannot be wrong (one alternative, no tokens of its
+/// own, asserted over all 756 in `tests/sweep.rs`), and the empty-but-present case is
+/// already pinned for the `Import` kind by `import/declaration-names-nothing.sysml`. What
+/// is left to get wrong is the **alternative**: `qualified_name` takes a `::` into the
+/// name only when a name follows, so the name ends at `A`, `import_suffix` finds no `*`,
+/// and `imported` closes the checkpoint as a `MembershipImport`
+/// (`crates/sv2-syntax/src/parser/import.rs`). That is the alternative which parsed, not
+/// the one a trailing `::` suggests was intended.
+///
+/// 1. the parse still yields a tree, with one declaration in it;
+/// 2. the accessor reports what is there rather than guessing what was meant: the child
+///    is a `MembershipImport`, its name is `A`, and **only** `Parse::errors()` says
+///    anything is wrong. Asserted together, because each half alone reads as health;
+/// 3. the neighbours still answer, down the whole delegation chain: the import reports
+///    `public`, and the `QualifiedName` inside reports exactly one segment — the `::` is
+///    a token of the alternative, not of the name and not of the declaration.
+#[test]
+fn a_trailing_separator_leaves_an_import_that_looks_undamaged() {
+    let parse = trees::parsed(TRAILING_SEPARATOR, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. one import, one declaration.
+    let found = imports(&root);
+    assert_eq!(found.len(), 1, "the fixture writes one import");
+    let declaration = found[0]
+        .declaration()
+        .expect("the node is opened before the name is sought, so it is always there");
+
+    // 2a. the alternative that parsed, reported as itself. `MembershipImport` and
+    // `NamespaceImport` have no views yet, so the kind is read from the node.
+    let imported = declaration
+        .imported()
+        .expect("the alternative node is built at a checkpoint and is always there");
+    assert_eq!(
+        imported.kind(),
+        SyntaxKind::MembershipImport,
+        "no `*` follows the separator, so what parsed is a membership import"
+    );
+
+    // 2b. and it is not merely present: it names `A`, so nothing here reads as damage.
+    let name = QualifiedName::cast(
+        imported
+            .children()
+            .find(|child| child.kind() == SyntaxKind::QualifiedName)
+            .expect("the alternative always carries its QualifiedName"),
+    )
+    .expect("that child is a QualifiedName");
+    assert_eq!(
+        name.segments()
+            .map(|token| token.text().to_owned())
+            .collect::<Vec<_>>(),
+        ["A"],
+        "the name ends at the separator, so one segment and not two"
+    );
+
+    // 2c. the only thing that says otherwise. Without this the fixture would be a
+    // well-formed import, which is exactly why a caller needs the diagnostics.
+    assert_eq!(
+        parse.errors().len(),
+        1,
+        "the stranded separator is reported once: {:?}",
+        parse.errors()
+    );
+
+    // 3a. width is not evidence: the declaration is WIDER than the name it carries,
+    // where `import/declaration-names-nothing.sysml` is zero width with a child. Neither
+    // direction tells a caller what was named.
+    assert!(
+        declaration.syntax().text_range().len() > name.syntax().text_range().len(),
+        "the declaration spans `A::` and the name only `A`"
+    );
+
+    // 3b. the separator belongs to the alternative, not to the declaration or the name.
+    assert_eq!(
+        declaration.syntax().children_with_tokens().count(),
+        1,
+        "the declaration holds its alternative and nothing else"
+    );
+
+    // 3c. the neighbour above still answers.
+    assert_eq!(
+        found[0]
+            .visibility()
+            .and_then(|visibility| visibility.keyword())
+            .map(|token| token.kind()),
+        Some(SyntaxKind::KwPublic),
+        "the import's visibility is untouched by the damage inside the declaration"
     );
 }

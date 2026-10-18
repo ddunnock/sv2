@@ -110,6 +110,38 @@ When the child production has *no* node of its own — `DefinitionElement` and
 the accessor returns the concrete element it finds. Say so, because the next reader will
 wonder why this one is untyped.
 
+There is a third case, and it is not the second one: the child has a node kind of its
+own, but **which** kind is not fixed. `ImportDeclaration` is `MembershipImport |
+NamespaceImport`, and this parser builds a node for whichever matched — at a checkpoint,
+in `imported`, which is why reading the production alone suggests no node and the tree
+says otherwise. Both alternatives are counted kinds, so the rule above asks for a typed
+view, and `AstNode` cannot give one: it declares one `KIND` per view, so no signature
+admits both. The accessor returns a raw `SyntaxNode` and the returned `kind()` is the
+discriminator. An enum over the alternatives would be a new abstraction invented before
+any of them has an accessor, which is the same wall the expression layer hit
+(`ElementFilterMember::filter`, decision `ast-expression-child`).
+
+So: **measure the tree before deciding which case you are in.** The production text does
+not tell you whether a node is built, and all three cases return something different.
+
+### The delegation ripple is part of the change
+
+A new view obliges every shipped accessor that returned that kind raw to be upgraded in
+the same commit. This is not optional tidying: two accessors answering the same question
+in different types is how callers start depending on the weaker one. Measured so far —
+`QualifiedName` cost 3 call sites, `VisibilityIndicator` 7 (two parents, 821 instances),
+`ImportDeclaration` 4.
+
+Two consequences worth knowing before you start. `tests/sweep.rs`'s per-kind assertion
+functions end up mixing typed and raw children, so each says in one line which are which;
+and they outgrow clippy's 60-line limit, which is why several are split into a
+`assert_<kind>_accessor` entry plus a helper. Both are expected, not signs of a wrong
+turn.
+
+A tautology appears too: once an accessor is typed, `assert_eq!(child.kind(), K)` is
+guaranteed by `cast` and proves nothing. Replace it with what the view cannot guarantee —
+that the child it wraps is there, or which alternative it is — rather than deleting it.
+
 ## The sweep is where an accessor is actually exercised
 
 `tests/sweep.rs` walks every tree in the repository — 311 corpus files and 299 rejection
