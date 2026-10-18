@@ -5,7 +5,8 @@
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, PackageMember, RootNamespace,
+    AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, PackageMember, QualifiedName,
+    RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -326,7 +327,7 @@ fn an_unclosed_short_name_does_not_swallow_the_member_name() {
     assert_eq!(
         alias
             .target()
-            .map(|node| node.text().to_string())
+            .map(|target| target.syntax().text().to_string())
             .unwrap_or_default(),
         "Automobile",
         "the target after `for` is unaffected by the missing `>`"
@@ -593,5 +594,172 @@ fn a_filter_with_no_condition_reports_none_rather_than_an_error_node() {
     assert!(
         found[0].declaration().is_some(),
         "and it still names what it imports"
+    );
+}
+
+const GLOBAL_QUALIFIER_NAMES_NOTHING: &str =
+    include_str!("malformed/qualified-name/global-qualifier-names-nothing.sysml");
+const SEGMENTS_LOST: &str =
+    include_str!("malformed/qualified-name/segments-lost-to-recovery.sysml");
+
+/// Every `QualifiedName` in `root`, in document order.
+fn qualified_names(root: &SyntaxNode) -> Vec<QualifiedName> {
+    root.descendants().filter_map(QualifiedName::cast).collect()
+}
+
+/// `qualified-name/global-qualifier-names-nothing.sysml`: `public import $::;`. The final
+/// `NAME` is not optional (`KerML` 8.2.3.4.1), and here nothing was written for it.
+///
+/// `expect_name` reports without consuming (`crates/sv2-syntax/src/parser/recovery.rs`),
+/// so the node is built holding both punctuation tokens and no name token at all. The
+/// three accessors must then disagree in exactly the right way: the `$` really is there,
+/// and no segment is.
+///
+/// The three things a malformed case must prove (`.claude/rules/ast.md`):
+///
+/// 1. the parse still yields a tree, with the qualified name node in it;
+/// 2. absence, reported: `segments()` is empty and `name()` is `None`, *and* a diagnostic
+///    says a name was expected. `is_global()` stays true, which is the part worth
+///    asserting rather than assuming — the qualifier is punctuation about where
+///    resolution starts, not a name to resolve, so it does not go away with the segments;
+/// 3. the neighbour still answers: `Import` reports its visibility and its declaration,
+///    because the damage is inside the name and not to the import around it.
+#[test]
+fn a_global_qualifier_with_no_segment_names_nothing() {
+    let parse = trees::parsed(GLOBAL_QUALIFIER_NAMES_NOTHING, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. the parse still yields a tree, and the node is in it.
+    let names = qualified_names(&root);
+    assert_eq!(names.len(), 1, "the fixture writes one qualified name");
+    let name = &names[0];
+
+    // 2a. absence: no segment was written, so none may be reported, and there is no
+    // final segment to identify either.
+    assert_eq!(
+        name.segments().count(),
+        0,
+        "`$::` writes no segment name: {:?}",
+        name.segments()
+            .map(|token| token.text().to_owned())
+            .collect::<Vec<_>>()
+    );
+    assert_eq!(
+        name.name().map(|token| token.text().to_owned()),
+        None,
+        "with no segments there is no final segment to report"
+    );
+
+    // 2b. and the qualifier does NOT go away with them: it is punctuation saying where
+    // resolution starts (8.2.3.4.1 Note 3), not a segment that could be missing.
+    assert!(
+        name.is_global(),
+        "the `$` is written, so the qualifier is there however empty the name is"
+    );
+
+    // 2c. something reported it.
+    assert!(
+        parse
+            .errors()
+            .iter()
+            .any(|diagnostic| diagnostic.message().contains("a name")),
+        "the missing segment must be diagnosed: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour still answers: the import around the damaged name is whole.
+    let found = imports(&root);
+    assert_eq!(found.len(), 1, "the fixture writes one import");
+    assert_eq!(
+        found[0]
+            .visibility()
+            .map(|node| node.text().to_string())
+            .as_deref(),
+        Some("public"),
+        "the import's own visibility is untouched by the damage inside the name"
+    );
+    assert!(
+        found[0].declaration().is_some(),
+        "and it still has the declaration the name sits in"
+    );
+}
+
+/// `qualified-name/segments-lost-to-recovery.sysml`: `alias X for A::::B;`. The name ends
+/// at `A`, and `B` — the last name a reader sees — is not a segment of it.
+///
+/// The second fixture for this kind: the first pins absence, this one pins
+/// **attribution**, which is the other way a token accessor goes wrong. The source is the
+/// parser: `qualified_name` loops `while self.at(ColonColon) &&
+/// self.name_follows_separator()` (`crates/sv2-syntax/src/parser/import.rs`), so a `::`
+/// with no name after it is not part of the name, and the loop never runs.
+///
+/// 1. the parse still yields a tree, with a one-segment name in it;
+/// 2. attribution, not a guess: `name()` is `A`, not `B`, although `B` is written last.
+///    An accessor reading the node's text, or scanning past the node's own tokens, would
+///    hand back `B`. The lost run really is in the tree, in one `Error`, so this is a
+///    statement about attribution and not merely about a short name;
+/// 3. the neighbour still answers: the alias still reports the target it does have.
+#[test]
+fn a_name_does_not_claim_a_segment_recovery_took() {
+    let parse = trees::parsed(SEGMENTS_LOST, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. one qualified name, one segment, though the text writes three names.
+    let names = qualified_names(&root);
+    assert_eq!(names.len(), 1, "the fixture writes one qualified name");
+    let name = &names[0];
+    assert_eq!(
+        name.segments()
+            .map(|token| token.text().to_owned())
+            .collect::<Vec<_>>(),
+        ["A"],
+        "the name ends at the separator that has no name after it"
+    );
+
+    // 2a. attribution: the final segment is `A`. `B` is the last name written, and it is
+    // not this name's.
+    assert_eq!(
+        name.name().map(|token| token.text().to_owned()),
+        Some("A".to_owned()),
+        "`B` is not a segment of this name, so it may not be reported as its final one"
+    );
+    assert!(
+        !name.is_global(),
+        "no `$` is written, so the qualifier is not there"
+    );
+
+    // 2b. and `B` really is in the tree, in one Error node with the rest of the run —
+    // so this says something about attribution, not merely that the name is short.
+    let orphan = root
+        .descendants()
+        .find(|node| node.kind() == SyntaxKind::Error)
+        .expect("recovery built an Error node for the run it could not read");
+    assert_eq!(
+        orphan.text().to_string().trim(),
+        "::::B;",
+        "recovery took the whole run into one node, the closing `;` included"
+    );
+
+    // 2c. one diagnostic for the whole run: the count is not a measure of how many
+    // segments were lost.
+    assert_eq!(
+        parse.errors().len(),
+        1,
+        "the run is reported once: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour still answers: the alias reports the target it does have, and its
+    // own name slot is undamaged.
+    let aliases: Vec<AliasMember> = root.descendants().filter_map(AliasMember::cast).collect();
+    assert_eq!(aliases.len(), 1, "the fixture writes one alias");
+    assert_eq!(
+        aliases[0].name().map(|token| token.text().to_owned()),
+        Some("X".to_owned()),
+        "the alias's own name stands before the damage and is untouched"
+    );
+    assert!(
+        aliases[0].target().is_some(),
+        "and it still reports the target it does have"
     );
 }

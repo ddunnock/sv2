@@ -12,6 +12,7 @@ mod import;
 mod member_prefix;
 mod namespace;
 mod package_member;
+mod qualified_name;
 
 pub use crate::alias_member::AliasMember;
 pub use crate::ast_node::AstNode;
@@ -20,3 +21,4 @@ pub use crate::import::Import;
 pub use crate::member_prefix::MemberPrefix;
 pub use crate::namespace::RootNamespace;
 pub use crate::package_member::PackageMember;
+pub use crate::qualified_name::QualifiedName;

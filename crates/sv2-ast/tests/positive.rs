@@ -290,9 +290,10 @@ fn package_example_writes_two_aliases_one_qualified() {
     let targets: Vec<String> = aliases
         .iter()
         .map(|alias| {
-            alias
-                .target()
-                .map_or_else(|| "<none>".to_owned(), |node| node.text().to_string())
+            alias.target().map_or_else(
+                || "<none>".to_owned(),
+                |target| target.syntax().text().to_string(),
+            )
         })
         .collect();
     assert_eq!(
@@ -525,4 +526,101 @@ fn the_two_filters_in_one_file_hold_conditions_of_different_kinds() {
             "neither filter in this file is written a visibility"
         );
     }
+}
+
+/// The corpus file that tells the global scope qualifier apart from a package NAMED `$`.
+/// `KerML`, because the qualifier is stated in `KerML` 8.2.3.4.1.
+const SCOPING: &str = "vendor/corpus/kerml/src/examples/Simple Tests/Scoping.kerml";
+
+/// `Scoping.kerml` writes a package named `'$'` (line 21) and then refers both to it and
+/// to the global scope — which is the one distinction this accessor can get wrong.
+///
+/// ```text
+///   line 32:  class D :> '$'::Objects::Object   a package NAMED `$`: three segments
+///   line 35:  class E :>  $ ::Objects::Object   the QUALIFIER: two segments, global
+/// ```
+///
+/// `KerML` 8.2.3.4.1, Note 3: a qualified name is "a sequence of segment names separated
+/// by `::` punctuation, optionally with the global scope qualifier `$` as an initial
+/// segment", and "an unqualified name can be considered the degenerate case of a
+/// qualified name with a single segment name". So the quoted `'$'` is a segment name like
+/// any other and the bare `$` is not a segment at all — it is punctuation about where
+/// resolution starts.
+///
+/// The two spellings differ by two characters of quoting and by nothing else, which is
+/// why no hand-written case is needed here: the pinned corpus already contains the pair,
+/// and the file exists to exercise exactly this.
+///
+/// Every qualified name in the file, in source order, read off the text above and the
+/// production `( '$' '::' )? ( NAME '::' )* NAME`.
+#[test]
+fn scoping_tells_a_package_named_dollar_from_the_global_qualifier() {
+    let root = tree_of(SCOPING);
+    let names: Vec<sv2_ast::QualifiedName> = root
+        .descendants()
+        .filter_map(sv2_ast::QualifiedName::cast)
+        .collect();
+
+    let segments: Vec<Vec<String>> = names
+        .iter()
+        .map(|name| {
+            name.segments()
+                .map(|token| token.text().to_owned())
+                .collect()
+        })
+        .collect();
+    assert_eq!(
+        segments,
+        [
+            vec!["A"],                        // line 11, `class B :> A`
+            vec!["g"],                        // line 12, `feature :>> g`
+            vec!["Objects", "Object"],        // line 29
+            vec!["test1"],                    // line 30
+            vec!["'$'", "Objects", "Object"], // line 32, a package NAMED `$`
+            vec!["test2"],                    // line 33
+            vec!["Objects", "Object"],        // line 35, the QUALIFIER, not a segment
+            vec!["subobjects"],               // line 36
+        ],
+        "every qualified name this file writes, in source order"
+    );
+
+    // Exactly one of them is written with the qualifier, and it is the one on line 35.
+    let global: Vec<bool> = names
+        .iter()
+        .map(sv2_ast::QualifiedName::is_global)
+        .collect();
+    assert_eq!(
+        global,
+        [false, false, false, false, false, false, true, false],
+        "only line 35 writes the bare `$`"
+    );
+
+    // The pair that makes this file worth reading: same trailing segments, and the
+    // quoted one is NOT global. An accessor testing the node's text for a leading `$`
+    // would call both of them global.
+    let quoted = &names[4];
+    let qualified = &names[6];
+    assert!(
+        !quoted.is_global(),
+        "`'$'` is a segment name, not the qualifier (8.2.3.4.1 Note 3)"
+    );
+    assert!(qualified.is_global(), "`$::` is the qualifier");
+    assert_eq!(
+        quoted.segments().count(),
+        qualified.segments().count() + 1,
+        "the quoted spelling has one more segment, which is the `$` itself"
+    );
+
+    // And the final segment is the same name in both: what differs is where resolution
+    // starts, not what is being identified.
+    assert_eq!(
+        quoted.name().map(|token| token.text().to_owned()),
+        qualified.name().map(|token| token.text().to_owned()),
+        "both identify a final segment called `Object`"
+    );
+    assert_eq!(
+        qualified.name().map(|token| token.text().to_owned()),
+        Some("Object".to_owned()),
+        "the last segment written is the one the name identifies"
+    );
 }
