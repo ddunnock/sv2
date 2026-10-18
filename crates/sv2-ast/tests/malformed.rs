@@ -4,7 +4,9 @@
 
 mod trees;
 
-use sv2_ast::{AliasMember, AstNode, Import, MemberPrefix, PackageMember, RootNamespace};
+use sv2_ast::{
+    AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, PackageMember, RootNamespace,
+};
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
 const UNCLOSED_BODY: &str = include_str!("malformed/root-namespace/unclosed-body.sysml");
@@ -483,5 +485,113 @@ fn a_prefix_does_not_claim_a_visibility_recovery_took() {
     assert!(
         imports(&root).is_empty() && root.descendants().filter_map(AliasMember::cast).count() == 0,
         "no import and no alias is written, so neither may be reported"
+    );
+}
+
+const CONDITION_MISSING: &str =
+    include_str!("malformed/element-filter-member/condition-missing.sysml");
+
+/// `element-filter-member/condition-missing.sysml`: `private filter ;`. The one slot of
+/// this production that is not optional is left empty, and the slot comes back EMPTY
+/// rather than holding an `Error`.
+///
+/// `OwnedExpression` is not optional in `ElementFilterMember` (`SysML` 8.2.2.5.1,
+/// `KerML` 8.2.5.13), and no file in the corpus omits it — 25 filter members, each with
+/// exactly one condition — so this is a hand-written case for a distinction the pinned
+/// corpus does not contain (`.claude/rules/tests.md`).
+///
+/// The source for the outcome is the parser: `owned_expression` climbs to
+/// `base_expression`, whose final `else` calls `error_expected("an expression")`
+/// (`crates/sv2-syntax/src/parser/primary.rs`), and `error_expected` reports **without
+/// consuming**. So nothing is built for the slot, the `;` survives for the member's own
+/// `expect`, and the member closes normally. No clause states that and no ADR does;
+/// ADR-0004 supports only the shape, that every byte still reaches the tree.
+///
+/// The three things a malformed case must prove (`.claude/rules/ast.md`):
+///
+/// 1. the parse still yields a tree, with the filter member in it;
+/// 2. the accessor reports absence rather than guessing — `filter()` is `None`, *and* a
+///    diagnostic says why. Both halves matter more here than usual: the slot holds no
+///    `Error` node, so the diagnostic is the only record that anything was written
+///    there at all;
+/// 3. the neighbours still answer, and substantively: the member's own prefix still
+///    reports `private`, and the import in the same body comes back whole. The damage is
+///    one slot wide, and an accessor that spread it would lose facts that are still
+///    there.
+#[test]
+fn a_filter_with_no_condition_reports_none_rather_than_an_error_node() {
+    let parse = trees::parsed(CONDITION_MISSING, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. the parse still yields a tree, and the member is in it.
+    let filters: Vec<ElementFilterMember> = root
+        .descendants()
+        .filter_map(ElementFilterMember::cast)
+        .collect();
+    assert_eq!(filters.len(), 1, "the fixture writes one filter member");
+    let filter = &filters[0];
+
+    // 2a. absence, not a guess: the condition slot is empty.
+    assert_eq!(
+        filter.filter(),
+        None,
+        "no condition was written, so none may be reported"
+    );
+
+    // 2b. and empty means EMPTY — there is no `Error` node standing in the slot, which is
+    // what a caller would otherwise look for. The member's only node child is its prefix.
+    let node_children: Vec<SyntaxKind> = filter.syntax().children().map(|c| c.kind()).collect();
+    assert_eq!(
+        node_children,
+        [SyntaxKind::MemberPrefix],
+        "the prefix is the only node child; nothing stands where the condition goes"
+    );
+
+    // 2c. something reported it. Absence that nothing reported is absence guessed, and
+    // here the diagnostic is the ONLY record that a condition was expected at all.
+    assert!(
+        parse
+            .errors()
+            .iter()
+            .any(|diagnostic| diagnostic.message().contains("an expression")),
+        "the empty condition must be diagnosed: {:?}",
+        parse.errors()
+    );
+
+    // 2d. the member still closed: the `;` was not consumed by the failed read, so the
+    // damage is one slot wide and not a run of recovery.
+    assert!(
+        filter.syntax().text().to_string().trim_end().ends_with(';'),
+        "the member closes with its own semicolon: {:?}",
+        filter.syntax().text().to_string()
+    );
+
+    // 3a. the neighbour that shares this node: the prefix keeps its visibility.
+    let prefix = filter
+        .prefix()
+        .expect("MemberPrefix is built whether or not a visibility is written");
+    assert_eq!(
+        prefix
+            .visibility()
+            .map(|node| node.text().to_string())
+            .as_deref(),
+        Some("private"),
+        "`private` is this member's own, and the damaged condition does not cost it"
+    );
+
+    // 3b. the neighbour in the same body: the import is whole, visibility and all.
+    let found = imports(&root);
+    assert_eq!(found.len(), 1, "the fixture writes one import");
+    assert_eq!(
+        found[0]
+            .visibility()
+            .map(|node| node.text().to_string())
+            .as_deref(),
+        Some("public"),
+        "the import above the filter is untouched"
+    );
+    assert!(
+        found[0].declaration().is_some(),
+        "and it still names what it imports"
     );
 }

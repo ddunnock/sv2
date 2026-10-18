@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-18T15:48:45Z",
+    "regenerated_utc": "2026-10-18T16:15:42Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 5,
-      "unimplemented": 458,
+      "implemented": 6,
+      "unimplemented": 457,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 1.1
+      "percent": 1.3
     },
     "tests": {
-      "unit": 769,
+      "unit": 771,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "41420e2 Merge ast-member-prefix: the MemberPrefix accessor and its two delegations",
+      "81102b6 Record the conformance review's findings: 0 blocking, 1 advisory",
+      "355c28b Close the session: five accessors, and the delegation rule they produced",
       "f042d33 Add MemberPrefix out of order, and let two accessors delegate to it",
       "16ac148 Merge ast-package-member and ast-alias-member: two more accessors",
       "70416d9 Add the AliasMember accessor, and two fixtures for one rule",
       "11d1c0a Add the PackageMember accessor, pinning attribution",
-      "ac2f1b0 Record that ast-evidence-gaps is merged and pushed",
-      "97eebec Merge ast-evidence-gaps: close ADR-0025's evidence gaps, and the Import accessor",
-      "8e9e0ec Add the Import accessor, and the case the corpus could not make",
-      "28fc394 Correct the handoff: the schema bump is no longer outstanding"
+      "ac2f1b0 Record that ast-evidence-gaps is merged and pushed"
     ]
   },
   "authored": {

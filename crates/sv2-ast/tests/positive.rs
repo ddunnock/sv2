@@ -17,7 +17,7 @@
 
 mod trees;
 
-use sv2_ast::{AliasMember, AstNode, Import, MemberPrefix, PackageMember};
+use sv2_ast::{AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, PackageMember};
 use sv2_syntax::{SyntaxKind, SyntaxNode};
 
 /// The file the frozen grammar unit cites as evidence for the optional `all`
@@ -441,4 +441,88 @@ fn item_test_writes_every_visibility_across_several_memberships() {
         parents.contains(&SyntaxKind::PackageMember),
         "PackageMember is one of them: {parents:?}"
     );
+}
+
+/// The training file for filtering: two filter members, one condition each, and the two
+/// conditions are of DIFFERENT expression kinds — which is the whole reason `filter()`
+/// returns a raw node.
+const FILTERING_EXAMPLE: &str = "vendor/corpus/sysml/src/training/40. Filtering/\
+                                 Filtering Example-1.sysml";
+
+/// `Filtering Example-1.sysml`, whose two filters are written (lines 25 and 30):
+///
+/// ```text
+///   filter @Safety;
+///   filter @Safety and (as Safety).isMandatory;
+/// ```
+///
+/// Read off the production, `MemberPrefix 'filter' OwnedExpression ';'` (`SysML`
+/// 8.2.2.5.1, `KerML` 8.2.5.13): each member has one condition, and its text is the
+/// text between the keyword and the semicolon.
+///
+/// What this case says that the sweep cannot is that the two conditions are **different
+/// kinds of node**. `@Safety` alone is a `ClassificationExpression` — the operand of a
+/// classification test is optional, which is what lets `@Safety` stand by itself inside
+/// a filter (`KerML` 8.2.5.8.1, and the frozen unit's own decision says so). Put `and`
+/// between two of them and the top of the expression is the conditional operator
+/// instead. `OwnedExpression` builds no node of its own, so what arrives in the slot is
+/// whichever concrete expression matched, and an accessor that promised one type would
+/// be wrong on the next corpus file.
+#[test]
+fn the_two_filters_in_one_file_hold_conditions_of_different_kinds() {
+    let root = tree_of(FILTERING_EXAMPLE);
+    let filters: Vec<ElementFilterMember> = root
+        .descendants()
+        .filter_map(ElementFilterMember::cast)
+        .collect();
+    assert_eq!(filters.len(), 2, "this file writes two filters");
+
+    // The conditions, as the file writes them.
+    let conditions: Vec<String> = filters
+        .iter()
+        .filter_map(ElementFilterMember::filter)
+        .map(|node| node.text().to_string())
+        .collect();
+    assert_eq!(
+        conditions,
+        ["@Safety", "@Safety and (as Safety).isMandatory"],
+        "each filter's condition is the text between `filter` and `;`"
+    );
+
+    // And they are different kinds, which is the claim. Asserted as "not equal" and then
+    // by name: the inequality is the part that stays true as the expression layer grows,
+    // the names are what make a failure readable.
+    let kinds: Vec<SyntaxKind> = filters
+        .iter()
+        .filter_map(ElementFilterMember::filter)
+        .map(|node| node.kind())
+        .collect();
+    assert_ne!(
+        kinds[0], kinds[1],
+        "the two conditions must not be the same kind, or this case shows nothing: \
+         {kinds:?}"
+    );
+    assert_eq!(
+        kinds[0],
+        SyntaxKind::ClassificationExpression,
+        "`@Safety` standing alone is a classification test with no operand \
+         (KerML 8.2.5.8.1)"
+    );
+    assert_eq!(
+        kinds[1],
+        SyntaxKind::ConditionalBinaryOperatorExpression,
+        "`and` is the conditional operator, so it is the top of the second condition \
+         (KerML 8.2.5.8.1, tier table row for `and`)"
+    );
+
+    // Neither filter is written a visibility here, and that must read as none rather
+    // than as damage: the prefix node is still built (`member_prefix`,
+    // crates/sv2-syntax/src/parser/namespace.rs).
+    for filter in &filters {
+        let prefix = filter.prefix().expect("the prefix node is always built");
+        assert!(
+            prefix.visibility().is_none(),
+            "neither filter in this file is written a visibility"
+        );
+    }
 }
