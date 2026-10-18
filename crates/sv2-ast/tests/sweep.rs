@@ -7,8 +7,8 @@
 
 mod trees;
 
-use sv2_ast::{AstNode, Import, RootNamespace};
-use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode};
+use sv2_ast::{AliasMember, AstNode, Import, PackageMember, RootNamespace};
+use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
 /// The direct children of `node` that are of `kind`.
 fn children_of_kind(node: &SyntaxNode, kind: SyntaxKind) -> Vec<SyntaxNode> {
@@ -181,6 +181,262 @@ fn assert_import_accessor(node: &SyntaxNode) {
     );
 }
 
+/// `prefix()` and `element()` partition `node`'s direct children.
+///
+/// (b) the production is `MemberPrefix` then **one** element, so neither half may have
+///     two members;
+/// (c) each accessor equals its re-derived half, and then the arithmetic that ties the
+///     two together: the counts must add up to every child, exactly once. Each equality
+///     taken alone passes an accessor that returned the prefix for both, because
+///     `element()` is defined as "not the prefix" and a defect can satisfy that vacuously;
+/// (d) the prefix is a `MemberPrefix`, the element never is, and they are never the same
+///     node.
+fn assert_package_member_partition(node: &SyntaxNode, member: &PackageMember) {
+    let prefixes = children_of_kind(node, SyntaxKind::MemberPrefix);
+    let elements: Vec<SyntaxNode> = node
+        .children()
+        .filter(|child| child.kind() != SyntaxKind::MemberPrefix)
+        .collect();
+    assert!(
+        prefixes.len() <= 1,
+        "a package member carries at most one MemberPrefix, but this one has {} at {:?}",
+        prefixes.len(),
+        node.text_range()
+    );
+    assert!(
+        elements.len() <= 1,
+        "a package member owns at most one element, but this one has {} ({:?}) at {:?}",
+        elements.len(),
+        elements.iter().map(SyntaxNode::kind).collect::<Vec<_>>(),
+        node.text_range()
+    );
+
+    assert_eq!(
+        member.prefix(),
+        prefixes.first().cloned(),
+        "prefix() is not this node's MemberPrefix child at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        member.element(),
+        elements.first().cloned(),
+        "element() is not this node's non-prefix child at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        usize::from(member.prefix().is_some()) + usize::from(member.element().is_some()),
+        node.children().count(),
+        "prefix() and element() must account for every direct child exactly once, at {:?}",
+        node.text_range()
+    );
+
+    if let Some(prefix) = member.prefix() {
+        assert_eq!(prefix.kind(), SyntaxKind::MemberPrefix);
+        assert_ne!(
+            Some(&prefix),
+            member.element().as_ref(),
+            "element() returned the prefix at {:?}",
+            node.text_range()
+        );
+    }
+    if let Some(element) = member.element() {
+        assert_ne!(
+            element.kind(),
+            SyntaxKind::MemberPrefix,
+            "element() returned a MemberPrefix at {:?}",
+            node.text_range()
+        );
+    }
+}
+
+/// What `PackageMember` must satisfy at every node, whatever the tree:
+///
+/// (a) `cast` succeeds exactly when `node.kind()` is `SyntaxKind::PackageMember`, and the
+///     node survives the round trip through `syntax()`;
+/// (b) the production is `MemberPrefix` then **one** element (`SysML` 8.2.2.5.1), so no
+///     member anywhere may carry two prefixes or two elements. This is the claim
+///     `PackageMember::child_where` relies on when it takes the first match;
+/// (c) the differential, and the one that matters here: `prefix()` and `element()`
+///     partition the direct children. `element()` is defined as "not the prefix", so the
+///     assertion re-derives both halves independently and demands that together they
+///     account for every child and never for the same one — an accessor that returned
+///     the prefix as the element would satisfy each half alone;
+/// (d) the prefix is a `MemberPrefix` and the element never is;
+/// (e) calling each accessor twice returns the same answer.
+fn assert_package_member_accessor(node: &SyntaxNode) {
+    let is_member = node.kind() == SyntaxKind::PackageMember;
+    let cast = PackageMember::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_member,
+        "PackageMember::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(member) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        member.syntax(),
+        node,
+        "PackageMember::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b), (c) and (d): the two accessors partition this node's children.
+    assert_package_member_partition(node, &member);
+
+    // (e) idempotent.
+    assert_eq!(
+        (member.prefix(), member.element()),
+        (member.prefix(), member.element()),
+        "a PackageMember accessor disagreed with itself between two calls on the same node"
+    );
+}
+
+/// The two name slots of `member`, checked against the positions the production states.
+///
+/// Re-derived from the TOKEN SEQUENCE rather than by repeating the accessor's walk, so
+/// this is a differential and not a restatement:
+///
+/// - both slots, if filled, stand before the `for` keyword — everything after it belongs
+///   to the target, and a name there is inside the `QualifiedName` node;
+/// - a short name requires a `<` before it, because that is the only thing that opens the
+///   slot;
+/// - the two are never the same token;
+/// - and the arithmetic: the number of name tokens standing before `for` equals how many
+///   slots came back filled. This is the one that catches a name being silently dropped,
+///   which neither "it is after the `<`" nor "they differ" can see.
+fn assert_alias_member_names(node: &SyntaxNode, member: &AliasMember) {
+    // Everything before `for`, taken as an iterator rather than sliced at a position:
+    // slicing is a workspace lint (invariant 3), and `get(..n).unwrap_or(..)` would buy
+    // the same result with a branch that can never run, which is its own defect.
+    let before_for: Vec<SyntaxToken> = node
+        .children_with_tokens()
+        .filter_map(SyntaxElement::into_token)
+        .take_while(|token| token.kind() != SyntaxKind::KwFor)
+        .collect();
+    let is_name = |token: &SyntaxToken| {
+        matches!(
+            token.kind(),
+            SyntaxKind::BasicName | SyntaxKind::UnrestrictedName
+        )
+    };
+
+    let names: Vec<&SyntaxToken> = before_for.iter().filter(|t| is_name(t)).collect();
+    let filled = usize::from(member.short_name().is_some()) + usize::from(member.name().is_some());
+    assert_eq!(
+        names.len(),
+        filled,
+        "an alias has {} name token(s) before `for` but {filled} slot(s) came back filled, \
+         at {:?} — a name is being dropped or invented",
+        names.len(),
+        node.text_range()
+    );
+
+    if let Some(short) = member.short_name() {
+        let opener = before_for
+            .iter()
+            .position(|token| token.kind() == SyntaxKind::Lt);
+        assert!(
+            opener.is_some(),
+            "a short name was reported with no `<` to open the slot, at {:?}",
+            node.text_range()
+        );
+        let short_at = before_for
+            .iter()
+            .position(|token| token.text_range() == short.text_range());
+        assert!(
+            short_at > opener,
+            "the short name must stand after the `<`, at {:?}",
+            node.text_range()
+        );
+    }
+
+    if let (Some(short), Some(name)) = (member.short_name(), member.name()) {
+        assert_ne!(
+            short.text_range(),
+            name.text_range(),
+            "the short name and the member name must be different tokens, at {:?}",
+            node.text_range()
+        );
+    }
+}
+
+/// What `AliasMember` must satisfy at every node, whatever the tree:
+///
+/// (a) `cast` succeeds exactly when `node.kind()` is `SyntaxKind::AliasMember`, and the
+///     node survives the round trip through `syntax()`;
+/// (b) `MemberPrefix`, `QualifiedName` and `RelationshipBody` are stated once each
+///     (`SysML` 8.2.2.5.1), so no alias may carry two of any of them, and each accessor
+///     equals the child re-derived by walking the tree;
+/// (c) the two name slots hold what their positions say — `assert_alias_member_names`;
+/// (d) calling each accessor twice returns the same answer.
+fn assert_alias_member_accessor(node: &SyntaxNode) {
+    let is_alias = node.kind() == SyntaxKind::AliasMember;
+    let cast = AliasMember::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_alias,
+        "AliasMember::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(member) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        member.syntax(),
+        node,
+        "AliasMember::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) one of each, and the differential against the re-derivation.
+    for (kind, accessor) in [
+        (SyntaxKind::MemberPrefix, member.prefix()),
+        (SyntaxKind::QualifiedName, member.target()),
+        (SyntaxKind::RelationshipBody, member.body()),
+    ] {
+        let direct = children_of_kind(node, kind);
+        assert!(
+            direct.len() <= 1,
+            "an alias carries at most one {:?}, but this one has {} at {:?}",
+            kind,
+            direct.len(),
+            node.text_range()
+        );
+        assert_eq!(
+            accessor,
+            direct.first().cloned(),
+            "the {:?} accessor is not this node's {:?} child at {:?}",
+            kind,
+            kind,
+            node.text_range()
+        );
+    }
+
+    // (c) the token slots, which every node-level assertion above is blind to.
+    assert_alias_member_names(node, &member);
+
+    // (d) idempotent.
+    assert_eq!(
+        (
+            member.short_name().map(|t| t.text_range()),
+            member.name().map(|t| t.text_range())
+        ),
+        (
+            member.short_name().map(|t| t.text_range()),
+            member.name().map(|t| t.text_range())
+        ),
+        "an AliasMember accessor disagreed with itself between two calls on the same node"
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -192,6 +448,8 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_node_invariants(&node);
             assert_root_namespace_accessor(&node);
             assert_import_accessor(&node);
+            assert_package_member_accessor(&node);
+            assert_alias_member_accessor(&node);
             visited += 1;
         }
     }
