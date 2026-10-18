@@ -5,6 +5,7 @@
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode};
 
 use crate::ast_node::AstNode;
+use crate::import_declaration::ImportDeclaration;
 use crate::visibility_indicator::VisibilityIndicator;
 
 /// An import of one membership or one namespace into the enclosing namespace.
@@ -82,8 +83,14 @@ impl Import {
     /// (`tests/malformed/import/declaration-names-nothing.sysml`). A caller that reads
     /// `is_some()` as "the import names something" is wrong in exactly the way an
     /// absence check cannot see. Ask the node for its range or its text.
-    pub fn declaration(&self) -> Option<SyntaxNode> {
+    ///
+    /// Returns the typed [`ImportDeclaration`] rather than the raw node, under the
+    /// delegation rule in `.claude/rules/ast.md`: which alternative was written is that
+    /// node's own question (`import.declaration().and_then(|d| d.imported())`). It
+    /// returned a raw `SyntaxNode` until that kind had a view to delegate to.
+    pub fn declaration(&self) -> Option<ImportDeclaration> {
         self.child(SyntaxKind::ImportDeclaration)
+            .and_then(ImportDeclaration::cast)
     }
 
     /// The relationship body: `;`, or braces carrying annotations.

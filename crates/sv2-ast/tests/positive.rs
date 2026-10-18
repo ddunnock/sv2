@@ -99,9 +99,14 @@ fn private_import_test_writes_four_imports_one_of_them_import_all() {
         let declaration = import
             .declaration()
             .unwrap_or_else(|| panic!("import {index} must have a declaration"));
-        assert_eq!(declaration.kind(), SyntaxKind::ImportDeclaration);
+        // `cast` guarantees the kind, so assert what it cannot: the alternative is
+        // there, and the declaration spans something.
         assert!(
-            declaration.text_range().len() > 0.into(),
+            declaration.imported().is_some(),
+            "import {index} wraps an alternative"
+        );
+        assert!(
+            declaration.syntax().text_range().len() > 0.into(),
             "import {index} names something, so its declaration cannot be zero width"
         );
         let body = import
@@ -696,5 +701,99 @@ fn every_visibility_keyword_comes_back_as_its_own_token_kind() {
         under_import,
         [SyntaxKind::Import; 4],
         "all four of that file's indicators sit under an Import, not a MemberPrefix"
+    );
+}
+
+/// The corpus file written to exercise imports, and the only one that puts both
+/// alternatives of `ImportDeclaration` in the same package.
+const IMPORTS: &str = "vendor/corpus/kerml/src/examples/Simple Tests/Imports.kerml";
+
+/// `Imports.kerml`, whose five imports are written:
+///
+/// ```text
+///   line 27:  public import Q::*;    namespace
+///   line 32:  public import P::*;    namespace
+///   line 33:  public import Q::**;   MEMBERSHIP, recursive
+///   line 41:  public import P::*;    namespace
+///   line 42:  public import R::*;    namespace
+/// ```
+///
+/// The third one is why this case exists. Read off the two productions (`KerML`
+/// 8.2.3.4.2):
+///
+/// ```text
+/// MembershipImport = [QualifiedName] ( '::' isRecursive ?= '**' )?
+/// NamespaceImport  = [QualifiedName] '::' '*' ( '::' isRecursive ?= '**' )?
+/// ```
+///
+/// what makes an import a `NamespaceImport` is the `::*`, and **not** the presence of
+/// stars. `Q::**` has no `::*` in it, so it matches the first alternative with
+/// `isRecursive` set: a recursive import of the membership `Q`, not of its namespace.
+/// Anything deciding the alternative by looking for a `*` character gets it backwards,
+/// and this file is the pinned input that says so.
+///
+/// `imported()` returns the raw node because the child is one of **two** kinds and
+/// `AstNode` declares one `KIND` per view, so no typed signature admits both. The kind is
+/// therefore the discriminator, which is what this case reads.
+#[test]
+fn a_double_star_without_a_single_one_is_a_membership_import() {
+    let root = tree_of(IMPORTS);
+    let declarations: Vec<sv2_ast::ImportDeclaration> = root
+        .descendants()
+        .filter_map(sv2_ast::ImportDeclaration::cast)
+        .collect();
+
+    let alternatives: Vec<SyntaxKind> = declarations
+        .iter()
+        .filter_map(sv2_ast::ImportDeclaration::imported)
+        .map(|node| node.kind())
+        .collect();
+    assert_eq!(
+        alternatives,
+        [
+            SyntaxKind::NamespaceImport,  // Q::*
+            SyntaxKind::NamespaceImport,  // P::*
+            SyntaxKind::MembershipImport, // Q::**  <- no `::*`, so the first alternative
+            SyntaxKind::NamespaceImport,  // P::*
+            SyntaxKind::NamespaceImport,  // R::*
+        ],
+        "the alternative each import matched, in source order"
+    );
+    assert_eq!(
+        alternatives.len(),
+        declarations.len(),
+        "every declaration carries its alternative; the node is built at a checkpoint, \
+         so there is no tree in which it is missing"
+    );
+
+    // The one that proves the rule: same trailing characters as a namespace import would
+    // have, and a different alternative. Its name is `Q`, with the `**` outside the name.
+    let recursive = declarations
+        .iter()
+        .find(|declaration| {
+            declaration
+                .imported()
+                .is_some_and(|node| node.kind() == SyntaxKind::MembershipImport)
+        })
+        .expect("line 33 writes one");
+    assert_eq!(
+        recursive.syntax().text().to_string(),
+        "Q::**",
+        "the declaration spans the name and the recursive marker"
+    );
+    let name = recursive
+        .imported()
+        .and_then(|node| {
+            node.children()
+                .find(|c| c.kind() == SyntaxKind::QualifiedName)
+        })
+        .and_then(sv2_ast::QualifiedName::cast)
+        .expect("the alternative carries a QualifiedName");
+    assert_eq!(
+        name.segments()
+            .map(|token| token.text().to_owned())
+            .collect::<Vec<_>>(),
+        ["Q"],
+        "`**` is not a segment of the name; it is the alternative's own token"
     );
 }
