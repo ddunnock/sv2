@@ -4,7 +4,7 @@
 
 mod trees;
 
-use sv2_ast::{AstNode, Import, PackageMember, RootNamespace};
+use sv2_ast::{AliasMember, AstNode, Import, PackageMember, RootNamespace};
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
 const UNCLOSED_BODY: &str = include_str!("malformed/root-namespace/unclosed-body.sysml");
@@ -12,6 +12,7 @@ const DECLARATION_NAMES_NOTHING: &str =
     include_str!("malformed/import/declaration-names-nothing.sysml");
 const ORPHANED_VISIBILITY: &str =
     include_str!("malformed/package-member/orphaned-visibility.sysml");
+const SHORT_NAME_UNCLOSED: &str = include_str!("malformed/alias-member/short-name-unclosed.sysml");
 
 /// Every `Import` in `root`, in document order.
 fn imports(root: &SyntaxNode) -> Vec<Import> {
@@ -270,4 +271,130 @@ fn an_orphaned_visibility_does_not_belong_to_the_member_after_it() {
         imports(&root).is_empty(),
         "no import is written, so none may be reported from a stray visibility"
     );
+}
+
+/// `alias-member/short-name-unclosed.sysml`: `alias <c Car for Automobile;`. The `>` is
+/// not written, so both names sit in the tree as adjacent `BasicName` siblings.
+///
+/// The source is the parser, and only the parser: `alias_member`
+/// (`crates/sv2-syntax/src/parser/namespace.rs`) reads `<`, takes a name, then calls
+/// `expect(SyntaxKind::Gt, ...)`, which reports a diagnostic **without consuming**, and
+/// carries on to read the optional member name. The clause (`SysML` 8.2.2.5.1) says only
+/// that a short name is written `'<' NAME '>'`.
+///
+/// What this case pins that the first three could not: both slots hold the same TOKEN
+/// KIND, so only position tells them apart, and the delimiter a positional rule would
+/// key on is the one character missing. A rule phrased "the name between `<` and `>`"
+/// reports no short name and hands `c` back as the member name — wrong about both slots
+/// at once. The rule that survives is `<` opens the slot, `>` closes it, and the slot
+/// holds at most one name, so the second falls through.
+#[test]
+fn an_unclosed_short_name_does_not_swallow_the_member_name() {
+    let parse = trees::parsed(SHORT_NAME_UNCLOSED, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. the parse still yields a tree, and the alias is in it.
+    let found: Vec<AliasMember> = root.descendants().filter_map(AliasMember::cast).collect();
+    assert_eq!(found.len(), 1, "the fixture writes one alias");
+    let alias = &found[0];
+
+    // 2a. both slots are filled, and filled with the right token each. This is the whole
+    // case: `c` opened the short-name slot, and `Car` fell through to the member name
+    // because the slot was never closed and holds at most one.
+    assert_eq!(
+        alias.short_name().map(|token| token.text().to_owned()),
+        Some("c".to_owned()),
+        "`c` stands after the `<`, so it is the short name even with no `>` to close it"
+    );
+    assert_eq!(
+        alias.name().map(|token| token.text().to_owned()),
+        Some("Car".to_owned()),
+        "`Car` is the member name; a rule keyed on the missing `>` would report it as \
+         the short name, or report it as nothing at all"
+    );
+    assert_ne!(
+        alias.short_name().map(|t| t.text_range()),
+        alias.name().map(|t| t.text_range()),
+        "the two slots must never be the same token"
+    );
+
+    // 2b. the rest of the member is intact and must read as intact, or an accessor that
+    // gave up on the whole node would pass 2a's shape by accident.
+    assert_eq!(
+        alias
+            .target()
+            .map(|node| node.text().to_string())
+            .unwrap_or_default(),
+        "Automobile",
+        "the target after `for` is unaffected by the missing `>`"
+    );
+    assert_eq!(
+        alias.body().map(|node| node.text().to_string()),
+        Some(";".to_owned())
+    );
+
+    // 2c. and the missing `>` was reported. A parser that accepted it in silence would
+    // leave 2a green while telling the caller the text was fine.
+    assert!(
+        parse
+            .errors()
+            .iter()
+            .any(|diagnostic| diagnostic.message().contains('>')),
+        "the missing `>` must be diagnosed, not quietly tolerated: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbouring accessors still answer. The alias is the root's one member,
+    // and `PackageMember` — which shares the MemberPrefix shape — must not claim it.
+    let namespace = RootNamespace::cast(root.clone()).expect("the root is always RootNamespace");
+    let top: Vec<_> = namespace.members().collect();
+    assert_eq!(top.len(), 1, "the alias is the root's one member");
+    assert_eq!(top[0], *alias.syntax());
+    assert!(
+        members(&root).is_empty(),
+        "an alias is a Membership, not an OwningMembership, so it is not a PackageMember"
+    );
+}
+
+const SHORT_NAME_EMPTY: &str = include_str!("malformed/alias-member/short-name-empty.sysml");
+
+/// `alias-member/short-name-empty.sysml`: `alias <> Car for Automobile;`. The slot opens
+/// and closes with nothing in it, so `Car` is the MEMBER name, not the short name.
+///
+/// The second fixture for one kind, and deliberately so: this is the branch of the
+/// positional rule that the unclosed case cannot distinguish. "The first name after `<`"
+/// satisfies `alias <c Car ...` and inverts both slots here. Only "`<` opens the slot,
+/// `>` closes it, the slot holds at most one name" is right in both, and it takes both
+/// fixtures to say so. `ast_coverage.py` allows several conditions per kind for this.
+#[test]
+fn an_empty_short_name_slot_leaves_the_member_name_where_it_is() {
+    let parse = trees::parsed(SHORT_NAME_EMPTY, Language::SysMl);
+    let root = parse.syntax();
+
+    let found: Vec<AliasMember> = root.descendants().filter_map(AliasMember::cast).collect();
+    assert_eq!(found.len(), 1, "the fixture writes one alias");
+    let alias = &found[0];
+
+    assert_eq!(
+        alias.short_name().map(|token| token.text().to_owned()),
+        None,
+        "the slot was closed empty, so there is no short name to report"
+    );
+    assert_eq!(
+        alias.name().map(|token| token.text().to_owned()),
+        Some("Car".to_owned()),
+        "`Car` stands after a CLOSED slot, so it is the member name"
+    );
+    assert!(
+        parse
+            .errors()
+            .iter()
+            .any(|diagnostic| diagnostic.message().contains("short name")),
+        "the empty slot must be diagnosed: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour still answers.
+    let namespace = RootNamespace::cast(root.clone()).expect("the root is always RootNamespace");
+    assert_eq!(namespace.members().count(), 1);
 }

@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-17T14:33:59Z",
+    "regenerated_utc": "2026-10-18T15:09:25Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 3,
-      "unimplemented": 460,
+      "implemented": 4,
+      "unimplemented": 459,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 0.6
+      "percent": 0.9
     },
     "tests": {
-      "unit": 763,
+      "unit": 767,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "11d1c0a Add the PackageMember accessor, pinning attribution",
       "ac2f1b0 Record that ast-evidence-gaps is merged and pushed",
       "97eebec Merge ast-evidence-gaps: close ADR-0025's evidence gaps, and the Import accessor",
       "8e9e0ec Add the Import accessor, and the case the corpus could not make",
       "28fc394 Correct the handoff: the schema bump is no longer outstanding",
       "6c502df Surface unswept in the handoff block, at state schema v2",
       "56e6478 Close the four ADR-0025 evidence gaps, and accept it",
-      "3e08d5d Land ADR-0026 with the frontmatter the other ADRs use",
-      "b316423 Record that ast-harness is merged and pushed"
+      "3e08d5d Land ADR-0026 with the frontmatter the other ADRs use"
     ]
   },
   "authored": {

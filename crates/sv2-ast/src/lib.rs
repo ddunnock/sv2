@@ -5,11 +5,13 @@
 //! This crate owns no data. Every accessor is a view over a CST node, so the tree
 //! stays the single source of truth and the text stays authoritative (ADR-0001).
 
+mod alias_member;
 mod ast_node;
 mod import;
 mod namespace;
 mod package_member;
 
+pub use crate::alias_member::AliasMember;
 pub use crate::ast_node::AstNode;
 pub use crate::import::Import;
 pub use crate::namespace::RootNamespace;

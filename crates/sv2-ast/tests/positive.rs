@@ -17,7 +17,7 @@
 
 mod trees;
 
-use sv2_ast::{AstNode, Import, PackageMember};
+use sv2_ast::{AliasMember, AstNode, Import, PackageMember};
 use sv2_syntax::{SyntaxKind, SyntaxNode};
 
 /// The file the frozen grammar unit cites as evidence for the optional `all`
@@ -243,4 +243,121 @@ fn package_example_writes_two_members_beside_other_memberships() {
     let count = |want: SyntaxKind| kinds.iter().filter(|kind| **kind == want).count();
     assert_eq!(count(SyntaxKind::Import), 2, "two imports are written");
     assert_eq!(count(SyntaxKind::AliasMember), 2, "two aliases are written");
+}
+
+/// The two aliases `Package Example.sysml` writes, one with a visibility and one without,
+/// one target qualified and one not.
+///
+/// ```text
+///   public alias Car for Automobile;      public,  target Automobile
+///   alias Torque for ISQ::TorqueValue;    no visibility, target ISQ::TorqueValue
+/// ```
+///
+/// Both name slots behave the same way in the pinned corpus — every alias in all 311
+/// files writes a member name and no short name — so this file pins the ordinary shape
+/// and `an_alias_short_name_is_the_one_inside_the_brackets` pins the rest.
+#[test]
+fn package_example_writes_two_aliases_one_qualified() {
+    let root = tree_of(PACKAGE_EXAMPLE);
+    let aliases: Vec<AliasMember> = root.descendants().filter_map(AliasMember::cast).collect();
+
+    assert_eq!(aliases.len(), 2, "the file writes two aliases");
+
+    let named: Vec<String> = aliases
+        .iter()
+        .map(|alias| {
+            alias
+                .name()
+                .map_or_else(|| "<none>".to_owned(), |token| token.text().to_owned())
+        })
+        .collect();
+    assert_eq!(
+        named,
+        ["Car", "Torque"],
+        "the member names, in source order"
+    );
+
+    assert!(
+        aliases.iter().all(|alias| alias.short_name().is_none()),
+        "no alias in the pinned corpus writes a short name"
+    );
+
+    let targets: Vec<String> = aliases
+        .iter()
+        .map(|alias| {
+            alias
+                .target()
+                .map_or_else(|| "<none>".to_owned(), |node| node.text().to_string())
+        })
+        .collect();
+    assert_eq!(
+        targets,
+        ["Automobile", "ISQ::TorqueValue"],
+        "the second target is qualified, so a target accessor that stopped at the first \
+         name would read `ISQ` and not notice"
+    );
+
+    let prefixes: Vec<String> = aliases
+        .iter()
+        .map(|alias| {
+            alias
+                .prefix()
+                .map_or_else(|| "<none>".to_owned(), |node| node.text().to_string())
+        })
+        .collect();
+    assert_eq!(
+        prefixes,
+        ["public", ""],
+        "one is written public, one is bare"
+    );
+}
+
+/// The short name is the one inside the brackets, and neither slot stands in for the
+/// other when it is empty.
+///
+/// Hand written, and it has to be: the short-name slot is **not exercised by the pinned
+/// corpus at all**. The only two occurrences of `alias <` in 311 files are inside `//`
+/// comments (`SimpleVehicleModel.sysml:458`, `// with alias <fm>`), which the parser in
+/// this project reads as trivia, not as a short name. The parser says so at
+/// `alias_member` too. So no corpus file can tell a correct accessor from one that
+/// confuses the two slots, and the expectation comes from the clause instead:
+/// `'alias' ( '<' memberShortName = NAME '>' )? ( memberName = NAME )?`, `SysML`
+/// 8.2.2.5.1. Every input here parses with no diagnostic — the damaged spellings of the
+/// same slot are pinned in `tests/malformed/alias-member/`.
+#[test]
+fn an_alias_short_name_is_the_one_inside_the_brackets() {
+    // (source, short name, member name) — read straight off the production.
+    let cases = [
+        ("alias <c> Car for Automobile;", Some("c"), Some("Car")),
+        ("alias <c> for Automobile;", Some("c"), None),
+        ("alias Car for Automobile;", None, Some("Car")),
+        // Both slots are optional and both are 0..1 on the metaclass, so this is well
+        // formed as far as the syntax goes — the parser's own note says as much.
+        ("alias for Automobile;", None, None),
+    ];
+
+    for (source, short, name) in cases {
+        let parse = trees::parsed(source, sv2_syntax::Language::SysMl);
+        assert!(
+            parse.errors().is_empty(),
+            "the clause admits {source:?}, so a diagnostic here is the parser \
+             disagreeing with it, not the test being wrong: {:?}",
+            parse.errors()
+        );
+        let root = parse.syntax();
+        let aliases: Vec<AliasMember> = root.descendants().filter_map(AliasMember::cast).collect();
+        assert_eq!(aliases.len(), 1, "{source:?} writes one alias");
+        let alias = &aliases[0];
+
+        assert_eq!(
+            alias.short_name().map(|token| token.text().to_owned()),
+            short.map(str::to_owned),
+            "short name of {source:?}"
+        );
+        assert_eq!(
+            alias.name().map(|token| token.text().to_owned()),
+            name.map(str::to_owned),
+            "member name of {source:?}"
+        );
+    }
 }
