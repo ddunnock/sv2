@@ -105,8 +105,8 @@ impl QualifiedName {
     ///
     /// True exactly when a `Dollar` token is written here. That is a stronger statement
     /// than it looks, because a segment may itself be named `$`: `Scoping.kerml` declares
-    /// `package '$'` and then refers to it as `'$'::Objects::Object` on line 32, two
-    /// lines above `$::Objects::Object` on line 35. The quoted spelling lexes as an
+    /// `package '$'` and then refers to it as `'$'::Objects::Object` on line 32 and to
+    /// the global scope as `$::Objects::Object` on line 35. The quoted spelling lexes as an
     /// `UnrestrictedName` and is a segment; the bare one lexes as `Dollar` and is not.
     /// `tests/positive.rs::scoping_tells_a_package_named_dollar_from_the_global_qualifier`
     /// holds that pair, and it catches an accessor that counts the segment named `$` as
