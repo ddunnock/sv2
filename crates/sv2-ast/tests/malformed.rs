@@ -6,7 +6,7 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, PackageMember, QualifiedName,
-    RootNamespace,
+    RelationshipBody, RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -343,7 +343,10 @@ fn an_unclosed_short_name_does_not_swallow_the_member_name() {
         "the target after `for` is unaffected by the missing `>`"
     );
     assert_eq!(
-        alias.body().map(|node| node.text().to_string()),
+        alias
+            .body()
+            .and_then(|body| body.terminator())
+            .map(|token| token.text().to_owned()),
         Some(";".to_owned())
     );
 
@@ -957,5 +960,200 @@ fn a_trailing_separator_leaves_an_import_that_looks_undamaged() {
             .map(|token| token.kind()),
         Some(SyntaxKind::KwPublic),
         "the import's visibility is untouched by the damage inside the declaration"
+    );
+}
+
+const NON_ANNOTATION_IN_BRACES: &str =
+    include_str!("malformed/relationship-body/non-annotation-in-braces.sysml");
+
+/// The five children of the braced body in `non-annotation-in-braces.sysml`.
+///
+/// Split out of the test only to stay inside clippy's function-length lint; the three
+/// claims belong together, because each alone reads as health. One real annotation, four
+/// one-token recovery fragments, and the count that a caller would misread as four extra
+/// annotations.
+fn assert_braced_body_children(body: &RelationshipBody) {
+    assert_eq!(
+        body.elements().map(|node| node.kind()).collect::<Vec<_>>(),
+        [
+            SyntaxKind::OwnedAnnotation,
+            SyntaxKind::Error,
+            SyntaxKind::Error,
+            SyntaxKind::Error,
+            SyntaxKind::Error,
+        ],
+        "the comment is an annotation; the four tokens of `part def X;` are not"
+    );
+    assert_eq!(
+        body.elements()
+            .filter(|node| node.kind() == SyntaxKind::OwnedAnnotation)
+            .count(),
+        1,
+        "exactly one real annotation was written"
+    );
+    assert_eq!(
+        body.elements().count(),
+        5,
+        "and five children came back, so a count is not an annotation count"
+    );
+    assert_eq!(
+        body.elements()
+            .filter(|node| node.kind() == SyntaxKind::Error)
+            .map(|node| node.text().to_string())
+            .collect::<Vec<_>>(),
+        ["part", "def", "X", ";"],
+        "recovery took one token at a time, not the statement as a whole"
+    );
+}
+
+/// `relationship-body/non-annotation-in-braces.sysml`:
+/// `public import A::* { /* a */ part def X; }`. The body is braced, closed and
+/// non-empty — which is what a healthy annotated relationship looks like — and four of
+/// its five children are recovery fragments.
+///
+/// `RelationshipBody` admits `OwnedAnnotation` and nothing else in `SysML` 8.2.2.2. The
+/// braced run reads an annotation when one starts and otherwise recovers one token at a
+/// time, reporting each (`sysml_relationship_body`,
+/// `crates/sv2-syntax/src/parser/annotation.rs`), so `part def X;` becomes four `Error`
+/// nodes rather than one.
+///
+/// 1. the parse still yields a tree, with the body in it;
+/// 2. the accessor reports what is there rather than what it means: `elements()` yields
+///    all five children in order, the `Error`s included (ADR-0002 — elements with failed
+///    constraints still enter the IR carrying their diagnostics), and `Parse::errors()`
+///    is the only thing that says anything failed. A caller counting `elements()` as
+///    annotations is wrong by four;
+/// 3. the neighbour still answers, and the subtler claim: `terminator()` returns the `}`,
+///    so **closed is not healthy**. The opposite case — never closed — is the fourteen
+///    zero-width bodies already in the corpus, where `terminator()` is `None`.
+#[test]
+fn a_braced_body_reports_recovery_fragments_as_the_children_they_are() {
+    let parse = trees::parsed(NON_ANNOTATION_IN_BRACES, Language::SysMl);
+    let root = parse.syntax();
+
+    let found = imports(&root);
+    assert_eq!(found.len(), 1, "the fixture writes one import");
+    let body = found[0]
+        .body()
+        .expect("the body node is built whichever alternative is written");
+
+    // 2a, 2b and 2c: the children, the count that misleads, and the fragments.
+    assert_braced_body_children(&body);
+
+    assert_eq!(
+        parse.errors().len(),
+        4,
+        "one diagnostic per recovered token: {:?}",
+        parse.errors()
+    );
+
+    // 3a. closed is not healthy: the `}` is there, and the body is damaged anyway.
+    assert_eq!(
+        body.terminator().map(|token| token.kind()),
+        Some(SyntaxKind::RBrace),
+        "the body closed with its brace, which says nothing about what is inside it"
+    );
+
+    // 3b. the neighbour above still answers.
+    assert_eq!(
+        found[0]
+            .visibility()
+            .and_then(|visibility| visibility.keyword())
+            .map(|token| token.kind()),
+        Some(SyntaxKind::KwPublic),
+        "the import's visibility is untouched by the damage inside the body"
+    );
+    assert!(
+        found[0]
+            .declaration()
+            .and_then(|declaration| declaration.imported())
+            .is_some(),
+        "and it still reports what it imports"
+    );
+}
+
+const UNCLOSED_BRACES: &str = include_str!("malformed/relationship-body/unclosed-braces.sysml");
+
+/// `relationship-body/unclosed-braces.sysml`: `public import A::* {` and nothing more. The
+/// body holds a token, is not zero width, and is **not terminated**.
+///
+/// The second fixture for this kind, and hand written because the corpus cannot settle the
+/// question: no pinned tree holds a body whose last token is a `{` — 827 are `;`, 16 are
+/// braced with both braces, 14 are zero width. Mutating `terminator()` to accept whatever
+/// token came last survived the whole suite for that reason, which is the first case
+/// `.claude/rules/ast.md` describes for a surviving mutation: nothing distinguished it, so
+/// write the case.
+///
+/// The source for the outcome is the parser: `sysml_relationship_body`
+/// (`crates/sv2-syntax/src/parser/annotation.rs`) closes the node with `expect(RBrace)`,
+/// which reports without consuming when the brace never arrives.
+///
+/// 1. the parse still yields a tree, with the body in it;
+/// 2. absence, reported: `terminator()` is `None` although a token is present, *and* a
+///    diagnostic says the `}` was expected. This is the one tree where the two readings of
+///    "unterminated" come apart — the 14 zero-width bodies are empty *and* unterminated,
+///    so an accessor answering from emptiness would be right about all of them and wrong
+///    here;
+/// 3. the neighbour still answers: the import above reports its visibility and what it
+///    imports, both of which were read before the brace.
+#[test]
+fn an_unclosed_brace_is_a_token_but_not_a_terminator() {
+    let parse = trees::parsed(UNCLOSED_BRACES, Language::SysMl);
+    let root = parse.syntax();
+
+    let found = imports(&root);
+    assert_eq!(found.len(), 1, "the fixture writes one import");
+    let body = found[0].body().expect("the body node is always built");
+
+    // 2a. unterminated, although a token is there.
+    assert_eq!(
+        body.terminator(),
+        None,
+        "a `{{` opens the body and does not close it"
+    );
+    assert!(
+        body.syntax().text_range().len() > 0.into(),
+        "the body is not zero width -- it holds the `{{`, which is what makes this case \
+         different from the fourteen unterminated-at-EOF bodies in the corpus"
+    );
+    assert_eq!(
+        body.syntax().text().to_string().trim(),
+        "{",
+        "the brace is the only thing in it"
+    );
+
+    // 2b. emptiness and closure are independent: this one is empty and unterminated,
+    // where the corpus's `{ }` is empty and terminated.
+    assert_eq!(
+        body.elements().count(),
+        0,
+        "nothing was written inside the brace"
+    );
+
+    // 2c. something reported it.
+    assert!(
+        parse
+            .errors()
+            .iter()
+            .any(|diagnostic| diagnostic.message().contains('}')),
+        "the missing brace must be diagnosed: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour still answers, for the part read before the brace.
+    assert_eq!(
+        found[0]
+            .visibility()
+            .and_then(|visibility| visibility.keyword())
+            .map(|token| token.kind()),
+        Some(SyntaxKind::KwPublic),
+        "the visibility stands before the damage"
+    );
+    assert!(
+        found[0]
+            .declaration()
+            .and_then(|declaration| declaration.imported())
+            .is_some(),
+        "and so does what it imports"
     );
 }

@@ -7,6 +7,7 @@ use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 use crate::ast_node::AstNode;
 use crate::member_prefix::MemberPrefix;
 use crate::qualified_name::QualifiedName;
+use crate::relationship_body::RelationshipBody;
 
 /// The two name slots while `AliasMember::names` walks the tokens.
 ///
@@ -172,9 +173,14 @@ impl AliasMember {
     }
 
     /// The relationship body: `;`, or braces carrying annotations.
-    pub fn body(&self) -> Option<SyntaxNode> {
+    ///
+    /// Returns the typed [`RelationshipBody`] rather than the raw node, under the
+    /// delegation rule in `.claude/rules/ast.md`. It returned a raw `SyntaxNode` until
+    /// that kind had a view to delegate to.
+    pub fn body(&self) -> Option<RelationshipBody> {
         self.0
             .children()
             .find(|child| child.kind() == SyntaxKind::RelationshipBody)
+            .and_then(RelationshipBody::cast)
     }
 }
