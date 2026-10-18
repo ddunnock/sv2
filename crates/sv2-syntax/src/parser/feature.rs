@@ -502,9 +502,14 @@ impl Parser<'_> {
     //
     // FeatureElement's ten alternatives are Feature, Step, Expression,
     // BooleanExpression, Invariant, Connector, BindingConnector, Succession, Flow and
-    // SuccessionFlow. Five are implemented, Feature, Step, Connector, BindingConnector
-    // and Succession; the member itself is, which is what this marks, exactly as
-    // NonFeatureMember marks its own shape rather than MemberElement's alternatives.
+    // SuccessionFlow. ALL TEN are implemented and `feature_element` dispatches to each:
+    // eight on their own reserved word, SuccessionFlow on the `succession flow` pair that
+    // `at_kerml_flow` tells from a bare `flow`, and Feature as the final fallback, its
+    // keyword being optional. This marks the MEMBER rather than the alternatives, exactly
+    // as NonFeatureMember marks its own shape rather than MemberElement's.
+    //
+    // Three of the ten occur as a namespace member in the pinned corpus: Feature 130
+    // times, Expression twice, Flow once.
     fn namespace_feature_member(&mut self) {
         self.eat_trivia();
         self.start_node(SyntaxKind::NamespaceFeatureMember);

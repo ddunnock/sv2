@@ -872,3 +872,90 @@ fn one_braced_body_among_semicolons_owns_its_comment() {
         );
     }
 }
+
+/// The `KerML` corpus file whose package body holds both namespace member productions,
+/// and whose one feature member owns something other than a `Feature`.
+const BEHAVIORS: &str = "vendor/corpus/kerml/src/examples/Simple Tests/Behaviors.kerml";
+
+/// `Behaviors.kerml`, whose package body holds four members:
+///
+/// ```text
+///   line  2:  behavior A { ... }            NonFeatureMember
+///   line  9:  behavior B specializes A {}   NonFeatureMember
+///   line 13:  class C { ... }               NonFeatureMember
+///   line 20:  abstract flow msg of C;       NamespaceFeatureMember
+/// ```
+///
+/// `NamespaceFeatureMember = MemberPrefix ownedRelatedElement += FeatureElement` (`KerML`
+/// 8.2.3.4.1), and a namespace's other members arrive through `NonFeatureMember`. The two
+/// are told apart by what they own, not by how they are written, and this file is the
+/// pinned input where both occur side by side.
+///
+/// The point of this case is the element. `FeatureElement` has ten alternatives and
+/// `feature_element` dispatches to all ten, but 130 of the 133 feature members in the
+/// corpus own a plain `Feature` — so a case reading any other file would not distinguish
+/// `element()` from "the Feature child". Line 20 owns a `Flow`, which is one of the three
+/// kinds that actually occur (`Feature` 130, `Expression` 2, `Flow` 1).
+///
+/// `KerML` only: ADR-0015 re-scoped this unit to the kerml grammar, and all 133 instances
+/// in the repository come from `.kerml` files.
+#[test]
+fn the_one_feature_member_in_behaviors_owns_a_flow_not_a_feature() {
+    let root = tree_of(BEHAVIORS);
+    let members: Vec<sv2_ast::NamespaceFeatureMember> = root
+        .descendants()
+        .filter_map(sv2_ast::NamespaceFeatureMember::cast)
+        .collect();
+    assert_eq!(
+        members.len(),
+        1,
+        "line 20 is the file's only namespace-level feature member"
+    );
+
+    // The element is a Flow, which is what makes this file worth reading: an accessor
+    // that looked for a Feature child specifically would report nothing here.
+    assert_eq!(
+        members[0].element().map(|node| node.kind()),
+        Some(SyntaxKind::Flow),
+        "`abstract flow msg of C;` owns a Flow, not a Feature"
+    );
+
+    // No visibility is written on it, and that must read as none rather than as damage:
+    // only one of the 133 feature members in the corpus writes one at all.
+    let prefix = members[0]
+        .prefix()
+        .expect("MemberPrefix is built whether or not a visibility is written");
+    assert!(
+        prefix.visibility().is_none(),
+        "line 20 writes no visibility"
+    );
+    assert_eq!(
+        prefix.syntax().text_range().len(),
+        0.into(),
+        "so its prefix is zero width"
+    );
+
+    // And the sibling production is present in the same body, which is the contrast that
+    // makes the kind mean something. Read off the file: three non-feature members.
+    let body = members[0]
+        .syntax()
+        .parent()
+        .expect("the member sits in the package body");
+    let kinds: Vec<SyntaxKind> = body.children().map(|child| child.kind()).collect();
+    assert_eq!(
+        kinds
+            .iter()
+            .filter(|kind| **kind == SyntaxKind::NonFeatureMember)
+            .count(),
+        3,
+        "two behaviors and a class, none of them feature members: {kinds:?}"
+    );
+    assert_eq!(
+        kinds
+            .iter()
+            .filter(|kind| **kind == SyntaxKind::NamespaceFeatureMember)
+            .count(),
+        1,
+        "and the one flow: {kinds:?}"
+    );
+}

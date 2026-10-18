@@ -9,7 +9,8 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, ImportDeclaration, MemberPrefix,
-    PackageMember, QualifiedName, RelationshipBody, RootNamespace, VisibilityIndicator,
+    NamespaceFeatureMember, PackageMember, QualifiedName, RelationshipBody, RootNamespace,
+    VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -1159,6 +1160,149 @@ fn assert_relationship_body_shape(node: &SyntaxNode, body: &RelationshipBody) {
     }
 }
 
+/// What `NamespaceFeatureMember` must satisfy at every node, whatever the tree:
+///
+/// (a) `cast` succeeds exactly when `node.kind()` is
+///     `SyntaxKind::NamespaceFeatureMember`, and the node survives the round trip;
+/// (b) the production is `MemberPrefix ownedRelatedElement += FeatureElement` (`KerML`
+///     8.2.3.4.1) with **both slots mandatory**, so every one of these nodes holds
+///     exactly one prefix and exactly one element — asserted as equality rather than as
+///     "at most one", because that is what the measurement says and a weaker assertion
+///     would let a missing element through. It also holds no token of its own;
+/// (c) the differential: `prefix()` and `element()` partition the children, and together
+///     account for every one of them exactly once. Each equality alone passes an accessor
+///     that returned the prefix for both, `element()` being defined as "not the prefix";
+/// (d) the prefix is a `MemberPrefix`, the element never is, and the element is never an
+///     `Error` — `feature_element` ends in a total fallback to `feature()`, so the
+///     dispatch cannot fail to produce one of `FeatureElement`'s alternatives;
+/// (e) calling each accessor twice returns the same answer.
+fn assert_namespace_feature_member_accessor(node: &SyntaxNode) {
+    let is_member = node.kind() == SyntaxKind::NamespaceFeatureMember;
+    let cast = NamespaceFeatureMember::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_member,
+        "NamespaceFeatureMember::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(member) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        member.syntax(),
+        node,
+        "NamespaceFeatureMember::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b), (c) and (d): the two mandatory slots, and what they may hold.
+    assert_namespace_feature_member_slots(node, &member);
+
+    // (e) idempotent.
+    assert_eq!(
+        (
+            member.prefix().map(|prefix| prefix.syntax().clone()),
+            member.element()
+        ),
+        (
+            member.prefix().map(|prefix| prefix.syntax().clone()),
+            member.element()
+        ),
+        "a NamespaceFeatureMember accessor disagreed with itself between two calls"
+    );
+}
+
+/// The two mandatory slots of a `NamespaceFeatureMember`, and what each may hold.
+///
+/// Both are re-derived by walking the children directly, so this is a differential. The
+/// counts are asserted as equality rather than "at most one" because the production makes
+/// both slots mandatory and the measurement agrees over all 133 instances — "at most one"
+/// would let a missing element through.
+fn assert_namespace_feature_member_slots(node: &SyntaxNode, member: &NamespaceFeatureMember) {
+    let prefixes = children_of_kind(node, SyntaxKind::MemberPrefix);
+    let elements: Vec<SyntaxNode> = node
+        .children()
+        .filter(|child| child.kind() != SyntaxKind::MemberPrefix)
+        .collect();
+    assert_eq!(
+        prefixes.len(),
+        1,
+        "both slots are mandatory, so there is exactly one prefix, not {} at {:?}",
+        prefixes.len(),
+        node.text_range()
+    );
+    assert_eq!(
+        elements.len(),
+        1,
+        "and exactly one element, not {} ({:?}) at {:?}",
+        elements.len(),
+        elements.iter().map(SyntaxNode::kind).collect::<Vec<_>>(),
+        node.text_range()
+    );
+    assert_eq!(
+        node.children_with_tokens()
+            .filter_map(SyntaxElement::into_token)
+            .filter(|token| !token.text().trim().is_empty())
+            .count(),
+        0,
+        "the production states no terminal of its own, yet this node holds one at {:?}",
+        node.text_range()
+    );
+
+    // (c) the differential, then the arithmetic that ties the halves together.
+    assert_eq!(
+        member.prefix().map(|prefix| prefix.syntax().clone()),
+        prefixes.first().cloned(),
+        "prefix() is not this node's MemberPrefix child at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        member.element(),
+        elements.first().cloned(),
+        "element() is not this node's non-prefix child at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        usize::from(member.prefix().is_some()) + usize::from(member.element().is_some()),
+        node.children().count(),
+        "prefix() and element() must account for every direct child exactly once, at {:?}",
+        node.text_range()
+    );
+
+    // (d) what the element may be.
+    assert_namespace_feature_element_kind(node, member);
+}
+
+/// The element slot of a `NamespaceFeatureMember` is never the prefix and never an
+/// `Error`.
+///
+/// The second half is a claim about the parser, not the grammar: `feature_element`
+/// (`crates/sv2-syntax/src/parser/feature.rs`) dispatches on each alternative's reserved
+/// word and ends in a total fallback to `feature()`, so the dispatch cannot fail to
+/// produce one of `FeatureElement`'s ten alternatives. If that ever stopped being true,
+/// this is where it would show.
+fn assert_namespace_feature_element_kind(node: &SyntaxNode, member: &NamespaceFeatureMember) {
+    let Some(element) = member.element() else {
+        return;
+    };
+    assert_ne!(
+        element.kind(),
+        SyntaxKind::MemberPrefix,
+        "element() returned a MemberPrefix at {:?}",
+        node.text_range()
+    );
+    assert_ne!(
+        element.kind(),
+        SyntaxKind::Error,
+        "feature_element's fallback means the element is always one of \
+         FeatureElement's alternatives, never an Error, at {:?}",
+        node.text_range()
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -1178,6 +1322,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_visibility_indicator_accessor(&node);
             assert_import_declaration_accessor(&node);
             assert_relationship_body_accessor(&node);
+            assert_namespace_feature_member_accessor(&node);
             visited += 1;
         }
     }

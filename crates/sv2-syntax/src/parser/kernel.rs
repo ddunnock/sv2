@@ -42,8 +42,11 @@ impl Parser<'_> {
     /// A `FeaturePrefix`, then `succession`. The keyword is reserved (`KerML` 8.2.2.6),
     /// so it decides on its own, and `at_feature` never claims it as a name. The one
     /// other production that opens the same way is `SuccessionFlow`, `succession flow`
-    /// (8.2.5.9.2): unimplemented, and declined here so that it is reported rather than
-    /// read as a succession whose declaration names `flow`.
+    /// (8.2.5.9.2), which **is** implemented — `at_kerml_flow` tells the pair from a bare
+    /// `flow` and `kerml_flow` builds the node. It is declined here so that the flow
+    /// branch gets it: `feature_element` asks this question before it asks about flows, so
+    /// a bare `succession` would otherwise swallow the pair and read a succession whose
+    /// declaration names `flow`.
     pub(super) fn at_kerml_succession(&self, n: usize) -> bool {
         let n = self.skip_feature_prefix(n);
         self.nth_is_keyword(n, "succession") && !self.nth_is_keyword(n + 1, "flow")
