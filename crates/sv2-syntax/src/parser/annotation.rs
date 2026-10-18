@@ -109,8 +109,8 @@ impl Parser<'_> {
 
     // production: RelationshipBody@sysml
     //
-    // RelationshipBody = ';' | '{' ( ownedRelationship += OwnedAnnotation )* '}'
-    //                                                            (SysML 8.2.2.2)
+    // RelationshipBody : Relationship =
+    //     ';' | '{' ( ownedRelationship += OwnedAnnotation )* '}'    (SysML 8.2.2.2)
     //
     // Inside the braces a regular comment is a token at item position (see
     // comments_significant), so `{ /* text */ }` owns a Comment rather than skipping one

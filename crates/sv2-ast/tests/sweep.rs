@@ -9,7 +9,7 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, ImportDeclaration, MemberPrefix,
-    PackageMember, QualifiedName, RootNamespace, VisibilityIndicator,
+    PackageMember, QualifiedName, RelationshipBody, RootNamespace, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -132,7 +132,10 @@ fn assert_import_children(node: &SyntaxNode, import: &Import) {
             SyntaxKind::ImportDeclaration,
             import.declaration().map(|d| d.syntax().clone()),
         ),
-        (SyntaxKind::RelationshipBody, import.body()),
+        (
+            SyntaxKind::RelationshipBody,
+            import.body().map(|b| b.syntax().clone()),
+        ),
     ] {
         let direct = children_of_kind(node, kind);
         assert!(
@@ -195,7 +198,7 @@ fn assert_import_accessor(node: &SyntaxNode) {
         (
             import.visibility().map(|v| v.syntax().clone()),
             import.declaration().map(|d| d.syntax().clone()),
-            import.body(),
+            import.body().map(|b| b.syntax().clone()),
         )
     };
     assert_eq!(
@@ -423,7 +426,10 @@ fn assert_alias_member_children(node: &SyntaxNode, member: &AliasMember) {
             SyntaxKind::QualifiedName,
             member.target().map(|target| target.syntax().clone()),
         ),
-        (SyntaxKind::RelationshipBody, member.body()),
+        (
+            SyntaxKind::RelationshipBody,
+            member.body().map(|b| b.syntax().clone()),
+        ),
     ] {
         let direct = children_of_kind(node, kind);
         assert!(
@@ -1036,6 +1042,123 @@ fn assert_import_declaration_accessor(node: &SyntaxNode) {
     );
 }
 
+/// What `RelationshipBody` must satisfy at every node, whatever the tree:
+///
+/// (a) `cast` succeeds exactly when `node.kind()` is `SyntaxKind::RelationshipBody`, and
+///     the node survives the round trip through `syntax()`;
+/// (b) the production is `';' | '{' ... '}'` (`SysML` 8.2.2.2, `KerML` 8.2.3.1), so the
+///     only tokens it may hold directly are `;`, `{` and `}` — and never a `;` together
+///     with a brace, because those are the two alternatives;
+/// (c) the differential: `elements()` yields the node's direct children **exactly**,
+///     unfiltered and in order. Equality, not containment, and unfiltered on purpose —
+///     `SysML` admits only `OwnedAnnotation` while `KerML`'s `RelationshipOwnedElement`
+///     also admits an element, and recovery contributes `Error` nodes (ADR-0002), so a
+///     filtering accessor would silently drop two of the three;
+/// (d) `terminator()` is the `;` or the `}`, by position: it is the LAST token of the
+///     node, and `None` exactly when the body never closed. The three reachable shapes
+///     are a `;`, a closed brace pair, and nothing at all — the last being the fourteen
+///     zero-width bodies left by a relationship unterminated at end of input;
+/// (e) calling each accessor twice returns the same answer.
+fn assert_relationship_body_accessor(node: &SyntaxNode) {
+    let is_body = node.kind() == SyntaxKind::RelationshipBody;
+    let cast = RelationshipBody::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_body,
+        "RelationshipBody::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(body) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        body.syntax(),
+        node,
+        "RelationshipBody::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b), (c) and (d).
+    assert_relationship_body_shape(node, &body);
+
+    // (e) idempotent.
+    assert_eq!(
+        body.elements().map(|n| n.text_range()).collect::<Vec<_>>(),
+        body.elements().map(|n| n.text_range()).collect::<Vec<_>>(),
+        "elements() disagreed with itself between two calls on the same node"
+    );
+}
+
+/// The tokens a relationship body may hold, its children, and which token closed it.
+///
+/// `elements()` is re-derived by walking the children directly rather than by repeating
+/// the accessor's own call, so this is a differential and not a restatement.
+fn assert_relationship_body_shape(node: &SyntaxNode, body: &RelationshipBody) {
+    // (b) only the three punctuation tokens of the two alternatives, and never a `;`
+    // beside a brace.
+    let written: Vec<SyntaxToken> = node
+        .children_with_tokens()
+        .filter_map(SyntaxElement::into_token)
+        .filter(|token| !token.text().trim().is_empty())
+        .collect();
+    for token in &written {
+        assert!(
+            matches!(
+                token.kind(),
+                SyntaxKind::Semicolon | SyntaxKind::LBrace | SyntaxKind::RBrace
+            ),
+            "a relationship body holds only `;`, `{{` or `}}` directly, not {:?}, at {:?}",
+            token.kind(),
+            node.text_range()
+        );
+    }
+    let has_semicolon = written
+        .iter()
+        .any(|token| token.kind() == SyntaxKind::Semicolon);
+    let has_brace = written
+        .iter()
+        .any(|token| matches!(token.kind(), SyntaxKind::LBrace | SyntaxKind::RBrace));
+    assert!(
+        !(has_semicolon && has_brace),
+        "`;` and braces are the two alternatives, so no body may hold both, at {:?}",
+        node.text_range()
+    );
+
+    // (c) the differential, unfiltered and in order.
+    let direct: Vec<SyntaxNode> = node.children().collect();
+    assert_eq!(
+        body.elements().map(|n| n.text_range()).collect::<Vec<_>>(),
+        direct
+            .iter()
+            .map(SyntaxNode::text_range)
+            .collect::<Vec<_>>(),
+        "elements() is not exactly this node's direct children, in order, at {:?}",
+        node.text_range()
+    );
+
+    // (d) the terminator is the node's last token, and it is one of the two closers.
+    let closer = written
+        .last()
+        .filter(|token| matches!(token.kind(), SyntaxKind::Semicolon | SyntaxKind::RBrace))
+        .cloned();
+    assert_eq!(
+        body.terminator().map(|token| token.text_range()),
+        closer.as_ref().map(SyntaxToken::text_range),
+        "terminator() is not the token that closed this body at {:?}",
+        node.text_range()
+    );
+    if body.terminator().is_none() {
+        assert!(
+            !has_semicolon,
+            "a body holding a `;` closed with it, at {:?}",
+            node.text_range()
+        );
+    }
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -1054,6 +1177,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_qualified_name_accessor(&node);
             assert_visibility_indicator_accessor(&node);
             assert_import_declaration_accessor(&node);
+            assert_relationship_body_accessor(&node);
             visited += 1;
         }
     }

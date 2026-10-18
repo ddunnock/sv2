@@ -6,6 +6,7 @@ use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode};
 
 use crate::ast_node::AstNode;
 use crate::import_declaration::ImportDeclaration;
+use crate::relationship_body::RelationshipBody;
 use crate::visibility_indicator::VisibilityIndicator;
 
 /// An import of one membership or one namespace into the enclosing namespace.
@@ -97,8 +98,14 @@ impl Import {
     ///
     /// Empty when the import is unterminated at end of file, for the same reason
     /// `declaration` can be: the node is opened before the terminator is sought.
-    pub fn body(&self) -> Option<SyntaxNode> {
+    /// Returns the typed [`RelationshipBody`] rather than the raw node, under the
+    /// delegation rule in `.claude/rules/ast.md`: what the body owns, and which of its two
+    /// alternatives was written, are that node's own questions
+    /// (`import.body().and_then(|body| body.terminator())`). It returned a raw
+    /// `SyntaxNode` until that kind had a view to delegate to.
+    pub fn body(&self) -> Option<RelationshipBody> {
         self.child(SyntaxKind::RelationshipBody)
+            .and_then(RelationshipBody::cast)
     }
 
     /// The first direct child of `kind`.

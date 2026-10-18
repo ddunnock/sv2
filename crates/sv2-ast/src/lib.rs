@@ -14,6 +14,7 @@ mod member_prefix;
 mod namespace;
 mod package_member;
 mod qualified_name;
+mod relationship_body;
 mod visibility_indicator;
 
 pub use crate::alias_member::AliasMember;
@@ -25,4 +26,5 @@ pub use crate::member_prefix::MemberPrefix;
 pub use crate::namespace::RootNamespace;
 pub use crate::package_member::PackageMember;
 pub use crate::qualified_name::QualifiedName;
+pub use crate::relationship_body::RelationshipBody;
 pub use crate::visibility_indicator::VisibilityIndicator;

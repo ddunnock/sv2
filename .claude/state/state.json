@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-18T17:38:49Z",
+    "regenerated_utc": "2026-10-18T17:49:23Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 9,
-      "unimplemented": 454,
+      "implemented": 10,
+      "unimplemented": 453,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 1.9
+      "percent": 2.2
     },
     "tests": {
-      "unit": 778,
+      "unit": 781,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,7 +50,7 @@
       "vendor_total": 332
     },
     "commits": [
-      "485a74f Carry the handoff forward to MembershipImport",
+      "ec9e01f Carry the handoff forward to MembershipImport",
       "e0b3546 Merge ast-import-declaration: the ImportDeclaration accessor and a third delegation case",
       "885807e Add the ImportDeclaration accessor, and a third case for the delegation rule",
       "c863040 Close the session: three accessors, and the delegation rule's first real bills",

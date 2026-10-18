@@ -112,12 +112,14 @@ fn private_import_test_writes_four_imports_one_of_them_import_all() {
         let body = import
             .body()
             .unwrap_or_else(|| panic!("import {index} must have a relationship body"));
-        assert_eq!(body.kind(), SyntaxKind::RelationshipBody);
+        // `cast` guarantees the kind, so assert what it cannot: which alternative this
+        // body is, read from the token that closed it, and that it owns nothing.
         assert_eq!(
-            body.text().to_string(),
-            ";",
+            body.terminator().map(|token| token.kind()),
+            Some(SyntaxKind::Semicolon),
             "every import in this file closes with a semicolon rather than a braced body"
         );
+        assert_eq!(body.elements().count(), 0, "a `;` body owns nothing");
     }
 }
 
@@ -796,4 +798,77 @@ fn a_double_star_without_a_single_one_is_a_membership_import() {
         ["Q"],
         "`**` is not a segment of the name; it is the alternative's own token"
     );
+}
+
+/// The corpus file that writes a braced relationship body among many terminated ones.
+const PARTS_TREE: &str = "vendor/corpus/sysml/src/validation/01-Parts Tree/1a-Parts Tree.sysml";
+
+/// `1a-Parts Tree.sysml` writes one braced relationship body and terminates every other
+/// one with a semicolon:
+///
+/// ```text
+///   lines 27-32:  private import Definitions::* {
+///                     /* A "private" private import makes ... */
+///                 }
+/// ```
+///
+/// `RelationshipBody = ';' | '{' ( ownedRelationship += OwnedAnnotation )* '}'` (`SysML`
+/// 8.2.2.2). Both alternatives end in a token, which is what `terminator()` returns, and
+/// the token's kind is therefore the discriminator between them — there is deliberately no
+/// second accessor saying which alternative was written.
+///
+/// What this case says that the sweep cannot: the two alternatives really do both occur in
+/// one pinned file, the braced one owns the comment as an `OwnedAnnotation` rather than
+/// skipping it as trivia, and every other body in the file is a bare `;` owning nothing.
+#[test]
+fn one_braced_body_among_semicolons_owns_its_comment() {
+    let root = tree_of(PARTS_TREE);
+    let bodies: Vec<sv2_ast::RelationshipBody> = root
+        .descendants()
+        .filter_map(sv2_ast::RelationshipBody::cast)
+        .collect();
+    assert!(
+        bodies.len() > 1,
+        "this file writes several relationships, or the contrast is not there: {}",
+        bodies.len()
+    );
+
+    // Exactly one is braced, and it is the only one owning anything.
+    let braced: Vec<&sv2_ast::RelationshipBody> = bodies
+        .iter()
+        .filter(|body| body.terminator().map(|token| token.kind()) == Some(SyntaxKind::RBrace))
+        .collect();
+    assert_eq!(
+        braced.len(),
+        1,
+        "lines 27-32 write the file's only braced body"
+    );
+    assert_eq!(
+        braced[0]
+            .elements()
+            .map(|node| node.kind())
+            .collect::<Vec<_>>(),
+        [SyntaxKind::OwnedAnnotation],
+        "the comment inside the braces is owned as an annotation, not skipped as trivia"
+    );
+
+    // Every other body is a bare `;` owning nothing. Asserted as the complement, so a
+    // body that stopped being terminated would land here rather than going unnoticed.
+    for body in &bodies {
+        if body.terminator().map(|token| token.kind()) == Some(SyntaxKind::RBrace) {
+            continue;
+        }
+        assert_eq!(
+            body.terminator().map(|token| token.kind()),
+            Some(SyntaxKind::Semicolon),
+            "every other relationship in this file closes with `;`, at {:?}",
+            body.syntax().text_range()
+        );
+        assert_eq!(
+            body.elements().count(),
+            0,
+            "a `;` body owns nothing, at {:?}",
+            body.syntax().text_range()
+        );
+    }
 }
