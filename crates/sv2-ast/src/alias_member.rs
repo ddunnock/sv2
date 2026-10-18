@@ -5,6 +5,7 @@
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
 use crate::ast_node::AstNode;
+use crate::member_prefix::MemberPrefix;
 
 /// The two name slots while `AliasMember::names` walks the tokens.
 ///
@@ -79,12 +80,15 @@ impl AstNode for AliasMember {
 impl AliasMember {
     /// This member's prefix, which carries its visibility when one is written.
     ///
-    /// Present and empty is the healthy shape, for the reason `PackageMember::prefix`
-    /// gives: the parser builds the node whether or not a visibility is written.
-    pub fn prefix(&self) -> Option<SyntaxNode> {
+    /// Present and empty is the healthy shape, for the reason [`MemberPrefix`] gives:
+    /// the parser builds the node whether or not a visibility is written. The visibility
+    /// is reached through the returned prefix —
+    /// `alias.prefix().and_then(|prefix| prefix.visibility())`.
+    pub fn prefix(&self) -> Option<MemberPrefix> {
         self.0
             .children()
             .find(|child| child.kind() == SyntaxKind::MemberPrefix)
+            .and_then(MemberPrefix::cast)
     }
 
     /// The short name, written `< name >` — `memberShortName`.

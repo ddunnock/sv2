@@ -4,7 +4,7 @@
 
 mod trees;
 
-use sv2_ast::{AliasMember, AstNode, Import, PackageMember, RootNamespace};
+use sv2_ast::{AliasMember, AstNode, Import, MemberPrefix, PackageMember, RootNamespace};
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
 const UNCLOSED_BODY: &str = include_str!("malformed/root-namespace/unclosed-body.sysml");
@@ -224,15 +224,16 @@ fn an_orphaned_visibility_does_not_belong_to_the_member_after_it() {
     let prefix = surviving
         .prefix()
         .expect("MemberPrefix is built whether or not a visibility is written");
-    assert_eq!(prefix.kind(), SyntaxKind::MemberPrefix);
+    assert_eq!(prefix.syntax().kind(), SyntaxKind::MemberPrefix);
     assert_eq!(
-        prefix.text_range().len(),
+        prefix.syntax().text_range().len(),
         0.into(),
         "the member was written with no visibility of its own, so its prefix is empty"
     );
     assert!(
-        prefix.first_child().is_none(),
-        "an empty prefix holds no VisibilityIndicator"
+        prefix.visibility().is_none(),
+        "an empty prefix reports no visibility -- asked of MemberPrefix itself, which is \
+         the accessor that owns the question"
     );
 
     // 2b. and the `private` really is elsewhere in the tree, as a sibling Error — so
@@ -397,4 +398,90 @@ fn an_empty_short_name_slot_leaves_the_member_name_where_it_is() {
     // 3. the neighbour still answers.
     let namespace = RootNamespace::cast(root.clone()).expect("the root is always RootNamespace");
     assert_eq!(namespace.members().count(), 1);
+}
+
+const VISIBILITIES_LOST: &str =
+    include_str!("malformed/member-prefix/visibilities-lost-to-recovery.sysml");
+
+/// `member-prefix/visibilities-lost-to-recovery.sysml`:
+/// `private protected part def A;`. Two visibilities, both recovered into one `Error`,
+/// and the surviving prefix reports neither.
+///
+/// `MemberPrefix` is `( visibility = VisibilityIndicator )?`, so its own shape cannot be
+/// wrong — every one in every tree holds nothing or one `VisibilityIndicator`, which
+/// `tests/sweep.rs` asserts over all 610 trees. There is no violated shape to pin, so
+/// this case pins the one thing that can go wrong instead: **attribution**.
+///
+/// The source is the parser: `recover_statement`
+/// (`crates/sv2-syntax/src/parser/recovery.rs`) takes the first token always and runs to
+/// a member keyword, so `private protected` lands in a single `Error` and `part def A;`
+/// survives as its own member. The clause (`SysML` 8.2.2.5.1) says only that a visibility
+/// in front of a member belongs to it.
+///
+/// Why two *disagreeing* words rather than `private private`: an accessor that went
+/// looking sideways for "the visibility the author meant" finds two candidates and no
+/// principled way to choose. There is nothing to invent, which states the rule more
+/// sharply than a case where guessing would have happened to be right.
+#[test]
+fn a_prefix_does_not_claim_a_visibility_recovery_took() {
+    let parse = trees::parsed(VISIBILITIES_LOST, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. the parse still yields a tree, with the surviving member in it.
+    let found = members(&root);
+    assert_eq!(found.len(), 1, "`part def A;` survives as the one member");
+    let prefix = found[0]
+        .prefix()
+        .expect("MemberPrefix is built whether or not a visibility is written");
+
+    // 2a. attribution: the prefix reports no visibility, although two were written
+    // immediately before it.
+    assert!(
+        prefix.visibility().is_none(),
+        "neither lost visibility is this member's, so none may be reported"
+    );
+    assert_eq!(
+        prefix.syntax().text_range().len(),
+        0.into(),
+        "a prefix with no visibility of its own is zero width"
+    );
+
+    // 2b. and both words really are in the tree, in one Error node — so this is a
+    // statement about attribution and not merely about an empty prefix, which is the
+    // ordinary shape of most members in the corpus.
+    let orphan = found[0]
+        .syntax()
+        .prev_sibling()
+        .expect("the Error recovery built stands immediately before the member");
+    assert_eq!(orphan.kind(), SyntaxKind::Error);
+    assert_eq!(
+        orphan.text().to_string().trim(),
+        "private protected",
+        "recovery took both words into one node, not one each"
+    );
+
+    // 2c. one diagnostic for two lost words: the count is not a measure of how much was
+    // lost, and a caller using it that way would under-count here.
+    assert_eq!(
+        parse.errors().len(),
+        1,
+        "the pair is reported once: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbours still answer. Every `MemberPrefix` in this tree is empty — the
+    // outer member has none either — and no accessor invents one.
+    let prefixes: Vec<MemberPrefix> = root.descendants().filter_map(MemberPrefix::cast).collect();
+    assert!(
+        !prefixes.is_empty(),
+        "the surviving member has a prefix, so there is at least one to check"
+    );
+    assert!(
+        prefixes.iter().all(|prefix| prefix.visibility().is_none()),
+        "no prefix anywhere in this tree was written a visibility"
+    );
+    assert!(
+        imports(&root).is_empty() && root.descendants().filter_map(AliasMember::cast).count() == 0,
+        "no import and no alias is written, so neither may be reported"
+    );
 }

@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-18T15:09:25Z",
+    "regenerated_utc": "2026-10-18T15:39:56Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 4,
-      "unimplemented": 459,
+      "implemented": 5,
+      "unimplemented": 458,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 0.9
+      "percent": 1.1
     },
     "tests": {
-      "unit": 767,
+      "unit": 769,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "16ac148 Merge ast-package-member and ast-alias-member: two more accessors",
+      "70416d9 Add the AliasMember accessor, and two fixtures for one rule",
       "11d1c0a Add the PackageMember accessor, pinning attribution",
       "ac2f1b0 Record that ast-evidence-gaps is merged and pushed",
       "97eebec Merge ast-evidence-gaps: close ADR-0025's evidence gaps, and the Import accessor",
       "8e9e0ec Add the Import accessor, and the case the corpus could not make",
       "28fc394 Correct the handoff: the schema bump is no longer outstanding",
-      "6c502df Surface unswept in the handoff block, at state schema v2",
-      "56e6478 Close the four ADR-0025 evidence gaps, and accept it",
-      "3e08d5d Land ADR-0026 with the frontmatter the other ADRs use"
+      "6c502df Surface unswept in the handoff block, at state schema v2"
     ]
   },
   "authored": {

@@ -17,7 +17,7 @@
 
 mod trees;
 
-use sv2_ast::{AliasMember, AstNode, Import, PackageMember};
+use sv2_ast::{AliasMember, AstNode, Import, MemberPrefix, PackageMember};
 use sv2_syntax::{SyntaxKind, SyntaxNode};
 
 /// The file the frozen grammar unit cites as evidence for the optional `all`
@@ -29,6 +29,10 @@ const PRIVATE_IMPORT_TEST: &str = "vendor/corpus/sysml/src/examples/Import Tests
 /// the same position in a package body, which is what makes it useful.
 const PACKAGE_EXAMPLE: &str = "vendor/corpus/sysml/src/training/01. Packages/\
                                Package Example.sysml";
+
+/// Twenty-two lines carrying all three visibility keywords, under several different
+/// membership productions.
+const ITEM_TEST: &str = "vendor/corpus/sysml/src/examples/Simple Tests/ItemTest.sysml";
 
 #[expect(
     clippy::panic,
@@ -226,9 +230,10 @@ fn package_example_writes_two_members_beside_other_memberships() {
     let prefixes: Vec<String> = members
         .iter()
         .map(|member| {
-            member
-                .prefix()
-                .map_or_else(|| "<none>".to_owned(), |node| node.text().to_string())
+            member.prefix().map_or_else(
+                || "<none>".to_owned(),
+                |prefix| prefix.syntax().text().to_string(),
+            )
         })
         .collect();
     assert_eq!(
@@ -300,9 +305,10 @@ fn package_example_writes_two_aliases_one_qualified() {
     let prefixes: Vec<String> = aliases
         .iter()
         .map(|alias| {
-            alias
-                .prefix()
-                .map_or_else(|| "<none>".to_owned(), |node| node.text().to_string())
+            alias.prefix().map_or_else(
+                || "<none>".to_owned(),
+                |prefix| prefix.syntax().text().to_string(),
+            )
         })
         .collect();
     assert_eq!(
@@ -360,4 +366,79 @@ fn an_alias_short_name_is_the_one_inside_the_brackets() {
             "member name of {source:?}"
         );
     }
+}
+
+/// Every visibility keyword the language has, across four different membership
+/// productions, in one twenty-two-line file.
+///
+/// `ItemTest.sysml`, read in source order — the non-empty prefixes only:
+///
+/// ```text
+///   public item def A {            public
+///       protected ref part c: C;   protected
+///   abstract item def B {
+///       public abstract part a: A; public
+///   private part def C {           private
+///       private in ref y: A, B;    private
+/// ```
+///
+/// This is the file that shows `MemberPrefix` is **shared**, which is the whole reason it
+/// was taken out of worklist order: its parents here are `PackageMember`,
+/// `OccurrenceUsageMember` and `NonOccurrenceUsageMember`, so a visibility accessor bolted
+/// onto `PackageMember` alone would have answered for one of three callers and left the
+/// others to reach into the node themselves.
+#[test]
+fn item_test_writes_every_visibility_across_several_memberships() {
+    let root = tree_of(ITEM_TEST);
+    let prefixes: Vec<MemberPrefix> = root.descendants().filter_map(MemberPrefix::cast).collect();
+
+    let written: Vec<String> = prefixes
+        .iter()
+        .filter_map(MemberPrefix::visibility)
+        .map(|node| node.text().to_string())
+        .collect();
+    assert_eq!(
+        written,
+        ["public", "protected", "public", "private", "private"],
+        "the visibilities this file writes, in source order"
+    );
+
+    // Most members carry none, and that must read as none rather than as damage.
+    assert!(
+        prefixes.len() > written.len(),
+        "this file also writes members with no visibility, and they must still have a \
+         prefix node: {} prefixes, {} of them written",
+        prefixes.len(),
+        written.len()
+    );
+
+    // The visibility is a VisibilityIndicator node, not a bare keyword token: that
+    // production has its own kind, and its own accessor still to come.
+    assert!(
+        prefixes
+            .iter()
+            .filter_map(MemberPrefix::visibility)
+            .all(|node| node.kind() == SyntaxKind::VisibilityIndicator),
+        "every visibility comes back as its own node"
+    );
+
+    // Shared across membership productions, which is the claim that justified the
+    // reordering. Asserted as a set, so adding a membership kind to the parser does not
+    // break it, but dropping below two would.
+    let mut parents: Vec<SyntaxKind> = prefixes
+        .iter()
+        .filter_map(|prefix| prefix.syntax().parent())
+        .map(|parent| parent.kind())
+        .collect();
+    parents.sort_unstable();
+    parents.dedup();
+    assert!(
+        parents.len() >= 2,
+        "MemberPrefix must appear under more than one membership production here, or the \
+         case does not show what it claims: {parents:?}"
+    );
+    assert!(
+        parents.contains(&SyntaxKind::PackageMember),
+        "PackageMember is one of them: {parents:?}"
+    );
 }
