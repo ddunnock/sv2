@@ -449,7 +449,7 @@ fn item_test_writes_every_visibility_across_several_memberships() {
 const FILTERING_EXAMPLE: &str = "vendor/corpus/sysml/src/training/40. Filtering/\
                                  Filtering Example-1.sysml";
 
-/// `Filtering Example-1.sysml`, whose two filters are written (lines 25 and 30):
+/// `Filtering Example-1.sysml`, whose two filters are written (lines 29 and 35):
 ///
 /// ```text
 ///   filter @Safety;
