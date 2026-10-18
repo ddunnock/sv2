@@ -5,8 +5,8 @@
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, PackageMember, QualifiedName,
-    RelationshipBody, RootNamespace,
+    AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, NamespaceFeatureMember,
+    PackageMember, QualifiedName, RelationshipBody, RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -1156,5 +1156,87 @@ fn an_unclosed_brace_is_a_token_but_not_a_terminator() {
             .and_then(|declaration| declaration.imported())
             .is_some(),
         "and so does what it imports"
+    );
+}
+
+const FEATURE_WITH_NOTHING_AFTER_IT: &str =
+    include_str!("malformed/namespace-feature-member/feature-with-nothing-after-it.kerml");
+
+/// `namespace-feature-member/feature-with-nothing-after-it.kerml`:
+/// `private feature` and then the end of the package. The element slot still answers,
+/// because it cannot do otherwise.
+///
+/// Both slots of `NamespaceFeatureMember` are mandatory (`KerML` 8.2.3.4.1) and all 133
+/// in the repository hold exactly one of each, so the shape cannot be wrong. What makes
+/// absence unreachable is the parser: `feature_element`
+/// (`crates/sv2-syntax/src/parser/feature.rs`) dispatches on each alternative's reserved
+/// word and ends in a **total fallback** to `self.feature()`, a `KerML` `Feature`'s keyword
+/// being optional. So no input leaves the slot empty or puts an `Error` in it.
+///
+/// 1. the parse still yields a tree, with the member in it;
+/// 2. `element()` answers, and `is_some()` is therefore not evidence that anything usable
+///    was written — the `Feature` here has no name, no typing and no terminator. The same
+///    trap `Import::declaration` documents, reached a different way: there the node opens
+///    before the name is sought, here the dispatch cannot fail to pick an alternative;
+/// 3. the neighbour still answers: the prefix beside the damaged element still reports
+///    `private`, so a diagnostic anywhere in the member is not reason to distrust every
+///    slot in it.
+#[test]
+fn a_feature_member_always_reports_an_element_however_little_was_written() {
+    let parse = trees::parsed(FEATURE_WITH_NOTHING_AFTER_IT, Language::KerMl);
+    let root = parse.syntax();
+
+    // 1. one member, with both slots filled.
+    let members: Vec<NamespaceFeatureMember> = root
+        .descendants()
+        .filter_map(NamespaceFeatureMember::cast)
+        .collect();
+    assert_eq!(members.len(), 1, "the fixture writes one feature member");
+    let member = &members[0];
+
+    // 2a. the element answers, and it is a Feature rather than an Error.
+    let element = member
+        .element()
+        .expect("feature_element's dispatch ends in a total fallback, so this never fails");
+    assert_eq!(
+        element.kind(),
+        SyntaxKind::Feature,
+        "the fallback reads anything that got this far as a Feature"
+    );
+    assert_ne!(
+        element.kind(),
+        SyntaxKind::Error,
+        "the element slot never holds an Error, which is why a caller cannot look for one"
+    );
+
+    // 2b. and it is a Feature with nothing in it, so presence proves nothing about
+    // content. Asserted on the text, which is what the author did not write.
+    assert_eq!(
+        element.text().to_string().trim(),
+        "feature",
+        "the keyword alone: no name, no typing, no terminator"
+    );
+
+    // 2c. something reported it, and the report is about the declaration rather than the
+    // membership -- nothing is wrong with the membership itself.
+    assert_eq!(
+        parse.errors().len(),
+        1,
+        "one diagnostic, about the classifier declaration: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour in the same node still answers correctly.
+    let prefix = member
+        .prefix()
+        .expect("MemberPrefix is built whether or not a visibility is written");
+    assert_eq!(
+        prefix
+            .visibility()
+            .and_then(|visibility| visibility.keyword())
+            .map(|token| token.text().to_owned())
+            .as_deref(),
+        Some("private"),
+        "`private` is this member's own and the damaged element does not cost it"
     );
 }

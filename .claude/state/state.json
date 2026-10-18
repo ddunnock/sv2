@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-18T17:49:23Z",
+    "regenerated_utc": "2026-10-18T18:05:25Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 10,
-      "unimplemented": 453,
+      "implemented": 11,
+      "unimplemented": 452,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 2.2
+      "percent": 2.4
     },
     "tests": {
-      "unit": 781,
+      "unit": 783,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "d93f3f9 Merge ast-relationship-body: the RelationshipBody accessor and two more delegations",
+      "dce52a0 Name the function that recovers, not the one that calls it",
+      "1fc6dc7 Add the RelationshipBody accessor, and discharge two raw returns",
       "ec9e01f Carry the handoff forward to MembershipImport",
       "e0b3546 Merge ast-import-declaration: the ImportDeclaration accessor and a third delegation case",
       "885807e Add the ImportDeclaration accessor, and a third case for the delegation rule",
       "c863040 Close the session: three accessors, and the delegation rule's first real bills",
-      "9441f06 Merge ast-visibility-indicator: the VisibilityIndicator accessor and two delegations",
-      "2a31472 State the unreachability claim over the whole call graph, not one entry point",
-      "b6226a9 Add the VisibilityIndicator accessor, and upgrade both its parents to delegate",
-      "2909888 Merge ast-qualified-name: the QualifiedName accessor and the first delegation upgrade"
+      "9441f06 Merge ast-visibility-indicator: the VisibilityIndicator accessor and two delegations"
     ]
   },
   "authored": {
