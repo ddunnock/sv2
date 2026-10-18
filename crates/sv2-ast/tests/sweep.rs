@@ -9,7 +9,7 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, PackageMember, QualifiedName,
-    RootNamespace,
+    RootNamespace, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -116,6 +116,40 @@ fn assert_root_namespace_accessor(node: &SyntaxNode) {
 ///     below an import without writing one above it; that case is hand written, in
 ///     `tests/positive.rs`;
 /// (e) calling each accessor twice returns the same answer.
+/// The three node children an import may carry, each at most once.
+///
+/// The length check is the grammar's claim; the equality is the differential. They are
+/// asserted together because the accessor's correctness depends on the claim: taking the
+/// first of two would be a silent choice. `visibility()` is typed, so it compares through
+/// its node; the other two are still raw, their kinds having no view yet.
+fn assert_import_children(node: &SyntaxNode, import: &Import) {
+    for (kind, accessor) in [
+        (
+            SyntaxKind::VisibilityIndicator,
+            import.visibility().map(|v| v.syntax().clone()),
+        ),
+        (SyntaxKind::ImportDeclaration, import.declaration()),
+        (SyntaxKind::RelationshipBody, import.body()),
+    ] {
+        let direct = children_of_kind(node, kind);
+        assert!(
+            direct.len() <= 1,
+            "an import carries at most one {:?}, but this one has {} at {:?}",
+            kind,
+            direct.len(),
+            node.text_range()
+        );
+        assert_eq!(
+            accessor,
+            direct.first().cloned(),
+            "the {:?} accessor is not this node's {:?} child at {:?}",
+            kind,
+            kind,
+            node.text_range()
+        );
+    }
+}
+
 fn assert_import_accessor(node: &SyntaxNode) {
     let is_import = node.kind() == SyntaxKind::Import;
     let cast = Import::cast(node.clone());
@@ -138,31 +172,8 @@ fn assert_import_accessor(node: &SyntaxNode) {
         node.text_range()
     );
 
-    // (b), then (c) per part. The length check is the grammar's claim; the equality is
-    // the differential. They are asserted together because the accessor's correctness
-    // depends on the claim: taking the first of two would be a silent choice.
-    for (kind, accessor) in [
-        (SyntaxKind::VisibilityIndicator, import.visibility()),
-        (SyntaxKind::ImportDeclaration, import.declaration()),
-        (SyntaxKind::RelationshipBody, import.body()),
-    ] {
-        let direct = children_of_kind(node, kind);
-        assert!(
-            direct.len() <= 1,
-            "an import carries at most one {:?}, but this one has {} at {:?}",
-            kind,
-            direct.len(),
-            node.text_range()
-        );
-        assert_eq!(
-            accessor,
-            direct.first().cloned(),
-            "the {:?} accessor is not this node's {:?} child at {:?}",
-            kind,
-            kind,
-            node.text_range()
-        );
-    }
+    // (b) and (c): the three node children, one of each at most.
+    assert_import_children(node, &import);
 
     // (d) the token the node-level assertions cannot see.
     let all_written = node
@@ -177,9 +188,16 @@ fn assert_import_accessor(node: &SyntaxNode) {
     );
 
     // (e) idempotent: the same node answers the same way the second time.
+    let answers = || {
+        (
+            import.visibility().map(|v| v.syntax().clone()),
+            import.declaration(),
+            import.body(),
+        )
+    };
     assert_eq!(
-        (import.visibility(), import.declaration(), import.body()),
-        (import.visibility(), import.declaration(), import.body()),
+        answers(),
+        answers(),
         "an Import accessor disagreed with itself between two calls on the same node"
     );
 }
@@ -518,7 +536,7 @@ fn assert_member_prefix_accessor(node: &SyntaxNode) {
 
     // (c) the differential.
     assert_eq!(
-        prefix.visibility(),
+        prefix.visibility().map(|v| v.syntax().clone()),
         visibilities.first().cloned(),
         "visibility() is not this node's VisibilityIndicator child at {:?}",
         node.text_range()
@@ -535,8 +553,8 @@ fn assert_member_prefix_accessor(node: &SyntaxNode) {
 
     // (e) idempotent.
     assert_eq!(
-        prefix.visibility(),
-        prefix.visibility(),
+        prefix.visibility().map(|v| v.syntax().clone()),
+        prefix.visibility().map(|v| v.syntax().clone()),
         "visibility() disagreed with itself between two calls on the same node"
     );
 }
@@ -833,6 +851,103 @@ fn assert_qualified_name_segments(node: &SyntaxNode, name: &QualifiedName) {
     );
 }
 
+/// What `VisibilityIndicator` must satisfy at every node, whatever the tree:
+///
+/// (a) `cast` succeeds exactly when `node.kind()` is `SyntaxKind::VisibilityIndicator`,
+///     and the node survives the round trip through `syntax()`;
+/// (b) the production is `'public' | 'private' | 'protected'` (`KerML` 8.2.3.4.1), an
+///     alternation of three terminals, so the node holds **one token and no child node**
+///     — and the token is one of those three keywords and never anything else. That is
+///     the claim that makes the accessor total;
+/// (c) the differential: `keyword()` equals the token re-derived by walking the node's
+///     own tokens;
+/// (d) the node's width is the keyword's width. A zero-width indicator would mean the
+///     parser took `visibility_indicator`'s error path, which nothing reaches — asserting
+///     it here is what would notice if that changed.
+fn assert_visibility_indicator_accessor(node: &SyntaxNode) {
+    let is_indicator = node.kind() == SyntaxKind::VisibilityIndicator;
+    let cast = VisibilityIndicator::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_indicator,
+        "VisibilityIndicator::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(indicator) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        indicator.syntax(),
+        node,
+        "VisibilityIndicator::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b), (c) and (d): the one token, and the two accessors read off it.
+    assert_visibility_indicator_token(node, &indicator);
+}
+
+/// The one keyword token an indicator holds, and what the accessor makes of it.
+///
+/// Re-derived from the token sequence rather than by calling the accessor twice, so this
+/// is a differential. The kind check is the alternation itself: three terminals, so a
+/// token of any other kind here would mean the tree disagrees with the grammar.
+fn assert_visibility_indicator_token(node: &SyntaxNode, indicator: &VisibilityIndicator) {
+    assert_eq!(
+        node.children().count(),
+        0,
+        "an indicator is one terminal, yet this one has child nodes ({:?}) at {:?}",
+        node.children()
+            .map(|child| child.kind())
+            .collect::<Vec<_>>(),
+        node.text_range()
+    );
+    let written: Vec<SyntaxToken> = node
+        .children_with_tokens()
+        .filter_map(SyntaxElement::into_token)
+        .filter(|token| !token.text().trim().is_empty())
+        .collect();
+    assert!(
+        written.len() <= 1,
+        "the production is one terminal, but this indicator holds {} ({:?}) at {:?}",
+        written.len(),
+        written.iter().map(SyntaxToken::kind).collect::<Vec<_>>(),
+        node.text_range()
+    );
+    for token in &written {
+        assert!(
+            matches!(
+                token.kind(),
+                SyntaxKind::KwPublic | SyntaxKind::KwPrivate | SyntaxKind::KwProtected
+            ),
+            "an indicator holds one of the three visibility keywords, not {:?}, at {:?}",
+            token.kind(),
+            node.text_range()
+        );
+    }
+
+    // (c) the differential.
+    assert_eq!(
+        indicator.keyword().map(|token| token.text_range()),
+        written.first().map(SyntaxToken::text_range),
+        "keyword() is not this node's own keyword token at {:?}",
+        node.text_range()
+    );
+
+    // (d) the node is exactly as wide as the keyword it holds. An indicator with no
+    // keyword would be zero width, which is the shape `visibility_indicator`'s
+    // unreachable error path would produce.
+    assert_eq!(
+        indicator.keyword().is_some(),
+        node.text_range().len() > 0.into(),
+        "an indicator is non-empty exactly when it holds a keyword, at {:?}",
+        node.text_range()
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -849,6 +964,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_member_prefix_accessor(&node);
             assert_element_filter_member_accessor(&node);
             assert_qualified_name_accessor(&node);
+            assert_visibility_indicator_accessor(&node);
             visited += 1;
         }
     }

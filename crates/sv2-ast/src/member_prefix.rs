@@ -5,6 +5,7 @@
 use sv2_syntax::{SyntaxKind, SyntaxNode};
 
 use crate::ast_node::AstNode;
+use crate::visibility_indicator::VisibilityIndicator;
 
 /// The optional visibility in front of a member.
 ///
@@ -72,9 +73,15 @@ impl MemberPrefix {
     /// invariant rather than an untested guess, and it is stated here so the next edit
     /// knows which assertion is holding it up: weaken that one and these stop being the
     /// same function.
-    pub fn visibility(&self) -> Option<SyntaxNode> {
+    /// Returns the typed [`VisibilityIndicator`] rather than the raw node, under the
+    /// delegation rule in `.claude/rules/ast.md`: which of the three keywords was written
+    /// is that node's own question
+    /// (`prefix.visibility().and_then(|visibility| visibility.keyword())`). It returned a
+    /// raw `SyntaxNode` until that kind had a view to delegate to.
+    pub fn visibility(&self) -> Option<VisibilityIndicator> {
         self.0
             .children()
             .find(|child| child.kind() == SyntaxKind::VisibilityIndicator)
+            .and_then(VisibilityIndicator::cast)
     }
 }
