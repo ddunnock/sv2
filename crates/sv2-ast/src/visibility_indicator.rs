@@ -69,9 +69,14 @@ impl VisibilityIndicator {
     /// makes it so**. `visibility_indicator`
     /// (`crates/sv2-syntax/src/parser/import.rs`) opens the node before it looks, and its
     /// `None` arm reports "`public`, `private` or `protected`" without consuming — but
-    /// neither caller can reach that arm. `body_elements` enters only on
-    /// `at_visibility`, and a bare `import A::*;` is reported as "unexpected `import`"
-    /// before `import()` is ever called. Measured: all 821 indicators in the repository
+    /// **no** caller can reach that arm, and the whole call graph says so rather than
+    /// one entry point. It has exactly two callers: `member_prefix` (`namespace.rs`),
+    /// guarded by `at_visibility()`, and `import()`, whose own three call sites
+    /// (`namespace.rs`, and two in `metadata.rs`) are each guarded by `at_import()` —
+    /// which is `at_visibility() && nth_is_keyword(1, "import")`. Every path in
+    /// therefore already has a visibility keyword at the cursor, which is also why a
+    /// bare `import A::*;` comes back as "unexpected `import`": it never reaches
+    /// `import()` at all. Measured: all 821 indicators in the repository
     /// hold exactly one keyword, and the rejection corpus produces no empty one either.
     /// The arm exists so that a future caller cannot silently lose a token, and this
     /// signature exists so that such a caller would not get a wrong answer instead of
