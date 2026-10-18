@@ -5,6 +5,7 @@
 use sv2_syntax::{SyntaxKind, SyntaxNode};
 
 use crate::ast_node::AstNode;
+use crate::member_prefix::MemberPrefix;
 
 /// A package's ownership of one element.
 ///
@@ -58,13 +59,14 @@ impl PackageMember {
     /// and that visibility is not this member's
     /// (`tests/malformed/package-member/orphaned-visibility.sysml`).
     ///
-    /// The visibility inside is reached through `MemberPrefix`'s own accessor, which is
-    /// still on the worklist. It is deliberately not reached from here: the production
-    /// puts the visibility in the prefix, so an accessor on this node that returned it
-    /// would be reaching across a production boundary — the same move that, done by
-    /// mistake, is how an accessor starts answering for a node it is not a view of.
-    pub fn prefix(&self) -> Option<SyntaxNode> {
+    /// The visibility inside is reached through the returned [`MemberPrefix`], not from
+    /// here: the production puts the visibility in the prefix, so an accessor on this
+    /// node that returned it would be reaching across a production boundary — the same
+    /// move that, done by mistake, is how an accessor starts answering for a node it is
+    /// not a view of. `member.prefix().and_then(|prefix| prefix.visibility())`.
+    pub fn prefix(&self) -> Option<MemberPrefix> {
         self.child_where(|kind| kind == SyntaxKind::MemberPrefix)
+            .and_then(MemberPrefix::cast)
     }
 
     /// The element this membership owns: the `DefinitionElement` or `UsageElement`.

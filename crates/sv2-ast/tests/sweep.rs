@@ -7,7 +7,7 @@
 
 mod trees;
 
-use sv2_ast::{AliasMember, AstNode, Import, PackageMember, RootNamespace};
+use sv2_ast::{AliasMember, AstNode, Import, MemberPrefix, PackageMember, RootNamespace};
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
 /// The direct children of `node` that are of `kind`.
@@ -212,7 +212,7 @@ fn assert_package_member_partition(node: &SyntaxNode, member: &PackageMember) {
     );
 
     assert_eq!(
-        member.prefix(),
+        member.prefix().map(|prefix| prefix.syntax().clone()),
         prefixes.first().cloned(),
         "prefix() is not this node's MemberPrefix child at {:?}",
         node.text_range()
@@ -231,9 +231,9 @@ fn assert_package_member_partition(node: &SyntaxNode, member: &PackageMember) {
     );
 
     if let Some(prefix) = member.prefix() {
-        assert_eq!(prefix.kind(), SyntaxKind::MemberPrefix);
+        assert_eq!(prefix.syntax().kind(), SyntaxKind::MemberPrefix);
         assert_ne!(
-            Some(&prefix),
+            Some(prefix.syntax()),
             member.element().as_ref(),
             "element() returned the prefix at {:?}",
             node.text_range()
@@ -290,8 +290,14 @@ fn assert_package_member_accessor(node: &SyntaxNode) {
 
     // (e) idempotent.
     assert_eq!(
-        (member.prefix(), member.element()),
-        (member.prefix(), member.element()),
+        (
+            member.prefix().map(|prefix| prefix.syntax().clone()),
+            member.element()
+        ),
+        (
+            member.prefix().map(|prefix| prefix.syntax().clone()),
+            member.element()
+        ),
         "a PackageMember accessor disagreed with itself between two calls on the same node"
     );
 }
@@ -397,8 +403,15 @@ fn assert_alias_member_accessor(node: &SyntaxNode) {
     );
 
     // (b) one of each, and the differential against the re-derivation.
+    assert_eq!(
+        member.prefix().map(|prefix| prefix.syntax().clone()),
+        children_of_kind(node, SyntaxKind::MemberPrefix)
+            .first()
+            .cloned(),
+        "prefix() is not this node's MemberPrefix child at {:?}",
+        node.text_range()
+    );
     for (kind, accessor) in [
-        (SyntaxKind::MemberPrefix, member.prefix()),
         (SyntaxKind::QualifiedName, member.target()),
         (SyntaxKind::RelationshipBody, member.body()),
     ] {
@@ -437,6 +450,82 @@ fn assert_alias_member_accessor(node: &SyntaxNode) {
     );
 }
 
+/// What `MemberPrefix` must satisfy at every node, whatever the tree:
+///
+/// (a) `cast` succeeds exactly when `node.kind()` is `SyntaxKind::MemberPrefix`, and the
+///     node survives the round trip through `syntax()`;
+/// (b) the production is `( visibility = VisibilityIndicator )?` and nothing else, so a
+///     prefix's children are **zero or one `VisibilityIndicator` and nothing of any other
+///     kind**. This is the claim that makes the accessor total: there is no damaged tree
+///     in which a prefix means something this one method cannot say;
+/// (c) the differential: `visibility()` equals the child re-derived by walking the tree;
+/// (d) a zero-width prefix has no visibility, and one with a visibility is not zero
+///     width — the two readings of "empty" cannot come apart;
+/// (e) calling the accessor twice returns the same answer.
+fn assert_member_prefix_accessor(node: &SyntaxNode) {
+    let is_prefix = node.kind() == SyntaxKind::MemberPrefix;
+    let cast = MemberPrefix::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_prefix,
+        "MemberPrefix::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(prefix) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        prefix.syntax(),
+        node,
+        "MemberPrefix::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) nothing but visibilities, and at most one.
+    let visibilities = children_of_kind(node, SyntaxKind::VisibilityIndicator);
+    assert!(
+        visibilities.len() <= 1,
+        "a member prefix carries at most one VisibilityIndicator, but this one has {} at {:?}",
+        visibilities.len(),
+        node.text_range()
+    );
+    assert_eq!(
+        node.children().count(),
+        visibilities.len(),
+        "a member prefix holds nothing but its visibility, yet this one has other \
+         children ({:?}) at {:?}",
+        node.children().map(|c| c.kind()).collect::<Vec<_>>(),
+        node.text_range()
+    );
+
+    // (c) the differential.
+    assert_eq!(
+        prefix.visibility(),
+        visibilities.first().cloned(),
+        "visibility() is not this node's VisibilityIndicator child at {:?}",
+        node.text_range()
+    );
+
+    // (d) the two readings of "empty" agree. A prefix is zero width exactly when no
+    // visibility was written for it, so neither reading can drift from the other.
+    assert_eq!(
+        node.text_range().len() == 0.into(),
+        prefix.visibility().is_none(),
+        "a prefix is zero width exactly when it has no visibility, at {:?}",
+        node.text_range()
+    );
+
+    // (e) idempotent.
+    assert_eq!(
+        prefix.visibility(),
+        prefix.visibility(),
+        "visibility() disagreed with itself between two calls on the same node"
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -450,6 +539,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_import_accessor(&node);
             assert_package_member_accessor(&node);
             assert_alias_member_accessor(&node);
+            assert_member_prefix_accessor(&node);
             visited += 1;
         }
     }
