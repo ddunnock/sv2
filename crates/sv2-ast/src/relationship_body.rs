@@ -9,8 +9,8 @@ use crate::ast_node::AstNode;
 /// The tail of a relationship: `;`, or `{ ... }` owning what the relationship annotates.
 ///
 /// ```text
-/// RelationshipBody = ';' | '{' ( ownedRelationship += OwnedAnnotation )* '}'
-///                                                           (SysML 8.2.2.2)
+/// RelationshipBody : Relationship =
+///     ';' | '{' ( ownedRelationship += OwnedAnnotation )* '}'   (SysML 8.2.2.2)
 ///
 /// RelationshipBody : Relationship = ';' | '{' RelationshipOwnedElement* '}'
 ///                                                           (KerML 8.2.3.1)
@@ -28,7 +28,8 @@ use crate::ast_node::AstNode;
 ///
 /// **Three reachable shapes, where the production states two.** 827 of the 857 are a bare
 /// `;`, 16 are braced, and 14 are **zero width** — a relationship unterminated at end of
-/// input, where `relationship_body` opens the node and finds neither alternative
+/// input, where `sysml_relationship_body` (or `kerml_relationship_body`) opens the node
+/// and finds neither alternative
 /// (`crates/sv2-syntax/src/parser/annotation.rs`). The third shape is not in the grammar
 /// and no clause describes it; [`terminator`](Self::terminator) is how a caller tells it
 /// from the other two.
@@ -69,8 +70,10 @@ impl RelationshipBody {
     ///   the pinned corpus owns a `Feature`;
     /// - recovery contributes `Error` nodes. The braced run reads an annotation when one
     ///   starts and otherwise recovers **one token at a time**, so a stray `part def X;`
-    ///   arrives as four separate `Error` children, not one
-    ///   (`sysml_relationship_body`, `crates/sv2-syntax/src/parser/annotation.rs`;
+    ///   arrives as four separate `Error` children, not one. The site is
+    ///   `owned_annotations`, which `sysml_relationship_body` calls once it has taken the
+    ///   `{`, and which recovers with `error_token` per token
+    ///   (`crates/sv2-syntax/src/parser/annotation.rs`;
     ///   `tests/malformed/relationship-body/non-annotation-in-braces.sysml`). They are
     ///   returned as they are: elements with failed constraints still enter the IR
     ///   carrying their diagnostics, and validity gates writes, never reads (ADR-0002).

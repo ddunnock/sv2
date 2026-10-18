@@ -1013,9 +1013,9 @@ fn assert_braced_body_children(body: &RelationshipBody) {
 ///
 /// `RelationshipBody` admits `OwnedAnnotation` and nothing else in `SysML` 8.2.2.2. The
 /// braced run reads an annotation when one starts and otherwise recovers one token at a
-/// time, reporting each (`sysml_relationship_body`,
-/// `crates/sv2-syntax/src/parser/annotation.rs`), so `part def X;` becomes four `Error`
-/// nodes rather than one.
+/// time, reporting each — in `owned_annotations`, which `sysml_relationship_body` calls
+/// once it has taken the `{` (`crates/sv2-syntax/src/parser/annotation.rs`) — so
+/// `part def X;` becomes four `Error` nodes rather than one.
 ///
 /// 1. the parse still yields a tree, with the body in it;
 /// 2. the accessor reports what is there rather than what it means: `elements()` yields
@@ -1085,8 +1085,9 @@ const UNCLOSED_BRACES: &str = include_str!("malformed/relationship-body/unclosed
 /// write the case.
 ///
 /// The source for the outcome is the parser: `sysml_relationship_body`
-/// (`crates/sv2-syntax/src/parser/annotation.rs`) closes the node with `expect(RBrace)`,
-/// which reports without consuming when the brace never arrives.
+/// (`crates/sv2-syntax/src/parser/annotation.rs`) takes the `{` and calls
+/// `owned_annotations`, which ends its run with `expect(RBrace)` — and that reports
+/// without consuming when the brace never arrives.
 ///
 /// 1. the parse still yields a tree, with the body in it;
 /// 2. absence, reported: `terminator()` is `None` although a token is present, *and* a

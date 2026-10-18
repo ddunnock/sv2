@@ -12,10 +12,12 @@
 // inside the braces, after a comment that IS an annotation, and the body closes normally.
 //
 // Recovery (NOT a clause, and NOT an ADR): the braced run reads an annotation when one
-// starts and otherwise recovers ONE TOKEN AT A TIME, reporting each -- the choice is
-// stated at `sysml_relationship_body` (crates/sv2-syntax/src/parser/annotation.rs), whose
-// comment says accepting the run silently "would report an annotation this parser cannot
-// read as one it understood". So `part def X;` becomes FOUR Error nodes, one per token,
+// starts and otherwise recovers ONE TOKEN AT A TIME, reporting each. The site is
+// `owned_annotations`, which `sysml_relationship_body` calls once it has taken the `{`,
+// and which recovers with `error_token` per token
+// (crates/sv2-syntax/src/parser/annotation.rs). `sysml_relationship_body`'s own comment
+// states the reason: accepting the run silently "would report an annotation this parser
+// cannot read as one it understood". So `part def X;` becomes FOUR Error nodes, one per token,
 // each with its own diagnostic:
 //
 //   RelationshipBody "{ /* a */ part def X; }"

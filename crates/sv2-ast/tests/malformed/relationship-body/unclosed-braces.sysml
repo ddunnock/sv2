@@ -14,9 +14,11 @@
 // expectation comes from the production above, never from what the accessor printed.
 //
 // Recovery (NOT a clause, and NOT an ADR): `sysml_relationship_body`
-// (crates/sv2-syntax/src/parser/annotation.rs) takes the `{`, reads annotations until the
-// closing brace, and closes the node with `expect(RBrace)` -- which REPORTS without
-// consuming when the brace never arrives. So the node keeps its `{` and gains nothing
+// (crates/sv2-syntax/src/parser/annotation.rs) takes the `{` and calls
+// `owned_annotations`, and it is THERE that the run ends with `expect(RBrace)` -- which
+// REPORTS without consuming when the brace never arrives. Naming the entry point rather
+// than the site is the mistake this header avoids: the `expect` is in `owned_annotations`,
+// reached through that call, and the KerML path reaches its own by the same shape. So the node keeps its `{` and gains nothing
 // else:
 //
 //   Import "public import A::* {"
