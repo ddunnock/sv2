@@ -7,7 +7,9 @@
 
 mod trees;
 
-use sv2_ast::{AliasMember, AstNode, Import, MemberPrefix, PackageMember, RootNamespace};
+use sv2_ast::{
+    AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, PackageMember, RootNamespace,
+};
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
 /// The direct children of `node` that are of `kind`.
@@ -526,6 +528,166 @@ fn assert_member_prefix_accessor(node: &SyntaxNode) {
     );
 }
 
+/// What `ElementFilterMember` must satisfy at every node, whatever the tree:
+///
+/// (a) `cast` succeeds exactly when `node.kind()` is `SyntaxKind::ElementFilterMember`,
+///     and the node survives the round trip through `syntax()`;
+/// (b) the production is `MemberPrefix 'filter' OwnedExpression ';'` (`SysML`
+///     8.2.2.5.1, `KerML` 8.2.5.13): one prefix, one `filter` keyword, one condition.
+///     So no filter member anywhere may carry two prefixes, two conditions, or two
+///     keywords — the claim both accessors rely on when they take the first match;
+/// (c) the differential: `prefix()` and `filter()` partition the node's children, and
+///     together account for every one of them exactly once. Each equality taken alone
+///     passes an accessor that returned the prefix for both, because `filter()` is
+///     defined as "not the prefix" and a defect can satisfy that vacuously;
+/// (d) the positional claim the node-level assertions are blind to: the prefix stands
+///     BEFORE the `filter` keyword and the condition AFTER it. `filter()` finds the
+///     condition by kind-exclusion, so nothing in it checks that the thing it found is
+///     the expression the keyword introduces;
+/// (e) calling each accessor twice returns the same answer.
+fn assert_element_filter_member_accessor(node: &SyntaxNode) {
+    let is_filter = node.kind() == SyntaxKind::ElementFilterMember;
+    let cast = ElementFilterMember::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_filter,
+        "ElementFilterMember::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(member) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        member.syntax(),
+        node,
+        "ElementFilterMember::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b), (c) and (d): the two accessors partition this node's children.
+    assert_element_filter_member_partition(node, &member);
+
+    // (e) the keyword, and the two slots it separates.
+    assert_element_filter_member_keyword(node, &member);
+
+    // (f) idempotent.
+    assert_eq!(
+        (
+            member.prefix().map(|prefix| prefix.syntax().clone()),
+            member.filter()
+        ),
+        (
+            member.prefix().map(|prefix| prefix.syntax().clone()),
+            member.filter()
+        ),
+        "an ElementFilterMember accessor disagreed with itself between two calls"
+    );
+}
+
+/// `prefix()` and `filter()` partition `node`'s direct children.
+///
+/// The same shape as `assert_package_member_partition`, and for the same reason:
+/// `filter()` is defined as "not the prefix", so each equality taken alone passes an
+/// accessor that returned the prefix for both. The arithmetic is what rules that out.
+fn assert_element_filter_member_partition(node: &SyntaxNode, member: &ElementFilterMember) {
+    let prefixes = children_of_kind(node, SyntaxKind::MemberPrefix);
+    let conditions: Vec<SyntaxNode> = node
+        .children()
+        .filter(|child| child.kind() != SyntaxKind::MemberPrefix)
+        .collect();
+    assert!(
+        prefixes.len() <= 1,
+        "a filter member carries at most one MemberPrefix, but this one has {} at {:?}",
+        prefixes.len(),
+        node.text_range()
+    );
+    assert!(
+        conditions.len() <= 1,
+        "a filter member carries at most one condition, but this one has {} ({:?}) at {:?}",
+        conditions.len(),
+        conditions.iter().map(SyntaxNode::kind).collect::<Vec<_>>(),
+        node.text_range()
+    );
+
+    // (c) the differential, and then the arithmetic that ties the two halves together.
+    assert_eq!(
+        member.prefix().map(|prefix| prefix.syntax().clone()),
+        prefixes.first().cloned(),
+        "prefix() is not this node's MemberPrefix child at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        member.filter(),
+        conditions.first().cloned(),
+        "filter() is not this node's non-prefix child at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        usize::from(member.prefix().is_some()) + usize::from(member.filter().is_some()),
+        node.children().count(),
+        "prefix() and filter() must account for every direct child exactly once, at {:?}",
+        node.text_range()
+    );
+    if let (Some(prefix), Some(condition)) = (member.prefix(), member.filter()) {
+        assert_ne!(
+            prefix.syntax(),
+            &condition,
+            "filter() returned the prefix at {:?}",
+            node.text_range()
+        );
+        assert_ne!(
+            condition.kind(),
+            SyntaxKind::MemberPrefix,
+            "filter() returned a MemberPrefix at {:?}",
+            node.text_range()
+        );
+    }
+}
+
+/// The `filter` keyword, and the two slots it separates.
+///
+/// `filter` is a reserved word in both languages (`RESERVED_KERML` and `RESERVED_SYSML`
+/// in `crates/sv2-syntax/src/generated/kinds.rs`), so the token is a `KwFilter` and never
+/// a name. The positional claim is the one nothing in either accessor checks: `filter()`
+/// finds the condition by excluding the prefix's kind, so no part of it knows that what
+/// it found is the expression the keyword introduces.
+fn assert_element_filter_member_keyword(node: &SyntaxNode, member: &ElementFilterMember) {
+    let keywords: Vec<SyntaxToken> = node
+        .children_with_tokens()
+        .filter_map(SyntaxElement::into_token)
+        .filter(|token| token.kind() == SyntaxKind::KwFilter)
+        .collect();
+    assert_eq!(
+        keywords.len(),
+        1,
+        "the production states one `filter` keyword, but this node has {} at {:?}",
+        keywords.len(),
+        node.text_range()
+    );
+    // Taken as a loop rather than by index: indexing is a workspace lint (invariant 3),
+    // and a fallback branch would be one that can never run, given the length assertion
+    // immediately above. The assertion makes this exactly one iteration.
+    for keyword in keywords.iter().map(SyntaxToken::text_range) {
+        if let Some(prefix) = member.prefix() {
+            assert!(
+                prefix.syntax().text_range().end() <= keyword.start(),
+                "the prefix stands before the `filter` keyword, at {:?}",
+                node.text_range()
+            );
+        }
+        if let Some(condition) = member.filter() {
+            assert!(
+                condition.text_range().start() >= keyword.end(),
+                "the condition stands after the `filter` keyword, at {:?}",
+                node.text_range()
+            );
+        }
+    }
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -540,6 +702,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_package_member_accessor(&node);
             assert_alias_member_accessor(&node);
             assert_member_prefix_accessor(&node);
+            assert_element_filter_member_accessor(&node);
             visited += 1;
         }
     }
