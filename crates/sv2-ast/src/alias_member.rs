@@ -6,6 +6,7 @@ use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
 use crate::ast_node::AstNode;
 use crate::member_prefix::MemberPrefix;
+use crate::qualified_name::QualifiedName;
 
 /// The two name slots while `AliasMember::names` walks the tokens.
 ///
@@ -154,11 +155,20 @@ impl AliasMember {
     ///
     /// Empty when nothing was written after `for`: the node is opened before the name is
     /// sought, so this returns `Some` for a node of zero width. Presence is not evidence
-    /// that anything was named, the same trap `Import::declaration` documents.
-    pub fn target(&self) -> Option<SyntaxNode> {
+    /// that anything was named, the same trap `Import::declaration` documents — and with
+    /// the typed view, a caller can now tell the two apart without reading text, because
+    /// a zero-width target has no segments.
+    ///
+    /// Returns the typed [`QualifiedName`] rather than the raw node, under the delegation
+    /// rule in `.claude/rules/ast.md`: the child has a kind of its own, so the segments
+    /// and the global qualifier are its business and not this node's
+    /// (`alias.target().and_then(|target| target.name())`). It returned a raw
+    /// `SyntaxNode` until `QualifiedName` had a view to delegate to.
+    pub fn target(&self) -> Option<QualifiedName> {
         self.0
             .children()
             .find(|child| child.kind() == SyntaxKind::QualifiedName)
+            .and_then(QualifiedName::cast)
     }
 
     /// The relationship body: `;`, or braces carrying annotations.

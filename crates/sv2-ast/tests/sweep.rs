@@ -8,7 +8,8 @@
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, PackageMember, RootNamespace,
+    AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, PackageMember, QualifiedName,
+    RootNamespace,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -382,6 +383,46 @@ fn assert_alias_member_names(node: &SyntaxNode, member: &AliasMember) {
 ///     equals the child re-derived by walking the tree;
 /// (c) the two name slots hold what their positions say — `assert_alias_member_names`;
 /// (d) calling each accessor twice returns the same answer.
+/// The three node children an alias may carry, each at most once.
+///
+/// `target()` returns a typed `QualifiedName` since that kind got a view of its own, so
+/// it is compared through its node; `body()` is still raw, `RelationshipBody` having no
+/// view yet. That asymmetry is the delegation rule mid-migration, not an inconsistency.
+fn assert_alias_member_children(node: &SyntaxNode, member: &AliasMember) {
+    assert_eq!(
+        member.prefix().map(|prefix| prefix.syntax().clone()),
+        children_of_kind(node, SyntaxKind::MemberPrefix)
+            .first()
+            .cloned(),
+        "prefix() is not this node's MemberPrefix child at {:?}",
+        node.text_range()
+    );
+    for (kind, accessor) in [
+        (
+            SyntaxKind::QualifiedName,
+            member.target().map(|target| target.syntax().clone()),
+        ),
+        (SyntaxKind::RelationshipBody, member.body()),
+    ] {
+        let direct = children_of_kind(node, kind);
+        assert!(
+            direct.len() <= 1,
+            "an alias carries at most one {:?}, but this one has {} at {:?}",
+            kind,
+            direct.len(),
+            node.text_range()
+        );
+        assert_eq!(
+            accessor,
+            direct.first().cloned(),
+            "the {:?} accessor is not this node's {:?} child at {:?}",
+            kind,
+            kind,
+            node.text_range()
+        );
+    }
+}
+
 fn assert_alias_member_accessor(node: &SyntaxNode) {
     let is_alias = node.kind() == SyntaxKind::AliasMember;
     let cast = AliasMember::cast(node.clone());
@@ -405,35 +446,7 @@ fn assert_alias_member_accessor(node: &SyntaxNode) {
     );
 
     // (b) one of each, and the differential against the re-derivation.
-    assert_eq!(
-        member.prefix().map(|prefix| prefix.syntax().clone()),
-        children_of_kind(node, SyntaxKind::MemberPrefix)
-            .first()
-            .cloned(),
-        "prefix() is not this node's MemberPrefix child at {:?}",
-        node.text_range()
-    );
-    for (kind, accessor) in [
-        (SyntaxKind::QualifiedName, member.target()),
-        (SyntaxKind::RelationshipBody, member.body()),
-    ] {
-        let direct = children_of_kind(node, kind);
-        assert!(
-            direct.len() <= 1,
-            "an alias carries at most one {:?}, but this one has {} at {:?}",
-            kind,
-            direct.len(),
-            node.text_range()
-        );
-        assert_eq!(
-            accessor,
-            direct.first().cloned(),
-            "the {:?} accessor is not this node's {:?} child at {:?}",
-            kind,
-            kind,
-            node.text_range()
-        );
-    }
+    assert_alias_member_children(node, &member);
 
     // (c) the token slots, which every node-level assertion above is blind to.
     assert_alias_member_names(node, &member);
@@ -688,6 +701,138 @@ fn assert_element_filter_member_keyword(node: &SyntaxNode, member: &ElementFilte
     }
 }
 
+/// What `QualifiedName` must satisfy at every node, whatever the tree:
+///
+/// (a) `cast` succeeds exactly when `node.kind()` is `SyntaxKind::QualifiedName`, and the
+///     node survives the round trip through `syntax()`;
+/// (b) the production is `( '$' '::' )? ( NAME '::' )* NAME` (`KerML` 8.2.3.4.1), which
+///     holds **tokens only** — so this node has no child nodes anywhere in the
+///     repository, and every token in it is a name, a `::` or the one `$`;
+/// (c) the differential: `segments()` equals the name tokens re-derived by walking the
+///     node's own tokens. Equality, not containment — a subset check passes an accessor
+///     that yields nothing, one that reverses the order, and one that drops a segment;
+/// (d) `name()` is the LAST of `segments()` and nothing else, and `is_global()` equals
+///     the presence of a `Dollar` token child. The `Dollar` is what tells the qualifier
+///     from a segment named `$`, which the corpus writes both of (`Scoping.kerml`);
+/// (e) calling each accessor twice returns the same answer.
+fn assert_qualified_name_accessor(node: &SyntaxNode) {
+    let is_name = node.kind() == SyntaxKind::QualifiedName;
+    let cast = QualifiedName::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_name,
+        "QualifiedName::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(name) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        name.syntax(),
+        node,
+        "QualifiedName::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) tokens only, and only the three kinds the production states. Trivia is skipped
+    // because `qualified_name` eats it before the node opens, so any that lands inside is
+    // between segments and belongs to no slot.
+    assert_eq!(
+        node.children().count(),
+        0,
+        "a qualified name holds tokens only, yet this one has child nodes ({:?}) at {:?}",
+        node.children()
+            .map(|child| child.kind())
+            .collect::<Vec<_>>(),
+        node.text_range()
+    );
+
+    // (c) and (d): the segments, and the two accessors derived from them.
+    assert_qualified_name_segments(node, &name);
+
+    // (e) idempotent.
+    assert_eq!(
+        name.segments()
+            .map(|token| token.text_range())
+            .collect::<Vec<_>>(),
+        name.segments()
+            .map(|token| token.text_range())
+            .collect::<Vec<_>>(),
+        "segments() disagreed with itself between two calls on the same node"
+    );
+}
+
+/// `segments()`, and the `name()` and `is_global()` that are read off it.
+///
+/// Re-derived from the TOKEN SEQUENCE rather than by repeating the accessor's own filter,
+/// so this is a differential and not a restatement.
+fn assert_qualified_name_segments(node: &SyntaxNode, name: &QualifiedName) {
+    let written: Vec<SyntaxToken> = node
+        .children_with_tokens()
+        .filter_map(SyntaxElement::into_token)
+        .filter(|token| {
+            matches!(
+                token.kind(),
+                SyntaxKind::BasicName | SyntaxKind::UnrestrictedName
+            )
+        })
+        .collect();
+    let reported: Vec<SyntaxToken> = name.segments().collect();
+    assert_eq!(
+        reported
+            .iter()
+            .map(SyntaxToken::text_range)
+            .collect::<Vec<_>>(),
+        written
+            .iter()
+            .map(SyntaxToken::text_range)
+            .collect::<Vec<_>>(),
+        "segments() is not exactly this node's name tokens, in order, at {:?}",
+        node.text_range()
+    );
+
+    // (d) `name()` is the last segment, and the qualifier is the `$` TOKEN rather than
+    // anything about the text: a segment may itself be named `$`, written `'$'`, and
+    // then it is an UnrestrictedName and not the qualifier (`Scoping.kerml` lines 32
+    // and 35 write both).
+    assert_eq!(
+        name.name().map(|token| token.text_range()),
+        written.last().map(SyntaxToken::text_range),
+        "name() is not the last segment at {:?}",
+        node.text_range()
+    );
+    let dollars = node
+        .children_with_tokens()
+        .filter_map(SyntaxElement::into_token)
+        .filter(|token| token.kind() == SyntaxKind::Dollar)
+        .count();
+    assert!(
+        dollars <= 1,
+        "the production states one `$` at most, but this name has {dollars} at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        name.is_global(),
+        dollars == 1,
+        "is_global disagreed with the presence of a Dollar token child at {:?}",
+        node.text_range()
+    );
+
+    // (e) idempotent.
+    assert_eq!(
+        name.segments()
+            .map(|token| token.text_range())
+            .collect::<Vec<_>>(),
+        name.segments()
+            .map(|token| token.text_range())
+            .collect::<Vec<_>>(),
+        "segments() disagreed with itself between two calls on the same node"
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -703,6 +848,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_alias_member_accessor(&node);
             assert_member_prefix_accessor(&node);
             assert_element_filter_member_accessor(&node);
+            assert_qualified_name_accessor(&node);
             visited += 1;
         }
     }
