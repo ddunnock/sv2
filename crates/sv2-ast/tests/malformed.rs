@@ -6,7 +6,7 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, NamespaceFeatureMember,
-    PackageMember, QualifiedName, RelationshipBody, RootNamespace,
+    NonFeatureMember, PackageMember, QualifiedName, RelationshipBody, RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -1238,5 +1238,104 @@ fn a_feature_member_always_reports_an_element_however_little_was_written() {
             .as_deref(),
         Some("private"),
         "`private` is this member's own and the damaged element does not cost it"
+    );
+}
+
+const LIBRARY_PACKAGE_HEAD_CUT_SHORT: &str =
+    include_str!("malformed/non-feature-member/library-package-head-cut-short.kerml");
+
+/// `non-feature-member/library-package-head-cut-short.kerml`: `private standard` with no
+/// `library` after it, then a healthy `class C;`. No member is built for the cut-short
+/// head, which is the only way this kind can be absent.
+///
+/// Both slots of `NonFeatureMember` are mandatory (`KerML` 8.2.3.4.1), and the parser
+/// cannot open the member without reading its element: `body_element` enters
+/// `membership` only when `at_kerml_non_feature_element` or `at_annotating_member`
+/// holds, and `kerml_non_feature_element` dispatches on the same list
+/// (`crates/sv2-syntax/src/parser/annotation.rs`). So where its sibling
+/// `NamespaceFeatureMember` always builds a member, this one either builds a whole one or
+/// none, and `recover_statement` (`crates/sv2-syntax/src/parser/recovery.rs`) takes the
+/// text into an `Error` beside the members.
+///
+/// 1. the parse still yields a tree, with both healthy members in it;
+/// 2. absence is reported, and it is the member's: no `NonFeatureMember` covers
+///    `private standard`, the `Error` that does is a sibling of the members, and one
+///    diagnostic spans exactly that `Error`;
+/// 3. the neighbours still answer: `RootNamespace` still has the package as its one
+///    member, and `class C;` is a member owning a `Class` whose prefix does not claim the
+///    orphaned `private`.
+#[test]
+fn a_cut_short_head_builds_no_member_rather_than_an_empty_one() {
+    let parse = trees::parsed(LIBRARY_PACKAGE_HEAD_CUT_SHORT, Language::KerMl);
+    let root = parse.syntax();
+
+    // 1. two members: the package at the root and the class in its body.
+    let members: Vec<NonFeatureMember> = root
+        .descendants()
+        .filter_map(NonFeatureMember::cast)
+        .collect();
+    let elements: Vec<Option<SyntaxKind>> = members
+        .iter()
+        .map(|member| member.element().map(|element| element.kind()))
+        .collect();
+    assert_eq!(
+        elements,
+        [Some(SyntaxKind::Package), Some(SyntaxKind::Class)],
+        "the package and `class C;`, and nothing for the cut-short head"
+    );
+
+    // 2a. the cut-short head is an Error in the package body, beside the members and
+    // inside none of them.
+    let errors: Vec<SyntaxNode> = root
+        .descendants()
+        .filter(|node| node.kind() == SyntaxKind::Error)
+        .collect();
+    assert_eq!(errors.len(), 1, "one recovery node, for `private standard`");
+    let error = &errors[0];
+    assert_eq!(
+        error.text().to_string().trim(),
+        "private standard",
+        "recover_statement took the visibility with the word after it"
+    );
+    assert_eq!(
+        error.parent().map(|parent| parent.kind()),
+        Some(SyntaxKind::PackageBody),
+        "a sibling of the members"
+    );
+    assert_eq!(
+        error
+            .ancestors()
+            .filter_map(NonFeatureMember::cast)
+            .map(|member| member.syntax().clone())
+            .collect::<Vec<_>>(),
+        [members[0].syntax().clone()],
+        "the only member enclosing the damage is the package's, which owns the body"
+    );
+
+    // 2b. and something reported it: one diagnostic, over exactly that text.
+    let diagnostics = parse.errors();
+    assert_eq!(diagnostics.len(), 1, "one diagnostic: {diagnostics:?}");
+    assert_eq!(
+        diagnostics[0].range(),
+        error.text_range(),
+        "the diagnostic spans the Error it describes"
+    );
+
+    // 3a. the root's neighbour: the package is still its one member.
+    let namespace = RootNamespace::cast(root.clone()).expect("the root is a RootNamespace");
+    assert_eq!(
+        namespace.members().collect::<Vec<_>>(),
+        [members[0].syntax().clone()],
+        "the damage inside the package does not cost the root its member"
+    );
+
+    // 3b. and the member after the damage: its prefix is present, empty, and does not
+    // claim the `private` written on the line above it.
+    let prefix = members[1]
+        .prefix()
+        .expect("MemberPrefix is built whether or not a visibility is written");
+    assert!(
+        prefix.visibility().is_none(),
+        "`private` belongs to the Error, not to `class C;`"
     );
 }
