@@ -6,7 +6,7 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, NamespaceFeatureMember,
-    NonFeatureMember, PackageMember, QualifiedName, RelationshipBody, RootNamespace,
+    NonFeatureMember, Package, PackageMember, QualifiedName, RelationshipBody, RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -1338,4 +1338,114 @@ fn a_cut_short_head_builds_no_member_rather_than_an_empty_one() {
         prefix.visibility().is_none(),
         "`private` belongs to the Error, not to `class C;`"
     );
+}
+
+const PREFIX_METADATA_NAMES_NOTHING: &str =
+    include_str!("malformed/package/prefix-metadata-names-nothing.sysml");
+
+/// `package/prefix-metadata-names-nothing.sysml`: a bare `#` in front of `package Inner;`,
+/// inside `package Outer`. The `#` is not the inner package's metadata.
+///
+/// `Package = ( ownedRelationship += PrefixMetadataMember )* PackageDeclaration
+/// PackageBody` (`SysML` 8.2.2.5.1). A `#` naming nothing is not a `PrefixMetadataMember`,
+/// so `at_package` (`crates/sv2-syntax/src/parser/namespace.rs`) finds no package at it and
+/// `recover_statement` (`crates/sv2-syntax/src/parser/recovery.rs`) takes it alone into an
+/// `Error` beside the member.
+///
+/// 1. the parse still yields a tree, with both packages in it;
+/// 2. `prefix_metadata()` reports none for `Inner`, and something reported the `#`: one
+///    diagnostic, spanning exactly the `Error`, which is a sibling of `Inner`'s member;
+/// 3. the neighbours still answer: the `PackageMember` beside the `Error` still owns
+///    `Inner`, and `Outer`'s declaration and body are its own.
+#[test]
+fn a_bare_hash_before_a_package_is_not_its_prefix_metadata() {
+    let parse = trees::parsed(PREFIX_METADATA_NAMES_NOTHING, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. two packages, Outer and Inner, in source order.
+    let packages: Vec<Package> = root.descendants().filter_map(Package::cast).collect();
+    assert_eq!(
+        packages
+            .iter()
+            .map(|package| package.declaration().map(|d| d.text().to_string()))
+            .collect::<Vec<_>>(),
+        [
+            Some("package Outer".to_owned()),
+            Some("package Inner".to_owned())
+        ],
+        "both packages survive the stray `#`"
+    );
+    let (outer, inner) = (&packages[0], &packages[1]);
+
+    // 2a. Inner has no prefix metadata: the `#` is not its own.
+    assert_eq!(
+        inner.prefix_metadata().count(),
+        0,
+        "a `#` naming nothing is not a PrefixMetadataMember, and is not Inner's"
+    );
+
+    // 2b. the `#` is an Error in Outer's body, beside Inner's member, and reported.
+    let member = inner
+        .syntax()
+        .parent()
+        .and_then(PackageMember::cast)
+        .expect("Inner is owned through a PackageMember");
+    let error = the_reported_hash_beside(&parse, &member);
+
+    // 3a. the member beside the damage still owns Inner.
+    assert_eq!(
+        member.element().as_ref(),
+        Some(inner.syntax()),
+        "PackageMember::element is still the inner package"
+    );
+
+    // 3b. and Outer's slots are its own: its body is the one holding the damage.
+    assert_eq!(
+        error.and_then(|error| error.parent()),
+        outer.body(),
+        "the Error is inside Outer's body, which Outer still reports"
+    );
+    assert_eq!(
+        outer.prefix_metadata().count(),
+        0,
+        "Outer writes no prefix metadata either"
+    );
+}
+
+/// The one `Error` in the `prefix-metadata-names-nothing` tree: the `#` alone, standing
+/// immediately before `member` as its sibling, and spanned by the one diagnostic.
+fn the_reported_hash_beside(
+    parse: &sv2_syntax::Parse,
+    member: &PackageMember,
+) -> Option<SyntaxNode> {
+    let errors: Vec<SyntaxNode> = parse
+        .syntax()
+        .descendants()
+        .filter(|node| node.kind() == SyntaxKind::Error)
+        .collect();
+    assert_eq!(
+        errors
+            .iter()
+            .map(|error| error.text().to_string())
+            .collect::<Vec<_>>(),
+        ["#"],
+        "one recovery node, holding the `#` alone"
+    );
+    let error = errors.first().cloned();
+    assert_eq!(
+        error.as_ref().and_then(SyntaxNode::next_sibling).as_ref(),
+        Some(member.syntax()),
+        "the Error stands immediately before Inner's member, as its sibling"
+    );
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        error.iter().map(SyntaxNode::text_range).collect::<Vec<_>>(),
+        "one diagnostic, spanning exactly the Error it describes: {:?}",
+        parse.errors()
+    );
+    error
 }
