@@ -9,8 +9,8 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, ImportDeclaration, MemberPrefix,
-    NamespaceFeatureMember, PackageMember, QualifiedName, RelationshipBody, RootNamespace,
-    VisibilityIndicator,
+    NamespaceFeatureMember, NonFeatureMember, PackageMember, QualifiedName, RelationshipBody,
+    RootNamespace, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -1303,6 +1303,151 @@ fn assert_namespace_feature_element_kind(node: &SyntaxNode, member: &NamespaceFe
     );
 }
 
+/// What `NonFeatureMember` must satisfy at every node, whatever the tree:
+///
+/// (a) `cast` succeeds exactly when `node.kind()` is `SyntaxKind::NonFeatureMember`, and
+///     the node survives the round trip;
+/// (b) the production is `MemberPrefix ownedRelatedElement += MemberElement` (`KerML`
+///     8.2.3.4.1) with **both slots mandatory**, so every one of these nodes holds exactly
+///     one prefix and exactly one element, and no token of its own;
+/// (c) the differential: `prefix()` and `element()` partition the children, and together
+///     account for every one of them exactly once;
+/// (d) the prefix is a `MemberPrefix`, the element never is, and the element is never an
+///     `Error` -- `membership` is entered only when `at_kerml_non_feature_element` or
+///     `at_annotating_member` holds, and reads the element by the same list, so a member
+///     is never opened over an element it cannot read;
+/// (e) calling each accessor twice returns the same answer.
+fn assert_non_feature_member_accessor(node: &SyntaxNode) {
+    let is_member = node.kind() == SyntaxKind::NonFeatureMember;
+    let cast = NonFeatureMember::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_member,
+        "NonFeatureMember::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(member) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        member.syntax(),
+        node,
+        "NonFeatureMember::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b), (c) and (d): the two mandatory slots, and what they may hold.
+    assert_non_feature_member_slots(node, &member);
+
+    // (e) idempotent.
+    assert_eq!(
+        (
+            member.prefix().map(|prefix| prefix.syntax().clone()),
+            member.element()
+        ),
+        (
+            member.prefix().map(|prefix| prefix.syntax().clone()),
+            member.element()
+        ),
+        "a NonFeatureMember accessor disagreed with itself between two calls"
+    );
+}
+
+/// The two mandatory slots of a `NonFeatureMember`, and what each may hold.
+///
+/// Re-derived by walking the children directly, so this is a differential. The counts are
+/// equality rather than "at most one" because the production makes both slots mandatory
+/// and the measurement agrees over all 608 instances.
+fn assert_non_feature_member_slots(node: &SyntaxNode, member: &NonFeatureMember) {
+    let prefixes = children_of_kind(node, SyntaxKind::MemberPrefix);
+    let elements: Vec<SyntaxNode> = node
+        .children()
+        .filter(|child| child.kind() != SyntaxKind::MemberPrefix)
+        .collect();
+    assert_eq!(
+        prefixes.len(),
+        1,
+        "both slots are mandatory, so there is exactly one prefix, not {} at {:?}",
+        prefixes.len(),
+        node.text_range()
+    );
+    assert_eq!(
+        elements.len(),
+        1,
+        "and exactly one element, not {} ({:?}) at {:?}",
+        elements.len(),
+        elements.iter().map(SyntaxNode::kind).collect::<Vec<_>>(),
+        node.text_range()
+    );
+    assert_eq!(
+        node.children_with_tokens()
+            .filter_map(SyntaxElement::into_token)
+            .filter(|token| !token.text().trim().is_empty())
+            .count(),
+        0,
+        "the production states no terminal of its own, yet this node holds one at {:?}",
+        node.text_range()
+    );
+
+    // The production writes the prefix first. Asserted because it is what makes
+    // prefix() reading descendants rather than children an equivalent mutation: preorder
+    // reaches this node's own MemberPrefix before any nested inside the element only
+    // while it is the first child.
+    assert_eq!(
+        node.first_child(),
+        prefixes.first().cloned(),
+        "the MemberPrefix is not this node's first child at {:?}",
+        node.text_range()
+    );
+
+    // (c) the differential, then the arithmetic that ties the halves together.
+    assert_eq!(
+        member.prefix().map(|prefix| prefix.syntax().clone()),
+        prefixes.first().cloned(),
+        "prefix() is not this node's MemberPrefix child at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        member.element(),
+        elements.first().cloned(),
+        "element() is not this node's non-prefix child at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        usize::from(member.prefix().is_some()) + usize::from(member.element().is_some()),
+        node.children().count(),
+        "prefix() and element() must account for every direct child exactly once, at {:?}",
+        node.text_range()
+    );
+
+    // (d) what the element may be.
+    assert_non_feature_element_kind(node, member);
+}
+
+/// The element slot of a `NonFeatureMember` is never the prefix and never an `Error`.
+///
+/// The second half is a claim about the parser, not the grammar: `body_element`
+/// (`crates/sv2-syntax/src/parser/namespace.rs`) enters `membership` only when
+/// `at_kerml_non_feature_element` or `at_annotating_member` holds, and
+/// `kerml_non_feature_element` reads the element by the same list, so a member is never
+/// opened over an element it cannot read. If that ever stopped being true, this is where
+/// it would show.
+fn assert_non_feature_element_kind(node: &SyntaxNode, member: &NonFeatureMember) {
+    let Some(element) = member.element() else {
+        return;
+    };
+    assert!(
+        !matches!(element.kind(), SyntaxKind::MemberPrefix | SyntaxKind::Error),
+        "a member is opened only over an element membership can read, so this is \
+         neither the prefix nor an Error: {:?} at {:?}",
+        element.kind(),
+        node.text_range()
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -1323,6 +1468,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_import_declaration_accessor(&node);
             assert_relationship_body_accessor(&node);
             assert_namespace_feature_member_accessor(&node);
+            assert_non_feature_member_accessor(&node);
             visited += 1;
         }
     }

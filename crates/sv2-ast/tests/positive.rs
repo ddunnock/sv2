@@ -959,3 +959,70 @@ fn the_one_feature_member_in_behaviors_owns_a_flow_not_a_feature() {
         "and the one flow: {kinds:?}"
     );
 }
+
+/// `Behaviors.kerml`'s non-feature members, in source order, and what each owns.
+///
+/// Read off the file:
+///
+/// ```text
+///   line  1:  package Behaviors { ... }     the root's one member, owning a Package
+///   line  2:  behavior A { ... }            owning a Behavior
+///   line  9:  behavior B specializes A {}   owning a Behavior
+///   line 13:  class C { ... }               owning a Class
+/// ```
+///
+/// `NonFeatureMember = MemberPrefix ownedRelatedElement += MemberElement` (`KerML`
+/// 8.2.3.4.1), and `MemberElement = AnnotatingElement | NonFeatureElement` (8.2.3.4.3) is
+/// an alternation that builds no node, so the element is the concrete one. The case
+/// is chosen for its behaviors: 243 of the 608 non-feature members in the corpus own a
+/// `Class` or a `Package`, and a case reading only those could not tell `element()` from
+/// an accessor that looked for one of them. Lines 2 and 9 own neither.
+///
+/// The members inside `class C { ... }` are features (`in x;`, `step a : A;`, ...) and
+/// arrive through `FeatureMember`, and line 20 is the file's one `NamespaceFeatureMember`,
+/// so none of them is counted here.
+#[test]
+fn the_non_feature_members_of_behaviors_own_a_package_two_behaviors_and_a_class() {
+    let root = tree_of(BEHAVIORS);
+    let members: Vec<sv2_ast::NonFeatureMember> = root
+        .descendants()
+        .filter_map(sv2_ast::NonFeatureMember::cast)
+        .collect();
+    assert_eq!(
+        members
+            .iter()
+            .map(|member| member.element().map(|element| element.kind()))
+            .collect::<Vec<_>>(),
+        [
+            Some(SyntaxKind::Package),
+            Some(SyntaxKind::Behavior),
+            Some(SyntaxKind::Behavior),
+            Some(SyntaxKind::Class),
+        ],
+        "lines 1, 2, 9 and 13, in source order"
+    );
+
+    // The element is the member's own child, not something found further down: line 2's
+    // Behavior holds a `composite step b`, and that must not stand in for it.
+    for member in &members {
+        assert_eq!(
+            member
+                .element()
+                .and_then(|element| element.parent())
+                .as_ref(),
+            Some(member.syntax()),
+            "each element is a direct child of its member"
+        );
+    }
+
+    // No member in the file writes a visibility, and that reads as none, not as damage.
+    for member in &members {
+        let prefix = member
+            .prefix()
+            .expect("MemberPrefix is built whether or not a visibility is written");
+        assert!(
+            prefix.visibility().is_none(),
+            "Behaviors.kerml writes no visibility"
+        );
+    }
+}
