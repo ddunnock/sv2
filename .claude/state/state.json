@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-19T15:41:00Z",
+    "regenerated_utc": "2026-10-19T18:18:05Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 12,
-      "unimplemented": 451,
+      "implemented": 13,
+      "unimplemented": 450,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 2.6
+      "percent": 2.8
     },
     "tests": {
-      "unit": 785,
+      "unit": 788,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "a70e302 Merge ast-non-feature-member: the accessor, and the prefix-order assertion",
+      "4ff3555 Add the NonFeatureMember accessor, and assert the prefix comes first",
       "35620fa Close the session: six accessors, 5 to 11 of 463, and the rule the rounds taught",
       "3bd4a6a Merge ast-namespace-feature-member: the accessor, and two stale comments corrected",
       "2ee68bf Correct the second stale \"unimplemented\" comment, on at_kerml_succession",
       "82c6bb6 Correct a stale count in namespace_feature_member's comment: ten, not five",
       "7214922 Add the NamespaceFeatureMember accessor",
-      "d93f3f9 Merge ast-relationship-body: the RelationshipBody accessor and two more delegations",
-      "dce52a0 Name the function that recovers, not the one that calls it",
-      "1fc6dc7 Add the RelationshipBody accessor, and discharge two raw returns"
+      "d93f3f9 Merge ast-relationship-body: the RelationshipBody accessor and two more delegations"
     ]
   },
   "authored": {

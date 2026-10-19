@@ -9,8 +9,8 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, ImportDeclaration, MemberPrefix,
-    NamespaceFeatureMember, NonFeatureMember, PackageMember, QualifiedName, RelationshipBody,
-    RootNamespace, VisibilityIndicator,
+    NamespaceFeatureMember, NonFeatureMember, Package, PackageMember, QualifiedName,
+    RelationshipBody, RootNamespace, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -1448,6 +1448,122 @@ fn assert_non_feature_element_kind(node: &SyntaxNode, member: &NonFeatureMember)
     );
 }
 
+/// What `Package` must satisfy at every node, whatever the tree:
+///
+/// (a) `cast` succeeds exactly when `node.kind()` is `SyntaxKind::Package`, and the node
+///     survives the round trip;
+/// (b) the production is `( ownedRelationship += PrefixMetadataMember )*
+///     PackageDeclaration PackageBody` (`SysML` 8.2.2.5.1, `KerML` 8.2.5.13), so every one
+///     of these nodes holds exactly one declaration and exactly one body, any metadata
+///     before them, and no token of its own;
+/// (c) the differential: the children, in order, are exactly `prefix_metadata()`, then
+///     `declaration()`, then `body()` — equality over the whole sequence, so an accessor
+///     that dropped, reordered or duplicated a child fails;
+/// (d) calling each accessor twice returns the same answer.
+fn assert_package_accessor(node: &SyntaxNode) {
+    let is_package = node.kind() == SyntaxKind::Package;
+    let cast = Package::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_package,
+        "Package::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(package) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        package.syntax(),
+        node,
+        "Package::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) and (c): the slots, re-derived from the children.
+    assert_package_slots(node, &package);
+
+    // (d) idempotent.
+    assert_eq!(
+        (
+            package.prefix_metadata().collect::<Vec<_>>(),
+            package.declaration(),
+            package.body()
+        ),
+        (
+            package.prefix_metadata().collect::<Vec<_>>(),
+            package.declaration(),
+            package.body()
+        ),
+        "a Package accessor disagreed with itself between two calls"
+    );
+}
+
+/// The slots of a `Package`, re-derived by walking its children directly. All three are
+/// raw: none of `PrefixMetadataMember`, `PackageDeclaration` and `PackageBody` has a view
+/// yet.
+fn assert_package_slots(node: &SyntaxNode, package: &Package) {
+    let declarations = children_of_kind(node, SyntaxKind::PackageDeclaration);
+    let bodies = children_of_kind(node, SyntaxKind::PackageBody);
+    assert_eq!(
+        (declarations.len(), bodies.len()),
+        (1, 1),
+        "the declaration and the body are mandatory, so one of each, at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        node.children_with_tokens()
+            .filter_map(SyntaxElement::into_token)
+            .filter(|token| !token.text().trim().is_empty())
+            .count(),
+        0,
+        "the production states no terminal of its own, yet this node holds one at {:?}",
+        node.text_range()
+    );
+
+    // (c) the differential, as the full ordered sequence of children. The metadata is
+    // every child before the declaration, so a child of any other kind there fails too.
+    let metadata = children_of_kind(node, SyntaxKind::PrefixMetadataMember);
+    let expected: Vec<SyntaxNode> = metadata
+        .iter()
+        .chain(&declarations)
+        .chain(&bodies)
+        .cloned()
+        .collect();
+    assert_eq!(
+        node.children().collect::<Vec<_>>(),
+        expected,
+        "the children are not metadata, then the declaration, then the body, at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        package
+            .prefix_metadata()
+            .chain(package.declaration())
+            .chain(package.body())
+            .collect::<Vec<_>>(),
+        expected,
+        "prefix_metadata(), declaration() and body() are not this node's children, \
+         in order, at {:?}",
+        node.text_range()
+    );
+
+    // Neither a PrefixMetadataMember nor a PackageDeclaration can hold a package body:
+    // their productions reach a typing and an identification, never a body. Asserted
+    // because it is what makes body() reading descendants rather than children an
+    // equivalent mutation: with the body last, preorder reaches it before anything
+    // nested inside it only while nothing before it holds one.
+    assert!(
+        metadata.iter().chain(&declarations).all(|child| child
+            .descendants()
+            .all(|d| d.kind() != SyntaxKind::PackageBody)),
+        "a package body inside a package's metadata or declaration, at {:?}",
+        node.text_range()
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -1469,6 +1585,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_relationship_body_accessor(&node);
             assert_namespace_feature_member_accessor(&node);
             assert_non_feature_member_accessor(&node);
+            assert_package_accessor(&node);
             visited += 1;
         }
     }

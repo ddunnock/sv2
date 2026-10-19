@@ -1026,3 +1026,119 @@ fn the_non_feature_members_of_behaviors_own_a_package_two_behaviors_and_a_class(
         );
     }
 }
+
+/// Sixteen lines holding four packages, one with a braced body and three with `;`.
+const DEPENDENCY_12A: &str = "vendor/corpus/sysml/src/validation/\
+                              12-Dependency Relationships/12a-Dependency.sysml";
+
+/// `12a-Dependency.sysml`'s packages, in source order, each with its own declaration and
+/// body.
+///
+/// Read off the file:
+///
+/// ```text
+///   line 1:  package '12a-Dependency' { ... }   braced body, holding the other three
+///   line 3:  package 'Application Layer';       `;` body
+///   line 4:  package 'Service Layer';           `;` body
+///   line 5:  package 'Data Layer';              `;` body
+/// ```
+///
+/// `Package = ( ownedRelationship += PrefixMetadataMember )* PackageDeclaration
+/// PackageBody` and `PackageBody = ';' | '{' PackageBodyElement* '}'` (`SysML` 8.2.2.5.1).
+/// The file is chosen because the outer package's body holds three packages of its own:
+/// an accessor that reached into the body for a nested declaration, or that returned the
+/// declaration for the body, reports a different name or a different first token here.
+#[test]
+fn the_packages_of_12a_dependency_each_report_their_own_declaration_and_body() {
+    let root = tree_of(DEPENDENCY_12A);
+    let packages: Vec<sv2_ast::Package> = root
+        .descendants()
+        .filter_map(sv2_ast::Package::cast)
+        .collect();
+
+    let declarations: Vec<Option<String>> = packages
+        .iter()
+        .map(|package| package.declaration().map(|d| d.text().to_string()))
+        .collect();
+    assert_eq!(
+        declarations,
+        [
+            Some("package '12a-Dependency'".to_owned()),
+            Some("package 'Application Layer'".to_owned()),
+            Some("package 'Service Layer'".to_owned()),
+            Some("package 'Data Layer'".to_owned()),
+        ],
+        "lines 1, 3, 4 and 5, in source order"
+    );
+
+    // Each body opens on the token the file writes: `{` for line 1, `;` for the rest.
+    let openers: Vec<Option<SyntaxKind>> = packages
+        .iter()
+        .map(|package| {
+            package
+                .body()
+                .and_then(|body| body.first_token())
+                .map(|token| token.kind())
+        })
+        .collect();
+    assert_eq!(
+        openers,
+        [
+            Some(SyntaxKind::LBrace),
+            Some(SyntaxKind::Semicolon),
+            Some(SyntaxKind::Semicolon),
+            Some(SyntaxKind::Semicolon),
+        ],
+        "one braced body, then three `;` bodies"
+    );
+
+    // And none of the four writes prefix metadata, which reads as none.
+    assert!(
+        packages
+            .iter()
+            .all(|package| package.prefix_metadata().next().is_none()),
+        "12a-Dependency.sysml writes no `#` before any package"
+    );
+}
+
+/// `#Safety #Approved package P;`, written by hand: two prefix metadata members, in
+/// source order, then the declaration and the body.
+///
+/// `Package = ( ownedRelationship += PrefixMetadataMember )* PackageDeclaration
+/// PackageBody` (`SysML` 8.2.2.5.1, and `KerML` 8.2.5.13 identically). Hand-written because
+/// **no pinned file writes prefix metadata on a package** — none of the 666 packages in the
+/// repository's 610 trees has one — so the corpus cannot tell `prefix_metadata()` from an
+/// accessor that always returned nothing. Two, so that the order is observable too: the
+/// clause's `ownedRelationship +=` is an ordered property, and source order is it.
+#[test]
+fn prefix_metadata_on_a_package_is_reported_in_source_order() {
+    let root = trees::tree("#Safety #Approved package P;", sv2_syntax::Language::SysMl);
+    let packages: Vec<sv2_ast::Package> = root
+        .descendants()
+        .filter_map(sv2_ast::Package::cast)
+        .collect();
+    assert_eq!(packages.len(), 1, "one package");
+    let package = &packages[0];
+
+    assert_eq!(
+        package
+            .prefix_metadata()
+            .map(|member| member.text().to_string().trim().to_owned())
+            .collect::<Vec<_>>(),
+        ["#Safety", "#Approved"],
+        "both members, in the order written"
+    );
+    assert_eq!(
+        package
+            .declaration()
+            .map(|d| d.text().to_string())
+            .as_deref(),
+        Some("package P"),
+        "the metadata is not the declaration"
+    );
+    assert_eq!(
+        package.body().map(|b| b.text().to_string()).as_deref(),
+        Some(";"),
+        "and the body is the `;`"
+    );
+}
