@@ -783,13 +783,16 @@ fn a_double_star_without_a_single_one_is_a_membership_import() {
         "Q::**",
         "the declaration spans the name and the recursive marker"
     );
-    let name = recursive
+    let membership = recursive
         .imported()
-        .and_then(|node| {
-            node.children()
-                .find(|c| c.kind() == SyntaxKind::QualifiedName)
-        })
-        .and_then(sv2_ast::QualifiedName::cast)
+        .and_then(sv2_ast::MembershipImport::cast)
+        .expect("the alternative found above is a membership import");
+    assert!(
+        membership.is_recursive(),
+        "`Q::**` sets isRecursive on the membership import"
+    );
+    let name = membership
+        .name()
         .expect("the alternative carries a QualifiedName");
     assert_eq!(
         name.segments()
@@ -1280,6 +1283,122 @@ fn standard_and_prefix_metadata_are_each_library_packages_own() {
             .collect::<Vec<_>>(),
         [Some(SyntaxKind::LBrace), Some(SyntaxKind::Semicolon)],
         "Outer's body is braced, Inner's is the `;`"
+    );
+    assert!(
+        parse.errors().is_empty(),
+        "both are well-formed: {:?}",
+        parse.errors()
+    );
+}
+
+const SAFETY_AND_SECURITY_11B: &str = "vendor/corpus/sysml/src/validation/11-View and Viewpoint/\
+                                       11b-Safety and Security Feature Views.sysml";
+
+/// `11b-Safety and Security Feature Views.sysml`, whose three membership imports are
+/// written:
+///
+/// ```text
+///   line 49:  private import PartsTree::vehicle;     two segments, not recursive
+///   line 52:  expose vehicle;                        a MembershipExpose, not recursive
+///   line 61:  expose vehicle::**[@Safety and ...];   recursive, the head of a FilterPackage
+/// ```
+///
+/// and one import that is **not** among them:
+///
+/// ```text
+///   line 56:  expose vehicle::*::**;                 recursive, but a NamespaceImport
+/// ```
+///
+/// `MembershipImport = importedMembership = [QualifiedName] ( '::' isRecursive ?= '**' )?`
+/// and `NamespaceImport = importedNamespace = [QualifiedName] '::' '*' ( '::' isRecursive
+/// ?= '**' )?` (`KerML` 8.2.3.4.2, `SysML` 8.2.2.5.1). The file is chosen for its spread:
+/// a multi-segment name, where the `::` inside the name is not the suffix's; an `expose`,
+/// which holds the alternative without an `ImportDeclaration` (`SysML` 8.2.2.26.2); a
+/// recursive one inside a filter; and line 56, whose `**` belongs to a namespace import.
+#[test]
+fn the_membership_imports_of_11b_name_what_they_import_and_say_which_recurse() {
+    let root = tree_of(SAFETY_AND_SECURITY_11B);
+    let memberships: Vec<sv2_ast::MembershipImport> = root
+        .descendants()
+        .filter_map(sv2_ast::MembershipImport::cast)
+        .collect();
+
+    let read: Vec<(Vec<String>, bool, Option<SyntaxKind>)> = memberships
+        .iter()
+        .map(|membership| {
+            (
+                membership
+                    .name()
+                    .map(|name| name.segments().map(|t| t.text().to_owned()).collect())
+                    .unwrap_or_default(),
+                membership.is_recursive(),
+                membership.syntax().parent().map(|parent| parent.kind()),
+            )
+        })
+        .collect();
+    assert_eq!(
+        read,
+        [
+            (
+                vec!["PartsTree".to_owned(), "vehicle".to_owned()],
+                false,
+                Some(SyntaxKind::ImportDeclaration)
+            ),
+            (
+                vec!["vehicle".to_owned()],
+                false,
+                Some(SyntaxKind::MembershipExpose)
+            ),
+            (
+                vec!["vehicle".to_owned()],
+                true,
+                Some(SyntaxKind::ImportDeclaration)
+            ),
+        ],
+        "lines 49, 52 and 61, in source order; line 56 is a namespace import"
+    );
+}
+
+/// Written by hand: two membership imports whose names are quoted and contain stars.
+///
+/// ```text
+/// public import A::'**';      a name whose last segment is `'**'`: NOT recursive
+/// public import 'b**'::**;    a name `'b**'`, then the suffix: recursive
+/// ```
+///
+/// An `UnrestrictedName` is one `NAME` token whatever its quotes enclose (`KerML` 8.2.2.3),
+/// so the stars inside one are a segment's text and never the `( '::' isRecursive ?= '**'
+/// )?` of `MembershipImport` (8.2.3.4.2). Hand-written because no pinned file quotes a
+/// name containing `*`, so the corpus cannot tell `is_recursive()` from an accessor that
+/// looked for stars in the text — the same mistake `ImportDeclaration::imported` warns
+/// against for telling the alternatives apart.
+#[test]
+fn stars_inside_a_quoted_name_are_not_the_recursive_suffix() {
+    let parse = trees::parsed(
+        "package P {\n\tpublic import A::'**';\n\tpublic import 'b**'::**;\n}",
+        sv2_syntax::Language::SysMl,
+    );
+    let read: Vec<(Vec<String>, bool)> = parse
+        .syntax()
+        .descendants()
+        .filter_map(sv2_ast::MembershipImport::cast)
+        .map(|membership| {
+            (
+                membership
+                    .name()
+                    .map(|name| name.segments().map(|t| t.text().to_owned()).collect())
+                    .unwrap_or_default(),
+                membership.is_recursive(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        read,
+        [
+            (vec!["A".to_owned(), "'**'".to_owned()], false),
+            (vec!["'b**'".to_owned()], true),
+        ],
+        "the quoted stars are segments; only the second writes the suffix"
     );
     assert!(
         parse.errors().is_empty(),

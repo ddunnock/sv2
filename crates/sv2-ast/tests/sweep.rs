@@ -9,8 +9,8 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, ImportDeclaration, LibraryPackage,
-    MemberPrefix, NamespaceFeatureMember, NonFeatureMember, Package, PackageMember, QualifiedName,
-    RelationshipBody, RootNamespace, VisibilityIndicator,
+    MemberPrefix, MembershipImport, NamespaceFeatureMember, NonFeatureMember, Package,
+    PackageMember, QualifiedName, RelationshipBody, RootNamespace, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -1708,6 +1708,115 @@ fn assert_library_package_slots(node: &SyntaxNode, library: &LibraryPackage) {
     );
 }
 
+/// What `MembershipImport` must satisfy at every node, whatever the tree. The name is
+/// typed (`QualifiedName`); the suffix is this node's own tokens, read as a bool.
+fn assert_membership_import_accessor(node: &SyntaxNode) {
+    let is_membership = node.kind() == SyntaxKind::MembershipImport;
+    let cast = MembershipImport::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_membership,
+        "MembershipImport::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(membership) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        membership.syntax(),
+        node,
+        "MembershipImport::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) one child, the name, which `qualified_name` always builds; and the differential.
+    let kids: Vec<SyntaxNode> = node.children().collect();
+    assert_eq!(
+        kids.iter().map(SyntaxNode::kind).collect::<Vec<_>>(),
+        [SyntaxKind::QualifiedName],
+        "a membership import holds its name and no other node, at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        membership.name().map(|name| name.syntax().clone()),
+        kids.first().cloned(),
+        "name() is not this node's QualifiedName, at {:?}",
+        node.text_range()
+    );
+
+    // The name holds no `**`: a QualifiedName is names, `::` and `$` (`KerML` 8.2.3.4.1).
+    // Asserted because it is what makes is_recursive() reading descendants rather than
+    // its own tokens an equivalent mutation: the only `**` beneath the node is its own.
+    assert!(
+        kids.iter().all(|name| name
+            .descendants_with_tokens()
+            .all(|element| element.kind() != SyntaxKind::StarStar)),
+        "a `**` inside a membership import's name, at {:?}",
+        node.text_range()
+    );
+
+    // (c) the suffix: nothing before the name, and after it `::` then `**`, `::` alone
+    // (reported by `import_suffix`), or nothing. is_recursive() is whether the `**` is
+    // there.
+    assert_membership_import_suffix(node, &membership);
+
+    // (d) idempotent.
+    assert_eq!(
+        (
+            membership.name().map(|name| name.syntax().clone()),
+            membership.is_recursive()
+        ),
+        (
+            membership.name().map(|name| name.syntax().clone()),
+            membership.is_recursive()
+        ),
+        "a MembershipImport accessor disagreed with itself between two calls"
+    );
+}
+
+/// The own tokens of a `MembershipImport`, all after its name, and what they say about
+/// `is_recursive()`.
+fn assert_membership_import_suffix(node: &SyntaxNode, membership: &MembershipImport) {
+    let mut before = 0;
+    let mut suffix = Vec::new();
+    let mut seen_name = false;
+    for element in node.children_with_tokens() {
+        match element {
+            SyntaxElement::Node(_) => seen_name = true,
+            SyntaxElement::Token(token) if !token.text().trim().is_empty() => {
+                if seen_name {
+                    suffix.push(token.kind());
+                } else {
+                    before += 1;
+                }
+            }
+            SyntaxElement::Token(_) => {}
+        }
+    }
+    assert_eq!(
+        before,
+        0,
+        "a terminal of the import's own before its name, at {:?}",
+        node.text_range()
+    );
+    let expected: &[SyntaxKind] = if membership.is_recursive() {
+        &[SyntaxKind::ColonColon, SyntaxKind::StarStar]
+    } else if suffix.is_empty() {
+        &[]
+    } else {
+        &[SyntaxKind::ColonColon]
+    };
+    assert_eq!(
+        suffix,
+        expected,
+        "is_recursive() disagrees with the suffix written, at {:?}",
+        node.text_range()
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -1731,6 +1840,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_non_feature_member_accessor(&node);
             assert_package_accessor(&node);
             assert_library_package_accessor(&node);
+            assert_membership_import_accessor(&node);
             visited += 1;
         }
     }

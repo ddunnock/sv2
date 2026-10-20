@@ -6,8 +6,8 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, LibraryPackage, MemberPrefix,
-    NamespaceFeatureMember, NonFeatureMember, Package, PackageMember, QualifiedName,
-    RelationshipBody, RootNamespace,
+    MembershipImport, NamespaceFeatureMember, NonFeatureMember, Package, PackageMember,
+    QualifiedName, RelationshipBody, RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -902,8 +902,8 @@ fn a_trailing_separator_leaves_an_import_that_looks_undamaged() {
         .declaration()
         .expect("the node is opened before the name is sought, so it is always there");
 
-    // 2a. the alternative that parsed, reported as itself. `MembershipImport` and
-    // `NamespaceImport` have no views yet, so the kind is read from the node.
+    // 2a. the alternative that parsed, reported as itself. `imported()` is raw because
+    // it is one of two kinds, so the kind is read from the node.
     let imported = declaration
         .imported()
         .expect("the alternative node is built at a checkpoint and is always there");
@@ -914,13 +914,15 @@ fn a_trailing_separator_leaves_an_import_that_looks_undamaged() {
     );
 
     // 2b. and it is not merely present: it names `A`, so nothing here reads as damage.
-    let name = QualifiedName::cast(
-        imported
-            .children()
-            .find(|child| child.kind() == SyntaxKind::QualifiedName)
-            .expect("the alternative always carries its QualifiedName"),
-    )
-    .expect("that child is a QualifiedName");
+    // Nor does it claim a recursion: a `::` with no `**` after it sets no `isRecursive`.
+    let membership = MembershipImport::cast(imported).expect("the kind was asserted just above");
+    assert!(
+        !membership.is_recursive(),
+        "the separator is written, the `**` is not"
+    );
+    let name = membership
+        .name()
+        .expect("the alternative always carries its QualifiedName");
     assert_eq!(
         name.segments()
             .map(|token| token.text().to_owned())
@@ -1531,5 +1533,121 @@ fn metadata_written_before_library_is_not_the_library_packages() {
         error.and_then(|error| error.parent()),
         outer.body(),
         "the Error is inside Outer's body, which Outer still reports"
+    );
+}
+
+const RECURSIVE_NAMES_NOTHING: &str =
+    include_str!("malformed/membership-import/recursive-names-nothing.sysml");
+
+/// `membership-import/recursive-names-nothing.sysml`: `public import ::**;`, the recursive
+/// suffix written and the name left out.
+///
+/// `MembershipImport = importedMembership = [QualifiedName] ( '::' isRecursive ?= '**' )?`
+/// (`KerML` 8.2.3.4.2, `SysML` 8.2.2.5.1). `qualified_name`
+/// (`crates/sv2-syntax/src/parser/import.rs`) opens its node before seeking a name, and
+/// `expect_name` (`crates/sv2-syntax/src/parser/recovery.rs`) reports the `::` it finds
+/// instead without consuming it, so the name closes empty and `import_suffix` takes the
+/// `::**` as the suffix.
+///
+/// 1. the parse still yields a tree, with one membership import in it;
+/// 2. `name()` is present and names nothing — no segments — and something reported it:
+///    one diagnostic, at the `::` where the name should be;
+/// 3. the neighbours still answer: `is_recursive()` reports the `**` that was written,
+///    independently of the name, and the `Import` still holds this declaration, its
+///    `public` and its `;` body.
+#[test]
+fn a_recursive_import_of_nothing_reports_an_empty_name_and_its_recursion() {
+    let parse = trees::parsed(RECURSIVE_NAMES_NOTHING, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. one membership import.
+    let memberships: Vec<MembershipImport> = root
+        .descendants()
+        .filter_map(MembershipImport::cast)
+        .collect();
+    assert_eq!(memberships.len(), 1, "the fixture writes one import");
+    let membership = &memberships[0];
+
+    // 2a. the name is there, and names nothing.
+    let name = membership
+        .name()
+        .expect("qualified_name opens its node before it seeks a name");
+    assert_eq!(
+        name.segments().count(),
+        0,
+        "no name is written, so the QualifiedName has no segments"
+    );
+    assert_eq!(
+        name.syntax().text_range().len(),
+        0.into(),
+        "and it spans nothing: the `::` is the suffix's, not the name's"
+    );
+
+    // 2b. and that was reported, at the `::`.
+    let separator = membership
+        .syntax()
+        .children_with_tokens()
+        .filter_map(sv2_syntax::SyntaxElement::into_token)
+        .find(|token| token.kind() == SyntaxKind::ColonColon)
+        .expect("the suffix's `::` is the import's own token");
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [separator.text_range()],
+        "one diagnostic, at the `::` found where a name was expected: {:?}",
+        parse.errors()
+    );
+
+    // 3a. the recursion is still the import's: the two slots answer independently.
+    assert!(
+        membership.is_recursive(),
+        "the `**` is written, so isRecursive is set whether or not a name is"
+    );
+
+    // 3b. and the Import above still answers.
+    assert_the_import_still_wraps(&root, membership);
+}
+
+/// The one `Import` of the `recursive-names-nothing` tree still wraps `membership` in its
+/// declaration, and still reports its `public` and its `;` body.
+fn assert_the_import_still_wraps(root: &SyntaxNode, membership: &MembershipImport) {
+    let found = imports(root);
+    assert_eq!(
+        found
+            .iter()
+            .map(|import| import.syntax().text().to_string())
+            .collect::<Vec<_>>(),
+        ["public import ::**;"],
+        "one import"
+    );
+    let Some(import) = found.first() else {
+        return;
+    };
+    assert_eq!(
+        import
+            .declaration()
+            .and_then(|declaration| declaration.imported())
+            .as_ref(),
+        Some(membership.syntax()),
+        "the Import's declaration still wraps this membership import"
+    );
+    assert_eq!(
+        import
+            .visibility()
+            .and_then(|visibility| visibility.keyword())
+            .map(|keyword| keyword.kind()),
+        Some(SyntaxKind::KwPublic),
+        "the visibility is still `public`"
+    );
+    assert_eq!(
+        import
+            .body()
+            .map(|body| body.syntax().text().to_string())
+            .as_deref(),
+        Some(";"),
+        "and the body is still the `;`"
     );
 }

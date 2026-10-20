@@ -56,9 +56,9 @@ impl ImportDeclaration {
     /// a typed view — but the child is one of **two** kinds, and `AstNode` declares one
     /// `KIND` per view, so no typed signature admits both. An enum over the two would be
     /// a new abstraction the trait cannot express, invented before either kind has an
-    /// accessor; `MembershipImport` and `NamespaceImport` are the next two kinds on the
-    /// worklist, and when they have views the caller casts what this returns and this
-    /// signature does not change.
+    /// accessor. Instead the caller casts what this returns —
+    /// [`MembershipImport::cast`](crate::MembershipImport) for the first alternative — and
+    /// this signature does not change as the alternatives gain views.
     ///
     /// So the returned node's `kind()` **is** the discriminator, and it is the honest one:
     /// what makes an import a `NamespaceImport` is the `::*`, not the presence of stars.
