@@ -1142,3 +1142,148 @@ fn prefix_metadata_on_a_package_is_reported_in_source_order() {
         "and the body is the `;`"
     );
 }
+
+const LANGUAGE_EXTENSIONS_14C: &str =
+    "vendor/corpus/sysml/src/validation/14-Language Extensions/14c-Language Extensions.sysml";
+
+/// `14c-Language Extensions.sysml`, whose outer package holds three packages, two of them
+/// library packages:
+///
+/// ```text
+///   line   1:  package '14c-Language-Extensions' {
+///   line   4:      library package FMEALibrary {       ... closed on line 75
+///   line  77:      library package FMEAMetadata {      ... closed on line 139
+///   line 141:      package FMEAUserModel {             a Package, not a LibraryPackage
+/// ```
+///
+/// `LibraryPackage = ( isStandard ?= 'standard' ) 'library' ( ownedRelationship +=
+/// PrefixMetadataMember )* PackageDeclaration PackageBody` (`SysML` 8.2.2.5.1, `'standard'`
+/// optional by deviation `LibraryPackage`). Neither writes `standard` or prefix metadata,
+/// and each body is braced. The lines are where each body's `}` is written: an accessor
+/// that returned another package's body, or a nested one, closes on a different line.
+#[test]
+fn the_two_library_packages_of_14c_are_not_standard_and_close_their_own_bodies() {
+    let path = trees::workspace().join(LANGUAGE_EXTENSIONS_14C);
+    let source = std::fs::read_to_string(&path).expect("14c-Language Extensions.sysml is pinned");
+    let root = trees::tree(&source, sv2_syntax::Language::SysMl);
+    let libraries: Vec<sv2_ast::LibraryPackage> = root
+        .descendants()
+        .filter_map(sv2_ast::LibraryPackage::cast)
+        .collect();
+
+    assert_eq!(
+        libraries
+            .iter()
+            .map(|library| library.declaration().map(|d| d.text().to_string()))
+            .collect::<Vec<_>>(),
+        [
+            Some("package FMEALibrary".to_owned()),
+            Some("package FMEAMetadata".to_owned()),
+        ],
+        "lines 4 and 77, in source order; FMEAUserModel is not a library package"
+    );
+
+    let closing_lines: Vec<Option<usize>> = libraries
+        .iter()
+        .map(|library| {
+            library.body().and_then(|body| {
+                let end = usize::from(body.text_range().end());
+                let text = source.get(..end)?;
+                text.ends_with('}')
+                    .then(|| text.bytes().filter(|&b| b == b'\n').count() + 1)
+            })
+        })
+        .collect();
+    assert_eq!(
+        closing_lines,
+        [Some(75), Some(139)],
+        "each body is braced and closes on the line the file closes it"
+    );
+
+    assert_eq!(
+        libraries
+            .iter()
+            .map(|library| (library.is_standard(), library.prefix_metadata().count()))
+            .collect::<Vec<_>>(),
+        [(false, 0), (false, 0)],
+        "the file writes `library package`, with no `standard` and no `#`"
+    );
+}
+
+/// Written by hand: a library package holding a standard one, each with prefix metadata
+/// after `library`.
+///
+/// ```text
+/// library #Safety package Outer {
+///     standard library #Approved #Reviewed package Inner;
+/// }
+/// ```
+///
+/// `LibraryPackage = ( isStandard ?= 'standard' ) 'library' ( ownedRelationship +=
+/// PrefixMetadataMember )* PackageDeclaration PackageBody` (`SysML` 8.2.2.5.1, and `KerML`
+/// 8.2.5.13 identically). Hand-written because **no pinned file writes `standard` or prefix
+/// metadata on a library package** — none of the 10 in the repository's 610 trees has
+/// either — so the corpus cannot tell `is_standard()` or `prefix_metadata()` from an
+/// accessor that always answered "no". The nesting is the point: `Outer` is not standard
+/// and owns one member, while the package inside its body is standard and owns two, so an
+/// accessor that read past its own children answers `Outer` with `Inner`'s. Two members on
+/// `Inner`, so that order is observable: `ownedRelationship +=` is ordered, and source
+/// order is it.
+#[test]
+fn standard_and_prefix_metadata_are_each_library_packages_own() {
+    let parse = trees::parsed(
+        "library #Safety package Outer {\n\tstandard library #Approved #Reviewed package Inner;\n}",
+        sv2_syntax::Language::SysMl,
+    );
+    let libraries: Vec<sv2_ast::LibraryPackage> = parse
+        .syntax()
+        .descendants()
+        .filter_map(sv2_ast::LibraryPackage::cast)
+        .collect();
+
+    let slots: Vec<(bool, Vec<String>, Option<String>)> = libraries
+        .iter()
+        .map(|library| {
+            (
+                library.is_standard(),
+                library
+                    .prefix_metadata()
+                    .map(|member| member.text().to_string().trim().to_owned())
+                    .collect(),
+                library.declaration().map(|d| d.text().to_string()),
+            )
+        })
+        .collect();
+    assert_eq!(
+        slots,
+        [
+            (
+                false,
+                vec!["#Safety".to_owned()],
+                Some("package Outer".to_owned())
+            ),
+            (
+                true,
+                vec!["#Approved".to_owned(), "#Reviewed".to_owned()],
+                Some("package Inner".to_owned())
+            ),
+        ],
+        "each package's own `standard` and metadata, in the order written"
+    );
+    assert_eq!(
+        libraries
+            .iter()
+            .map(|library| library
+                .body()
+                .and_then(|body| body.first_token())
+                .map(|t| t.kind()))
+            .collect::<Vec<_>>(),
+        [Some(SyntaxKind::LBrace), Some(SyntaxKind::Semicolon)],
+        "Outer's body is braced, Inner's is the `;`"
+    );
+    assert!(
+        parse.errors().is_empty(),
+        "both are well-formed: {:?}",
+        parse.errors()
+    );
+}

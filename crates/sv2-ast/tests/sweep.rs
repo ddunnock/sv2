@@ -8,8 +8,8 @@
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, ElementFilterMember, Import, ImportDeclaration, MemberPrefix,
-    NamespaceFeatureMember, NonFeatureMember, Package, PackageMember, QualifiedName,
+    AliasMember, AstNode, ElementFilterMember, Import, ImportDeclaration, LibraryPackage,
+    MemberPrefix, NamespaceFeatureMember, NonFeatureMember, Package, PackageMember, QualifiedName,
     RelationshipBody, RootNamespace, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
@@ -1564,6 +1564,150 @@ fn assert_package_slots(node: &SyntaxNode, package: &Package) {
     );
 }
 
+fn assert_library_package_accessor(node: &SyntaxNode) {
+    let is_library_package = node.kind() == SyntaxKind::LibraryPackage;
+    let cast = LibraryPackage::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_library_package,
+        "LibraryPackage::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(library) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        library.syntax(),
+        node,
+        "LibraryPackage::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) the keywords, and (c) the slots, re-derived from the children.
+    assert_library_package_keywords(node, &library);
+    assert_library_package_slots(node, &library);
+
+    // (d) idempotent.
+    assert_eq!(
+        (
+            library.is_standard(),
+            library.prefix_metadata().collect::<Vec<_>>(),
+            library.declaration(),
+            library.body()
+        ),
+        (
+            library.is_standard(),
+            library.prefix_metadata().collect::<Vec<_>>(),
+            library.declaration(),
+            library.body()
+        ),
+        "a LibraryPackage accessor disagreed with itself between two calls"
+    );
+}
+
+/// The two keywords of a `LibraryPackage`: its own tokens are `standard`, if written, then
+/// `library`, and nothing else, all before its first child node. `library_package` is
+/// entered only once `at_library_package` has seen `library`, so the `library` is always
+/// there.
+fn assert_library_package_keywords(node: &SyntaxNode, library: &LibraryPackage) {
+    let mut keywords = Vec::new();
+    for element in node.children_with_tokens() {
+        match element {
+            SyntaxElement::Node(_) => break,
+            SyntaxElement::Token(token) if !token.text().trim().is_empty() => {
+                keywords.push(token.kind());
+            }
+            SyntaxElement::Token(_) => {}
+        }
+    }
+    let own = node
+        .children_with_tokens()
+        .filter_map(SyntaxElement::into_token)
+        .filter(|token| !token.text().trim().is_empty())
+        .count();
+    assert_eq!(
+        own,
+        keywords.len(),
+        "a terminal of this node's own after its first child, at {:?}",
+        node.text_range()
+    );
+    let expected: &[SyntaxKind] = if library.is_standard() {
+        &[SyntaxKind::KwStandard, SyntaxKind::KwLibrary]
+    } else {
+        &[SyntaxKind::KwLibrary]
+    };
+    assert_eq!(
+        keywords,
+        expected,
+        "is_standard() disagrees with the keywords written, at {:?}",
+        node.text_range()
+    );
+}
+
+/// The slots of a `LibraryPackage`, re-derived by walking its children directly. All three
+/// are raw: none of `PrefixMetadataMember`, `PackageDeclaration` and `PackageBody` has a
+/// view yet.
+fn assert_library_package_slots(node: &SyntaxNode, library: &LibraryPackage) {
+    let declarations = children_of_kind(node, SyntaxKind::PackageDeclaration);
+    let bodies = children_of_kind(node, SyntaxKind::PackageBody);
+    assert_eq!(
+        (declarations.len(), bodies.len()),
+        (1, 1),
+        "the declaration and the body are mandatory, so one of each, at {:?}",
+        node.text_range()
+    );
+
+    // (c) the differential, as the full ordered sequence of children. The metadata is
+    // every child before the declaration, so a child of any other kind there fails too.
+    let metadata = children_of_kind(node, SyntaxKind::PrefixMetadataMember);
+    let expected: Vec<SyntaxNode> = metadata
+        .iter()
+        .chain(&declarations)
+        .chain(&bodies)
+        .cloned()
+        .collect();
+    assert_eq!(
+        node.children().collect::<Vec<_>>(),
+        expected,
+        "the children are not metadata, then the declaration, then the body, at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        library
+            .prefix_metadata()
+            .chain(library.declaration())
+            .chain(library.body())
+            .collect::<Vec<_>>(),
+        expected,
+        "prefix_metadata(), declaration() and body() are not this node's children, \
+         in order, at {:?}",
+        node.text_range()
+    );
+
+    // Nothing before the declaration holds a declaration, and nothing before the body
+    // holds a body: a PrefixMetadataMember reaches a typing, a PackageDeclaration an
+    // identification, never a package. Asserted because it is what makes declaration()
+    // and body() reading descendants rather than children equivalent mutations: each
+    // slot comes after everything that precedes it in preorder only while those hold
+    // none of their own.
+    assert!(
+        metadata
+            .iter()
+            .all(|child| child.descendants().all(|d| !matches!(
+                d.kind(),
+                SyntaxKind::PackageDeclaration | SyntaxKind::PackageBody
+            )))
+            && declarations.iter().all(|child| child
+                .descendants()
+                .all(|d| d.kind() != SyntaxKind::PackageBody)),
+        "a package declaration or body nested before its own slot, at {:?}",
+        node.text_range()
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -1586,6 +1730,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_namespace_feature_member_accessor(&node);
             assert_non_feature_member_accessor(&node);
             assert_package_accessor(&node);
+            assert_library_package_accessor(&node);
             visited += 1;
         }
     }

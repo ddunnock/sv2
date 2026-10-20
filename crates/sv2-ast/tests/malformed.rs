@@ -5,8 +5,9 @@
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, NamespaceFeatureMember,
-    NonFeatureMember, Package, PackageMember, QualifiedName, RelationshipBody, RootNamespace,
+    AliasMember, AstNode, ElementFilterMember, Import, LibraryPackage, MemberPrefix,
+    NamespaceFeatureMember, NonFeatureMember, Package, PackageMember, QualifiedName,
+    RelationshipBody, RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -1390,7 +1391,7 @@ fn a_bare_hash_before_a_package_is_not_its_prefix_metadata() {
         .parent()
         .and_then(PackageMember::cast)
         .expect("Inner is owned through a PackageMember");
-    let error = the_reported_hash_beside(&parse, &member);
+    let error = the_reported_error_beside(&parse, &member, "#");
 
     // 3a. the member beside the damage still owns Inner.
     assert_eq!(
@@ -1412,11 +1413,12 @@ fn a_bare_hash_before_a_package_is_not_its_prefix_metadata() {
     );
 }
 
-/// The one `Error` in the `prefix-metadata-names-nothing` tree: the `#` alone, standing
+/// The one `Error` in `parse`'s tree: holding `text` and nothing else, standing
 /// immediately before `member` as its sibling, and spanned by the one diagnostic.
-fn the_reported_hash_beside(
+fn the_reported_error_beside(
     parse: &sv2_syntax::Parse,
     member: &PackageMember,
+    text: &str,
 ) -> Option<SyntaxNode> {
     let errors: Vec<SyntaxNode> = parse
         .syntax()
@@ -1428,14 +1430,14 @@ fn the_reported_hash_beside(
             .iter()
             .map(|error| error.text().to_string())
             .collect::<Vec<_>>(),
-        ["#"],
-        "one recovery node, holding the `#` alone"
+        [text],
+        "one recovery node, holding {text:?} alone"
     );
     let error = errors.first().cloned();
     assert_eq!(
         error.as_ref().and_then(SyntaxNode::next_sibling).as_ref(),
         Some(member.syntax()),
-        "the Error stands immediately before Inner's member, as its sibling"
+        "the Error stands immediately before the member, as its sibling"
     );
     assert_eq!(
         parse
@@ -1448,4 +1450,86 @@ fn the_reported_hash_beside(
         parse.errors()
     );
     error
+}
+
+const PREFIX_METADATA_BEFORE_LIBRARY: &str =
+    include_str!("malformed/library-package/prefix-metadata-before-library.sysml");
+
+/// `library-package/prefix-metadata-before-library.sysml`: `#Approved` written before
+/// `library` in `#Approved library package Inner;`, inside `package Outer`. The metadata is
+/// not the library package's.
+///
+/// `LibraryPackage = ( isStandard ?= 'standard' ) 'library' ( ownedRelationship +=
+/// PrefixMetadataMember )* PackageDeclaration PackageBody` (`SysML` 8.2.2.5.1, with
+/// `'standard'` optional by deviation `LibraryPackage`): the metadata's place is after
+/// `library`. `at_library_package` and `at_package`
+/// (`crates/sv2-syntax/src/parser/namespace.rs`) find no member at the `#`, and
+/// `recover_statement` (`crates/sv2-syntax/src/parser/recovery.rs`) takes `#Approved` into
+/// an `Error`, stopping at the member keyword `library`.
+///
+/// 1. the parse still yields a tree, with the library package in it;
+/// 2. `prefix_metadata()` reports none for `Inner`, which is not standard either, and
+///    something reported `#Approved`: one diagnostic, spanning exactly the `Error`, which
+///    is a sibling of `Inner`'s member;
+/// 3. the neighbours still answer: the `PackageMember` beside the `Error` still owns
+///    `Inner`, and the `Package` `Outer` holds the damage in the body it reports.
+#[test]
+fn metadata_written_before_library_is_not_the_library_packages() {
+    let parse = trees::parsed(PREFIX_METADATA_BEFORE_LIBRARY, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. one library package, Inner, inside the one package, Outer.
+    let libraries: Vec<LibraryPackage> = root
+        .descendants()
+        .filter_map(LibraryPackage::cast)
+        .collect();
+    assert_eq!(
+        libraries
+            .iter()
+            .map(|library| library.declaration().map(|d| d.text().to_string()))
+            .collect::<Vec<_>>(),
+        [Some("package Inner".to_owned())],
+        "the library package survives the misplaced metadata"
+    );
+    let inner = &libraries[0];
+
+    // 2a. Inner has no prefix metadata, and is not standard: neither was written in its
+    // production's places.
+    assert_eq!(
+        inner.prefix_metadata().count(),
+        0,
+        "metadata before `library` is not a PrefixMetadataMember of Inner"
+    );
+    assert!(!inner.is_standard(), "Inner writes no `standard`");
+
+    // 2b. `#Approved` is an Error beside Inner's member, and reported.
+    let member = inner
+        .syntax()
+        .parent()
+        .and_then(PackageMember::cast)
+        .expect("Inner is owned through a PackageMember");
+    let error = the_reported_error_beside(&parse, &member, "#Approved");
+
+    // 3a. the member beside the damage still owns Inner.
+    assert_eq!(
+        member.element().as_ref(),
+        Some(inner.syntax()),
+        "PackageMember::element is still the library package"
+    );
+
+    // 3b. and Outer's body is the one holding the damage.
+    let outer = root
+        .descendants()
+        .find_map(Package::cast)
+        .expect("Outer is a Package");
+    assert_eq!(
+        outer.declaration().map(|d| d.text().to_string()).as_deref(),
+        Some("package Outer"),
+        "Outer is still its own package"
+    );
+    assert_eq!(
+        error.and_then(|error| error.parent()),
+        outer.body(),
+        "the Error is inside Outer's body, which Outer still reports"
+    );
 }
