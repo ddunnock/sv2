@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-20T21:02:46Z",
+    "regenerated_utc": "2026-10-20T22:09:37Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 14,
-      "unimplemented": 449,
+      "implemented": 15,
+      "unimplemented": 448,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 3.0
+      "percent": 3.2
     },
     "tests": {
-      "unit": 791,
+      "unit": 794,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "6e5ae96 Merge ast-library-package: the accessor, and the slots the corpus never writes",
+      "9b67166 Add the LibraryPackage accessor, with the two slots the corpus never writes",
       "57b4b76 Merge ast-package: the accessor, and the metadata slot the corpus never writes",
       "9e0d79c Add the Package accessor, with the one slot the corpus never writes",
       "a70e302 Merge ast-non-feature-member: the accessor, and the prefix-order assertion",
       "4ff3555 Add the NonFeatureMember accessor, and assert the prefix comes first",
       "35620fa Close the session: six accessors, 5 to 11 of 463, and the rule the rounds taught",
-      "3bd4a6a Merge ast-namespace-feature-member: the accessor, and two stale comments corrected",
-      "2ee68bf Correct the second stale \"unimplemented\" comment, on at_kerml_succession",
-      "82c6bb6 Correct a stale count in namespace_feature_member's comment: ten, not five"
+      "3bd4a6a Merge ast-namespace-feature-member: the accessor, and two stale comments corrected"
     ]
   },
   "authored": {
