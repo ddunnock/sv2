@@ -10,7 +10,8 @@ mod trees;
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, ImportDeclaration, LibraryPackage,
     MemberPrefix, MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember,
-    Package, PackageMember, QualifiedName, RelationshipBody, RootNamespace, VisibilityIndicator,
+    OwnedAnnotation, Package, PackageMember, QualifiedName, RelationshipBody, RootNamespace,
+    VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -1944,6 +1945,81 @@ fn assert_namespace_import_suffix(node: &SyntaxNode, namespace: &NamespaceImport
     );
 }
 
+/// What `OwnedAnnotation` must satisfy at every node, whatever the tree. Its one child is
+/// the `AnnotatingElement`, an alternation that builds no node, so `element()` is raw and
+/// is the concrete element.
+fn assert_owned_annotation_accessor(node: &SyntaxNode) {
+    let is_annotation = node.kind() == SyntaxKind::OwnedAnnotation;
+    let cast = OwnedAnnotation::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_annotation,
+        "OwnedAnnotation::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(annotation) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        annotation.syntax(),
+        node,
+        "OwnedAnnotation::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) one child and no terminal of its own: `ownedRelatedElement += AnnotatingElement`
+    // states nothing else (`SysML` 8.2.2.4.1, `KerML` 8.2.3.3.1). And the differential,
+    // unfiltered on both sides: element() is that child, whatever its kind.
+    let kids: Vec<SyntaxNode> = node.children().collect();
+    assert_eq!(
+        kids.len(),
+        1,
+        "an owned annotation holds one element, at {:?}",
+        node.text_range()
+    );
+    assert!(
+        node.children_with_tokens()
+            .filter_map(SyntaxElement::into_token)
+            .all(|token| token.text().trim().is_empty()),
+        "a terminal of the annotation's own, at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        annotation.element(),
+        kids.first().cloned(),
+        "element() is not this node's one child, at {:?}",
+        node.text_range()
+    );
+
+    // (c) the element is one of the four alternatives. The fourth is a MetadataUsage in
+    // `SysML`, by deviation AnnotatingElement (follow_xtext), and the clause's own
+    // MetadataFeature in `KerML`. Never an Error: `owned_annotation` is reached only where
+    // `at_annotating_element` holds (`crates/sv2-syntax/src/parser/annotation.rs`).
+    assert!(
+        kids.iter().all(|kid| matches!(
+            kid.kind(),
+            SyntaxKind::Comment
+                | SyntaxKind::Documentation
+                | SyntaxKind::TextualRepresentation
+                | SyntaxKind::MetadataUsage
+                | SyntaxKind::MetadataFeature
+        )),
+        "an owned annotation's element is not an AnnotatingElement, at {:?}: {:?}",
+        node.text_range(),
+        kids.iter().map(SyntaxNode::kind).collect::<Vec<_>>()
+    );
+
+    // (d) idempotent.
+    assert_eq!(
+        annotation.element(),
+        annotation.element(),
+        "element() disagreed with itself between two calls on the same node"
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -1969,6 +2045,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_library_package_accessor(&node);
             assert_membership_import_accessor(&node);
             assert_namespace_import_accessor(&node);
+            assert_owned_annotation_accessor(&node);
             visited += 1;
         }
     }
