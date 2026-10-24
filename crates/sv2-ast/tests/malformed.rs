@@ -6,8 +6,8 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, LibraryPackage, MemberPrefix,
-    MembershipImport, NamespaceFeatureMember, NonFeatureMember, Package, PackageMember,
-    QualifiedName, RelationshipBody, RootNamespace,
+    MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember, Package,
+    PackageMember, QualifiedName, RelationshipBody, RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -1633,6 +1633,126 @@ fn assert_the_import_still_wraps(root: &SyntaxNode, membership: &MembershipImpor
             .as_ref(),
         Some(membership.syntax()),
         "the Import's declaration still wraps this membership import"
+    );
+    assert_eq!(
+        import
+            .visibility()
+            .and_then(|visibility| visibility.keyword())
+            .map(|keyword| keyword.kind()),
+        Some(SyntaxKind::KwPublic),
+        "the visibility is still `public`"
+    );
+    assert_eq!(
+        import
+            .body()
+            .map(|body| body.syntax().text().to_string())
+            .as_deref(),
+        Some(";"),
+        "and the body is still the `;`"
+    );
+}
+
+const RECURSIVE_SUFFIX_UNFINISHED: &str =
+    include_str!("malformed/namespace-import/recursive-suffix-unfinished.sysml");
+
+/// `namespace-import/recursive-suffix-unfinished.sysml`: `public import A::*::;`, the
+/// recursive suffix opened with its `::` and never given its `**`.
+///
+/// `NamespaceImport = importedNamespace = [QualifiedName] '::' '*' ( '::' isRecursive ?=
+/// '**' )?` (`KerML` 8.2.3.4.2, `SysML` 8.2.2.5.1). `recursive_suffix`
+/// (`crates/sv2-syntax/src/parser/import.rs`) takes the second `::` and `expect`s a `**`.
+/// It reports the `;` it finds instead and consumes nothing, so the node keeps the
+/// dangling `::` as its own token.
+///
+/// 1. the parse still yields a tree, holding one namespace import of the first
+///    alternative;
+/// 2. `is_recursive()` reports absence rather than guessing from the second `::`, and
+///    something reported it: one diagnostic, at the `;` where the `**` should be;
+/// 3. the neighbours still answer: `name()` is still `A`, and the `Import` still holds
+///    this declaration, its `public` and its `;` body.
+#[test]
+fn an_unfinished_recursive_suffix_is_reported_and_does_not_make_the_import_recursive() {
+    let parse = trees::parsed(RECURSIVE_SUFFIX_UNFINISHED, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. one namespace import, of the first alternative.
+    let namespaces: Vec<NamespaceImport> = root
+        .descendants()
+        .filter_map(NamespaceImport::cast)
+        .collect();
+    assert_eq!(namespaces.len(), 1, "the fixture writes one import");
+    let namespace = &namespaces[0];
+    assert!(
+        namespace.filter_package().is_none(),
+        "no `[` is written, so this is not the FilterPackage alternative"
+    );
+
+    // 2a. the second `::` is there, and the import is not recursive.
+    let separators = namespace
+        .syntax()
+        .children_with_tokens()
+        .filter_map(sv2_syntax::SyntaxElement::into_token)
+        .filter(|token| token.kind() == SyntaxKind::ColonColon)
+        .count();
+    assert_eq!(separators, 2, "`::*` and then the suffix's dangling `::`");
+    assert!(
+        !namespace.is_recursive(),
+        "no `**` is written, so isRecursive is not set, whatever `::` precedes it"
+    );
+
+    // 2b. and that was reported, at the `;` where the `**` should be.
+    let semicolon = root
+        .descendants_with_tokens()
+        .filter_map(sv2_syntax::SyntaxElement::into_token)
+        .find(|token| token.kind() == SyntaxKind::Semicolon)
+        .expect("the import's `;` body is written");
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [semicolon.text_range()],
+        "one diagnostic, at the `;` found where a `**` was expected: {:?}",
+        parse.errors()
+    );
+
+    // 3a. the name is untouched by the broken suffix.
+    assert_eq!(
+        namespace.name().map(|name| name
+            .segments()
+            .map(|t| t.text().to_owned())
+            .collect::<Vec<_>>()),
+        Some(vec!["A".to_owned()]),
+        "the namespace named is still `A`"
+    );
+
+    // 3b. and the Import above still answers.
+    assert_the_import_still_wraps_namespace(&root, namespace);
+}
+
+/// The one `Import` of the `recursive-suffix-unfinished` tree still wraps `namespace` in
+/// its declaration, and still reports its `public` and its `;` body.
+fn assert_the_import_still_wraps_namespace(root: &SyntaxNode, namespace: &NamespaceImport) {
+    let found = imports(root);
+    assert_eq!(
+        found
+            .iter()
+            .map(|import| import.syntax().text().to_string())
+            .collect::<Vec<_>>(),
+        ["public import A::*::;"],
+        "one import"
+    );
+    let Some(import) = found.first() else {
+        return;
+    };
+    assert_eq!(
+        import
+            .declaration()
+            .and_then(|declaration| declaration.imported())
+            .as_ref(),
+        Some(namespace.syntax()),
+        "the Import's declaration still wraps this namespace import"
     );
     assert_eq!(
         import
