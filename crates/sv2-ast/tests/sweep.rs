@@ -9,8 +9,8 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, ImportDeclaration, LibraryPackage,
-    MemberPrefix, MembershipImport, NamespaceFeatureMember, NonFeatureMember, Package,
-    PackageMember, QualifiedName, RelationshipBody, RootNamespace, VisibilityIndicator,
+    MemberPrefix, MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember,
+    Package, PackageMember, QualifiedName, RelationshipBody, RootNamespace, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -1817,6 +1817,133 @@ fn assert_membership_import_suffix(node: &SyntaxNode, membership: &MembershipImp
     );
 }
 
+/// What `NamespaceImport` must satisfy at every node, whatever the tree. Two alternatives
+/// (`KerML` 8.2.3.4.2): a name and its own `::*` suffix, or a `FilterPackage` and no
+/// token of its own. The name is typed (`QualifiedName`); the filter package is raw,
+/// having no view yet; the suffix is read as a bool.
+fn assert_namespace_import_accessor(node: &SyntaxNode) {
+    let is_namespace = node.kind() == SyntaxKind::NamespaceImport;
+    let cast = NamespaceImport::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_namespace,
+        "NamespaceImport::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(namespace) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        namespace.syntax(),
+        node,
+        "NamespaceImport::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) exactly one child, the name or the filter package, and the differential: each
+    // accessor returns that child when it is its kind and nothing otherwise, so exactly
+    // one of the two answers.
+    let kids: Vec<SyntaxNode> = node.children().collect();
+    let child_kinds: Vec<SyntaxKind> = kids.iter().map(SyntaxNode::kind).collect();
+    assert!(
+        child_kinds == [SyntaxKind::QualifiedName] || child_kinds == [SyntaxKind::FilterPackage],
+        "a namespace import holds one node, its name or its filter, at {:?}: {child_kinds:?}",
+        node.text_range()
+    );
+    let child_of = |kind: SyntaxKind| kids.first().filter(|kid| kid.kind() == kind).cloned();
+    assert_eq!(
+        (
+            namespace.name().map(|name| name.syntax().clone()),
+            namespace.filter_package()
+        ),
+        (
+            child_of(SyntaxKind::QualifiedName),
+            child_of(SyntaxKind::FilterPackage)
+        ),
+        "name() and filter_package() disagree with the one child, at {:?}",
+        node.text_range()
+    );
+
+    // (c) the suffix: this node's own tokens, and what they say about is_recursive().
+    assert_namespace_import_suffix(node, &namespace);
+
+    // (d) idempotent.
+    assert_eq!(
+        (
+            namespace.name().map(|name| name.syntax().clone()),
+            namespace.filter_package(),
+            namespace.is_recursive()
+        ),
+        (
+            namespace.name().map(|name| name.syntax().clone()),
+            namespace.filter_package(),
+            namespace.is_recursive()
+        ),
+        "a NamespaceImport accessor disagreed with itself between two calls"
+    );
+}
+
+/// The own tokens of a `NamespaceImport`. After a name, `::` `*` and then the recursive
+/// suffix whole, its `::` alone (reported by `recursive_suffix`), or nothing. Beside a
+/// filter package, none at all: the second alternative assigns no `isRecursive`, and
+/// the `**` a filtered import writes belongs to the import inside the filter.
+fn assert_namespace_import_suffix(node: &SyntaxNode, namespace: &NamespaceImport) {
+    let mut before = 0;
+    let mut own = Vec::new();
+    let mut seen_child = false;
+    for element in node.children_with_tokens() {
+        match element {
+            SyntaxElement::Node(_) => seen_child = true,
+            SyntaxElement::Token(token) if !token.text().trim().is_empty() => {
+                if seen_child {
+                    own.push(token.kind());
+                } else {
+                    before += 1;
+                }
+            }
+            SyntaxElement::Token(_) => {}
+        }
+    }
+    assert_eq!(
+        before,
+        0,
+        "a terminal of the import's own before its name, at {:?}",
+        node.text_range()
+    );
+    let expected: &[SyntaxKind] = if namespace.filter_package().is_some() {
+        &[]
+    } else if namespace.is_recursive() {
+        &[
+            SyntaxKind::ColonColon,
+            SyntaxKind::Star,
+            SyntaxKind::ColonColon,
+            SyntaxKind::StarStar,
+        ]
+    } else if own.len() > 2 {
+        &[
+            SyntaxKind::ColonColon,
+            SyntaxKind::Star,
+            SyntaxKind::ColonColon,
+        ]
+    } else {
+        &[SyntaxKind::ColonColon, SyntaxKind::Star]
+    };
+    assert_eq!(
+        own,
+        expected,
+        "is_recursive() disagrees with the suffix written, at {:?}",
+        node.text_range()
+    );
+    assert!(
+        !namespace.is_recursive() || namespace.filter_package().is_none(),
+        "a filtered namespace import reported a recursion of its own, at {:?}",
+        node.text_range()
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -1841,6 +1968,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_package_accessor(&node);
             assert_library_package_accessor(&node);
             assert_membership_import_accessor(&node);
+            assert_namespace_import_accessor(&node);
             visited += 1;
         }
     }

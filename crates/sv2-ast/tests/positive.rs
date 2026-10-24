@@ -1406,3 +1406,72 @@ fn stars_inside_a_quoted_name_are_not_the_recursive_suffix() {
         parse.errors()
     );
 }
+
+/// `11b-Safety and Security Feature Views.sysml` again, for its seven namespace imports:
+///
+/// ```text
+///   line  1:  private import Views::*;                      at the root
+///   line  3:  private import ScalarValues::*;
+///   line 13:  public import AnnotationDefinitions::*;
+///   line 34:  public import AnnotationDefinitions::*;
+///   line 48:  private import ViewDefinitions::*;
+///   line 56:  expose vehicle::*::**;                        recursive, in a NamespaceExpose
+///   line 61:  expose vehicle::**[@Safety and ...];          the FilterPackage alternative
+/// ```
+///
+/// ```text
+/// NamespaceImport = importedNamespace = [QualifiedName] '::' '*' ( '::' isRecursive ?= '**' )?
+///                 | importedNamespace = FilterPackage { ownedRelatedElement += importedNamespace }
+/// ```
+///
+/// (`KerML` 8.2.3.4.2, `SysML` 8.2.2.5.1; the expose is `NamespaceExpose = NamespaceImport`,
+/// 8.2.2.26.2). Line 61 is why the file was picked. Its second alternative names nothing
+/// and assigns no `isRecursive`, but the `MembershipImport` *inside* its filter names
+/// `vehicle` and writes `**`. So an accessor that reads this node's descendants rather
+/// than its own children reports a name and a recursion that belong to the import it
+/// filters.
+#[test]
+fn the_namespace_imports_of_11b_name_a_namespace_or_carry_a_filter_and_say_which_recurse() {
+    let root = tree_of(SAFETY_AND_SECURITY_11B);
+    let read: Vec<(Vec<String>, bool, bool, Option<SyntaxKind>)> = root
+        .descendants()
+        .filter_map(sv2_ast::NamespaceImport::cast)
+        .map(|namespace| {
+            (
+                namespace
+                    .name()
+                    .map(|name| name.segments().map(|t| t.text().to_owned()).collect())
+                    .unwrap_or_default(),
+                namespace.is_recursive(),
+                namespace.filter_package().is_some(),
+                namespace.syntax().parent().map(|parent| parent.kind()),
+            )
+        })
+        .collect();
+    let plain = |name: &str| {
+        (
+            vec![name.to_owned()],
+            false,
+            false,
+            Some(SyntaxKind::ImportDeclaration),
+        )
+    };
+    assert_eq!(
+        read,
+        [
+            plain("Views"),
+            plain("ScalarValues"),
+            plain("AnnotationDefinitions"),
+            plain("AnnotationDefinitions"),
+            plain("ViewDefinitions"),
+            (
+                vec!["vehicle".to_owned()],
+                true,
+                false,
+                Some(SyntaxKind::NamespaceExpose)
+            ),
+            (vec![], false, true, Some(SyntaxKind::NamespaceExpose)),
+        ],
+        "lines 1, 3, 13, 34, 48, 56 and 61, in source order"
+    );
+}

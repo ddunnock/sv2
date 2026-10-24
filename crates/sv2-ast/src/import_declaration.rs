@@ -55,10 +55,12 @@ impl ImportDeclaration {
     /// kinds of their own, so the delegation rule in `.claude/rules/ast.md` would ask for
     /// a typed view — but the child is one of **two** kinds, and `AstNode` declares one
     /// `KIND` per view, so no typed signature admits both. An enum over the two would be
-    /// a new abstraction the trait cannot express, invented before either kind has an
-    /// accessor. Instead the caller casts what this returns —
-    /// [`MembershipImport::cast`](crate::MembershipImport) for the first alternative — and
-    /// this signature does not change as the alternatives gain views.
+    /// a new abstraction the trait cannot express, and `.claude/rules/ast.md` rules it
+    /// out as invented before any alternative had an accessor. Instead the caller casts what this returns —
+    /// [`MembershipImport::cast`](crate::MembershipImport) for the first alternative,
+    /// [`NamespaceImport::cast`](crate::NamespaceImport) for the second — and this
+    /// signature does not change as the alternatives gain views. Both have one now, so
+    /// whether an enum earns its place can be asked of real views; it has not been.
     ///
     /// So the returned node's `kind()` **is** the discriminator, and it is the honest one:
     /// what makes an import a `NamespaceImport` is the `::*`, not the presence of stars.
