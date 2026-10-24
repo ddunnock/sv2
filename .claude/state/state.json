@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-24T21:53:32Z",
+    "regenerated_utc": "2026-10-24T22:08:07Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 16,
-      "unimplemented": 447,
+      "implemented": 17,
+      "unimplemented": 446,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 3.5
+      "percent": 3.7
     },
     "tests": {
-      "unit": 796,
+      "unit": 799,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "f6ebdf3 Merge ast-namespace-import: the accessor, and the filter that hides an inner recursion",
+      "149984b Add the NamespaceImport accessor, with the filter that hides an inner recursion",
       "42fc635 Merge ast-membership-import: the accessor, and stars that are not the suffix",
       "4b4b210 Add the MembershipImport accessor, and upgrade the two tests that reached into it",
       "6e5ae96 Merge ast-library-package: the accessor, and the slots the corpus never writes",
       "9b67166 Add the LibraryPackage accessor, with the two slots the corpus never writes",
       "57b4b76 Merge ast-package: the accessor, and the metadata slot the corpus never writes",
-      "9e0d79c Add the Package accessor, with the one slot the corpus never writes",
-      "a70e302 Merge ast-non-feature-member: the accessor, and the prefix-order assertion",
-      "4ff3555 Add the NonFeatureMember accessor, and assert the prefix comes first"
+      "9e0d79c Add the Package accessor, with the one slot the corpus never writes"
     ]
   },
   "authored": {

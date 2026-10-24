@@ -2,13 +2,13 @@
   "_generated_by": "scripts/ast_coverage.py",
   "_note": "Typed accessors over CST node kinds (ADR-0025). `unimplemented` is a tracked state, not a failure. `absent` is a defect: a marker claiming a kind that does not exist. `unproved` is a defect: an implemented kind with no malformed case under crates/sv2-ast/tests/malformed/<kind-in-kebab>/. `unswept` is a defect: an implemented kind whose assert_<kind>_accessor the sweep does not define and call, so no tree reaches it. `stray` is a defect: a case naming no kind. The order is the worklist order, never a verdict.",
   "declared": 463,
-  "implemented": 16,
-  "unimplemented": 447,
+  "implemented": 17,
+  "unimplemented": 446,
   "absent": 0,
   "unproved": 0,
   "unswept": 0,
   "stray": 0,
-  "percent": 3.5,
+  "percent": 3.7,
   "implemented_kinds": [
     "RootNamespace",
     "Import",
@@ -25,10 +25,10 @@
     "Package",
     "LibraryPackage",
     "MembershipImport",
-    "NamespaceImport"
+    "NamespaceImport",
+    "OwnedAnnotation"
   ],
   "unimplemented_kinds": [
-    "OwnedAnnotation",
     "PartDefinition",
     "AttributeDefinition",
     "OccurrenceDefinition",

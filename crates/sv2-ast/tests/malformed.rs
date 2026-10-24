@@ -6,8 +6,8 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, LibraryPackage, MemberPrefix,
-    MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember, Package,
-    PackageMember, QualifiedName, RelationshipBody, RootNamespace,
+    MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember, OwnedAnnotation,
+    Package, PackageMember, QualifiedName, RelationshipBody, RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -1769,5 +1769,109 @@ fn assert_the_import_still_wraps_namespace(root: &SyntaxNode, namespace: &Namesp
             .as_deref(),
         Some(";"),
         "and the body is still the `;`"
+    );
+}
+
+const DOCUMENTATION_BODY_MISSING: &str =
+    include_str!("malformed/owned-annotation/documentation-body-missing.sysml");
+
+/// `owned-annotation/documentation-body-missing.sysml`: `alias A for B { doc }`, an
+/// annotation begun inside a relationship body and its element cut short.
+///
+/// `OwnedAnnotation : Annotation = ownedRelatedElement += AnnotatingElement` (`SysML`
+/// 8.2.2.4.1), and a `Documentation` ends in a `REGULAR_COMMENT` body (8.2.2.4.2).
+/// `documentation` (`crates/sv2-syntax/src/parser/annotation.rs`) `expect`s the body,
+/// reports the `}` it finds instead and consumes nothing, so `owned_annotation` closes
+/// around a `Documentation` with no body and `owned_annotations` takes the `}`.
+///
+/// 1. the parse still yields a tree, holding one owned annotation;
+/// 2. `element()` reports what was written, the `Documentation`, rather than hiding a
+///    damaged element as absent; the damage is the element's own body, and something
+///    reported it: one diagnostic, at the `}` where the body should be;
+/// 3. the neighbours still answer: the body's `elements()` is this annotation and its
+///    terminator the `}`, and the alias still names `A` and targets `B`.
+#[test]
+fn an_annotation_whose_documentation_has_no_body_still_owns_the_documentation() {
+    let parse = trees::parsed(DOCUMENTATION_BODY_MISSING, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. one owned annotation.
+    let annotations: Vec<OwnedAnnotation> = root
+        .descendants()
+        .filter_map(OwnedAnnotation::cast)
+        .collect();
+    assert_eq!(annotations.len(), 1, "the fixture writes one annotation");
+    let annotation = &annotations[0];
+
+    // 2a. the element is the Documentation written, with its body missing.
+    let element = annotation
+        .element()
+        .expect("owned_annotation is reached only where an annotating element starts");
+    assert_eq!(
+        element.kind(),
+        SyntaxKind::Documentation,
+        "`doc` was written"
+    );
+    assert!(
+        element
+            .children_with_tokens()
+            .all(|child| child.kind() != SyntaxKind::RegularComment),
+        "and no `/* ... */` body follows it"
+    );
+
+    // 2b. and that was reported, at the `}` where the body should be.
+    let close = root
+        .descendants()
+        .find_map(RelationshipBody::cast)
+        .and_then(|body| body.terminator())
+        .expect("the alias body's `}` is written");
+    assert_eq!(
+        close.kind(),
+        SyntaxKind::RBrace,
+        "the body closes with `}}`"
+    );
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [close.text_range()],
+        "one diagnostic, at the `}}` found where a body was expected: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbours still answer.
+    assert_the_alias_still_owns(&root, annotation);
+}
+
+/// The one `AliasMember` of the `documentation-body-missing` tree still names `A`,
+/// targets `B`, and owns `annotation` as its body's only element.
+fn assert_the_alias_still_owns(root: &SyntaxNode, annotation: &OwnedAnnotation) {
+    let aliases: Vec<AliasMember> = root.descendants().filter_map(AliasMember::cast).collect();
+    assert_eq!(aliases.len(), 1, "one alias");
+    let Some(alias) = aliases.first() else {
+        return;
+    };
+    assert_eq!(
+        alias.name().map(|token| token.text().to_owned()).as_deref(),
+        Some("A"),
+        "the alias still names `A`"
+    );
+    assert_eq!(
+        alias
+            .target()
+            .map(|target| target.syntax().text().to_string())
+            .as_deref(),
+        Some("B"),
+        "and still targets `B`"
+    );
+    assert_eq!(
+        alias
+            .body()
+            .map(|body| body.elements().collect::<Vec<_>>())
+            .unwrap_or_default(),
+        [annotation.syntax().clone()],
+        "and its body's only element is this annotation"
     );
 }

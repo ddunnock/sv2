@@ -1475,3 +1475,139 @@ fn the_namespace_imports_of_11b_name_a_namespace_or_carry_a_filter_and_say_which
         "lines 1, 3, 13, 34, 48, 56 and 61, in source order"
     );
 }
+
+const COMMENT_EXAMPLE: &str = "vendor/corpus/sysml/src/training/01. Packages/\
+                               Comment Example.sysml";
+const DOCUMENTATION_EXAMPLE: &str = "vendor/corpus/sysml/src/training/01. Packages/\
+                                     Documentation Example.sysml";
+
+/// `Comment Example.sysml` and `Documentation Example.sysml`, the two training siblings,
+/// each owning exactly one annotation through a relationship and several more as members.
+///
+/// ```text
+///   Comment Example        lines 2, 5, 7:   comments owned as members of the package
+///                          lines 14-19:     alias Car for Automobile { /* ... */ }
+///   Documentation Example  lines 2, 7:      documentation owned by its namespace
+///                          lines 10-12:     alias Car for Automobile { doc /* ... */ }
+/// ```
+///
+/// `OwnedAnnotation : Annotation = ownedRelatedElement += AnnotatingElement` and
+/// `AnnotatingElement = Comment | Documentation | TextualRepresentation | MetadataFeature`
+/// (`SysML` 8.2.2.4.1, `KerML` 8.2.3.3.1), reached from a braced `RelationshipBody`
+/// (`SysML` 8.2.2.2). Only the alias bodies are relationship bodies. Everything else in
+/// either file is a member, and is not an `OwnedAnnotation`.
+///
+/// Read together because no pinned file writes both alternatives. Comment Example alone
+/// cannot fail an `element()` that looked only for a `Comment`, nor Documentation Example
+/// one that looked only for a `Documentation`. Read together they fail both.
+#[test]
+fn the_alias_bodies_of_the_two_training_examples_each_own_one_annotation() {
+    for (file, kind, written, annotating) in [
+        (
+            COMMENT_EXAMPLE,
+            SyntaxKind::Comment,
+            "/*\n\t\t * This is a comment annotating its owning\n\t\t * element.\n\t\t */",
+            4,
+        ),
+        (
+            DOCUMENTATION_EXAMPLE,
+            SyntaxKind::Documentation,
+            "doc /* This is documentation of the alias. */",
+            3,
+        ),
+    ] {
+        let root = tree_of(file);
+        assert_eq!(
+            root.descendants()
+                .filter(|node| node.kind() == kind)
+                .count(),
+            annotating,
+            "{file}: every {kind:?} the file writes, annotation or member"
+        );
+        let annotations: Vec<sv2_ast::OwnedAnnotation> = root
+            .descendants()
+            .filter_map(sv2_ast::OwnedAnnotation::cast)
+            .collect();
+        let read: Vec<(Option<SyntaxKind>, Option<String>)> = annotations
+            .iter()
+            .map(|annotation| {
+                let element = annotation.element();
+                (
+                    element.as_ref().map(SyntaxNode::kind),
+                    element.map(|node| node.text().to_string()),
+                )
+            })
+            .collect();
+        assert_eq!(
+            read,
+            [(Some(kind), Some(written.to_owned()))],
+            "{file}: the alias body owns one annotation, and it is the one written there"
+        );
+        let alias = annotations[0]
+            .syntax()
+            .ancestors()
+            .find_map(AliasMember::cast)
+            .expect("the annotation is inside `alias Car`'s body");
+        assert_eq!(
+            alias.name().map(|token| token.text().to_owned()).as_deref(),
+            Some("Car"),
+            "{file}: the alias that owns it"
+        );
+    }
+}
+
+/// Written by hand: an alias body owning each annotating element the corpus never owns
+/// through a relationship, in both languages.
+///
+/// ```text
+/// alias A for B { @M; }                            SysML: a MetadataUsage
+/// alias A for B { language "ocl" /* x > 0 */ }     SysML: a TextualRepresentation
+/// alias A for B { @M; }                            KerML: a MetadataFeature
+/// ```
+///
+/// `AnnotatingElement = Comment | Documentation | TextualRepresentation |
+/// MetadataFeature` (`SysML` 8.2.2.4.1, `KerML` 8.2.3.3.1). `SysML`'s fourth alternative
+/// is a `MetadataUsage` by deviation `AnnotatingElement` (`follow_xtext`), and `KerML`'s is
+/// the clause's own `MetadataFeature`. `TextualRepresentation = ( 'rep' Identification
+/// )? 'language' language = STRING_VALUE body = REGULAR_COMMENT` (`SysML` 8.2.2.4.3).
+/// Hand-written because every one of the corpus's 8 owned annotations is a `Comment` or
+/// a `Documentation`. An `element()` that skipped the metadata alternative survived the
+/// whole 610-tree sweep.
+#[test]
+fn an_owned_annotation_owns_every_alternative_of_annotating_element() {
+    for (source, language, kind) in [
+        (
+            "package P {\n\talias A for B { @M; }\n}",
+            sv2_syntax::Language::SysMl,
+            SyntaxKind::MetadataUsage,
+        ),
+        (
+            "package P {\n\talias A for B { language \"ocl\" /* x > 0 */ }\n}",
+            sv2_syntax::Language::SysMl,
+            SyntaxKind::TextualRepresentation,
+        ),
+        (
+            "package P {\n\talias A for B { @M; }\n}",
+            sv2_syntax::Language::KerMl,
+            SyntaxKind::MetadataFeature,
+        ),
+    ] {
+        let parse = trees::parsed(source, language);
+        let read: Vec<Option<SyntaxKind>> = parse
+            .syntax()
+            .descendants()
+            .filter_map(sv2_ast::OwnedAnnotation::cast)
+            .map(|annotation| annotation.element().map(|element| element.kind()))
+            .collect();
+        assert_eq!(
+            read,
+            [Some(kind)],
+            "{language:?} {source:?}: one annotation, owning the alternative written"
+        );
+        assert!(
+            parse.errors().is_empty(),
+            "{language:?} {source:?} is well-formed: {:?}",
+            parse.errors()
+        );
+    }
+}
