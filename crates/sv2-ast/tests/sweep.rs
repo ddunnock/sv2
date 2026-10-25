@@ -8,10 +8,10 @@
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, ElementFilterMember, Import, ImportDeclaration, LibraryPackage,
-    MemberPrefix, MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember,
-    OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember, QualifiedName,
-    RelationshipBody, RootNamespace, VisibilityIndicator,
+    AliasMember, AstNode, DefinitionPrefix, ElementFilterMember, Import, ImportDeclaration,
+    LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember, NamespaceImport,
+    NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember,
+    QualifiedName, RelationshipBody, RootNamespace, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -2163,6 +2163,89 @@ fn assert_occurrence_definition_prefix_order(node: &SyntaxNode) {
     );
 }
 
+/// What `DefinitionPrefix` must satisfy at every node, whatever the tree. Both slots are
+/// raw (`BasicDefinitionPrefix` and `DefinitionExtensionKeyword` have no views yet).
+fn assert_definition_prefix_accessor(node: &SyntaxNode) {
+    let is_prefix = node.kind() == SyntaxKind::DefinitionPrefix;
+    let cast = DefinitionPrefix::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_prefix,
+        "DefinitionPrefix::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(prefix) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        prefix.syntax(),
+        node,
+        "DefinitionPrefix::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) the shape.
+    assert_definition_prefix_shape(node);
+
+    // (c) the differential, unfiltered, and zero width exactly when both slots are empty.
+    assert_eq!(
+        (
+            prefix.basic_prefix(),
+            prefix.extension_keywords().collect::<Vec<_>>()
+        ),
+        (
+            children_of_kind(node, SyntaxKind::BasicDefinitionPrefix)
+                .first()
+                .cloned(),
+            children_of_kind(node, SyntaxKind::DefinitionExtensionKeyword),
+        ),
+        "a slot accessor disagrees with the node's children, at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        node.text_range().is_empty(),
+        prefix.basic_prefix().is_none() && prefix.extension_keywords().next().is_none(),
+        "a definition prefix is zero width exactly when both slots are empty, at {:?}",
+        node.text_range()
+    );
+}
+
+/// The shape of a `DefinitionPrefix`, whatever its accessors say.
+fn assert_definition_prefix_shape(node: &SyntaxNode) {
+    // (b) `BasicDefinitionPrefix? DefinitionExtensionKeyword*` (`SysML` 8.2.2.6.1): the
+    // basic prefix first if at all, then only keywords, and no token of the node's own.
+    // Nothing beneath a slot is a slot, which makes reading descendants equivalent.
+    let kinds: Vec<SyntaxKind> = node.children().map(|child| child.kind()).collect();
+    let keywords_from = usize::from(kinds.first() == Some(&SyntaxKind::BasicDefinitionPrefix));
+    assert!(
+        kinds
+            .iter()
+            .skip(keywords_from)
+            .all(|kind| *kind == SyntaxKind::DefinitionExtensionKeyword),
+        "a definition prefix's slots out of order, at {:?}: {kinds:?}",
+        node.text_range()
+    );
+    assert!(
+        node.children_with_tokens()
+            .filter_map(SyntaxElement::into_token)
+            .all(|token| token.text().trim().is_empty()),
+        "a terminal of the definition prefix's own, at {:?}",
+        node.text_range()
+    );
+    assert!(
+        node.children()
+            .all(|slot| slot.descendants().skip(1).all(|below| !matches!(
+                below.kind(),
+                SyntaxKind::BasicDefinitionPrefix | SyntaxKind::DefinitionExtensionKeyword
+            ))),
+        "a definition prefix slot nested inside another slot, at {:?}",
+        node.text_range()
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -2190,6 +2273,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_namespace_import_accessor(&node);
             assert_owned_annotation_accessor(&node);
             assert_occurrence_definition_prefix_accessor(&node);
+            assert_definition_prefix_accessor(&node);
             visited += 1;
         }
     }

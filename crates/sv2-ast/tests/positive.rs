@@ -1783,3 +1783,103 @@ fn a_prefix_writes_its_slots_together_and_its_keywords_in_order() {
         parse.errors()
     );
 }
+
+const VARIATION_DEFINITIONS: &str = "vendor/corpus/sysml/src/training/36. Variability/\
+                                     Variation Definitions.sysml";
+const AHF_CORE_LIB: &str =
+    "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFCoreLib.sysml";
+
+/// What one `DefinitionPrefix` says: its basic prefix's text and its extension keywords.
+fn definition_prefixes_of(relative: &str) -> Vec<(Option<String>, Vec<String>)> {
+    tree_of(relative)
+        .descendants()
+        .filter_map(sv2_ast::DefinitionPrefix::cast)
+        .map(|prefix| {
+            (
+                prefix.basic_prefix().map(|basic| basic.text().to_string()),
+                prefix
+                    .extension_keywords()
+                    .map(|keyword| keyword.text().to_string())
+                    .collect(),
+            )
+        })
+        .collect()
+}
+
+/// `Variation Definitions.sysml` and `AHFCoreLib.sysml`, two of the four corpus files that
+/// write a `DefinitionPrefix` with something in it (the others are
+/// `VehicleVariabilityModel.sysml` and `AHFNorwayTopics.sysml`, one prefix each):
+///
+/// ```text
+///   Variation Definitions  line  5:  attribute def Diameter            plain
+///                          line 25:  variation attribute def ...       variation
+///                          line 30:  variation part def EngineChoices  NOT a DefinitionPrefix
+///   AHFCoreLib             lines 7, 12, 15, 19:  #service port def ...
+/// ```
+///
+/// `DefinitionPrefix : Definition = BasicDefinitionPrefix? DefinitionExtensionKeyword*`
+/// (`SysML` 8.2.2.6.1), the prefix of `AttributeDefinition` (8.2.2.7) and `PortDefinition`
+/// (8.2.2.12), the definitions that are not occurrences. Line 30 is why the first file
+/// was picked. A `part def` is an occurrence definition and opens with an
+/// `OccurrenceDefinitionPrefix` (8.2.2.11), so the file writes two `variation`s and only
+/// one of them is a `DefinitionPrefix`'s.
+#[test]
+fn two_corpus_files_write_variation_once_and_service_four_times_in_definition_prefixes() {
+    assert_eq!(
+        definition_prefixes_of(VARIATION_DEFINITIONS),
+        [(None, vec![]), (Some("variation".to_owned()), vec![])],
+        "lines 5 and 25; line 30's `variation` is an occurrence definition's"
+    );
+    let service = (None, vec!["#service".to_owned()]);
+    assert_eq!(
+        definition_prefixes_of(AHF_CORE_LIB),
+        [service.clone(), service.clone(), service.clone(), service],
+        "lines 7, 12, 15 and 19"
+    );
+}
+
+/// Written by hand: a `DefinitionPrefix` writing both slots and two user-defined keywords.
+///
+/// ```text
+/// abstract #A #B attribute def X;
+/// ```
+///
+/// `DefinitionPrefix = BasicDefinitionPrefix? DefinitionExtensionKeyword*` (`SysML`
+/// 8.2.2.6.1), and "It is also possible to include more than one user defined-keyword in
+/// a declaration" (7.27.4, receipt 0f2c5bd1). Hand-written because no corpus
+/// `DefinitionPrefix` writes two slots or two keywords: of 291, the 7 that write anything
+/// write exactly one.
+#[test]
+fn a_definition_prefix_writes_both_slots_and_its_keywords_in_order() {
+    let parse = trees::parsed(
+        "package P {\n\tabstract #A #B attribute def X;\n}",
+        sv2_syntax::Language::SysMl,
+    );
+    let read: Vec<(Option<String>, Vec<String>)> = parse
+        .syntax()
+        .descendants()
+        .filter_map(sv2_ast::DefinitionPrefix::cast)
+        .map(|prefix| {
+            (
+                prefix.basic_prefix().map(|basic| basic.text().to_string()),
+                prefix
+                    .extension_keywords()
+                    .map(|keyword| keyword.text().to_string())
+                    .collect(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        read,
+        [(
+            Some("abstract".to_owned()),
+            vec!["#A".to_owned(), "#B".to_owned()]
+        )],
+        "both slots, and both keywords in source order"
+    );
+    assert!(
+        parse.errors().is_empty(),
+        "well-formed: {:?}",
+        parse.errors()
+    );
+}

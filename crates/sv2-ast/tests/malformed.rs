@@ -5,8 +5,8 @@
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, ElementFilterMember, Import, LibraryPackage, MemberPrefix,
-    MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember,
+    AliasMember, AstNode, DefinitionPrefix, ElementFilterMember, Import, LibraryPackage,
+    MemberPrefix, MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember,
     OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember, QualifiedName,
     RelationshipBody, RootNamespace,
 };
@@ -1983,6 +1983,110 @@ fn assert_the_body_holds_the_error_then_the_member(
         element.as_ref().map(SyntaxNode::kind),
         Some(SyntaxKind::PartDefinition),
         "the member still owns the PartDefinition"
+    );
+    assert_eq!(
+        prefix.syntax().parent(),
+        element,
+        "and the prefix is that definition's"
+    );
+}
+
+const INDIVIDUAL_HAS_NO_SLOT: &str =
+    include_str!("malformed/definition-prefix/individual-has-no-slot.sysml");
+
+/// `definition-prefix/individual-has-no-slot.sysml`: `individual attribute def A;`, a word
+/// written for a slot the prefix does not have.
+///
+/// `DefinitionPrefix = BasicDefinitionPrefix? DefinitionExtensionKeyword*` (`SysML`
+/// 8.2.2.6.1) has no `individual`, which only an `OccurrenceDefinitionPrefix` takes
+/// (8.2.2.9.1). No member starts at `individual attribute`, so `body_element`
+/// (`crates/sv2-syntax/src/parser/namespace.rs`) falls through to `recover_statement`
+/// (`crates/sv2-syntax/src/parser/recovery.rs`), which takes `individual` into an `Error`
+/// and stops at `attribute`, a keyword that begins a member.
+///
+/// 1. the parse still yields a tree, holding one prefix;
+/// 2. the prefix reports absence in both slots, at zero width, and something reported
+///    the word: one diagnostic, on the `individual`;
+/// 3. the neighbours still answer: the package body holds the `Error` and then one member
+///    owning the `AttributeDefinition`, whose prefix this is.
+#[test]
+fn an_individual_has_no_slot_in_a_definition_prefix() {
+    let parse = trees::parsed(INDIVIDUAL_HAS_NO_SLOT, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. one prefix.
+    let prefixes: Vec<DefinitionPrefix> = root
+        .descendants()
+        .filter_map(DefinitionPrefix::cast)
+        .collect();
+    assert_eq!(prefixes.len(), 1, "the fixture writes one definition");
+    let prefix = &prefixes[0];
+
+    // 2a. absent in both slots, and zero width.
+    assert!(
+        prefix.basic_prefix().is_none(),
+        "no `abstract` or `variation` is written"
+    );
+    assert_eq!(prefix.extension_keywords().count(), 0, "no `#X` is written");
+    assert!(
+        prefix.syntax().text_range().is_empty(),
+        "and the prefix spans nothing: the `individual` is not inside it"
+    );
+
+    // 2b. and the word was reported.
+    let error = root
+        .descendants()
+        .find(|node| node.kind() == SyntaxKind::Error)
+        .expect("recover_statement wraps what it takes in an Error");
+    assert_eq!(
+        error.text().to_string(),
+        "individual",
+        "the Error holds the one word"
+    );
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [error.text_range()],
+        "one diagnostic, on the `individual`: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbours still answer.
+    assert_the_body_holds_the_error_then_the_attribute(&root, prefix);
+}
+
+/// The one `Package` of the `individual-has-no-slot` tree holds the `Error` and then one
+/// `PackageMember`, whose element is the `AttributeDefinition` that owns `prefix`.
+fn assert_the_body_holds_the_error_then_the_attribute(
+    root: &SyntaxNode,
+    prefix: &DefinitionPrefix,
+) {
+    let body = root
+        .descendants()
+        .find_map(Package::cast)
+        .and_then(|package| package.body());
+    assert!(body.is_some(), "package P has a body");
+    let Some(body) = body else {
+        return;
+    };
+    assert_eq!(
+        body.children()
+            .map(|child| child.kind())
+            .collect::<Vec<_>>(),
+        [SyntaxKind::Error, SyntaxKind::PackageMember],
+        "the Error beside the member, not inside it"
+    );
+    let element = body
+        .children()
+        .find_map(PackageMember::cast)
+        .and_then(|member| member.element());
+    assert_eq!(
+        element.as_ref().map(SyntaxNode::kind),
+        Some(SyntaxKind::AttributeDefinition),
+        "the member still owns the AttributeDefinition"
     );
     assert_eq!(
         prefix.syntax().parent(),
