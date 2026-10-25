@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-25T16:37:34Z",
+    "regenerated_utc": "2026-10-25T17:06:46Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "131dcdd Correct next_step: seven siblings, and which one takes the other prefix",
+      "1c79d3d Merge close-session-2026-10-25b: the state file current at 20 of 463",
+      "dd2d080 Close the session: three shared definition children, 17 to 20 of 463",
       "df9ff41 Merge ast-definition: the last shared child, pinned on nested definitions",
       "604c298 Add the Definition accessor, the last shared child, pinned on nested definitions",
       "19086f5 Merge ast-definition-prefix: the sibling prefix, and a word it has no slot for",
       "31ee83e Add the DefinitionPrefix accessor, the sibling prefix, and a word it has no slot for",
-      "525232c Merge ast-occurrence-definition-prefix: the shared prefix first, and the slots the corpus never combines",
-      "2bd2d39 Add the OccurrenceDefinitionPrefix accessor, ahead of the worklist, and the slots the corpus never combines",
-      "82f1634 Merge ast-alternative-views: the enum question deferred once, for the crate",
-      "17d57a2 Close the session: two accessors, 15 to 17 of 463, and the enum question deferred once"
+      "525232c Merge ast-occurrence-definition-prefix: the shared prefix first, and the slots the corpus never combines"
     ]
   },
   "authored": {
@@ -362,7 +362,7 @@
       },
       {
         "id": "ast-equivalence-by-assertion",
-        "question": "PROPOSED, not adopted -- the author's to accept or reject. Three rounds running (OccurrenceDefinitionPrefix, DefinitionPrefix, Definition) a surviving mutation, 'read descendants instead of children', was equivalent BY GRAMMAR ALONE: nothing beneath the slot could be another slot. Each time the fix was a new tests/sweep.rs assertion stating that grammar fact over all 610 trees, so the equivalence became proved rather than assumed and a future grammar change that breaks it fails a test instead of silently changing an accessor's answer (MembershipImport's 'no `**` inside the name' was the first instance). Proposal: write this into .claude/rules/ast.md and the add-accessor skill's 'A missed mutation is a result' section as a standing third outcome -- equivalent by grammar is not equivalent until an assertion says so. Not done unasked because it changes the skill's definition of a finished round.",
+        "question": "RESOLVED on 2026-10-25 by the author, on the recommendation below: ADOPTED, with three limits. The add-accessor skill ('A missed mutation is a result') and .claude/rules/ast.md now say that 'the grammar does not allow that shape' is not yet equivalence: add the one grammar fact the survivor rests on to the sweep. The limits: assert only that fact, never grammar facts in general; cite its clause and name the mutation it covers beside it; and scan only the slot it concerns, never a body, because a per-node scan over a whole subtree goes quadratic on nested files. It is procedural, not gated. The original proposal: Three rounds running (OccurrenceDefinitionPrefix, DefinitionPrefix, Definition) a surviving mutation, 'read descendants instead of children', was equivalent BY GRAMMAR ALONE: nothing beneath the slot could be another slot. Each time the fix was a new tests/sweep.rs assertion stating that grammar fact over all 610 trees, so the equivalence became proved rather than assumed and a future grammar change that breaks it fails a test instead of silently changing an accessor's answer (MembershipImport's 'no `**` inside the name' was the first instance). Proposal: write this into .claude/rules/ast.md and the add-accessor skill's 'A missed mutation is a result' section as a standing third outcome -- equivalent by grammar is not equivalent until an assertion says so. Not done unasked because it changes the skill's definition of a finished round.",
         "blocks": []
       }
     ],

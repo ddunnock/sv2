@@ -185,6 +185,14 @@ relaxing equality to containment to make a filtering accessor pass.
 Then mutate the accessor and watch the sweep go red before you trust it. An assertion
 nobody has seen fail is a guess.
 
+A surviving mutation that is equivalent **only because the grammar forbids a shape** is
+not equivalent yet. Add the one grammar fact it rests on to the sweep, with its clause
+and the mutation it covers named beside it, and scan only the slot it concerns. Then the
+equivalence is proved over every tree rather than assumed (decision
+`ast-equivalence-by-assertion`; the add-accessor skill has the three rules). It is a
+procedural step, like the property-test leg: the gate cannot tell a needed assertion from
+a missing one, so review does.
+
 ## What this crate does not do
 
 It raises `ID-MALFORMED` and `ID-ORPHAN`, because attaching an `@id` note to its
