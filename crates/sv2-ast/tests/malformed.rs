@@ -5,10 +5,10 @@
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, DefinitionPrefix, ElementFilterMember, Import, LibraryPackage,
-    MemberPrefix, MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember,
-    OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember, QualifiedName,
-    RelationshipBody, RootNamespace,
+    AliasMember, AstNode, Definition, DefinitionPrefix, ElementFilterMember, Import,
+    LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember, NamespaceImport,
+    NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember,
+    QualifiedName, RelationshipBody, RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -2092,5 +2092,81 @@ fn assert_the_body_holds_the_error_then_the_attribute(
         prefix.syntax().parent(),
         element,
         "and the prefix is that definition's"
+    );
+}
+
+const BODY_MISSING_BEFORE_NEXT_MEMBER: &str =
+    include_str!("malformed/definition/body-missing-before-next-member.sysml");
+
+/// `definition/body-missing-before-next-member.sysml`: `part def A` with no body, and then
+/// `part def B;`.
+///
+/// `Definition = DefinitionDeclaration DefinitionBody` and `DefinitionBody = ';' | '{'
+/// DefinitionBodyItem* '}'` (`SysML` 8.2.2.6.1). `definition_body`
+/// (`crates/sv2-syntax/src/parser/definition.rs`) opens its node before it looks for `;`
+/// or `{`, finds neither, and reports the `part` it finds instead without consuming it.
+///
+/// 1. the parse still yields a tree, holding two definitions;
+/// 2. A's `body()` is present and empty, and something reported it: one diagnostic, on
+///    the `part` where A's body should be;
+/// 3. the neighbours still answer: A's declaration still names A, and B is whole, its
+///    declaration naming B and its body the `;`.
+#[test]
+fn a_definition_with_no_body_keeps_an_empty_one_and_the_next_member_survives() {
+    let parse = trees::parsed(BODY_MISSING_BEFORE_NEXT_MEMBER, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. two definitions.
+    let definitions: Vec<Definition> = root.descendants().filter_map(Definition::cast).collect();
+    assert_eq!(definitions.len(), 2, "the fixture writes A and B");
+    let (a, b) = (&definitions[0], &definitions[1]);
+
+    // 2a. A's body is there, and holds nothing.
+    let body = a
+        .body()
+        .expect("definition_body opens its node before it looks for `;` or `{`");
+    assert!(
+        body.text_range().is_empty(),
+        "A writes no body, so its DefinitionBody spans nothing"
+    );
+
+    // 2b. and that was reported, on B's `part`. Found in preorder rather than by rowan's
+    // `first_token()`, which descends into the first child, B's zero-width prefix, and so
+    // finds nothing.
+    let part = b
+        .syntax()
+        .parent()
+        .and_then(|definition| {
+            definition
+                .descendants_with_tokens()
+                .find_map(sv2_syntax::SyntaxElement::into_token)
+        })
+        .expect("B's PartDefinition holds a token");
+    assert_eq!(part.text(), "part", "B's definition opens with `part`");
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [part.text_range()],
+        "one diagnostic, on the `part` found where A's body should be: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbours still answer.
+    let read = |definition: &Definition| {
+        (
+            definition.declaration().map(|d| d.text().to_string()),
+            definition.body().map(|b| b.text().to_string()),
+        )
+    };
+    assert_eq!(
+        (read(a), read(b)),
+        (
+            (Some("A".to_owned()), Some(String::new())),
+            (Some("B".to_owned()), Some(";".to_owned()))
+        ),
+        "A still declares A; B is whole, declaring B with its `;`"
     );
 }

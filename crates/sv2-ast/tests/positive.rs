@@ -1883,3 +1883,68 @@ fn a_definition_prefix_writes_both_slots_and_its_keywords_in_order() {
         parse.errors()
     );
 }
+
+const CART_SAMPLE: &str =
+    "vendor/corpus/sysml/src/examples/State Space Representation Examples/CartSample.sysml";
+
+/// `CartSample.sysml`, one of the four corpus files that nest a definition inside another
+/// definition's body:
+///
+/// ```text
+///   line  5:  part def Cart {                                    owns four
+///   line  8:      attribute def CartInput :> Input { ... }
+///   line 12:      attribute def CartOutput :> Output { ... }
+///   line 16:      attribute def CartState :> StateSpace { ... }
+///   line 20:      attribute def CartStateDerivative :> StateDerivative { ... }
+///   line 26:  part def Pusher {                                  owns one
+///   line 27:      attribute def PusherOutput :> Output { ... }
+/// ```
+///
+/// `Definition = DefinitionDeclaration DefinitionBody` (`SysML` 8.2.2.6.1). Chosen for the
+/// nesting: only four of the corpus's 311 files nest a definition in another's body, so a
+/// `body()` that reached a nested definition's body, or a `declaration()` that reached a
+/// nested declaration, would be invisible on almost every file. Here each definition's
+/// declaration names it, and its body owns the definitions written in its braces, and no
+/// others.
+#[test]
+fn the_definitions_of_cart_sample_declare_their_names_and_own_their_nested_definitions() {
+    let read: Vec<(String, usize)> = tree_of(CART_SAMPLE)
+        .descendants()
+        .filter_map(sv2_ast::Definition::cast)
+        .map(|definition| {
+            let owned = definition.body().map_or(0, |body| {
+                body.descendants()
+                    .filter(|node| node.kind() == SyntaxKind::Definition)
+                    .filter(|nested| {
+                        nested
+                            .ancestors()
+                            .skip(1)
+                            .find(|above| above.kind() == SyntaxKind::Definition)
+                            .as_ref()
+                            == Some(definition.syntax())
+                    })
+                    .count()
+            });
+            (
+                definition
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string())
+                    .unwrap_or_default(),
+                owned,
+            )
+        })
+        .collect();
+    assert_eq!(
+        read,
+        [
+            ("Cart".to_owned(), 4),
+            ("CartInput :> Input".to_owned(), 0),
+            ("CartOutput :> Output".to_owned(), 0),
+            ("CartState :> StateSpace".to_owned(), 0),
+            ("CartStateDerivative :> StateDerivative".to_owned(), 0),
+            ("Pusher".to_owned(), 1),
+            ("PusherOutput :> Output".to_owned(), 0),
+        ],
+        "lines 5, 8, 12, 16, 20, 26 and 27, in source order"
+    );
+}

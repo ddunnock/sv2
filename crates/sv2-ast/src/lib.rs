@@ -7,6 +7,7 @@
 
 mod alias_member;
 mod ast_node;
+mod definition;
 mod definition_prefix;
 mod element_filter_member;
 mod import;
@@ -28,6 +29,7 @@ mod visibility_indicator;
 
 pub use crate::alias_member::AliasMember;
 pub use crate::ast_node::AstNode;
+pub use crate::definition::Definition;
 pub use crate::definition_prefix::DefinitionPrefix;
 pub use crate::element_filter_member::ElementFilterMember;
 pub use crate::import::Import;
