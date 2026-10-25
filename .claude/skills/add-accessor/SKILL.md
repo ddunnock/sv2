@@ -123,6 +123,25 @@ interchangeable:
   assertion ever failed, this mutation would become observable, which is the honest link
   between the two.
 
+**"The grammar does not allow that shape" is not yet the second case.** It is a claim,
+and it becomes a proof only when the sweep asserts it. When the only reason a survivor
+cannot be observed is a fact about the grammar, add that one fact to the kind's
+`assert_<kind>_accessor` and leave the mutation as equivalent under it. The usual case is
+reading descendants instead of children, equivalent only because nothing beneath a slot
+can be another slot. Three rules keep this from growing:
+
+- assert only the fact the specific survivor rests on, never grammar facts in general;
+- cite the clause it rests on, and name the mutation it makes equivalent, in a comment
+  beside it;
+- scan only the slot the equivalence depends on (the declaration, or a prefix's slot
+  children), never a body. A per-node scan over a whole subtree goes quadratic on deeply
+  nested files.
+
+`Definition`'s "a declaration holds neither a declaration nor a body" and
+`OccurrenceDefinitionPrefix`'s "nothing beneath a slot is a slot" are the pattern. If a
+later grammar change breaks one, the sweep fails at that tree instead of an accessor
+silently changing its answer.
+
 What is never acceptable is recording a mutation as caught when the build merely failed to
 compile. That proves the mutation was ill-formed, not that an assertion bites.
 
