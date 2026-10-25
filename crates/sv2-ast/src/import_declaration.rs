@@ -59,8 +59,9 @@ impl ImportDeclaration {
     /// out as invented before any alternative had an accessor. Instead the caller casts what this returns —
     /// [`MembershipImport::cast`](crate::MembershipImport) for the first alternative,
     /// [`NamespaceImport::cast`](crate::NamespaceImport) for the second — and this
-    /// signature does not change as the alternatives gain views. Both have one now, so
-    /// whether an enum earns its place can be asked of real views; it has not been.
+    /// signature does not change as the alternatives gain views. Both have one now, and
+    /// the enum question is deferred for the whole crate, not answered here (decision
+    /// `ast-alternative-views`).
     ///
     /// So the returned node's `kind()` **is** the discriminator, and it is the honest one:
     /// what makes an import a `NamespaceImport` is the `::*`, not the presence of stars.
