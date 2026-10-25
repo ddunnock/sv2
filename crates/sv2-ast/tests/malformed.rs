@@ -8,7 +8,7 @@ use sv2_ast::{
     AliasMember, AstNode, Definition, DefinitionPrefix, ElementFilterMember, Import,
     LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember, NamespaceImport,
     NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember,
-    QualifiedName, RelationshipBody, RootNamespace,
+    PartDefinition, QualifiedName, RelationshipBody, RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -2168,5 +2168,188 @@ fn a_definition_with_no_body_keeps_an_empty_one_and_the_next_member_survives() {
             (Some("B".to_owned()), Some(";".to_owned()))
         ),
         "A still declares A; B is whole, declaring B with its `;`"
+    );
+}
+
+const DEF_WRITTEN_TWICE: &str = include_str!("malformed/part-definition/def-written-twice.sysml");
+const DEF_MISSING: &str = include_str!("malformed/part-definition/def-missing.sysml");
+
+/// Every `PartDefinition` in `root`, in document order.
+fn part_definitions(root: &SyntaxNode) -> Vec<PartDefinition> {
+    root.descendants()
+        .filter_map(PartDefinition::cast)
+        .collect()
+}
+
+/// What a part definition says of itself and of its definition: its two keywords, and the
+/// declaration and body its `Definition` holds.
+type PartDefinitionRead = (Option<String>, Option<String>, Option<(String, String)>);
+
+fn read_part_definition(part: &PartDefinition) -> PartDefinitionRead {
+    (
+        part.part_keyword().map(|token| token.text().to_owned()),
+        part.def_keyword().map(|token| token.text().to_owned()),
+        part.definition().map(|definition| {
+            (
+                definition
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string())
+                    .unwrap_or_default(),
+                definition
+                    .body()
+                    .map(|body| body.text().to_string())
+                    .unwrap_or_default(),
+            )
+        }),
+    )
+}
+
+/// The first token of the `Error` the package body holds, where the stray text begins.
+fn first_error_token(root: &SyntaxNode) -> Option<sv2_syntax::SyntaxToken> {
+    root.descendants()
+        .find(|node| node.kind() == SyntaxKind::Error)
+        .and_then(|error| error.first_token())
+}
+
+/// `part-definition/def-written-twice.sysml`: `part def def A;`, then `part def B;`.
+///
+/// `PartDefinition = OccurrenceDefinitionPrefix 'part' 'def' Definition` (`SysML`
+/// 8.2.2.11). `simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`) takes
+/// the first `def`; `definition_body` reports the second, and `recover_statement`
+/// (`crates/sv2-syntax/src/parser/recovery.rs`) puts it in an `Error` beside the member.
+///
+/// 1. the parse still yields a tree, holding two part definitions;
+/// 2. the first owns one `def`, the first, its definition spans nothing, and one
+///    diagnostic, on the second `def`, reported it;
+/// 3. the neighbours still answer: the first's `Definition` declares nothing, and B is
+///    whole.
+#[test]
+fn a_part_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    let parse = trees::parsed(DEF_WRITTEN_TWICE, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. two part definitions.
+    let parts = part_definitions(&root);
+    assert_eq!(parts.len(), 2, "the fixture writes two `part def`s");
+    let first = &parts[0];
+
+    // 2a. the first owns exactly one `def`, the first one written.
+    let written = DEF_WRITTEN_TWICE
+        .find("\tpart def def")
+        .expect("the fixture writes `part def def`, tab-indented, below its header");
+    let first_def = u32::try_from(written + "\tpart ".len()).expect("the fixture is small");
+    assert_eq!(
+        first
+            .def_keyword()
+            .map(|token| u32::from(token.text_range().start())),
+        Some(first_def),
+        "def_keyword() is the `def` written straight after `part`"
+    );
+    assert_eq!(
+        first.syntax().text().to_string(),
+        "part def ",
+        "the first part definition holds the keywords, and the space `definition` eats \
+         before it opens an empty Definition, and nothing after them"
+    );
+
+    // 2b. the second `def` is the Error's, `def ` (four bytes) after the first, and that
+    // was reported, once.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    assert_eq!(
+        (stray.text(), u32::from(stray.text_range().start())),
+        ("def", first_def + 4),
+        "the Error opens with the second `def`"
+    );
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [stray.text_range()],
+        "one diagnostic, on the second `def`: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbours still answer.
+    assert_eq!(
+        parts.iter().map(read_part_definition).collect::<Vec<_>>(),
+        [
+            (
+                Some("part".to_owned()),
+                Some("def".to_owned()),
+                Some((String::new(), String::new()))
+            ),
+            (
+                Some("part".to_owned()),
+                Some("def".to_owned()),
+                Some(("B".to_owned(), ";".to_owned()))
+            ),
+        ],
+        "the first's Definition declares nothing and has no body; B is whole"
+    );
+}
+
+/// `part-definition/def-missing.sysml`: `part A def B;`, then `part def C;`.
+///
+/// `PartDefinition = OccurrenceDefinitionPrefix 'part' 'def' Definition` and `PartUsage =
+/// OccurrenceUsagePrefix 'part' Usage` (`SysML` 8.2.2.11). `at_simple_definition`
+/// (`crates/sv2-syntax/src/parser/definition.rs`) begins a part definition only on `part`
+/// followed by `def`, so `part A` is a `PartUsage` and no part definition is begun.
+///
+/// 1. the parse still yields a tree, holding one part definition, C's;
+/// 2. A is no part definition at all, and one diagnostic, on the `def`, reported it;
+/// 3. the neighbours still answer: the first member's element is a `PartUsage`, and C is
+///    whole.
+#[test]
+fn a_part_with_no_def_after_it_begins_no_part_definition() {
+    let parse = trees::parsed(DEF_MISSING, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1 and 2a. one part definition, and it is C's.
+    let parts = part_definitions(&root);
+    assert_eq!(
+        parts.iter().map(read_part_definition).collect::<Vec<_>>(),
+        [(
+            Some("part".to_owned()),
+            Some("def".to_owned()),
+            Some(("C".to_owned(), ";".to_owned()))
+        )],
+        "only C writes `part def`, so only C is a part definition"
+    );
+
+    // 2b. reported, once, on the `def` A's `part` was not followed by.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    let written = DEF_MISSING
+        .find("\tpart A def")
+        .expect("the fixture writes `part A def`, tab-indented, below its header");
+    assert_eq!(
+        (stray.text(), usize::from(stray.text_range().start())),
+        ("def", written + "\tpart A ".len()),
+        "the Error opens with the misplaced `def`"
+    );
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [stray.text_range()],
+        "one diagnostic, on the misplaced `def`: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour: the first member holds a PartUsage, not a half-built definition.
+    assert_eq!(
+        members(&root)
+            .iter()
+            .filter_map(|member| member.element().map(|element| element.kind()))
+            .collect::<Vec<_>>(),
+        [
+            SyntaxKind::Package,
+            SyntaxKind::PartUsage,
+            SyntaxKind::PartDefinition
+        ],
+        "the package, then A as a PartUsage, then C"
     );
 }

@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-25T17:06:46Z",
+    "regenerated_utc": "2026-10-25T17:19:17Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 20,
-      "unimplemented": 443,
+      "implemented": 21,
+      "unimplemented": 442,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 4.3
+      "percent": 4.5
     },
     "tests": {
-      "unit": 808,
+      "unit": 811,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "2c4b188 Merge ast-equivalence-by-assertion: equivalence by grammar is proved by the sweep",
+      "91fc68f Make equivalence by grammar a proof: the sweep asserts the fact a survivor rests on",
       "131dcdd Correct next_step: seven siblings, and which one takes the other prefix",
       "1c79d3d Merge close-session-2026-10-25b: the state file current at 20 of 463",
       "dd2d080 Close the session: three shared definition children, 17 to 20 of 463",
       "df9ff41 Merge ast-definition: the last shared child, pinned on nested definitions",
       "604c298 Add the Definition accessor, the last shared child, pinned on nested definitions",
-      "19086f5 Merge ast-definition-prefix: the sibling prefix, and a word it has no slot for",
-      "31ee83e Add the DefinitionPrefix accessor, the sibling prefix, and a word it has no slot for",
-      "525232c Merge ast-occurrence-definition-prefix: the shared prefix first, and the slots the corpus never combines"
+      "19086f5 Merge ast-definition-prefix: the sibling prefix, and a word it has no slot for"
     ]
   },
   "authored": {

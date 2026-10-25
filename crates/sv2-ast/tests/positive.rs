@@ -17,7 +17,9 @@
 
 mod trees;
 
-use sv2_ast::{AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, PackageMember};
+use sv2_ast::{
+    AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, PackageMember, PartDefinition,
+};
 use sv2_syntax::{SyntaxKind, SyntaxNode};
 
 /// The file the frozen grammar unit cites as evidence for the optional `all`
@@ -1946,5 +1948,61 @@ fn the_definitions_of_cart_sample_declare_their_names_and_own_their_nested_defin
             ("PusherOutput :> Output".to_owned(), 0),
         ],
         "lines 5, 8, 12, 16, 20, 26 and 27, in source order"
+    );
+}
+
+/// A part definition's two keywords, whether its prefix is `individual`, and what its
+/// definition declares.
+type PartDefinitionRead = (Option<String>, Option<String>, bool, Option<String>);
+
+const INDIVIDUALS_AND_ROLES: &str =
+    "vendor/corpus/sysml/src/training/28. Individuals/Individuals and Roles-1.sysml";
+
+/// `Individuals and Roles-1.sysml`, three part definitions and a part usage that looks
+/// like one:
+///
+/// ```text
+///   line  4:  part def Wheel;                                    no prefix
+///   line  6:  individual part def Vehicle_1 :> Vehicle { ... }   individual
+///   line 11:  individual part def Wheel_1 :> Wheel;              individual
+///   line 13:  individual part vehicle_1 : Vehicle_1 { ... }      a PartUsage: no `def`
+/// ```
+///
+/// `PartDefinition = OccurrenceDefinitionPrefix 'part' 'def' Definition` (`SysML`
+/// 8.2.2.11). Chosen because it writes the definition with and without a prefix side by
+/// side, and line 13 beside them: `PartUsage` (8.2.2.11) writes `part` and no `def`, so it
+/// is not one of these, however much it reads like one.
+#[test]
+fn the_part_definitions_of_individuals_and_roles_read_their_keywords_prefix_and_definition() {
+    let read: Vec<PartDefinitionRead> = tree_of(INDIVIDUALS_AND_ROLES)
+        .descendants()
+        .filter_map(PartDefinition::cast)
+        .map(|part| {
+            (
+                part.part_keyword().map(|token| token.text().to_owned()),
+                part.def_keyword().map(|token| token.text().to_owned()),
+                part.prefix().is_some_and(|prefix| prefix.is_individual()),
+                part.definition()
+                    .and_then(|definition| definition.declaration())
+                    .map(|declaration| declaration.text().to_string()),
+            )
+        })
+        .collect();
+    let def = |individual: bool, declaration: &str| {
+        (
+            Some("part".to_owned()),
+            Some("def".to_owned()),
+            individual,
+            Some(declaration.to_owned()),
+        )
+    };
+    assert_eq!(
+        read,
+        [
+            def(false, "Wheel"),
+            def(true, "Vehicle_1 :> Vehicle"),
+            def(true, "Wheel_1 :> Wheel"),
+        ],
+        "lines 4, 6 and 11, in source order, and not the usage on line 13"
     );
 }
