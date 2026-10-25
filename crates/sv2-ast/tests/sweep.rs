@@ -8,10 +8,10 @@
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, DefinitionPrefix, ElementFilterMember, Import, ImportDeclaration,
-    LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember, NamespaceImport,
-    NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember,
-    QualifiedName, RelationshipBody, RootNamespace, VisibilityIndicator,
+    AliasMember, AstNode, Definition, DefinitionPrefix, ElementFilterMember, Import,
+    ImportDeclaration, LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember,
+    NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package,
+    PackageMember, QualifiedName, RelationshipBody, RootNamespace, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -2246,6 +2246,84 @@ fn assert_definition_prefix_shape(node: &SyntaxNode) {
     );
 }
 
+/// What `Definition` must satisfy at every node, whatever the tree. Both children are raw
+/// (`DefinitionDeclaration` and `DefinitionBody` have no views yet).
+fn assert_definition_accessor(node: &SyntaxNode) {
+    let is_definition = node.kind() == SyntaxKind::Definition;
+    let cast = Definition::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_definition,
+        "Definition::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(definition) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        definition.syntax(),
+        node,
+        "Definition::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) `DefinitionDeclaration DefinitionBody` (`SysML` 8.2.2.6.1), both always built
+    // (`definition`, `crates/sv2-syntax/src/parser/definition.rs`), in that order, and no
+    // token of the node's own but trivia.
+    let kids: Vec<SyntaxNode> = node.children().collect();
+    assert_eq!(
+        kids.iter().map(SyntaxNode::kind).collect::<Vec<_>>(),
+        [
+            SyntaxKind::DefinitionDeclaration,
+            SyntaxKind::DefinitionBody
+        ],
+        "a definition holds its declaration and then its body, at {:?}",
+        node.text_range()
+    );
+    assert!(
+        node.children_with_tokens()
+            .filter_map(SyntaxElement::into_token)
+            .all(|token| token.text().trim().is_empty()),
+        "a terminal of the definition's own, at {:?}",
+        node.text_range()
+    );
+
+    // The declaration holds neither a declaration nor a body: it is an identification and
+    // its specializations (`DefinitionDeclaration`, `SysML` 8.2.2.6.1). Asserted because it
+    // is what makes declaration() and body() reading descendants an equivalent mutation:
+    // in preorder, the first of either kind beneath this node is then its own child.
+    assert!(
+        kids.first().is_none_or(
+            |declaration| declaration.descendants().skip(1).all(|below| {
+                !matches!(
+                    below.kind(),
+                    SyntaxKind::DefinitionDeclaration | SyntaxKind::DefinitionBody
+                )
+            })
+        ),
+        "a declaration or body inside a definition's declaration, at {:?}",
+        node.text_range()
+    );
+
+    // (c) the differential.
+    assert_eq!(
+        (definition.declaration(), definition.body()),
+        (kids.first().cloned(), kids.get(1).cloned()),
+        "declaration() or body() is not this node's child, at {:?}",
+        node.text_range()
+    );
+
+    // (d) idempotent.
+    assert_eq!(
+        (definition.declaration(), definition.body()),
+        (definition.declaration(), definition.body()),
+        "a Definition accessor disagreed with itself between two calls"
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -2274,6 +2352,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_owned_annotation_accessor(&node);
             assert_occurrence_definition_prefix_accessor(&node);
             assert_definition_prefix_accessor(&node);
+            assert_definition_accessor(&node);
             visited += 1;
         }
     }
