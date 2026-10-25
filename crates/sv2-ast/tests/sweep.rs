@@ -10,8 +10,8 @@ mod trees;
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, ImportDeclaration, LibraryPackage,
     MemberPrefix, MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember,
-    OwnedAnnotation, Package, PackageMember, QualifiedName, RelationshipBody, RootNamespace,
-    VisibilityIndicator,
+    OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember, QualifiedName,
+    RelationshipBody, RootNamespace, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -2020,6 +2020,149 @@ fn assert_owned_annotation_accessor(node: &SyntaxNode) {
     );
 }
 
+/// What `OccurrenceDefinitionPrefix` must satisfy at every node, whatever the tree. Its
+/// children are all raw (`BasicDefinitionPrefix`, `EmptyMultiplicityMember` and
+/// `DefinitionExtensionKeyword` have no views yet); `individual` is read as a bool.
+fn assert_occurrence_definition_prefix_accessor(node: &SyntaxNode) {
+    let is_prefix = node.kind() == SyntaxKind::OccurrenceDefinitionPrefix;
+    let cast = OccurrenceDefinitionPrefix::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_prefix,
+        "OccurrenceDefinitionPrefix::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(prefix) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        prefix.syntax(),
+        node,
+        "OccurrenceDefinitionPrefix::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) the slots, in the production's order.
+    assert_occurrence_definition_prefix_order(node);
+
+    // (c) and (d).
+    assert_occurrence_definition_prefix_slots(node, &prefix);
+}
+
+/// The slot accessors of an `OccurrenceDefinitionPrefix`, against its children: (c) the
+/// differential and (d) the invariants the production states between the slots.
+fn assert_occurrence_definition_prefix_slots(
+    node: &SyntaxNode,
+    prefix: &OccurrenceDefinitionPrefix,
+) {
+    // (c) the differential, each slot against the children of its kind, unfiltered.
+    assert_eq!(
+        (
+            prefix.basic_prefix(),
+            prefix.multiplicity(),
+            prefix.extension_keywords().collect::<Vec<_>>(),
+        ),
+        (
+            children_of_kind(node, SyntaxKind::BasicDefinitionPrefix)
+                .first()
+                .cloned(),
+            children_of_kind(node, SyntaxKind::EmptyMultiplicityMember)
+                .first()
+                .cloned(),
+            children_of_kind(node, SyntaxKind::DefinitionExtensionKeyword),
+        ),
+        "a slot accessor disagrees with the node's children, at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        prefix.is_individual(),
+        node.children_with_tokens()
+            .filter_map(SyntaxElement::into_token)
+            .any(|token| token.kind() == SyntaxKind::KwIndividual),
+        "is_individual() disagrees with the node's own tokens, at {:?}",
+        node.text_range()
+    );
+
+    // Nothing beneath a slot is itself a slot: a `BasicDefinitionPrefix` is one keyword,
+    // an `EmptyMultiplicityMember` holds an empty multiplicity, and a
+    // `DefinitionExtensionKeyword` holds a `#` and a qualified name (`SysML` 8.2.2.6.1,
+    // 8.2.2.9.1). Asserted because it is what makes every accessor here reading
+    // descendants rather than children an equivalent mutation.
+    assert!(
+        node.children()
+            .all(|slot| slot.descendants().skip(1).all(|below| !matches!(
+                below.kind(),
+                SyntaxKind::BasicDefinitionPrefix
+                    | SyntaxKind::EmptyMultiplicityMember
+                    | SyntaxKind::DefinitionExtensionKeyword
+            ))),
+        "a prefix slot nested inside another slot, at {:?}",
+        node.text_range()
+    );
+
+    // (d) `isIndividual ?= 'individual' ownedRelationship += EmptyMultiplicityMember` is one
+    // group: the flag and the multiplicity come together or not at all (`SysML` 8.2.2.9.1).
+    // And the node is zero width exactly when no slot is written.
+    assert_eq!(
+        prefix.is_individual(),
+        prefix.multiplicity().is_some(),
+        "`individual` without its empty multiplicity, or the reverse, at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        node.text_range().is_empty(),
+        prefix.basic_prefix().is_none()
+            && !prefix.is_individual()
+            && prefix.extension_keywords().next().is_none(),
+        "a prefix is zero width exactly when every slot is empty, at {:?}",
+        node.text_range()
+    );
+}
+
+/// The non-trivia elements of an `OccurrenceDefinitionPrefix`, against
+/// `BasicDefinitionPrefix? ( 'individual' EmptyMultiplicityMember )?
+/// DefinitionExtensionKeyword*`: each element may only follow those the production
+/// puts before it.
+fn assert_occurrence_definition_prefix_order(node: &SyntaxNode) {
+    // The production's positions: 0 start, 1 after the basic prefix, 2 after
+    // `individual`, 3 after its multiplicity, 4 among the extension keywords.
+    let mut position = 0;
+    let mut misplaced = None;
+    for element in node.children_with_tokens() {
+        if element
+            .as_token()
+            .is_some_and(|token| token.text().trim().is_empty())
+        {
+            continue;
+        }
+        position = match (position, element.kind()) {
+            (0, SyntaxKind::BasicDefinitionPrefix) => 1,
+            (0 | 1, SyntaxKind::KwIndividual) => 2,
+            (2, SyntaxKind::EmptyMultiplicityMember) => 3,
+            (0 | 1 | 3 | 4, SyntaxKind::DefinitionExtensionKeyword) => 4,
+            (at, kind) => {
+                misplaced = misplaced.or(Some((at, kind)));
+                at
+            }
+        };
+    }
+    assert_eq!(
+        misplaced,
+        None,
+        "an element out of the production's order (position, kind), at {:?}",
+        node.text_range()
+    );
+    assert_ne!(
+        position,
+        2,
+        "`individual` without the EmptyMultiplicityMember after it, at {:?}",
+        node.text_range()
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -2046,6 +2189,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_membership_import_accessor(&node);
             assert_namespace_import_accessor(&node);
             assert_owned_annotation_accessor(&node);
+            assert_occurrence_definition_prefix_accessor(&node);
             visited += 1;
         }
     }

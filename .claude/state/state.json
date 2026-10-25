@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-25T14:09:59Z",
+    "regenerated_utc": "2026-10-25T14:21:12Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 17,
-      "unimplemented": 446,
+      "implemented": 18,
+      "unimplemented": 445,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 3.7
+      "percent": 3.9
     },
     "tests": {
-      "unit": 799,
+      "unit": 803,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "82f1634 Merge ast-alternative-views: the enum question deferred once, for the crate",
+      "17d57a2 Close the session: two accessors, 15 to 17 of 463, and the enum question deferred once",
       "dcc29cc Merge ast-owned-annotation: the accessor, and the alternatives the corpus never owns",
       "b3312b0 Add the OwnedAnnotation accessor, and the alternatives the corpus never owns",
       "f6ebdf3 Merge ast-namespace-import: the accessor, and the filter that hides an inner recursion",
       "149984b Add the NamespaceImport accessor, with the filter that hides an inner recursion",
       "42fc635 Merge ast-membership-import: the accessor, and stars that are not the suffix",
-      "4b4b210 Add the MembershipImport accessor, and upgrade the two tests that reached into it",
-      "6e5ae96 Merge ast-library-package: the accessor, and the slots the corpus never writes",
-      "9b67166 Add the LibraryPackage accessor, with the two slots the corpus never writes"
+      "4b4b210 Add the MembershipImport accessor, and upgrade the two tests that reached into it"
     ]
   },
   "authored": {

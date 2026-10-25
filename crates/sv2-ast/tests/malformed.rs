@@ -6,8 +6,9 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, ElementFilterMember, Import, LibraryPackage, MemberPrefix,
-    MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember, OwnedAnnotation,
-    Package, PackageMember, QualifiedName, RelationshipBody, RootNamespace,
+    MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember,
+    OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember, QualifiedName,
+    RelationshipBody, RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -1873,5 +1874,119 @@ fn assert_the_alias_still_owns(root: &SyntaxNode, annotation: &OwnedAnnotation) 
             .unwrap_or_default(),
         [annotation.syntax().clone()],
         "and its body's only element is this annotation"
+    );
+}
+
+const INDIVIDUAL_BEFORE_BASIC_PREFIX: &str =
+    include_str!("malformed/occurrence-definition-prefix/individual-before-basic-prefix.sysml");
+
+/// `occurrence-definition-prefix/individual-before-basic-prefix.sysml`: `individual
+/// abstract part def X;`, two of the prefix's slots written out of order.
+///
+/// `OccurrenceDefinitionPrefix = BasicDefinitionPrefix? ( isIndividual ?= 'individual'
+/// ownedRelationship += EmptyMultiplicityMember )? DefinitionExtensionKeyword*` (`SysML`
+/// 8.2.2.9.1). No member starts at `individual abstract`, so `body_element`
+/// (`crates/sv2-syntax/src/parser/namespace.rs`) falls through to `recover_statement`
+/// (`crates/sv2-syntax/src/parser/recovery.rs`), which takes `individual` into an `Error`
+/// and stops at `abstract`, a keyword that begins a member.
+///
+/// 1. the parse still yields a tree, holding one prefix;
+/// 2. the prefix reports absence of `individual`, and so of the multiplicity written with
+///    it, rather than claiming a keyword outside it, and something reported it: one
+///    diagnostic, on the `individual`;
+/// 3. the neighbours still answer: `basic_prefix()` is still `abstract`, and the package
+///    body holds the `Error` and then one member owning the `PartDefinition`.
+#[test]
+fn an_individual_written_before_the_basic_prefix_is_not_the_prefixs() {
+    let parse = trees::parsed(INDIVIDUAL_BEFORE_BASIC_PREFIX, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. one prefix.
+    let prefixes: Vec<OccurrenceDefinitionPrefix> = root
+        .descendants()
+        .filter_map(OccurrenceDefinitionPrefix::cast)
+        .collect();
+    assert_eq!(prefixes.len(), 1, "the fixture writes one definition");
+    let prefix = &prefixes[0];
+
+    // 2a. not individual, and so no empty multiplicity.
+    assert!(
+        !prefix.is_individual(),
+        "the `individual` is written outside the prefix, so the prefix is not individual"
+    );
+    assert!(
+        prefix.multiplicity().is_none(),
+        "the EmptyMultiplicityMember comes with `individual`, and there is none here"
+    );
+
+    // 2b. and that was reported, on the `individual`.
+    let error = root
+        .descendants()
+        .find(|node| node.kind() == SyntaxKind::Error)
+        .expect("recover_statement wraps what it takes in an Error");
+    assert_eq!(
+        error.text().to_string(),
+        "individual",
+        "the Error holds the one word"
+    );
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [error.text_range()],
+        "one diagnostic, on the `individual`: {:?}",
+        parse.errors()
+    );
+
+    // 3a. the basic prefix is untouched.
+    assert_eq!(
+        prefix
+            .basic_prefix()
+            .map(|basic| basic.text().to_string())
+            .as_deref(),
+        Some("abstract"),
+        "the prefix still reads `abstract`"
+    );
+
+    // 3b. and the package body still holds the Error, then the member.
+    assert_the_body_holds_the_error_then_the_member(&root, prefix);
+}
+
+/// The one `Package` of the `individual-before-basic-prefix` tree holds the `Error` and
+/// then one `PackageMember`, whose element is the `PartDefinition` that owns `prefix`.
+fn assert_the_body_holds_the_error_then_the_member(
+    root: &SyntaxNode,
+    prefix: &OccurrenceDefinitionPrefix,
+) {
+    let body = root
+        .descendants()
+        .find_map(Package::cast)
+        .and_then(|package| package.body());
+    assert!(body.is_some(), "package P has a body");
+    let Some(body) = body else {
+        return;
+    };
+    assert_eq!(
+        body.children()
+            .map(|child| child.kind())
+            .collect::<Vec<_>>(),
+        [SyntaxKind::Error, SyntaxKind::PackageMember],
+        "the Error beside the member, not inside it"
+    );
+    let element = body
+        .children()
+        .find_map(PackageMember::cast)
+        .and_then(|member| member.element());
+    assert_eq!(
+        element.as_ref().map(SyntaxNode::kind),
+        Some(SyntaxKind::PartDefinition),
+        "the member still owns the PartDefinition"
+    );
+    assert_eq!(
+        prefix.syntax().parent(),
+        element,
+        "and the prefix is that definition's"
     );
 }
