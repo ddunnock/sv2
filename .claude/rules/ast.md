@@ -121,6 +121,13 @@ discriminator. An enum over the alternatives would be a new abstraction invented
 any of them has an accessor, which is the same wall the expression layer hit
 (`ElementFilterMember::filter`, decision `ast-expression-child`).
 
+Both of `ImportDeclaration`'s alternatives have views now, and the question was asked and
+deferred **once, for the crate** (decision `ast-alternative-views`): do not add a one-off
+enum at any single accessor. When it is taken, it is taken in the trait, by replacing
+`const KIND` with `fn can_cast(kind) -> bool` so that an enum over views is itself an
+`AstNode`, as an amendment to ADR-0025. Until then, raw with `kind()` as the
+discriminator is the rule, in all three cases.
+
 So: **measure the tree before deciding which case you are in.** The production text does
 not tell you whether a node is built, and all three cases return something different.
 
