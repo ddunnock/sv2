@@ -1611,3 +1611,175 @@ fn an_owned_annotation_owns_every_alternative_of_annotating_element() {
         );
     }
 }
+
+const INDIVIDUAL_TEST: &str = "vendor/corpus/sysml/src/examples/Simple Tests/IndividualTest.sysml";
+
+/// What one `OccurrenceDefinitionPrefix` says: its basic prefix's text, whether it is
+/// individual, whether it carries the empty multiplicity, and its extension keywords.
+type PrefixReading = (Option<String>, bool, bool, Vec<String>);
+
+fn prefixes_of(relative: &str) -> Vec<PrefixReading> {
+    tree_of(relative)
+        .descendants()
+        .filter_map(sv2_ast::OccurrenceDefinitionPrefix::cast)
+        .map(|prefix| {
+            (
+                prefix.basic_prefix().map(|basic| basic.text().to_string()),
+                prefix.is_individual(),
+                prefix.multiplicity().is_some(),
+                prefix
+                    .extension_keywords()
+                    .map(|keyword| keyword.text().to_string())
+                    .collect(),
+            )
+        })
+        .collect()
+}
+
+/// `14c-Language Extensions.sysml`, whose thirteen occurrence definitions write two
+/// `abstract`s and one `#fmea`:
+///
+/// ```text
+///   line   6:  abstract occurrence def Situation;
+///   lines 10, 16, 22:  occurrence def Cause / FailureMode / Effect
+///   line  28:  item def FMEAItem
+///   lines 38, 45, 49, 55:  connection, requirement, requirement, connection
+///   line  62:  abstract connection def ControllingMeasure
+///   lines 67, 71:  connection def Prevention / Mitigation
+///   line 161:  #fmea item def 'Glucose FMEA Item'
+/// ```
+///
+/// `OccurrenceDefinitionPrefix = BasicDefinitionPrefix? ( isIndividual ?= 'individual'
+/// ownedRelationship += EmptyMultiplicityMember )? DefinitionExtensionKeyword*` (`SysML`
+/// 8.2.2.9.1), the prefix of the occurrence, item, connection and requirement definitions
+/// (8.2.2.9.1, .10, .13.1, .21.1). The file's `enum def`s and `metadata def`s are not among
+/// them: neither production opens with this prefix.
+#[test]
+fn the_occurrence_definition_prefixes_of_14c_write_abstract_twice_and_one_extension() {
+    let plain: PrefixReading = (None, false, false, vec![]);
+    let abstract_: PrefixReading = (Some("abstract".to_owned()), false, false, vec![]);
+    let fmea: PrefixReading = (None, false, false, vec!["#fmea".to_owned()]);
+    assert_eq!(
+        prefixes_of(LANGUAGE_EXTENSIONS_14C),
+        [
+            abstract_.clone(), // 6
+            plain.clone(),     // 10
+            plain.clone(),     // 16
+            plain.clone(),     // 22
+            plain.clone(),     // 28
+            plain.clone(),     // 38
+            plain.clone(),     // 45
+            plain.clone(),     // 49
+            plain.clone(),     // 55
+            abstract_,         // 62
+            plain.clone(),     // 67
+            plain,             // 71
+            fmea,              // 161
+        ],
+        "the thirteen prefixes, in source order"
+    );
+}
+
+/// `IndividualTest.sysml`, whose eight `individual`s belong to only seven prefixes:
+///
+/// ```text
+///   line  2:  individual def IO1;              an IndividualDefinition: NO prefix
+///   line  3:  individual occurrence def IO2    individual
+///   line  7:  individual item def II1          individual
+///   line 11:  item def I                       plain
+///   line 14:  individual item def II2 :> I     individual
+///   line 18:  individual part def IP1          individual
+///   line 22:  part def P                       plain
+///   line 25:  individual part def IP2 :> P     individual
+///   line 29:  individual action def AP1        individual
+///   line 33:  action def A                     plain
+///   line 36:  individual action def IA2 :> A   individual
+/// ```
+///
+/// Line 2 is why the file was picked. `IndividualDefinition : OccurrenceDefinition =
+/// BasicDefinitionPrefix? isIndividual ?= 'individual' DefinitionExtensionKeyword* 'def'
+/// Definition ownedRelationship += EmptyMultiplicityMember` (`SysML` 8.2.2.9.1) writes its
+/// `individual` without an `OccurrenceDefinitionPrefix` around it. So a count of `individual`
+/// keywords is not a count of individual prefixes. Each of the other seven carries
+/// `ownedRelationship += EmptyMultiplicityMember` with its `individual`. The Pilot writes
+/// `IndividualDefinition`'s multiplicity straight after `individual` (`SysML.xtext:816`),
+/// not last; it consumes no tokens, so both accept the same text, and `individual_definition`
+/// (`crates/sv2-syntax/src/parser/definition.rs`) records that no deviation is needed.
+#[test]
+fn the_individual_prefixes_of_individual_test_are_seven_of_its_eight_individuals() {
+    let plain: PrefixReading = (None, false, false, vec![]);
+    let individual: PrefixReading = (None, true, true, vec![]);
+    assert_eq!(
+        prefixes_of(INDIVIDUAL_TEST),
+        [
+            individual.clone(), // 3
+            individual.clone(), // 7
+            plain.clone(),      // 11
+            individual.clone(), // 14
+            individual.clone(), // 18
+            plain.clone(),      // 22
+            individual.clone(), // 25
+            individual.clone(), // 29
+            plain,              // 33
+            individual,         // 36
+        ],
+        "ten prefixes, in source order; line 2's `individual` is not a prefix's"
+    );
+}
+
+/// Written by hand: prefixes that write more than one slot, and more than one
+/// user-defined keyword.
+///
+/// ```text
+/// #A #B part def X;                        two extension keywords, in order
+/// abstract individual #A #B part def Y;    every slot, in the production's order
+/// ```
+///
+/// `OccurrenceDefinitionPrefix = BasicDefinitionPrefix? ( isIndividual ?= 'individual'
+/// ownedRelationship += EmptyMultiplicityMember )? DefinitionExtensionKeyword*` (`SysML`
+/// 8.2.2.9.1), and "It is also possible to include more than one user defined-keyword in
+/// a declaration" (7.27.4, receipt 0f2c5bd1). Hand-written because no corpus prefix writes
+/// two slots or two keywords: of 1,020, the 50 that write anything write exactly one. So
+/// the corpus cannot tell `extension_keywords()` from one that reversed them or kept only
+/// the first, and both survived the 610-tree sweep.
+#[test]
+fn a_prefix_writes_its_slots_together_and_its_keywords_in_order() {
+    let parse = trees::parsed(
+        "package P {\n\t#A #B part def X;\n\tabstract individual #A #B part def Y;\n}",
+        sv2_syntax::Language::SysMl,
+    );
+    let read: Vec<PrefixReading> = parse
+        .syntax()
+        .descendants()
+        .filter_map(sv2_ast::OccurrenceDefinitionPrefix::cast)
+        .map(|prefix| {
+            (
+                prefix.basic_prefix().map(|basic| basic.text().to_string()),
+                prefix.is_individual(),
+                prefix.multiplicity().is_some(),
+                prefix
+                    .extension_keywords()
+                    .map(|keyword| keyword.text().to_string())
+                    .collect(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        read,
+        [
+            (None, false, false, vec!["#A".to_owned(), "#B".to_owned()]),
+            (
+                Some("abstract".to_owned()),
+                true,
+                true,
+                vec!["#A".to_owned(), "#B".to_owned()]
+            ),
+        ],
+        "both keywords in source order, and every slot of the second"
+    );
+    assert!(
+        parse.errors().is_empty(),
+        "both are well-formed: {:?}",
+        parse.errors()
+    );
+}
