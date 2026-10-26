@@ -5,14 +5,14 @@
 //! The rejection corpus is malformed by construction, so the hardest inputs for this
 //! layer arrive free and grow as the corpora grow.
 
+mod simple_definitions;
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, AttributeDefinition, Definition, DefinitionPrefix, ElementFilterMember,
-    Import, ImportDeclaration, LibraryPackage, MemberPrefix, MembershipImport,
-    NamespaceFeatureMember, NamespaceImport, NonFeatureMember, OccurrenceDefinition,
-    OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember, PartDefinition,
-    QualifiedName, RelationshipBody, RootNamespace, VisibilityIndicator,
+    AliasMember, AstNode, Definition, DefinitionPrefix, ElementFilterMember, Import,
+    ImportDeclaration, LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember,
+    NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package,
+    PackageMember, QualifiedName, RelationshipBody, RootNamespace, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -2325,271 +2325,54 @@ fn assert_definition_accessor(node: &SyntaxNode) {
     );
 }
 
-/// What `PartDefinition` must satisfy at every node, whatever the tree. Both node children
-/// are typed (`OccurrenceDefinitionPrefix`, `Definition`); the keywords are its own tokens.
+/// What `PartDefinition` must satisfy at every node, whatever the tree.
 fn assert_part_definition_accessor(node: &SyntaxNode) {
-    let is_part = node.kind() == SyntaxKind::PartDefinition;
-    let cast = PartDefinition::cast(node.clone());
-    assert_eq!(
-        cast.is_some(),
-        is_part,
-        "PartDefinition::cast disagreed with node.kind() at {:?} {:?}",
-        node.kind(),
-        node.text_range()
-    );
-    let Some(part) = cast else {
-        return;
-    };
-
-    // (a) round trip.
-    assert_eq!(
-        part.syntax(),
-        node,
-        "PartDefinition::syntax did not return the node it was cast from, at {:?}",
-        node.text_range()
-    );
-
-    // (b) the shape, and (c) the differential against it.
-    let expected = part_definition_shape(node).map_or(
-        (None, None, None, None),
-        |(prefix, part_keyword, def_keyword, definition)| {
-            (
-                Some(prefix),
-                Some(part_keyword),
-                Some(def_keyword),
-                Some(definition),
-            )
-        },
-    );
-    assert_eq!(
-        (
-            part.prefix().map(|prefix| prefix.syntax().clone()),
-            part.part_keyword(),
-            part.def_keyword(),
-            part.definition()
-                .map(|definition| definition.syntax().clone()),
-        ),
-        expected,
-        "a PartDefinition accessor disagrees with the node's own elements, at {:?}",
-        node.text_range()
-    );
+    assert_simple_definition(node, &simple_definitions::PART);
 }
 
-/// The elements of a `PartDefinition`, asserted to be exactly the production's.
-///
-/// `OccurrenceDefinitionPrefix 'part' 'def' Definition` (`SysML` 8.2.2.11), all four
-/// always present: `at_simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`)
-/// begins one only on `part` followed by `def`, and `simple_definition` builds both nodes
-/// whatever follows. Nothing else but trivia.
-fn part_definition_shape(
-    node: &SyntaxNode,
-) -> Option<(SyntaxNode, SyntaxToken, SyntaxToken, SyntaxNode)> {
-    let elements: Vec<SyntaxElement> = node
-        .children_with_tokens()
-        .filter(|element| {
-            element
-                .as_token()
-                .is_none_or(|token| !token.text().trim().is_empty())
-        })
-        .collect();
-    let shape = match elements.as_slice() {
-        [
-            SyntaxElement::Node(prefix),
-            SyntaxElement::Token(part_keyword),
-            SyntaxElement::Token(def_keyword),
-            SyntaxElement::Node(definition),
-        ] if prefix.kind() == SyntaxKind::OccurrenceDefinitionPrefix
-            && part_keyword.kind() == SyntaxKind::KwPart
-            && def_keyword.kind() == SyntaxKind::KwDef
-            && definition.kind() == SyntaxKind::Definition =>
-        {
-            Some((
-                prefix.clone(),
-                part_keyword.clone(),
-                def_keyword.clone(),
-                definition.clone(),
-            ))
-        }
-        _ => None,
-    };
-    assert!(
-        shape.is_some(),
-        "a part definition is not `OccurrenceDefinitionPrefix 'part' 'def' Definition`, \
-         at {:?}: {elements:?}",
-        node.text_range()
-    );
-
-    // The prefix holds neither keyword and no Definition: it is `abstract` or `variation`,
-    // `individual`, and `#` keywords naming metadata (`OccurrenceDefinitionPrefix`, `SysML`
-    // 8.2.2.9.1; `DefinitionExtensionKeyword`, 8.2.2.6.1). Asserted because it is what
-    // makes part_keyword(), def_keyword() and definition() reading descendants equivalent
-    // mutations: the prefix is the only element before the keywords and the Definition in
-    // preorder, and the Definition's body, which may nest another part definition, comes
-    // after them.
-    assert!(
-        shape.as_ref().is_none_or(|(prefix, ..)| {
-            prefix.descendants_with_tokens().all(|below| {
-                !matches!(
-                    below.kind(),
-                    SyntaxKind::KwPart | SyntaxKind::KwDef | SyntaxKind::Definition
-                )
-            })
-        }),
-        "a `part`, `def` or Definition inside a part definition's prefix, at {:?}",
-        node.text_range()
-    );
-    shape
-}
-
-/// What `AttributeDefinition` must satisfy at every node, whatever the tree. Both node
-/// children are typed (`DefinitionPrefix`, `Definition`); the keywords are its own tokens.
+/// What `AttributeDefinition` must satisfy at every node, whatever the tree.
 fn assert_attribute_definition_accessor(node: &SyntaxNode) {
-    let is_attribute = node.kind() == SyntaxKind::AttributeDefinition;
-    let cast = AttributeDefinition::cast(node.clone());
-    assert_eq!(
-        cast.is_some(),
-        is_attribute,
-        "AttributeDefinition::cast disagreed with node.kind() at {:?} {:?}",
-        node.kind(),
-        node.text_range()
-    );
-    let Some(attribute) = cast else {
-        return;
-    };
-
-    // (a) round trip.
-    assert_eq!(
-        attribute.syntax(),
-        node,
-        "AttributeDefinition::syntax did not return the node it was cast from, at {:?}",
-        node.text_range()
-    );
-
-    // (b) the shape, and (c) the differential against it.
-    let expected = attribute_definition_shape(node).map_or(
-        (None, None, None, None),
-        |(prefix, attribute_keyword, def_keyword, definition)| {
-            (
-                Some(prefix),
-                Some(attribute_keyword),
-                Some(def_keyword),
-                Some(definition),
-            )
-        },
-    );
-    assert_eq!(
-        (
-            attribute.prefix().map(|prefix| prefix.syntax().clone()),
-            attribute.attribute_keyword(),
-            attribute.def_keyword(),
-            attribute
-                .definition()
-                .map(|definition| definition.syntax().clone()),
-        ),
-        expected,
-        "an AttributeDefinition accessor disagrees with the node's own elements, at {:?}",
-        node.text_range()
-    );
+    assert_simple_definition(node, &simple_definitions::ATTRIBUTE);
 }
 
-/// The elements of an `AttributeDefinition`, asserted to be exactly the production's.
-///
-/// `DefinitionPrefix 'attribute' 'def' Definition` (`SysML` 8.2.2.7), all four always
-/// present: `at_simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`) begins
-/// one only on `attribute` followed by `def`, and `simple_definition` builds both nodes
-/// whatever follows. Nothing else but trivia.
-fn attribute_definition_shape(
-    node: &SyntaxNode,
-) -> Option<(SyntaxNode, SyntaxToken, SyntaxToken, SyntaxNode)> {
-    let elements: Vec<SyntaxElement> = node
-        .children_with_tokens()
-        .filter(|element| {
-            element
-                .as_token()
-                .is_none_or(|token| !token.text().trim().is_empty())
-        })
-        .collect();
-    let shape = match elements.as_slice() {
-        [
-            SyntaxElement::Node(prefix),
-            SyntaxElement::Token(attribute_keyword),
-            SyntaxElement::Token(def_keyword),
-            SyntaxElement::Node(definition),
-        ] if prefix.kind() == SyntaxKind::DefinitionPrefix
-            && attribute_keyword.kind() == SyntaxKind::KwAttribute
-            && def_keyword.kind() == SyntaxKind::KwDef
-            && definition.kind() == SyntaxKind::Definition =>
-        {
-            Some((
-                prefix.clone(),
-                attribute_keyword.clone(),
-                def_keyword.clone(),
-                definition.clone(),
-            ))
-        }
-        _ => None,
-    };
-    assert!(
-        shape.is_some(),
-        "an attribute definition is not `DefinitionPrefix 'attribute' 'def' Definition`, \
-         at {:?}: {elements:?}",
-        node.text_range()
-    );
-
-    // The prefix holds neither keyword and no Definition: it is `abstract` or `variation`,
-    // and `#` keywords naming metadata (`DefinitionPrefix`, `SysML` 8.2.2.6.1;
-    // `DefinitionExtensionKeyword`, 8.2.2.6.1). Asserted because it is what makes
-    // attribute_keyword(), def_keyword() and definition() reading descendants equivalent
-    // mutations: the prefix is the only element before the keywords and the Definition in
-    // preorder, and the Definition's body, which may nest another attribute definition,
-    // comes after them.
-    assert!(
-        shape.as_ref().is_none_or(|(prefix, ..)| {
-            prefix.descendants_with_tokens().all(|below| {
-                !matches!(
-                    below.kind(),
-                    SyntaxKind::KwAttribute | SyntaxKind::KwDef | SyntaxKind::Definition
-                )
-            })
-        }),
-        "an `attribute`, `def` or Definition inside an attribute definition's prefix, at {:?}",
-        node.text_range()
-    );
-    shape
-}
-
-/// What `OccurrenceDefinition` must satisfy at every node, whatever the tree. Both node
-/// children are typed (`OccurrenceDefinitionPrefix`, `Definition`); the keywords are its own
-/// tokens.
+/// What `OccurrenceDefinition` must satisfy at every node, whatever the tree.
 fn assert_occurrence_definition_accessor(node: &SyntaxNode) {
-    let is_occurrence = node.kind() == SyntaxKind::OccurrenceDefinition;
-    let cast = OccurrenceDefinition::cast(node.clone());
+    assert_simple_definition(node, &simple_definitions::OCCURRENCE);
+}
+
+/// What a view of one of `simple_definition`'s productions must satisfy at every node.
+/// Both node children are typed (the prefix's view, `Definition`); the keywords are the
+/// node's own tokens.
+fn assert_simple_definition(node: &SyntaxNode, production: &simple_definitions::Production) {
+    let read = (production.read)(node);
     assert_eq!(
-        cast.is_some(),
-        is_occurrence,
-        "OccurrenceDefinition::cast disagreed with node.kind() at {:?} {:?}",
+        read.is_some(),
+        node.kind() == production.node,
+        "{:?}::cast disagreed with node.kind() at {:?} {:?}",
+        production.node,
         node.kind(),
         node.text_range()
     );
-    let Some(occurrence) = cast else {
+    let Some(read) = read else {
         return;
     };
 
     // (a) round trip.
     assert_eq!(
-        occurrence.syntax(),
+        &read.syntax,
         node,
-        "OccurrenceDefinition::syntax did not return the node it was cast from, at {:?}",
+        "{:?}::syntax did not return the node it was cast from, at {:?}",
+        production.node,
         node.text_range()
     );
 
     // (b) the shape, and (c) the differential against it.
-    let expected = occurrence_definition_shape(node).map_or(
+    let expected = simple_definition_shape(node, production).map_or(
         (None, None, None, None),
-        |(prefix, occurrence_keyword, def_keyword, definition)| {
+        |(prefix, keyword, def_keyword, definition)| {
             (
                 Some(prefix),
-                Some(occurrence_keyword),
+                Some(keyword),
                 Some(def_keyword),
                 Some(definition),
             )
@@ -2597,27 +2380,29 @@ fn assert_occurrence_definition_accessor(node: &SyntaxNode) {
     );
     assert_eq!(
         (
-            occurrence.prefix().map(|prefix| prefix.syntax().clone()),
-            occurrence.occurrence_keyword(),
-            occurrence.def_keyword(),
-            occurrence
-                .definition()
+            read.prefix,
+            read.keyword,
+            read.def_keyword,
+            read.definition
                 .map(|definition| definition.syntax().clone()),
         ),
         expected,
-        "an OccurrenceDefinition accessor disagrees with the node's own elements, at {:?}",
+        "a {:?} accessor disagrees with the node's own elements, at {:?}",
+        production.node,
         node.text_range()
     );
 }
 
-/// The elements of an `OccurrenceDefinition`, asserted to be exactly the production's.
+/// The elements of one of `simple_definition`'s productions, asserted to be exactly the
+/// production's.
 ///
-/// `OccurrenceDefinitionPrefix 'occurrence' 'def' Definition` (`SysML` 8.2.2.9.1), all
-/// four always present: `at_simple_definition`
-/// (`crates/sv2-syntax/src/parser/definition.rs`) begins one only on `occurrence` followed
-/// by `def`, and `simple_definition` builds both nodes whatever follows. Nothing else but trivia.
-fn occurrence_definition_shape(
+/// `<prefix> '<keyword>' 'def' Definition` (`SysML` 8.2.2.7, 8.2.2.9.1, 8.2.2.11), all four
+/// always present: `at_simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`)
+/// begins one only on its keyword followed by `def`, and `simple_definition` builds both
+/// nodes whatever follows. Nothing else but trivia.
+fn simple_definition_shape(
     node: &SyntaxNode,
+    production: &simple_definitions::Production,
 ) -> Option<(SyntaxNode, SyntaxToken, SyntaxToken, SyntaxNode)> {
     let elements: Vec<SyntaxElement> = node
         .children_with_tokens()
@@ -2630,17 +2415,17 @@ fn occurrence_definition_shape(
     let shape = match elements.as_slice() {
         [
             SyntaxElement::Node(prefix),
-            SyntaxElement::Token(occurrence_keyword),
+            SyntaxElement::Token(keyword),
             SyntaxElement::Token(def_keyword),
             SyntaxElement::Node(definition),
-        ] if prefix.kind() == SyntaxKind::OccurrenceDefinitionPrefix
-            && occurrence_keyword.kind() == SyntaxKind::KwOccurrence
+        ] if prefix.kind() == production.prefix
+            && keyword.kind() == production.keyword
             && def_keyword.kind() == SyntaxKind::KwDef
             && definition.kind() == SyntaxKind::Definition =>
         {
             Some((
                 prefix.clone(),
-                occurrence_keyword.clone(),
+                keyword.clone(),
                 def_keyword.clone(),
                 definition.clone(),
             ))
@@ -2649,28 +2434,32 @@ fn occurrence_definition_shape(
     };
     assert!(
         shape.is_some(),
-        "an occurrence definition is not `OccurrenceDefinitionPrefix 'occurrence' 'def' \
-         Definition`, at {:?}: {elements:?}",
+        "a {:?} is not `{:?} '{}' 'def' Definition`, at {:?}: {elements:?}",
+        production.node,
+        production.prefix,
+        production.keyword_text,
         node.text_range()
     );
 
     // The prefix holds neither keyword and no Definition: it is `abstract` or `variation`,
-    // `individual`, and `#` keywords naming metadata (`OccurrenceDefinitionPrefix`, `SysML`
-    // 8.2.2.9.1; `DefinitionExtensionKeyword`, 8.2.2.6.1). Asserted because it is what
-    // makes occurrence_keyword(), def_keyword() and definition() reading descendants
-    // equivalent mutations: the prefix is the only element before the keywords and the
-    // Definition in preorder, and the Definition's body, which may nest another occurrence
-    // definition, comes after them.
+    // `individual` in an occurrence's, and `#` keywords naming metadata
+    // (`OccurrenceDefinitionPrefix`, `SysML` 8.2.2.9.1; `DefinitionPrefix` and
+    // `DefinitionExtensionKeyword`, 8.2.2.6.1). Asserted because it is what makes the
+    // keyword accessors and definition() reading descendants equivalent mutations: the
+    // prefix is the only element before the keywords and the Definition in preorder, and
+    // the Definition's body, which may nest another definition, comes after them.
     assert!(
         shape.as_ref().is_none_or(|(prefix, ..)| {
             prefix.descendants_with_tokens().all(|below| {
-                !matches!(
-                    below.kind(),
-                    SyntaxKind::KwOccurrence | SyntaxKind::KwDef | SyntaxKind::Definition
-                )
+                let kind = below.kind();
+                kind != production.keyword
+                    && kind != SyntaxKind::KwDef
+                    && kind != SyntaxKind::Definition
             })
         }),
-        "an `occurrence`, `def` or Definition inside an occurrence definition's prefix, at {:?}",
+        "a `{}`, `def` or Definition inside a {:?}'s prefix, at {:?}",
+        production.keyword_text,
+        production.node,
         node.text_range()
     );
     shape

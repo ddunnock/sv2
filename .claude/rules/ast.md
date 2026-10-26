@@ -149,6 +149,27 @@ A tautology appears too: once an accessor is typed, `assert_eq!(child.kind(), K)
 guaranteed by `cast` and proves nothing. Replace it with what the view cannot guarantee —
 that the child it wraps is there, or which alternative it is — rather than deleting it.
 
+### A family built by one parser method shares its tests, not its views
+
+Where one parser method builds several productions that differ only in data — the eight
+`simple_definition` builds from `SIMPLE_DEFINITIONS` — each still gets its own view, one
+file in `src/` with its own `// node:` marker, because a view is of one node kind. What
+their tests assert is the same, so it is written once:
+
+- `tests/simple_definitions/mod.rs` holds a `Production` per kind: the node kind, the
+  prefix kind, the keyword, the usage the keyword opens without `def`, and a `read` that
+  calls the typed accessors. Adding a sibling adds one `Production` and one reader.
+- `tests/sweep.rs` keeps a one-line `assert_<kind>_accessor` per kind, delegating to
+  `assert_simple_definition`. The per-kind name stays because `ast_coverage.py` counts
+  `unswept` by it.
+- `tests/malformed.rs` keeps a `#[test]` and a fixture directory per kind, each calling
+  `def_written_twice` or `def_missing`. A condition that belongs to one kind alone — the
+  `individual` before an `attribute` — stays written out for that kind.
+
+The positive case stays per kind: it reads a corpus file chosen for that kind, and the
+choice is the point. Mutation still runs per accessor, since the views are separate code;
+a shared assertion proven against one kind proves nothing about another kind's reader.
+
 ## The sweep is where an accessor is actually exercised
 
 `tests/sweep.rs` walks every tree in the repository — 311 corpus files and 299 rejection

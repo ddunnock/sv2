@@ -77,6 +77,13 @@ about deviation diagnostics and says nothing about recovery.
 The accessor wraps one `SyntaxNode`, carries `// node: Kind` **in `src/`** (a marker
 elsewhere counts for nothing), and returns nodes and tokens — never a `String`.
 
+**If the kind is one of `SIMPLE_DEFINITIONS`**, its tests already exist in shared form
+(`.claude/rules/ast.md`, "A family built by one parser method shares its tests"): add a
+`Production` and a reader to `tests/simple_definitions/mod.rs`, a one-line
+`assert_<kind>_accessor` in the sweep, and the two malformed `#[test]`s calling
+`def_written_twice` and `def_missing` with the kind's fixtures. The positive case and the
+mutation run are still this kind's own.
+
 **Extend `tests/sweep.rs` with assertions for this kind.** The sweep walks every tree in
 the repository, so an accessor that is not called from it is not swept at all, and the
 suite stays green because it has nothing to check. The gate enforces this as `unswept`:
