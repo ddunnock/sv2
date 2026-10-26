@@ -18,7 +18,8 @@
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, ElementFilterMember, Import, MemberPrefix, PackageMember, PartDefinition,
+    AliasMember, AstNode, AttributeDefinition, ElementFilterMember, Import, MemberPrefix,
+    PackageMember, PartDefinition,
 };
 use sv2_syntax::{SyntaxKind, SyntaxNode};
 
@@ -2004,5 +2005,68 @@ fn the_part_definitions_of_individuals_and_roles_read_their_keywords_prefix_and_
             def(true, "Wheel_1 :> Wheel"),
         ],
         "lines 4, 6 and 11, in source order, and not the usage on line 13"
+    );
+}
+
+/// An attribute definition's two keywords, its prefix's basic prefix, and what its
+/// definition declares.
+type AttributeDefinitionRead = (
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+);
+
+/// `Variation Definitions.sysml`, two attribute definitions and a part definition written
+/// with the same prefix keyword:
+///
+/// ```text
+///   line  5:  attribute def Diameter :> ISQ::LengthValue;          no prefix
+///   line 25:  variation attribute def DiameterChoices :> Diameter  variation
+///   line 30:  variation part def EngineChoices :> Engine           a PartDefinition
+/// ```
+///
+/// `AttributeDefinition = DefinitionPrefix 'attribute' 'def' Definition` (`SysML`
+/// 8.2.2.7). Chosen because it is one of the two corpus files whose attribute definition
+/// writes a prefix, beside one that writes none, and because line 30 is the same shape
+/// with another kind keyword: `PartDefinition` (8.2.2.11) is a sibling built by the same
+/// parser method, and none of these.
+#[test]
+fn the_attribute_definitions_of_variation_definitions_read_their_keywords_prefix_and_definition() {
+    let read: Vec<AttributeDefinitionRead> = tree_of(VARIATION_DEFINITIONS)
+        .descendants()
+        .filter_map(AttributeDefinition::cast)
+        .map(|attribute| {
+            (
+                attribute
+                    .attribute_keyword()
+                    .map(|token| token.text().to_owned()),
+                attribute.def_keyword().map(|token| token.text().to_owned()),
+                attribute
+                    .prefix()
+                    .and_then(|prefix| prefix.basic_prefix())
+                    .map(|basic| basic.text().to_string()),
+                attribute
+                    .definition()
+                    .and_then(|definition| definition.declaration())
+                    .map(|declaration| declaration.text().to_string()),
+            )
+        })
+        .collect();
+    let def = |basic: Option<&str>, declaration: &str| {
+        (
+            Some("attribute".to_owned()),
+            Some("def".to_owned()),
+            basic.map(str::to_owned),
+            Some(declaration.to_owned()),
+        )
+    };
+    assert_eq!(
+        read,
+        [
+            def(None, "Diameter :> ISQ::LengthValue"),
+            def(Some("variation"), "DiameterChoices :> Diameter"),
+        ],
+        "lines 5 and 25, in source order, and not the part definition on line 30"
     );
 }

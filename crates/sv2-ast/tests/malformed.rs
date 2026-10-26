@@ -5,10 +5,10 @@
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, Definition, DefinitionPrefix, ElementFilterMember, Import,
-    LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember, NamespaceImport,
-    NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember,
-    PartDefinition, QualifiedName, RelationshipBody, RootNamespace,
+    AliasMember, AstNode, AttributeDefinition, Definition, DefinitionPrefix, ElementFilterMember,
+    Import, LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember,
+    NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package,
+    PackageMember, PartDefinition, QualifiedName, RelationshipBody, RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -2351,5 +2351,304 @@ fn a_part_with_no_def_after_it_begins_no_part_definition() {
             SyntaxKind::PartDefinition
         ],
         "the package, then A as a PartUsage, then C"
+    );
+}
+
+const ATTRIBUTE_DEF_WRITTEN_TWICE: &str =
+    include_str!("malformed/attribute-definition/def-written-twice.sysml");
+const ATTRIBUTE_DEF_MISSING: &str =
+    include_str!("malformed/attribute-definition/def-missing.sysml");
+const INDIVIDUAL_BEFORE_ATTRIBUTE: &str =
+    include_str!("malformed/attribute-definition/individual-before-attribute.sysml");
+
+/// Every `AttributeDefinition` in `root`, in document order.
+fn attribute_definitions(root: &SyntaxNode) -> Vec<AttributeDefinition> {
+    root.descendants()
+        .filter_map(AttributeDefinition::cast)
+        .collect()
+}
+
+/// What an attribute definition says of itself and of its definition: its two keywords,
+/// and the declaration and body its `Definition` holds.
+type AttributeDefinitionRead = (Option<String>, Option<String>, Option<(String, String)>);
+
+fn read_attribute_definition(attribute: &AttributeDefinition) -> AttributeDefinitionRead {
+    (
+        attribute
+            .attribute_keyword()
+            .map(|token| token.text().to_owned()),
+        attribute.def_keyword().map(|token| token.text().to_owned()),
+        attribute.definition().map(|definition| {
+            (
+                definition
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string())
+                    .unwrap_or_default(),
+                definition
+                    .body()
+                    .map(|body| body.text().to_string())
+                    .unwrap_or_default(),
+            )
+        }),
+    )
+}
+
+/// A whole attribute definition declaring `name`, closed by `;`.
+fn whole_attribute(name: &str) -> AttributeDefinitionRead {
+    (
+        Some("attribute".to_owned()),
+        Some("def".to_owned()),
+        Some((name.to_owned(), ";".to_owned())),
+    )
+}
+
+/// `attribute-definition/def-written-twice.sysml`: `attribute def def A;`, then
+/// `attribute def B;`.
+///
+/// `AttributeDefinition = DefinitionPrefix 'attribute' 'def' Definition` (`SysML`
+/// 8.2.2.7). `simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`) takes the
+/// first `def`; `definition_body` reports the second, and `recover_statement`
+/// (`crates/sv2-syntax/src/parser/recovery.rs`) puts it in an `Error` beside the member.
+///
+/// 1. the parse still yields a tree, holding two attribute definitions;
+/// 2. the first owns one `def`, the first, its definition spans nothing, and one
+///    diagnostic, on the second `def`, reported it;
+/// 3. the neighbours still answer: the first's `Definition` declares nothing, and B is
+///    whole.
+#[test]
+fn an_attribute_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    let parse = trees::parsed(ATTRIBUTE_DEF_WRITTEN_TWICE, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. two attribute definitions.
+    let attributes = attribute_definitions(&root);
+    assert_eq!(
+        attributes.len(),
+        2,
+        "the fixture writes two `attribute def`s"
+    );
+    let first = &attributes[0];
+
+    // 2a. the first owns exactly one `def`, the first one written.
+    let written = ATTRIBUTE_DEF_WRITTEN_TWICE
+        .find("\tattribute def def")
+        .expect("the fixture writes `attribute def def`, tab-indented, below its header");
+    let first_def = u32::try_from(written + "\tattribute ".len()).expect("the fixture is small");
+    assert_eq!(
+        first
+            .def_keyword()
+            .map(|token| u32::from(token.text_range().start())),
+        Some(first_def),
+        "def_keyword() is the `def` written straight after `attribute`"
+    );
+    assert_eq!(
+        first.syntax().text().to_string(),
+        "attribute def ",
+        "the first attribute definition holds the keywords, and the space `definition` \
+         eats before it opens an empty Definition, and nothing after them"
+    );
+
+    // 2b. the second `def` is the Error's, `def ` (four bytes) after the first, and that
+    // was reported, once.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    assert_eq!(
+        (stray.text(), u32::from(stray.text_range().start())),
+        ("def", first_def + 4),
+        "the Error opens with the second `def`"
+    );
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [stray.text_range()],
+        "one diagnostic, on the second `def`: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbours still answer.
+    assert_eq!(
+        attributes
+            .iter()
+            .map(read_attribute_definition)
+            .collect::<Vec<_>>(),
+        [
+            (
+                Some("attribute".to_owned()),
+                Some("def".to_owned()),
+                Some((String::new(), String::new()))
+            ),
+            whole_attribute("B"),
+        ],
+        "the first's Definition declares nothing and has no body; B is whole"
+    );
+}
+
+/// `attribute-definition/def-missing.sysml`: `attribute A def B;`, then `attribute def
+/// C;`.
+///
+/// `AttributeDefinition = DefinitionPrefix 'attribute' 'def' Definition` and
+/// `AttributeUsage = UsagePrefix 'attribute' Usage` (`SysML` 8.2.2.7).
+/// `at_simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`) begins an
+/// attribute definition only on `attribute` followed by `def`, so `attribute A` is an
+/// `AttributeUsage` and no attribute definition is begun.
+///
+/// 1. the parse still yields a tree, holding one attribute definition, C's;
+/// 2. A is no attribute definition at all, and one diagnostic, on the `def`, reported it;
+/// 3. the neighbours still answer: the first member's element is an `AttributeUsage`, and
+///    C is whole.
+#[test]
+fn an_attribute_with_no_def_after_it_begins_no_attribute_definition() {
+    let parse = trees::parsed(ATTRIBUTE_DEF_MISSING, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1 and 2a. one attribute definition, and it is C's.
+    assert_eq!(
+        attribute_definitions(&root)
+            .iter()
+            .map(read_attribute_definition)
+            .collect::<Vec<_>>(),
+        [whole_attribute("C")],
+        "only C writes `attribute def`, so only C is an attribute definition"
+    );
+
+    // 2b. reported, once, on the `def` A's `attribute` was not followed by.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    let written = ATTRIBUTE_DEF_MISSING
+        .find("\tattribute A def")
+        .expect("the fixture writes `attribute A def`, tab-indented, below its header");
+    assert_eq!(
+        (stray.text(), usize::from(stray.text_range().start())),
+        ("def", written + "\tattribute A ".len()),
+        "the Error opens with the misplaced `def`"
+    );
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [stray.text_range()],
+        "one diagnostic, on the misplaced `def`: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour: the first member holds an AttributeUsage, not a half-built
+    // definition.
+    assert_eq!(
+        members(&root)
+            .iter()
+            .filter_map(|member| member.element().map(|element| element.kind()))
+            .collect::<Vec<_>>(),
+        [
+            SyntaxKind::Package,
+            SyntaxKind::AttributeUsage,
+            SyntaxKind::AttributeDefinition
+        ],
+        "the package, then A as an AttributeUsage, then C"
+    );
+}
+
+/// `attribute-definition/individual-before-attribute.sysml`: `individual attribute def
+/// A;`, then `attribute def B;`.
+///
+/// `AttributeDefinition = DefinitionPrefix 'attribute' 'def' Definition` (`SysML`
+/// 8.2.2.7), and `DefinitionPrefix = BasicDefinitionPrefix? DefinitionExtensionKeyword*`
+/// (8.2.2.6.1) has no `individual`: only an occurrence may be individual (8.2.2.9.1).
+/// `SIMPLE_DEFINITIONS` marks `attribute` `is_occurrence: false`
+/// (`crates/sv2-syntax/src/parser/definition.rs`), so no definition begins at
+/// `individual`, and `recover_statement` (`crates/sv2-syntax/src/parser/recovery.rs`)
+/// wraps it in an `Error` alone.
+///
+/// 1. the parse still yields a tree, holding two attribute definitions;
+/// 2. A's starts at `attribute`, its prefix is present and empty, and one diagnostic, on
+///    the `individual`, reported it;
+/// 3. the neighbours still answer: A and B are whole, and `DefinitionPrefix` answers
+///    absence for both of A's slots.
+#[test]
+fn an_attribute_definition_leaves_individual_out_of_its_prefix() {
+    let parse = trees::parsed(INDIVIDUAL_BEFORE_ATTRIBUTE, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. two attribute definitions.
+    let attributes = attribute_definitions(&root);
+    assert_eq!(
+        attributes.len(),
+        2,
+        "the fixture writes two `attribute def`s"
+    );
+    let first = &attributes[0];
+
+    // 2a. A begins at its `attribute`, and the `individual` before it is not its prefix's.
+    let written = INDIVIDUAL_BEFORE_ATTRIBUTE
+        .find("\tindividual attribute def")
+        .expect("the fixture writes `individual attribute def`, tab-indented");
+    let attribute_at = written + "\tindividual ".len();
+    assert_eq!(
+        (
+            usize::from(first.syntax().text_range().start()),
+            first
+                .attribute_keyword()
+                .map(|token| usize::from(token.text_range().start())),
+        ),
+        (attribute_at, Some(attribute_at)),
+        "A's definition, and its `attribute`, start after the `individual`"
+    );
+    let prefix = first
+        .prefix()
+        .expect("simple_definition builds the prefix even when nothing is written");
+    assert_eq!(
+        prefix.syntax().text().to_string(),
+        "",
+        "the prefix holds nothing: `individual` is no DefinitionPrefix's"
+    );
+
+    // 2b. the `individual` is the Error's, and that was reported, once.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    assert_individual_alone_reported(&parse, &stray, written + "\t".len());
+
+    // 3. the neighbours: both definitions whole, and the prefix's own accessors find no
+    // slot.
+    assert_eq!(
+        attributes
+            .iter()
+            .map(read_attribute_definition)
+            .collect::<Vec<_>>(),
+        [whole_attribute("A"), whole_attribute("B")],
+        "A and B are each whole"
+    );
+    assert_eq!(
+        (
+            prefix.basic_prefix().map(|basic| basic.text().to_string()),
+            prefix.extension_keywords().count()
+        ),
+        (None, 0),
+        "DefinitionPrefix finds neither slot in A's prefix"
+    );
+}
+
+/// Part 2b of `an_attribute_definition_leaves_individual_out_of_its_prefix`, split out
+/// for clippy's 60-line limit: `stray`, the `Error`'s first token, is the `individual`
+/// written at `at`, and the parse reports exactly that token, once.
+fn assert_individual_alone_reported(
+    parse: &sv2_syntax::Parse,
+    stray: &sv2_syntax::SyntaxToken,
+    at: usize,
+) {
+    assert_eq!(
+        (stray.text(), usize::from(stray.text_range().start())),
+        ("individual", at),
+        "the Error holds the `individual`"
+    );
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [stray.text_range()],
+        "one diagnostic, on the `individual`: {:?}",
+        parse.errors()
     );
 }
