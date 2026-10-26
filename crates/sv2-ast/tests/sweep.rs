@@ -10,9 +10,9 @@ mod trees;
 use sv2_ast::{
     AliasMember, AstNode, AttributeDefinition, Definition, DefinitionPrefix, ElementFilterMember,
     Import, ImportDeclaration, LibraryPackage, MemberPrefix, MembershipImport,
-    NamespaceFeatureMember, NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix,
-    OwnedAnnotation, Package, PackageMember, PartDefinition, QualifiedName, RelationshipBody,
-    RootNamespace, VisibilityIndicator,
+    NamespaceFeatureMember, NamespaceImport, NonFeatureMember, OccurrenceDefinition,
+    OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember, PartDefinition,
+    QualifiedName, RelationshipBody, RootNamespace, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -2558,6 +2558,124 @@ fn attribute_definition_shape(
     shape
 }
 
+/// What `OccurrenceDefinition` must satisfy at every node, whatever the tree. Both node
+/// children are typed (`OccurrenceDefinitionPrefix`, `Definition`); the keywords are its own
+/// tokens.
+fn assert_occurrence_definition_accessor(node: &SyntaxNode) {
+    let is_occurrence = node.kind() == SyntaxKind::OccurrenceDefinition;
+    let cast = OccurrenceDefinition::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_occurrence,
+        "OccurrenceDefinition::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(occurrence) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        occurrence.syntax(),
+        node,
+        "OccurrenceDefinition::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) the shape, and (c) the differential against it.
+    let expected = occurrence_definition_shape(node).map_or(
+        (None, None, None, None),
+        |(prefix, occurrence_keyword, def_keyword, definition)| {
+            (
+                Some(prefix),
+                Some(occurrence_keyword),
+                Some(def_keyword),
+                Some(definition),
+            )
+        },
+    );
+    assert_eq!(
+        (
+            occurrence.prefix().map(|prefix| prefix.syntax().clone()),
+            occurrence.occurrence_keyword(),
+            occurrence.def_keyword(),
+            occurrence
+                .definition()
+                .map(|definition| definition.syntax().clone()),
+        ),
+        expected,
+        "an OccurrenceDefinition accessor disagrees with the node's own elements, at {:?}",
+        node.text_range()
+    );
+}
+
+/// The elements of an `OccurrenceDefinition`, asserted to be exactly the production's.
+///
+/// `OccurrenceDefinitionPrefix 'occurrence' 'def' Definition` (`SysML` 8.2.2.9.1), all
+/// four always present: `at_simple_definition`
+/// (`crates/sv2-syntax/src/parser/definition.rs`) begins one only on `occurrence` followed
+/// by `def`, and `simple_definition` builds both nodes whatever follows. Nothing else but trivia.
+fn occurrence_definition_shape(
+    node: &SyntaxNode,
+) -> Option<(SyntaxNode, SyntaxToken, SyntaxToken, SyntaxNode)> {
+    let elements: Vec<SyntaxElement> = node
+        .children_with_tokens()
+        .filter(|element| {
+            element
+                .as_token()
+                .is_none_or(|token| !token.text().trim().is_empty())
+        })
+        .collect();
+    let shape = match elements.as_slice() {
+        [
+            SyntaxElement::Node(prefix),
+            SyntaxElement::Token(occurrence_keyword),
+            SyntaxElement::Token(def_keyword),
+            SyntaxElement::Node(definition),
+        ] if prefix.kind() == SyntaxKind::OccurrenceDefinitionPrefix
+            && occurrence_keyword.kind() == SyntaxKind::KwOccurrence
+            && def_keyword.kind() == SyntaxKind::KwDef
+            && definition.kind() == SyntaxKind::Definition =>
+        {
+            Some((
+                prefix.clone(),
+                occurrence_keyword.clone(),
+                def_keyword.clone(),
+                definition.clone(),
+            ))
+        }
+        _ => None,
+    };
+    assert!(
+        shape.is_some(),
+        "an occurrence definition is not `OccurrenceDefinitionPrefix 'occurrence' 'def' \
+         Definition`, at {:?}: {elements:?}",
+        node.text_range()
+    );
+
+    // The prefix holds neither keyword and no Definition: it is `abstract` or `variation`,
+    // `individual`, and `#` keywords naming metadata (`OccurrenceDefinitionPrefix`, `SysML`
+    // 8.2.2.9.1; `DefinitionExtensionKeyword`, 8.2.2.6.1). Asserted because it is what
+    // makes occurrence_keyword(), def_keyword() and definition() reading descendants
+    // equivalent mutations: the prefix is the only element before the keywords and the
+    // Definition in preorder, and the Definition's body, which may nest another occurrence
+    // definition, comes after them.
+    assert!(
+        shape.as_ref().is_none_or(|(prefix, ..)| {
+            prefix.descendants_with_tokens().all(|below| {
+                !matches!(
+                    below.kind(),
+                    SyntaxKind::KwOccurrence | SyntaxKind::KwDef | SyntaxKind::Definition
+                )
+            })
+        }),
+        "an `occurrence`, `def` or Definition inside an occurrence definition's prefix, at {:?}",
+        node.text_range()
+    );
+    shape
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -2589,6 +2707,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_definition_accessor(&node);
             assert_part_definition_accessor(&node);
             assert_attribute_definition_accessor(&node);
+            assert_occurrence_definition_accessor(&node);
             visited += 1;
         }
     }

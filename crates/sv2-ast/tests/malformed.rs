@@ -7,8 +7,9 @@ mod trees;
 use sv2_ast::{
     AliasMember, AstNode, AttributeDefinition, Definition, DefinitionPrefix, ElementFilterMember,
     Import, LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember,
-    NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package,
-    PackageMember, PartDefinition, QualifiedName, RelationshipBody, RootNamespace,
+    NamespaceImport, NonFeatureMember, OccurrenceDefinition, OccurrenceDefinitionPrefix,
+    OwnedAnnotation, Package, PackageMember, PartDefinition, QualifiedName, RelationshipBody,
+    RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -2650,5 +2651,201 @@ fn assert_individual_alone_reported(
         [stray.text_range()],
         "one diagnostic, on the `individual`: {:?}",
         parse.errors()
+    );
+}
+
+const OCCURRENCE_DEF_WRITTEN_TWICE: &str =
+    include_str!("malformed/occurrence-definition/def-written-twice.sysml");
+const OCCURRENCE_DEF_MISSING: &str =
+    include_str!("malformed/occurrence-definition/def-missing.sysml");
+
+/// Every `OccurrenceDefinition` in `root`, in document order.
+fn occurrence_definitions(root: &SyntaxNode) -> Vec<OccurrenceDefinition> {
+    root.descendants()
+        .filter_map(OccurrenceDefinition::cast)
+        .collect()
+}
+
+/// What an occurrence definition says of itself and of its definition: its two keywords,
+/// and the declaration and body its `Definition` holds.
+type OccurrenceDefinitionRead = (Option<String>, Option<String>, Option<(String, String)>);
+
+fn read_occurrence_definition(occurrence: &OccurrenceDefinition) -> OccurrenceDefinitionRead {
+    (
+        occurrence
+            .occurrence_keyword()
+            .map(|token| token.text().to_owned()),
+        occurrence
+            .def_keyword()
+            .map(|token| token.text().to_owned()),
+        occurrence.definition().map(|definition| {
+            (
+                definition
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string())
+                    .unwrap_or_default(),
+                definition
+                    .body()
+                    .map(|body| body.text().to_string())
+                    .unwrap_or_default(),
+            )
+        }),
+    )
+}
+
+/// A whole occurrence definition declaring `name`, closed by `;`.
+fn whole_occurrence(name: &str) -> OccurrenceDefinitionRead {
+    (
+        Some("occurrence".to_owned()),
+        Some("def".to_owned()),
+        Some((name.to_owned(), ";".to_owned())),
+    )
+}
+
+/// `occurrence-definition/def-written-twice.sysml`: `occurrence def def A;`, then
+/// `occurrence def B;`.
+///
+/// `OccurrenceDefinition = OccurrenceDefinitionPrefix 'occurrence' 'def' Definition`
+/// (`SysML` 8.2.2.9.1). `simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`)
+/// takes the first `def`; `definition_body` reports the second, and `recover_statement`
+/// (`crates/sv2-syntax/src/parser/recovery.rs`) puts it in an `Error` beside the member.
+///
+/// 1. the parse still yields a tree, holding two occurrence definitions;
+/// 2. the first owns one `def`, the first, its definition spans nothing, and one
+///    diagnostic, on the second `def`, reported it;
+/// 3. the neighbours still answer: the first's `Definition` declares nothing, and B is
+///    whole.
+#[test]
+fn an_occurrence_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    let parse = trees::parsed(OCCURRENCE_DEF_WRITTEN_TWICE, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. two occurrence definitions.
+    let occurrences = occurrence_definitions(&root);
+    assert_eq!(
+        occurrences.len(),
+        2,
+        "the fixture writes two `occurrence def`s"
+    );
+    let first = &occurrences[0];
+
+    // 2a. the first owns exactly one `def`, the first one written.
+    let written = OCCURRENCE_DEF_WRITTEN_TWICE
+        .find("\toccurrence def def")
+        .expect("the fixture writes `occurrence def def`, tab-indented, below its header");
+    let first_def = u32::try_from(written + "\toccurrence ".len()).expect("the fixture is small");
+    assert_eq!(
+        first
+            .def_keyword()
+            .map(|token| u32::from(token.text_range().start())),
+        Some(first_def),
+        "def_keyword() is the `def` written straight after `occurrence`"
+    );
+    assert_eq!(
+        first.syntax().text().to_string(),
+        "occurrence def ",
+        "the first occurrence definition holds the keywords, and the space `definition` \
+         eats before it opens an empty Definition, and nothing after them"
+    );
+
+    // 2b. the second `def` is the Error's, `def ` (four bytes) after the first, and that
+    // was reported, once.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    assert_eq!(
+        (stray.text(), u32::from(stray.text_range().start())),
+        ("def", first_def + 4),
+        "the Error opens with the second `def`"
+    );
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [stray.text_range()],
+        "one diagnostic, on the second `def`: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbours still answer.
+    assert_eq!(
+        occurrences
+            .iter()
+            .map(read_occurrence_definition)
+            .collect::<Vec<_>>(),
+        [
+            (
+                Some("occurrence".to_owned()),
+                Some("def".to_owned()),
+                Some((String::new(), String::new()))
+            ),
+            whole_occurrence("B"),
+        ],
+        "the first's Definition declares nothing and has no body; B is whole"
+    );
+}
+
+/// `occurrence-definition/def-missing.sysml`: `occurrence A def B;`, then `occurrence def
+/// C;`.
+///
+/// `OccurrenceDefinition = OccurrenceDefinitionPrefix 'occurrence' 'def' Definition` and
+/// `OccurrenceUsage = OccurrenceUsagePrefix 'occurrence' Usage` (`SysML` 8.2.2.9.1).
+/// `at_simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`) begins an
+/// occurrence definition only on `occurrence` followed by `def`, so `occurrence A` is an
+/// `OccurrenceUsage` and no occurrence definition is begun.
+///
+/// 1. the parse still yields a tree, holding one occurrence definition, C's;
+/// 2. A is no occurrence definition at all, and one diagnostic, on the `def`, reported it;
+/// 3. the neighbours still answer: the first member's element is an `OccurrenceUsage`, and
+///    C is whole.
+#[test]
+fn an_occurrence_with_no_def_after_it_begins_no_occurrence_definition() {
+    let parse = trees::parsed(OCCURRENCE_DEF_MISSING, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1 and 2a. one occurrence definition, and it is C's.
+    assert_eq!(
+        occurrence_definitions(&root)
+            .iter()
+            .map(read_occurrence_definition)
+            .collect::<Vec<_>>(),
+        [whole_occurrence("C")],
+        "only C writes `occurrence def`, so only C is an occurrence definition"
+    );
+
+    // 2b. reported, once, on the `def` A's `occurrence` was not followed by.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    let written = OCCURRENCE_DEF_MISSING
+        .find("\toccurrence A def")
+        .expect("the fixture writes `occurrence A def`, tab-indented, below its header");
+    assert_eq!(
+        (stray.text(), usize::from(stray.text_range().start())),
+        ("def", written + "\toccurrence A ".len()),
+        "the Error opens with the misplaced `def`"
+    );
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [stray.text_range()],
+        "one diagnostic, on the misplaced `def`: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour: the first member holds an OccurrenceUsage, not a half-built
+    // definition.
+    assert_eq!(
+        members(&root)
+            .iter()
+            .filter_map(|member| member.element().map(|element| element.kind()))
+            .collect::<Vec<_>>(),
+        [
+            SyntaxKind::Package,
+            SyntaxKind::OccurrenceUsage,
+            SyntaxKind::OccurrenceDefinition
+        ],
+        "the package, then A as an OccurrenceUsage, then C"
     );
 }

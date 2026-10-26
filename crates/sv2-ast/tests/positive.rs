@@ -2070,3 +2070,75 @@ fn the_attribute_definitions_of_variation_definitions_read_their_keywords_prefix
         "lines 5 and 25, in source order, and not the part definition on line 30"
     );
 }
+
+/// An occurrence definition's two keywords, whether its prefix is `individual`, and what
+/// its definition declares.
+type OccurrenceDefinitionRead = (Option<String>, Option<String>, bool, Option<String>);
+
+const OCCURRENCE_TEST: &str = "vendor/corpus/sysml/src/examples/Simple Tests/OccurrenceTest.sysml";
+
+/// Every `OccurrenceDefinition` in the corpus file at `relative`, read.
+fn occurrence_definitions_of(relative: &str) -> Vec<OccurrenceDefinitionRead> {
+    tree_of(relative)
+        .descendants()
+        .filter_map(sv2_ast::OccurrenceDefinition::cast)
+        .map(|occurrence| {
+            (
+                occurrence
+                    .occurrence_keyword()
+                    .map(|token| token.text().to_owned()),
+                occurrence
+                    .def_keyword()
+                    .map(|token| token.text().to_owned()),
+                occurrence
+                    .prefix()
+                    .is_some_and(|prefix| prefix.is_individual()),
+                occurrence
+                    .definition()
+                    .and_then(|definition| definition.declaration())
+                    .map(|declaration| declaration.text().to_string()),
+            )
+        })
+        .collect()
+}
+
+/// `OccurrenceTest.sysml` and `IndividualTest.sysml`, read for their occurrence
+/// definitions:
+///
+/// ```text
+///   OccurrenceTest   line  2:  occurrence def Occ { ... }             no prefix
+///                    line 13:  occurrence occ : Occ { ... }           an OccurrenceUsage
+///                    line 19:  individual occurrence def Ind { ... }  individual
+///                    line 23:  individual occurrence ind : ...        an OccurrenceUsage
+///   IndividualTest   line  2:  individual def IO1;                    an IndividualDefinition
+///                    line  3:  individual occurrence def IO2 { ... }  individual
+/// ```
+///
+/// `OccurrenceDefinition = OccurrenceDefinitionPrefix 'occurrence' 'def' Definition`
+/// (`SysML` 8.2.2.9.1). The first file writes the definition with and without a prefix
+/// beside usages of the same keyword (`OccurrenceUsage`, 8.2.2.9.2), which write no `def`.
+/// The second is chosen for line 2: `IndividualDefinition` (8.2.2.9.1) has the metaclass
+/// `OccurrenceDefinition` too ("individual may be used in place of the kind keyword",
+/// 7.9.4, receipt 8c84370d), but it is another production, with no `occurrence` keyword
+/// and no `OccurrenceDefinitionPrefix`, and this parser builds it as another node.
+#[test]
+fn the_occurrence_definitions_of_two_simple_tests_read_their_keywords_prefix_and_definition() {
+    let def = |individual: bool, declaration: &str| {
+        (
+            Some("occurrence".to_owned()),
+            Some("def".to_owned()),
+            individual,
+            Some(declaration.to_owned()),
+        )
+    };
+    assert_eq!(
+        occurrence_definitions_of(OCCURRENCE_TEST),
+        [def(false, "Occ"), def(true, "Ind")],
+        "lines 2 and 19, in source order, and neither usage"
+    );
+    assert_eq!(
+        occurrence_definitions_of(INDIVIDUAL_TEST),
+        [def(true, "IO2")],
+        "line 3, and not the individual definition on line 2"
+    );
+}
