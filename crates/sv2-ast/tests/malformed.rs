@@ -2,14 +2,14 @@
 // Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
 //! One malformed case per accessor (`.claude/rules/ast.md`).
 
+mod simple_definitions;
 mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, AttributeDefinition, Definition, DefinitionPrefix, ElementFilterMember,
     Import, LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember,
-    NamespaceImport, NonFeatureMember, OccurrenceDefinition, OccurrenceDefinitionPrefix,
-    OwnedAnnotation, Package, PackageMember, PartDefinition, QualifiedName, RelationshipBody,
-    RootNamespace,
+    NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package,
+    PackageMember, QualifiedName, RelationshipBody, RootNamespace,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -2172,39 +2172,6 @@ fn a_definition_with_no_body_keeps_an_empty_one_and_the_next_member_survives() {
     );
 }
 
-const DEF_WRITTEN_TWICE: &str = include_str!("malformed/part-definition/def-written-twice.sysml");
-const DEF_MISSING: &str = include_str!("malformed/part-definition/def-missing.sysml");
-
-/// Every `PartDefinition` in `root`, in document order.
-fn part_definitions(root: &SyntaxNode) -> Vec<PartDefinition> {
-    root.descendants()
-        .filter_map(PartDefinition::cast)
-        .collect()
-}
-
-/// What a part definition says of itself and of its definition: its two keywords, and the
-/// declaration and body its `Definition` holds.
-type PartDefinitionRead = (Option<String>, Option<String>, Option<(String, String)>);
-
-fn read_part_definition(part: &PartDefinition) -> PartDefinitionRead {
-    (
-        part.part_keyword().map(|token| token.text().to_owned()),
-        part.def_keyword().map(|token| token.text().to_owned()),
-        part.definition().map(|definition| {
-            (
-                definition
-                    .declaration()
-                    .map(|declaration| declaration.text().to_string())
-                    .unwrap_or_default(),
-                definition
-                    .body()
-                    .map(|body| body.text().to_string())
-                    .unwrap_or_default(),
-            )
-        }),
-    )
-}
-
 /// The first token of the `Error` the package body holds, where the stray text begins.
 fn first_error_token(root: &SyntaxNode) -> Option<sv2_syntax::SyntaxToken> {
     root.descendants()
@@ -2212,45 +2179,53 @@ fn first_error_token(root: &SyntaxNode) -> Option<sv2_syntax::SyntaxToken> {
         .and_then(|error| error.first_token())
 }
 
-/// `part-definition/def-written-twice.sysml`: `part def def A;`, then `part def B;`.
+/// The malformed case every production `simple_definition` builds shares:
+/// `<keyword> def def A;`, then `<keyword> def B;`, in `source`.
 ///
-/// `PartDefinition = OccurrenceDefinitionPrefix 'part' 'def' Definition` (`SysML`
-/// 8.2.2.11). `simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`) takes
-/// the first `def`; `definition_body` reports the second, and `recover_statement`
+/// `<prefix> '<keyword>' 'def' Definition` (`SysML` 8.2.2.7, 8.2.2.9.1, 8.2.2.11).
+/// `simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`) takes the first
+/// `def`; `definition_body` reports the second, and `recover_statement`
 /// (`crates/sv2-syntax/src/parser/recovery.rs`) puts it in an `Error` beside the member.
 ///
-/// 1. the parse still yields a tree, holding two part definitions;
+/// 1. the parse still yields a tree, holding two instances;
 /// 2. the first owns one `def`, the first, its definition spans nothing, and one
 ///    diagnostic, on the second `def`, reported it;
 /// 3. the neighbours still answer: the first's `Definition` declares nothing, and B is
 ///    whole.
-#[test]
-fn a_part_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
-    let parse = trees::parsed(DEF_WRITTEN_TWICE, Language::SysMl);
+#[expect(
+    clippy::expect_used,
+    reason = "test support only: the fixture is the test's, and an expectation it fails is \
+              the test failing"
+)]
+fn def_written_twice(production: &simple_definitions::Production, source: &str) {
+    let parse = trees::parsed(source, Language::SysMl);
     let root = parse.syntax();
+    let keyword = production.keyword_text;
 
-    // 1. two part definitions.
-    let parts = part_definitions(&root);
-    assert_eq!(parts.len(), 2, "the fixture writes two `part def`s");
-    let first = &parts[0];
+    // 1. two instances.
+    let read = simple_definitions::every(production, &root);
+    assert_eq!(read.len(), 2, "the fixture writes two `{keyword} def`s");
+    let first = read.first().expect("two, so a first");
 
     // 2a. the first owns exactly one `def`, the first one written.
-    let written = DEF_WRITTEN_TWICE
-        .find("\tpart def def")
-        .expect("the fixture writes `part def def`, tab-indented, below its header");
-    let first_def = u32::try_from(written + "\tpart ".len()).expect("the fixture is small");
+    let written = source
+        .find(&format!("\t{keyword} def def"))
+        .expect("the fixture writes `<keyword> def def`, tab-indented, below its header");
+    let first_def = u32::try_from(written + 1 + keyword.len() + 1).expect("the fixture is small");
     assert_eq!(
         first
-            .def_keyword()
+            .def_keyword
+            .as_ref()
             .map(|token| u32::from(token.text_range().start())),
         Some(first_def),
-        "def_keyword() is the `def` written straight after `part`"
+        "def_keyword() is the `def` written straight after `{keyword}`"
     );
     assert_eq!(
-        first.syntax().text().to_string(),
-        "part def ",
-        "the first part definition holds the keywords, and the space `definition` eats \
-         before it opens an empty Definition, and nothing after them"
+        first.syntax.text().to_string(),
+        format!("{keyword} def "),
+        "the first {:?} holds the keywords, and the space `definition` eats before it opens \
+         an empty Definition, and nothing after them",
+        production.node
     );
 
     // 2b. the second `def` is the Error's, `def ` (four bytes) after the first, and that
@@ -2274,285 +2249,152 @@ fn a_part_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
 
     // 3. the neighbours still answer.
     assert_eq!(
-        parts.iter().map(read_part_definition).collect::<Vec<_>>(),
+        read.iter()
+            .map(simple_definitions::summary)
+            .collect::<Vec<_>>(),
         [
             (
-                Some("part".to_owned()),
+                Some(keyword.to_owned()),
                 Some("def".to_owned()),
                 Some((String::new(), String::new()))
             ),
-            (
-                Some("part".to_owned()),
-                Some("def".to_owned()),
-                Some(("B".to_owned(), ";".to_owned()))
-            ),
+            simple_definitions::whole(production, "B"),
         ],
         "the first's Definition declares nothing and has no body; B is whole"
+    );
+}
+
+/// The other malformed case every production `simple_definition` builds shares:
+/// `<keyword> A def B;`, then `<keyword> def C;`, in `source`.
+///
+/// `<prefix> '<keyword>' 'def' Definition`, and the usage the same keyword opens, which
+/// writes no `def` (`SysML` 8.2.2.7, 8.2.2.9.1, 8.2.2.11). `at_simple_definition`
+/// (`crates/sv2-syntax/src/parser/definition.rs`) begins a definition only on the keyword
+/// followed by `def`, so `<keyword> A` is the usage and no definition is begun.
+///
+/// 1. the parse still yields a tree, holding one instance, C's;
+/// 2. A is no instance at all, and one diagnostic, on the `def`, reported it;
+/// 3. the neighbours still answer: the first member's element is the usage, and C is
+///    whole.
+#[expect(
+    clippy::expect_used,
+    reason = "test support only: the fixture is the test's, and an expectation it fails is \
+              the test failing"
+)]
+fn def_missing(production: &simple_definitions::Production, source: &str) {
+    let parse = trees::parsed(source, Language::SysMl);
+    let root = parse.syntax();
+    let keyword = production.keyword_text;
+
+    // 1 and 2a. one instance, and it is C's.
+    assert_eq!(
+        simple_definitions::every(production, &root)
+            .iter()
+            .map(simple_definitions::summary)
+            .collect::<Vec<_>>(),
+        [simple_definitions::whole(production, "C")],
+        "only C writes `{keyword} def`, so only C is a {:?}",
+        production.node
+    );
+
+    // 2b. reported, once, on the `def` A's keyword was not followed by.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    let written = source
+        .find(&format!("\t{keyword} A def"))
+        .expect("the fixture writes `<keyword> A def`, tab-indented, below its header");
+    assert_eq!(
+        (stray.text(), usize::from(stray.text_range().start())),
+        ("def", written + 1 + keyword.len() + " A ".len()),
+        "the Error opens with the misplaced `def`"
+    );
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [stray.text_range()],
+        "one diagnostic, on the misplaced `def`: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour: the first member holds the usage, not a half-built definition.
+    assert_eq!(
+        members(&root)
+            .iter()
+            .filter_map(|member| member.element().map(|element| element.kind()))
+            .collect::<Vec<_>>(),
+        [SyntaxKind::Package, production.usage, production.node],
+        "the package, then A as a usage, then C"
+    );
+}
+
+/// `part-definition/def-written-twice.sysml`: `part def def A;`, then `part def B;`.
+/// [`def_written_twice`] states what it pins and where the outcome comes from.
+#[test]
+fn a_part_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    def_written_twice(
+        &simple_definitions::PART,
+        include_str!("malformed/part-definition/def-written-twice.sysml"),
     );
 }
 
 /// `part-definition/def-missing.sysml`: `part A def B;`, then `part def C;`.
-///
-/// `PartDefinition = OccurrenceDefinitionPrefix 'part' 'def' Definition` and `PartUsage =
-/// OccurrenceUsagePrefix 'part' Usage` (`SysML` 8.2.2.11). `at_simple_definition`
-/// (`crates/sv2-syntax/src/parser/definition.rs`) begins a part definition only on `part`
-/// followed by `def`, so `part A` is a `PartUsage` and no part definition is begun.
-///
-/// 1. the parse still yields a tree, holding one part definition, C's;
-/// 2. A is no part definition at all, and one diagnostic, on the `def`, reported it;
-/// 3. the neighbours still answer: the first member's element is a `PartUsage`, and C is
-///    whole.
+/// [`def_missing`] states what it pins and where the outcome comes from.
 #[test]
 fn a_part_with_no_def_after_it_begins_no_part_definition() {
-    let parse = trees::parsed(DEF_MISSING, Language::SysMl);
-    let root = parse.syntax();
-
-    // 1 and 2a. one part definition, and it is C's.
-    let parts = part_definitions(&root);
-    assert_eq!(
-        parts.iter().map(read_part_definition).collect::<Vec<_>>(),
-        [(
-            Some("part".to_owned()),
-            Some("def".to_owned()),
-            Some(("C".to_owned(), ";".to_owned()))
-        )],
-        "only C writes `part def`, so only C is a part definition"
+    def_missing(
+        &simple_definitions::PART,
+        include_str!("malformed/part-definition/def-missing.sysml"),
     );
-
-    // 2b. reported, once, on the `def` A's `part` was not followed by.
-    let stray = first_error_token(&root).expect("recover_statement builds an Error");
-    let written = DEF_MISSING
-        .find("\tpart A def")
-        .expect("the fixture writes `part A def`, tab-indented, below its header");
-    assert_eq!(
-        (stray.text(), usize::from(stray.text_range().start())),
-        ("def", written + "\tpart A ".len()),
-        "the Error opens with the misplaced `def`"
-    );
-    assert_eq!(
-        parse
-            .errors()
-            .iter()
-            .map(sv2_syntax::Diagnostic::range)
-            .collect::<Vec<_>>(),
-        [stray.text_range()],
-        "one diagnostic, on the misplaced `def`: {:?}",
-        parse.errors()
-    );
-
-    // 3. the neighbour: the first member holds a PartUsage, not a half-built definition.
-    assert_eq!(
-        members(&root)
-            .iter()
-            .filter_map(|member| member.element().map(|element| element.kind()))
-            .collect::<Vec<_>>(),
-        [
-            SyntaxKind::Package,
-            SyntaxKind::PartUsage,
-            SyntaxKind::PartDefinition
-        ],
-        "the package, then A as a PartUsage, then C"
-    );
-}
-
-const ATTRIBUTE_DEF_WRITTEN_TWICE: &str =
-    include_str!("malformed/attribute-definition/def-written-twice.sysml");
-const ATTRIBUTE_DEF_MISSING: &str =
-    include_str!("malformed/attribute-definition/def-missing.sysml");
-const INDIVIDUAL_BEFORE_ATTRIBUTE: &str =
-    include_str!("malformed/attribute-definition/individual-before-attribute.sysml");
-
-/// Every `AttributeDefinition` in `root`, in document order.
-fn attribute_definitions(root: &SyntaxNode) -> Vec<AttributeDefinition> {
-    root.descendants()
-        .filter_map(AttributeDefinition::cast)
-        .collect()
-}
-
-/// What an attribute definition says of itself and of its definition: its two keywords,
-/// and the declaration and body its `Definition` holds.
-type AttributeDefinitionRead = (Option<String>, Option<String>, Option<(String, String)>);
-
-fn read_attribute_definition(attribute: &AttributeDefinition) -> AttributeDefinitionRead {
-    (
-        attribute
-            .attribute_keyword()
-            .map(|token| token.text().to_owned()),
-        attribute.def_keyword().map(|token| token.text().to_owned()),
-        attribute.definition().map(|definition| {
-            (
-                definition
-                    .declaration()
-                    .map(|declaration| declaration.text().to_string())
-                    .unwrap_or_default(),
-                definition
-                    .body()
-                    .map(|body| body.text().to_string())
-                    .unwrap_or_default(),
-            )
-        }),
-    )
-}
-
-/// A whole attribute definition declaring `name`, closed by `;`.
-fn whole_attribute(name: &str) -> AttributeDefinitionRead {
-    (
-        Some("attribute".to_owned()),
-        Some("def".to_owned()),
-        Some((name.to_owned(), ";".to_owned())),
-    )
 }
 
 /// `attribute-definition/def-written-twice.sysml`: `attribute def def A;`, then
-/// `attribute def B;`.
-///
-/// `AttributeDefinition = DefinitionPrefix 'attribute' 'def' Definition` (`SysML`
-/// 8.2.2.7). `simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`) takes the
-/// first `def`; `definition_body` reports the second, and `recover_statement`
-/// (`crates/sv2-syntax/src/parser/recovery.rs`) puts it in an `Error` beside the member.
-///
-/// 1. the parse still yields a tree, holding two attribute definitions;
-/// 2. the first owns one `def`, the first, its definition spans nothing, and one
-///    diagnostic, on the second `def`, reported it;
-/// 3. the neighbours still answer: the first's `Definition` declares nothing, and B is
-///    whole.
+/// `attribute def B;`. [`def_written_twice`] states what it pins.
 #[test]
 fn an_attribute_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
-    let parse = trees::parsed(ATTRIBUTE_DEF_WRITTEN_TWICE, Language::SysMl);
-    let root = parse.syntax();
-
-    // 1. two attribute definitions.
-    let attributes = attribute_definitions(&root);
-    assert_eq!(
-        attributes.len(),
-        2,
-        "the fixture writes two `attribute def`s"
-    );
-    let first = &attributes[0];
-
-    // 2a. the first owns exactly one `def`, the first one written.
-    let written = ATTRIBUTE_DEF_WRITTEN_TWICE
-        .find("\tattribute def def")
-        .expect("the fixture writes `attribute def def`, tab-indented, below its header");
-    let first_def = u32::try_from(written + "\tattribute ".len()).expect("the fixture is small");
-    assert_eq!(
-        first
-            .def_keyword()
-            .map(|token| u32::from(token.text_range().start())),
-        Some(first_def),
-        "def_keyword() is the `def` written straight after `attribute`"
-    );
-    assert_eq!(
-        first.syntax().text().to_string(),
-        "attribute def ",
-        "the first attribute definition holds the keywords, and the space `definition` \
-         eats before it opens an empty Definition, and nothing after them"
-    );
-
-    // 2b. the second `def` is the Error's, `def ` (four bytes) after the first, and that
-    // was reported, once.
-    let stray = first_error_token(&root).expect("recover_statement builds an Error");
-    assert_eq!(
-        (stray.text(), u32::from(stray.text_range().start())),
-        ("def", first_def + 4),
-        "the Error opens with the second `def`"
-    );
-    assert_eq!(
-        parse
-            .errors()
-            .iter()
-            .map(sv2_syntax::Diagnostic::range)
-            .collect::<Vec<_>>(),
-        [stray.text_range()],
-        "one diagnostic, on the second `def`: {:?}",
-        parse.errors()
-    );
-
-    // 3. the neighbours still answer.
-    assert_eq!(
-        attributes
-            .iter()
-            .map(read_attribute_definition)
-            .collect::<Vec<_>>(),
-        [
-            (
-                Some("attribute".to_owned()),
-                Some("def".to_owned()),
-                Some((String::new(), String::new()))
-            ),
-            whole_attribute("B"),
-        ],
-        "the first's Definition declares nothing and has no body; B is whole"
+    def_written_twice(
+        &simple_definitions::ATTRIBUTE,
+        include_str!("malformed/attribute-definition/def-written-twice.sysml"),
     );
 }
 
 /// `attribute-definition/def-missing.sysml`: `attribute A def B;`, then `attribute def
-/// C;`.
-///
-/// `AttributeDefinition = DefinitionPrefix 'attribute' 'def' Definition` and
-/// `AttributeUsage = UsagePrefix 'attribute' Usage` (`SysML` 8.2.2.7).
-/// `at_simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`) begins an
-/// attribute definition only on `attribute` followed by `def`, so `attribute A` is an
-/// `AttributeUsage` and no attribute definition is begun.
-///
-/// 1. the parse still yields a tree, holding one attribute definition, C's;
-/// 2. A is no attribute definition at all, and one diagnostic, on the `def`, reported it;
-/// 3. the neighbours still answer: the first member's element is an `AttributeUsage`, and
-///    C is whole.
+/// C;`. [`def_missing`] states what it pins.
 #[test]
 fn an_attribute_with_no_def_after_it_begins_no_attribute_definition() {
-    let parse = trees::parsed(ATTRIBUTE_DEF_MISSING, Language::SysMl);
-    let root = parse.syntax();
-
-    // 1 and 2a. one attribute definition, and it is C's.
-    assert_eq!(
-        attribute_definitions(&root)
-            .iter()
-            .map(read_attribute_definition)
-            .collect::<Vec<_>>(),
-        [whole_attribute("C")],
-        "only C writes `attribute def`, so only C is an attribute definition"
-    );
-
-    // 2b. reported, once, on the `def` A's `attribute` was not followed by.
-    let stray = first_error_token(&root).expect("recover_statement builds an Error");
-    let written = ATTRIBUTE_DEF_MISSING
-        .find("\tattribute A def")
-        .expect("the fixture writes `attribute A def`, tab-indented, below its header");
-    assert_eq!(
-        (stray.text(), usize::from(stray.text_range().start())),
-        ("def", written + "\tattribute A ".len()),
-        "the Error opens with the misplaced `def`"
-    );
-    assert_eq!(
-        parse
-            .errors()
-            .iter()
-            .map(sv2_syntax::Diagnostic::range)
-            .collect::<Vec<_>>(),
-        [stray.text_range()],
-        "one diagnostic, on the misplaced `def`: {:?}",
-        parse.errors()
-    );
-
-    // 3. the neighbour: the first member holds an AttributeUsage, not a half-built
-    // definition.
-    assert_eq!(
-        members(&root)
-            .iter()
-            .filter_map(|member| member.element().map(|element| element.kind()))
-            .collect::<Vec<_>>(),
-        [
-            SyntaxKind::Package,
-            SyntaxKind::AttributeUsage,
-            SyntaxKind::AttributeDefinition
-        ],
-        "the package, then A as an AttributeUsage, then C"
+    def_missing(
+        &simple_definitions::ATTRIBUTE,
+        include_str!("malformed/attribute-definition/def-missing.sysml"),
     );
 }
 
+/// `occurrence-definition/def-written-twice.sysml`: `occurrence def def A;`, then
+/// `occurrence def B;`. [`def_written_twice`] states what it pins.
+#[test]
+fn an_occurrence_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    def_written_twice(
+        &simple_definitions::OCCURRENCE,
+        include_str!("malformed/occurrence-definition/def-written-twice.sysml"),
+    );
+}
+
+/// `occurrence-definition/def-missing.sysml`: `occurrence A def B;`, then `occurrence def
+/// C;`. [`def_missing`] states what it pins.
+#[test]
+fn an_occurrence_with_no_def_after_it_begins_no_occurrence_definition() {
+    def_missing(
+        &simple_definitions::OCCURRENCE,
+        include_str!("malformed/occurrence-definition/def-missing.sysml"),
+    );
+}
+
+const INDIVIDUAL_BEFORE_ATTRIBUTE: &str =
+    include_str!("malformed/attribute-definition/individual-before-attribute.sysml");
+
 /// `attribute-definition/individual-before-attribute.sysml`: `individual attribute def
-/// A;`, then `attribute def B;`.
+/// A;`, then `attribute def B;`. The one malformed case that is `AttributeDefinition`'s
+/// alone.
 ///
 /// `AttributeDefinition = DefinitionPrefix 'attribute' 'def' Definition` (`SysML`
 /// 8.2.2.7), and `DefinitionPrefix = BasicDefinitionPrefix? DefinitionExtensionKeyword*`
@@ -2573,7 +2415,10 @@ fn an_attribute_definition_leaves_individual_out_of_its_prefix() {
     let root = parse.syntax();
 
     // 1. two attribute definitions.
-    let attributes = attribute_definitions(&root);
+    let attributes: Vec<AttributeDefinition> = root
+        .descendants()
+        .filter_map(AttributeDefinition::cast)
+        .collect();
     assert_eq!(
         attributes.len(),
         2,
@@ -2611,12 +2456,16 @@ fn an_attribute_definition_leaves_individual_out_of_its_prefix() {
 
     // 3. the neighbours: both definitions whole, and the prefix's own accessors find no
     // slot.
+    let attribute = &simple_definitions::ATTRIBUTE;
     assert_eq!(
-        attributes
+        simple_definitions::every(attribute, &root)
             .iter()
-            .map(read_attribute_definition)
+            .map(simple_definitions::summary)
             .collect::<Vec<_>>(),
-        [whole_attribute("A"), whole_attribute("B")],
+        [
+            simple_definitions::whole(attribute, "A"),
+            simple_definitions::whole(attribute, "B")
+        ],
         "A and B are each whole"
     );
     assert_eq!(
@@ -2651,201 +2500,5 @@ fn assert_individual_alone_reported(
         [stray.text_range()],
         "one diagnostic, on the `individual`: {:?}",
         parse.errors()
-    );
-}
-
-const OCCURRENCE_DEF_WRITTEN_TWICE: &str =
-    include_str!("malformed/occurrence-definition/def-written-twice.sysml");
-const OCCURRENCE_DEF_MISSING: &str =
-    include_str!("malformed/occurrence-definition/def-missing.sysml");
-
-/// Every `OccurrenceDefinition` in `root`, in document order.
-fn occurrence_definitions(root: &SyntaxNode) -> Vec<OccurrenceDefinition> {
-    root.descendants()
-        .filter_map(OccurrenceDefinition::cast)
-        .collect()
-}
-
-/// What an occurrence definition says of itself and of its definition: its two keywords,
-/// and the declaration and body its `Definition` holds.
-type OccurrenceDefinitionRead = (Option<String>, Option<String>, Option<(String, String)>);
-
-fn read_occurrence_definition(occurrence: &OccurrenceDefinition) -> OccurrenceDefinitionRead {
-    (
-        occurrence
-            .occurrence_keyword()
-            .map(|token| token.text().to_owned()),
-        occurrence
-            .def_keyword()
-            .map(|token| token.text().to_owned()),
-        occurrence.definition().map(|definition| {
-            (
-                definition
-                    .declaration()
-                    .map(|declaration| declaration.text().to_string())
-                    .unwrap_or_default(),
-                definition
-                    .body()
-                    .map(|body| body.text().to_string())
-                    .unwrap_or_default(),
-            )
-        }),
-    )
-}
-
-/// A whole occurrence definition declaring `name`, closed by `;`.
-fn whole_occurrence(name: &str) -> OccurrenceDefinitionRead {
-    (
-        Some("occurrence".to_owned()),
-        Some("def".to_owned()),
-        Some((name.to_owned(), ";".to_owned())),
-    )
-}
-
-/// `occurrence-definition/def-written-twice.sysml`: `occurrence def def A;`, then
-/// `occurrence def B;`.
-///
-/// `OccurrenceDefinition = OccurrenceDefinitionPrefix 'occurrence' 'def' Definition`
-/// (`SysML` 8.2.2.9.1). `simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`)
-/// takes the first `def`; `definition_body` reports the second, and `recover_statement`
-/// (`crates/sv2-syntax/src/parser/recovery.rs`) puts it in an `Error` beside the member.
-///
-/// 1. the parse still yields a tree, holding two occurrence definitions;
-/// 2. the first owns one `def`, the first, its definition spans nothing, and one
-///    diagnostic, on the second `def`, reported it;
-/// 3. the neighbours still answer: the first's `Definition` declares nothing, and B is
-///    whole.
-#[test]
-fn an_occurrence_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
-    let parse = trees::parsed(OCCURRENCE_DEF_WRITTEN_TWICE, Language::SysMl);
-    let root = parse.syntax();
-
-    // 1. two occurrence definitions.
-    let occurrences = occurrence_definitions(&root);
-    assert_eq!(
-        occurrences.len(),
-        2,
-        "the fixture writes two `occurrence def`s"
-    );
-    let first = &occurrences[0];
-
-    // 2a. the first owns exactly one `def`, the first one written.
-    let written = OCCURRENCE_DEF_WRITTEN_TWICE
-        .find("\toccurrence def def")
-        .expect("the fixture writes `occurrence def def`, tab-indented, below its header");
-    let first_def = u32::try_from(written + "\toccurrence ".len()).expect("the fixture is small");
-    assert_eq!(
-        first
-            .def_keyword()
-            .map(|token| u32::from(token.text_range().start())),
-        Some(first_def),
-        "def_keyword() is the `def` written straight after `occurrence`"
-    );
-    assert_eq!(
-        first.syntax().text().to_string(),
-        "occurrence def ",
-        "the first occurrence definition holds the keywords, and the space `definition` \
-         eats before it opens an empty Definition, and nothing after them"
-    );
-
-    // 2b. the second `def` is the Error's, `def ` (four bytes) after the first, and that
-    // was reported, once.
-    let stray = first_error_token(&root).expect("recover_statement builds an Error");
-    assert_eq!(
-        (stray.text(), u32::from(stray.text_range().start())),
-        ("def", first_def + 4),
-        "the Error opens with the second `def`"
-    );
-    assert_eq!(
-        parse
-            .errors()
-            .iter()
-            .map(sv2_syntax::Diagnostic::range)
-            .collect::<Vec<_>>(),
-        [stray.text_range()],
-        "one diagnostic, on the second `def`: {:?}",
-        parse.errors()
-    );
-
-    // 3. the neighbours still answer.
-    assert_eq!(
-        occurrences
-            .iter()
-            .map(read_occurrence_definition)
-            .collect::<Vec<_>>(),
-        [
-            (
-                Some("occurrence".to_owned()),
-                Some("def".to_owned()),
-                Some((String::new(), String::new()))
-            ),
-            whole_occurrence("B"),
-        ],
-        "the first's Definition declares nothing and has no body; B is whole"
-    );
-}
-
-/// `occurrence-definition/def-missing.sysml`: `occurrence A def B;`, then `occurrence def
-/// C;`.
-///
-/// `OccurrenceDefinition = OccurrenceDefinitionPrefix 'occurrence' 'def' Definition` and
-/// `OccurrenceUsage = OccurrenceUsagePrefix 'occurrence' Usage` (`SysML` 8.2.2.9.1).
-/// `at_simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`) begins an
-/// occurrence definition only on `occurrence` followed by `def`, so `occurrence A` is an
-/// `OccurrenceUsage` and no occurrence definition is begun.
-///
-/// 1. the parse still yields a tree, holding one occurrence definition, C's;
-/// 2. A is no occurrence definition at all, and one diagnostic, on the `def`, reported it;
-/// 3. the neighbours still answer: the first member's element is an `OccurrenceUsage`, and
-///    C is whole.
-#[test]
-fn an_occurrence_with_no_def_after_it_begins_no_occurrence_definition() {
-    let parse = trees::parsed(OCCURRENCE_DEF_MISSING, Language::SysMl);
-    let root = parse.syntax();
-
-    // 1 and 2a. one occurrence definition, and it is C's.
-    assert_eq!(
-        occurrence_definitions(&root)
-            .iter()
-            .map(read_occurrence_definition)
-            .collect::<Vec<_>>(),
-        [whole_occurrence("C")],
-        "only C writes `occurrence def`, so only C is an occurrence definition"
-    );
-
-    // 2b. reported, once, on the `def` A's `occurrence` was not followed by.
-    let stray = first_error_token(&root).expect("recover_statement builds an Error");
-    let written = OCCURRENCE_DEF_MISSING
-        .find("\toccurrence A def")
-        .expect("the fixture writes `occurrence A def`, tab-indented, below its header");
-    assert_eq!(
-        (stray.text(), usize::from(stray.text_range().start())),
-        ("def", written + "\toccurrence A ".len()),
-        "the Error opens with the misplaced `def`"
-    );
-    assert_eq!(
-        parse
-            .errors()
-            .iter()
-            .map(sv2_syntax::Diagnostic::range)
-            .collect::<Vec<_>>(),
-        [stray.text_range()],
-        "one diagnostic, on the misplaced `def`: {:?}",
-        parse.errors()
-    );
-
-    // 3. the neighbour: the first member holds an OccurrenceUsage, not a half-built
-    // definition.
-    assert_eq!(
-        members(&root)
-            .iter()
-            .filter_map(|member| member.element().map(|element| element.kind()))
-            .collect::<Vec<_>>(),
-        [
-            SyntaxKind::Package,
-            SyntaxKind::OccurrenceUsage,
-            SyntaxKind::OccurrenceDefinition
-        ],
-        "the package, then A as an OccurrenceUsage, then C"
     );
 }
