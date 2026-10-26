@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-25T17:24:09Z",
+    "regenerated_utc": "2026-10-26T15:57:49Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 21,
-      "unimplemented": 442,
+      "implemented": 22,
+      "unimplemented": 441,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 4.5
+      "percent": 4.8
     },
     "tests": {
-      "unit": 811,
+      "unit": 815,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "9a67c85 Merge close-session-2026-10-25c: the state file current at 21 of 463",
+      "5cfb7fd Close the session: PartDefinition, 20 to 21 of 463, AttributeDefinition next",
       "d178225 Merge ast-part-definition: the first definition with every slot typed",
       "5a6a704 Add the PartDefinition accessor, the first definition with every slot typed",
       "2c4b188 Merge ast-equivalence-by-assertion: equivalence by grammar is proved by the sweep",
       "91fc68f Make equivalence by grammar a proof: the sweep asserts the fact a survivor rests on",
       "131dcdd Correct next_step: seven siblings, and which one takes the other prefix",
-      "1c79d3d Merge close-session-2026-10-25b: the state file current at 20 of 463",
-      "dd2d080 Close the session: three shared definition children, 17 to 20 of 463",
-      "df9ff41 Merge ast-definition: the last shared child, pinned on nested definitions"
+      "1c79d3d Merge close-session-2026-10-25b: the state file current at 20 of 463"
     ]
   },
   "authored": {

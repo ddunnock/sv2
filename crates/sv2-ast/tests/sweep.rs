@@ -8,11 +8,11 @@
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, Definition, DefinitionPrefix, ElementFilterMember, Import,
-    ImportDeclaration, LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember,
-    NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package,
-    PackageMember, PartDefinition, QualifiedName, RelationshipBody, RootNamespace,
-    VisibilityIndicator,
+    AliasMember, AstNode, AttributeDefinition, Definition, DefinitionPrefix, ElementFilterMember,
+    Import, ImportDeclaration, LibraryPackage, MemberPrefix, MembershipImport,
+    NamespaceFeatureMember, NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix,
+    OwnedAnnotation, Package, PackageMember, PartDefinition, QualifiedName, RelationshipBody,
+    RootNamespace, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -2441,6 +2441,123 @@ fn part_definition_shape(
     shape
 }
 
+/// What `AttributeDefinition` must satisfy at every node, whatever the tree. Both node
+/// children are typed (`DefinitionPrefix`, `Definition`); the keywords are its own tokens.
+fn assert_attribute_definition_accessor(node: &SyntaxNode) {
+    let is_attribute = node.kind() == SyntaxKind::AttributeDefinition;
+    let cast = AttributeDefinition::cast(node.clone());
+    assert_eq!(
+        cast.is_some(),
+        is_attribute,
+        "AttributeDefinition::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(attribute) = cast else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        attribute.syntax(),
+        node,
+        "AttributeDefinition::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) the shape, and (c) the differential against it.
+    let expected = attribute_definition_shape(node).map_or(
+        (None, None, None, None),
+        |(prefix, attribute_keyword, def_keyword, definition)| {
+            (
+                Some(prefix),
+                Some(attribute_keyword),
+                Some(def_keyword),
+                Some(definition),
+            )
+        },
+    );
+    assert_eq!(
+        (
+            attribute.prefix().map(|prefix| prefix.syntax().clone()),
+            attribute.attribute_keyword(),
+            attribute.def_keyword(),
+            attribute
+                .definition()
+                .map(|definition| definition.syntax().clone()),
+        ),
+        expected,
+        "an AttributeDefinition accessor disagrees with the node's own elements, at {:?}",
+        node.text_range()
+    );
+}
+
+/// The elements of an `AttributeDefinition`, asserted to be exactly the production's.
+///
+/// `DefinitionPrefix 'attribute' 'def' Definition` (`SysML` 8.2.2.7), all four always
+/// present: `at_simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`) begins
+/// one only on `attribute` followed by `def`, and `simple_definition` builds both nodes
+/// whatever follows. Nothing else but trivia.
+fn attribute_definition_shape(
+    node: &SyntaxNode,
+) -> Option<(SyntaxNode, SyntaxToken, SyntaxToken, SyntaxNode)> {
+    let elements: Vec<SyntaxElement> = node
+        .children_with_tokens()
+        .filter(|element| {
+            element
+                .as_token()
+                .is_none_or(|token| !token.text().trim().is_empty())
+        })
+        .collect();
+    let shape = match elements.as_slice() {
+        [
+            SyntaxElement::Node(prefix),
+            SyntaxElement::Token(attribute_keyword),
+            SyntaxElement::Token(def_keyword),
+            SyntaxElement::Node(definition),
+        ] if prefix.kind() == SyntaxKind::DefinitionPrefix
+            && attribute_keyword.kind() == SyntaxKind::KwAttribute
+            && def_keyword.kind() == SyntaxKind::KwDef
+            && definition.kind() == SyntaxKind::Definition =>
+        {
+            Some((
+                prefix.clone(),
+                attribute_keyword.clone(),
+                def_keyword.clone(),
+                definition.clone(),
+            ))
+        }
+        _ => None,
+    };
+    assert!(
+        shape.is_some(),
+        "an attribute definition is not `DefinitionPrefix 'attribute' 'def' Definition`, \
+         at {:?}: {elements:?}",
+        node.text_range()
+    );
+
+    // The prefix holds neither keyword and no Definition: it is `abstract` or `variation`,
+    // and `#` keywords naming metadata (`DefinitionPrefix`, `SysML` 8.2.2.6.1;
+    // `DefinitionExtensionKeyword`, 8.2.2.6.1). Asserted because it is what makes
+    // attribute_keyword(), def_keyword() and definition() reading descendants equivalent
+    // mutations: the prefix is the only element before the keywords and the Definition in
+    // preorder, and the Definition's body, which may nest another attribute definition,
+    // comes after them.
+    assert!(
+        shape.as_ref().is_none_or(|(prefix, ..)| {
+            prefix.descendants_with_tokens().all(|below| {
+                !matches!(
+                    below.kind(),
+                    SyntaxKind::KwAttribute | SyntaxKind::KwDef | SyntaxKind::Definition
+                )
+            })
+        }),
+        "an `attribute`, `def` or Definition inside an attribute definition's prefix, at {:?}",
+        node.text_range()
+    );
+    shape
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -2471,6 +2588,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_definition_prefix_accessor(&node);
             assert_definition_accessor(&node);
             assert_part_definition_accessor(&node);
+            assert_attribute_definition_accessor(&node);
             visited += 1;
         }
     }
