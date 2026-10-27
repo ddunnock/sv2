@@ -2469,6 +2469,26 @@ fn an_allocation_with_no_def_after_it_begins_no_allocation_definition() {
     );
 }
 
+/// `rendering-definition/def-written-twice.sysml`: `rendering def def A;`, then `rendering
+/// def B;`. [`def_written_twice`] states what it pins.
+#[test]
+fn a_rendering_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    def_written_twice(
+        &simple_definitions::RENDERING,
+        include_str!("malformed/rendering-definition/def-written-twice.sysml"),
+    );
+}
+
+/// `rendering-definition/def-missing.sysml`: `rendering A def B;`, then `rendering def C;`.
+/// [`def_missing`] states what it pins.
+#[test]
+fn a_rendering_with_no_def_after_it_begins_no_rendering_definition() {
+    def_missing(
+        &simple_definitions::RENDERING,
+        include_str!("malformed/rendering-definition/def-missing.sysml"),
+    );
+}
+
 const INDIVIDUAL_BEFORE_ATTRIBUTE: &str =
     include_str!("malformed/attribute-definition/individual-before-attribute.sysml");
 
