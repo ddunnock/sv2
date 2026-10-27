@@ -2623,3 +2623,198 @@ fn assert_individual_alone_reported(
         parse.errors()
     );
 }
+
+/// An individual definition's keywords, declaration and body as written, and whether it
+/// owns its empty multiplicity.
+type IndividualSummary = (Option<String>, Option<String>, String, String, bool);
+
+/// `individual`, as text.
+fn individual_summary(individual: &sv2_ast::IndividualDefinition) -> IndividualSummary {
+    let definition = individual.definition();
+    (
+        individual
+            .individual_keyword()
+            .map(|token| token.text().to_owned()),
+        individual
+            .def_keyword()
+            .map(|token| token.text().to_owned()),
+        definition
+            .as_ref()
+            .and_then(Definition::declaration)
+            .map(|declaration| declaration.text().to_string())
+            .unwrap_or_default(),
+        definition
+            .as_ref()
+            .and_then(Definition::body)
+            .map(|body| body.text().to_string())
+            .unwrap_or_default(),
+        individual.multiplicity().is_some(),
+    )
+}
+
+/// That the `Error` in `parse` opens with `text` at byte `at`, and is the one thing
+/// reported: a single diagnostic, on that token.
+#[expect(
+    clippy::expect_used,
+    reason = "test support only: the fixture is the test's, and an expectation it fails is \
+              the test failing"
+)]
+fn assert_reported_once_on_the_error(parse: &sv2_syntax::Parse, text: &str, at: u32) {
+    let stray = first_error_token(&parse.syntax()).expect("recover_statement builds an Error");
+    assert_eq!(
+        (stray.text(), u32::from(stray.text_range().start())),
+        (text, at),
+        "the Error opens with `{text}`"
+    );
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [stray.text_range()],
+        "one diagnostic, on the `{text}` the Error opens with: {:?}",
+        parse.errors()
+    );
+}
+
+/// `individual-definition/def-written-twice.sysml`: `individual def def A;`, then
+/// `individual def B;`. `individual_definition`
+/// (`crates/sv2-syntax/src/parser/definition.rs`) takes the first `def`;
+/// `definition_body` reports the second, and `recover_statement`
+/// (`crates/sv2-syntax/src/parser/recovery.rs`) puts it in an `Error` beside the member.
+/// The fixture's header states the three things this pins.
+#[test]
+fn an_individual_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    const SOURCE: &str = include_str!("malformed/individual-definition/def-written-twice.sysml");
+    let parse = trees::parsed(SOURCE, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1. two instances.
+    let individuals: Vec<sv2_ast::IndividualDefinition> = root
+        .descendants()
+        .filter_map(sv2_ast::IndividualDefinition::cast)
+        .collect();
+    assert_eq!(
+        individuals.len(),
+        2,
+        "the fixture writes two `individual def`s"
+    );
+    let first = individuals.first().expect("two, so a first");
+
+    // 2a. the first owns exactly one `def`, the first one written.
+    let written = SOURCE
+        .find("\tindividual def def")
+        .expect("the fixture writes `individual def def`, tab-indented, below its header");
+    let first_def = u32::try_from(written + "\tindividual ".len()).expect("the fixture is small");
+    assert_eq!(
+        first
+            .def_keyword()
+            .map(|token| u32::from(token.text_range().start())),
+        Some(first_def),
+        "def_keyword() is the `def` written straight after `individual`"
+    );
+    assert_eq!(
+        first.syntax().text().to_string(),
+        "individual def ",
+        "the first holds the keywords, the space `definition` eats, and nothing after"
+    );
+
+    // 2b. the second `def` is the Error's, `def ` (four bytes) after the first, and that
+    // was reported, once.
+    assert_reported_once_on_the_error(&parse, "def", first_def + 4);
+
+    // 3. the neighbours still answer.
+    let whole = |declaration: &str, body: &str| {
+        let keywords = (Some("individual".to_owned()), Some("def".to_owned()));
+        (
+            keywords.0,
+            keywords.1,
+            declaration.to_owned(),
+            body.to_owned(),
+            true,
+        )
+    };
+    assert_eq!(
+        individuals
+            .iter()
+            .map(individual_summary)
+            .collect::<Vec<_>>(),
+        [whole("", ""), whole("B", ";")],
+        "the first declares nothing and still owns its multiplicity; B is whole"
+    );
+}
+
+/// `individual-definition/basic-prefix-after-individual.sysml`: `individual abstract def
+/// A;`, then `individual def B;`. `at_individual_definition`
+/// (`crates/sv2-syntax/src/parser/definition.rs`) finds `abstract` where it asks for
+/// `def`, so nothing is begun, and `body_elements`
+/// (`crates/sv2-syntax/src/parser/namespace.rs`) hands the statement to
+/// `recover_statement` (`crates/sv2-syntax/src/parser/recovery.rs`), whole. The fixture's
+/// header states the three things this pins.
+#[test]
+fn an_individual_with_its_basic_prefix_after_it_begins_no_individual_definition() {
+    const SOURCE: &str =
+        include_str!("malformed/individual-definition/basic-prefix-after-individual.sysml");
+    let parse = trees::parsed(SOURCE, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1 and 2a. one instance, and it is B's, with no basic prefix.
+    let individuals: Vec<sv2_ast::IndividualDefinition> = root
+        .descendants()
+        .filter_map(sv2_ast::IndividualDefinition::cast)
+        .collect();
+    assert_eq!(
+        individuals
+            .iter()
+            .map(|individual| (
+                individual
+                    .basic_prefix()
+                    .map(|basic| basic.text().to_string()),
+                individual_summary(individual)
+            ))
+            .collect::<Vec<_>>(),
+        [(
+            None,
+            (
+                Some("individual".to_owned()),
+                Some("def".to_owned()),
+                "B".to_owned(),
+                ";".to_owned(),
+                true
+            )
+        )],
+        "only B writes `individual def`, so only B is one, and the `abstract` is no one's"
+    );
+
+    // 2b. the statement is one Error, reported once, over the whole of it.
+    let error = root
+        .descendants()
+        .find(|node| node.kind() == SyntaxKind::Error)
+        .expect("recover_statement builds an Error");
+    assert_eq!(
+        error.text().to_string(),
+        "individual abstract def A;",
+        "the Error is the statement, up to and including its `;`"
+    );
+    assert_eq!(
+        parse
+            .errors()
+            .iter()
+            .map(sv2_syntax::Diagnostic::range)
+            .collect::<Vec<_>>(),
+        [error.text_range()],
+        "one diagnostic, over the Error: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour: the package's members are itself and B's, and no member for A.
+    assert_eq!(
+        members(&root)
+            .iter()
+            .filter_map(|member| member.element().map(|element| element.kind()))
+            .collect::<Vec<_>>(),
+        [SyntaxKind::Package, SyntaxKind::IndividualDefinition],
+        "the package, then B; A's statement is an Error, not a member"
+    );
+}

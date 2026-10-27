@@ -2504,6 +2504,143 @@ fn simple_definition_shape(
     shape
 }
 
+/// What an `IndividualDefinition`'s elements are, each as its accessor returns it.
+#[derive(Debug, PartialEq, Eq)]
+struct IndividualShape {
+    basic_prefix: Option<SyntaxNode>,
+    individual_keyword: Option<SyntaxToken>,
+    extension_keywords: Vec<SyntaxNode>,
+    def_keyword: Option<SyntaxToken>,
+    definition: Option<SyntaxNode>,
+    multiplicity: Option<SyntaxNode>,
+}
+
+/// What `IndividualDefinition` must satisfy at every node, whatever the tree. The
+/// `Definition` is typed; the slots and the multiplicity are raw, having no views; the
+/// keywords are the node's own tokens.
+fn assert_individual_definition_accessor(node: &SyntaxNode) {
+    let view = sv2_ast::IndividualDefinition::cast(node.clone());
+    assert_eq!(
+        view.is_some(),
+        node.kind() == SyntaxKind::IndividualDefinition,
+        "IndividualDefinition::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(view) = view else {
+        return;
+    };
+    assert_eq!(
+        view.syntax(),
+        node,
+        "IndividualDefinition::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        IndividualShape {
+            basic_prefix: view.basic_prefix(),
+            individual_keyword: view.individual_keyword(),
+            extension_keywords: view.extension_keywords().collect(),
+            def_keyword: view.def_keyword(),
+            definition: view
+                .definition()
+                .map(|definition| definition.syntax().clone()),
+            multiplicity: view.multiplicity(),
+        },
+        individual_definition_shape(node),
+        "an IndividualDefinition accessor disagrees with the node's own elements, at {:?}",
+        node.text_range()
+    );
+}
+
+/// The elements of an `IndividualDefinition`, asserted to be exactly the production's:
+///
+/// ```text
+/// BasicDefinitionPrefix? 'individual' DefinitionExtensionKeyword* 'def' Definition
+/// EmptyMultiplicityMember
+/// ```
+///
+/// `SysML` 8.2.2.9.1, in that order, the keywords, the `Definition` and the multiplicity
+/// always present: `at_individual_definition`
+/// (`crates/sv2-syntax/src/parser/definition.rs`) begins one only on `individual` and,
+/// past its `#` keywords, `def`, and `individual_definition` builds both nodes whatever
+/// follows. Nothing else but trivia. One of each is what makes `child` and `token` taking
+/// the last an equivalent mutation.
+fn individual_definition_shape(node: &SyntaxNode) -> IndividualShape {
+    let elements: Vec<SyntaxElement> = node
+        .children_with_tokens()
+        .filter(|element| {
+            element
+                .as_token()
+                .is_none_or(|token| !token.text().trim().is_empty())
+        })
+        .collect();
+    let mut rest = elements.as_slice();
+    let mut take = |kind: SyntaxKind| match rest.split_first() {
+        Some((first, after)) if first.kind() == kind => {
+            rest = after;
+            Some(first.clone())
+        }
+        _ => None,
+    };
+    let basic_prefix = take(SyntaxKind::BasicDefinitionPrefix).and_then(SyntaxElement::into_node);
+    let individual_keyword = take(SyntaxKind::KwIndividual).and_then(SyntaxElement::into_token);
+    let extension_keywords: Vec<SyntaxNode> =
+        std::iter::from_fn(|| take(SyntaxKind::DefinitionExtensionKeyword))
+            .filter_map(SyntaxElement::into_node)
+            .collect();
+    let def_keyword = take(SyntaxKind::KwDef).and_then(SyntaxElement::into_token);
+    let definition = take(SyntaxKind::Definition).and_then(SyntaxElement::into_node);
+    let multiplicity = take(SyntaxKind::EmptyMultiplicityMember).and_then(SyntaxElement::into_node);
+    assert!(
+        individual_keyword.is_some()
+            && def_keyword.is_some()
+            && definition.is_some()
+            && multiplicity.is_some()
+            && rest.is_empty(),
+        "an IndividualDefinition is not `BasicDefinitionPrefix? 'individual' \
+         DefinitionExtensionKeyword* 'def' Definition EmptyMultiplicityMember`, at {:?}: \
+         {elements:?}",
+        node.text_range()
+    );
+
+    assert_individual_slots_hold_no_keyword(node, basic_prefix.iter().chain(&extension_keywords));
+    IndividualShape {
+        basic_prefix,
+        individual_keyword,
+        extension_keywords,
+        def_keyword,
+        definition,
+        multiplicity,
+    }
+}
+
+/// Nothing beneath a prefix slot is either keyword or a `Definition`: a basic prefix is one
+/// keyword, and an extension keyword a `#` and a qualified name (`BasicDefinitionPrefix`,
+/// `DefinitionExtensionKeyword`, `SysML` 8.2.2.6.1). Asserted because it is what makes
+/// `token` and `definition` reading descendants equivalent mutations: the slots are the
+/// only elements before the keywords and the `Definition` in preorder. Only the slots are
+/// scanned, never the body. No pinned tree writes a slot on an individual definition, so
+/// this holds vacuously over the sweep today, and bites on the first tree that does.
+fn assert_individual_slots_hold_no_keyword<'a>(
+    node: &SyntaxNode,
+    slots: impl Iterator<Item = &'a SyntaxNode>,
+) {
+    for slot in slots {
+        assert!(
+            slot.descendants_with_tokens()
+                .skip(1)
+                .all(|below| !matches!(
+                    below.kind(),
+                    SyntaxKind::KwIndividual | SyntaxKind::KwDef | SyntaxKind::Definition
+                )),
+            "a keyword or Definition beneath an IndividualDefinition's {:?}, at {:?}",
+            slot.kind(),
+            node.text_range()
+        );
+    }
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -2542,6 +2679,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_allocation_definition_accessor(&node);
             assert_rendering_definition_accessor(&node);
             assert_port_definition_accessor(&node);
+            assert_individual_definition_accessor(&node);
             visited += 1;
         }
     }
