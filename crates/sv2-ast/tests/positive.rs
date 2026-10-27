@@ -2847,3 +2847,46 @@ fn the_concern_definition_of_view_test_reads_its_keywords_declaration_and_body()
         "line 9, and none of the three usages"
     );
 }
+
+/// `ViewTest.sysml`, read for its view definitions:
+///
+/// ```text
+///   line 27:  view def V { ... }           V
+///   line 34:    view v: V[0..*] { ... }    a ViewUsage, in V's body
+///   line 46:  view v : V { ... }           a ViewUsage
+/// ```
+///
+/// `ViewDefinition = OccurrenceDefinitionPrefix 'view' 'def' DefinitionDeclaration
+/// ViewDefinitionBody` (`SysML` 8.2.2.26.1): no `Definition` node. The file writes one,
+/// whose body holds a viewpoint usage, a `render` and a view usage, beside two usages of
+/// the same keyword that write no `def` (`ViewUsage`, 8.2.2.26.2), one nested in its body.
+///
+/// No corpus file writes a prefix on a view definition, so this case cannot tell a
+/// `prefix()` that answers nothing from one that answers an empty prefix. The sweep can:
+/// it asserts the prefix node is there on every view definition in every tree.
+#[test]
+fn the_view_definition_of_view_test_reads_its_keywords_declaration_and_body() {
+    let read: Vec<RequirementShapedRead> = tree_of(VIEW_TEST)
+        .descendants()
+        .filter_map(sv2_ast::ViewDefinition::cast)
+        .map(|view| {
+            (
+                view.view_keyword().map(|token| token.text().to_owned()),
+                view.def_keyword().map(|token| token.text().to_owned()),
+                view.declaration()
+                    .map(|declaration| declaration.text().to_string()),
+                view.body().as_ref().and_then(opening),
+            )
+        })
+        .collect();
+    assert_eq!(
+        read,
+        [(
+            Some("view".to_owned()),
+            Some("def".to_owned()),
+            Some("V".to_owned()),
+            Some("{".to_owned()),
+        )],
+        "line 27, and neither usage"
+    );
+}
