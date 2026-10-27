@@ -2552,6 +2552,26 @@ fn a_concern_with_no_def_after_it_begins_no_concern_definition() {
     );
 }
 
+/// `view-definition/def-written-twice.sysml`: `view def def A;`, then `view def B;`.
+/// [`def_written_twice`] states what it pins.
+#[test]
+fn a_view_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    def_written_twice(
+        &simple_definitions::VIEW,
+        include_str!("malformed/view-definition/def-written-twice.sysml"),
+    );
+}
+
+/// `view-definition/def-missing.sysml`: `view A def B;`, then `view def C;`.
+/// [`def_missing`] states what it pins.
+#[test]
+fn a_view_with_no_def_after_it_begins_no_view_definition() {
+    def_missing(
+        &simple_definitions::VIEW,
+        include_str!("malformed/view-definition/def-missing.sysml"),
+    );
+}
+
 const INDIVIDUAL_BEFORE_ATTRIBUTE: &str =
     include_str!("malformed/attribute-definition/individual-before-attribute.sysml");
 

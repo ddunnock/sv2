@@ -37,6 +37,7 @@ mod qualified_name;
 mod relationship_body;
 mod rendering_definition;
 mod requirement_definition;
+mod view_definition;
 mod visibility_indicator;
 
 pub use crate::alias_member::AliasMember;
@@ -71,4 +72,5 @@ pub use crate::qualified_name::QualifiedName;
 pub use crate::relationship_body::RelationshipBody;
 pub use crate::rendering_definition::RenderingDefinition;
 pub use crate::requirement_definition::RequirementDefinition;
+pub use crate::view_definition::ViewDefinition;
 pub use crate::visibility_indicator::VisibilityIndicator;

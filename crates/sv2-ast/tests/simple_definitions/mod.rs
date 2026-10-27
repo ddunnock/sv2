@@ -36,7 +36,7 @@
 use sv2_ast::{
     AllocationDefinition, AstNode, AttributeDefinition, ConcernDefinition, ConnectionDefinition,
     Definition, FlowDefinition, ItemDefinition, OccurrenceDefinition, PartDefinition,
-    PortDefinition, RenderingDefinition, RequirementDefinition,
+    PortDefinition, RenderingDefinition, RequirementDefinition, ViewDefinition,
 };
 use sv2_syntax::{SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -253,6 +253,21 @@ pub(crate) const CONCERN: Production = Production {
     read: read_concern,
 };
 
+/// `ViewDefinition = OccurrenceDefinitionPrefix 'view' 'def' DefinitionDeclaration
+/// ViewDefinitionBody` (`SysML` 8.2.2.26.1), built by `view_definition` with no `Definition` node.
+pub(crate) const VIEW: Production = Production {
+    node: SyntaxKind::ViewDefinition,
+    prefix: SyntaxKind::OccurrenceDefinitionPrefix,
+    keyword: SyntaxKind::KwView,
+    keyword_text: "view",
+    usage: SyntaxKind::ViewUsage,
+    tail: &[
+        SyntaxKind::DefinitionDeclaration,
+        SyntaxKind::ViewDefinitionBody,
+    ],
+    read: read_view,
+};
+
 fn read_attribute(node: &SyntaxNode) -> Option<Read> {
     AttributeDefinition::cast(node.clone()).map(|view| {
         Read::with_definition(
@@ -378,6 +393,18 @@ fn read_concern(node: &SyntaxNode) -> Option<Read> {
         syntax: view.syntax().clone(),
         prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
         keyword: view.concern_keyword(),
+        def_keyword: view.def_keyword(),
+        tail: vec![view.declaration(), view.body()],
+        declaration: view.declaration(),
+        body: view.body(),
+    })
+}
+
+fn read_view(node: &SyntaxNode) -> Option<Read> {
+    ViewDefinition::cast(node.clone()).map(|view| Read {
+        syntax: view.syntax().clone(),
+        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
+        keyword: view.view_keyword(),
         def_keyword: view.def_keyword(),
         tail: vec![view.declaration(), view.body()],
         declaration: view.declaration(),
