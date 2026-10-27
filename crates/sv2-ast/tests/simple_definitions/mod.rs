@@ -36,7 +36,7 @@
 use sv2_ast::{
     AllocationDefinition, AstNode, AttributeDefinition, ConnectionDefinition, Definition,
     FlowDefinition, ItemDefinition, OccurrenceDefinition, PartDefinition, PortDefinition,
-    RenderingDefinition,
+    RenderingDefinition, RequirementDefinition,
 };
 use sv2_syntax::{SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -221,6 +221,22 @@ pub(crate) const PORT: Production = Production {
     read: read_port,
 };
 
+/// `RequirementDefinition = OccurrenceDefinitionPrefix 'requirement' 'def'
+/// DefinitionDeclaration RequirementBody` (`SysML` 8.2.2.21.1). Not one of
+/// `simple_definition`'s: `requirement_definition` builds it, with no `Definition` node.
+pub(crate) const REQUIREMENT: Production = Production {
+    node: SyntaxKind::RequirementDefinition,
+    prefix: SyntaxKind::OccurrenceDefinitionPrefix,
+    keyword: SyntaxKind::KwRequirement,
+    keyword_text: "requirement",
+    usage: SyntaxKind::RequirementUsage,
+    tail: &[
+        SyntaxKind::DefinitionDeclaration,
+        SyntaxKind::RequirementBody,
+    ],
+    read: read_requirement,
+};
+
 fn read_attribute(node: &SyntaxNode) -> Option<Read> {
     AttributeDefinition::cast(node.clone()).map(|view| {
         Read::with_definition(
@@ -326,6 +342,18 @@ fn read_port(node: &SyntaxNode) -> Option<Read> {
             view.def_keyword(),
             view.definition(),
         )
+    })
+}
+
+fn read_requirement(node: &SyntaxNode) -> Option<Read> {
+    RequirementDefinition::cast(node.clone()).map(|view| Read {
+        syntax: view.syntax().clone(),
+        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
+        keyword: view.requirement_keyword(),
+        def_keyword: view.def_keyword(),
+        tail: vec![view.declaration(), view.body()],
+        declaration: view.declaration(),
+        body: view.body(),
     })
 }
 

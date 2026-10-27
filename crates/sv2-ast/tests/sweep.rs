@@ -2370,6 +2370,11 @@ fn assert_port_definition_accessor(node: &SyntaxNode) {
     assert_simple_definition(node, &simple_definitions::PORT);
 }
 
+/// What `RequirementDefinition` must satisfy at every node, whatever the tree.
+fn assert_requirement_definition_accessor(node: &SyntaxNode) {
+    assert_simple_definition(node, &simple_definitions::REQUIREMENT);
+}
+
 /// What a view of one of `simple_definition`'s productions must satisfy at every node.
 /// Both node children are typed (the prefix's view, `Definition`); the keywords are the
 /// node's own tokens.
@@ -2461,7 +2466,7 @@ fn simple_definition_shape(
                 def_keyword.clone(),
                 tail.iter()
                     .filter_map(|element| element.as_node().cloned())
-                    .collect(),
+                    .collect::<Vec<_>>(),
             ))
         }
         _ => None,
@@ -2476,28 +2481,9 @@ fn simple_definition_shape(
         node.text_range()
     );
 
-    // The prefix holds neither keyword and no tail kind: it is `abstract` or `variation`,
-    // `individual` in an occurrence's, and `#` keywords naming metadata
-    // (`OccurrenceDefinitionPrefix`, `SysML` 8.2.2.9.1; `DefinitionPrefix` and
-    // `DefinitionExtensionKeyword`, 8.2.2.6.1). Asserted because it is what makes the
-    // keyword accessors and the tail's accessors reading descendants equivalent
-    // mutations: the prefix is the only element before the keywords and the tail in
-    // preorder, and the body, which may nest another definition, comes after them.
-    assert!(
-        shape.as_ref().is_none_or(|(prefix, ..)| {
-            prefix.descendants_with_tokens().all(|below| {
-                let kind = below.kind();
-                kind != production.keyword
-                    && kind != SyntaxKind::KwDef
-                    && !production.tail.contains(&kind)
-            })
-        }),
-        "a `{}`, `def` or {:?} inside a {:?}'s prefix, at {:?}",
-        production.keyword_text,
-        production.tail,
-        production.node,
-        node.text_range()
-    );
+    if let Some((prefix, _, _, tail)) = &shape {
+        assert_simple_definition_slots(node, production, prefix, tail);
+    }
     shape
 }
 
@@ -2638,6 +2624,56 @@ fn assert_individual_slots_hold_no_keyword<'a>(
     }
 }
 
+/// The grammar facts the equivalent mutations of a simple definition's accessors rest on,
+/// asserted over the two slots they concern.
+fn assert_simple_definition_slots(
+    node: &SyntaxNode,
+    production: &simple_definitions::Production,
+    prefix: &SyntaxNode,
+    tail: &[SyntaxNode],
+) {
+    // The prefix holds neither keyword and no tail kind: it is `abstract` or `variation`,
+    // `individual` in an occurrence's, and `#` keywords naming metadata
+    // (`OccurrenceDefinitionPrefix`, `SysML` 8.2.2.9.1; `DefinitionPrefix` and
+    // `DefinitionExtensionKeyword`, 8.2.2.6.1). Asserted because it is what makes the
+    // keyword accessors and the tail's accessors reading descendants equivalent
+    // mutations: the prefix is the only element before the keywords and the tail in
+    // preorder, and the body, which may nest another definition, comes after them.
+    assert!(
+        prefix.descendants_with_tokens().all(|below| {
+            let kind = below.kind();
+            kind != production.keyword
+                && kind != SyntaxKind::KwDef
+                && !production.tail.contains(&kind)
+        }),
+        "a `{}`, `def` or {:?} inside a {:?}'s prefix, at {:?}",
+        production.keyword_text,
+        production.tail,
+        production.node,
+        node.text_range()
+    );
+
+    // A declaration in the tail holds no other tail kind: it is an identification and a
+    // subclassification part (`DefinitionDeclaration`, `SysML` 8.2.2.6.1), never a body.
+    // Asserted because it is what makes `body()` reading descendants an equivalent
+    // mutation for a requirement or concern definition, whose declaration precedes its
+    // `RequirementBody` in preorder. Only the declaration is scanned, never the body.
+    assert!(
+        tail.iter()
+            .filter(|node| node.kind() == SyntaxKind::DefinitionDeclaration)
+            .all(|declaration| {
+                declaration
+                    .descendants()
+                    .skip(1)
+                    .all(|below| !production.tail.contains(&below.kind()))
+            }),
+        "a {:?} inside a {:?}'s declaration, at {:?}",
+        production.tail,
+        production.node,
+        node.text_range()
+    );
+}
+
 fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
     let mut visited = 0;
     for path in paths {
@@ -2677,6 +2713,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_rendering_definition_accessor(&node);
             assert_port_definition_accessor(&node);
             assert_individual_definition_accessor(&node);
+            assert_requirement_definition_accessor(&node);
             visited += 1;
         }
     }
