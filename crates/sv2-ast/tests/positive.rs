@@ -2430,3 +2430,83 @@ fn the_rendering_definition_of_view_test_reads_its_keywords_prefix_and_definitio
         "line 23, and none of the four usages"
     );
 }
+
+/// A port definition's two keywords, its prefix's `#` keywords, and what its definition
+/// declares.
+type PortDefinitionRead = (Option<String>, Option<String>, Vec<String>, Option<String>);
+
+const CONJUGATION_TEST: &str =
+    "vendor/corpus/sysml/src/examples/Simple Tests/ConjugationTest.sysml";
+
+/// Every `PortDefinition` in the corpus file at `relative`, read.
+fn port_definitions_of(relative: &str) -> Vec<PortDefinitionRead> {
+    tree_of(relative)
+        .descendants()
+        .filter_map(sv2_ast::PortDefinition::cast)
+        .map(|port| {
+            (
+                port.port_keyword().map(|token| token.text().to_owned()),
+                port.def_keyword().map(|token| token.text().to_owned()),
+                port.prefix()
+                    .map(|prefix| {
+                        prefix
+                            .extension_keywords()
+                            .map(|keyword| keyword.text().to_string())
+                            .collect()
+                    })
+                    .unwrap_or_default(),
+                port.definition()
+                    .and_then(|definition| definition.declaration())
+                    .map(|declaration| declaration.text().to_string()),
+            )
+        })
+        .collect()
+}
+
+/// `ConjugationTest.sysml` and `AHFCoreLib.sysml`, read for their port definitions:
+///
+/// ```text
+///   ConjugationTest   line  2:  port def P;                              no prefix
+///                     lines 5, 6, 10, 11, ...:  port p1: P; port p2: ~P; PortUsages
+///   AHFCoreLib        line  7:  #service port def ServiceDiscovery { }   #service
+///                     line 12:  #service port def ServiceDiscoveryDD :> ServiceDiscovery
+///                     line 15:  #service port def Authorisation { ... }
+///                     line 19:  #service port def AuthorisationDD :> Authorisation
+///                     line 28:  #service serviceDiscovery : ServiceDiscovery;   no port
+/// ```
+///
+/// `PortDefinition = DefinitionPrefix 'port' 'def' Definition ownedRelationship +=
+/// ConjugatedPortDefinitionMember` (`SysML` 8.2.2.12). The first file writes the
+/// definition beside usages of it and of its conjugate, which write no `def` (`PortUsage`,
+/// 8.2.2.12). No corpus file writes `abstract` or `variation` before `port def`; the
+/// second file is chosen because it writes a prefix all the same, a user-defined keyword
+/// (`DefinitionExtensionKeyword`, 8.2.2.6.1), and writes it on non-port elements too.
+#[test]
+fn the_port_definitions_of_two_files_read_their_keywords_prefix_and_definition() {
+    let def = |extensions: &[&str], declaration: &str| {
+        (
+            Some("port".to_owned()),
+            Some("def".to_owned()),
+            extensions
+                .iter()
+                .map(|&keyword| keyword.to_owned())
+                .collect::<Vec<_>>(),
+            Some(declaration.to_owned()),
+        )
+    };
+    assert_eq!(
+        port_definitions_of(CONJUGATION_TEST),
+        [def(&[], "P")],
+        "line 2, and none of the usages"
+    );
+    assert_eq!(
+        port_definitions_of(AHF_CORE_LIB),
+        [
+            def(&["#service"], "ServiceDiscovery"),
+            def(&["#service"], "ServiceDiscoveryDD :> ServiceDiscovery"),
+            def(&["#service"], "Authorisation"),
+            def(&["#service"], "AuthorisationDD :> Authorisation"),
+        ],
+        "lines 7, 12, 15 and 19, in source order"
+    );
+}

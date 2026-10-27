@@ -2365,6 +2365,11 @@ fn assert_rendering_definition_accessor(node: &SyntaxNode) {
     assert_simple_definition(node, &simple_definitions::RENDERING);
 }
 
+/// What `PortDefinition` must satisfy at every node, whatever the tree.
+fn assert_port_definition_accessor(node: &SyntaxNode) {
+    assert_simple_definition(node, &simple_definitions::PORT);
+}
+
 /// What a view of one of `simple_definition`'s productions must satisfy at every node.
 /// Both node children are typed (the prefix's view, `Definition`); the keywords are the
 /// node's own tokens.
@@ -2424,7 +2429,10 @@ fn assert_simple_definition(node: &SyntaxNode, production: &simple_definitions::
 /// `<prefix> '<keyword>' 'def' Definition` (`SysML` 8.2.2.7, 8.2.2.9.1, 8.2.2.11), all four
 /// always present: `at_simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`)
 /// begins one only on its keyword followed by `def`, and `simple_definition` builds both
-/// nodes whatever follows. Nothing else but trivia.
+/// nodes whatever follows. Then exactly the production's trailing child, if it names one:
+/// a port definition's `ConjugatedPortDefinitionMember` (8.2.2.12), which `port_definition`
+/// (`crates/sv2-syntax/src/parser/connection.rs`) builds whatever precedes it. Nothing else
+/// but trivia.
 fn simple_definition_shape(
     node: &SyntaxNode,
     production: &simple_definitions::Production,
@@ -2443,10 +2451,15 @@ fn simple_definition_shape(
             SyntaxElement::Token(keyword),
             SyntaxElement::Token(def_keyword),
             SyntaxElement::Node(definition),
+            trailing @ ..,
         ] if prefix.kind() == production.prefix
             && keyword.kind() == production.keyword
             && def_keyword.kind() == SyntaxKind::KwDef
-            && definition.kind() == SyntaxKind::Definition =>
+            && definition.kind() == SyntaxKind::Definition
+            && trailing
+                .iter()
+                .map(SyntaxElement::kind)
+                .eq(production.trailing) =>
         {
             Some((
                 prefix.clone(),
@@ -2459,10 +2472,11 @@ fn simple_definition_shape(
     };
     assert!(
         shape.is_some(),
-        "a {:?} is not `{:?} '{}' 'def' Definition`, at {:?}: {elements:?}",
+        "a {:?} is not `{:?} '{}' 'def' Definition {:?}`, at {:?}: {elements:?}",
         production.node,
         production.prefix,
         production.keyword_text,
+        production.trailing,
         node.text_range()
     );
 
@@ -2527,6 +2541,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_flow_definition_accessor(&node);
             assert_allocation_definition_accessor(&node);
             assert_rendering_definition_accessor(&node);
+            assert_port_definition_accessor(&node);
             visited += 1;
         }
     }

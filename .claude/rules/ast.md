@@ -166,6 +166,12 @@ their tests assert is the same, so it is written once:
   `def_written_twice` or `def_missing`. A condition that belongs to one kind alone — the
   `individual` before an `attribute` — stays written out for that kind.
 
+A production another method builds may join when its tree and its recovery are the
+family's, measured rather than assumed. `PortDefinition` (`port_definition`) is an
+attribute definition's tree plus a trailing `ConjugatedPortDefinitionMember` holding no
+token, and recovers identically, so its `Production` names that child as `trailing` and
+the sweep's shape asserts exactly it. A production whose recovery differs does not join.
+
 The positive case stays per kind: it reads a corpus file chosen for that kind, and the
 choice is the point. Mutation still runs per accessor, since the views are separate code;
 a shared assertion proven against one kind proves nothing about another kind's reader.

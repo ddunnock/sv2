@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-27T14:32:39Z",
+    "regenerated_utc": "2026-10-27T18:55:16Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 28,
-      "unimplemented": 435,
+      "implemented": 29,
+      "unimplemented": 434,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 6.0
+      "percent": 6.3
     },
     "tests": {
-      "unit": 833,
+      "unit": 836,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "719b472 Merge ast-rendering-definition: every simple_definition production has a view",
+      "af62380 Add the RenderingDefinition accessor, the last simple_definition sibling",
       "82d8415 Merge ast-allocation-definition",
       "eb4d8f4 Add the AllocationDefinition accessor",
       "09cac9e Merge ast-flow-definition",
       "d7c18e9 Add the FlowDefinition accessor",
       "1bdbc1c Merge ast-connection-definition",
-      "c02d1d0 Add the ConnectionDefinition accessor",
-      "c8dc661 Merge ast-item-definition: the first sibling written on the shared path",
-      "ed950ee Add the ItemDefinition accessor, the first sibling on the shared path"
+      "c02d1d0 Add the ConnectionDefinition accessor"
     ]
   },
   "authored": {

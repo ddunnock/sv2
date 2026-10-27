@@ -2489,6 +2489,27 @@ fn a_rendering_with_no_def_after_it_begins_no_rendering_definition() {
     );
 }
 
+/// `port-definition/def-written-twice.sysml`: `port def def A;`, then `port def B;`.
+/// [`def_written_twice`] states what it pins; `port_definition` builds the definition, and
+/// recovers as `simple_definition` does.
+#[test]
+fn a_port_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    def_written_twice(
+        &simple_definitions::PORT,
+        include_str!("malformed/port-definition/def-written-twice.sysml"),
+    );
+}
+
+/// `port-definition/def-missing.sysml`: `port A def B;`, then `port def C;`.
+/// [`def_missing`] states what it pins.
+#[test]
+fn a_port_with_no_def_after_it_begins_no_port_definition() {
+    def_missing(
+        &simple_definitions::PORT,
+        include_str!("malformed/port-definition/def-missing.sysml"),
+    );
+}
+
 const INDIVIDUAL_BEFORE_ATTRIBUTE: &str =
     include_str!("malformed/attribute-definition/individual-before-attribute.sysml");
 
