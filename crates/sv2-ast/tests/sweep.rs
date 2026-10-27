@@ -2355,6 +2355,11 @@ fn assert_flow_definition_accessor(node: &SyntaxNode) {
     assert_simple_definition(node, &simple_definitions::FLOW);
 }
 
+/// What `AllocationDefinition` must satisfy at every node, whatever the tree.
+fn assert_allocation_definition_accessor(node: &SyntaxNode) {
+    assert_simple_definition(node, &simple_definitions::ALLOCATION);
+}
+
 /// What a view of one of `simple_definition`'s productions must satisfy at every node.
 /// Both node children are typed (the prefix's view, `Definition`); the keywords are the
 /// node's own tokens.
@@ -2515,6 +2520,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_item_definition_accessor(&node);
             assert_connection_definition_accessor(&node);
             assert_flow_definition_accessor(&node);
+            assert_allocation_definition_accessor(&node);
             visited += 1;
         }
     }
