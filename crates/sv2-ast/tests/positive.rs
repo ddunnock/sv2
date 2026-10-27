@@ -2722,3 +2722,78 @@ fn an_individual_definition_does_not_claim_the_slots_of_one_in_its_body() {
         "X has no slot written and owns its own multiplicity; Y has both slots and its own"
     );
 }
+
+/// A requirement or concern definition's two keywords, what its declaration declares, and
+/// the first token of its body: `;` or `{`.
+type RequirementShapedRead = (
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+);
+
+/// The first token of `body`, as written.
+fn opening(body: &SyntaxNode) -> Option<String> {
+    body.first_token().map(|token| token.text().to_owned())
+}
+
+const REQUIREMENT_TEST: &str =
+    "vendor/corpus/sysml/src/examples/Simple Tests/RequirementTest.sysml";
+
+/// `RequirementTest.sysml`, read for its requirement definitions:
+///
+/// ```text
+///   line  5:  requirement def R { ... }               R
+///   line  9:    requirement;                          a RequirementUsage
+///   line 10:    requirement def <'1'> A { ... }       nested in R, with a short name
+///   line 15:  requirement def R1 { ... }              R1
+///   lines 20, 25:  requirement r : R; / r1 : R1;      RequirementUsages
+///   line 33:  requirement def R2 { ... }              R2
+/// ```
+///
+/// `RequirementDefinition = OccurrenceDefinitionPrefix 'requirement' 'def'
+/// DefinitionDeclaration RequirementBody` (`SysML` 8.2.2.21.1): no `Definition` node, the
+/// declaration and the body are the definition's own. The file writes the definition at
+/// the top and nested in another's body, with a short name, beside usages of the same
+/// keyword that write no `def` (`RequirementUsage`, 8.2.2.21.2). In preorder the nested
+/// one comes before R's later siblings.
+///
+/// No corpus file writes a prefix on a requirement definition (`grep -rnE
+/// '\b(abstract|variation|individual)\s+requirement\s+def\b|#\S+\s+requirement\s+def'
+/// vendor/corpus` finds none), so this case cannot tell a `prefix()` that answers nothing
+/// from one that answers an empty prefix. The sweep can: it asserts the prefix node is
+/// there on every requirement definition in every tree.
+#[test]
+fn the_requirement_definitions_of_requirement_test_read_their_keywords_declaration_and_body() {
+    let read: Vec<RequirementShapedRead> = tree_of(REQUIREMENT_TEST)
+        .descendants()
+        .filter_map(sv2_ast::RequirementDefinition::cast)
+        .map(|requirement| {
+            (
+                requirement
+                    .requirement_keyword()
+                    .map(|token| token.text().to_owned()),
+                requirement
+                    .def_keyword()
+                    .map(|token| token.text().to_owned()),
+                requirement
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string()),
+                requirement.body().as_ref().and_then(opening),
+            )
+        })
+        .collect();
+    let def = |declaration: &str| {
+        (
+            Some("requirement".to_owned()),
+            Some("def".to_owned()),
+            Some(declaration.to_owned()),
+            Some("{".to_owned()),
+        )
+    };
+    assert_eq!(
+        read,
+        [def("R"), def("<'1'> A"), def("R1"), def("R2")],
+        "lines 5, 10, 15 and 33, in preorder, and none of the usages"
+    );
+}

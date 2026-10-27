@@ -167,10 +167,13 @@ their tests assert is the same, so it is written once:
   `individual` before an `attribute` — stays written out for that kind.
 
 A production another method builds may join when its tree and its recovery are the
-family's, measured rather than assumed. `PortDefinition` (`port_definition`) is an
-attribute definition's tree plus a trailing `ConjugatedPortDefinitionMember` holding no
-token, and recovers identically, so its `Production` names that child as `trailing` and
-the sweep's shape asserts exactly it. A production whose recovery differs does not join.
+family's, measured rather than assumed: `<prefix> '<keyword>' 'def'`, then whatever the
+production's `tail` names, one `<keyword> def` deciding where it begins. `PortDefinition`
+(`port_definition`) has a `Definition` and a `ConjugatedPortDefinitionMember` holding no
+token; `RequirementDefinition` and `ConcernDefinition` have a `DefinitionDeclaration` and
+a `RequirementBody`, and no `Definition` node. The sweep's shape asserts exactly the tail,
+and the reader reports what the view answers for it. A production whose recovery differs
+does not join.
 
 The positive case stays per kind: it reads a corpus file chosen for that kind, and the
 choice is the point. Mutation still runs per accessor, since the views are separate code;
