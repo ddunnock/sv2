@@ -22,13 +22,21 @@
 //! their tests assert is the same, so it is written once, here, against a [`Production`]
 //! that names those three differences and a reader that calls the typed accessors.
 //!
+//! `PortDefinition` shares them too, though `port_definition`
+//! (`crates/sv2-syntax/src/parser/connection.rs`) builds it. Its tree is an attribute
+//! definition's with one more child after the `Definition`, a
+//! `ConjugatedPortDefinitionMember` holding no token, which [`Production::trailing`]
+//! names. Its recovery is theirs: `at_port_definition` begins one only on `port def`, and
+//! the body's `Definition` is read by the same `definition`.
+//!
 //! The per-kind entry points stay per kind: `tests/sweep.rs` keeps an
 //! `assert_<kind>_accessor` for each, which `scripts/ast_coverage.py` requires by name,
 //! and each malformed case keeps its own test function and its own fixture directory.
 
 use sv2_ast::{
     AllocationDefinition, AstNode, AttributeDefinition, ConnectionDefinition, Definition,
-    FlowDefinition, ItemDefinition, OccurrenceDefinition, PartDefinition, RenderingDefinition,
+    FlowDefinition, ItemDefinition, OccurrenceDefinition, PartDefinition, PortDefinition,
+    RenderingDefinition,
 };
 use sv2_syntax::{SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -45,6 +53,9 @@ pub(crate) struct Production {
     /// The usage the same keyword opens when no `def` follows it, which is what
     /// `at_simple_definition` reads `<keyword> A def B;` as.
     pub(crate) usage: SyntaxKind,
+    /// What the node holds after its `Definition`: nothing for the eight `simple_definition`
+    /// builds, and the zero-width `ConjugatedPortDefinitionMember` for a port definition.
+    pub(crate) trailing: Option<SyntaxKind>,
     /// The production read through its typed view, or `None` where the view's `cast`
     /// refuses the node.
     pub(crate) read: fn(&SyntaxNode) -> Option<Read>,
@@ -71,6 +82,7 @@ pub(crate) const ATTRIBUTE: Production = Production {
     keyword: SyntaxKind::KwAttribute,
     keyword_text: "attribute",
     usage: SyntaxKind::AttributeUsage,
+    trailing: None,
     read: read_attribute,
 };
 
@@ -82,6 +94,7 @@ pub(crate) const OCCURRENCE: Production = Production {
     keyword: SyntaxKind::KwOccurrence,
     keyword_text: "occurrence",
     usage: SyntaxKind::OccurrenceUsage,
+    trailing: None,
     read: read_occurrence,
 };
 
@@ -92,6 +105,7 @@ pub(crate) const ITEM: Production = Production {
     keyword: SyntaxKind::KwItem,
     keyword_text: "item",
     usage: SyntaxKind::ItemUsage,
+    trailing: None,
     read: read_item,
 };
 
@@ -103,6 +117,7 @@ pub(crate) const PART: Production = Production {
     keyword: SyntaxKind::KwPart,
     keyword_text: "part",
     usage: SyntaxKind::PartUsage,
+    trailing: None,
     read: read_part,
 };
 
@@ -114,6 +129,7 @@ pub(crate) const CONNECTION: Production = Production {
     keyword: SyntaxKind::KwConnection,
     keyword_text: "connection",
     usage: SyntaxKind::ConnectionUsage,
+    trailing: None,
     read: read_connection,
 };
 
@@ -125,6 +141,7 @@ pub(crate) const FLOW: Production = Production {
     keyword: SyntaxKind::KwFlow,
     keyword_text: "flow",
     usage: SyntaxKind::FlowUsage,
+    trailing: None,
     read: read_flow,
 };
 
@@ -136,6 +153,7 @@ pub(crate) const ALLOCATION: Production = Production {
     keyword: SyntaxKind::KwAllocation,
     keyword_text: "allocation",
     usage: SyntaxKind::AllocationUsage,
+    trailing: None,
     read: read_allocation,
 };
 
@@ -147,7 +165,22 @@ pub(crate) const RENDERING: Production = Production {
     keyword: SyntaxKind::KwRendering,
     keyword_text: "rendering",
     usage: SyntaxKind::RenderingUsage,
+    trailing: None,
     read: read_rendering,
+};
+
+/// `PortDefinition = DefinitionPrefix 'port' 'def' Definition ownedRelationship +=
+/// ConjugatedPortDefinitionMember` (`SysML` 8.2.2.12). Not one of `simple_definition`'s:
+/// `port_definition` builds it, and its tree differs from theirs only in the trailing
+/// member, which holds no token.
+pub(crate) const PORT: Production = Production {
+    node: SyntaxKind::PortDefinition,
+    prefix: SyntaxKind::DefinitionPrefix,
+    keyword: SyntaxKind::KwPort,
+    keyword_text: "port",
+    usage: SyntaxKind::PortUsage,
+    trailing: Some(SyntaxKind::ConjugatedPortDefinitionMember),
+    read: read_port,
 };
 
 fn read_attribute(node: &SyntaxNode) -> Option<Read> {
@@ -225,6 +258,16 @@ fn read_rendering(node: &SyntaxNode) -> Option<Read> {
         syntax: view.syntax().clone(),
         prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
         keyword: view.rendering_keyword(),
+        def_keyword: view.def_keyword(),
+        definition: view.definition(),
+    })
+}
+
+fn read_port(node: &SyntaxNode) -> Option<Read> {
+    PortDefinition::cast(node.clone()).map(|view| Read {
+        syntax: view.syntax().clone(),
+        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
+        keyword: view.port_keyword(),
         def_keyword: view.def_keyword(),
         definition: view.definition(),
     })
