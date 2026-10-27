@@ -2429,6 +2429,26 @@ fn a_connection_with_no_def_after_it_begins_no_connection_definition() {
     );
 }
 
+/// `flow-definition/def-written-twice.sysml`: `flow def def A;`, then `flow def B;`.
+/// [`def_written_twice`] states what it pins.
+#[test]
+fn a_flow_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    def_written_twice(
+        &simple_definitions::FLOW,
+        include_str!("malformed/flow-definition/def-written-twice.sysml"),
+    );
+}
+
+/// `flow-definition/def-missing.sysml`: `flow A def B;`, then `flow def C;`.
+/// [`def_missing`] states what it pins.
+#[test]
+fn a_flow_with_no_def_after_it_begins_no_flow_definition() {
+    def_missing(
+        &simple_definitions::FLOW,
+        include_str!("malformed/flow-definition/def-missing.sysml"),
+    );
+}
+
 const INDIVIDUAL_BEFORE_ATTRIBUTE: &str =
     include_str!("malformed/attribute-definition/individual-before-attribute.sysml");
 
