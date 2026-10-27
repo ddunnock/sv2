@@ -2612,6 +2612,26 @@ fn a_constraint_with_no_def_after_it_begins_no_constraint_definition() {
     );
 }
 
+/// `calculation-definition/def-written-twice.sysml`: `calc def def A;`, then `calc def B;`.
+/// [`def_written_twice`] states what it pins.
+#[test]
+fn a_calculation_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    def_written_twice(
+        &simple_definitions::CALCULATION,
+        include_str!("malformed/calculation-definition/def-written-twice.sysml"),
+    );
+}
+
+/// `calculation-definition/def-missing.sysml`: `calc A def B;`, then `calc def C;`.
+/// [`def_missing`] states what it pins.
+#[test]
+fn a_calc_with_no_def_after_it_begins_no_calculation_definition() {
+    def_missing(
+        &simple_definitions::CALCULATION,
+        include_str!("malformed/calculation-definition/def-missing.sysml"),
+    );
+}
+
 const INDIVIDUAL_BEFORE_ATTRIBUTE: &str =
     include_str!("malformed/attribute-definition/individual-before-attribute.sysml");
 

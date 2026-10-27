@@ -34,10 +34,10 @@
 //! and each malformed case keeps its own test function and its own fixture directory.
 
 use sv2_ast::{
-    AllocationDefinition, AstNode, AttributeDefinition, ConcernDefinition, ConnectionDefinition,
-    ConstraintDefinition, Definition, FlowDefinition, ItemDefinition, OccurrenceDefinition,
-    PartDefinition, PortDefinition, RenderingDefinition, RequirementDefinition, ViewDefinition,
-    ViewpointDefinition,
+    AllocationDefinition, AstNode, AttributeDefinition, CalculationDefinition, ConcernDefinition,
+    ConnectionDefinition, ConstraintDefinition, Definition, FlowDefinition, ItemDefinition,
+    OccurrenceDefinition, PartDefinition, PortDefinition, RenderingDefinition,
+    RequirementDefinition, ViewDefinition, ViewpointDefinition,
 };
 use sv2_syntax::{SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -299,6 +299,21 @@ pub(crate) const CONSTRAINT: Production = Production {
     read: read_constraint,
 };
 
+/// `CalculationDefinition = OccurrenceDefinitionPrefix 'calc' 'def' DefinitionDeclaration
+/// CalculationBody` (`SysML` 8.2.2.19), built by `calculation_definition` with no `Definition` node.
+pub(crate) const CALCULATION: Production = Production {
+    node: SyntaxKind::CalculationDefinition,
+    prefix: SyntaxKind::OccurrenceDefinitionPrefix,
+    keyword: SyntaxKind::KwCalc,
+    keyword_text: "calc",
+    usage: SyntaxKind::CalculationUsage,
+    tail: &[
+        SyntaxKind::DefinitionDeclaration,
+        SyntaxKind::CalculationBody,
+    ],
+    read: read_calculation,
+};
+
 fn read_attribute(node: &SyntaxNode) -> Option<Read> {
     AttributeDefinition::cast(node.clone()).map(|view| {
         Read::with_definition(
@@ -460,6 +475,18 @@ fn read_constraint(node: &SyntaxNode) -> Option<Read> {
         syntax: view.syntax().clone(),
         prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
         keyword: view.constraint_keyword(),
+        def_keyword: view.def_keyword(),
+        tail: vec![view.declaration(), view.body()],
+        declaration: view.declaration(),
+        body: view.body(),
+    })
+}
+
+fn read_calculation(node: &SyntaxNode) -> Option<Read> {
+    CalculationDefinition::cast(node.clone()).map(|view| Read {
+        syntax: view.syntax().clone(),
+        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
+        keyword: view.calc_keyword(),
         def_keyword: view.def_keyword(),
         tail: vec![view.declaration(), view.body()],
         declaration: view.declaration(),

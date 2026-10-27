@@ -2997,3 +2997,79 @@ fn the_constraint_definitions_of_constraint_test_read_their_keywords_declaration
         "lines 6, 42 and 65, in source order, and none of the usages"
     );
 }
+
+/// A calculation definition's two keywords, its prefix's basic keyword, what its
+/// declaration declares, and the first token of its body.
+type CalculationDefinitionRead = (
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+);
+
+const CALCULATION_TEST: &str =
+    "vendor/corpus/sysml/src/examples/Simple Tests/CalculationTest.sysml";
+
+const FUEL_ECONOMY_ANALYSIS_10C: &str =
+    "vendor/corpus/sysml/src/validation/10-Analysis and Trades/10c-Fuel Economy Analysis.sysml";
+
+/// Every `CalculationDefinition` in the corpus file at `relative`, read.
+fn calculation_definitions_of(relative: &str) -> Vec<CalculationDefinitionRead> {
+    tree_of(relative)
+        .descendants()
+        .filter_map(sv2_ast::CalculationDefinition::cast)
+        .map(|calc| {
+            (
+                calc.calc_keyword().map(|token| token.text().to_owned()),
+                calc.def_keyword().map(|token| token.text().to_owned()),
+                calc.prefix()
+                    .and_then(|prefix| prefix.basic_prefix())
+                    .map(|basic| basic.text().to_string()),
+                calc.declaration()
+                    .map(|declaration| declaration.text().to_string()),
+                calc.body().as_ref().and_then(opening),
+            )
+        })
+        .collect()
+}
+
+/// `CalculationTest.sysml` and `10c-Fuel Economy Analysis.sysml`, read for their
+/// calculation definitions:
+///
+/// ```text
+///   CalculationTest   line 17:  calc def MassSum { ... }                 no prefix
+///                     line 22:  calc ms: MassSum { ... }                 a CalculationUsage
+///   10c               line 71:  abstract calc def NominalScenario { ... } abstract
+///                     lines 75, 76, 80, 149, 155:  calc <name> ...       calculation usages
+/// ```
+///
+/// `CalculationDefinition = OccurrenceDefinitionPrefix 'calc' 'def' DefinitionDeclaration
+/// CalculationBody` (`SysML` 8.2.2.19): no `Definition` node. Each file writes the
+/// definition beside usages of the same keyword that write no `def` (`CalculationUsage`,
+/// 8.2.2.19), some of them parameters. The second is chosen because it is the one
+/// corpus file that writes a prefix on a calculation definition (`grep -rnE
+/// '\b(abstract|variation|individual)\s+calc\s+def\b|#\S+\s+calc\s+def' vendor/corpus`
+/// finds only line 71), so `prefix()` has something to answer.
+#[test]
+fn the_calculation_definitions_of_two_files_read_their_keywords_prefix_declaration_and_body() {
+    let def = |basic: Option<&str>, declaration: &str| {
+        (
+            Some("calc".to_owned()),
+            Some("def".to_owned()),
+            basic.map(str::to_owned),
+            Some(declaration.to_owned()),
+            Some("{".to_owned()),
+        )
+    };
+    assert_eq!(
+        calculation_definitions_of(CALCULATION_TEST),
+        [def(None, "MassSum")],
+        "line 17, and not the usage on line 22"
+    );
+    assert_eq!(
+        calculation_definitions_of(FUEL_ECONOMY_ANALYSIS_10C),
+        [def(Some("abstract"), "NominalScenario")],
+        "line 71, and none of the five usages"
+    );
+}

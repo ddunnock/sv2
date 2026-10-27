@@ -170,10 +170,11 @@ A production another method builds may join when its tree and its recovery are t
 family's, measured rather than assumed: `<prefix> '<keyword>' 'def'`, then whatever the
 production's `tail` names, one `<keyword> def` deciding where it begins. `PortDefinition`
 (`port_definition`) has a `Definition` and a `ConjugatedPortDefinitionMember` holding no
-token; `RequirementDefinition` and `ConcernDefinition` have a `DefinitionDeclaration` and
-a `RequirementBody`, and no `Definition` node. The sweep's shape asserts exactly the tail,
-and the reader reports what the view answers for it. A production whose recovery differs
-does not join.
+token; `RequirementDefinition`, `ConcernDefinition`, `ViewDefinition`,
+`ViewpointDefinition`, `ConstraintDefinition` and `CalculationDefinition` have a
+`DefinitionDeclaration` and a body of their own kind, and no `Definition` node. The
+sweep's shape asserts exactly the tail, and the reader reports what the view answers for
+it. A production whose recovery differs does not join.
 
 The positive case stays per kind: it reads a corpus file chosen for that kind, and the
 choice is the point. Mutation still runs per accessor, since the views are separate code;
