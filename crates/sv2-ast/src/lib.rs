@@ -8,6 +8,7 @@
 mod alias_member;
 mod ast_node;
 mod attribute_definition;
+mod connection_definition;
 mod definition;
 mod definition_prefix;
 mod element_filter_member;
@@ -34,6 +35,7 @@ mod visibility_indicator;
 pub use crate::alias_member::AliasMember;
 pub use crate::ast_node::AstNode;
 pub use crate::attribute_definition::AttributeDefinition;
+pub use crate::connection_definition::ConnectionDefinition;
 pub use crate::definition::Definition;
 pub use crate::definition_prefix::DefinitionPrefix;
 pub use crate::element_filter_member::ElementFilterMember;
