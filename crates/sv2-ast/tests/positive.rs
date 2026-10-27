@@ -2510,3 +2510,215 @@ fn the_port_definitions_of_two_files_read_their_keywords_prefix_and_definition()
         "lines 7, 12, 15 and 19, in source order"
     );
 }
+
+/// An individual definition's basic prefix, `individual`, `#` keywords and `def` as
+/// written, what its definition declares, and whether it owns its empty multiplicity.
+type IndividualDefinitionRead = (
+    Option<String>,
+    Option<String>,
+    Vec<String>,
+    Option<String>,
+    Option<String>,
+    bool,
+);
+
+/// Every `IndividualDefinition` under `root`, read.
+fn individual_definitions_in(root: &SyntaxNode) -> Vec<IndividualDefinitionRead> {
+    root.descendants()
+        .filter_map(sv2_ast::IndividualDefinition::cast)
+        .map(|individual| {
+            (
+                individual
+                    .basic_prefix()
+                    .map(|basic| basic.text().to_string()),
+                individual
+                    .individual_keyword()
+                    .map(|token| token.text().to_owned()),
+                individual
+                    .extension_keywords()
+                    .map(|keyword| keyword.text().to_string())
+                    .collect(),
+                individual
+                    .def_keyword()
+                    .map(|token| token.text().to_owned()),
+                individual
+                    .definition()
+                    .and_then(|definition| definition.declaration())
+                    .map(|declaration| declaration.text().to_string()),
+                individual.multiplicity().is_some(),
+            )
+        })
+        .collect()
+}
+
+/// An individual definition with nothing before `individual` and nothing between it and
+/// `def`, declaring `declaration`: the only kind the corpus writes.
+fn bare_individual(declaration: &str) -> IndividualDefinitionRead {
+    (
+        None,
+        Some("individual".to_owned()),
+        vec![],
+        Some("def".to_owned()),
+        Some(declaration.to_owned()),
+        true,
+    )
+}
+
+const VERIFICATION_CASE_USAGE_EXAMPLE: &str =
+    "vendor/corpus/sysml/src/training/34. Verification/Verification Case Usage Example.sysml";
+
+/// `IndividualTest.sysml` and `Verification Case Usage Example.sysml`, read for their
+/// individual definitions:
+///
+/// ```text
+///   IndividualTest   line  2:  individual def IO1;                    an IndividualDefinition
+///                    lines 3, 7, 14, 18, 25, 29, 36:  individual <kind> def ...
+///                              occurrence, item, part and action definitions, each
+///                              with an `individual` OccurrenceDefinitionPrefix
+///   Verification     line 30:  individual def TestSystem :> MassVerificationSystem;
+///                    lines 32, 33:  individual def TestVehicle1 / TestVehicle2 :> Vehicle;
+///                    line 35:  individual testSystem : TestSystem ...  a usage, no `def`
+/// ```
+///
+/// `IndividualDefinition : OccurrenceDefinition = BasicDefinitionPrefix? isIndividual ?=
+/// 'individual' DefinitionExtensionKeyword* 'def' Definition ownedRelationship +=
+/// EmptyMultiplicityMember` (`SysML` 8.2.2.9.1): "individual may be used in place of the
+/// kind keyword" (7.9.4, receipt 8c84370d). The first file is chosen because it writes
+/// this production once beside seven definitions whose `individual` stands before a kind
+/// keyword, which are other productions; the second because it writes it beside an
+/// individual usage. Each owns its `EmptyMultiplicityMember`, which the clause puts there
+/// and which spans no text.
+#[test]
+fn the_individual_definitions_of_two_files_read_their_keywords_and_definition() {
+    assert_eq!(
+        individual_definitions_in(&tree_of(INDIVIDUAL_TEST)),
+        [bare_individual("IO1")],
+        "line 2, and none of the definitions whose individual is a prefix's"
+    );
+    assert_eq!(
+        individual_definitions_in(&tree_of(VERIFICATION_CASE_USAGE_EXAMPLE)),
+        [
+            bare_individual("TestSystem :> MassVerificationSystem"),
+            bare_individual("TestVehicle1 :> Vehicle"),
+            bare_individual("TestVehicle2 :> Vehicle"),
+        ],
+        "lines 30, 32 and 33, in source order, and not the usage on line 35"
+    );
+}
+
+/// An individual definition's prefix slots, which no corpus file writes.
+///
+/// `BasicDefinitionPrefix? 'individual' DefinitionExtensionKeyword* 'def'` (`SysML`
+/// 8.2.2.9.1), with `BasicDefinitionPrefix = isAbstract ?= 'abstract' | isVariation ?=
+/// 'variation'` and `DefinitionExtensionKeyword = ownedRelationship +=
+/// PrefixMetadataMember`, a `#` and a name (8.2.2.6.1). Every individual definition in the
+/// corpus writes `individual def` and nothing else before its name (`grep -rnE
+/// '\b(abstract|variation)\s+individual\s+def\b|\bindividual\s+#\S+\s+def\b'
+/// vendor/corpus` finds none), so `basic_prefix()` and `extension_keywords()` would answer
+/// nothing on every corpus tree whatever they did. This text writes each slot: one with
+/// `abstract` and one keyword, one with `variation` and two, whose order is the source's.
+#[test]
+fn an_individual_definition_reads_the_prefix_slots_the_corpus_never_writes() {
+    const PREFIXED: &str = "package P {\n\
+                            \tmetadata def M;\n\
+                            \tmetadata def N;\n\
+                            \tabstract individual #M def X;\n\
+                            \tvariation individual #N #M def Y;\n\
+                            }\n";
+
+    let parse = trees::parsed(PREFIXED, sv2_syntax::Language::SysMl);
+    assert!(
+        parse.errors().is_empty(),
+        "the clauses admit this text, so a diagnostic here is the parser disagreeing \
+         with them, not the test being wrong: {:?}",
+        parse.errors()
+    );
+    let written = |basic: &str, keywords: &[&str], declaration: &str| {
+        (
+            Some(basic.to_owned()),
+            Some("individual".to_owned()),
+            keywords
+                .iter()
+                .map(|&keyword| keyword.to_owned())
+                .collect::<Vec<_>>(),
+            Some("def".to_owned()),
+            Some(declaration.to_owned()),
+            true,
+        )
+    };
+    assert_eq!(
+        individual_definitions_in(&parse.syntax()),
+        [
+            written("abstract", &["#M"], "X"),
+            written("variation", &["#N", "#M"], "Y"),
+        ],
+        "X and Y, each slot as written, in source order"
+    );
+}
+
+/// An individual definition's slots and multiplicity are its own, not those of one nested
+/// in its body.
+///
+/// `IndividualDefinition = BasicDefinitionPrefix? 'individual'
+/// DefinitionExtensionKeyword* 'def' Definition EmptyMultiplicityMember` (`SysML`
+/// 8.2.2.9.1), and a `Definition`'s body admits another definition (`DefinitionBodyItem`,
+/// 8.2.2.6.1). Here X writes no basic prefix and no `#` keyword, and Y, in X's body, writes
+/// both. X's multiplicity is the last element X owns, after its body, so in preorder Y's
+/// comes first. Reading descendants rather than children would hand X Y's `abstract`, Y's
+/// `#M` and Y's multiplicity. No corpus file nests an individual definition (none writes
+/// a prefix slot on one at all), so only this text can tell the two apart.
+#[test]
+fn an_individual_definition_does_not_claim_the_slots_of_one_in_its_body() {
+    const NESTED: &str = "package P {\n\
+                          \tmetadata def M;\n\
+                          \tindividual def X {\n\
+                          \t\tabstract individual #M def Y;\n\
+                          \t}\n\
+                          }\n";
+
+    let parse = trees::parsed(NESTED, sv2_syntax::Language::SysMl);
+    assert!(
+        parse.errors().is_empty(),
+        "the clauses admit this text, so a diagnostic here is the parser disagreeing \
+         with them, not the test being wrong: {:?}",
+        parse.errors()
+    );
+    let root = parse.syntax();
+    let individuals: Vec<sv2_ast::IndividualDefinition> = root
+        .descendants()
+        .filter_map(sv2_ast::IndividualDefinition::cast)
+        .collect();
+    assert_eq!(
+        individuals
+            .iter()
+            .map(|individual| (
+                individual
+                    .definition()
+                    .and_then(|definition| definition.declaration())
+                    .map(|declaration| declaration.text().to_string()),
+                individual
+                    .basic_prefix()
+                    .map(|basic| basic.text().to_string()),
+                individual
+                    .extension_keywords()
+                    .map(|keyword| keyword.text().to_string())
+                    .collect::<Vec<_>>(),
+                individual
+                    .multiplicity()
+                    .and_then(|multiplicity| multiplicity.parent())
+                    .as_ref()
+                    == Some(individual.syntax()),
+            ))
+            .collect::<Vec<_>>(),
+        [
+            (Some("X".to_owned()), None, vec![], true),
+            (
+                Some("Y".to_owned()),
+                Some("abstract".to_owned()),
+                vec!["#M".to_owned()],
+                true
+            ),
+        ],
+        "X has no slot written and owns its own multiplicity; Y has both slots and its own"
+    );
+}
