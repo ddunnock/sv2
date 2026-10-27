@@ -26,7 +26,9 @@
 //! `assert_<kind>_accessor` for each, which `scripts/ast_coverage.py` requires by name,
 //! and each malformed case keeps its own test function and its own fixture directory.
 
-use sv2_ast::{AstNode, AttributeDefinition, Definition, OccurrenceDefinition, PartDefinition};
+use sv2_ast::{
+    AstNode, AttributeDefinition, Definition, ItemDefinition, OccurrenceDefinition, PartDefinition,
+};
 use sv2_syntax::{SyntaxKind, SyntaxNode, SyntaxToken};
 
 /// One production `simple_definition` builds: `<prefix> '<keyword>' 'def' Definition`.
@@ -82,6 +84,16 @@ pub(crate) const OCCURRENCE: Production = Production {
     read: read_occurrence,
 };
 
+/// `ItemDefinition = OccurrenceDefinitionPrefix 'item' 'def' Definition` (`SysML` 8.2.2.10).
+pub(crate) const ITEM: Production = Production {
+    node: SyntaxKind::ItemDefinition,
+    prefix: SyntaxKind::OccurrenceDefinitionPrefix,
+    keyword: SyntaxKind::KwItem,
+    keyword_text: "item",
+    usage: SyntaxKind::ItemUsage,
+    read: read_item,
+};
+
 /// `PartDefinition = OccurrenceDefinitionPrefix 'part' 'def' Definition` (`SysML`
 /// 8.2.2.11).
 pub(crate) const PART: Production = Production {
@@ -108,6 +120,16 @@ fn read_occurrence(node: &SyntaxNode) -> Option<Read> {
         syntax: view.syntax().clone(),
         prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
         keyword: view.occurrence_keyword(),
+        def_keyword: view.def_keyword(),
+        definition: view.definition(),
+    })
+}
+
+fn read_item(node: &SyntaxNode) -> Option<Read> {
+    ItemDefinition::cast(node.clone()).map(|view| Read {
+        syntax: view.syntax().clone(),
+        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
+        keyword: view.item_keyword(),
         def_keyword: view.def_keyword(),
         definition: view.definition(),
     })

@@ -2389,6 +2389,26 @@ fn an_occurrence_with_no_def_after_it_begins_no_occurrence_definition() {
     );
 }
 
+/// `item-definition/def-written-twice.sysml`: `item def def A;`, then `item def B;`.
+/// [`def_written_twice`] states what it pins.
+#[test]
+fn an_item_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    def_written_twice(
+        &simple_definitions::ITEM,
+        include_str!("malformed/item-definition/def-written-twice.sysml"),
+    );
+}
+
+/// `item-definition/def-missing.sysml`: `item A def B;`, then `item def C;`.
+/// [`def_missing`] states what it pins.
+#[test]
+fn an_item_with_no_def_after_it_begins_no_item_definition() {
+    def_missing(
+        &simple_definitions::ITEM,
+        include_str!("malformed/item-definition/def-missing.sysml"),
+    );
+}
+
 const INDIVIDUAL_BEFORE_ATTRIBUTE: &str =
     include_str!("malformed/attribute-definition/individual-before-attribute.sysml");
 
