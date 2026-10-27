@@ -2936,3 +2936,64 @@ fn the_viewpoint_definition_of_view_test_reads_its_keywords_declaration_and_body
         "line 19, and not the usage on line 28"
     );
 }
+
+const CONSTRAINT_TEST: &str = "vendor/corpus/sysml/src/examples/Simple Tests/ConstraintTest.sysml";
+
+/// `ConstraintTest.sysml`, read for its constraint definitions:
+///
+/// ```text
+///   line  6:  constraint def MassAnalysis { ... }    closes with a result expression
+///   lines 24, 36, 50, 59:  assert constraint ...     constraint usages, under `assert`
+///   line 42:  constraint def MassAnalysis2 { ... }   closes with a result expression
+///   line 65:  constraint def MassAnalysis3 { ... }   no result expression
+///   lines 70, 88:  constraint massAnalysis3 ... / constraint massLimitation ...
+///                                                    ConstraintUsages
+/// ```
+///
+/// `ConstraintDefinition = OccurrenceDefinitionPrefix 'constraint' 'def'
+/// DefinitionDeclaration CalculationBody` (`SysML` 8.2.2.20): no `Definition` node. The file
+/// writes three, with and without the result expression a `CalculationBody` may close
+/// with (8.2.2.19), beside usages of the same keyword that write no `def`
+/// (`ConstraintUsage`, 8.2.2.20), several under `assert`.
+///
+/// No corpus file writes a prefix on a constraint definition, so this case cannot tell a
+/// `prefix()` that answers nothing from one that answers an empty prefix. The sweep can:
+/// it asserts the prefix node is there on every constraint definition in every tree.
+#[test]
+fn the_constraint_definitions_of_constraint_test_read_their_keywords_declaration_and_body() {
+    let read: Vec<RequirementShapedRead> = tree_of(CONSTRAINT_TEST)
+        .descendants()
+        .filter_map(sv2_ast::ConstraintDefinition::cast)
+        .map(|constraint| {
+            (
+                constraint
+                    .constraint_keyword()
+                    .map(|token| token.text().to_owned()),
+                constraint
+                    .def_keyword()
+                    .map(|token| token.text().to_owned()),
+                constraint
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string()),
+                constraint.body().as_ref().and_then(opening),
+            )
+        })
+        .collect();
+    let def = |declaration: &str| {
+        (
+            Some("constraint".to_owned()),
+            Some("def".to_owned()),
+            Some(declaration.to_owned()),
+            Some("{".to_owned()),
+        )
+    };
+    assert_eq!(
+        read,
+        [
+            def("MassAnalysis"),
+            def("MassAnalysis2"),
+            def("MassAnalysis3")
+        ],
+        "lines 6, 42 and 65, in source order, and none of the usages"
+    );
+}
