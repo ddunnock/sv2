@@ -2375,6 +2375,11 @@ fn assert_requirement_definition_accessor(node: &SyntaxNode) {
     assert_simple_definition(node, &simple_definitions::REQUIREMENT);
 }
 
+/// What `ConcernDefinition` must satisfy at every node, whatever the tree.
+fn assert_concern_definition_accessor(node: &SyntaxNode) {
+    assert_simple_definition(node, &simple_definitions::CONCERN);
+}
+
 /// What a view of one of `simple_definition`'s productions must satisfy at every node.
 /// Both node children are typed (the prefix's view, `Definition`); the keywords are the
 /// node's own tokens.
@@ -2714,6 +2719,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_port_definition_accessor(&node);
             assert_individual_definition_accessor(&node);
             assert_requirement_definition_accessor(&node);
+            assert_concern_definition_accessor(&node);
             visited += 1;
         }
     }

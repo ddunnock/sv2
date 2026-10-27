@@ -2797,3 +2797,53 @@ fn the_requirement_definitions_of_requirement_test_read_their_keywords_declarati
         "lines 5, 10, 15 and 33, in preorder, and none of the usages"
     );
 }
+
+/// `ViewTest.sysml`, read for its concern definitions:
+///
+/// ```text
+///   line  9:  concern def C { subject; stakeholder s : S; }   C
+///   line 14:  concern c : C { ... }                           a ConcernUsage
+///   line 29:  frame concern c1;                               a concern usage, under `frame`
+///   line 30:  concern c2;                                     a ConcernUsage
+/// ```
+///
+/// `ConcernDefinition = OccurrenceDefinitionPrefix 'concern' 'def' DefinitionDeclaration
+/// RequirementBody` (`SysML` 8.2.2.21.3): "specified exactly like a regular requirement
+/// definition" with the kind keyword `concern` (7.21.3, receipt 0e50a373), so no
+/// `Definition` node. The file writes one with a body holding a subject and a
+/// stakeholder, which are `RequirementBody` items and no definition body's, beside usages
+/// of the same keyword that write no `def` (`ConcernUsage`, 8.2.2.21.3).
+///
+/// No corpus file writes a prefix on a concern definition (all three are listed by
+/// `grep -rnE '\bconcern\s+def\b' vendor/corpus`), so this case cannot tell a `prefix()`
+/// that answers nothing from one that answers an empty prefix. The sweep can: it asserts
+/// the prefix node is there on every concern definition in every tree.
+#[test]
+fn the_concern_definition_of_view_test_reads_its_keywords_declaration_and_body() {
+    let read: Vec<RequirementShapedRead> = tree_of(VIEW_TEST)
+        .descendants()
+        .filter_map(sv2_ast::ConcernDefinition::cast)
+        .map(|concern| {
+            (
+                concern
+                    .concern_keyword()
+                    .map(|token| token.text().to_owned()),
+                concern.def_keyword().map(|token| token.text().to_owned()),
+                concern
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string()),
+                concern.body().as_ref().and_then(opening),
+            )
+        })
+        .collect();
+    assert_eq!(
+        read,
+        [(
+            Some("concern".to_owned()),
+            Some("def".to_owned()),
+            Some("C".to_owned()),
+            Some("{".to_owned()),
+        )],
+        "line 9, and none of the three usages"
+    );
+}
