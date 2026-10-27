@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-27T14:21:50Z",
+    "regenerated_utc": "2026-10-27T14:27:29Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 24,
-      "unimplemented": 439,
+      "implemented": 25,
+      "unimplemented": 438,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 5.2
+      "percent": 5.4
     },
     "tests": {
-      "unit": 821,
+      "unit": 824,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "c8dc661 Merge ast-item-definition: the first sibling written on the shared path",
+      "ed950ee Add the ItemDefinition accessor, the first sibling on the shared path",
       "f9c8ff9 Merge ast-simple-definition-tests: the family's tests written once",
       "74c9dd4 Share the simple_definition family's tests: one Production per kind",
       "226a355 Merge ast-occurrence-definition: the node, not the metaclass",
       "f9b7659 Add the OccurrenceDefinition accessor, a node view and not a metaclass view",
       "582eea1 Merge ast-attribute-definition: the definition whose prefix is not an occurrence's",
-      "f6f3e88 Add the AttributeDefinition accessor, the definition that is not an occurrence",
-      "9a67c85 Merge close-session-2026-10-25c: the state file current at 21 of 463",
-      "5cfb7fd Close the session: PartDefinition, 20 to 21 of 463, AttributeDefinition next"
+      "f6f3e88 Add the AttributeDefinition accessor, the definition that is not an occurrence"
     ]
   },
   "authored": {

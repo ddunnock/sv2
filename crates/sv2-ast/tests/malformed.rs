@@ -2409,6 +2409,26 @@ fn an_item_with_no_def_after_it_begins_no_item_definition() {
     );
 }
 
+/// `connection-definition/def-written-twice.sysml`: `connection def def A;`, then
+/// `connection def B;`. [`def_written_twice`] states what it pins.
+#[test]
+fn a_connection_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    def_written_twice(
+        &simple_definitions::CONNECTION,
+        include_str!("malformed/connection-definition/def-written-twice.sysml"),
+    );
+}
+
+/// `connection-definition/def-missing.sysml`: `connection A def B;`, then `connection def
+/// C;`. [`def_missing`] states what it pins.
+#[test]
+fn a_connection_with_no_def_after_it_begins_no_connection_definition() {
+    def_missing(
+        &simple_definitions::CONNECTION,
+        include_str!("malformed/connection-definition/def-missing.sysml"),
+    );
+}
+
 const INDIVIDUAL_BEFORE_ATTRIBUTE: &str =
     include_str!("malformed/attribute-definition/individual-before-attribute.sysml");
 

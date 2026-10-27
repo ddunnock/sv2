@@ -2143,9 +2143,9 @@ fn the_occurrence_definitions_of_two_simple_tests_read_their_keywords_prefix_and
     );
 }
 
-/// An item definition's two keywords, its prefix's basic keyword, and what its definition
-/// declares.
-type ItemDefinitionRead = (
+/// A `simple_definition` production's two keywords, its prefix's basic keyword, and what its
+/// definition declares: what the item and later definitions' positive cases compare.
+type SimpleDefinitionRead = (
     Option<String>,
     Option<String>,
     Option<String>,
@@ -2169,7 +2169,7 @@ type ItemDefinitionRead = (
 /// definition's (8.2.2.5.1).
 #[test]
 fn the_item_definitions_of_item_test_read_their_keywords_prefix_and_definition() {
-    let read: Vec<ItemDefinitionRead> = tree_of(ITEM_TEST)
+    let read: Vec<SimpleDefinitionRead> = tree_of(ITEM_TEST)
         .descendants()
         .filter_map(sv2_ast::ItemDefinition::cast)
         .map(|item| {
@@ -2197,5 +2197,62 @@ fn the_item_definitions_of_item_test_read_their_keywords_prefix_and_definition()
         read,
         [def(None, "A"), def(Some("abstract"), "B")],
         "lines 5 and 10, in source order, and none of the usages"
+    );
+}
+
+const CONNECTION_TEST: &str = "vendor/corpus/sysml/src/examples/Simple Tests/ConnectionTest.sysml";
+
+/// `ConnectionTest.sysml`, read for its connection definitions:
+///
+/// ```text
+///   lines 12, 16, 17:  connect p to y; ...       ConnectionUsages, with no `connection`
+///   line 31:  abstract connection def C { ... }  abstract
+///   line 43:  connection bus : C connect (...);  a ConnectionUsage
+///   lines 45, 51:  connection : C { ... }, connection { ... }   ConnectionUsages
+///   line 57:  abstract flow def F;               a FlowDefinition, a sibling
+///   line 67:  connection def AB { ... }          no prefix
+/// ```
+///
+/// `ConnectionDefinition = OccurrenceDefinitionPrefix 'connection' 'def' Definition`
+/// (`SysML` 8.2.2.13.1). The file writes the definition with and without `abstract`,
+/// beside usages that open with the same keyword and write no `def` (`ConnectionUsage`,
+/// 8.2.2.13.1), and beside a flow definition, which `simple_definition` builds with the same
+/// method and another node kind.
+#[test]
+fn the_connection_definitions_of_connection_test_read_their_keywords_prefix_and_definition() {
+    let read: Vec<SimpleDefinitionRead> = tree_of(CONNECTION_TEST)
+        .descendants()
+        .filter_map(sv2_ast::ConnectionDefinition::cast)
+        .map(|connection| {
+            (
+                connection
+                    .connection_keyword()
+                    .map(|token| token.text().to_owned()),
+                connection
+                    .def_keyword()
+                    .map(|token| token.text().to_owned()),
+                connection
+                    .prefix()
+                    .and_then(|prefix| prefix.basic_prefix())
+                    .map(|basic| basic.text().to_string()),
+                connection
+                    .definition()
+                    .and_then(|definition| definition.declaration())
+                    .map(|declaration| declaration.text().to_string()),
+            )
+        })
+        .collect();
+    let def = |basic: Option<&str>, declaration: &str| {
+        (
+            Some("connection".to_owned()),
+            Some("def".to_owned()),
+            basic.map(str::to_owned),
+            Some(declaration.to_owned()),
+        )
+    };
+    assert_eq!(
+        read,
+        [def(Some("abstract"), "C"), def(None, "AB")],
+        "lines 31 and 67, in source order, and neither the usages nor the flow definition"
     );
 }
