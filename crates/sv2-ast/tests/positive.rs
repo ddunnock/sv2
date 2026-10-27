@@ -2890,3 +2890,49 @@ fn the_view_definition_of_view_test_reads_its_keywords_declaration_and_body() {
         "line 27, and neither usage"
     );
 }
+
+/// `ViewTest.sysml`, read for its viewpoint definitions:
+///
+/// ```text
+///   line 19:  viewpoint def VP { frame c; }   VP
+///   line 28:    viewpoint vp: VP { ... }      a ViewpointUsage, in V's body
+/// ```
+///
+/// `ViewpointDefinition = OccurrenceDefinitionPrefix 'viewpoint' 'def'
+/// DefinitionDeclaration RequirementBody` (`SysML` 8.2.2.26.3): no `Definition` node. The
+/// file writes one, whose body frames a concern, a `RequirementBody` item and no
+/// definition body's (`FramedConcernMember`, 8.2.2.21.1), beside a usage of the same
+/// keyword that writes no `def` (`ViewpointUsage`, 8.2.2.26.3).
+///
+/// No corpus file writes a prefix on a viewpoint definition, so this case cannot tell a
+/// `prefix()` that answers nothing from one that answers an empty prefix. The sweep can:
+/// it asserts the prefix node is there on every viewpoint definition in every tree.
+#[test]
+fn the_viewpoint_definition_of_view_test_reads_its_keywords_declaration_and_body() {
+    let read: Vec<RequirementShapedRead> = tree_of(VIEW_TEST)
+        .descendants()
+        .filter_map(sv2_ast::ViewpointDefinition::cast)
+        .map(|viewpoint| {
+            (
+                viewpoint
+                    .viewpoint_keyword()
+                    .map(|token| token.text().to_owned()),
+                viewpoint.def_keyword().map(|token| token.text().to_owned()),
+                viewpoint
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string()),
+                viewpoint.body().as_ref().and_then(opening),
+            )
+        })
+        .collect();
+    assert_eq!(
+        read,
+        [(
+            Some("viewpoint".to_owned()),
+            Some("def".to_owned()),
+            Some("VP".to_owned()),
+            Some("{".to_owned()),
+        )],
+        "line 19, and not the usage on line 28"
+    );
+}

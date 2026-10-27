@@ -37,6 +37,7 @@ use sv2_ast::{
     AllocationDefinition, AstNode, AttributeDefinition, ConcernDefinition, ConnectionDefinition,
     Definition, FlowDefinition, ItemDefinition, OccurrenceDefinition, PartDefinition,
     PortDefinition, RenderingDefinition, RequirementDefinition, ViewDefinition,
+    ViewpointDefinition,
 };
 use sv2_syntax::{SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -268,6 +269,21 @@ pub(crate) const VIEW: Production = Production {
     read: read_view,
 };
 
+/// `ViewpointDefinition = OccurrenceDefinitionPrefix 'viewpoint' 'def' DefinitionDeclaration
+/// RequirementBody` (`SysML` 8.2.2.26.3), built by `viewpoint_definition` with no `Definition` node.
+pub(crate) const VIEWPOINT: Production = Production {
+    node: SyntaxKind::ViewpointDefinition,
+    prefix: SyntaxKind::OccurrenceDefinitionPrefix,
+    keyword: SyntaxKind::KwViewpoint,
+    keyword_text: "viewpoint",
+    usage: SyntaxKind::ViewpointUsage,
+    tail: &[
+        SyntaxKind::DefinitionDeclaration,
+        SyntaxKind::RequirementBody,
+    ],
+    read: read_viewpoint,
+};
+
 fn read_attribute(node: &SyntaxNode) -> Option<Read> {
     AttributeDefinition::cast(node.clone()).map(|view| {
         Read::with_definition(
@@ -405,6 +421,18 @@ fn read_view(node: &SyntaxNode) -> Option<Read> {
         syntax: view.syntax().clone(),
         prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
         keyword: view.view_keyword(),
+        def_keyword: view.def_keyword(),
+        tail: vec![view.declaration(), view.body()],
+        declaration: view.declaration(),
+        body: view.body(),
+    })
+}
+
+fn read_viewpoint(node: &SyntaxNode) -> Option<Read> {
+    ViewpointDefinition::cast(node.clone()).map(|view| Read {
+        syntax: view.syntax().clone(),
+        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
+        keyword: view.viewpoint_keyword(),
         def_keyword: view.def_keyword(),
         tail: vec![view.declaration(), view.body()],
         declaration: view.declaration(),
