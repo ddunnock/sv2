@@ -6,6 +6,7 @@
 //! stays the single source of truth and the text stays authoritative (ADR-0001).
 
 mod alias_member;
+mod allocation_definition;
 mod ast_node;
 mod attribute_definition;
 mod connection_definition;
@@ -34,6 +35,7 @@ mod relationship_body;
 mod visibility_indicator;
 
 pub use crate::alias_member::AliasMember;
+pub use crate::allocation_definition::AllocationDefinition;
 pub use crate::ast_node::AstNode;
 pub use crate::attribute_definition::AttributeDefinition;
 pub use crate::connection_definition::ConnectionDefinition;

@@ -2315,3 +2315,63 @@ fn the_flow_definitions_of_two_files_read_their_keywords_prefix_and_definition()
         "line 6, and not the flow usage on line 16"
     );
 }
+
+const ALLOCATION_TEST: &str = "vendor/corpus/sysml/src/examples/Simple Tests/AllocationTest.sysml";
+
+/// `AllocationTest.sysml`, read for its allocation definitions:
+///
+/// ```text
+///   line 19:  allocate l.component to assembly.element;          an AllocationUsage
+///   line 22:  allocation def A;                                  no prefix
+///   line 24:  allocation def Logical_to_Physical :> A { ... }    no prefix
+///   lines 29, 30:  allocation allocation1 / allocation2 : ...    AllocationUsages
+///   line 35:  allocate l.component to p.assembly.element;        an AllocationUsage
+/// ```
+///
+/// `AllocationDefinition = OccurrenceDefinitionPrefix 'allocation' 'def' Definition`
+/// (`SysML` 8.2.2.15). The file writes the definition with a body and without, beside
+/// usages that open with the same keyword or with `allocate` and write no `def`
+/// (`AllocationUsage`, 8.2.2.15).
+///
+/// No corpus file writes a prefix on an allocation definition (all six are listed by
+/// `grep -rnE '\ballocation\s+def\b' vendor/corpus`), so this case cannot tell a `prefix()`
+/// that answers nothing from one that answers an empty prefix. The sweep can: it asserts
+/// the prefix node is there on every allocation definition in every tree.
+#[test]
+fn the_allocation_definitions_of_allocation_test_read_their_keywords_prefix_and_definition() {
+    let read: Vec<SimpleDefinitionRead> = tree_of(ALLOCATION_TEST)
+        .descendants()
+        .filter_map(sv2_ast::AllocationDefinition::cast)
+        .map(|allocation| {
+            (
+                allocation
+                    .allocation_keyword()
+                    .map(|token| token.text().to_owned()),
+                allocation
+                    .def_keyword()
+                    .map(|token| token.text().to_owned()),
+                allocation
+                    .prefix()
+                    .and_then(|prefix| prefix.basic_prefix())
+                    .map(|basic| basic.text().to_string()),
+                allocation
+                    .definition()
+                    .and_then(|definition| definition.declaration())
+                    .map(|declaration| declaration.text().to_string()),
+            )
+        })
+        .collect();
+    let def = |declaration: &str| {
+        (
+            Some("allocation".to_owned()),
+            Some("def".to_owned()),
+            None,
+            Some(declaration.to_owned()),
+        )
+    };
+    assert_eq!(
+        read,
+        [def("A"), def("Logical_to_Physical :> A")],
+        "lines 22 and 24, in source order, and none of the usages"
+    );
+}

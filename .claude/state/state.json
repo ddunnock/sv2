@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-27T14:29:23Z",
+    "regenerated_utc": "2026-10-27T14:31:03Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 26,
-      "unimplemented": 437,
+      "implemented": 27,
+      "unimplemented": 436,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 5.6
+      "percent": 5.8
     },
     "tests": {
-      "unit": 827,
+      "unit": 830,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "09cac9e Merge ast-flow-definition",
+      "d7c18e9 Add the FlowDefinition accessor",
       "1bdbc1c Merge ast-connection-definition",
       "c02d1d0 Add the ConnectionDefinition accessor",
       "c8dc661 Merge ast-item-definition: the first sibling written on the shared path",
       "ed950ee Add the ItemDefinition accessor, the first sibling on the shared path",
       "f9c8ff9 Merge ast-simple-definition-tests: the family's tests written once",
-      "74c9dd4 Share the simple_definition family's tests: one Production per kind",
-      "226a355 Merge ast-occurrence-definition: the node, not the metaclass",
-      "f9b7659 Add the OccurrenceDefinition accessor, a node view and not a metaclass view"
+      "74c9dd4 Share the simple_definition family's tests: one Production per kind"
     ]
   },
   "authored": {
