@@ -2142,3 +2142,60 @@ fn the_occurrence_definitions_of_two_simple_tests_read_their_keywords_prefix_and
         "line 3, and not the individual definition on line 2"
     );
 }
+
+/// An item definition's two keywords, its prefix's basic keyword, and what its definition
+/// declares.
+type ItemDefinitionRead = (
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+);
+
+/// `ItemTest.sysml`, read for its item definitions:
+///
+/// ```text
+///   line  3:  item f: A;                 an ItemUsage
+///   line  5:  public item def A { ... }  no prefix: `public` is the member's
+///   line  6:    item b: B;               an ItemUsage
+///   line 10:  abstract item def B { ... } abstract
+///   lines 19, 20:  in item a1 / out item a2   ItemUsages
+/// ```
+///
+/// `ItemDefinition = OccurrenceDefinitionPrefix 'item' 'def' Definition` (`SysML`
+/// 8.2.2.10). The file writes the definition with and without `abstract`, beside usages of
+/// the same keyword (`ItemUsage = OccurrenceUsagePrefix 'item' Usage`, 8.2.2.10), which
+/// write no `def`. `public` is a visibility, which the member's prefix owns, not the
+/// definition's (8.2.2.5.1).
+#[test]
+fn the_item_definitions_of_item_test_read_their_keywords_prefix_and_definition() {
+    let read: Vec<ItemDefinitionRead> = tree_of(ITEM_TEST)
+        .descendants()
+        .filter_map(sv2_ast::ItemDefinition::cast)
+        .map(|item| {
+            (
+                item.item_keyword().map(|token| token.text().to_owned()),
+                item.def_keyword().map(|token| token.text().to_owned()),
+                item.prefix()
+                    .and_then(|prefix| prefix.basic_prefix())
+                    .map(|basic| basic.text().to_string()),
+                item.definition()
+                    .and_then(|definition| definition.declaration())
+                    .map(|declaration| declaration.text().to_string()),
+            )
+        })
+        .collect();
+    let def = |basic: Option<&str>, declaration: &str| {
+        (
+            Some("item".to_owned()),
+            Some("def".to_owned()),
+            basic.map(str::to_owned),
+            Some(declaration.to_owned()),
+        )
+    };
+    assert_eq!(
+        read,
+        [def(None, "A"), def(Some("abstract"), "B")],
+        "lines 5 and 10, in source order, and none of the usages"
+    );
+}
