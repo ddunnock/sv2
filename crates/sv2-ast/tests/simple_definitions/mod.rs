@@ -28,7 +28,7 @@
 
 use sv2_ast::{
     AllocationDefinition, AstNode, AttributeDefinition, ConnectionDefinition, Definition,
-    FlowDefinition, ItemDefinition, OccurrenceDefinition, PartDefinition,
+    FlowDefinition, ItemDefinition, OccurrenceDefinition, PartDefinition, RenderingDefinition,
 };
 use sv2_syntax::{SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -139,6 +139,17 @@ pub(crate) const ALLOCATION: Production = Production {
     read: read_allocation,
 };
 
+/// `RenderingDefinition = OccurrenceDefinitionPrefix 'rendering' 'def' Definition` (`SysML`
+/// 8.2.2.26.4).
+pub(crate) const RENDERING: Production = Production {
+    node: SyntaxKind::RenderingDefinition,
+    prefix: SyntaxKind::OccurrenceDefinitionPrefix,
+    keyword: SyntaxKind::KwRendering,
+    keyword_text: "rendering",
+    usage: SyntaxKind::RenderingUsage,
+    read: read_rendering,
+};
+
 fn read_attribute(node: &SyntaxNode) -> Option<Read> {
     AttributeDefinition::cast(node.clone()).map(|view| Read {
         syntax: view.syntax().clone(),
@@ -204,6 +215,16 @@ fn read_allocation(node: &SyntaxNode) -> Option<Read> {
         syntax: view.syntax().clone(),
         prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
         keyword: view.allocation_keyword(),
+        def_keyword: view.def_keyword(),
+        definition: view.definition(),
+    })
+}
+
+fn read_rendering(node: &SyntaxNode) -> Option<Read> {
+    RenderingDefinition::cast(node.clone()).map(|view| Read {
+        syntax: view.syntax().clone(),
+        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
+        keyword: view.rendering_keyword(),
         def_keyword: view.def_keyword(),
         definition: view.definition(),
     })

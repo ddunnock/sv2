@@ -2375,3 +2375,58 @@ fn the_allocation_definitions_of_allocation_test_read_their_keywords_prefix_and_
         "lines 22 and 24, in source order, and none of the usages"
     );
 }
+
+const VIEW_TEST: &str = "vendor/corpus/sysml/src/examples/Simple Tests/ViewTest.sysml";
+
+/// `ViewTest.sysml`, read for its one rendering definition, the corpus's only one:
+///
+/// ```text
+///   line 23:  rendering def R;                  no prefix
+///   line 25:  rendering r : R;                  a RenderingUsage
+///   line 32:  render rendering r1: R[0..1];     a rendering usage, under `render`
+///   line 36:  render r;                         a reference, under `render`
+///   line 38:  rendering r2;                     a RenderingUsage
+/// ```
+///
+/// `RenderingDefinition = OccurrenceDefinitionPrefix 'rendering' 'def' Definition`
+/// (`SysML` 8.2.2.26.4). The file writes it beside four usages, opening with the same
+/// keyword or with `render` and writing no `def` (`RenderingUsage`, 8.2.2.26.4;
+/// `ViewRenderingMember`, 8.2.2.26.1), and beside the concern, viewpoint and view
+/// definitions, none of which `simple_definition` builds.
+///
+/// The one rendering definition writes no prefix, so this case cannot tell a `prefix()`
+/// that answers nothing from one that answers an empty prefix. The sweep can: it asserts
+/// the prefix node is there on every rendering definition in every tree.
+#[test]
+fn the_rendering_definition_of_view_test_reads_its_keywords_prefix_and_definition() {
+    let read: Vec<SimpleDefinitionRead> = tree_of(VIEW_TEST)
+        .descendants()
+        .filter_map(sv2_ast::RenderingDefinition::cast)
+        .map(|rendering| {
+            (
+                rendering
+                    .rendering_keyword()
+                    .map(|token| token.text().to_owned()),
+                rendering.def_keyword().map(|token| token.text().to_owned()),
+                rendering
+                    .prefix()
+                    .and_then(|prefix| prefix.basic_prefix())
+                    .map(|basic| basic.text().to_string()),
+                rendering
+                    .definition()
+                    .and_then(|definition| definition.declaration())
+                    .map(|declaration| declaration.text().to_string()),
+            )
+        })
+        .collect();
+    assert_eq!(
+        read,
+        [(
+            Some("rendering".to_owned()),
+            Some("def".to_owned()),
+            None,
+            Some("R".to_owned()),
+        )],
+        "line 23, and none of the four usages"
+    );
+}
