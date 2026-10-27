@@ -2256,3 +2256,62 @@ fn the_connection_definitions_of_connection_test_read_their_keywords_prefix_and_
         "lines 31 and 67, in source order, and neither the usages nor the flow definition"
     );
 }
+
+const FLOW_DEFINITION_EXAMPLE: &str =
+    "vendor/corpus/sysml/src/training/13. Flows/Flow Definition Example.sysml";
+
+/// Every `FlowDefinition` in the corpus file at `relative`, read.
+fn flow_definitions_of(relative: &str) -> Vec<SimpleDefinitionRead> {
+    tree_of(relative)
+        .descendants()
+        .filter_map(sv2_ast::FlowDefinition::cast)
+        .map(|flow| {
+            (
+                flow.flow_keyword().map(|token| token.text().to_owned()),
+                flow.def_keyword().map(|token| token.text().to_owned()),
+                flow.prefix()
+                    .and_then(|prefix| prefix.basic_prefix())
+                    .map(|basic| basic.text().to_string()),
+                flow.definition()
+                    .and_then(|definition| definition.declaration())
+                    .map(|declaration| declaration.text().to_string()),
+            )
+        })
+        .collect()
+}
+
+/// The corpus's two flow definitions, one in each of two files:
+///
+/// ```text
+///   ConnectionTest            line 57:  abstract flow def F;             abstract
+///                             line 59:  message : F from p to p;         a Message
+///   Flow Definition Example   line  6:  flow def FuelFlow { ... }        no prefix
+///                             line 16:  flow : FuelFlow of Fuel ...;     a FlowUsage
+/// ```
+///
+/// `FlowDefinition = OccurrenceDefinitionPrefix 'flow' 'def' Definition` (`SysML`
+/// 8.2.2.16). Each file writes the definition beside a usage of it that writes no `def`:
+/// a `FlowUsage`, or a `Message`, whose metaclass is `FlowUsage` (8.2.2.16). And
+/// `ConnectionTest` writes it among connection definitions, which `simple_definition`
+/// builds with the same method and another node kind.
+#[test]
+fn the_flow_definitions_of_two_files_read_their_keywords_prefix_and_definition() {
+    let def = |basic: Option<&str>, declaration: &str| {
+        (
+            Some("flow".to_owned()),
+            Some("def".to_owned()),
+            basic.map(str::to_owned),
+            Some(declaration.to_owned()),
+        )
+    };
+    assert_eq!(
+        flow_definitions_of(CONNECTION_TEST),
+        [def(Some("abstract"), "F")],
+        "line 57, and none of the connection definitions or usages"
+    );
+    assert_eq!(
+        flow_definitions_of(FLOW_DEFINITION_EXAMPLE),
+        [def(None, "FuelFlow")],
+        "line 6, and not the flow usage on line 16"
+    );
+}

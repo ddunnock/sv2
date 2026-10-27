@@ -27,7 +27,7 @@
 //! and each malformed case keeps its own test function and its own fixture directory.
 
 use sv2_ast::{
-    AstNode, AttributeDefinition, ConnectionDefinition, Definition, ItemDefinition,
+    AstNode, AttributeDefinition, ConnectionDefinition, Definition, FlowDefinition, ItemDefinition,
     OccurrenceDefinition, PartDefinition,
 };
 use sv2_syntax::{SyntaxKind, SyntaxNode, SyntaxToken};
@@ -117,6 +117,17 @@ pub(crate) const CONNECTION: Production = Production {
     read: read_connection,
 };
 
+/// `FlowDefinition = OccurrenceDefinitionPrefix 'flow' 'def' Definition` (`SysML`
+/// 8.2.2.16).
+pub(crate) const FLOW: Production = Production {
+    node: SyntaxKind::FlowDefinition,
+    prefix: SyntaxKind::OccurrenceDefinitionPrefix,
+    keyword: SyntaxKind::KwFlow,
+    keyword_text: "flow",
+    usage: SyntaxKind::FlowUsage,
+    read: read_flow,
+};
+
 fn read_attribute(node: &SyntaxNode) -> Option<Read> {
     AttributeDefinition::cast(node.clone()).map(|view| Read {
         syntax: view.syntax().clone(),
@@ -162,6 +173,16 @@ fn read_connection(node: &SyntaxNode) -> Option<Read> {
         syntax: view.syntax().clone(),
         prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
         keyword: view.connection_keyword(),
+        def_keyword: view.def_keyword(),
+        definition: view.definition(),
+    })
+}
+
+fn read_flow(node: &SyntaxNode) -> Option<Read> {
+    FlowDefinition::cast(node.clone()).map(|view| Read {
+        syntax: view.syntax().clone(),
+        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
+        keyword: view.flow_keyword(),
         def_keyword: view.def_keyword(),
         definition: view.definition(),
     })
