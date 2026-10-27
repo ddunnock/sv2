@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-27T19:13:58Z",
+    "regenerated_utc": "2026-10-27T19:17:03Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 31,
-      "unimplemented": 432,
+      "implemented": 32,
+      "unimplemented": 431,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 6.7
+      "percent": 6.9
     },
     "tests": {
-      "unit": 844,
+      "unit": 847,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "70ecb91 Merge ast-requirement-definition: the shared tests take a tail",
+      "4d4db25 Add the RequirementDefinition accessor",
       "5487689 Generalise the shared definition tests from a trailing child to a tail",
       "295e56a Merge ast-individual-definition",
       "882a712 Add the IndividualDefinition accessor",
       "eba138b Merge ast-port-definition: a second method's production on the shared path",
       "c27847a Add the PortDefinition accessor, sharing the simple definitions' tests",
-      "719b472 Merge ast-rendering-definition: every simple_definition production has a view",
-      "af62380 Add the RenderingDefinition accessor, the last simple_definition sibling",
-      "82d8415 Merge ast-allocation-definition"
+      "719b472 Merge ast-rendering-definition: every simple_definition production has a view"
     ]
   },
   "authored": {

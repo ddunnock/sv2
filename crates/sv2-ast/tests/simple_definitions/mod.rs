@@ -34,9 +34,9 @@
 //! and each malformed case keeps its own test function and its own fixture directory.
 
 use sv2_ast::{
-    AllocationDefinition, AstNode, AttributeDefinition, ConnectionDefinition, Definition,
-    FlowDefinition, ItemDefinition, OccurrenceDefinition, PartDefinition, PortDefinition,
-    RenderingDefinition, RequirementDefinition,
+    AllocationDefinition, AstNode, AttributeDefinition, ConcernDefinition, ConnectionDefinition,
+    Definition, FlowDefinition, ItemDefinition, OccurrenceDefinition, PartDefinition,
+    PortDefinition, RenderingDefinition, RequirementDefinition,
 };
 use sv2_syntax::{SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -237,6 +237,22 @@ pub(crate) const REQUIREMENT: Production = Production {
     read: read_requirement,
 };
 
+/// `ConcernDefinition = OccurrenceDefinitionPrefix 'concern' 'def' DefinitionDeclaration
+/// RequirementBody` (`SysML` 8.2.2.21.3): a requirement definition's tail, with the kind
+/// keyword `concern`, built by `concern_definition`.
+pub(crate) const CONCERN: Production = Production {
+    node: SyntaxKind::ConcernDefinition,
+    prefix: SyntaxKind::OccurrenceDefinitionPrefix,
+    keyword: SyntaxKind::KwConcern,
+    keyword_text: "concern",
+    usage: SyntaxKind::ConcernUsage,
+    tail: &[
+        SyntaxKind::DefinitionDeclaration,
+        SyntaxKind::RequirementBody,
+    ],
+    read: read_concern,
+};
+
 fn read_attribute(node: &SyntaxNode) -> Option<Read> {
     AttributeDefinition::cast(node.clone()).map(|view| {
         Read::with_definition(
@@ -350,6 +366,18 @@ fn read_requirement(node: &SyntaxNode) -> Option<Read> {
         syntax: view.syntax().clone(),
         prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
         keyword: view.requirement_keyword(),
+        def_keyword: view.def_keyword(),
+        tail: vec![view.declaration(), view.body()],
+        declaration: view.declaration(),
+        body: view.body(),
+    })
+}
+
+fn read_concern(node: &SyntaxNode) -> Option<Read> {
+    ConcernDefinition::cast(node.clone()).map(|view| Read {
+        syntax: view.syntax().clone(),
+        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
+        keyword: view.concern_keyword(),
         def_keyword: view.def_keyword(),
         tail: vec![view.declaration(), view.body()],
         declaration: view.declaration(),
