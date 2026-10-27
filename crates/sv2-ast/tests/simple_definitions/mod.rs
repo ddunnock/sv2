@@ -35,8 +35,8 @@
 
 use sv2_ast::{
     AllocationDefinition, AstNode, AttributeDefinition, ConcernDefinition, ConnectionDefinition,
-    Definition, FlowDefinition, ItemDefinition, OccurrenceDefinition, PartDefinition,
-    PortDefinition, RenderingDefinition, RequirementDefinition, ViewDefinition,
+    ConstraintDefinition, Definition, FlowDefinition, ItemDefinition, OccurrenceDefinition,
+    PartDefinition, PortDefinition, RenderingDefinition, RequirementDefinition, ViewDefinition,
     ViewpointDefinition,
 };
 use sv2_syntax::{SyntaxKind, SyntaxNode, SyntaxToken};
@@ -284,6 +284,21 @@ pub(crate) const VIEWPOINT: Production = Production {
     read: read_viewpoint,
 };
 
+/// `ConstraintDefinition = OccurrenceDefinitionPrefix 'constraint' 'def' DefinitionDeclaration
+/// CalculationBody` (`SysML` 8.2.2.20), built by `constraint_definition` with no `Definition` node.
+pub(crate) const CONSTRAINT: Production = Production {
+    node: SyntaxKind::ConstraintDefinition,
+    prefix: SyntaxKind::OccurrenceDefinitionPrefix,
+    keyword: SyntaxKind::KwConstraint,
+    keyword_text: "constraint",
+    usage: SyntaxKind::ConstraintUsage,
+    tail: &[
+        SyntaxKind::DefinitionDeclaration,
+        SyntaxKind::CalculationBody,
+    ],
+    read: read_constraint,
+};
+
 fn read_attribute(node: &SyntaxNode) -> Option<Read> {
     AttributeDefinition::cast(node.clone()).map(|view| {
         Read::with_definition(
@@ -433,6 +448,18 @@ fn read_viewpoint(node: &SyntaxNode) -> Option<Read> {
         syntax: view.syntax().clone(),
         prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
         keyword: view.viewpoint_keyword(),
+        def_keyword: view.def_keyword(),
+        tail: vec![view.declaration(), view.body()],
+        declaration: view.declaration(),
+        body: view.body(),
+    })
+}
+
+fn read_constraint(node: &SyntaxNode) -> Option<Read> {
+    ConstraintDefinition::cast(node.clone()).map(|view| Read {
+        syntax: view.syntax().clone(),
+        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
+        keyword: view.constraint_keyword(),
         def_keyword: view.def_keyword(),
         tail: vec![view.declaration(), view.body()],
         declaration: view.declaration(),

@@ -2592,6 +2592,26 @@ fn a_viewpoint_with_no_def_after_it_begins_no_viewpoint_definition() {
     );
 }
 
+/// `constraint-definition/def-written-twice.sysml`: `constraint def def A;`, then
+/// `constraint def B;`. [`def_written_twice`] states what it pins.
+#[test]
+fn a_constraint_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    def_written_twice(
+        &simple_definitions::CONSTRAINT,
+        include_str!("malformed/constraint-definition/def-written-twice.sysml"),
+    );
+}
+
+/// `constraint-definition/def-missing.sysml`: `constraint A def B;`, then `constraint def
+/// C;`. [`def_missing`] states what it pins.
+#[test]
+fn a_constraint_with_no_def_after_it_begins_no_constraint_definition() {
+    def_missing(
+        &simple_definitions::CONSTRAINT,
+        include_str!("malformed/constraint-definition/def-missing.sysml"),
+    );
+}
+
 const INDIVIDUAL_BEFORE_ATTRIBUTE: &str =
     include_str!("malformed/attribute-definition/individual-before-attribute.sysml");
 
