@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-10-27T19:23:54Z",
+    "regenerated_utc": "2026-10-27T19:25:43Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 35,
-      "unimplemented": 428,
+      "implemented": 36,
+      "unimplemented": 427,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 7.6
+      "percent": 7.8
     },
     "tests": {
-      "unit": 856,
+      "unit": 859,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "dd10875 Merge ast-constraint-definition",
+      "16cc40f Add the ConstraintDefinition accessor",
       "756e380 Merge ast-viewpoint-definition",
       "d2d75dc Add the ViewpointDefinition accessor",
       "317c021 Merge ast-view-definition",
       "3f14a7b Add the ViewDefinition accessor",
       "3dda0c8 Merge ast-concern-definition",
-      "3c435d0 Add the ConcernDefinition accessor",
-      "70ecb91 Merge ast-requirement-definition: the shared tests take a tail",
-      "4d4db25 Add the RequirementDefinition accessor"
+      "3c435d0 Add the ConcernDefinition accessor"
     ]
   },
   "authored": {
