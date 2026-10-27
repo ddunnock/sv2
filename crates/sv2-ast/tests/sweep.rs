@@ -2396,26 +2396,21 @@ fn assert_simple_definition(node: &SyntaxNode, production: &simple_definitions::
         node.text_range()
     );
 
-    // (b) the shape, and (c) the differential against it.
+    // (b) the shape, and (c) the differential against it. The view may stop short of a
+    // tail kind it has no accessor for yet, so the shape's tail is cut to the read's.
     let expected = simple_definition_shape(node, production).map_or(
-        (None, None, None, None),
-        |(prefix, keyword, def_keyword, definition)| {
+        (None, None, None, vec![None; read.tail.len()]),
+        |(prefix, keyword, def_keyword, tail)| {
             (
                 Some(prefix),
                 Some(keyword),
                 Some(def_keyword),
-                Some(definition),
+                tail.into_iter().take(read.tail.len()).map(Some).collect(),
             )
         },
     );
     assert_eq!(
-        (
-            read.prefix,
-            read.keyword,
-            read.def_keyword,
-            read.definition
-                .map(|definition| definition.syntax().clone()),
-        ),
+        (read.prefix, read.keyword, read.def_keyword, read.tail),
         expected,
         "a {:?} accessor disagrees with the node's own elements, at {:?}",
         production.node,
@@ -2423,20 +2418,21 @@ fn assert_simple_definition(node: &SyntaxNode, production: &simple_definitions::
     );
 }
 
-/// The elements of one of `simple_definition`'s productions, asserted to be exactly the
-/// production's.
+/// The elements of one of `simple_definition`'s productions, or of one shaped like them,
+/// asserted to be exactly the production's.
 ///
-/// `<prefix> '<keyword>' 'def' Definition` (`SysML` 8.2.2.7, 8.2.2.9.1, 8.2.2.11), all four
-/// always present: `at_simple_definition` (`crates/sv2-syntax/src/parser/definition.rs`)
-/// begins one only on its keyword followed by `def`, and `simple_definition` builds both
-/// nodes whatever follows. Then exactly the production's trailing child, if it names one:
-/// a port definition's `ConjugatedPortDefinitionMember` (8.2.2.12), which `port_definition`
+/// `<prefix> '<keyword>' 'def'` and then the production's tail (`SysML` 8.2.2.7, 8.2.2.9.1,
+/// 8.2.2.11: a `Definition`), all always present: `at_simple_definition`
+/// (`crates/sv2-syntax/src/parser/definition.rs`) begins one only on its keyword followed
+/// by `def`, and `simple_definition` builds every node whatever follows. The productions
+/// shaped like them do the same: a port definition's tail adds a
+/// `ConjugatedPortDefinitionMember` (8.2.2.12), which `port_definition`
 /// (`crates/sv2-syntax/src/parser/connection.rs`) builds whatever precedes it. Nothing else
 /// but trivia.
 fn simple_definition_shape(
     node: &SyntaxNode,
     production: &simple_definitions::Production,
-) -> Option<(SyntaxNode, SyntaxToken, SyntaxToken, SyntaxNode)> {
+) -> Option<(SyntaxNode, SyntaxToken, SyntaxToken, Vec<SyntaxNode>)> {
     let elements: Vec<SyntaxElement> = node
         .children_with_tokens()
         .filter(|element| {
@@ -2450,54 +2446,55 @@ fn simple_definition_shape(
             SyntaxElement::Node(prefix),
             SyntaxElement::Token(keyword),
             SyntaxElement::Token(def_keyword),
-            SyntaxElement::Node(definition),
-            trailing @ ..,
+            tail @ ..,
         ] if prefix.kind() == production.prefix
             && keyword.kind() == production.keyword
             && def_keyword.kind() == SyntaxKind::KwDef
-            && definition.kind() == SyntaxKind::Definition
-            && trailing
+            && tail
                 .iter()
                 .map(SyntaxElement::kind)
-                .eq(production.trailing) =>
+                .eq(production.tail.iter().copied()) =>
         {
             Some((
                 prefix.clone(),
                 keyword.clone(),
                 def_keyword.clone(),
-                definition.clone(),
+                tail.iter()
+                    .filter_map(|element| element.as_node().cloned())
+                    .collect(),
             ))
         }
         _ => None,
     };
     assert!(
         shape.is_some(),
-        "a {:?} is not `{:?} '{}' 'def' Definition {:?}`, at {:?}: {elements:?}",
+        "a {:?} is not `{:?} '{}' 'def' {:?}`, at {:?}: {elements:?}",
         production.node,
         production.prefix,
         production.keyword_text,
-        production.trailing,
+        production.tail,
         node.text_range()
     );
 
-    // The prefix holds neither keyword and no Definition: it is `abstract` or `variation`,
+    // The prefix holds neither keyword and no tail kind: it is `abstract` or `variation`,
     // `individual` in an occurrence's, and `#` keywords naming metadata
     // (`OccurrenceDefinitionPrefix`, `SysML` 8.2.2.9.1; `DefinitionPrefix` and
     // `DefinitionExtensionKeyword`, 8.2.2.6.1). Asserted because it is what makes the
-    // keyword accessors and definition() reading descendants equivalent mutations: the
-    // prefix is the only element before the keywords and the Definition in preorder, and
-    // the Definition's body, which may nest another definition, comes after them.
+    // keyword accessors and the tail's accessors reading descendants equivalent
+    // mutations: the prefix is the only element before the keywords and the tail in
+    // preorder, and the body, which may nest another definition, comes after them.
     assert!(
         shape.as_ref().is_none_or(|(prefix, ..)| {
             prefix.descendants_with_tokens().all(|below| {
                 let kind = below.kind();
                 kind != production.keyword
                     && kind != SyntaxKind::KwDef
-                    && kind != SyntaxKind::Definition
+                    && !production.tail.contains(&kind)
             })
         }),
-        "a `{}`, `def` or Definition inside a {:?}'s prefix, at {:?}",
+        "a `{}`, `def` or {:?} inside a {:?}'s prefix, at {:?}",
         production.keyword_text,
+        production.tail,
         production.node,
         node.text_range()
     );

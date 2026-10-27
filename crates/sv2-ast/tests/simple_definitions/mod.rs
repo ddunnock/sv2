@@ -25,7 +25,7 @@
 //! `PortDefinition` shares them too, though `port_definition`
 //! (`crates/sv2-syntax/src/parser/connection.rs`) builds it. Its tree is an attribute
 //! definition's with one more child after the `Definition`, a
-//! `ConjugatedPortDefinitionMember` holding no token, which [`Production::trailing`]
+//! `ConjugatedPortDefinitionMember` holding no token, which [`Production::tail`]
 //! names. Its recovery is theirs: `at_port_definition` begins one only on `port def`, and
 //! the body's `Definition` is read by the same `definition`.
 //!
@@ -53,9 +53,12 @@ pub(crate) struct Production {
     /// The usage the same keyword opens when no `def` follows it, which is what
     /// `at_simple_definition` reads `<keyword> A def B;` as.
     pub(crate) usage: SyntaxKind,
-    /// What the node holds after its `Definition`: nothing for the eight `simple_definition`
-    /// builds, and the zero-width `ConjugatedPortDefinitionMember` for a port definition.
-    pub(crate) trailing: Option<SyntaxKind>,
+    /// The node kinds the production holds after `def`, in order: `Definition` for the eight
+    /// `simple_definition` builds; `Definition` and the zero-width
+    /// `ConjugatedPortDefinitionMember` for a port definition; and `DefinitionDeclaration`
+    /// and `RequirementBody` for a requirement or concern definition, which have no
+    /// `Definition` node.
+    pub(crate) tail: &'static [SyntaxKind],
     /// The production read through its typed view, or `None` where the view's `cast`
     /// refuses the node.
     pub(crate) read: fn(&SyntaxNode) -> Option<Read>,
@@ -71,8 +74,40 @@ pub(crate) struct Read {
     pub(crate) keyword: Option<SyntaxToken>,
     /// `def_keyword()`.
     pub(crate) def_keyword: Option<SyntaxToken>,
-    /// `definition()`.
-    pub(crate) definition: Option<Definition>,
+    /// What the view's accessors answer for the [`Production::tail`] kinds, in order, as
+    /// the nodes they wrap: `definition()`, or `declaration()` and `body()`. It stops short
+    /// of a tail kind with no accessor yet, a port's conjugate member.
+    pub(crate) tail: Vec<Option<SyntaxNode>>,
+    /// The declaration, through `definition()` where the production has one.
+    pub(crate) declaration: Option<SyntaxNode>,
+    /// The body, through `definition()` where the production has one.
+    pub(crate) body: Option<SyntaxNode>,
+}
+
+/// The tail of the eight `simple_definition` builds: one `Definition`.
+const DEFINITION: &[SyntaxKind] = &[SyntaxKind::Definition];
+
+impl Read {
+    /// A view whose tail is one `Definition`, read through it.
+    fn with_definition(
+        syntax: SyntaxNode,
+        prefix: Option<SyntaxNode>,
+        keyword: Option<SyntaxToken>,
+        def_keyword: Option<SyntaxToken>,
+        definition: Option<Definition>,
+    ) -> Self {
+        let declaration = definition.as_ref().and_then(Definition::declaration);
+        let body = definition.as_ref().and_then(Definition::body);
+        Self {
+            syntax,
+            prefix,
+            keyword,
+            def_keyword,
+            tail: vec![definition.map(|definition| definition.syntax().clone())],
+            declaration,
+            body,
+        }
+    }
 }
 
 /// `AttributeDefinition = DefinitionPrefix 'attribute' 'def' Definition` (`SysML` 8.2.2.7).
@@ -82,7 +117,7 @@ pub(crate) const ATTRIBUTE: Production = Production {
     keyword: SyntaxKind::KwAttribute,
     keyword_text: "attribute",
     usage: SyntaxKind::AttributeUsage,
-    trailing: None,
+    tail: DEFINITION,
     read: read_attribute,
 };
 
@@ -94,7 +129,7 @@ pub(crate) const OCCURRENCE: Production = Production {
     keyword: SyntaxKind::KwOccurrence,
     keyword_text: "occurrence",
     usage: SyntaxKind::OccurrenceUsage,
-    trailing: None,
+    tail: DEFINITION,
     read: read_occurrence,
 };
 
@@ -105,7 +140,7 @@ pub(crate) const ITEM: Production = Production {
     keyword: SyntaxKind::KwItem,
     keyword_text: "item",
     usage: SyntaxKind::ItemUsage,
-    trailing: None,
+    tail: DEFINITION,
     read: read_item,
 };
 
@@ -117,7 +152,7 @@ pub(crate) const PART: Production = Production {
     keyword: SyntaxKind::KwPart,
     keyword_text: "part",
     usage: SyntaxKind::PartUsage,
-    trailing: None,
+    tail: DEFINITION,
     read: read_part,
 };
 
@@ -129,7 +164,7 @@ pub(crate) const CONNECTION: Production = Production {
     keyword: SyntaxKind::KwConnection,
     keyword_text: "connection",
     usage: SyntaxKind::ConnectionUsage,
-    trailing: None,
+    tail: DEFINITION,
     read: read_connection,
 };
 
@@ -141,7 +176,7 @@ pub(crate) const FLOW: Production = Production {
     keyword: SyntaxKind::KwFlow,
     keyword_text: "flow",
     usage: SyntaxKind::FlowUsage,
-    trailing: None,
+    tail: DEFINITION,
     read: read_flow,
 };
 
@@ -153,7 +188,7 @@ pub(crate) const ALLOCATION: Production = Production {
     keyword: SyntaxKind::KwAllocation,
     keyword_text: "allocation",
     usage: SyntaxKind::AllocationUsage,
-    trailing: None,
+    tail: DEFINITION,
     read: read_allocation,
 };
 
@@ -165,7 +200,7 @@ pub(crate) const RENDERING: Production = Production {
     keyword: SyntaxKind::KwRendering,
     keyword_text: "rendering",
     usage: SyntaxKind::RenderingUsage,
-    trailing: None,
+    tail: DEFINITION,
     read: read_rendering,
 };
 
@@ -179,97 +214,118 @@ pub(crate) const PORT: Production = Production {
     keyword: SyntaxKind::KwPort,
     keyword_text: "port",
     usage: SyntaxKind::PortUsage,
-    trailing: Some(SyntaxKind::ConjugatedPortDefinitionMember),
+    tail: &[
+        SyntaxKind::Definition,
+        SyntaxKind::ConjugatedPortDefinitionMember,
+    ],
     read: read_port,
 };
 
 fn read_attribute(node: &SyntaxNode) -> Option<Read> {
-    AttributeDefinition::cast(node.clone()).map(|view| Read {
-        syntax: view.syntax().clone(),
-        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
-        keyword: view.attribute_keyword(),
-        def_keyword: view.def_keyword(),
-        definition: view.definition(),
+    AttributeDefinition::cast(node.clone()).map(|view| {
+        Read::with_definition(
+            view.syntax().clone(),
+            view.prefix().map(|prefix| prefix.syntax().clone()),
+            view.attribute_keyword(),
+            view.def_keyword(),
+            view.definition(),
+        )
     })
 }
 
 fn read_occurrence(node: &SyntaxNode) -> Option<Read> {
-    OccurrenceDefinition::cast(node.clone()).map(|view| Read {
-        syntax: view.syntax().clone(),
-        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
-        keyword: view.occurrence_keyword(),
-        def_keyword: view.def_keyword(),
-        definition: view.definition(),
+    OccurrenceDefinition::cast(node.clone()).map(|view| {
+        Read::with_definition(
+            view.syntax().clone(),
+            view.prefix().map(|prefix| prefix.syntax().clone()),
+            view.occurrence_keyword(),
+            view.def_keyword(),
+            view.definition(),
+        )
     })
 }
 
 fn read_item(node: &SyntaxNode) -> Option<Read> {
-    ItemDefinition::cast(node.clone()).map(|view| Read {
-        syntax: view.syntax().clone(),
-        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
-        keyword: view.item_keyword(),
-        def_keyword: view.def_keyword(),
-        definition: view.definition(),
+    ItemDefinition::cast(node.clone()).map(|view| {
+        Read::with_definition(
+            view.syntax().clone(),
+            view.prefix().map(|prefix| prefix.syntax().clone()),
+            view.item_keyword(),
+            view.def_keyword(),
+            view.definition(),
+        )
     })
 }
 
 fn read_part(node: &SyntaxNode) -> Option<Read> {
-    PartDefinition::cast(node.clone()).map(|view| Read {
-        syntax: view.syntax().clone(),
-        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
-        keyword: view.part_keyword(),
-        def_keyword: view.def_keyword(),
-        definition: view.definition(),
+    PartDefinition::cast(node.clone()).map(|view| {
+        Read::with_definition(
+            view.syntax().clone(),
+            view.prefix().map(|prefix| prefix.syntax().clone()),
+            view.part_keyword(),
+            view.def_keyword(),
+            view.definition(),
+        )
     })
 }
 
 fn read_connection(node: &SyntaxNode) -> Option<Read> {
-    ConnectionDefinition::cast(node.clone()).map(|view| Read {
-        syntax: view.syntax().clone(),
-        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
-        keyword: view.connection_keyword(),
-        def_keyword: view.def_keyword(),
-        definition: view.definition(),
+    ConnectionDefinition::cast(node.clone()).map(|view| {
+        Read::with_definition(
+            view.syntax().clone(),
+            view.prefix().map(|prefix| prefix.syntax().clone()),
+            view.connection_keyword(),
+            view.def_keyword(),
+            view.definition(),
+        )
     })
 }
 
 fn read_flow(node: &SyntaxNode) -> Option<Read> {
-    FlowDefinition::cast(node.clone()).map(|view| Read {
-        syntax: view.syntax().clone(),
-        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
-        keyword: view.flow_keyword(),
-        def_keyword: view.def_keyword(),
-        definition: view.definition(),
+    FlowDefinition::cast(node.clone()).map(|view| {
+        Read::with_definition(
+            view.syntax().clone(),
+            view.prefix().map(|prefix| prefix.syntax().clone()),
+            view.flow_keyword(),
+            view.def_keyword(),
+            view.definition(),
+        )
     })
 }
 
 fn read_allocation(node: &SyntaxNode) -> Option<Read> {
-    AllocationDefinition::cast(node.clone()).map(|view| Read {
-        syntax: view.syntax().clone(),
-        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
-        keyword: view.allocation_keyword(),
-        def_keyword: view.def_keyword(),
-        definition: view.definition(),
+    AllocationDefinition::cast(node.clone()).map(|view| {
+        Read::with_definition(
+            view.syntax().clone(),
+            view.prefix().map(|prefix| prefix.syntax().clone()),
+            view.allocation_keyword(),
+            view.def_keyword(),
+            view.definition(),
+        )
     })
 }
 
 fn read_rendering(node: &SyntaxNode) -> Option<Read> {
-    RenderingDefinition::cast(node.clone()).map(|view| Read {
-        syntax: view.syntax().clone(),
-        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
-        keyword: view.rendering_keyword(),
-        def_keyword: view.def_keyword(),
-        definition: view.definition(),
+    RenderingDefinition::cast(node.clone()).map(|view| {
+        Read::with_definition(
+            view.syntax().clone(),
+            view.prefix().map(|prefix| prefix.syntax().clone()),
+            view.rendering_keyword(),
+            view.def_keyword(),
+            view.definition(),
+        )
     })
 }
 
 fn read_port(node: &SyntaxNode) -> Option<Read> {
-    PortDefinition::cast(node.clone()).map(|view| Read {
-        syntax: view.syntax().clone(),
-        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
-        keyword: view.port_keyword(),
-        def_keyword: view.def_keyword(),
-        definition: view.definition(),
+    PortDefinition::cast(node.clone()).map(|view| {
+        Read::with_definition(
+            view.syntax().clone(),
+            view.prefix().map(|prefix| prefix.syntax().clone()),
+            view.port_keyword(),
+            view.def_keyword(),
+            view.definition(),
+        )
     })
 }
 
@@ -281,28 +337,25 @@ pub(crate) fn every(production: &Production, root: &SyntaxNode) -> Vec<Read> {
 }
 
 /// What a malformed case compares: the two keywords as written, and the declaration and
-/// body the `Definition` holds, empty where absent.
+/// body, empty where absent, when the first of the tail is there.
 pub(crate) type Summary = (Option<String>, Option<String>, Option<(String, String)>);
 
 /// `read`, as text.
 pub(crate) fn summary(read: &Read) -> Summary {
+    let text = |node: &Option<SyntaxNode>| {
+        node.as_ref()
+            .map(|node| node.text().to_string())
+            .unwrap_or_default()
+    };
     (
         read.keyword.as_ref().map(|token| token.text().to_owned()),
         read.def_keyword
             .as_ref()
             .map(|token| token.text().to_owned()),
-        read.definition.as_ref().map(|definition| {
-            (
-                definition
-                    .declaration()
-                    .map(|declaration| declaration.text().to_string())
-                    .unwrap_or_default(),
-                definition
-                    .body()
-                    .map(|body| body.text().to_string())
-                    .unwrap_or_default(),
-            )
-        }),
+        read.tail
+            .first()
+            .and_then(Option::as_ref)
+            .map(|_| (text(&read.declaration), text(&read.body))),
     )
 }
 
