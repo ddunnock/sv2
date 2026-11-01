@@ -21,7 +21,7 @@ use sv2_ast::{
     AliasMember, AstNode, AttributeDefinition, ElementFilterMember, Import, MemberPrefix,
     PackageMember, PartDefinition,
 };
-use sv2_syntax::{SyntaxKind, SyntaxNode};
+use sv2_syntax::{SyntaxKind, SyntaxNode, SyntaxToken};
 
 /// The file the frozen grammar unit cites as evidence for the optional `all`
 /// (`.claude/state/grammar/units/Import.json`, evidence[2]).
@@ -3332,5 +3332,90 @@ fn the_verification_case_definitions_of_two_files_read_their_keywords_declaratio
         verification_case_definitions_of(VERIFICATION_METADATA_EXAMPLE),
         [def("MassTest", ";")],
         "line 5, and not the usage on line 6"
+    );
+}
+
+/// A use case definition's three keywords, what its declaration declares, and the first
+/// token of its body.
+type UseCaseDefinitionRead = (
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+);
+
+const USE_CASE_TEST: &str = "vendor/corpus/sysml/src/examples/Simple Tests/UseCaseTest.sysml";
+
+const USE_CASE_DEFINITION_EXAMPLE: &str =
+    "vendor/corpus/sysml/src/training/35. Use Cases/Use Case Definition Example.sysml";
+
+/// Every `UseCaseDefinition` in the corpus file at `relative`, read.
+fn use_case_definitions_of(relative: &str) -> Vec<UseCaseDefinitionRead> {
+    let token = |token: Option<SyntaxToken>| token.map(|token| token.text().to_owned());
+    tree_of(relative)
+        .descendants()
+        .filter_map(sv2_ast::UseCaseDefinition::cast)
+        .map(|use_case| {
+            (
+                token(use_case.use_keyword()),
+                token(use_case.case_keyword()),
+                token(use_case.def_keyword()),
+                use_case
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string()),
+                use_case.body().as_ref().and_then(opening),
+            )
+        })
+        .collect()
+}
+
+/// `UseCaseTest.sysml` and `Use Case Definition Example.sysml`, read for their use case
+/// definitions:
+///
+/// ```text
+///   UseCaseTest
+///     line  6:  use case def UseSystem { ... }
+///     line 14:    include use case uc1 : UC1;           an IncludeUseCaseUsage
+///     line 15:    include use case uc2 { ... }          an IncludeUseCaseUsage
+///     line 21:  use case def UC1;
+///     lines 25, 30, 35, 38:  use case <name> ...       use case usages
+///   Use Case Definition Example
+///     lines 8, 23, 29:  use case def '<name>' { ... }  unrestricted names
+/// ```
+///
+/// `UseCaseDefinition = OccurrenceDefinitionPrefix 'use' 'case' 'def' DefinitionDeclaration
+/// CaseBody` (`SysML` 8.2.2.25): no `Definition` node, and the one definition in the family
+/// whose kind is two keywords. The first file is chosen because it writes `use case` eight
+/// times and `def` after it only twice: four times as a `UseCaseUsage` (8.2.2.25) and twice
+/// inside an `include` (`IncludeUseCaseUsage`, 8.2.2.25), and its two definitions close
+/// one with a body and one with `;`. The second writes its names quoted, so the
+/// declaration is read as written, quotes and all. No corpus file prefixes a use case
+/// definition (`grep -rnE '\b(abstract|variation|individual)\s+use\s+case\s+def\b'
+/// vendor/corpus` finds none).
+#[test]
+fn the_use_case_definitions_of_two_files_read_their_three_keywords_declaration_and_body() {
+    let def = |declaration: &str, opens: &str| {
+        (
+            Some("use".to_owned()),
+            Some("case".to_owned()),
+            Some("def".to_owned()),
+            Some(declaration.to_owned()),
+            Some(opens.to_owned()),
+        )
+    };
+    assert_eq!(
+        use_case_definitions_of(USE_CASE_TEST),
+        [def("UseSystem", "{"), def("UC1", ";")],
+        "lines 6 and 21, in source order, and none of the six usages"
+    );
+    assert_eq!(
+        use_case_definitions_of(USE_CASE_DEFINITION_EXAMPLE),
+        [
+            def("'Provide Transportation'", "{"),
+            def("'Enter Vehicle'", "{"),
+            def("'Exit Vehicle'", "{"),
+        ],
+        "lines 8, 23 and 29, in source order"
     );
 }

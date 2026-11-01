@@ -9,7 +9,7 @@ use sv2_ast::{
     AliasMember, AstNode, AttributeDefinition, Definition, DefinitionPrefix, ElementFilterMember,
     Import, LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember,
     NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package,
-    PackageMember, QualifiedName, RelationshipBody, RootNamespace,
+    PackageMember, QualifiedName, RelationshipBody, RootNamespace, UseCaseDefinition,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -2998,5 +2998,214 @@ fn an_individual_with_its_basic_prefix_after_it_begins_no_individual_definition(
             .collect::<Vec<_>>(),
         [SyntaxKind::Package, SyntaxKind::IndividualDefinition],
         "the package, then B; A's statement is an Error, not a member"
+    );
+}
+
+/// What a malformed use case case compares of each `UseCaseDefinition`: its three
+/// keywords as written, and its declaration and body as text, empty where absent.
+type UseCaseSummary = (
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    String,
+    String,
+);
+
+/// Every `UseCaseDefinition` in `root`, read through its view.
+///
+/// Written out rather than through `simple_definitions`, whose `Production` names one
+/// kind keyword: a use case is the one definition in the family whose kind is two.
+fn use_case_definitions(root: &SyntaxNode) -> Vec<UseCaseSummary> {
+    let text = |node: Option<SyntaxNode>| node.map(|node| node.text().to_string());
+    let token = |token: Option<sv2_syntax::SyntaxToken>| token.map(|t| t.text().to_owned());
+    root.descendants()
+        .filter_map(UseCaseDefinition::cast)
+        .map(|use_case| {
+            (
+                token(use_case.use_keyword()),
+                token(use_case.case_keyword()),
+                token(use_case.def_keyword()),
+                text(use_case.declaration()).unwrap_or_default(),
+                text(use_case.body()).unwrap_or_default(),
+            )
+        })
+        .collect()
+}
+
+/// A whole `use case def <name>;`, as [`use_case_definitions`] reads it.
+fn whole_use_case(name: &str) -> UseCaseSummary {
+    (
+        Some("use".to_owned()),
+        Some("case".to_owned()),
+        Some("def".to_owned()),
+        name.to_owned(),
+        ";".to_owned(),
+    )
+}
+
+/// The ranges of every diagnostic the parse reported.
+fn error_ranges(parse: &sv2_syntax::Parse) -> Vec<sv2_syntax::TextRange> {
+    parse
+        .errors()
+        .iter()
+        .map(sv2_syntax::Diagnostic::range)
+        .collect()
+}
+
+/// `use-case-definition/def-written-twice.sysml`: `use case def def A;`, then `use case
+/// def B;`. The header states what it pins and where the outcome comes from.
+#[test]
+fn a_use_case_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    let source = include_str!("malformed/use-case-definition/def-written-twice.sysml");
+    let parse = trees::parsed(source, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1 and 3. two definitions: the first's declaration and body span nothing; B is whole.
+    assert_eq!(
+        use_case_definitions(&root),
+        [
+            (
+                Some("use".to_owned()),
+                Some("case".to_owned()),
+                Some("def".to_owned()),
+                String::new(),
+                String::new()
+            ),
+            whole_use_case("B"),
+        ],
+        "the first declares nothing and has no body; B is whole"
+    );
+
+    // 2a. the first owns exactly one `def`, the first one written, and nothing after it.
+    let written = source
+        .find("\tuse case def def")
+        .expect("the fixture writes `use case def def`, tab-indented, below its header");
+    let first_def = written + "\tuse case ".len();
+    let first = root
+        .descendants()
+        .find_map(UseCaseDefinition::cast)
+        .expect("two, so a first");
+    assert_eq!(
+        first
+            .def_keyword()
+            .map(|token| usize::from(token.text_range().start())),
+        Some(first_def),
+        "def_keyword() is the `def` written straight after `case`"
+    );
+    assert_eq!(
+        first.syntax().text().to_string(),
+        "use case def ",
+        "the first holds its keywords and the space before its empty declaration"
+    );
+
+    // 2b. the second `def` is the Error's, and that was reported, once.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    assert_eq!(
+        (stray.text(), usize::from(stray.text_range().start())),
+        ("def", first_def + "def ".len()),
+        "the Error opens with the second `def`"
+    );
+    assert_eq!(
+        error_ranges(&parse),
+        [stray.text_range()],
+        "one diagnostic, on the second `def`: {:?}",
+        parse.errors()
+    );
+}
+
+/// `use-case-definition/def-missing.sysml`: `use case A def B;`, then `use case def C;`.
+/// The header states what it pins and where the outcome comes from.
+#[test]
+fn a_use_case_with_no_def_after_it_begins_no_use_case_definition() {
+    let source = include_str!("malformed/use-case-definition/def-missing.sysml");
+    let parse = trees::parsed(source, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1 and 2a. one definition, and it is C's.
+    assert_eq!(
+        use_case_definitions(&root),
+        [whole_use_case("C")],
+        "only C writes `use case def`, so only C is a UseCaseDefinition"
+    );
+
+    // 2b. reported, once, on the `def` A's keywords were not followed by.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    let written = source
+        .find("\tuse case A def")
+        .expect("the fixture writes `use case A def`, tab-indented, below its header");
+    assert_eq!(
+        (stray.text(), usize::from(stray.text_range().start())),
+        ("def", written + "\tuse case A ".len()),
+        "the Error opens with the misplaced `def`"
+    );
+    assert_eq!(
+        error_ranges(&parse),
+        [stray.text_range()],
+        "one diagnostic, on the misplaced `def`: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour: the first member holds the usage, not a half-built definition.
+    assert_eq!(
+        members(&root)
+            .iter()
+            .filter_map(|member| member.element().map(|element| element.kind()))
+            .collect::<Vec<_>>(),
+        [
+            SyntaxKind::Package,
+            SyntaxKind::UseCaseUsage,
+            SyntaxKind::UseCaseDefinition
+        ],
+        "the package, then A as a use case usage, then C"
+    );
+}
+
+/// `use-case-definition/case-missing.sysml`: `use def A;`, then `use case def B;`. The
+/// header states what it pins and where the outcome comes from.
+#[test]
+fn a_use_with_no_case_after_it_begins_nothing() {
+    let source = include_str!("malformed/use-case-definition/case-missing.sysml");
+    let parse = trees::parsed(source, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1 and 2a. one definition, and it is B's.
+    assert_eq!(
+        use_case_definitions(&root),
+        [whole_use_case("B")],
+        "only B writes `use case def`, so only B is a UseCaseDefinition"
+    );
+
+    // 2b. the whole statement is the Error's, from its `use` to its `;`, and that was
+    // reported, once, over the Error.
+    let written = source
+        .find("\tuse def A;")
+        .expect("the fixture writes `use def A;`, tab-indented, below its header");
+    let error = root
+        .descendants()
+        .find(|node| node.kind() == SyntaxKind::Error)
+        .expect("recover_statement builds an Error");
+    assert_eq!(
+        (
+            error.text().to_string(),
+            usize::from(error.text_range().start())
+        ),
+        ("use def A;".to_owned(), written + 1),
+        "the Error is the whole statement"
+    );
+    assert_eq!(
+        error_ranges(&parse),
+        [error.text_range()],
+        "one diagnostic, over the skipped statement: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour: the package holds no member for `use def A;` at all.
+    assert_eq!(
+        members(&root)
+            .iter()
+            .filter_map(|member| member.element().map(|element| element.kind()))
+            .collect::<Vec<_>>(),
+        [SyntaxKind::Package, SyntaxKind::UseCaseDefinition],
+        "the package, then B, and nothing for the `use` with no `case`"
     );
 }
