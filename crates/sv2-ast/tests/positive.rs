@@ -3718,3 +3718,77 @@ fn a_kerml_dependency_reads_two_clients_and_two_suppliers() {
         )]
     );
 }
+
+const STATE_TEST: &str = "vendor/corpus/sysml/src/examples/Simple Tests/StateTest.sysml";
+
+const STATE_DECOMPOSITION_1: &str =
+    "vendor/corpus/sysml/src/training/24. States/State Decomposition-1.sysml";
+
+/// A state definition's two keywords, what its declaration declares, and the first token of
+/// its body.
+type StateDefinitionRead = (
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+);
+
+/// Every `StateDefinition` in the corpus file at `relative`, read.
+fn state_definitions_of(relative: &str) -> Vec<StateDefinitionRead> {
+    let token = |token: Option<SyntaxToken>| token.map(|token| token.text().to_owned());
+    tree_of(relative)
+        .descendants()
+        .filter_map(sv2_ast::StateDefinition::cast)
+        .map(|state| {
+            (
+                token(state.state_keyword()),
+                token(state.def_keyword()),
+                state
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string()),
+                state.body().as_ref().and_then(opening),
+            )
+        })
+        .collect()
+}
+
+/// `StateTest.sysml` and `State Decomposition-1.sysml`, read for their state definitions:
+///
+/// ```text
+///   StateTest
+///     line 11:  state def S { ... }               state usages inside, at lines 15-42
+///     lines 48, 58:  state s0 { ... }, state s parallel { ... }   state usages
+///   State Decomposition-1
+///     line  7:  state def VehicleStates;
+///     line  9:  state vehicleStates : VehicleStates { ... }       a usage, and four
+///                                                                 nested inside it
+/// ```
+///
+/// `StateDefinition = OccurrenceDefinitionPrefix 'state' 'def' DefinitionDeclaration
+/// StateDefBody` (`SysML` 8.2.2.18.1): no `Definition` node, and a body that is `;` or
+/// braced. Each file writes its one definition among state usages that write no `def`
+/// (`StateUsage`, 8.2.2.18.2), at several depths, one of them `parallel`. The first is
+/// chosen for its braced body full of usages; the second for its `;` body beside a usage
+/// typed by it. No corpus file prefixes a state definition or writes `parallel` on one
+/// (`grep -rnE '\bstate\s+def\b.*\bparallel\b'` over the pinned corpus finds none).
+#[test]
+fn the_state_definitions_of_two_files_read_their_keywords_declaration_and_body() {
+    let def = |declaration: &str, opens: &str| {
+        (
+            Some("state".to_owned()),
+            Some("def".to_owned()),
+            Some(declaration.to_owned()),
+            Some(opens.to_owned()),
+        )
+    };
+    assert_eq!(
+        state_definitions_of(STATE_TEST),
+        [def("S", "{")],
+        "line 11, and none of the usages"
+    );
+    assert_eq!(
+        state_definitions_of(STATE_DECOMPOSITION_1),
+        [def("VehicleStates", ";")],
+        "line 7, and none of the five usages"
+    );
+}

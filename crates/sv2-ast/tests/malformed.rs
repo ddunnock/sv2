@@ -2693,6 +2693,26 @@ fn a_verification_with_no_def_after_it_begins_no_verification_case_definition() 
     );
 }
 
+/// `state-definition/def-written-twice.sysml`: `state def def A;`, then `state def B;`.
+/// [`def_written_twice`] states what it pins.
+#[test]
+fn a_state_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    def_written_twice(
+        &simple_definitions::STATE,
+        include_str!("malformed/state-definition/def-written-twice.sysml"),
+    );
+}
+
+/// `state-definition/def-missing.sysml`: `state A def B;`, then `state def C;`.
+/// [`def_missing`] states what it pins.
+#[test]
+fn a_state_with_no_def_after_it_begins_no_state_definition() {
+    def_missing(
+        &simple_definitions::STATE,
+        include_str!("malformed/state-definition/def-missing.sysml"),
+    );
+}
+
 const INDIVIDUAL_BEFORE_ATTRIBUTE: &str =
     include_str!("malformed/attribute-definition/individual-before-attribute.sysml");
 

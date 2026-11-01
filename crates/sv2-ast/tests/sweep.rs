@@ -2911,6 +2911,11 @@ fn assert_dependency_declaration_parts(
     }
 }
 
+/// What `StateDefinition` must satisfy at every node, whatever the tree.
+fn assert_state_definition_accessor(node: &SyntaxNode) {
+    assert_simple_definition(node, &simple_definitions::STATE);
+}
+
 /// What a view of one of `simple_definition`'s productions must satisfy at every node.
 /// Both node children are typed (the prefix's view, `Definition`); the keywords are the
 /// node's own tokens.
@@ -3261,6 +3266,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_use_case_definition_accessor(&node);
             assert_enumeration_definition_accessor(&node);
             assert_dependency_accessor(&node);
+            assert_state_definition_accessor(&node);
             visited += 1;
         }
     }
