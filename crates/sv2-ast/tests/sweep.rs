@@ -9,11 +9,11 @@ mod simple_definitions;
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, Definition, DefinitionPrefix, ElementFilterMember, Import,
-    ImportDeclaration, LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember,
-    NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package,
-    PackageMember, QualifiedName, RelationshipBody, RootNamespace, UseCaseDefinition,
-    VisibilityIndicator,
+    AliasMember, AstNode, Definition, DefinitionPrefix, ElementFilterMember, EnumerationDefinition,
+    Import, ImportDeclaration, LibraryPackage, MemberPrefix, MembershipImport,
+    NamespaceFeatureMember, NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix,
+    OwnedAnnotation, Package, PackageMember, QualifiedName, RelationshipBody, RootNamespace,
+    UseCaseDefinition, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -2584,6 +2584,173 @@ fn assert_use_case_definition_slots(
     );
 }
 
+/// What `EnumerationDefinition` must satisfy at every node, whatever the tree.
+///
+/// Written out rather than through [`assert_simple_definition`]: `EnumerationDefinition =
+/// DefinitionExtensionKeyword* 'enum' 'def' DefinitionDeclaration EnumerationBody` (`SysML`
+/// 8.2.2.8) has no prefix node, its extension keywords being its own children, as many as
+/// are written. Those, the declaration and the body are raw; the keywords are the node's
+/// own tokens.
+fn assert_enumeration_definition_accessor(node: &SyntaxNode) {
+    let view = EnumerationDefinition::cast(node.clone());
+    assert_eq!(
+        view.is_some(),
+        node.kind() == SyntaxKind::EnumerationDefinition,
+        "EnumerationDefinition::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(view) = view else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        view.syntax(),
+        node,
+        "EnumerationDefinition::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) the shape, and (c) the differential against it.
+    let shape = enumeration_definition_shape(node);
+    assert_eq!(
+        (
+            view.extension_keywords().collect::<Vec<_>>(),
+            view.enum_keyword(),
+            view.def_keyword(),
+            view.declaration(),
+            view.body(),
+        ),
+        (
+            shape.0,
+            Some(shape.1),
+            Some(shape.2),
+            Some(shape.3),
+            Some(shape.4)
+        ),
+        "an EnumerationDefinition accessor disagrees with the node's own elements, at {:?}",
+        node.text_range()
+    );
+}
+
+/// An enumeration definition's elements, asserted to be exactly the production's in order:
+/// zero or more extension keywords, then one each of `enum`, `def`, the declaration and the
+/// body.
+///
+/// Asserting one of each after the extension keywords is what makes the view's `child` and
+/// `token` taking the last match rather than the first an equivalent mutation.
+#[expect(
+    clippy::panic,
+    reason = "test support only: a shape the production does not admit is the sweep failing"
+)]
+fn enumeration_definition_shape(
+    node: &SyntaxNode,
+) -> (
+    Vec<SyntaxNode>,
+    SyntaxToken,
+    SyntaxToken,
+    SyntaxNode,
+    SyntaxNode,
+) {
+    let elements: Vec<SyntaxElement> = node
+        .children_with_tokens()
+        .filter(|element| {
+            element
+                .as_token()
+                .is_none_or(|token| !token.text().trim().is_empty())
+        })
+        .collect();
+    let keywords: Vec<SyntaxNode> = elements
+        .iter()
+        .map_while(|element| {
+            element
+                .as_node()
+                .filter(|node| node.kind() == SyntaxKind::DefinitionExtensionKeyword)
+                .cloned()
+        })
+        .collect();
+    let [
+        SyntaxElement::Token(enum_keyword),
+        SyntaxElement::Token(def_keyword),
+        SyntaxElement::Node(declaration),
+        SyntaxElement::Node(body),
+    ] = elements.get(keywords.len()..).unwrap_or_default()
+    else {
+        panic!(
+            "an EnumerationDefinition is not `DefinitionExtensionKeyword* 'enum' 'def' \
+             DefinitionDeclaration EnumerationBody`, at {:?}: {elements:?}",
+            node.text_range()
+        );
+    };
+    assert_eq!(
+        [
+            enum_keyword.kind(),
+            def_keyword.kind(),
+            declaration.kind(),
+            body.kind(),
+        ],
+        [
+            SyntaxKind::KwEnum,
+            SyntaxKind::KwDef,
+            SyntaxKind::DefinitionDeclaration,
+            SyntaxKind::EnumerationBody,
+        ],
+        "an EnumerationDefinition's elements are not the production's, at {:?}",
+        node.text_range()
+    );
+    assert_enumeration_definition_slots(node, &keywords, declaration);
+    (
+        keywords,
+        enum_keyword.clone(),
+        def_keyword.clone(),
+        declaration.clone(),
+        body.clone(),
+    )
+}
+
+/// The two grammar facts the enumeration view's equivalent mutations rest on, scanning
+/// only the extension keywords and the declaration, never the body.
+fn assert_enumeration_definition_slots(
+    node: &SyntaxNode,
+    keywords: &[SyntaxNode],
+    declaration: &SyntaxNode,
+) {
+    // An extension keyword holds none of the node's own elements: it is `#` and a
+    // qualified name naming metadata (`DefinitionExtensionKeyword`, `SysML` 8.2.2.6.1).
+    // Asserted because it is what makes the keyword accessors, `child` and
+    // `extension_keywords` reading descendants equivalent mutations: the extension keywords
+    // are the only elements before the rest in preorder.
+    let own = [
+        SyntaxKind::DefinitionExtensionKeyword,
+        SyntaxKind::KwEnum,
+        SyntaxKind::KwDef,
+        SyntaxKind::DefinitionDeclaration,
+        SyntaxKind::EnumerationBody,
+    ];
+    assert!(
+        keywords.iter().all(|keyword| {
+            keyword
+                .descendants_with_tokens()
+                .skip(1)
+                .all(|below| !own.contains(&below.kind()))
+        }),
+        "an extension keyword, `enum`, `def`, declaration or body inside an \
+         EnumerationDefinition's extension keyword, at {:?}",
+        node.text_range()
+    );
+
+    // The declaration holds no body (`DefinitionDeclaration`, `SysML` 8.2.2.6.1). Asserted
+    // because it is what makes `body()` reading descendants an equivalent mutation.
+    assert!(
+        declaration
+            .descendants()
+            .all(|below| below.kind() != SyntaxKind::EnumerationBody),
+        "an EnumerationBody inside an EnumerationDefinition's declaration, at {:?}",
+        node.text_range()
+    );
+}
+
 /// What a view of one of `simple_definition`'s productions must satisfy at every node.
 /// Both node children are typed (the prefix's view, `Definition`); the keywords are the
 /// node's own tokens.
@@ -2932,6 +3099,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_analysis_case_definition_accessor(&node);
             assert_verification_case_definition_accessor(&node);
             assert_use_case_definition_accessor(&node);
+            assert_enumeration_definition_accessor(&node);
             visited += 1;
         }
     }
