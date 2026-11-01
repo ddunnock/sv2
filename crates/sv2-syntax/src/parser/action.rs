@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 David Dunnock <dunnoda@gmail.com>
-//! Actions, `SysML` 8.2.2.16: action definitions, usages and bodies, and perform
+//! Actions, `SysML` 8.2.2.17: action definitions, usages and bodies, and perform
 //! action usages.
 
 use crate::generated::kinds::SyntaxKind;
