@@ -171,7 +171,8 @@ family's, measured rather than assumed: `<prefix> '<keyword>' 'def'`, then whate
 production's `tail` names, one `<keyword> def` deciding where it begins. `PortDefinition`
 (`port_definition`) has a `Definition` and a `ConjugatedPortDefinitionMember` holding no
 token; `RequirementDefinition`, `ConcernDefinition`, `ViewDefinition`,
-`ViewpointDefinition`, `ConstraintDefinition` and `CalculationDefinition` have a
+`ViewpointDefinition`, `ConstraintDefinition`, `CalculationDefinition` and
+`ActionDefinition` have a
 `DefinitionDeclaration` and a body of their own kind, and no `Definition` node. The
 sweep's shape asserts exactly the tail, and the reader reports what the view answers for
 it. A production whose recovery differs does not join.

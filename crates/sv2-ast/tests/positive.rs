@@ -3073,3 +3073,93 @@ fn the_calculation_definitions_of_two_files_read_their_keywords_prefix_declarati
         "line 71, and none of the five usages"
     );
 }
+
+/// An action definition's two keywords, its prefix's basic keyword, whether its prefix
+/// writes `individual`, what its declaration declares, and the first token of its body.
+type ActionDefinitionRead = (
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    bool,
+    Option<String>,
+    Option<String>,
+);
+
+const VARIABILITY_TEST: &str =
+    "vendor/corpus/sysml/src/examples/Simple Tests/VariabilityTest.sysml";
+
+/// Every `ActionDefinition` in the corpus file at `relative`, read.
+fn action_definitions_of(relative: &str) -> Vec<ActionDefinitionRead> {
+    tree_of(relative)
+        .descendants()
+        .filter_map(sv2_ast::ActionDefinition::cast)
+        .map(|action| {
+            let prefix = action.prefix();
+            (
+                action.action_keyword().map(|token| token.text().to_owned()),
+                action.def_keyword().map(|token| token.text().to_owned()),
+                prefix
+                    .as_ref()
+                    .and_then(sv2_ast::OccurrenceDefinitionPrefix::basic_prefix)
+                    .map(|basic| basic.text().to_string()),
+                prefix
+                    .as_ref()
+                    .is_some_and(sv2_ast::OccurrenceDefinitionPrefix::is_individual),
+                action
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string()),
+                action.body().as_ref().and_then(opening),
+            )
+        })
+        .collect()
+}
+
+/// `IndividualTest.sysml` and `VariabilityTest.sysml`, read for their action definitions:
+///
+/// ```text
+///   IndividualTest   line 29:  individual action def AP1 { ... }         individual
+///                    line 30:    individual action a : AP1;              an ActionUsage
+///                    line 33:  action def A { ... }                      no prefix
+///                    line 34:    action a : A;                           an ActionUsage
+///                    line 36:  individual action def IA2 :> A { ... }    individual
+///                    line 37:    individual action :>> a : IA2;          an ActionUsage
+///   VariabilityTest  line 23:  variation action def A { ... }            variation
+///                    lines 24, 25:  variant action a1; variant action a2; variants
+/// ```
+///
+/// `ActionDefinition = OccurrenceDefinitionPrefix 'action' 'def' DefinitionDeclaration
+/// ActionBody` (`SysML` 8.2.2.17.1): no `Definition` node. Every definition here holds,
+/// in its body, a usage of the same keyword that writes no `def` (`ActionUsage`,
+/// 8.2.2.17.2), most with the same prefix word. Three of the corpus's four prefixed action
+/// definitions are here (`grep -rnE
+/// '\b(abstract|variation|individual)\s+action\s+def\b|#\S+\s+action\s+def' vendor/corpus`
+/// finds lines 29 and 36, line 23, and `AnalysisIndividualExample.sysml` line 77), and
+/// `IndividualTest` puts an unprefixed one between two `individual` ones, so `prefix()` must
+/// tell `individual` from `variation` from nothing.
+#[test]
+fn the_action_definitions_of_two_files_read_their_keywords_prefix_declaration_and_body() {
+    let def = |basic: Option<&str>, individual: bool, declaration: &str| {
+        (
+            Some("action".to_owned()),
+            Some("def".to_owned()),
+            basic.map(str::to_owned),
+            individual,
+            Some(declaration.to_owned()),
+            Some("{".to_owned()),
+        )
+    };
+    assert_eq!(
+        action_definitions_of(INDIVIDUAL_TEST),
+        [
+            def(None, true, "AP1"),
+            def(None, false, "A"),
+            def(None, true, "IA2 :> A"),
+        ],
+        "lines 29, 33 and 36, in source order, and none of the usages in their bodies"
+    );
+    assert_eq!(
+        action_definitions_of(VARIABILITY_TEST),
+        [def(Some("variation"), false, "A")],
+        "line 23, and neither variant usage"
+    );
+}

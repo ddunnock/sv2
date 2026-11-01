@@ -5,6 +5,7 @@
 //! This crate owns no data. Every accessor is a view over a CST node, so the tree
 //! stays the single source of truth and the text stays authoritative (ADR-0001).
 
+mod action_definition;
 mod alias_member;
 mod allocation_definition;
 mod ast_node;
@@ -43,6 +44,7 @@ mod view_definition;
 mod viewpoint_definition;
 mod visibility_indicator;
 
+pub use crate::action_definition::ActionDefinition;
 pub use crate::alias_member::AliasMember;
 pub use crate::allocation_definition::AllocationDefinition;
 pub use crate::ast_node::AstNode;

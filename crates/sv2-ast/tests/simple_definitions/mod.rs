@@ -34,9 +34,9 @@
 //! and each malformed case keeps its own test function and its own fixture directory.
 
 use sv2_ast::{
-    AllocationDefinition, AstNode, AttributeDefinition, CalculationDefinition, ConcernDefinition,
-    ConnectionDefinition, ConstraintDefinition, Definition, FlowDefinition, ItemDefinition,
-    OccurrenceDefinition, PartDefinition, PortDefinition, RenderingDefinition,
+    ActionDefinition, AllocationDefinition, AstNode, AttributeDefinition, CalculationDefinition,
+    ConcernDefinition, ConnectionDefinition, ConstraintDefinition, Definition, FlowDefinition,
+    ItemDefinition, OccurrenceDefinition, PartDefinition, PortDefinition, RenderingDefinition,
     RequirementDefinition, ViewDefinition, ViewpointDefinition,
 };
 use sv2_syntax::{SyntaxKind, SyntaxNode, SyntaxToken};
@@ -314,6 +314,18 @@ pub(crate) const CALCULATION: Production = Production {
     read: read_calculation,
 };
 
+/// `ActionDefinition = OccurrenceDefinitionPrefix 'action' 'def' DefinitionDeclaration
+/// ActionBody` (`SysML` 8.2.2.17.1), built by `action_definition` with no `Definition` node.
+pub(crate) const ACTION: Production = Production {
+    node: SyntaxKind::ActionDefinition,
+    prefix: SyntaxKind::OccurrenceDefinitionPrefix,
+    keyword: SyntaxKind::KwAction,
+    keyword_text: "action",
+    usage: SyntaxKind::ActionUsage,
+    tail: &[SyntaxKind::DefinitionDeclaration, SyntaxKind::ActionBody],
+    read: read_action,
+};
+
 fn read_attribute(node: &SyntaxNode) -> Option<Read> {
     AttributeDefinition::cast(node.clone()).map(|view| {
         Read::with_definition(
@@ -487,6 +499,18 @@ fn read_calculation(node: &SyntaxNode) -> Option<Read> {
         syntax: view.syntax().clone(),
         prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
         keyword: view.calc_keyword(),
+        def_keyword: view.def_keyword(),
+        tail: vec![view.declaration(), view.body()],
+        declaration: view.declaration(),
+        body: view.body(),
+    })
+}
+
+fn read_action(node: &SyntaxNode) -> Option<Read> {
+    ActionDefinition::cast(node.clone()).map(|view| Read {
+        syntax: view.syntax().clone(),
+        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
+        keyword: view.action_keyword(),
         def_keyword: view.def_keyword(),
         tail: vec![view.declaration(), view.body()],
         declaration: view.declaration(),
