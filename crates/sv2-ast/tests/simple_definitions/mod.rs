@@ -34,10 +34,11 @@
 //! and each malformed case keeps its own test function and its own fixture directory.
 
 use sv2_ast::{
-    ActionDefinition, AllocationDefinition, AstNode, AttributeDefinition, CalculationDefinition,
-    ConcernDefinition, ConnectionDefinition, ConstraintDefinition, Definition, FlowDefinition,
-    ItemDefinition, OccurrenceDefinition, PartDefinition, PortDefinition, RenderingDefinition,
-    RequirementDefinition, ViewDefinition, ViewpointDefinition,
+    ActionDefinition, AllocationDefinition, AnalysisCaseDefinition, AstNode, AttributeDefinition,
+    CalculationDefinition, ConcernDefinition, ConnectionDefinition, ConstraintDefinition,
+    Definition, FlowDefinition, ItemDefinition, OccurrenceDefinition, PartDefinition,
+    PortDefinition, RenderingDefinition, RequirementDefinition, ViewDefinition,
+    ViewpointDefinition,
 };
 use sv2_syntax::{SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -326,6 +327,18 @@ pub(crate) const ACTION: Production = Production {
     read: read_action,
 };
 
+/// `AnalysisCaseDefinition = OccurrenceDefinitionPrefix 'analysis' 'def' DefinitionDeclaration
+/// CaseBody` (`SysML` 8.2.2.23), built by `case_definition` with no `Definition` node.
+pub(crate) const ANALYSIS_CASE: Production = Production {
+    node: SyntaxKind::AnalysisCaseDefinition,
+    prefix: SyntaxKind::OccurrenceDefinitionPrefix,
+    keyword: SyntaxKind::KwAnalysis,
+    keyword_text: "analysis",
+    usage: SyntaxKind::AnalysisCaseUsage,
+    tail: &[SyntaxKind::DefinitionDeclaration, SyntaxKind::CaseBody],
+    read: read_analysis_case,
+};
+
 fn read_attribute(node: &SyntaxNode) -> Option<Read> {
     AttributeDefinition::cast(node.clone()).map(|view| {
         Read::with_definition(
@@ -511,6 +524,18 @@ fn read_action(node: &SyntaxNode) -> Option<Read> {
         syntax: view.syntax().clone(),
         prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
         keyword: view.action_keyword(),
+        def_keyword: view.def_keyword(),
+        tail: vec![view.declaration(), view.body()],
+        declaration: view.declaration(),
+        body: view.body(),
+    })
+}
+
+fn read_analysis_case(node: &SyntaxNode) -> Option<Read> {
+    AnalysisCaseDefinition::cast(node.clone()).map(|view| Read {
+        syntax: view.syntax().clone(),
+        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
+        keyword: view.analysis_keyword(),
         def_keyword: view.def_keyword(),
         tail: vec![view.declaration(), view.body()],
         declaration: view.declaration(),

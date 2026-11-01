@@ -8,6 +8,7 @@
 mod action_definition;
 mod alias_member;
 mod allocation_definition;
+mod analysis_case_definition;
 mod ast_node;
 mod attribute_definition;
 mod calculation_definition;
@@ -47,6 +48,7 @@ mod visibility_indicator;
 pub use crate::action_definition::ActionDefinition;
 pub use crate::alias_member::AliasMember;
 pub use crate::allocation_definition::AllocationDefinition;
+pub use crate::analysis_case_definition::AnalysisCaseDefinition;
 pub use crate::ast_node::AstNode;
 pub use crate::attribute_definition::AttributeDefinition;
 pub use crate::calculation_definition::CalculationDefinition;

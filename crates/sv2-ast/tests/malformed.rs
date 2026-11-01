@@ -2652,6 +2652,26 @@ fn an_action_with_no_def_after_it_begins_no_action_definition() {
     );
 }
 
+/// `analysis-case-definition/def-written-twice.sysml`: `analysis def def A;`, then
+/// `analysis def B;`. [`def_written_twice`] states what it pins.
+#[test]
+fn an_analysis_case_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    def_written_twice(
+        &simple_definitions::ANALYSIS_CASE,
+        include_str!("malformed/analysis-case-definition/def-written-twice.sysml"),
+    );
+}
+
+/// `analysis-case-definition/def-missing.sysml`: `analysis A def B;`, then `analysis def
+/// C;`. [`def_missing`] states what it pins.
+#[test]
+fn an_analysis_with_no_def_after_it_begins_no_analysis_case_definition() {
+    def_missing(
+        &simple_definitions::ANALYSIS_CASE,
+        include_str!("malformed/analysis-case-definition/def-missing.sysml"),
+    );
+}
+
 const INDIVIDUAL_BEFORE_ATTRIBUTE: &str =
     include_str!("malformed/attribute-definition/individual-before-attribute.sysml");
 
