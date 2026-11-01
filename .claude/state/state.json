@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-11-01T13:38:44Z",
+    "regenerated_utc": "2026-11-01T13:42:21Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 38,
-      "unimplemented": 425,
+      "implemented": 39,
+      "unimplemented": 424,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 8.2
+      "percent": 8.4
     },
     "tests": {
-      "unit": 865,
+      "unit": 868,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "8a64950 Merge ast-analysis-case-definition",
+      "cc0e5ff Add the AnalysisCaseDefinition accessor",
       "0ebac94 Merge ast-action-definition",
       "c5d218f Add the ActionDefinition accessor",
       "b5829a1 Merge ast-calculation-definition",
       "105d1d0 Add the CalculationDefinition accessor",
       "dd10875 Merge ast-constraint-definition",
-      "16cc40f Add the ConstraintDefinition accessor",
-      "756e380 Merge ast-viewpoint-definition",
-      "d2d75dc Add the ViewpointDefinition accessor"
+      "16cc40f Add the ConstraintDefinition accessor"
     ]
   },
   "authored": {

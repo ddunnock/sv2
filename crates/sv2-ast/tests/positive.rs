@@ -3250,3 +3250,87 @@ fn the_analysis_case_definitions_of_two_files_read_their_keywords_prefix_declara
         "lines 13 and 23, and neither usage"
     );
 }
+
+const VERIFICATION_TEST: &str =
+    "vendor/corpus/sysml/src/examples/Simple Tests/VerificationTest.sysml";
+
+const VERIFICATION_METADATA_EXAMPLE: &str =
+    "vendor/corpus/sysml/src/examples/Metadata Examples/VerificationMetadataExample.sysml";
+
+/// Every `VerificationCaseDefinition` in the corpus file at `relative`, read as
+/// [`action_definitions_of`] reads an action definition: both keywords, the prefix's basic
+/// keyword, whether it writes `individual`, the declaration, and the body's first token.
+fn verification_case_definitions_of(relative: &str) -> Vec<ActionDefinitionRead> {
+    tree_of(relative)
+        .descendants()
+        .filter_map(sv2_ast::VerificationCaseDefinition::cast)
+        .map(|verification| {
+            let prefix = verification.prefix();
+            (
+                verification
+                    .verification_keyword()
+                    .map(|token| token.text().to_owned()),
+                verification
+                    .def_keyword()
+                    .map(|token| token.text().to_owned()),
+                prefix
+                    .as_ref()
+                    .and_then(sv2_ast::OccurrenceDefinitionPrefix::basic_prefix)
+                    .map(|basic| basic.text().to_string()),
+                prefix
+                    .as_ref()
+                    .is_some_and(sv2_ast::OccurrenceDefinitionPrefix::is_individual),
+                verification
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string()),
+                verification.body().as_ref().and_then(opening),
+            )
+        })
+        .collect()
+}
+
+/// `VerificationTest.sysml` and `VerificationMetadataExample.sysml`, read for their
+/// verification case definitions:
+///
+/// ```text
+///   VerificationTest
+///     line 15:  verification def VerificationCase { ... }
+///     line 24:  verification def VerificationPlan { ... }
+///     line 31:    verification verificationCase : VerificationCase;     a usage
+///     line 35:    verification verificationPlan : VerificationPlan { ... } a usage
+///   VerificationMetadataExample
+///     line 5:   verification def MassTest;
+///     line 6:   verification massTests:MassTest { ... }                 a usage
+/// ```
+///
+/// `VerificationCaseDefinition = OccurrenceDefinitionPrefix 'verification' 'def'
+/// DefinitionDeclaration CaseBody` (`SysML` 8.2.2.24): no `Definition` node, and a
+/// `CaseBody` that is `;` or a braced body. Each file writes the definitions beside usages
+/// of the same keyword that write no `def` (`VerificationCaseUsage`, 8.2.2.24). The second
+/// is chosen for its `;` body, the first for its two braced ones. No corpus file writes a
+/// prefix on a verification case definition (`grep -rnE
+/// '\b(abstract|variation|individual)\s+verification\s+def\b|#\S+\s+verification\s+def'
+/// vendor/corpus` finds none), so every prefix here is empty.
+#[test]
+fn the_verification_case_definitions_of_two_files_read_their_keywords_declaration_and_body() {
+    let def = |declaration: &str, opens: &str| {
+        (
+            Some("verification".to_owned()),
+            Some("def".to_owned()),
+            None,
+            false,
+            Some(declaration.to_owned()),
+            Some(opens.to_owned()),
+        )
+    };
+    assert_eq!(
+        verification_case_definitions_of(VERIFICATION_TEST),
+        [def("VerificationCase", "{"), def("VerificationPlan", "{")],
+        "lines 15 and 24, in source order, and neither usage"
+    );
+    assert_eq!(
+        verification_case_definitions_of(VERIFICATION_METADATA_EXAMPLE),
+        [def("MassTest", ";")],
+        "line 5, and not the usage on line 6"
+    );
+}
