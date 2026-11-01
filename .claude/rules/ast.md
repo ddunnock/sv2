@@ -177,6 +177,12 @@ token; `RequirementDefinition`, `ConcernDefinition`, `ViewDefinition`,
 sweep's shape asserts exactly the tail, and the reader reports what the view answers for
 it. A production whose recovery differs does not join.
 
+Nor does one whose kind is more than one keyword. `UseCaseDefinition` (`'use' 'case'
+'def'`) shares the family's tree and recovery, but `Production` names one kind keyword, so
+it writes its own tests rather than widening `Production` for one kind: its own sweep
+shape and slot facts (`assert_use_case_definition_accessor`), its own malformed tests,
+and a third malformed case only it has, `use def A;`, which begins no node at all.
+
 The positive case stays per kind: it reads a corpus file chosen for that kind, and the
 choice is the point. Mutation still runs per accessor, since the views are separate code;
 a shared assertion proven against one kind proves nothing about another kind's reader.

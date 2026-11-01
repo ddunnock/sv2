@@ -12,7 +12,8 @@ use sv2_ast::{
     AliasMember, AstNode, Definition, DefinitionPrefix, ElementFilterMember, Import,
     ImportDeclaration, LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember,
     NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package,
-    PackageMember, QualifiedName, RelationshipBody, RootNamespace, VisibilityIndicator,
+    PackageMember, QualifiedName, RelationshipBody, RootNamespace, UseCaseDefinition,
+    VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -2415,6 +2416,174 @@ fn assert_verification_case_definition_accessor(node: &SyntaxNode) {
     assert_simple_definition(node, &simple_definitions::VERIFICATION_CASE);
 }
 
+/// What `UseCaseDefinition` must satisfy at every node, whatever the tree.
+///
+/// Written out rather than through [`assert_simple_definition`], whose `Production` names
+/// one kind keyword: `UseCaseDefinition = OccurrenceDefinitionPrefix 'use' 'case' 'def'
+/// DefinitionDeclaration CaseBody` (`SysML` 8.2.2.25) is the one definition in the family
+/// whose kind is two. The prefix is typed (`OccurrenceDefinitionPrefix`); the declaration
+/// and the body are raw; the three keywords are the node's own tokens.
+fn assert_use_case_definition_accessor(node: &SyntaxNode) {
+    let view = UseCaseDefinition::cast(node.clone());
+    assert_eq!(
+        view.is_some(),
+        node.kind() == SyntaxKind::UseCaseDefinition,
+        "UseCaseDefinition::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(view) = view else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        view.syntax(),
+        node,
+        "UseCaseDefinition::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) the shape, and (c) the differential against it.
+    let shape = use_case_definition_shape(node);
+    assert_eq!(
+        (
+            view.prefix().map(|prefix| prefix.syntax().clone()),
+            view.use_keyword(),
+            view.case_keyword(),
+            view.def_keyword(),
+            view.declaration(),
+            view.body(),
+        ),
+        (
+            Some(shape.0),
+            Some(shape.1),
+            Some(shape.2),
+            Some(shape.3),
+            Some(shape.4),
+            Some(shape.5),
+        ),
+        "a UseCaseDefinition accessor disagrees with the node's own elements, at {:?}",
+        node.text_range()
+    );
+}
+
+/// A use case definition's six elements, asserted to be exactly the production's, one of
+/// each and in order: the prefix, `use`, `case`, `def`, the declaration and the body.
+///
+/// Asserting exactly one of each is what makes the views' `child` and `token` taking the
+/// last match rather than the first an equivalent mutation.
+#[expect(
+    clippy::panic,
+    reason = "test support only: a shape the production does not admit is the sweep failing"
+)]
+fn use_case_definition_shape(
+    node: &SyntaxNode,
+) -> (
+    SyntaxNode,
+    SyntaxToken,
+    SyntaxToken,
+    SyntaxToken,
+    SyntaxNode,
+    SyntaxNode,
+) {
+    let elements: Vec<SyntaxElement> = node
+        .children_with_tokens()
+        .filter(|element| {
+            element
+                .as_token()
+                .is_none_or(|token| !token.text().trim().is_empty())
+        })
+        .collect();
+    let [
+        SyntaxElement::Node(prefix),
+        SyntaxElement::Token(use_keyword),
+        SyntaxElement::Token(case_keyword),
+        SyntaxElement::Token(def_keyword),
+        SyntaxElement::Node(declaration),
+        SyntaxElement::Node(body),
+    ] = elements.as_slice()
+    else {
+        panic!(
+            "a UseCaseDefinition is not `OccurrenceDefinitionPrefix 'use' 'case' 'def' \
+             DefinitionDeclaration CaseBody`, at {:?}: {elements:?}",
+            node.text_range()
+        );
+    };
+    assert_eq!(
+        [
+            prefix.kind(),
+            use_keyword.kind(),
+            case_keyword.kind(),
+            def_keyword.kind(),
+            declaration.kind(),
+            body.kind(),
+        ],
+        [
+            SyntaxKind::OccurrenceDefinitionPrefix,
+            SyntaxKind::KwUse,
+            SyntaxKind::KwCase,
+            SyntaxKind::KwDef,
+            SyntaxKind::DefinitionDeclaration,
+            SyntaxKind::CaseBody,
+        ],
+        "a UseCaseDefinition's elements are not the production's, at {:?}",
+        node.text_range()
+    );
+    assert_use_case_definition_slots(node, prefix, declaration);
+    (
+        prefix.clone(),
+        use_keyword.clone(),
+        case_keyword.clone(),
+        def_keyword.clone(),
+        declaration.clone(),
+        body.clone(),
+    )
+}
+
+/// The two grammar facts the use case views' equivalent mutations rest on, scanning only
+/// the prefix and the declaration, never the body.
+fn assert_use_case_definition_slots(
+    node: &SyntaxNode,
+    prefix: &SyntaxNode,
+    declaration: &SyntaxNode,
+) {
+    // The prefix holds no keyword of the node's and neither the declaration nor the body:
+    // it is `abstract` or `variation`, `individual`, and `#` keywords naming metadata
+    // (`OccurrenceDefinitionPrefix`, `SysML` 8.2.2.9.1). Asserted because it is what makes
+    // `prefix()`, the keyword accessors and `child` reading descendants equivalent
+    // mutations: the prefix is the only element before them in preorder, and the body,
+    // which may nest another use case definition, comes after them.
+    let own = [
+        SyntaxKind::KwUse,
+        SyntaxKind::KwCase,
+        SyntaxKind::KwDef,
+        SyntaxKind::OccurrenceDefinitionPrefix,
+        SyntaxKind::DefinitionDeclaration,
+        SyntaxKind::CaseBody,
+    ];
+    assert!(
+        prefix
+            .descendants_with_tokens()
+            .skip(1)
+            .all(|below| !own.contains(&below.kind())),
+        "a `use`, `case`, `def`, prefix, declaration or body inside a UseCaseDefinition's \
+         prefix, at {:?}",
+        node.text_range()
+    );
+
+    // The declaration holds no body: it is an identification and a subclassification part
+    // (`DefinitionDeclaration`, `SysML` 8.2.2.6.1). Asserted because it is what makes
+    // `body()` reading descendants an equivalent mutation.
+    assert!(
+        declaration
+            .descendants()
+            .all(|below| below.kind() != SyntaxKind::CaseBody),
+        "a CaseBody inside a UseCaseDefinition's declaration, at {:?}",
+        node.text_range()
+    );
+}
+
 /// What a view of one of `simple_definition`'s productions must satisfy at every node.
 /// Both node children are typed (the prefix's view, `Definition`); the keywords are the
 /// node's own tokens.
@@ -2762,6 +2931,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_action_definition_accessor(&node);
             assert_analysis_case_definition_accessor(&node);
             assert_verification_case_definition_accessor(&node);
+            assert_use_case_definition_accessor(&node);
             visited += 1;
         }
     }
