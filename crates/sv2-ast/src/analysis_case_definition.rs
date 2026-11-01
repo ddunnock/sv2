@@ -18,8 +18,7 @@ use crate::occurrence_definition_prefix::OccurrenceDefinitionPrefix;
 /// `SysML` 8.2.2.23. Built by `case_definition` (`crates/sv2-syntax/src/parser/case.rs`)
 /// from its row of `CASES`, on [`CalculationDefinition`](crate::CalculationDefinition)'s
 /// spine: it takes the declaration and the body directly, so there is **no `Definition`
-/// node** here, and the two are this view's own children. 14 in the corpus, all under
-/// `PackageMember`, one of them prefixed (`individual`).
+/// node** here, and the two are this view's own children.
 ///
 /// **Both keywords are always there.** `at_case_definition` begins an analysis case
 /// definition only on `analysis` followed by `def`, so `analysis A def B;` is an

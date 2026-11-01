@@ -16,18 +16,19 @@ use crate::ast_node::AstNode;
 ///                                                           (KerML 8.2.3.1)
 /// ```
 ///
-/// **The most shared child in the crate so far**, by a wide margin: across this
-/// repository's 610 trees there are 857 of these nodes under **fourteen** different
-/// parent productions — `Import` 744, `AliasMember` 29, `Dependency` 22,
-/// `InitialNodeMember` 20, `Expose` 10, `Redefinition` 5, `Subclassification` 5,
-/// `FeatureInverting` 4, `Specialization` 4, `Subsetting` 4, `Conjugation` 3,
-/// `FeatureTyping` 3, `Disjoining` 2 and `TypeFeaturing` 2. Two of those parents already
+/// **The most shared child in the crate so far**, by a wide margin: across the
+/// repository's trees it sits under **fourteen** different parent productions (pinned by
+/// `tests/corpus_counts.rs`) — `Import`, `AliasMember`, `Dependency`, `InitialNodeMember`,
+/// `Expose`, `Redefinition`, `Subclassification`, `FeatureInverting`, `Specialization`,
+/// `Subsetting`, `Conjugation`, `FeatureTyping`, `Disjoining` and `TypeFeaturing`, `Import`
+/// by far the most. Two of those parents already
 /// shipped an accessor returning this kind raw, which is why it goes before the kinds
 /// listed above it on the worklist (`.claude/rules/ast.md`: a shared child is worth
 /// taking out of order).
 ///
-/// **Three reachable shapes, where the production states two.** 827 of the 857 are a bare
-/// `;`, 16 are braced, and 14 are **zero width** — a relationship unterminated at end of
+/// **Three reachable shapes, where the production states two.** Across the repository's
+/// trees 827 are a bare `;`, 16 are braced, and 14 are **zero width** (pinned by
+/// `tests/corpus_counts.rs`) — a relationship unterminated at end of
 /// input, where `sysml_relationship_body` (or `kerml_relationship_body`) opens the node
 /// and finds neither alternative
 /// (`crates/sv2-syntax/src/parser/annotation.rs`). The third shape is not in the grammar
@@ -105,8 +106,10 @@ impl RelationshipBody {
     ///
     /// Two mutations are worth recording, because they came out differently. Accepting
     /// whatever token came last, rather than only a closer, survived the whole suite at
-    /// first: with no unclosed body in any of the 610 trees, "the last token" and "the
-    /// last token if it closes" agree everywhere, so nothing distinguished it. That was a
+    /// first: with no non-empty unclosed body in any of the repository's trees (pinned by
+    /// `tests/corpus_counts.rs`; a zero-width body has no last token, so both answer
+    /// `None` on it), "the last token" and "the last token if it closes" agree everywhere,
+    /// so nothing distinguished it. That was a
     /// gap rather than an equivalence, and
     /// `tests/malformed/relationship-body/unclosed-braces.sysml` was written to close it —
     /// it now fails that mutation. Searching for a closer **anywhere** in the node instead

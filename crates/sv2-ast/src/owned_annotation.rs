@@ -14,11 +14,9 @@ use crate::ast_node::AstNode;
 /// ```
 ///
 /// `SysML` 8.2.2.4.1 and `KerML` 8.2.3.3.1. Its parent is always a `RelationshipBody`
-/// (`SysML` 8.2.2.2, `KerML` 8.2.3.1). The corpus writes only 8, all `SysML`: 5 under an
-/// `Import`, 3 under an `AliasMember`, each owning a `Comment` (3) or a `Documentation`
-/// (5). A comment or documentation owned as a *member* is not one of these. That is
-/// the far more common case, and those elements sit in a namespace body with no
-/// `OwnedAnnotation` around them.
+/// (`SysML` 8.2.2.2, `KerML` 8.2.3.1). A comment or documentation owned as a *member* is
+/// not one of these. That is the far more common case, and those elements sit in a
+/// namespace body with no `OwnedAnnotation` around them.
 ///
 /// The node holds the element and no token of its own.
 // node: OwnedAnnotation

@@ -17,16 +17,15 @@ use crate::ast_node::AstNode;
 /// ```
 ///
 /// `SysML` 8.2.2.9.1. It is shared by every occurrence definition and their
-/// specializations. In the corpus that is 1,020 prefixes under 19 parent kinds,
-/// `PartDefinition` (544), `ActionDefinition` (121) and `ItemDefinition` (93) the most.
-/// `AttributeDefinition` and the other non-occurrence definitions take a
+/// specializations. `AttributeDefinition` and the other non-occurrence definitions take a
 /// `DefinitionPrefix` instead, and `individual def X` is an `IndividualDefinition`
 /// (8.2.2.9.1), whose `individual` has no prefix around it.
 ///
 /// **Almost always empty.** The node is built even when every slot is
-/// (`occurrence_definition_prefix`, `crates/sv2-syntax/src/parser/definition.rs`), and 970
-/// of the 1,020 are. An empty prefix is the ordinary shape, not a defect: it is zero width,
-/// and every accessor below answers absence.
+/// (`occurrence_definition_prefix`, `crates/sv2-syntax/src/parser/definition.rs`), and in
+/// the corpus 970 of the 1,020 are (pinned by `tests/corpus_counts.rs`). An empty prefix
+/// is the ordinary shape, not a defect: it is zero width, and every accessor below answers
+/// absence.
 ///
 /// Its slot children all have kinds of their own and none has a view yet, so they are
 /// returned raw until they do. `individual` is this node's own token.

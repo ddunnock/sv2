@@ -26,8 +26,8 @@ use crate::ast_node::AstNode;
 /// node kinds of their own and no view yet, so all three are returned raw, to be upgraded
 /// in the change that ships each view (`.claude/rules/ast.md`, the delegation ripple).
 ///
-/// Every one of the 10 library packages across the repository's 610 trees holds exactly
-/// one declaration and one body, which `tests/sweep.rs` asserts as equality, together with
+/// Every library package in the repository's trees holds exactly one declaration and one
+/// body, which `tests/sweep.rs` asserts as equality, together with
 /// the order the production writes them in.
 // node: LibraryPackage
 pub struct LibraryPackage(SyntaxNode);

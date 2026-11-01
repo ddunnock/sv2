@@ -20,8 +20,7 @@ use crate::occurrence_definition_prefix::OccurrenceDefinitionPrefix;
 /// the declaration and the body directly, so there is **no `Definition` node** here, and
 /// the two are this view's own children. The body is a `RequirementBody`, whose items are
 /// a superset of a definition body's (subjects, actors, stakeholders, constraints, framed
-/// concerns, verifications). 38 in the corpus, under `PackageMember` (37) and
-/// `DefinitionMember` (1).
+/// concerns, verifications).
 ///
 /// **Both keywords are always there.** `at_requirement_definition` begins a requirement
 /// definition only on `requirement` followed by `def`, so `requirement A def B;` is a

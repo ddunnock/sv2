@@ -28,8 +28,8 @@ use crate::visibility_indicator::VisibilityIndicator;
 ///
 /// Nothing can make this production's own shape wrong: every part of it is optional, so
 /// every `MemberPrefix` in any tree holds either nothing or one `VisibilityIndicator`.
-/// `tests/sweep.rs` asserts exactly that over all 610 trees. What *can* go wrong is
-/// attribution — see [`visibility`](Self::visibility).
+/// `tests/sweep.rs` asserts exactly that over every tree in the repository. What *can* go
+/// wrong is attribution — see [`visibility`](Self::visibility).
 // node: MemberPrefix
 pub struct MemberPrefix(SyntaxNode);
 
@@ -67,15 +67,14 @@ impl MemberPrefix {
     /// Written as "the child of that kind" although `children().next()` would return the
     /// same node on every tree that exists, and so would a search over `descendants()`.
     /// Both were tried as mutations and neither can be observed, because `tests/sweep.rs`
-    /// asserts over all 610 trees that a prefix's children are **nothing but** zero or
-    /// one `VisibilityIndicator` — so there is no other child for `next()` to reach and
-    /// nothing nested for `descendants()` to find. That is equivalence under a verified
-    /// invariant rather than an untested guess, and it is stated here so the next edit
-    /// knows which assertion is holding it up: weaken that one and these stop being the
-    /// same function.
-    /// Returns the typed [`VisibilityIndicator`] rather than the raw node, under the
-    /// delegation rule in `.claude/rules/ast.md`: which of the three keywords was written
-    /// is that node's own question
+    /// asserts over every tree in the repository that a prefix's children are **nothing
+    /// but** zero or one `VisibilityIndicator` — so there is no other child for `next()` to
+    /// reach and nothing nested for `descendants()` to find. That is equivalence under a
+    /// verified invariant rather than an untested guess, and it is stated here so the next
+    /// edit knows which assertion is holding it up: weaken that one and these stop being
+    /// the same function. Returns the typed [`VisibilityIndicator`] rather than the raw
+    /// node, under the delegation rule in `.claude/rules/ast.md`: which of the three
+    /// keywords was written is that node's own question
     /// (`prefix.visibility().and_then(|visibility| visibility.keyword())`). It returned a
     /// raw `SyntaxNode` until that kind had a view to delegate to.
     pub fn visibility(&self) -> Option<VisibilityIndicator> {

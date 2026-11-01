@@ -20,7 +20,7 @@ use crate::occurrence_definition_prefix::OccurrenceDefinitionPrefix;
 /// spine: it takes the declaration and the body directly, so there is **no `Definition`
 /// node** here, and the two are this view's own children. It is the one definition in the
 /// family whose kind is two keywords, so it has three keyword accessors where its siblings
-/// have two. 11 in the corpus, all under `PackageMember`, none of them prefixed.
+/// have two.
 ///
 /// **All three keywords are always there.** `at_case_definition` begins a use case
 /// definition only on `use`, `case` and `def` in that order. `use case A def B;` is a

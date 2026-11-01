@@ -17,16 +17,15 @@ use crate::qualified_name::QualifiedName;
 /// ```
 ///
 /// `KerML` 8.2.3.4.2 and `SysML` 8.2.2.5.1, one shared unit. Its parent is an
-/// `ImportDeclaration` (475 across the corpus), or in `SysML` a `NamespaceExpose` (6),
-/// which wraps the same alternative without a declaration (8.2.2.26.2).
+/// `ImportDeclaration`, or in `SysML` a `NamespaceExpose`, which wraps the same alternative
+/// without a declaration (8.2.2.26.2).
 ///
 /// **The two alternatives hold different children.** The first holds a `QualifiedName`
-/// and its own `::`, `*` and optional `::` `**` (470 in the corpus, 2 recursive). The
-/// second holds one `FilterPackage` and no token of its own (11). This parser opens it
-/// around an import it has already read (`filter_package`,
-/// `crates/sv2-syntax/src/parser/import.rs`), so the filtered import's name and `**` lie
-/// inside the filter package and are not this node's. Every filter in the corpus wraps a
-/// recursive *membership* import, `vehicle::**[@Safety]`.
+/// and its own `::`, `*` and optional `::` `**`. The second holds one `FilterPackage` and
+/// no token of its own. This parser opens it around an import it has already read
+/// (`filter_package`, `crates/sv2-syntax/src/parser/import.rs`), so the filtered import's
+/// name and `**` lie inside the filter package and are not this node's. Every filter in the
+/// corpus wraps a recursive *membership* import, `vehicle::**[@Safety]`.
 ///
 /// The name is a child with a view of its own, so it is returned typed. The filter
 /// package has a kind of its own and no view yet, so it is returned raw until it has one.

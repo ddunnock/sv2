@@ -18,13 +18,13 @@ use crate::ast_node::AstNode;
 ///
 /// `KerML` 8.2.3.4.2 and `SysML` 8.2.2.5.1.
 ///
-/// **A pure wrapper, and measurably so**: across this repository's 610 trees there are
-/// 756 of these nodes, and every one holds exactly one child node and **no token of its
-/// own**. The separators, the `*` and the `**` all belong to the alternative inside, so
-/// nothing here goes looking for them — doing so would be reaching across a production
-/// boundary, and it would not find them anyway. `tests/sweep.rs` asserts both halves.
+/// **A pure wrapper, and measurably so**: in every tree in the repository each of these
+/// nodes holds exactly one child node and **no token of its own**. The separators, the `*`
+/// and the `**` all belong to the alternative inside, so nothing here goes looking for them
+/// — doing so would be reaching across a production boundary, and it would not find them
+/// anyway. `tests/sweep.rs` asserts both halves.
 ///
-/// Its parents are `Import` (744), `FilterPackageImport` (11) and `FilterPackage` (1):
+/// Its parents are `Import`, `FilterPackageImport` and `FilterPackage`:
 /// `SysML`'s `MembershipExpose` and `NamespaceExpose` wrap the same reader (8.2.2.26.2),
 /// which is why `imported` in the parser is shared rather than inlined.
 // node: ImportDeclaration

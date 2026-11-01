@@ -27,10 +27,11 @@ use crate::ast_node::AstNode;
 /// (`.claude/rules/ast.md`). So this view hands back the keyword token, whose `kind()`
 /// already distinguishes the three without anyone comparing a string.
 ///
-/// A shared child, like `MemberPrefix`: across this repository's 610 trees there are 821
-/// indicators, 744 of them under `Import` and 77 under `MemberPrefix`. `Import` states
-/// its visibility where `MemberPrefix` leaves it optional, which is why the counts are so
-/// uneven and why the corpus exercises this production mostly through imports.
+/// A shared child, like `MemberPrefix`: across the repository's trees 744 indicators sit
+/// under `Import` and 77 under `MemberPrefix`, and none anywhere else (pinned by
+/// `tests/corpus_counts.rs`). `Import` states its visibility where `MemberPrefix` leaves it
+/// optional, which is why the counts are so uneven and why the corpus exercises this
+/// production mostly through imports.
 // node: VisibilityIndicator
 pub struct VisibilityIndicator(SyntaxNode);
 
@@ -76,8 +77,8 @@ impl VisibilityIndicator {
     /// which is `at_visibility() && nth_is_keyword(1, "import")`. Every path in
     /// therefore already has a visibility keyword at the cursor, which is also why a
     /// bare `import A::*;` comes back as "unexpected `import`": it never reaches
-    /// `import()` at all. Measured: all 821 indicators in the repository
-    /// hold exactly one keyword, and the rejection corpus produces no empty one either.
+    /// `import()` at all. Measured: no indicator in any of the repository's trees is empty,
+    /// the rejection files included (pinned by `tests/corpus_counts.rs`).
     /// The arm exists so that a future caller cannot silently lose a token, and this
     /// signature exists so that such a caller would not get a wrong answer instead of
     /// none. `tests/sweep.rs` ties the two readings together — an indicator is non-empty
@@ -88,7 +89,7 @@ impl VisibilityIndicator {
     /// production rather than a gap in the tests.** Of seven tried, three were caught —
     /// reporting only `public`, reporting nothing, and the delegation returning nothing —
     /// and the other four cannot be observed, each under an invariant `tests/sweep.rs`
-    /// asserts over all 610 trees:
+    /// asserts over every tree in the repository:
     ///
     /// - taking the first token of **any** kind: the node's only token is the keyword,
     ///   because `visibility_indicator` eats trivia before it opens the node and bumps
