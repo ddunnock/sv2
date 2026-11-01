@@ -1,9 +1,9 @@
-// Clause: SysML 8.2.2.17.1 --
+// Clause: SysML 8.2.2.17.1 and 8.2.2.17.2 --
 //
 //   ActionDefinition = OccurrenceDefinitionPrefix 'action' 'def'
-//                      DefinitionDeclaration ActionBody
+//                      DefinitionDeclaration ActionBody             (8.2.2.17.1)
 //   ActionUsage      = OccurrenceUsagePrefix 'action'
-//                      ActionUsageDeclaration ActionBody
+//                      ActionUsageDeclaration ActionBody            (8.2.2.17.2)
 //
 // Both open with `action`; only the definition writes `def` after it. This file writes the
 // `def` after the name, where neither production has it: `action A def B;`, then `action def

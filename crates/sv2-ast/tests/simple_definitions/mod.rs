@@ -37,8 +37,8 @@ use sv2_ast::{
     ActionDefinition, AllocationDefinition, AnalysisCaseDefinition, AstNode, AttributeDefinition,
     CalculationDefinition, ConcernDefinition, ConnectionDefinition, ConstraintDefinition,
     Definition, FlowDefinition, ItemDefinition, OccurrenceDefinition, PartDefinition,
-    PortDefinition, RenderingDefinition, RequirementDefinition, VerificationCaseDefinition,
-    ViewDefinition, ViewpointDefinition,
+    PortDefinition, RenderingDefinition, RequirementDefinition, StateDefinition,
+    VerificationCaseDefinition, ViewDefinition, ViewpointDefinition,
 };
 use sv2_syntax::{SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -352,6 +352,19 @@ pub(crate) const VERIFICATION_CASE: Production = Production {
     read: read_verification_case,
 };
 
+/// `StateDefinition = OccurrenceDefinitionPrefix 'state' 'def' DefinitionDeclaration
+/// StateDefBody` (`SysML` 8.2.2.18.1), built by `state_definition` with no `Definition`
+/// node.
+pub(crate) const STATE: Production = Production {
+    node: SyntaxKind::StateDefinition,
+    prefix: SyntaxKind::OccurrenceDefinitionPrefix,
+    keyword: SyntaxKind::KwState,
+    keyword_text: "state",
+    usage: SyntaxKind::StateUsage,
+    tail: &[SyntaxKind::DefinitionDeclaration, SyntaxKind::StateDefBody],
+    read: read_state,
+};
+
 fn read_attribute(node: &SyntaxNode) -> Option<Read> {
     AttributeDefinition::cast(node.clone()).map(|view| {
         Read::with_definition(
@@ -561,6 +574,18 @@ fn read_verification_case(node: &SyntaxNode) -> Option<Read> {
         syntax: view.syntax().clone(),
         prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
         keyword: view.verification_keyword(),
+        def_keyword: view.def_keyword(),
+        tail: vec![view.declaration(), view.body()],
+        declaration: view.declaration(),
+        body: view.body(),
+    })
+}
+
+fn read_state(node: &SyntaxNode) -> Option<Read> {
+    StateDefinition::cast(node.clone()).map(|view| Read {
+        syntax: view.syntax().clone(),
+        prefix: view.prefix().map(|prefix| prefix.syntax().clone()),
+        keyword: view.state_keyword(),
         def_keyword: view.def_keyword(),
         tail: vec![view.declaration(), view.body()],
         declaration: view.declaration(),
