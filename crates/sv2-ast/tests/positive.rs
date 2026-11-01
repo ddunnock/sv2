@@ -3419,3 +3419,117 @@ fn the_use_case_definitions_of_two_files_read_their_three_keywords_declaration_a
         "lines 8, 23 and 29, in source order"
     );
 }
+
+/// An enumeration definition's extension keywords, its two keywords, what its declaration
+/// declares, and the first token of its body.
+type EnumerationDefinitionRead = (
+    Vec<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+);
+
+const ENUMERATION_TEST: &str =
+    "vendor/corpus/sysml/src/examples/Simple Tests/EnumerationTest.sysml";
+
+const METADATA_TEST_FILE: &str = "vendor/corpus/sysml/src/examples/Simple Tests/MetadataTest.sysml";
+
+/// Every `EnumerationDefinition` beneath `root`, read.
+fn enumeration_definitions_in(root: &SyntaxNode) -> Vec<EnumerationDefinitionRead> {
+    let token = |token: Option<SyntaxToken>| token.map(|token| token.text().to_owned());
+    root.descendants()
+        .filter_map(sv2_ast::EnumerationDefinition::cast)
+        .map(|enumeration| {
+            (
+                enumeration
+                    .extension_keywords()
+                    .map(|keyword| keyword.text().to_string())
+                    .collect(),
+                token(enumeration.enum_keyword()),
+                token(enumeration.def_keyword()),
+                enumeration
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string()),
+                enumeration.body().as_ref().and_then(opening),
+            )
+        })
+        .collect()
+}
+
+/// An `enum def` read as [`enumeration_definitions_in`] reads it.
+fn enumeration(keywords: &[&str], declaration: &str, opens: &str) -> EnumerationDefinitionRead {
+    (
+        keywords.iter().map(|&keyword| keyword.to_owned()).collect(),
+        Some("enum".to_owned()),
+        Some("def".to_owned()),
+        Some(declaration.to_owned()),
+        Some(opens.to_owned()),
+    )
+}
+
+/// `EnumerationTest.sysml` and `MetadataTest.sysml`, read for their enumeration
+/// definitions:
+///
+/// ```text
+///   EnumerationTest
+///     line  7:  enum def ColorKind :> Color { ... }
+///     lines 15, 18, 21:  enum red { ... }, ...      enumeration usages in its body
+///     lines 26, 27:  enum color : ColorKind; ...    enumeration usages
+///     line 30:  enum def E1 { a; b; c; ... }
+///     line 38:  enum def E2;
+///     line 47:  enum def SizeChoice :> Size { ... }
+///     line 52:  enum size: SizeChoice = 60.0;       an enumeration usage
+///   MetadataTest
+///     line  6:  #Security enum def ClassificationLevel :> ScalarValues::Natural { ... }
+///     line  9:    #Security enum secret : ClassificationLevel = 2;   a usage in its body
+/// ```
+///
+/// `EnumerationDefinition = DefinitionExtensionKeyword* 'enum' 'def' DefinitionDeclaration
+/// EnumerationBody` (`SysML` 8.2.2.8): no prefix node, and a body that is `;` or braced.
+/// The first file writes four definitions among six `enum` usages that write no `def`
+/// (`EnumerationUsage`, 8.2.2.8), one closed by `;`. The second is the one corpus file that
+/// writes an extension keyword on an enumeration definition (`grep -rnE '#\S+\s+enum\s+def'`
+/// over the pinned corpus finds only line 6), and writes the same `#Security` on a usage in
+/// its body, which is not the definition's.
+#[test]
+fn the_enumeration_definitions_of_two_files_read_their_keywords_declaration_and_body() {
+    assert_eq!(
+        enumeration_definitions_in(&tree_of(ENUMERATION_TEST)),
+        [
+            enumeration(&[], "ColorKind :> Color", "{"),
+            enumeration(&[], "E1", "{"),
+            enumeration(&[], "E2", ";"),
+            enumeration(&[], "SizeChoice :> Size", "{"),
+        ],
+        "lines 7, 30, 38 and 47, in source order, and none of the six usages"
+    );
+    assert_eq!(
+        enumeration_definitions_in(&tree_of(METADATA_TEST_FILE)),
+        [enumeration(
+            &["#Security"],
+            "ClassificationLevel :> ScalarValues::Natural",
+            "{"
+        )],
+        "line 6 with its one extension keyword, and not the `#Security` usage on line 9"
+    );
+}
+
+/// Two extension keywords, which no corpus file writes on an enumeration definition (the
+/// grep above finds one keyword at most), so the corpus cannot tell `extension_keywords()`
+/// from one that stops at the first or reverses them.
+///
+/// `DefinitionExtensionKeyword*` (`SysML` 8.2.2.8): any number, in the order written, each
+/// `'#' MetadataReference` (`DefinitionExtensionKeyword`, 8.2.2.6.1). The text is
+/// hand-written for exactly that distinction; the expectation is the clause's.
+#[test]
+fn an_enumeration_definition_reads_two_extension_keywords_in_the_order_written() {
+    let root = trees::tree(
+        "package P {\n\t#M #N enum def A;\n}\n",
+        sv2_syntax::Language::SysMl,
+    );
+    assert_eq!(
+        enumeration_definitions_in(&root),
+        [enumeration(&["#M", "#N"], "A", ";")]
+    );
+}

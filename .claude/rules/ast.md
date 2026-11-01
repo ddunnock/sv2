@@ -182,6 +182,9 @@ Nor does one whose kind is more than one keyword. `UseCaseDefinition` (`'use' 'c
 it writes its own tests rather than widening `Production` for one kind: its own sweep
 shape and slot facts (`assert_use_case_definition_accessor`), its own malformed tests,
 and a third malformed case only it has, `use def A;`, which begins no node at all.
+`EnumerationDefinition` is outside the family for a different reason: it has no prefix
+node, its `DefinitionExtensionKeyword*` being its own children, so its sweep shape has a
+variable-length head and its tests are its own too.
 
 The positive case stays per kind: it reads a corpus file chosen for that kind, and the
 choice is the point. Mutation still runs per accessor, since the views are separate code;

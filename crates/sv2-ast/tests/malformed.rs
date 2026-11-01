@@ -7,9 +7,10 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, AttributeDefinition, Definition, DefinitionPrefix, ElementFilterMember,
-    Import, LibraryPackage, MemberPrefix, MembershipImport, NamespaceFeatureMember,
-    NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package,
-    PackageMember, QualifiedName, RelationshipBody, RootNamespace, UseCaseDefinition,
+    EnumerationDefinition, Import, LibraryPackage, MemberPrefix, MembershipImport,
+    NamespaceFeatureMember, NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix,
+    OwnedAnnotation, Package, PackageMember, QualifiedName, RelationshipBody, RootNamespace,
+    UseCaseDefinition,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -3207,5 +3208,190 @@ fn a_use_with_no_case_after_it_begins_nothing() {
             .collect::<Vec<_>>(),
         [SyntaxKind::Package, SyntaxKind::UseCaseDefinition],
         "the package, then B, and nothing for the `use` with no `case`"
+    );
+}
+
+/// What a malformed enumeration case compares of each `EnumerationDefinition`: its
+/// extension keywords as text, its two keywords as written, and its declaration and body
+/// as text, empty where absent.
+type EnumerationSummary = (Vec<String>, Option<String>, Option<String>, String, String);
+
+/// Every `EnumerationDefinition` in `root`, read through its view.
+///
+/// Written out rather than through `simple_definitions`: an enumeration definition has no
+/// prefix node, its extension keywords being its own children (`SysML` 8.2.2.8).
+fn enumeration_definitions(root: &SyntaxNode) -> Vec<EnumerationSummary> {
+    let text = |node: Option<SyntaxNode>| node.map(|node| node.text().to_string());
+    let token = |token: Option<sv2_syntax::SyntaxToken>| token.map(|t| t.text().to_owned());
+    root.descendants()
+        .filter_map(EnumerationDefinition::cast)
+        .map(|enumeration| {
+            (
+                enumeration
+                    .extension_keywords()
+                    .map(|keyword| keyword.text().to_string())
+                    .collect(),
+                token(enumeration.enum_keyword()),
+                token(enumeration.def_keyword()),
+                text(enumeration.declaration()).unwrap_or_default(),
+                text(enumeration.body()).unwrap_or_default(),
+            )
+        })
+        .collect()
+}
+
+/// A whole `enum def <name>` with no extension keyword and `body`, as
+/// [`enumeration_definitions`] reads it.
+fn whole_enumeration(name: &str, body: &str) -> EnumerationSummary {
+    (
+        Vec::new(),
+        Some("enum".to_owned()),
+        Some("def".to_owned()),
+        name.to_owned(),
+        body.to_owned(),
+    )
+}
+
+/// `enumeration-definition/def-written-twice.sysml`: `enum def def A;`, then `enum def
+/// B;`. The header states what it pins and where the outcome comes from.
+#[test]
+fn an_enumeration_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    let source = include_str!("malformed/enumeration-definition/def-written-twice.sysml");
+    let parse = trees::parsed(source, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1 and 3. two definitions: the first's declaration and body span nothing; B is whole.
+    assert_eq!(
+        enumeration_definitions(&root),
+        [whole_enumeration("", ""), whole_enumeration("B", ";")],
+        "the first declares nothing and has no body; B is whole"
+    );
+
+    // 2a. the first owns exactly one `def`, the first one written, and nothing after it.
+    let written = source
+        .find("\tenum def def")
+        .expect("the fixture writes `enum def def`, tab-indented, below its header");
+    let first_def = written + "\tenum ".len();
+    let first = root
+        .descendants()
+        .find_map(EnumerationDefinition::cast)
+        .expect("two, so a first");
+    assert_eq!(
+        first
+            .def_keyword()
+            .map(|token| usize::from(token.text_range().start())),
+        Some(first_def),
+        "def_keyword() is the `def` written straight after `enum`"
+    );
+    assert_eq!(
+        first.syntax().text().to_string(),
+        "enum def ",
+        "the first holds its keywords and the space before its empty declaration"
+    );
+
+    // 2b. the second `def` is the Error's, and that was reported, once.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    assert_eq!(
+        (stray.text(), usize::from(stray.text_range().start())),
+        ("def", first_def + "def ".len()),
+        "the Error opens with the second `def`"
+    );
+    assert_eq!(
+        error_ranges(&parse),
+        [stray.text_range()],
+        "one diagnostic, on the second `def`: {:?}",
+        parse.errors()
+    );
+}
+
+/// `enumeration-definition/def-missing.sysml`: `enum A def B;`, then `enum def C;`. The
+/// header states what it pins and where the outcome comes from.
+#[test]
+fn an_enum_with_no_def_after_it_begins_no_enumeration_definition() {
+    let source = include_str!("malformed/enumeration-definition/def-missing.sysml");
+    let parse = trees::parsed(source, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1 and 2a. one definition, and it is C's.
+    assert_eq!(
+        enumeration_definitions(&root),
+        [whole_enumeration("C", ";")],
+        "only C writes `enum def`, so only C is an EnumerationDefinition"
+    );
+
+    // 2b. reported, once, on the `def` A's keyword was not followed by.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    let written = source
+        .find("\tenum A def")
+        .expect("the fixture writes `enum A def`, tab-indented, below its header");
+    assert_eq!(
+        (stray.text(), usize::from(stray.text_range().start())),
+        ("def", written + "\tenum A ".len()),
+        "the Error opens with the misplaced `def`"
+    );
+    assert_eq!(
+        error_ranges(&parse),
+        [stray.text_range()],
+        "one diagnostic, on the misplaced `def`: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour: the first member holds the usage, not a half-built definition.
+    assert_eq!(
+        members(&root)
+            .iter()
+            .filter_map(|member| member.element().map(|element| element.kind()))
+            .collect::<Vec<_>>(),
+        [
+            SyntaxKind::Package,
+            SyntaxKind::EnumerationUsage,
+            SyntaxKind::EnumerationDefinition
+        ],
+        "the package, then A as an enumeration usage, then C"
+    );
+}
+
+/// `enumeration-definition/definition-in-body.sysml`: `enum def E { enum def F; }`. The
+/// header states what it pins and where the outcome comes from.
+#[test]
+fn an_enumeration_definition_in_an_enumeration_body_is_an_error_not_a_definition() {
+    let source = include_str!("malformed/enumeration-definition/definition-in-body.sysml");
+    let parse = trees::parsed(source, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1, 2a and 3. one definition, E's, whole around the Error.
+    assert_eq!(
+        enumeration_definitions(&root),
+        [whole_enumeration("E", "{ enum def F; }")],
+        "only E is an EnumerationDefinition; F is not one"
+    );
+
+    // 2b. F's whole statement is an Error inside E's body, reported once over the Error.
+    let written = source
+        .find("\tenum def E { enum def F;")
+        .map(|line| line + "\tenum def E { ".len())
+        .expect("the fixture writes `enum def F;` inside E's body, on a tab-indented line");
+    let error = root
+        .descendants()
+        .find(|node| node.kind() == SyntaxKind::Error)
+        .expect("recover_statement builds an Error");
+    assert_eq!(
+        (
+            error.text().to_string(),
+            usize::from(error.text_range().start()),
+            error.parent().map(|parent| parent.kind())
+        ),
+        (
+            "enum def F;".to_owned(),
+            written,
+            Some(SyntaxKind::EnumerationBody)
+        ),
+        "the Error is F's whole statement, inside E's body"
+    );
+    assert_eq!(
+        error_ranges(&parse),
+        [error.text_range()],
+        "one diagnostic, over the skipped statement: {:?}",
+        parse.errors()
     );
 }
