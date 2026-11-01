@@ -3163,3 +3163,90 @@ fn the_action_definitions_of_two_files_read_their_keywords_prefix_declaration_an
         "line 23, and neither variant usage"
     );
 }
+
+const ANALYSIS_INDIVIDUAL_EXAMPLE: &str =
+    "vendor/corpus/sysml/src/examples/Individuals Examples/AnalysisIndividualExample.sysml";
+
+const ANALYSIS_TEST: &str = "vendor/corpus/sysml/src/examples/Simple Tests/AnalysisTest.sysml";
+
+/// Every `AnalysisCaseDefinition` in the corpus file at `relative`, read as
+/// [`action_definitions_of`] reads an action definition: both keywords, the prefix's basic
+/// keyword, whether it writes `individual`, the declaration, and the body's first token.
+fn analysis_case_definitions_of(relative: &str) -> Vec<ActionDefinitionRead> {
+    tree_of(relative)
+        .descendants()
+        .filter_map(sv2_ast::AnalysisCaseDefinition::cast)
+        .map(|analysis| {
+            let prefix = analysis.prefix();
+            (
+                analysis
+                    .analysis_keyword()
+                    .map(|token| token.text().to_owned()),
+                analysis.def_keyword().map(|token| token.text().to_owned()),
+                prefix
+                    .as_ref()
+                    .and_then(sv2_ast::OccurrenceDefinitionPrefix::basic_prefix)
+                    .map(|basic| basic.text().to_string()),
+                prefix
+                    .as_ref()
+                    .is_some_and(sv2_ast::OccurrenceDefinitionPrefix::is_individual),
+                analysis
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string()),
+                analysis.body().as_ref().and_then(opening),
+            )
+        })
+        .collect()
+}
+
+/// `AnalysisIndividualExample.sysml` and `AnalysisTest.sysml`, read for their analysis
+/// case definitions:
+///
+/// ```text
+///   AnalysisIndividualExample
+///     line 56:  analysis def FuelEconomyAnalysis { ... }                        no prefix
+///     line 76:  individual analysis def FuelEconomyAnalysis_1 :> FuelEconomyAnalysis;
+///     line 79:  individual analysis fuelEconomyAnalysis_1 : ... { ... }          a usage
+///   AnalysisTest
+///     line 13:  analysis def AnalysisCase { ... }                               no prefix
+///     line 23:  analysis def AnalysisPlan { ... }                               no prefix
+///     lines 30, 34:  analysis <name> : ... { ... }                              usages
+/// ```
+///
+/// `AnalysisCaseDefinition = OccurrenceDefinitionPrefix 'analysis' 'def'
+/// DefinitionDeclaration CaseBody` (`SysML` 8.2.2.23): no `Definition` node, and a
+/// `CaseBody` that is `;` or a braced body. Each file writes the definitions beside usages
+/// of the same keyword that write no `def` (`AnalysisCaseUsage`, 8.2.2.23). The first is
+/// chosen because line 76 is the corpus's one prefixed analysis case definition (`grep
+/// -rnE '\b(abstract|variation|individual)\s+analysis\s+def\b|#\S+\s+analysis\s+def'
+/// vendor/corpus` finds only it), its one with a subclassification and a `;` body, and it
+/// sits between an unprefixed definition and an `individual` usage.
+#[test]
+fn the_analysis_case_definitions_of_two_files_read_their_keywords_prefix_declaration_and_body() {
+    let def = |individual: bool, declaration: &str, opens: &str| {
+        (
+            Some("analysis".to_owned()),
+            Some("def".to_owned()),
+            None,
+            individual,
+            Some(declaration.to_owned()),
+            Some(opens.to_owned()),
+        )
+    };
+    assert_eq!(
+        analysis_case_definitions_of(ANALYSIS_INDIVIDUAL_EXAMPLE),
+        [
+            def(false, "FuelEconomyAnalysis", "{"),
+            def(true, "FuelEconomyAnalysis_1 :> FuelEconomyAnalysis", ";"),
+        ],
+        "lines 56 and 76, in source order, and not the usage on line 79"
+    );
+    assert_eq!(
+        analysis_case_definitions_of(ANALYSIS_TEST),
+        [
+            def(false, "AnalysisCase", "{"),
+            def(false, "AnalysisPlan", "{"),
+        ],
+        "lines 13 and 23, and neither usage"
+    );
+}
