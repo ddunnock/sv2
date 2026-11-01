@@ -9,11 +9,11 @@ mod simple_definitions;
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, Definition, DefinitionPrefix, ElementFilterMember, EnumerationDefinition,
-    Import, ImportDeclaration, LibraryPackage, MemberPrefix, MembershipImport,
-    NamespaceFeatureMember, NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix,
-    OwnedAnnotation, Package, PackageMember, QualifiedName, RelationshipBody, RootNamespace,
-    UseCaseDefinition, VisibilityIndicator,
+    AliasMember, AstNode, Definition, DefinitionPrefix, Dependency, ElementFilterMember,
+    EnumerationDefinition, Import, ImportDeclaration, LibraryPackage, MemberPrefix,
+    MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember,
+    OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember, QualifiedName,
+    RelationshipBody, RootNamespace, UseCaseDefinition, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -2751,6 +2751,166 @@ fn assert_enumeration_definition_slots(
     );
 }
 
+/// What `Dependency` must satisfy at every node, whatever the tree.
+///
+/// The tree differs by language (ADR-0015): a `SysML` dependency holds a
+/// `DependencyDeclaration`, and a `KerML` one owns the declaration's parts itself. The view
+/// answers for its own children in both, so the assertions here read the node's own
+/// children and say which language each applies to by what is present, never by asking
+/// the file. `PrefixMetadataAnnotation`, `DependencyDeclaration` and `Identification` are
+/// raw; the names and the body are typed.
+fn assert_dependency_accessor(node: &SyntaxNode) {
+    let view = Dependency::cast(node.clone());
+    assert_eq!(
+        view.is_some(),
+        node.kind() == SyntaxKind::Dependency,
+        "Dependency::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(view) = view else {
+        return;
+    };
+    assert_eq!(
+        view.syntax(),
+        node,
+        "Dependency::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // The slots every dependency has, in both languages: the leading annotations, one
+    // `dependency`, and the body last.
+    let own: Vec<SyntaxElement> = node
+        .children_with_tokens()
+        .filter(|element| {
+            element
+                .as_token()
+                .is_none_or(|token| !token.text().trim().is_empty())
+        })
+        .collect();
+    let annotations: Vec<SyntaxNode> = own
+        .iter()
+        .map_while(|element| {
+            element
+                .as_node()
+                .filter(|node| node.kind() == SyntaxKind::PrefixMetadataAnnotation)
+                .cloned()
+        })
+        .collect();
+    assert_eq!(
+        (
+            view.prefix_annotations().collect::<Vec<_>>(),
+            view.dependency_keyword(),
+            view.body().map(|body| body.syntax().clone()),
+        ),
+        (
+            annotations.clone(),
+            own.get(annotations.len())
+                .and_then(|element| element.as_token().cloned())
+                .filter(|token| token.kind() == SyntaxKind::KwDependency),
+            own.last()
+                .and_then(|element| element.as_node().cloned())
+                .filter(|node| node.kind() == SyntaxKind::RelationshipBody),
+        ),
+        "a Dependency's annotations, keyword or body disagree with its own elements, at {:?}",
+        node.text_range()
+    );
+    assert_dependency_slots_unique(node, &own);
+    assert_dependency_declaration_parts(node, &view, &own);
+}
+
+/// At most one of each slot and keyword the view reads with `child` or `token`: one
+/// declaration (`SysML` 8.2.2.3), or one optional identification and one each of `from` and
+/// `to` (`KerML` 8.2.3.2), one `dependency` and one body in both. Asserted because it is
+/// what makes `child` and `token` taking the last match rather than the first an
+/// equivalent mutation.
+fn assert_dependency_slots_unique(node: &SyntaxNode, own: &[SyntaxElement]) {
+    for kind in [
+        SyntaxKind::DependencyDeclaration,
+        SyntaxKind::Identification,
+        SyntaxKind::RelationshipBody,
+        SyntaxKind::KwDependency,
+        SyntaxKind::KwFrom,
+        SyntaxKind::KwTo,
+    ] {
+        assert!(
+            own.iter().filter(|element| element.kind() == kind).count() <= 1,
+            "a Dependency with more than one {kind:?} of its own, at {:?}",
+            node.text_range()
+        );
+    }
+}
+
+/// The parts the declaration holds: in a `DependencyDeclaration` child (`SysML`), or this
+/// node's own (`KerML`), never both.
+fn assert_dependency_declaration_parts(
+    node: &SyntaxNode,
+    view: &Dependency,
+    own: &[SyntaxElement],
+) {
+    let names: Vec<SyntaxNode> = children_of_kind(node, SyntaxKind::QualifiedName);
+    let declaration = children_of_kind(node, SyntaxKind::DependencyDeclaration);
+
+    assert!(
+        declaration.is_empty() || names.is_empty(),
+        "a Dependency with both a DependencyDeclaration and names of its own, at {:?}",
+        node.text_range()
+    );
+    let token = |kind: SyntaxKind| {
+        own.iter()
+            .filter_map(SyntaxElement::as_token)
+            .find(|token| token.kind() == kind)
+            .cloned()
+    };
+    let clients: Vec<SyntaxNode> = view.clients().map(|name| name.syntax().clone()).collect();
+    let suppliers: Vec<SyntaxNode> = view.suppliers().map(|name| name.syntax().clone()).collect();
+    assert_eq!(
+        (
+            view.declaration(),
+            view.identification(),
+            view.from_keyword(),
+            view.to_keyword(),
+        ),
+        (
+            declaration.first().cloned(),
+            children_of_kind(node, SyntaxKind::Identification)
+                .first()
+                .cloned(),
+            token(SyntaxKind::KwFrom),
+            token(SyntaxKind::KwTo),
+        ),
+        "a Dependency's declaration, identification, `from` or `to` disagree with its own \
+         elements, at {:?}",
+        node.text_range()
+    );
+
+    // The lists, re-derived another way than the view's: by where the `to` stands, which
+    // agrees with the parser's two lists whenever a `to` was written. Without one, only
+    // their union is asserted here; which list a name joins then is a recovery fact,
+    // pinned by `tests/malformed/dependency/to-missing.kerml`.
+    let to = token(SyntaxKind::KwTo).map(|to| to.text_range().start());
+    let (before, after): (Vec<SyntaxNode>, Vec<SyntaxNode>) = names
+        .iter()
+        .cloned()
+        .partition(|name| to.is_none_or(|to| name.text_range().start() < to));
+    if to.is_some() {
+        assert_eq!(
+            (clients, suppliers),
+            (before, after),
+            "a Dependency's clients or suppliers disagree with the names either side of its \
+             `to`, at {:?}",
+            node.text_range()
+        );
+    } else {
+        assert_eq!(
+            [clients, suppliers].concat(),
+            names,
+            "a Dependency's clients and suppliers are not its own names, at {:?}",
+            node.text_range()
+        );
+    }
+}
+
 /// What a view of one of `simple_definition`'s productions must satisfy at every node.
 /// Both node children are typed (the prefix's view, `Definition`); the keywords are the
 /// node's own tokens.
@@ -3100,6 +3260,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_verification_case_definition_accessor(&node);
             assert_use_case_definition_accessor(&node);
             assert_enumeration_definition_accessor(&node);
+            assert_dependency_accessor(&node);
             visited += 1;
         }
     }

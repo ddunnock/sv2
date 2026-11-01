@@ -6,11 +6,11 @@ mod simple_definitions;
 mod trees;
 
 use sv2_ast::{
-    AliasMember, AstNode, AttributeDefinition, Definition, DefinitionPrefix, ElementFilterMember,
-    EnumerationDefinition, Import, LibraryPackage, MemberPrefix, MembershipImport,
-    NamespaceFeatureMember, NamespaceImport, NonFeatureMember, OccurrenceDefinitionPrefix,
-    OwnedAnnotation, Package, PackageMember, QualifiedName, RelationshipBody, RootNamespace,
-    UseCaseDefinition,
+    AliasMember, AstNode, AttributeDefinition, Definition, DefinitionPrefix, Dependency,
+    ElementFilterMember, EnumerationDefinition, Import, LibraryPackage, MemberPrefix,
+    MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember,
+    OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember, QualifiedName,
+    RelationshipBody, RootNamespace, UseCaseDefinition,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -3392,6 +3392,125 @@ fn an_enumeration_definition_in_an_enumeration_body_is_an_error_not_a_definition
         error_ranges(&parse),
         [error.text_range()],
         "one diagnostic, over the skipped statement: {:?}",
+        parse.errors()
+    );
+}
+
+/// What a malformed dependency case compares of each `Dependency`: its declaration as
+/// text, its clients and suppliers as text, its `to`, and its body as text.
+type DependencySummary = (
+    Option<String>,
+    Vec<String>,
+    Option<String>,
+    Vec<String>,
+    Option<String>,
+);
+
+/// Every `Dependency` in `root`, read through its view.
+fn dependencies(root: &SyntaxNode) -> Vec<DependencySummary> {
+    let names = |names: &mut dyn Iterator<Item = QualifiedName>| {
+        names
+            .map(|name| name.syntax().text().to_string())
+            .collect::<Vec<_>>()
+    };
+    root.descendants()
+        .filter_map(Dependency::cast)
+        .map(|dependency| {
+            (
+                dependency
+                    .declaration()
+                    .map(|declaration| declaration.text().to_string()),
+                names(&mut dependency.clients()),
+                dependency.to_keyword().map(|to| to.text().to_owned()),
+                names(&mut dependency.suppliers()),
+                dependency
+                    .body()
+                    .map(|body| body.syntax().text().to_string()),
+            )
+        })
+        .collect()
+}
+
+/// The diagnostic's range, and the offset of `b` on the fixture's tab-indented `dependency
+/// a b;` line.
+fn missing_to_at(source: &str, parse: &sv2_syntax::Parse) -> (Vec<sv2_syntax::TextRange>, usize) {
+    let written = source
+        .find("\tdependency a b;")
+        .map(|line| line + "\tdependency a ".len());
+    (error_ranges(parse), written.unwrap_or_default())
+}
+
+/// `dependency/to-missing.kerml`: `dependency a b;`, then `dependency c to d;`, as `KerML`.
+/// The header states what it pins and where the outcome comes from.
+#[test]
+fn a_kerml_dependency_with_no_to_still_splits_its_names_by_the_lists_read() {
+    let source = include_str!("malformed/dependency/to-missing.kerml");
+    let parse = trees::parsed(source, Language::KerMl);
+    let root = parse.syntax();
+
+    // 1, 2a and 3. two dependencies: the first `a` to `b` with no `to`; the second whole.
+    let name = |text: &str| vec![text.to_owned()];
+    assert_eq!(
+        dependencies(&root),
+        [
+            (None, name("a"), None, name("b"), Some(";".to_owned())),
+            (
+                None,
+                name("c"),
+                Some("to".to_owned()),
+                name("d"),
+                Some(";".to_owned())
+            ),
+        ],
+        "`a` is the client and `b` the supplier, though no `to` stands between them"
+    );
+
+    // 2b. reported, once, at `b`, where the `to` was expected.
+    let (ranges, b) = missing_to_at(source, &parse);
+    assert_eq!(
+        ranges
+            .iter()
+            .map(|range| usize::from(range.start()))
+            .collect::<Vec<_>>(),
+        [b],
+        "one diagnostic, at `b`: {:?}",
+        parse.errors()
+    );
+}
+
+/// `dependency/to-missing.sysml`: the same text as `SysML`. The header states what it pins
+/// and where the outcome comes from.
+#[test]
+fn a_sysml_dependency_with_no_to_keeps_both_names_in_its_declaration() {
+    let source = include_str!("malformed/dependency/to-missing.sysml");
+    let parse = trees::parsed(source, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1, 2a and 3. two dependencies whose names are their declarations', none their own.
+    let declared = |text: &str| {
+        (
+            Some(text.to_owned()),
+            Vec::new(),
+            None,
+            Vec::new(),
+            Some(";".to_owned()),
+        )
+    };
+    assert_eq!(
+        dependencies(&root),
+        [declared("a b"), declared("c to d")],
+        "the names and the `to` are the declarations', so the Dependency answers none"
+    );
+
+    // 2b. reported, once, at `b`.
+    let (ranges, b) = missing_to_at(source, &parse);
+    assert_eq!(
+        ranges
+            .iter()
+            .map(|range| usize::from(range.start()))
+            .collect::<Vec<_>>(),
+        [b],
+        "one diagnostic, at `b`: {:?}",
         parse.errors()
     );
 }

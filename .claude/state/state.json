@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-11-01T14:10:08Z",
+    "regenerated_utc": "2026-11-01T14:22:04Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 41,
-      "unimplemented": 422,
+      "implemented": 42,
+      "unimplemented": 421,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 8.9
+      "percent": 9.1
     },
     "tests": {
-      "unit": 878,
+      "unit": 883,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "4f4fd12 Merge ast-enumeration-definition",
+      "12ca77f Add the EnumerationDefinition accessor, with tests of its own",
       "9ea2f23 Merge ast-corpus-count-provenance",
       "b478748 Pin the corpus counts the ast docs argue from; drop the rest",
       "53f2e89 Merge close-session-2026-11-01",
       "6231492 Close the session: 36 to 40 of 463, EnumerationDefinition next",
       "f72e2c3 Merge ast-use-case-definition",
-      "d3440d4 Add the UseCaseDefinition accessor, with tests of its own",
-      "1be94a5 Merge ast-verification-case-definition",
-      "b08ed36 Add the VerificationCaseDefinition accessor"
+      "d3440d4 Add the UseCaseDefinition accessor, with tests of its own"
     ]
   },
   "authored": {
