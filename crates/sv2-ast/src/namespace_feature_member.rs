@@ -16,9 +16,10 @@ use crate::member_prefix::MemberPrefix;
 ///
 /// **`KerML` only.** ADR-0015 re-scoped this unit to the kerml grammar because no `SysML`
 /// grammar reaches it — a `SysML` namespace owns its members through `PackageMember`
-/// instead — and the corpus agrees: all 133 of these nodes across the repository's 610
-/// trees come from `.kerml` files. Its sibling for everything that is not a feature is
-/// `NonFeatureMember`, and the two occur side by side in `Behaviors.kerml`.
+/// instead — and the trees agree: every one of these nodes in the repository's trees comes
+/// from a `.kerml` file (pinned by `tests/corpus_counts.rs`). Its sibling for everything
+/// that is not a feature is `NonFeatureMember`, and the two occur side by side in
+/// `Behaviors.kerml`.
 ///
 /// The metaclass is `OwningMembership`, so this node is the *relationship* and not the
 /// thing related. It is shape-identical to `PackageMember` — a prefix and one owned
@@ -27,7 +28,7 @@ use crate::member_prefix::MemberPrefix;
 /// by text, this one reached through `NamespaceMember` in a namespace body and that one
 /// through `FeatureMember` in a type body, with only the membership metaclass differing.
 ///
-/// Both slots are mandatory, and every one of the 133 holds exactly one of each, which
+/// Both slots are mandatory, and every one holds exactly one of each, which
 /// `tests/sweep.rs` asserts as equality rather than as "at most one".
 // node: NamespaceFeatureMember
 pub struct NamespaceFeatureMember(SyntaxNode);
@@ -51,11 +52,11 @@ impl AstNode for NamespaceFeatureMember {
 impl NamespaceFeatureMember {
     /// This member's prefix, which carries its visibility when one is written.
     ///
-    /// Almost always empty here: of the 133 feature members in the corpus, **one** writes
-    /// a visibility. The node is built either way (`member_prefix`,
-    /// `crates/sv2-syntax/src/parser/namespace.rs`), so an empty prefix is the ordinary
-    /// shape rather than a defect, and the visibility is reached through the returned
-    /// [`MemberPrefix`] rather than from here
+    /// Almost always empty here: of the 133 feature members in the repository's trees,
+    /// **one** writes a visibility (pinned by `tests/corpus_counts.rs`). The node is built
+    /// either way (`member_prefix`, `crates/sv2-syntax/src/parser/namespace.rs`), so an
+    /// empty prefix is the ordinary shape rather than a defect, and the visibility is
+    /// reached through the returned [`MemberPrefix`] rather than from here
     /// (`member.prefix().and_then(|prefix| prefix.visibility())`).
     pub fn prefix(&self) -> Option<MemberPrefix> {
         self.child_where(|kind| kind == SyntaxKind::MemberPrefix)
@@ -72,8 +73,9 @@ impl NamespaceFeatureMember {
     /// alternatives: `Feature`, `Step`, `Expression`, `BooleanExpression`, `Invariant`,
     /// `Connector`, `BindingConnector`, `Succession`, `Flow` and `SuccessionFlow`.
     ///
-    /// Three of the ten actually occur as a namespace member in the pinned corpus —
-    /// `Feature` 130 times, `Expression` twice and `Flow` once — which is why
+    /// Three of the ten actually occur as a namespace member in the repository's trees —
+    /// `Feature` 130 times, `Expression` twice and `Flow` once, pinned by
+    /// `tests/corpus_counts.rs` — which is why
     /// `tests/positive.rs` reads the `Flow` rather than any of the 130: a case built on a
     /// `Feature` could not tell this accessor from one that looked for a `Feature` child
     /// specifically.

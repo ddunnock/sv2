@@ -16,18 +16,18 @@ use crate::member_prefix::MemberPrefix;
 /// ```
 ///
 /// **`KerML` only.** ADR-0015 scopes this unit to the kerml grammar — a `SysML` namespace
-/// owns its members through `PackageMember` — and all 608 of these nodes across the
-/// repository's 610 trees come from `.kerml` files. With its sibling
-/// [`NamespaceFeatureMember`](crate::NamespaceFeatureMember) it is the whole of `KerML`'s
-/// `NamespaceMember`, and a type body reaches it too, `TypeBodyElement` naming it as its
-/// first alternative (8.2.4.1.1).
+/// owns its members through `PackageMember` — and every one of these nodes in the
+/// repository's trees comes from a `.kerml` file (pinned by `tests/corpus_counts.rs`). With
+/// its sibling [`NamespaceFeatureMember`](crate::NamespaceFeatureMember) it is the whole of
+/// `KerML`'s `NamespaceMember`, and a type body reaches it too, `TypeBodyElement` naming it
+/// as its first alternative (8.2.4.1.1).
 ///
 /// The metaclass is `OwningMembership`, so this node is the *relationship* and not the
 /// thing related. It is shape-identical to `PackageMember` and `NamespaceFeatureMember` —
 /// a prefix and one owned element — and one parser method builds all three, differing only
 /// in which elements it may own (`membership`, `crates/sv2-syntax/src/parser/namespace.rs`).
 ///
-/// Both slots are mandatory, and every one of the 608 holds exactly one of each, which
+/// Both slots are mandatory, and every one holds exactly one of each, which
 /// `tests/sweep.rs` asserts as equality rather than as "at most one".
 // node: NonFeatureMember
 pub struct NonFeatureMember(SyntaxNode);
@@ -51,11 +51,11 @@ impl AstNode for NonFeatureMember {
 impl NonFeatureMember {
     /// This member's prefix, which carries its visibility when one is written.
     ///
-    /// Almost always empty: 6 of the 608 non-feature members in the corpus write a
-    /// visibility. The node is built either way (`member_prefix`,
-    /// `crates/sv2-syntax/src/parser/namespace.rs`), so an empty prefix is the ordinary
-    /// shape rather than a defect, and the visibility is reached through the returned
-    /// [`MemberPrefix`] rather than from here
+    /// Almost always empty: 6 of the 608 non-feature members in the repository's trees
+    /// write a visibility (pinned by `tests/corpus_counts.rs`). The node is built either
+    /// way (`member_prefix`, `crates/sv2-syntax/src/parser/namespace.rs`), so an empty
+    /// prefix is the ordinary shape rather than a defect, and the visibility is reached
+    /// through the returned [`MemberPrefix`] rather than from here
     /// (`member.prefix().and_then(|prefix| prefix.visibility())`).
     ///
     /// Read from the direct children. Reading descendants instead cannot be observed —
@@ -72,8 +72,8 @@ impl NonFeatureMember {
     /// Untyped because `MemberElement` is an alternation that builds **no node of its
     /// own**, the second of the three cases in `.claude/rules/ast.md`, as
     /// [`PackageMember::element`](crate::PackageMember::element) is. What comes back is
-    /// the concrete element, and twenty-eight kinds occur in the corpus — `Class`,
-    /// `Package`, `Classifier`, `Association`, `Structure`, `Behavior`, `Comment`,
+    /// the concrete element, and many kinds occur in the corpus — `Class`, `Package`,
+    /// `Classifier`, `Association`, `Structure`, `Behavior`, `Comment`,
     /// `Documentation` and the relationship declarations among them — so match on
     /// `kind()`.
     ///

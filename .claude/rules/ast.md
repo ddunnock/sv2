@@ -187,6 +187,27 @@ The positive case stays per kind: it reads a corpus file chosen for that kind, a
 choice is the point. Mutation still runs per accessor, since the views are separate code;
 a shared assertion proven against one kind proves nothing about another kind's reader.
 
+## A corpus count in a doc comment is pinned, or it is not written
+
+A count measured with a throwaway probe is true on the day and goes stale silently when
+the corpus is re-pinned or the parser changes what it builds (decision
+`ast-corpus-count-provenance`). So:
+
+- **A count that only describes the corpus is not written.** "121 in the corpus, all
+  under `PackageMember`" argues nothing; the shape claims beside it are what the sweep
+  proves, and they are enough.
+- **A count a sentence draws a conclusion from is pinned** in `tests/corpus_counts.rs`,
+  with that sentence quoted beside the row, and the doc comment says "pinned by
+  `tests/corpus_counts.rs`". "`Feature` 130 times, `Flow` once, which is why the positive
+  case reads the `Flow`" is one; so is a zero that explains why a mutation survived.
+- **Name the scope the figure was measured over**, and measure over that scope: "in the
+  corpus" is the pinned corpus alone, "the repository's trees" adds `tests/rejection`.
+  The first run of the counting test found two sentences that said the first and meant
+  the second.
+
+When a pinned figure moves, re-read the sentence it supports before changing the number:
+the conclusion may no longer follow.
+
 ## The sweep is where an accessor is actually exercised
 
 `tests/sweep.rs` walks every tree in the repository — 311 corpus files and 299 rejection

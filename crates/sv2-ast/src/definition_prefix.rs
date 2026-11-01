@@ -16,13 +16,14 @@ use crate::ast_node::AstNode;
 /// `SysML` 8.2.2.6.1. It is [`OccurrenceDefinitionPrefix`](crate::OccurrenceDefinitionPrefix)
 /// without the `individual` group: only an occurrence may be individual, so
 /// `individual attribute def A;` is an error, and the two are separate productions for
-/// that reason (`definition_prefix`, `crates/sv2-syntax/src/parser/definition.rs`). In the
-/// corpus there are 291, under `AttributeDefinition` (171) and `PortDefinition` (120), the
-/// two definitions that are not occurrences.
+/// that reason (`definition_prefix`, `crates/sv2-syntax/src/parser/definition.rs`). It is
+/// taken by `AttributeDefinition` and `PortDefinition`, the two definitions that are not
+/// occurrences.
 ///
-/// **Almost always empty.** The node is built even when both slots are, and 284 of the 291
-/// are. The other 7 write one slot each: `variation` (2) or a `#X` (5). An empty prefix is
-/// zero width, and both accessors answer absence.
+/// **Almost always empty.** The node is built even when both slots are, and in the corpus
+/// 284 are. The other 7 write one slot each: `variation` (2) or a `#X` (5); none writes
+/// both (pinned by `tests/corpus_counts.rs`). An empty prefix is zero width, and both
+/// accessors answer absence.
 ///
 /// The node holds its slots and no token of its own. Both slots have kinds of their own
 /// and no view yet, so they are returned raw until they do.

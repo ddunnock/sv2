@@ -20,8 +20,7 @@ use crate::occurrence_definition_prefix::OccurrenceDefinitionPrefix;
 /// [`RequirementDefinition`](crate::RequirementDefinition)'s spine: it takes the
 /// declaration and the body directly, so there is **no `Definition` node** here, and the
 /// two are this view's own children. The body is a `RequirementBody`, the body a
-/// requirement definition takes (8.2.2.26.3, 8.2.2.21.1). 5 in the corpus, all under
-/// `PackageMember`.
+/// requirement definition takes (8.2.2.26.3, 8.2.2.21.1).
 ///
 /// **Both keywords are always there.** `at_viewpoint_definition` begins a viewpoint
 /// definition only on `viewpoint` followed by `def`, so `viewpoint A def B;` is a

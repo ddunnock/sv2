@@ -21,7 +21,6 @@ use crate::definition_prefix::DefinitionPrefix;
 /// [`OccurrenceDefinitionPrefix`](crate::OccurrenceDefinitionPrefix). So `individual
 /// attribute def A;` leaves the `individual` in an `Error` and begins the definition at
 /// `attribute` (`tests/malformed/attribute-definition/individual-before-attribute.sysml`).
-/// 171 in the corpus, under `PackageMember` (153) and `DefinitionMember` (18).
 ///
 /// **Both keywords are always there.** `at_simple_definition` begins an attribute
 /// definition only on `attribute` followed by `def`, so `attribute A def B;` is an

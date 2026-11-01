@@ -899,7 +899,7 @@ const BEHAVIORS: &str = "vendor/corpus/kerml/src/examples/Simple Tests/Behaviors
 ///
 /// The point of this case is the element. `FeatureElement` has ten alternatives and
 /// `feature_element` dispatches to all ten, but 130 of the 133 feature members in the
-/// corpus own a plain `Feature` — so a case reading any other file would not distinguish
+/// repository's trees own a plain `Feature` (pinned by `tests/corpus_counts.rs`) — so a case reading any other file would not distinguish
 /// `element()` from "the Feature child". Line 20 owns a `Flow`, which is one of the three
 /// kinds that actually occur (`Feature` 130, `Expression` 2, `Flow` 1).
 ///
@@ -980,8 +980,8 @@ fn the_one_feature_member_in_behaviors_owns_a_flow_not_a_feature() {
 /// `NonFeatureMember = MemberPrefix ownedRelatedElement += MemberElement` (`KerML`
 /// 8.2.3.4.1), and `MemberElement = AnnotatingElement | NonFeatureElement` (8.2.3.4.3) is
 /// an alternation that builds no node, so the element is the concrete one. The case
-/// is chosen for its behaviors: 243 of the 608 non-feature members in the corpus own a
-/// `Class` or a `Package`, and a case reading only those could not tell `element()` from
+/// is chosen for its behaviors: 243 of the 608 non-feature members in the repository's
+/// trees own a `Class` or a `Package` (pinned by `tests/corpus_counts.rs`), and a case reading only those could not tell `element()` from
 /// an accessor that looked for one of them. Lines 2 and 9 own neither.
 ///
 /// The members inside `class C { ... }` are features (`in x;`, `step a : A;`, ...) and

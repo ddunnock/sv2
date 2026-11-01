@@ -21,7 +21,7 @@ use crate::occurrence_definition_prefix::OccurrenceDefinitionPrefix;
 /// declaration and the body directly, so there is **no `Definition` node** here, and the
 /// two are this view's own children. The body is a `CalculationBody`, the body a
 /// calculation definition takes, which may close with a result expression (8.2.2.20,
-/// 8.2.2.19). 21 in the corpus, all under `PackageMember`.
+/// 8.2.2.19).
 ///
 /// **Both keywords are always there.** `at_constraint_definition` begins a constraint
 /// definition only on `constraint` followed by `def`, so `constraint A def B;` is a

@@ -152,6 +152,14 @@ silently changing its answer.
 What is never acceptable is recording a mutation as caught when the build merely failed to
 compile. That proves the mutation was ill-formed, not that an assertion bites.
 
+### Corpus counts in the doc comment
+
+Measuring first produces numbers, and it is tempting to write them all down. Do not:
+`.claude/rules/ast.md` ("A corpus count in a doc comment is pinned, or it is not
+written") says which ones belong. A descriptive tally is left out. A count the prose
+argues from gets a row in `tests/corpus_counts.rs`, measured over the scope the sentence
+names, in the same change.
+
 ## 5. Verify, in this order
 
 ```bash

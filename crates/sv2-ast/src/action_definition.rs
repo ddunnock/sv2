@@ -19,8 +19,7 @@ use crate::occurrence_definition_prefix::OccurrenceDefinitionPrefix;
 /// (`crates/sv2-syntax/src/parser/action.rs`) on
 /// [`RequirementDefinition`](crate::RequirementDefinition)'s spine: it takes the
 /// declaration and the body directly, so there is **no `Definition` node** here, and the
-/// two are this view's own children. 121 in the corpus, all under `PackageMember`, four
-/// of them prefixed (`individual` three times, `variation` once).
+/// two are this view's own children.
 ///
 /// **Both keywords are always there.** `at_action_definition` begins an action
 /// definition only on `action` followed by `def`, so `action A def B;` is an `ActionUsage`

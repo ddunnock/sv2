@@ -17,7 +17,7 @@ use crate::occurrence_definition_prefix::OccurrenceDefinitionPrefix;
 /// `SysML` 8.2.2.11. One of the eight productions `simple_definition`
 /// (`crates/sv2-syntax/src/parser/definition.rs`) builds with one method; the other seven
 /// differ from it only in the first keyword, and `AttributeDefinition` in taking a
-/// `DefinitionPrefix`. 544 in the corpus, every one under a `PackageMember`.
+/// `DefinitionPrefix`.
 ///
 /// **Both keywords are always there.** `at_simple_definition` begins a part definition
 /// only on `part` followed by `def`, so `part A def B;` is a `PartUsage` and builds no

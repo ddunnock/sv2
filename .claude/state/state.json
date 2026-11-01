@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-11-01T13:52:48Z",
+    "regenerated_utc": "2026-11-01T14:02:34Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -36,7 +36,7 @@
       "percent": 8.6
     },
     "tests": {
-      "unit": 872,
+      "unit": 873,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "53f2e89 Merge close-session-2026-11-01",
+      "6231492 Close the session: 36 to 40 of 463, EnumerationDefinition next",
       "f72e2c3 Merge ast-use-case-definition",
       "d3440d4 Add the UseCaseDefinition accessor, with tests of its own",
       "1be94a5 Merge ast-verification-case-definition",
       "b08ed36 Add the VerificationCaseDefinition accessor",
       "8a64950 Merge ast-analysis-case-definition",
-      "cc0e5ff Add the AnalysisCaseDefinition accessor",
-      "0ebac94 Merge ast-action-definition",
-      "c5d218f Add the ActionDefinition accessor"
+      "cc0e5ff Add the AnalysisCaseDefinition accessor"
     ]
   },
   "authored": {
@@ -364,13 +364,6 @@
         "id": "ast-equivalence-by-assertion",
         "question": "RESOLVED on 2026-10-25 by the author, on the recommendation below: ADOPTED, with three limits. The add-accessor skill ('A missed mutation is a result') and .claude/rules/ast.md now say that 'the grammar does not allow that shape' is not yet equivalence: add the one grammar fact the survivor rests on to the sweep. The limits: assert only that fact, never grammar facts in general; cite its clause and name the mutation it covers beside it; and scan only the slot it concerns, never a body, because a per-node scan over a whole subtree goes quadratic on nested files. It is procedural, not gated. The original proposal: Three rounds running (OccurrenceDefinitionPrefix, DefinitionPrefix, Definition) a surviving mutation, 'read descendants instead of children', was equivalent BY GRAMMAR ALONE: nothing beneath the slot could be another slot. Each time the fix was a new tests/sweep.rs assertion stating that grammar fact over all 610 trees, so the equivalence became proved rather than assumed and a future grammar change that breaks it fails a test instead of silently changing an accessor's answer (MembershipImport's 'no `**` inside the name' was the first instance). Proposal: write this into .claude/rules/ast.md and the add-accessor skill's 'A missed mutation is a result' section as a standing third outcome -- equivalent by grammar is not equivalent until an assertion says so. Not done unasked because it changes the skill's definition of a finished round.",
         "blocks": []
-      },
-      {
-        "id": "ast-corpus-count-provenance",
-        "question": "Raised as an advisory by the PartDefinition conformance review (2026-10-25), not resolved: sv2-ast doc comments state corpus counts ('544 in the corpus, every one under a PackageMember' in part_definition.rs; 1,020 / 1,064 in occurrence_definition_prefix.rs and definition.rs) that were measured with throwaway probes no file records. The figures are true now and will go stale silently when the corpus is re-pinned. Options: (a) cite the measuring command beside each figure, as the part-definition fixtures now cite their greps; (b) a counting test that pins each figure, which turns a stale count into a red gate; (c) drop the numbers and keep only the shape claims, which the sweep already proves. Recommendation: (c) for parent-kind tallies, (b) only where a count carries an argument. UPDATE 2026-11-01: the same advisory was raised again by the conformance review of ActionDefinition, AnalysisCaseDefinition, VerificationCaseDefinition and UseCaseDefinition, whose doc comments state 121, 14, 11 and 11 corpus instances, 'all under PackageMember', 'none nested' -- measured by throwaway probes and confirmed independently by the reviewer's scratch parse, but pinned by no test. The rounds of 2026-10-26/27 (AttributeDefinition through CalculationDefinition) state counts the same way. Every new definition accessor adds to this until it is decided.",
-        "blocks": [
-          "ast doc comments that state corpus counts"
-        ]
       }
     ],
     "log": [
@@ -597,7 +590,7 @@
       {
         "date": "2026-11-01",
         "gate": "green",
-        "summary": "ActionDefinition, AnalysisCaseDefinition, VerificationCaseDefinition and UseCaseDefinition, 36 to 40 of 463, each measured first with a throwaway tree probe and both malformed inputs parsed before a fixture was written. The first three joined the shared definition tests (tail [DefinitionDeclaration, <Body>]); UseCaseDefinition, the one definition whose kind is two keywords, got its own sweep shape, slot facts and three malformed cases, the third (`use def A;`) one only it can write, which begins no node at all -- the user chose this over widening Production. CaseDefinition was SKIPPED after measuring: 0 in 311 corpus files, confirmed by grep; the user agreed. Mutation: 6 of 11 caught per family member, 8 of 13 for UseCaseDefinition (both keyword swaps caught); every survivor equivalent under a named sweep assertion. prefix-none is caught even where no corpus file writes a prefix, because the parser always builds the prefix node. Slips caught before commit: copied fixtures' articles and wrapping ('a action', 'an Verification...'), an `ls`-quoted path baked into a test constant, three #[expect(clippy::expect_used)] on #[test] fns that clippy already exempts. Conformance review: 0 blocking, 2 advisory -- the corpus-count one folded into ast-corpus-count-provenance; the other, parser/action.rs's module header citing 8.2.2.16 for Actions (the pinned BNF has 8.2.2.17; .16 is Flows), fixed in the close commit. Also noted: no log entry existed for 2026-10-26/27, so one is reconstructed above from the commits."
+        "summary": "ActionDefinition, AnalysisCaseDefinition, VerificationCaseDefinition and UseCaseDefinition, 36 to 40 of 463, each measured first with a throwaway tree probe and both malformed inputs parsed before a fixture was written. The first three joined the shared definition tests (tail [DefinitionDeclaration, <Body>]); UseCaseDefinition, the one definition whose kind is two keywords, got its own sweep shape, slot facts and three malformed cases, the third (`use def A;`) one only it can write, which begins no node at all -- the user chose this over widening Production. CaseDefinition was SKIPPED after measuring: 0 in 311 corpus files, confirmed by grep; the user agreed. Mutation: 6 of 11 caught per family member, 8 of 13 for UseCaseDefinition (both keyword swaps caught); every survivor equivalent under a named sweep assertion. prefix-none is caught even where no corpus file writes a prefix, because the parser always builds the prefix node. Slips caught before commit: copied fixtures' articles and wrapping ('a action', 'an Verification...'), an `ls`-quoted path baked into a test constant, three #[expect(clippy::expect_used)] on #[test] fns that clippy already exempts. Conformance review: 0 blocking, 2 advisory -- the corpus-count one folded into ast-corpus-count-provenance; the other, parser/action.rs's module header citing 8.2.2.16 for Actions (the pinned BNF has 8.2.2.17; .16 is Flows), fixed in the close commit. Also noted: no log entry existed for 2026-10-26/27, so one is reconstructed above from the commits. LATER THE SAME DAY: decision ast-corpus-count-provenance RESOLVED as its recommendation, by the user's choice: descriptive corpus tallies removed from 28 sv2-ast doc comments; the counts a sentence argues from (prefix emptiness, feature-member element kinds and visibility, KerML-only members, RelationshipBody shapes and parent kinds, VisibilityIndicator parents and emptiness, root Error members in rejection files, non-feature members owning a Class or Package) pinned in the new crates/sv2-ast/tests/corpus_counts.rs, each beside the sentence it supports. Its first run caught a scope slip: the feature/non-feature member figures (133, 608, 130/2/1, 243) had been measured over all 610 trees but four sentences said 'in the corpus'; every figure matched over its true scope, so the sentences were corrected, not the numbers. RelationshipBody's 'no unclosed body' was also too broad (14 zero-width bodies are unclosed) and now says 'no non-empty unclosed body'. The rule is in .claude/rules/ast.md and the add-accessor skill."
       }
     ]
   }

@@ -20,7 +20,7 @@ use crate::occurrence_definition_prefix::OccurrenceDefinitionPrefix;
 /// [`RequirementDefinition`](crate::RequirementDefinition)'s spine: it takes the
 /// declaration and the body directly, so there is **no `Definition` node** here, and the
 /// two are this view's own children. The body is a `CalculationBody`, which may close with
-/// a result expression (8.2.2.19). 48 in the corpus, all under `PackageMember`.
+/// a result expression (8.2.2.19).
 ///
 /// **Both keywords are always there.** `at_calculation_definition` begins a calculation
 /// definition only on `calc` followed by `def`, so `calc A def B;` is a `CalculationUsage`

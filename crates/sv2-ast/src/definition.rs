@@ -15,8 +15,7 @@ use crate::ast_node::AstNode;
 /// `SysML` 8.2.2.6.1. It follows the prefix and keywords of the eight definitions
 /// `simple_definition` builds (`crates/sv2-syntax/src/parser/definition.rs`), and of
 /// `ExtendedDefinition`, `IndividualDefinition`, `PortDefinition` and
-/// `MetadataDefinition`: 1,064 in the corpus, under 12 parent kinds, `PartDefinition` (544)
-/// the most. It is **not** in every definition. The action, state, calculation,
+/// `MetadataDefinition`. It is **not** in every definition. The action, state, calculation,
 /// constraint, interface and view definitions read a `DefinitionDeclaration` and a body of
 /// their own, with no `Definition` around them.
 ///

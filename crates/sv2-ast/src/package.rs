@@ -23,8 +23,8 @@ use crate::ast_node::AstNode;
 /// all three are returned raw. When a view for one ships, the accessor here is upgraded to
 /// it in the same change (`.claude/rules/ast.md`, the delegation ripple).
 ///
-/// The declaration and the body are mandatory, and every one of the 666 packages across
-/// the repository's 610 trees holds exactly one of each — which `tests/sweep.rs` asserts
+/// The declaration and the body are mandatory, and every package in the repository's
+/// trees holds exactly one of each — which `tests/sweep.rs` asserts
 /// as equality, together with the order the production writes them in.
 // node: Package
 pub struct Package(SyntaxNode);

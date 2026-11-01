@@ -19,7 +19,7 @@ use crate::occurrence_definition_prefix::OccurrenceDefinitionPrefix;
 /// declaration and the body directly, so there is **no `Definition` node** here, and the
 /// two are this view's own children. The body is a `ViewDefinitionBody`, whose items are a
 /// definition body's and element filters and view renderings besides
-/// (`ViewDefinitionBodyItem`, 8.2.2.26.1). 16 in the corpus, all under `PackageMember`.
+/// (`ViewDefinitionBodyItem`, 8.2.2.26.1).
 ///
 /// **Both keywords are always there.** `at_view_definition` begins a view definition only
 /// on `view` followed by `def`, so `view A def B;` is a `ViewUsage` and builds no view

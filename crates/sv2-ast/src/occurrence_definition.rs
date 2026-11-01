@@ -16,8 +16,7 @@ use crate::occurrence_definition_prefix::OccurrenceDefinitionPrefix;
 ///
 /// `SysML` 8.2.2.9.1. One of the eight productions `simple_definition`
 /// (`crates/sv2-syntax/src/parser/definition.rs`) builds with one method, differing from
-/// [`PartDefinition`](crate::PartDefinition) only in the first keyword. 17 in the corpus,
-/// under `PackageMember` (15) and `DefinitionMember` (2).
+/// [`PartDefinition`](crate::PartDefinition) only in the first keyword.
 ///
 /// **Not every `OccurrenceDefinition` is one of these.** `individual def A;` is an
 /// `IndividualDefinition` (8.2.2.9.1), whose metaclass is `OccurrenceDefinition` too, but

@@ -20,8 +20,7 @@ use crate::occurrence_definition_prefix::OccurrenceDefinitionPrefix;
 /// receipt 0e50a373). Built by `concern_definition`
 /// (`crates/sv2-syntax/src/parser/requirement.rs`) on the same spine as
 /// [`RequirementDefinition`](crate::RequirementDefinition): **no `Definition` node**, the
-/// declaration and the `RequirementBody` are this view's own children. 3 in the corpus,
-/// all under `PackageMember`.
+/// declaration and the `RequirementBody` are this view's own children.
 ///
 /// **Both keywords are always there.** `at_concern_definition` begins a concern definition
 /// only on `concern` followed by `def`, so `concern A def B;` is a `ConcernUsage` and builds
