@@ -3533,3 +3533,188 @@ fn an_enumeration_definition_reads_two_extension_keywords_in_the_order_written()
         [enumeration(&["#M", "#N"], "A", ";")]
     );
 }
+
+/// A dependency read: its annotations, its declaration, its identification, `from`, its
+/// clients, `to`, its suppliers, and the first token of its body.
+type DependencyRead = (
+    Vec<String>,
+    Option<String>,
+    Option<String>,
+    bool,
+    Vec<String>,
+    bool,
+    Vec<String>,
+    Option<String>,
+);
+
+const DEPENDENCIES_KERML: &str = "vendor/corpus/kerml/src/examples/Simple Tests/Dependencies.kerml";
+
+const DEPENDENCY_TEST: &str = "vendor/corpus/sysml/src/examples/Simple Tests/DependencyTest.sysml";
+
+const SIMPLE_VEHICLE_MODEL_ANNEX_A: &str = "vendor/corpus/sysml/src/examples/Vehicle Example/\
+                                            SysML v2 Spec Annex A SimpleVehicleModel.sysml";
+
+/// Every `Dependency` in the corpus file at `relative`, read.
+fn dependencies_of(relative: &str) -> Vec<DependencyRead> {
+    let text = |node: SyntaxNode| node.text().to_string();
+    tree_of(relative)
+        .descendants()
+        .filter_map(sv2_ast::Dependency::cast)
+        .map(|dependency| {
+            (
+                dependency.prefix_annotations().map(text).collect(),
+                dependency.declaration().map(text),
+                dependency.identification().map(text),
+                dependency.from_keyword().is_some(),
+                dependency
+                    .clients()
+                    .map(|name| text(name.syntax().clone()))
+                    .collect(),
+                dependency.to_keyword().is_some(),
+                dependency
+                    .suppliers()
+                    .map(|name| text(name.syntax().clone()))
+                    .collect(),
+                dependency.body().and_then(|body| opening(body.syntax())),
+            )
+        })
+        .collect()
+}
+
+/// `Dependencies.kerml` and `DependencyTest.sysml`, which write the same three dependencies
+/// on the same lines, read once in each language:
+///
+/// ```text
+///   line 11:  dependency Use from 'Application Layer' to 'Service Layer';
+///   line 12:  dependency from 'Service Layer' to 'Data Layer';
+///   line 18:  dependency z to x, y { feature e; }       (KerML; SysML closes with `;`)
+/// ```
+///
+/// `KerML` 8.2.3.2 writes the identification, `from`, the client list, `to` and the
+/// supplier list inline, so a `.kerml` dependency owns them. `SysML` 8.2.2.3 names them a
+/// `DependencyDeclaration`, so a `.sysml` dependency owns that and none of the parts
+/// (ADR-0015). The pair is chosen because it is the same text: what differs between the
+/// two reads is the tree and nothing else. Line 12 writes `from` with no name before it,
+/// which builds an empty identification; line 18 writes two suppliers and, in `KerML`, a
+/// braced body.
+#[test]
+fn the_same_three_dependencies_read_as_kerml_own_their_parts_and_as_sysml_own_a_declaration() {
+    let names = |names: &[&str]| names.iter().map(|&name| name.to_owned()).collect();
+    let kerml = |identification: Option<&str>, clients: &[&str], suppliers: &[&str], opens| {
+        (
+            Vec::new(),
+            None,
+            identification.map(str::to_owned),
+            identification.is_some(),
+            names(clients),
+            true,
+            names(suppliers),
+            Some(String::from(opens)),
+        )
+    };
+    assert_eq!(
+        dependencies_of(DEPENDENCIES_KERML),
+        [
+            kerml(
+                Some("Use"),
+                &["'Application Layer'"],
+                &["'Service Layer'"],
+                ";"
+            ),
+            kerml(Some(""), &["'Service Layer'"], &["'Data Layer'"], ";"),
+            kerml(None, &["z"], &["x", "y"], "{"),
+        ],
+        "lines 11, 12 and 18, each owning its parts"
+    );
+    let sysml = |declaration: &str| {
+        (
+            Vec::new(),
+            Some(declaration.to_owned()),
+            None,
+            false,
+            Vec::new(),
+            false,
+            Vec::new(),
+            Some(";".to_owned()),
+        )
+    };
+    assert_eq!(
+        dependencies_of(DEPENDENCY_TEST),
+        [
+            sysml("Use from 'Application Layer' to 'Service Layer'"),
+            sysml("from 'Service Layer' to 'Data Layer'"),
+            sysml("z to x, y"),
+        ],
+        "the same lines, each owning a declaration and none of its parts"
+    );
+}
+
+/// `SysML v2 Spec Annex A SimpleVehicleModel.sysml`, read for its two dependencies:
+///
+/// ```text
+///   line 863:  dependency from vehicleSpecification to marketSurvey;
+///   line 937:  #refinement dependency engine4Cyl to VehicleConfiguration_b::...::engine;
+/// ```
+///
+/// `( ownedRelationship += PrefixMetadataAnnotation )*` (`SysML` 8.2.2.3): line 937 is one
+/// of the two corpus dependencies that write an annotation, both this line in the file's
+/// two copies (`grep -rnE '#\S+\s+dependency\b'` over the pinned corpus), and line 863
+/// writes none, so `prefix_annotations()` must tell them apart.
+#[test]
+fn the_dependencies_of_the_simple_vehicle_model_read_their_annotations() {
+    let read: Vec<(Vec<String>, Option<String>)> = dependencies_of(SIMPLE_VEHICLE_MODEL_ANNEX_A)
+        .into_iter()
+        .map(|(annotations, declaration, ..)| (annotations, declaration))
+        .collect();
+    assert_eq!(
+        read,
+        [
+            (
+                Vec::new(),
+                Some("from vehicleSpecification to marketSurvey".to_owned())
+            ),
+            (
+                vec!["#refinement".to_owned()],
+                Some(
+                    "engine4Cyl to VehicleConfiguration_b::PartsTree::vehicle_b::engine".to_owned()
+                )
+            ),
+        ],
+        "line 863 with no annotation, then line 937 with `#refinement`"
+    );
+}
+
+/// Two clients and two suppliers in `KerML`, which no tree in the repository writes: the
+/// one `KerML` dependency with a comma writes it among the suppliers (`dependency z to x,
+/// y`), so the corpus cannot tell `clients()` from one that ends the client list after its
+/// first name.
+///
+/// `client += [QualifiedName] ( ',' client += [QualifiedName] )* 'to' supplier +=
+/// [QualifiedName] ( ',' supplier += [QualifiedName] )*` (`KerML` 8.2.3.2): both lists are
+/// comma-separated. The text is hand-written for exactly that distinction; the expectation
+/// is the clause's.
+#[test]
+fn a_kerml_dependency_reads_two_clients_and_two_suppliers() {
+    let root = trees::tree(
+        "package P {\n\tdependency a, b to c, d;\n}\n",
+        sv2_syntax::Language::KerMl,
+    );
+    let read: Vec<(Vec<String>, Vec<String>)> = root
+        .descendants()
+        .filter_map(sv2_ast::Dependency::cast)
+        .map(|dependency| {
+            let text = |name: sv2_ast::QualifiedName| name.syntax().text().to_string();
+            (
+                dependency.clients().map(text).collect(),
+                dependency.suppliers().map(text).collect(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        read,
+        [(
+            vec!["a".to_owned(), "b".to_owned()],
+            vec!["c".to_owned(), "d".to_owned()]
+        )]
+    );
+}

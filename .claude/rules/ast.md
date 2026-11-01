@@ -190,6 +190,16 @@ The positive case stays per kind: it reads a corpus file chosen for that kind, a
 choice is the point. Mutation still runs per accessor, since the views are separate code;
 a shared assertion proven against one kind proves nothing about another kind's reader.
 
+### A kind whose tree depends on the language
+
+ADR-0015 lets the two grammars build different trees from the same text. `Dependency` is
+the first such view: `SysML` wraps the declaration's parts in a `DependencyDeclaration`,
+and `KerML` writes them inline. The view still answers for its own children only, so its
+inline-part accessors answer in `KerML` and are empty in `SysML`, where the parts are the
+declaration's (the user's choice, 2026-11-01). The sweep tells the languages apart by what
+the node holds, never by asking the file, and the malformed cases come in pairs, one per
+language, over the same text.
+
 ## A corpus count in a doc comment is pinned, or it is not written
 
 A count measured with a throwaway probe is true on the day and goes stale silently when
