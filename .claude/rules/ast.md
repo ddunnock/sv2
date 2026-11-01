@@ -172,7 +172,7 @@ production's `tail` names, one `<keyword> def` deciding where it begins. `PortDe
 (`port_definition`) has a `Definition` and a `ConjugatedPortDefinitionMember` holding no
 token; `RequirementDefinition`, `ConcernDefinition`, `ViewDefinition`,
 `ViewpointDefinition`, `ConstraintDefinition`, `CalculationDefinition`,
-`ActionDefinition` and `AnalysisCaseDefinition` have a
+`ActionDefinition`, `AnalysisCaseDefinition` and `VerificationCaseDefinition` have a
 `DefinitionDeclaration` and a body of their own kind, and no `Definition` node. The
 sweep's shape asserts exactly the tail, and the reader reports what the view answers for
 it. A production whose recovery differs does not join.

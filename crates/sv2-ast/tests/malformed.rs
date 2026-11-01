@@ -2672,6 +2672,26 @@ fn an_analysis_with_no_def_after_it_begins_no_analysis_case_definition() {
     );
 }
 
+/// `verification-case-definition/def-written-twice.sysml`: `verification def def A;`,
+/// then `verification def B;`. [`def_written_twice`] states what it pins.
+#[test]
+fn a_verification_case_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    def_written_twice(
+        &simple_definitions::VERIFICATION_CASE,
+        include_str!("malformed/verification-case-definition/def-written-twice.sysml"),
+    );
+}
+
+/// `verification-case-definition/def-missing.sysml`: `verification A def B;`, then
+/// `verification def C;`. [`def_missing`] states what it pins.
+#[test]
+fn a_verification_with_no_def_after_it_begins_no_verification_case_definition() {
+    def_missing(
+        &simple_definitions::VERIFICATION_CASE,
+        include_str!("malformed/verification-case-definition/def-missing.sysml"),
+    );
+}
+
 const INDIVIDUAL_BEFORE_ATTRIBUTE: &str =
     include_str!("malformed/attribute-definition/individual-before-attribute.sysml");
 
