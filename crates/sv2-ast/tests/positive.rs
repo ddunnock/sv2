@@ -3520,8 +3520,9 @@ fn the_enumeration_definitions_of_two_files_read_their_keywords_declaration_and_
 /// from one that stops at the first or reverses them.
 ///
 /// `DefinitionExtensionKeyword*` (`SysML` 8.2.2.8): any number, in the order written, each
-/// `'#' MetadataReference` (`DefinitionExtensionKeyword`, 8.2.2.6.1). The text is
-/// hand-written for exactly that distinction; the expectation is the clause's.
+/// a `PrefixMetadataMember` (`DefinitionExtensionKeyword`, 8.2.2.6.1), which is `'#'
+/// PrefixMetadataUsage` (8.2.2.27). The text is hand-written for exactly that distinction;
+/// the expectation is the clause's.
 #[test]
 fn an_enumeration_definition_reads_two_extension_keywords_in_the_order_written() {
     let root = trees::tree(
@@ -3875,7 +3876,7 @@ fn metadata(
 /// `MetadataDefinition = ( isAbstract ?= 'abstract' )? DefinitionExtensionKeyword*
 /// 'metadata' 'def' Definition` (`SysML` 8.2.2.27). The first file is the one corpus file
 /// that writes `abstract` on a metadata definition (`grep -rnE
-/// 'abstract\s+metadata\s+def'` over the pinned corpus finds only line 127), beside twelve
+/// 'abstract\s+metadata\s+def'` over the pinned corpus finds only line 127), beside eleven
 /// that do not, and a usage written with `@`. The second writes a body that is `;` and one
 /// that is braced, and two usages written with the word `metadata` and no `def`
 /// (`MetadataUsage`, 8.2.2.27), which are not definitions.
@@ -3921,9 +3922,10 @@ fn the_metadata_definitions_of_two_files_read_their_keywords_and_definition() {
 /// stops at the first or reverses them, nor show `abstract` beside them.
 ///
 /// `( isAbstract ?= 'abstract' )? DefinitionExtensionKeyword*` (`SysML` 8.2.2.27): the
-/// `abstract` first, then any number of keywords in the order written, each `'#'
-/// MetadataReference` (`DefinitionExtensionKeyword`, 8.2.2.6.1). The text is hand-written
-/// for exactly that distinction; the expectation is the clause's.
+/// `abstract` first, then any number of keywords in the order written, each a
+/// `PrefixMetadataMember` (`DefinitionExtensionKeyword`, 8.2.2.6.1), which is `'#'
+/// PrefixMetadataUsage` (8.2.2.27). The text is hand-written for exactly that distinction;
+/// the expectation is the clause's.
 #[test]
 fn a_metadata_definition_reads_abstract_and_two_extension_keywords_in_the_order_written() {
     let root = trees::tree(
