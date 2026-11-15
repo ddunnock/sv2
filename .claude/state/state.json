@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "generated": {
-    "regenerated_utc": "2026-11-15T19:39:57Z",
+    "regenerated_utc": "2026-11-15T20:58:19Z",
     "gates": {
       "vendor": "pass",
       "namespace": "pass",
@@ -27,16 +27,16 @@
     },
     "ast_coverage": {
       "declared": 463,
-      "implemented": 44,
-      "unimplemented": 419,
+      "implemented": 45,
+      "unimplemented": 418,
       "absent": 0,
       "unproved": 0,
       "unswept": 0,
       "stray": 0,
-      "percent": 9.5
+      "percent": 9.7
     },
     "tests": {
-      "unit": 893,
+      "unit": 899,
       "snapshots": 8,
       "corpus_files": 311,
       "negative_cases": 299,
@@ -50,14 +50,14 @@
       "vendor_total": 332
     },
     "commits": [
+      "6168c7b Merge close-session-2026-11-15",
+      "be18462 Close the session: 43 to 44 of 463, ExtendedDefinition next",
       "39aafe1 Merge ast-metadata-definition",
       "191b9e6 Add the MetadataDefinition accessor",
       "4ff242b Merge ast-state-definition",
       "96bbbf0 Add the StateDefinition accessor",
       "e4cf3be Merge ast-dependency",
-      "9e278af Add the Dependency accessor, which follows the tree in each language",
-      "4f4fd12 Merge ast-enumeration-definition",
-      "12ca77f Add the EnumerationDefinition accessor, with tests of its own"
+      "9e278af Add the Dependency accessor, which follows the tree in each language"
     ]
   },
   "authored": {
