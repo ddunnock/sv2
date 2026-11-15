@@ -3985,3 +3985,153 @@ fn a_metadata_definition_does_not_answer_for_the_abstract_or_keywords_of_one_in_
         "M is neither abstract nor keyworded; Inner is both"
     );
 }
+
+/// An extended definition read: its basic prefix and its extension keywords as text, its
+/// `def`, what its definition's declaration declares, and the first token of its
+/// definition's body.
+type ExtendedDefinitionRead = (
+    Option<String>,
+    Vec<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+);
+
+const USER_KEYWORD_EXAMPLE: &str =
+    "vendor/corpus/sysml/src/training/41. Language Extension/User Keyword Example.sysml";
+
+const AHF_NORWAY_TOPICS: &str =
+    "vendor/corpus/sysml/src/examples/Arrowhead Framework Example/AHFNorwayTopics.sysml";
+
+/// Every `ExtendedDefinition` beneath `root`, read, the declaration and the body through
+/// the typed `Definition` the view hands back.
+fn extended_definitions_in(root: &SyntaxNode) -> Vec<ExtendedDefinitionRead> {
+    root.descendants()
+        .filter_map(sv2_ast::ExtendedDefinition::cast)
+        .map(|extended| {
+            let definition = extended.definition();
+            (
+                extended
+                    .basic_prefix()
+                    .map(|prefix| prefix.text().to_string()),
+                extended
+                    .extension_keywords()
+                    .map(|keyword| keyword.text().to_string())
+                    .collect(),
+                extended.def_keyword().map(|token| token.text().to_owned()),
+                definition
+                    .as_ref()
+                    .and_then(sv2_ast::Definition::declaration)
+                    .map(|declaration| declaration.text().to_string()),
+                definition
+                    .as_ref()
+                    .and_then(sv2_ast::Definition::body)
+                    .as_ref()
+                    .and_then(opening),
+            )
+        })
+        .collect()
+}
+
+/// A `#… def` read as [`extended_definitions_in`] reads it.
+fn extended(
+    basic_prefix: Option<&str>,
+    keywords: &[&str],
+    declaration: &str,
+    opens: &str,
+) -> ExtendedDefinitionRead {
+    (
+        basic_prefix.map(str::to_owned),
+        keywords.iter().map(|&keyword| keyword.to_owned()).collect(),
+        Some("def".to_owned()),
+        Some(declaration.to_owned()),
+        Some(opens.to_owned()),
+    )
+}
+
+/// `User Keyword Example.sysml` and `AHFNorwayTopics.sysml`, read for their extended
+/// definitions:
+///
+/// ```text
+///   User Keyword Example
+///     line  6:  part def Device { ... }                    a PartDefinition
+///     line 12:  #scenario def DeviceFailure { ... }        an ExtendedDefinition
+///     lines 16-28:  #cause 'battery old' { ... }, #causation connect ..., #situation,
+///                   #failure                               keyworded usages, no `def`
+///   AHFNorwayTopics
+///     line 11:  #service def APISService { ... }           an ExtendedDefinition
+///     line 19:  #servicedd port def APIS_DD :> APISService { ... }
+///                                                          a PortDefinition
+/// ```
+///
+/// `ExtendedDefinition : Definition = BasicDefinitionPrefix? DefinitionExtensionKeyword+
+/// 'def' Definition` (`SysML` 8.2.2.27): "A user-defined keyword for semantic metadata may
+/// also be used to declare a definition or usage without using any language-defined
+/// keyword" (7.27.4). Line 12 of the first is the clause's own shape. The keyworded usages
+/// beneath it write no `def`, so they are usages and not definitions, and the
+/// `#servicedd port def` of
+/// the second writes the language-defined keyword `port`, whose `#servicedd` is a
+/// `PortDefinition`'s prefix metadata (8.2.2.6.1); neither is an extended definition.
+#[test]
+fn the_extended_definitions_of_two_files_read_their_keywords_and_definition() {
+    assert_eq!(
+        extended_definitions_in(&tree_of(USER_KEYWORD_EXAMPLE)),
+        [extended(None, &["#scenario"], "DeviceFailure", "{")],
+        "line 12, and none of the keyworded usages in its body"
+    );
+    assert_eq!(
+        extended_definitions_in(&tree_of(AHF_NORWAY_TOPICS)),
+        [extended(None, &["#service"], "APISService", "{")],
+        "line 11, and not the port definition"
+    );
+}
+
+/// Each basic prefix, and two extension keywords, which no corpus file writes on an
+/// extended definition (the two corpus instances each write one keyword and no prefix), so
+/// the corpus cannot tell `basic_prefix()` from one that answers nothing, nor
+/// `extension_keywords()` from one that stops at the first or reverses them.
+///
+/// `BasicDefinitionPrefix? DefinitionExtensionKeyword+` (`SysML` 8.2.2.27): the prefix
+/// first, `abstract` or `variation` (`BasicDefinitionPrefix`, 8.2.2.6.1), then one or more
+/// keywords in the order written, each a `PrefixMetadataMember` (8.2.2.6.1), which is `'#'
+/// PrefixMetadataUsage` (8.2.2.27). Hand-written for exactly that distinction; the
+/// expectation is the clauses'.
+#[test]
+fn an_extended_definition_reads_either_basic_prefix_and_keywords_in_the_order_written() {
+    let parse = trees::parsed(
+        "package P {\n\tabstract #X #Y def A :> B;\n\tvariation #Z def V;\n}\n",
+        sv2_syntax::Language::SysMl,
+    );
+    assert!(parse.errors().is_empty(), "{:?}", parse.errors());
+    assert_eq!(
+        extended_definitions_in(&parse.syntax()),
+        [
+            extended(Some("abstract"), &["#X", "#Y"], "A :> B", ";"),
+            extended(Some("variation"), &["#Z"], "V", ";"),
+        ]
+    );
+}
+
+/// An extended definition whose body holds another, the inner one with a basic prefix and
+/// a keyword of its own. No corpus tree nests one, so none tells the outer view's own
+/// prefix and keywords from the ones written in its body.
+///
+/// An extended definition's `Definition` has a `DefinitionBody`, whose items include
+/// definitions (`DefinitionBodyItem`, `SysML` 8.2.2.6.1), so an extended definition may be
+/// written inside one; its `variation` and `#Y` are its own by 8.2.2.27, not the outer
+/// one's. Hand-written for exactly that distinction; the expectation is the clauses'.
+#[test]
+fn an_extended_definition_does_not_answer_for_the_prefix_or_keywords_of_one_in_its_body() {
+    let root = trees::tree(
+        "package P {\n\t#X def M {\n\t\tvariation #Y def Inner;\n\t}\n}\n",
+        sv2_syntax::Language::SysMl,
+    );
+    assert_eq!(
+        extended_definitions_in(&root),
+        [
+            extended(None, &["#X"], "M", "{"),
+            extended(Some("variation"), &["#Y"], "Inner", ";"),
+        ],
+        "M has no prefix and only `#X`; Inner has `variation` and only `#Y`"
+    );
+}

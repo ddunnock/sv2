@@ -10,8 +10,8 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, Definition, DefinitionPrefix, Dependency, ElementFilterMember,
-    EnumerationDefinition, Import, ImportDeclaration, LibraryPackage, MemberPrefix,
-    MembershipImport, MetadataDefinition, NamespaceFeatureMember, NamespaceImport,
+    EnumerationDefinition, ExtendedDefinition, Import, ImportDeclaration, LibraryPackage,
+    MemberPrefix, MembershipImport, MetadataDefinition, NamespaceFeatureMember, NamespaceImport,
     NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember,
     QualifiedName, RelationshipBody, RootNamespace, UseCaseDefinition, VisibilityIndicator,
 };
@@ -2751,6 +2751,132 @@ fn assert_enumeration_definition_slots(
     );
 }
 
+/// What an `ExtendedDefinition`'s elements are, each as its accessor returns it.
+#[derive(Debug, PartialEq, Eq)]
+struct ExtendedShape {
+    basic_prefix: Option<SyntaxNode>,
+    extension_keywords: Vec<SyntaxNode>,
+    def_keyword: Option<SyntaxToken>,
+    definition: Option<SyntaxNode>,
+}
+
+/// What `ExtendedDefinition` must satisfy at every node, whatever the tree.
+///
+/// Written out rather than through [`assert_simple_definition`]: `ExtendedDefinition =
+/// BasicDefinitionPrefix? DefinitionExtensionKeyword+ 'def' Definition` (`SysML` 8.2.2.27)
+/// has no prefix node and no kind keyword. The basic prefix and the extension keywords are
+/// raw, having no views; the `Definition` is typed; `def` is the node's own token.
+fn assert_extended_definition_accessor(node: &SyntaxNode) {
+    let view = ExtendedDefinition::cast(node.clone());
+    assert_eq!(
+        view.is_some(),
+        node.kind() == SyntaxKind::ExtendedDefinition,
+        "ExtendedDefinition::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(view) = view else {
+        return;
+    };
+    assert_eq!(
+        view.syntax(),
+        node,
+        "ExtendedDefinition::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+    assert_eq!(
+        ExtendedShape {
+            basic_prefix: view.basic_prefix(),
+            extension_keywords: view.extension_keywords().collect(),
+            def_keyword: view.def_keyword(),
+            definition: view
+                .definition()
+                .map(|definition| definition.syntax().clone()),
+        },
+        extended_definition_shape(node),
+        "an ExtendedDefinition accessor disagrees with the node's own elements, at {:?}",
+        node.text_range()
+    );
+}
+
+/// The elements of an `ExtendedDefinition`, asserted to be exactly the production's:
+///
+/// ```text
+/// BasicDefinitionPrefix? DefinitionExtensionKeyword+ 'def' Definition
+/// ```
+///
+/// `SysML` 8.2.2.27, in that order, at least one extension keyword, and `def` and the
+/// `Definition` always present: `at_extended_definition`
+/// (`crates/sv2-syntax/src/parser/definition.rs`) begins one only on a `#` keyword and,
+/// past the rest of them, `def`, and `extended_definition` builds the `Definition` whatever
+/// follows. Nothing else but trivia. One of each is what makes `child` and `token` taking
+/// the last an equivalent mutation.
+fn extended_definition_shape(node: &SyntaxNode) -> ExtendedShape {
+    let elements: Vec<SyntaxElement> = node
+        .children_with_tokens()
+        .filter(|element| {
+            element
+                .as_token()
+                .is_none_or(|token| !token.text().trim().is_empty())
+        })
+        .collect();
+    let mut rest = elements.as_slice();
+    let mut take = |kind: SyntaxKind| match rest.split_first() {
+        Some((first, after)) if first.kind() == kind => {
+            rest = after;
+            Some(first.clone())
+        }
+        _ => None,
+    };
+    let basic_prefix = take(SyntaxKind::BasicDefinitionPrefix).and_then(SyntaxElement::into_node);
+    let extension_keywords: Vec<SyntaxNode> =
+        std::iter::from_fn(|| take(SyntaxKind::DefinitionExtensionKeyword))
+            .filter_map(SyntaxElement::into_node)
+            .collect();
+    let def_keyword = take(SyntaxKind::KwDef).and_then(SyntaxElement::into_token);
+    let definition = take(SyntaxKind::Definition).and_then(SyntaxElement::into_node);
+    assert!(
+        !extension_keywords.is_empty()
+            && def_keyword.is_some()
+            && definition.is_some()
+            && rest.is_empty(),
+        "an ExtendedDefinition is not `BasicDefinitionPrefix? DefinitionExtensionKeyword+ \
+         'def' Definition`, at {:?}: {elements:?}",
+        node.text_range()
+    );
+    assert_extended_slots_hold_no_def(node, basic_prefix.iter().chain(&extension_keywords));
+    ExtendedShape {
+        basic_prefix,
+        extension_keywords,
+        def_keyword,
+        definition,
+    }
+}
+
+/// Nothing beneath a prefix slot is `def` or a `Definition`: a basic prefix is one keyword,
+/// and an extension keyword a `#` and a qualified name (`BasicDefinitionPrefix`,
+/// `DefinitionExtensionKeyword`, `SysML` 8.2.2.6.1). Asserted because it is what makes
+/// `def_keyword` and `definition` reading descendants equivalent mutations: the slots are
+/// the only elements before `def` and the `Definition` in preorder. It does NOT make
+/// `basic_prefix` or `extension_keywords` reading descendants equivalent: a definition in
+/// the body may write its own, and `tests/positive.rs` nests one. Only the slots are
+/// scanned, never the body.
+fn assert_extended_slots_hold_no_def<'a>(
+    node: &SyntaxNode,
+    slots: impl Iterator<Item = &'a SyntaxNode>,
+) {
+    for slot in slots {
+        assert!(
+            slot.descendants_with_tokens()
+                .skip(1)
+                .all(|below| !matches!(below.kind(), SyntaxKind::KwDef | SyntaxKind::Definition)),
+            "a `def` or Definition beneath an ExtendedDefinition's {:?}, at {:?}",
+            slot.kind(),
+            node.text_range()
+        );
+    }
+}
+
 /// What `MetadataDefinition` must satisfy at every node, whatever the tree.
 ///
 /// Written out rather than through [`assert_simple_definition`]: `MetadataDefinition = (
@@ -3429,6 +3555,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_dependency_accessor(&node);
             assert_state_definition_accessor(&node);
             assert_metadata_definition_accessor(&node);
+            assert_extended_definition_accessor(&node);
             visited += 1;
         }
     }

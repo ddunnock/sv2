@@ -193,6 +193,12 @@ their own, so its keyword accessors reading descendants are *not* equivalent the
 `EnumerationDefinition`'s are, and a hand-written nested case in `tests/positive.rs` says
 so.
 
+`ExtendedDefinition` (`BasicDefinitionPrefix? DefinitionExtensionKeyword+ 'def'
+Definition`) is outside for the same reasons as `MetadataDefinition`, and has no kind
+keyword at all: its `#` keywords stand in for one, so the sweep asserts at least one.
+Its basic prefix is a node, as `IndividualDefinition`'s is, and the same nested case
+applies to both slots.
+
 The positive case stays per kind: it reads a corpus file chosen for that kind, and the
 choice is the point. Mutation still runs per accessor, since the views are separate code;
 a shared assertion proven against one kind proves nothing about another kind's reader.

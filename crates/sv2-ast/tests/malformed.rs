@@ -7,8 +7,8 @@ mod trees;
 
 use sv2_ast::{
     AliasMember, AstNode, AttributeDefinition, Definition, DefinitionPrefix, Dependency,
-    ElementFilterMember, EnumerationDefinition, Import, LibraryPackage, MemberPrefix,
-    MembershipImport, MetadataDefinition, NamespaceFeatureMember, NamespaceImport,
+    ElementFilterMember, EnumerationDefinition, ExtendedDefinition, Import, LibraryPackage,
+    MemberPrefix, MembershipImport, MetadataDefinition, NamespaceFeatureMember, NamespaceImport,
     NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember,
     QualifiedName, RelationshipBody, RootNamespace, UseCaseDefinition,
 };
@@ -3735,4 +3735,166 @@ fn a_variation_before_a_metadata_definition_is_an_error_and_not_its_prefix() {
         [SyntaxKind::Package, SyntaxKind::MetadataDefinition],
         "the package, then V"
     );
+}
+
+/// What a malformed extended case compares of each `ExtendedDefinition`: its basic prefix
+/// and its extension keywords as text, its `def` as written, and its definition's
+/// declaration and body as text, empty where absent.
+type ExtendedSummary = (Option<String>, Vec<String>, Option<String>, String, String);
+
+/// Every `ExtendedDefinition` in `root`, read through its view, and through `Definition`'s
+/// for the declaration and the body, which are the definition's and not this node's.
+fn extended_definitions(root: &SyntaxNode) -> Vec<ExtendedSummary> {
+    let text = |node: Option<SyntaxNode>| node.map(|node| node.text().to_string());
+    root.descendants()
+        .filter_map(ExtendedDefinition::cast)
+        .map(|extended| {
+            let definition = extended.definition();
+            (
+                text(extended.basic_prefix()),
+                extended
+                    .extension_keywords()
+                    .map(|keyword| keyword.text().to_string())
+                    .collect(),
+                extended.def_keyword().map(|token| token.text().to_owned()),
+                text(definition.as_ref().and_then(Definition::declaration)).unwrap_or_default(),
+                text(definition.as_ref().and_then(Definition::body)).unwrap_or_default(),
+            )
+        })
+        .collect()
+}
+
+/// A whole `#X def <name>` with no basic prefix and `body`, as [`extended_definitions`]
+/// reads it.
+fn whole_extended(name: &str, body: &str) -> ExtendedSummary {
+    (
+        None,
+        vec!["#X".to_owned()],
+        Some("def".to_owned()),
+        name.to_owned(),
+        body.to_owned(),
+    )
+}
+
+/// That `parse` holds exactly one `Error`, reading `text`, reported once over the whole
+/// of it, and that the package's members are itself and one `ExtendedDefinition`.
+#[expect(
+    clippy::expect_used,
+    reason = "test support only: the fixture is the test's, and an expectation it fails is \
+              the test failing"
+)]
+fn assert_one_statement_error_beside_one_extended(parse: &sv2_syntax::Parse, text: &str) {
+    let root = parse.syntax();
+    let error = root
+        .descendants()
+        .find(|node| node.kind() == SyntaxKind::Error)
+        .expect("recover_statement builds an Error");
+    assert_eq!(
+        error.text().to_string(),
+        text,
+        "the Error is the statement, up to and including its `;`"
+    );
+    assert_eq!(
+        error_ranges(parse),
+        [error.text_range()],
+        "one diagnostic, over the Error: {:?}",
+        parse.errors()
+    );
+    assert_eq!(
+        members(&root)
+            .iter()
+            .filter_map(|member| member.element().map(|element| element.kind()))
+            .collect::<Vec<_>>(),
+        [SyntaxKind::Package, SyntaxKind::ExtendedDefinition],
+        "the package, then B; the broken statement is an Error, not a member"
+    );
+}
+
+/// `extended-definition/def-written-twice.sysml`: `#X def def A;`, then `#X def B;`. The
+/// header states what it pins and where the outcome comes from.
+#[test]
+fn an_extended_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    let source = include_str!("malformed/extended-definition/def-written-twice.sysml");
+    let parse = trees::parsed(source, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1 and 3. two definitions: the first keeps its `#X`, its declaration and body span
+    // nothing; B is whole.
+    assert_eq!(
+        extended_definitions(&root),
+        [whole_extended("", ""), whole_extended("B", ";")],
+        "the first declares nothing and has no body; B is whole"
+    );
+
+    // 2a. the first owns exactly one `def`, the first one written, and nothing after it.
+    let written = source
+        .find("\t#X def def")
+        .expect("the fixture writes `#X def def`, tab-indented, below its header");
+    let first_def = written + "\t#X ".len();
+    let first = root
+        .descendants()
+        .find_map(ExtendedDefinition::cast)
+        .expect("two, so a first");
+    assert_eq!(
+        first
+            .def_keyword()
+            .map(|token| usize::from(token.text_range().start())),
+        Some(first_def),
+        "def_keyword() is the `def` written straight after `#X`"
+    );
+    assert_eq!(
+        first.syntax().text().to_string(),
+        "#X def ",
+        "the first holds its keyword, its `def` and the space before its empty Definition"
+    );
+
+    // 2b. the second `def` is the Error's, and that was reported, once.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    assert_eq!(
+        (stray.text(), usize::from(stray.text_range().start())),
+        ("def", first_def + "def ".len()),
+        "the Error opens with the second `def`"
+    );
+    assert_eq!(
+        error_ranges(&parse),
+        [stray.text_range()],
+        "one diagnostic, on the second `def`: {:?}",
+        parse.errors()
+    );
+}
+
+/// `extended-definition/extension-keyword-missing.sysml`: `def A;`, then `#X def B;`. The
+/// header states what it pins and where the outcome comes from.
+#[test]
+fn a_def_with_no_extension_keyword_begins_no_extended_definition() {
+    let source = include_str!("malformed/extended-definition/extension-keyword-missing.sysml");
+    let parse = trees::parsed(source, Language::SysMl);
+
+    // 1 and 2a. one definition, and it is B's: A is a missing node, not one with no keyword.
+    assert_eq!(
+        extended_definitions(&parse.syntax()),
+        [whole_extended("B", ";")],
+        "only B writes a `#` keyword before `def`, so only B is an ExtendedDefinition"
+    );
+
+    // 2b and 3. A's statement is one Error, reported once; the package's member is B's.
+    assert_one_statement_error_beside_one_extended(&parse, "def A;");
+}
+
+/// `extended-definition/basic-prefix-after-keyword.sysml`: `#X abstract def A;`, then `#X
+/// def B;`. The header states what it pins and where the outcome comes from.
+#[test]
+fn a_basic_prefix_after_an_extension_keyword_begins_no_extended_definition() {
+    let source = include_str!("malformed/extended-definition/basic-prefix-after-keyword.sysml");
+    let parse = trees::parsed(source, Language::SysMl);
+
+    // 1 and 2a. one definition, B's, and no basic prefix answers for the misplaced one.
+    assert_eq!(
+        extended_definitions(&parse.syntax()),
+        [whole_extended("B", ";")],
+        "only B is an ExtendedDefinition, and it owns no `abstract`"
+    );
+
+    // 2b and 3. A's statement is one Error, reported once; the package's member is B's.
+    assert_one_statement_error_beside_one_extended(&parse, "#X abstract def A;");
 }
