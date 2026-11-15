@@ -185,7 +185,13 @@ shape and slot facts (`assert_use_case_definition_accessor`), its own malformed 
 and a third malformed case only it has, `use def A;`, which begins no node at all.
 `EnumerationDefinition` is outside the family for a different reason: it has no prefix
 node, its `DefinitionExtensionKeyword*` being its own children, so its sweep shape has a
-variable-length head and its tests are its own too.
+variable-length head and its tests are its own too. `MetadataDefinition` is outside for
+the same reason and one more: its prefix is `'abstract'?` alone (no `variation`, which
+recovers as an `Error` outside the node), held as its own token beside its own extension
+keywords. Its tail is a `Definition`, whose body may hold definitions with keywords of
+their own, so its keyword accessors reading descendants are *not* equivalent the way
+`EnumerationDefinition`'s are, and a hand-written nested case in `tests/positive.rs` says
+so.
 
 The positive case stays per kind: it reads a corpus file chosen for that kind, and the
 choice is the point. Mutation still runs per accessor, since the views are separate code;

@@ -3792,3 +3792,194 @@ fn the_state_definitions_of_two_files_read_their_keywords_declaration_and_body()
         "line 7, and none of the five usages"
     );
 }
+
+/// A metadata definition read: its `abstract`, its extension keywords, its two keywords,
+/// what its definition's declaration declares, and the first token of its definition's
+/// body.
+type MetadataDefinitionRead = (
+    Option<String>,
+    Vec<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+);
+
+const METADATA_EXAMPLE_1: &str =
+    "vendor/corpus/sysml/src/training/39. Metadata/Metadata Example-1.sysml";
+
+/// Every `MetadataDefinition` beneath `root`, read, the declaration and the body through
+/// the typed `Definition` the view hands back.
+fn metadata_definitions_in(root: &SyntaxNode) -> Vec<MetadataDefinitionRead> {
+    let token = |token: Option<SyntaxToken>| token.map(|token| token.text().to_owned());
+    root.descendants()
+        .filter_map(sv2_ast::MetadataDefinition::cast)
+        .map(|metadata| {
+            let definition = metadata.definition();
+            (
+                token(metadata.abstract_keyword()),
+                metadata
+                    .extension_keywords()
+                    .map(|keyword| keyword.text().to_string())
+                    .collect(),
+                token(metadata.metadata_keyword()),
+                token(metadata.def_keyword()),
+                definition
+                    .as_ref()
+                    .and_then(sv2_ast::Definition::declaration)
+                    .map(|declaration| declaration.text().to_string()),
+                definition
+                    .as_ref()
+                    .and_then(sv2_ast::Definition::body)
+                    .as_ref()
+                    .and_then(opening),
+            )
+        })
+        .collect()
+}
+
+/// A `metadata def` read as [`metadata_definitions_in`] reads it.
+fn metadata(
+    abstract_keyword: Option<&str>,
+    keywords: &[&str],
+    declaration: &str,
+    opens: &str,
+) -> MetadataDefinitionRead {
+    (
+        abstract_keyword.map(str::to_owned),
+        keywords.iter().map(|&keyword| keyword.to_owned()).collect(),
+        Some("metadata".to_owned()),
+        Some("def".to_owned()),
+        Some(declaration.to_owned()),
+        Some(opens.to_owned()),
+    )
+}
+
+/// `14c-Language Extensions.sysml` and `Metadata Example-1.sysml`, read for their metadata
+/// definitions:
+///
+/// ```text
+///   14c-Language Extensions
+///     line  86:  metadata def StatusHolder { ... }
+///     lines 90-122:  metadata def <situation> SituationMetadata :> SemanticMetadata { ... }
+///                    and seven more, each with a short name and a specialization
+///     line 127:  abstract metadata def ControllingMeasureMetadata :> SemanticMetadata { ... }
+///     lines 131, 135:  metadata def <prevention> PreventionMetadata ... { ... }, <mitigation>
+///     line 154:  @StatusHolder { ... }                 a metadata usage
+///   Metadata Example-1
+///     line 3:  metadata def SafetyFeature;
+///     line 4:  metadata def SecurityFeature { ... }
+///     lines 9, 14:  metadata SafetyFeature about ...;  metadata usages, no `def`
+/// ```
+///
+/// `MetadataDefinition = ( isAbstract ?= 'abstract' )? DefinitionExtensionKeyword*
+/// 'metadata' 'def' Definition` (`SysML` 8.2.2.27). The first file is the one corpus file
+/// that writes `abstract` on a metadata definition (`grep -rnE
+/// 'abstract\s+metadata\s+def'` over the pinned corpus finds only line 127), beside twelve
+/// that do not, and a usage written with `@`. The second writes a body that is `;` and one
+/// that is braced, and two usages written with the word `metadata` and no `def`
+/// (`MetadataUsage`, 8.2.2.27), which are not definitions.
+#[test]
+fn the_metadata_definitions_of_two_files_read_their_keywords_and_definition() {
+    let situation = |declaration: &str| metadata(None, &[], declaration, "{");
+    assert_eq!(
+        metadata_definitions_in(&tree_of(LANGUAGE_EXTENSIONS_14C)),
+        [
+            situation("StatusHolder"),
+            situation("<situation> SituationMetadata :> SemanticMetadata"),
+            situation("<cause> CauseMetadata :> SituationMetadata"),
+            situation("<failure> FailureModeMetadata :> SituationMetadata"),
+            situation("<effect> EffectMetadata :> SituationMetadata"),
+            situation("<fmea> FMEAItemMetadata :> SituationMetadata"),
+            situation("<causation> CausationMetadata :> SemanticMetadata"),
+            situation("<fmeaspec> FMEARequirementMetadata :> SemanticMetadata"),
+            situation("<violation> ViolationMetadata :> SemanticMetadata"),
+            metadata(
+                Some("abstract"),
+                &[],
+                "ControllingMeasureMetadata :> SemanticMetadata",
+                "{"
+            ),
+            situation("<prevention> PreventionMetadata :> ControllingMeasureMetadata"),
+            situation("<mitigation> MitigationMetadata :> ControllingMeasureMetadata"),
+        ],
+        "lines 86 to 135, in source order, line 127 the one abstract, and not the usage"
+    );
+    assert_eq!(
+        metadata_definitions_in(&tree_of(METADATA_EXAMPLE_1)),
+        [
+            metadata(None, &[], "SafetyFeature", ";"),
+            metadata(None, &[], "SecurityFeature", "{"),
+        ],
+        "lines 3 and 4, and neither of the two usages"
+    );
+}
+
+/// `abstract` and two extension keywords together, which no corpus file writes on a
+/// metadata definition (`grep -rnE '#\S+\s+metadata\s+def'` over the pinned corpus finds
+/// none), so the corpus cannot tell `extension_keywords()` from one that answers nothing,
+/// stops at the first or reverses them, nor show `abstract` beside them.
+///
+/// `( isAbstract ?= 'abstract' )? DefinitionExtensionKeyword*` (`SysML` 8.2.2.27): the
+/// `abstract` first, then any number of keywords in the order written, each `'#'
+/// MetadataReference` (`DefinitionExtensionKeyword`, 8.2.2.6.1). The text is hand-written
+/// for exactly that distinction; the expectation is the clause's.
+#[test]
+fn a_metadata_definition_reads_abstract_and_two_extension_keywords_in_the_order_written() {
+    let root = trees::tree(
+        "package P {\n\tabstract #M #N metadata def A :> B;\n}\n",
+        sv2_syntax::Language::SysMl,
+    );
+    assert_eq!(
+        metadata_definitions_in(&root),
+        [metadata(Some("abstract"), &["#M", "#N"], "A :> B", ";")]
+    );
+}
+
+/// The same words in `KerML` build no metadata definition. `KerML` has no
+/// `MetadataDefinition` and does not reserve `def` (`KerML` 8.2.2.6), so `metadata def :
+/// T;` is a `MetadataFeature` named `def`, by `MetadataFeatureDeclaration = (
+/// Identification ( ':' | 'typed' 'by' ) )? OwnedFeatureTyping` (8.2.5.12). Hand-written,
+/// because no `.kerml` file in the corpus writes `metadata def`.
+#[test]
+fn metadata_def_in_kerml_is_a_metadata_feature_named_def_and_no_definition() {
+    let parse = trees::parsed(
+        "package P {\n\tmetadata def : T;\n}\n",
+        sv2_syntax::Language::KerMl,
+    );
+    let root = parse.syntax();
+    assert!(parse.errors().is_empty(), "{:?}", parse.errors());
+    assert_eq!(metadata_definitions_in(&root), []);
+    assert_eq!(
+        root.descendants()
+            .filter(|node| node.kind() == SyntaxKind::MetadataFeature)
+            .count(),
+        1,
+        "the one metadata feature, named `def`"
+    );
+}
+
+/// A metadata definition whose body holds another, the inner one `abstract` and with an
+/// extension keyword, the outer one with neither. No corpus tree tells the outer view's
+/// own `abstract` and extension keywords from the ones written in its body: reading
+/// descendants instead of the node's own children survived the whole sweep, for both.
+///
+/// A metadata definition's `Definition` has a `DefinitionBody`, whose items include
+/// definitions (`DefinitionBodyItem`, `SysML` 8.2.2.6.1), so a metadata definition may be
+/// written inside one; its `abstract` and `#N` are its own by 8.2.2.27, not the outer
+/// one's. Hand-written for exactly that distinction; the expectation is the clauses'.
+#[test]
+fn a_metadata_definition_does_not_answer_for_the_abstract_or_keywords_of_one_in_its_body() {
+    let root = trees::tree(
+        "package P {\n\tmetadata def M {\n\t\tabstract #N metadata def Inner;\n\t}\n}\n",
+        sv2_syntax::Language::SysMl,
+    );
+    assert_eq!(
+        metadata_definitions_in(&root),
+        [
+            metadata(None, &[], "M", "{"),
+            metadata(Some("abstract"), &["#N"], "Inner", ";"),
+        ],
+        "M is neither abstract nor keyworded; Inner is both"
+    );
+}

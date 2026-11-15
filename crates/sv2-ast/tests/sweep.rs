@@ -11,9 +11,9 @@ mod trees;
 use sv2_ast::{
     AliasMember, AstNode, Definition, DefinitionPrefix, Dependency, ElementFilterMember,
     EnumerationDefinition, Import, ImportDeclaration, LibraryPackage, MemberPrefix,
-    MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember,
-    OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember, QualifiedName,
-    RelationshipBody, RootNamespace, UseCaseDefinition, VisibilityIndicator,
+    MembershipImport, MetadataDefinition, NamespaceFeatureMember, NamespaceImport,
+    NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember,
+    QualifiedName, RelationshipBody, RootNamespace, UseCaseDefinition, VisibilityIndicator,
 };
 use sv2_syntax::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken};
 
@@ -2751,6 +2751,167 @@ fn assert_enumeration_definition_slots(
     );
 }
 
+/// What `MetadataDefinition` must satisfy at every node, whatever the tree.
+///
+/// Written out rather than through [`assert_simple_definition`]: `MetadataDefinition = (
+/// isAbstract ?= 'abstract' )? DefinitionExtensionKeyword* 'metadata' 'def' Definition`
+/// (`SysML` 8.2.2.27) has no prefix node, its `abstract` being its own token and its
+/// extension keywords its own children, as many as are written. The extension keywords are
+/// raw; the `Definition` is typed; the keywords are the node's own tokens.
+fn assert_metadata_definition_accessor(node: &SyntaxNode) {
+    let view = MetadataDefinition::cast(node.clone());
+    assert_eq!(
+        view.is_some(),
+        node.kind() == SyntaxKind::MetadataDefinition,
+        "MetadataDefinition::cast disagreed with node.kind() at {:?} {:?}",
+        node.kind(),
+        node.text_range()
+    );
+    let Some(view) = view else {
+        return;
+    };
+
+    // (a) round trip.
+    assert_eq!(
+        view.syntax(),
+        node,
+        "MetadataDefinition::syntax did not return the node it was cast from, at {:?}",
+        node.text_range()
+    );
+
+    // (b) the shape, and (c) the differential against it. The definition is typed, so
+    // what is compared is the node it wraps.
+    let shape = metadata_definition_shape(node);
+    assert_eq!(
+        (
+            view.abstract_keyword(),
+            view.extension_keywords().collect::<Vec<_>>(),
+            view.metadata_keyword(),
+            view.def_keyword(),
+            view.definition()
+                .map(|definition| definition.syntax().clone()),
+        ),
+        (
+            shape.0,
+            shape.1,
+            Some(shape.2),
+            Some(shape.3),
+            Some(shape.4)
+        ),
+        "a MetadataDefinition accessor disagrees with the node's own elements, at {:?}",
+        node.text_range()
+    );
+}
+
+/// A metadata definition's elements, asserted to be exactly the production's in order: at
+/// most one `abstract`, zero or more extension keywords, then one each of `metadata`,
+/// `def` and the `Definition`.
+///
+/// Asserting one of each after the extension keywords is what makes the view's `child` and
+/// `token` taking the last match rather than the first an equivalent mutation.
+#[expect(
+    clippy::panic,
+    reason = "test support only: a shape the production does not admit is the sweep failing"
+)]
+fn metadata_definition_shape(
+    node: &SyntaxNode,
+) -> (
+    Option<SyntaxToken>,
+    Vec<SyntaxNode>,
+    SyntaxToken,
+    SyntaxToken,
+    SyntaxNode,
+) {
+    let elements: Vec<SyntaxElement> = node
+        .children_with_tokens()
+        .filter(|element| {
+            element
+                .as_token()
+                .is_none_or(|token| !token.text().trim().is_empty())
+        })
+        .collect();
+    let abstract_keyword = elements
+        .first()
+        .and_then(SyntaxElement::as_token)
+        .filter(|token| token.kind() == SyntaxKind::KwAbstract)
+        .cloned();
+    let head = usize::from(abstract_keyword.is_some());
+    let keywords: Vec<SyntaxNode> = elements
+        .get(head..)
+        .unwrap_or_default()
+        .iter()
+        .map_while(|element| {
+            element
+                .as_node()
+                .filter(|node| node.kind() == SyntaxKind::DefinitionExtensionKeyword)
+                .cloned()
+        })
+        .collect();
+    let [
+        SyntaxElement::Token(metadata_keyword),
+        SyntaxElement::Token(def_keyword),
+        SyntaxElement::Node(definition),
+    ] = elements.get(head + keywords.len()..).unwrap_or_default()
+    else {
+        panic!(
+            "a MetadataDefinition is not `'abstract'? DefinitionExtensionKeyword* 'metadata' \
+             'def' Definition`, at {:?}: {elements:?}",
+            node.text_range()
+        );
+    };
+    assert_eq!(
+        [
+            metadata_keyword.kind(),
+            def_keyword.kind(),
+            definition.kind()
+        ],
+        [
+            SyntaxKind::KwMetadata,
+            SyntaxKind::KwDef,
+            SyntaxKind::Definition
+        ],
+        "a MetadataDefinition's elements are not the production's, at {:?}",
+        node.text_range()
+    );
+    assert_metadata_definition_slots(node, &keywords);
+    (
+        abstract_keyword,
+        keywords,
+        metadata_keyword.clone(),
+        def_keyword.clone(),
+        definition.clone(),
+    )
+}
+
+/// The one grammar fact the metadata view's equivalent mutations rest on, scanning only the
+/// extension keywords, never the definition.
+fn assert_metadata_definition_slots(node: &SyntaxNode, keywords: &[SyntaxNode]) {
+    // An extension keyword holds none of the node's own elements: it is `#` and a
+    // qualified name naming metadata (`DefinitionExtensionKeyword`, `SysML` 8.2.2.6.1).
+    // Asserted because it is what makes the keyword accessors, `child` and
+    // `extension_keywords` reading descendants equivalent mutations: `abstract` is a token
+    // with nothing beneath it, so the extension keywords are the only elements before the
+    // rest in preorder.
+    let own = [
+        SyntaxKind::KwAbstract,
+        SyntaxKind::DefinitionExtensionKeyword,
+        SyntaxKind::KwMetadata,
+        SyntaxKind::KwDef,
+        SyntaxKind::Definition,
+    ];
+    assert!(
+        keywords.iter().all(|keyword| {
+            keyword
+                .descendants_with_tokens()
+                .skip(1)
+                .all(|below| !own.contains(&below.kind()))
+        }),
+        "an `abstract`, extension keyword, `metadata`, `def` or definition inside a \
+         MetadataDefinition's extension keyword, at {:?}",
+        node.text_range()
+    );
+}
+
 /// What `Dependency` must satisfy at every node, whatever the tree.
 ///
 /// The tree differs by language (ADR-0015): a `SysML` dependency holds a
@@ -3267,6 +3428,7 @@ fn sweep(paths: Vec<std::path::PathBuf>) -> usize {
             assert_enumeration_definition_accessor(&node);
             assert_dependency_accessor(&node);
             assert_state_definition_accessor(&node);
+            assert_metadata_definition_accessor(&node);
             visited += 1;
         }
     }
