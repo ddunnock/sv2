@@ -8,9 +8,9 @@ mod trees;
 use sv2_ast::{
     AliasMember, AstNode, AttributeDefinition, Definition, DefinitionPrefix, Dependency,
     ElementFilterMember, EnumerationDefinition, Import, LibraryPackage, MemberPrefix,
-    MembershipImport, NamespaceFeatureMember, NamespaceImport, NonFeatureMember,
-    OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember, QualifiedName,
-    RelationshipBody, RootNamespace, UseCaseDefinition,
+    MembershipImport, MetadataDefinition, NamespaceFeatureMember, NamespaceImport,
+    NonFeatureMember, OccurrenceDefinitionPrefix, OwnedAnnotation, Package, PackageMember,
+    QualifiedName, RelationshipBody, RootNamespace, UseCaseDefinition,
 };
 use sv2_syntax::{Language, SyntaxKind, SyntaxNode};
 
@@ -3532,5 +3532,207 @@ fn a_sysml_dependency_with_no_to_keeps_both_names_in_its_declaration() {
         [b],
         "one diagnostic, at `b`: {:?}",
         parse.errors()
+    );
+}
+
+/// What a malformed metadata case compares of each `MetadataDefinition`: its `abstract`,
+/// its extension keywords as text, its two keywords as written, and its definition's
+/// declaration and body as text, empty where absent.
+type MetadataSummary = (
+    Option<String>,
+    Vec<String>,
+    Option<String>,
+    Option<String>,
+    String,
+    String,
+);
+
+/// Every `MetadataDefinition` in `root`, read through its view, and through `Definition`'s
+/// for the declaration and the body, which are the definition's and not this node's.
+///
+/// Written out rather than through `simple_definitions`: a metadata definition has no
+/// prefix node, its `abstract` being its own token and its extension keywords its own
+/// children (`SysML` 8.2.2.27).
+fn metadata_definitions(root: &SyntaxNode) -> Vec<MetadataSummary> {
+    let text = |node: Option<SyntaxNode>| node.map(|node| node.text().to_string());
+    let token = |token: Option<sv2_syntax::SyntaxToken>| token.map(|t| t.text().to_owned());
+    root.descendants()
+        .filter_map(MetadataDefinition::cast)
+        .map(|metadata| {
+            let definition = metadata.definition();
+            (
+                token(metadata.abstract_keyword()),
+                metadata
+                    .extension_keywords()
+                    .map(|keyword| keyword.text().to_string())
+                    .collect(),
+                token(metadata.metadata_keyword()),
+                token(metadata.def_keyword()),
+                text(definition.as_ref().and_then(Definition::declaration)).unwrap_or_default(),
+                text(definition.as_ref().and_then(Definition::body)).unwrap_or_default(),
+            )
+        })
+        .collect()
+}
+
+/// A whole `metadata def <name>` with no `abstract`, no extension keyword and `body`, as
+/// [`metadata_definitions`] reads it.
+fn whole_metadata(name: &str, body: &str) -> MetadataSummary {
+    (
+        None,
+        Vec::new(),
+        Some("metadata".to_owned()),
+        Some("def".to_owned()),
+        name.to_owned(),
+        body.to_owned(),
+    )
+}
+
+/// `metadata-definition/def-written-twice.sysml`: `metadata def def A;`, then `metadata
+/// def B;`. The header states what it pins and where the outcome comes from.
+#[test]
+fn a_metadata_definition_owns_its_first_def_and_leaves_the_second_in_an_error() {
+    let source = include_str!("malformed/metadata-definition/def-written-twice.sysml");
+    let parse = trees::parsed(source, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1 and 3. two definitions: the first's declaration and body span nothing; B is whole.
+    assert_eq!(
+        metadata_definitions(&root),
+        [whole_metadata("", ""), whole_metadata("B", ";")],
+        "the first declares nothing and has no body; B is whole"
+    );
+
+    // 2a. the first owns exactly one `def`, the first one written, and nothing after it.
+    let written = source
+        .find("\tmetadata def def")
+        .expect("the fixture writes `metadata def def`, tab-indented, below its header");
+    let first_def = written + "\tmetadata ".len();
+    let first = root
+        .descendants()
+        .find_map(MetadataDefinition::cast)
+        .expect("two, so a first");
+    assert_eq!(
+        first
+            .def_keyword()
+            .map(|token| usize::from(token.text_range().start())),
+        Some(first_def),
+        "def_keyword() is the `def` written straight after `metadata`"
+    );
+    assert_eq!(
+        first.syntax().text().to_string(),
+        "metadata def ",
+        "the first holds its keywords and the space before its empty Definition"
+    );
+
+    // 2b. the second `def` is the Error's, and that was reported, once.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    assert_eq!(
+        (stray.text(), usize::from(stray.text_range().start())),
+        ("def", first_def + "def ".len()),
+        "the Error opens with the second `def`"
+    );
+    assert_eq!(
+        error_ranges(&parse),
+        [stray.text_range()],
+        "one diagnostic, on the second `def`: {:?}",
+        parse.errors()
+    );
+}
+
+/// `metadata-definition/def-missing.sysml`: `metadata A def B;`, then `metadata def C;`.
+/// The header states what it pins and where the outcome comes from.
+#[test]
+fn a_metadata_with_no_def_after_it_begins_no_metadata_definition() {
+    let source = include_str!("malformed/metadata-definition/def-missing.sysml");
+    let parse = trees::parsed(source, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1 and 2a. one definition, and it is C's.
+    assert_eq!(
+        metadata_definitions(&root),
+        [whole_metadata("C", ";")],
+        "only C writes `metadata def`, so only C is a MetadataDefinition"
+    );
+
+    // 2b. reported, once, on the `def` A's keyword was not followed by.
+    let stray = first_error_token(&root).expect("recover_statement builds an Error");
+    let written = source
+        .find("\tmetadata A def")
+        .expect("the fixture writes `metadata A def`, tab-indented, below its header");
+    assert_eq!(
+        (stray.text(), usize::from(stray.text_range().start())),
+        ("def", written + "\tmetadata A ".len()),
+        "the Error opens with the misplaced `def`"
+    );
+    assert_eq!(
+        error_ranges(&parse),
+        [stray.text_range()],
+        "one diagnostic, on the misplaced `def`: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour: the first member holds the usage, not a half-built definition.
+    assert_eq!(
+        members(&root)
+            .iter()
+            .filter_map(|member| member.element().map(|element| element.kind()))
+            .collect::<Vec<_>>(),
+        [
+            SyntaxKind::Package,
+            SyntaxKind::MetadataUsage,
+            SyntaxKind::MetadataDefinition
+        ],
+        "the package, then A as a metadata usage, then C"
+    );
+}
+
+/// `metadata-definition/variation-prefix.sysml`: `variation metadata def V;`. The header
+/// states what it pins and where the outcome comes from.
+#[test]
+fn a_variation_before_a_metadata_definition_is_an_error_and_not_its_prefix() {
+    let source = include_str!("malformed/metadata-definition/variation-prefix.sysml");
+    let parse = trees::parsed(source, Language::SysMl);
+    let root = parse.syntax();
+
+    // 1, 2a and 3. one definition, V's, whole, with no `abstract` answering for `variation`.
+    assert_eq!(
+        metadata_definitions(&root),
+        [whole_metadata("V", ";")],
+        "V is whole, and owns neither `variation` nor an `abstract`"
+    );
+
+    // 2b. `variation` alone is the Error, reported once over it.
+    let written = source
+        .find("\tvariation metadata def V;")
+        .map(|line| line + "\t".len())
+        .expect("the fixture writes `variation metadata def V;` on a tab-indented line");
+    let error = root
+        .descendants()
+        .find(|node| node.kind() == SyntaxKind::Error)
+        .expect("recover_statement builds an Error");
+    assert_eq!(
+        (
+            error.text().to_string(),
+            usize::from(error.text_range().start())
+        ),
+        ("variation".to_owned(), written),
+        "the Error is `variation`, where it was written"
+    );
+    assert_eq!(
+        error_ranges(&parse),
+        [error.text_range()],
+        "one diagnostic, over the Error: {:?}",
+        parse.errors()
+    );
+
+    // 3. the neighbour: the package's one member is V's definition, outside the Error.
+    assert_eq!(
+        members(&root)
+            .iter()
+            .filter_map(|member| member.element().map(|element| element.kind()))
+            .collect::<Vec<_>>(),
+        [SyntaxKind::Package, SyntaxKind::MetadataDefinition],
+        "the package, then V"
     );
 }
